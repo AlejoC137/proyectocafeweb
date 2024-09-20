@@ -1,8 +1,8 @@
 // App.jsx
 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import SupaBaseTest from './body/SupaBaseTest';
 import './App.css';
+import SupaBaseTest from './body/supaBaseTest';
 
 function App() {
 
