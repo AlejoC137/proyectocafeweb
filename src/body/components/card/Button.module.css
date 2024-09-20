@@ -1,0 +1,11 @@
+.card {
+  font-family: ProyectoCafe2-Regular;
+  font-size: 35px;
+  border: 2px solid; /* Borde solo en los lados izquierdo y derecho */
+  margin: 1%; /* Añadimos un margen para separar las tarjetas */
+  margin-bottom: 1%; /* Añadimos un margen para separar las tarjetas */
+  object-fit: cover; /* Para que la imagen se ajuste dentro del contenedor manteniendo su relación de aspecto */
+  background-image: url('https://res.cloudinary.com/dwcp7dk9h/image/upload/v1713458263/hafkkk1uhvyuhvdkfwcb.png');
+  background-size: cover; /* Ajustamos el tamaño de la imagen de fondo para que cubra la tarjeta */
+  background-position: center; /* Centramos la imagen de fondo */
+}

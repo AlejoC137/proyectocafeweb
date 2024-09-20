@@ -1,0 +1,7 @@
+.cards {
+  display: flex;
+  /* height: 40%; */
+  flex-wrap: wrap;
+  justify-content: center; /* Centramos los elementos horizontalmente */
+  /* background-color: aqua; */
+}

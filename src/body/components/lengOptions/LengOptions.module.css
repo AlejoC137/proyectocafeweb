@@ -1,0 +1,70 @@
+@font-face {
+  font-family: Montserrat;
+  src: url('../../../assets/Montserrat-VariableFont_wght.ttf') format('truetype');
+  /* Add other font formats (e.g., woff, woff2) if needed */
+}
+
+@font-face {
+  font-family: ProyectoCafe2-Regular;
+  src: url('../../../assets/PROYECTOCAFE2-REGULAR.TTF') format('truetype');
+  /* Add other font formats (e.g., woff, woff2) if needed */
+}
+
+
+.centerColumn {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  /* width: 350px; */
+}
+.singUpElement {
+margin: 20px;
+  margin: auto;
+}
+.imageVitrina {
+  max-width: 200px;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+}
+
+.button {
+  background-color: rgb(216, 210, 174);
+  width: 120px;
+  height: 60px;
+  font-size: 50px;
+  border-radius: 10px;
+  font-family:  ProyectoCafe2-Regular;
+  font-style: bold;
+}
+.horario {
+  background-color: rgb(220,153,131);
+  /* width: 120px; */
+  height: 30px;
+  font-size: 12px;
+  border-radius: 10px;
+  font-family:  Montserrat ;
+  font-style: bold;
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background-color: rgba(255, 255, 255, 0.9); /* Transparent white background */
+  padding: 10px; /* Adjust padding as needed */
+  border-radius: 8px; /* Add border radius for rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add box shadow */
+  font-family: Montserrat;
+  width: 80%;
+}
+
+/* Estilos responsivos */
+@media screen and (max-width: 768px) {
+  .menuProjectoCafe {
+    flex-direction: column;
+    align-items: center;
+  }
+}

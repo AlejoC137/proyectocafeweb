@@ -1,23 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import { Button } from "@/components/ui/button"
+// App.jsx
+
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import SupaBaseTest from './body/SupaBaseTest';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  
+
 
   return (
-    <>
-
-
-    <div>
-      <Button>Click me</Button>
-    </div>
-
-
-    </>
-  )
+    <Routes>
+      <Route path="/supaBaseTest" element={<SupaBaseTest />} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;

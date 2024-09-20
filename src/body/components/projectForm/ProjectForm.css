@@ -1,0 +1,39 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Align items to the center */
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+}
+
+input[type="text"] {
+  width: auto;
+  padding: auto;
+}
+
+input[type="checkbox"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.error-msg {
+  color: red;
+  font-size: 14px;
+}

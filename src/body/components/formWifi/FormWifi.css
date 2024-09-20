@@ -1,0 +1,61 @@
+.form-container {
+    /* max-width: 400px; */
+    width: 89%;
+    /* margin: auto; */
+    padding: 20px;
+    /* border: 1px solid #ccc; */
+    /* border-radius: 5px; */
+    background-image: url("https://res.cloudinary.com/dwcp7dk9h/image/upload/v1710996709/PERCHERO_02-02_g4pqcy.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    font-family: ProyectoCafe2-Regular;  /* Apply the custom font here */
+    font-size:20px; /* Adjust font size */
+    color: rgb(154, 69, 43);
+
+  }
+  
+ /*  rgb(249, 136, 102) */
+
+ /*  text-shadow: */
+ /*  1.5px 1.5px 0 rgba(118,159,211,0.7); /* Add shadow effect */
+/* -webkit-text-stroke: 0.0125px rgba(255, 234, 202, 0.5);  */
+/* -webkit-text-stroke: 0.0125px rgba(44, 28, 5, 0.8); 
+/* text-stroke: 0.025px rgba(0, 0, 0, 0.5);*/
+
+  
+  .form-group {
+    margin-bottom: 15px;
+    display: flex;
+    font-family: ProyectoCafe2-Regular;  /* Apply the custom font here */
+ 
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  input[type="text"],
+  input[type="checkbox"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  .checks {
+    margin-top: -12px;
+  }
+  .checks label {
+    white-space: nowrap; 
+    }
+
+  .button {
+    width: 15px;
+    height: 15px;
+  }
+
+  .error-msg {
+    color: red;
+  }
+  
