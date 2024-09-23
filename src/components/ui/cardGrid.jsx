@@ -1,8 +1,26 @@
 import { Label } from "@/components/ui/label";
-import React from 'react';
+import React, { useRef } from 'react';
 import { CardInstance } from "@/components/ui/cardInstance";
 
 export function CardGrid({ products, isEnglish, category }) {
+
+  const containerRef = useRef(null);
+
+  const handleSwipeEnd = () => {
+    const container = containerRef.current;
+    const cardWidth = document.querySelector('.card').offsetWidth;
+    const cardMargin = parseInt(window.getComputedStyle(document.querySelector('.card')).marginRight, 10);
+    const swipeDistance = cardWidth + cardMargin;
+
+    const currentScroll = container.scrollLeft;
+    const nearestCardIndex = Math.round(currentScroll / swipeDistance);
+
+    container.scrollTo({
+      left: nearestCardIndex * swipeDistance,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <>
       {/* Label aligned to the left */}
@@ -25,3 +43,5 @@ export function CardGrid({ products, isEnglish, category }) {
     </>
   );
 }
+
+

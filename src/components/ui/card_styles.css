@@ -1,0 +1,18 @@
+
+.card-container {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: none; /* Scroll is free, no strict snapping */
+  scroll-behavior: smooth;
+}
+
+.card {
+  flex: 0 0 auto; /* Prevent cards from shrinking */
+  margin-right: 16px; /* Or your preferred margin */
+  width: 300px; /* Example width */
+  height: 200px; /* Example height */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
