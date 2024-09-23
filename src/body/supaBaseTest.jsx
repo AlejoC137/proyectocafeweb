@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { CardGrid } from '@/components/ui/cardGrid';
 import { useDispatch, useSelector } from 'react-redux';
-import { fixUrl, getAllFromTable } from '../redux/actions';
-
+import { getAllFromTable } from '../redux/actions';
+import { CardGrid } from '@/components/ui/cardGrid';
 import {
   STAFF,
   MENU,
@@ -15,6 +13,8 @@ function SupaBaseTest() {
   const [loading, setLoading] = useState(true);
 
   const menuData = useSelector((state) => state.allMenu);
+  const staffData = useSelector((state) => state.allStaff); // Mantienes los datos de Staff por si los necesitas
+  const itemsData = useSelector((state) => state.allItems); // Mantienes los datos de Items por si los necesitas
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,12 +37,18 @@ function SupaBaseTest() {
     return <div>Loading...</div>;
   }
 
+  // Filtrar los datos por categoría en el componente
+  const cafeFrioCaliente = menuData.filter(item => item.TipoES === 'Café');
+  const desayuno = menuData.filter(item => item.TipoES === 'Desayuno');
+  const almuerzo = menuData.filter(item => item.TipoES === 'Almuerzo');
+  const postres = menuData.filter(item => item.TipoES === 'Postres');
+
   return (
-    <div className="flex flex-col gap-4"> {/* Adjust the gap between grids */}
-      <CardGrid products={menuData} category={'Café Frío y Caliente'} isEnglish={true} />
-      <CardGrid products={menuData} category={'Desayuno Salado y Dulce'} isEnglish={true} />
-      <CardGrid products={menuData} category={'Almuerzo y Para la tarde'} isEnglish={true} />
-      <CardGrid products={menuData} category={'Otros'} isEnglish={true} />
+    <div className="flex flex-col gap-4">
+      <CardGrid products={cafeFrioCaliente} category={'Café Frío y Caliente'} isEnglish={true} />
+      <CardGrid products={desayuno} category={'Desayuno Salado y Dulce'} isEnglish={true} />
+      <CardGrid products={almuerzo} category={'Almuerzo y Para la tarde'} isEnglish={true} />
+      <CardGrid products={postres} category={'Postres'} isEnglish={true} />
     </div>
   );
 }

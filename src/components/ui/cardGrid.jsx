@@ -13,8 +13,8 @@ export function CardGrid({ products, isEnglish, category }) {
       </div>
 
       <div className="container mx-auto">
-        {/* Horizontal scroll enabled, vertical scroll adjusted based on content */}
-        <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth">
+        {/* Horizontal scroll with added gap between cards */}
+        <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4">  {/* Agregamos gap-x-4 */}
           {products.map((product) => (
             <div key={product._id} className="snap-center flex-shrink-0 w-[260px]">
               <CardInstance product={product} isEnglish={isEnglish} />
