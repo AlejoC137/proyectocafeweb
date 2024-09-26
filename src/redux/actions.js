@@ -1,7 +1,7 @@
 import supabase from "../config/supabaseClient";
 import {
   GET_ALL_FROM_TABLE,
-
+  UPDATE_ACTIVE_TAB
 } from "./actions-types";
 
 import axios from "axios";
@@ -62,3 +62,9 @@ export function fixUrl(datos, campo, buscar, reemplazar) {
     }
   };
 }
+
+
+export const updateActiveTab = (tab) => ({
+  type: "UPDATE_ACTIVE_TAB",
+  payload: tab,
+});

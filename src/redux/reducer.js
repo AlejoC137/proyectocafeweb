@@ -1,9 +1,11 @@
 import {
     GET_ALL_FROM_TABLE,
+    UPDATE_ACTIVE_TAB,
     STAFF,
     MENU,
     ITEMS,
     PRODUCCION,
+
   } from './actions-types';
   
   const initialState = {
@@ -11,10 +13,18 @@ import {
     allMenu: [],
     allItems: [],
     allProduccion: [],
+    activeTab: "Bookings",
   };
   
   const reducer = (state = initialState, action) => {
     switch (action.type) {
+      case UPDATE_ACTIVE_TAB:
+      return {
+        ...state,
+        activeTab: action.payload,
+      };
+
+
       case GET_ALL_FROM_TABLE:
         if (action.path === STAFF) {
           return {

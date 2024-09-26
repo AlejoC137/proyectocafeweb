@@ -31,7 +31,7 @@ function SupaBaseTest() {
       }
     };
     fetchData();
-  }, [dispatch]);
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
