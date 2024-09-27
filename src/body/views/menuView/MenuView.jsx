@@ -52,7 +52,7 @@ function MenuView() {
   }
 
   return (
-    <div className="flex flex-col gap-4 overflow-hidden w-screen pr-20" > {/* Añadir overflow-hidden aquí */}
+    <div className="flex flex-col gap-4 fixed top-0 left-0 w-screen p-5" > {/* Añadir overflow-hidden aquí */}
       {uniqueCategories.map((category) => (
         <div key={category} className="overflow-hidden"> {/* Asegurar que cada grid tenga overflow-hidden */}
           <CardGrid
