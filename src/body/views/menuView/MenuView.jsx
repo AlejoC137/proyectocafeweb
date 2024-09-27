@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardGrid } from '@/components/ui/cardGrid';
 import { useDispatch, useSelector } from 'react-redux';
-import { fixUrl, getAllFromTable } from '../../../redux/actions';
-
-import {
-  STAFF,
-  MENU,
-  ITEMS,
-} from '../../../redux/actions-types';
+import { getAllFromTable } from '../../../redux/actions';
+import { STAFF, MENU, ITEMS } from '../../../redux/actions-types';
 
 function MenuView() {
   const dispatch = useDispatch();
@@ -57,14 +52,16 @@ function MenuView() {
   }
 
   return (
-    <div className="flex flex-col gap-4"> {/* Ajusta el espacio entre grids */}
+    <div className="flex flex-col gap-4 overflow-hidden"> {/* Añadir overflow-hidden aquí */}
       {uniqueCategories.map((category) => (
-        <CardGrid
-          filterKey={category}
-          products={menuData}
-          category={getCategoryTitle(category)}
-          isEnglish={true}
-        />
+        <div key={category} className="overflow-hidden"> {/* Asegurar que cada grid tenga overflow-hidden */}
+          <CardGrid
+            filterKey={category}
+            products={menuData}
+            category={getCategoryTitle(category)}
+            isEnglish={true}
+          />
+        </div>
       ))}
     </div>
   );

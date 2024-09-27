@@ -2,7 +2,8 @@ import { Label } from "@/components/ui/label";
 import React, { useRef } from 'react';
 import { CardInstance } from "@/components/ui/cardInstance";
 
-export function CardGrid({ products, isEnglish, category, filterKey }) {
+export function CardGrid({ products, isEnglish, category , filterKey }) {
+
   const containerRef = useRef(null);
 
   const handleSwipeEnd = () => {
@@ -16,7 +17,7 @@ export function CardGrid({ products, isEnglish, category, filterKey }) {
 
     container.scrollTo({
       left: nearestCardIndex * swipeDistance,
-      behavior: 'smooth',
+      behavior: 'smooth'
     });
   };
 
@@ -30,12 +31,9 @@ export function CardGrid({ products, isEnglish, category, filterKey }) {
       </div>
 
       <div className="container mx-auto">
-        {/* Horizontal scroll with hidden overflow */}
-        <div
-          ref={containerRef}
-          className="flex overflow-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4"
-        >
-          {products
+        {/* Horizontal scroll with added gap between cards */}
+        <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4">  {/* Agregamos gap-x-4 */}
+        {products
             .filter((product) => product.TipoEN === filterKey) // Filtrar por TipoEN
             .map((product) => (
               <div key={product._id} className="snap-center flex-shrink-0 w-[260px]">
@@ -47,3 +45,5 @@ export function CardGrid({ products, isEnglish, category, filterKey }) {
     </>
   );
 }
+
+
