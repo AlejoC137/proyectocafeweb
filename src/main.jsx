@@ -19,7 +19,6 @@ root.render(
       {/* <React.StrictMode> */}
         <App />
       {/* </React.StrictMode> */}
-    <BottomNav />
     </BrowserRouter>
   </Provider>
 );

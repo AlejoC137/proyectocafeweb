@@ -3,15 +3,16 @@ import { useDispatch } from "react-redux"; // Import the useDispatch hook from R
 import { Link, useLocation } from "react-router-dom"; // Import Link for navigation
 import { Home, Search, ShoppingBag, Calendar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { updateActiveTab } from "../../redux/actions";
+import { Button } from "@/components/ui/button"; // Use the custom Button component
+import { updateActiveTab } from "../../redux/actions"; // Import Redux action
+
+import { UPDATE_CURRENT_VIEW, HOME, SUPABASE, ABOUT, CONTACT } from '../../redux/actions-types'; // Importa las acciones y vistas
 
 const navItems = [
-  { icon: Home, label: "Home", color: "text-blue-500", path: "/home" },
-  { icon: Search, label: "Search", color: "text-green-500", path: "/search" },
-  { icon: ShoppingBag, label: "Orders", color: "text-yellow-500", path: "/orders" },
-  { icon: Calendar, label: "Bookings", color: "text-purple-500", path: "/bookings" },
-  { icon: User, label: "Profile", color: "text-red-500", path: "/profile" },
+  { icon: Home, label: HOME, color: "text-blue-500", path: "/home" },
+  { icon: Search, label: ABOUT, color: "text-green-500", path: "/about" },
+  { icon: ShoppingBag, label: CONTACT, color: "text-yellow-500", path: "/contact" },
+  { icon: Calendar, label: SUPABASE, color: "text-purple-500", path: "/supabaseTest" },
 ];
 
 export default function BottomNav() {
@@ -26,23 +27,23 @@ export default function BottomNav() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-  
-
-      {/* Navigation bar at the bottom */}
-      <nav className="flex-none h-16 bg-white border-t dark:bg-slate-950">
-        <ul className="h-full flex justify-around items-center px-2">
+    <div className="flex flex-col">
+      {/* Navigation bar at the bottom, fixed */}
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t dark:bg-slate-950 ">
+        <ul className="h-full flex justify-between items-center">
           {navItems.map(({ icon: Icon, label, color, path }) => (
-            <li key={label} className="flex-1">
-              {/* Use Link for navigation without a sliding window */}
+            <li key={label} className="flex-grow">
               <Link to={path}>
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full h-full flex flex-col items-center justify-center space-y-1 rounded-xl transition-all duration-300 ease-in-out",
-                    location.pathname === path ? "bg-slate-100 dark:bg-slate-800" : "hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                    "h-full flex flex-col items-center justify-center transition-all duration-300 ease-in-out",
+                    location.pathname === path
+                      ? "bg-slate-200 dark:bg-slate-700" // Botón seleccionado: más oscuro
+                      : "bg-slate-50 dark:bg-slate-900 hover:bg-slate-100/50 dark:hover:bg-slate-800/50" // Botones no seleccionados: más claro
                   )}
-                  onClick={() => handleTabClick(label)}
+                  style={{ width: `calc(100vw / (${navItems.length}))` }}
+                  onClick={() => handleTabClick(label)} // onClick handler added
                 >
                   <Icon className={cn("h-5 w-5", color)} />
                   <span className="text-xs font-medium">{label}</span>

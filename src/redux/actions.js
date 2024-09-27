@@ -64,7 +64,20 @@ export function fixUrl(datos, campo, buscar, reemplazar) {
 }
 
 
-export const updateActiveTab = (tab) => ({
-  type: "UPDATE_ACTIVE_TAB",
-  payload: tab,
-});
+export function updateActiveTab(option) {
+  return async (dispatch) => {
+    try {
+      // If you have any async operations, you can place them here.
+      // For now, it's just a synchronous dispatch.
+      
+      // Dispatching the action to update the active tab
+      return dispatch({
+        type: UPDATE_ACTIVE_TAB,
+        payload: option, // Pass the selected option as payload
+      });
+    } catch (error) {
+      // Handle any error that occurs
+      console.error("Error updating active tab:", error);
+    }
+  };
+}

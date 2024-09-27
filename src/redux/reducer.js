@@ -1,61 +1,61 @@
 import {
-    GET_ALL_FROM_TABLE,
-    UPDATE_ACTIVE_TAB,
-    STAFF,
-    MENU,
-    ITEMS,
-    PRODUCCION,
+  GET_ALL_FROM_TABLE,
+  UPDATE_CURRENT_VIEW,
+  STAFF,
+  MENU,
+  ITEMS,
+  PRODUCCION,
+  UPDATE_ACTIVE_TAB
+} from './actions-types';
 
-  } from './actions-types';
-  
-  const initialState = {
-    allStaff: [],
-    allMenu: [],
-    allItems: [],
-    allProduccion: [],
-    activeTab: "Bookings",
-  };
-  
-  const reducer = (state = initialState, action) => {
-    switch (action.type) {
-      case UPDATE_ACTIVE_TAB:
+const initialState = {
+  allStaff: [],
+  allMenu: [],
+  allItems: [],
+  allProduccion: [],
+  currentView: 'HOME', // Estado inicial del currentView (o vista actual)
+};
+
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    
+    case UPDATE_CURRENT_VIEW:
       return {
         ...state,
-        activeTab: action.payload,
+        currentView: action.payload, // Actualiza la vista actual (currentView) según el payload
       };
 
+    case GET_ALL_FROM_TABLE:
+      switch (action.path) {
+        case STAFF:
+          return {
+            ...state,
+            allStaff: action.payload, // Actualiza el estado para STAFF
+          };
+        case MENU:
+          return {
+            ...state,
+            allMenu: action.payload, // Actualiza el estado para MENU
+          };
+        case ITEMS:
+          return {
+            ...state,
+            allItems: action.payload, // Actualiza el estado para ITEMS
+          };
+        case PRODUCCION:
+          return {
+            ...state,
+            allProduccion: action.payload, // Actualiza el estado para PRODUCCION
+          };
+          
 
-      case GET_ALL_FROM_TABLE:
-        if (action.path === STAFF) {
-          return {
-            ...state,
-            allStaff: action.payload,
-          };
-        }
-        if (action.path === MENU) {
-          return {
-            ...state,
-            allMenu: action.payload,
-          };
-        }
-        if (action.path === ITEMS) {
-          return {
-            ...state,
-            allItems: action.payload,
-          };
-        }
-        if (action.path === PRODUCCION) {
-          return {
-            ...state,
-            allProduccion: action.payload,
-          };
-        }
-        return state;
-  
-      default:
-        return state;
-    }
-  };
-  
-  export default reducer;
-  
+          
+   
+      }
+
+    default:
+      return state; // Devuelve el estado actual si la acción no es reconocida
+  }
+};
+
+export default reducer;
