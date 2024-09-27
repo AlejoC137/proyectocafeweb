@@ -24,7 +24,7 @@ export function CardGrid({ products, isEnglish, category , filterKey }) {
   return (
     <>
       {/* Label aligned to the left */}
-      <div className="w-full flex justify-start">
+      <div className=" flex justify-start overflow-hidden bg-black">
         <Label className="text-left text-lg font-bold truncate">
           {category}
         </Label>
@@ -32,7 +32,7 @@ export function CardGrid({ products, isEnglish, category , filterKey }) {
 
       <div className="container mx-auto">
         {/* Horizontal scroll with added gap between cards */}
-        <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4">  {/* Agregamos gap-x-4 */}
+        <div className="flex overflow-x-auto overflow-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4">  {/* Agregamos gap-x-4 */}
         {products
             .filter((product) => product.TipoEN === filterKey) // Filtrar por TipoEN
             .map((product) => (
