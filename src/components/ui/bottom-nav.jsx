@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button"; // Use the custom Button component
 import { updateActiveTab } from "../../redux/actions"; // Import Redux action
 
-import { UPDATE_CURRENT_VIEW, HOME, SUPABASE, ABOUT, CONTACT } from '../../redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT } from '../../redux/actions-types'; // Importa las acciones y vistas
 
 const navItems = [
   { icon: Home, label: HOME, color: "text-blue-500", path: "/home" },
   { icon: Search, label: ABOUT, color: "text-green-500", path: "/about" },
   { icon: ShoppingBag, label: CONTACT, color: "text-yellow-500", path: "/contact" },
-  { icon: Calendar, label: SUPABASE, color: "text-purple-500", path: "/supabaseTest" },
+  { icon: Calendar, label: MENUVIEW, color: "text-purple-500", path: "/MenuView" },
 ];
 
 export default function BottomNav() {

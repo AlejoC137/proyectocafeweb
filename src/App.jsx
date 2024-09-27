@@ -2,14 +2,14 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useSelector } from 'react-redux'; // Para acceder al estado global de Redux
 import './App.css';
 
-import { UPDATE_CURRENT_VIEW, HOME, SUPABASE, ABOUT, CONTACT } from './redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT } from './redux/actions-types'; // Importa las acciones y vistas
 
 // import About from './components/About';
 // import Contact from './components/Contact';
 // import NotFound from './components/NotFound'; // Componente de fallback si no coincide una ruta
 import BottomNav from './components/ui/bottom-nav'; // Importa BottomNav
 import Home from './body/views/home/Home';
-import SupaBaseTest from './body/supaBaseTest';
+import MenuView from './body/views/menuView/MenuView';
 // import { Home } from 'lucide-react';
 
 function App() {
@@ -29,8 +29,8 @@ function App() {
     case CONTACT:
       componentToRender = <div>Contact Page</div>;
       break;
-    case SUPABASE:
-      componentToRender = <SupaBaseTest />;
+    case MENUVIEW:
+      componentToRender = <MenuView />;
       break;
     default:
       componentToRender = <div>Page Not Found</div>; // Fallback para rutas no encontradas
@@ -41,7 +41,7 @@ function App() {
     <div >
     <Routes>
      <Route path="/" element={componentToRender} />
-     <Route path="/SupaBaseTest" element={<SupaBaseTest />} />
+     <Route path="/MenuView" element={<MenuView />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 
