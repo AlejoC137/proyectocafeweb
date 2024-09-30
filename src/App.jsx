@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useSelector } from 'react-redux'; // Para acceder al estado global de Redux
-import './App.css';
+// import './App.css';
 
 import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT } from './redux/actions-types'; // Importa las acciones y vistas
 

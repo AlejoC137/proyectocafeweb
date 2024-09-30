@@ -7,6 +7,7 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  padding: 0;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -29,6 +30,7 @@ a:hover {
 
 body {
   margin: 0;
+  padding: 0;
   display: flex;
   place-items: center;
   min-width: 320px;
@@ -63,11 +65,14 @@ button:focus-visible {
   :root {
     color: #213547;
     background-color: #ffffff;
+    padding: 0%
   }
   a:hover {
     color: #747bff;
+    padding: 0%;
   }
   button {
+    padding: 0%;
     background-color: #f9f9f9;
   }
 }
@@ -99,6 +104,7 @@ button:focus-visible {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --padding: 0;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -125,14 +131,17 @@ button:focus-visible {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --padding: 0;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border; /* Aplica bordes */
+    @apply px-0; /* Elimina padding horizontal */
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground; /* Asegura que el fondo y el texto estén bien configurados */
+    @apply px-0; /* Asegura que el body no tenga padding horizontal */
   }
 }

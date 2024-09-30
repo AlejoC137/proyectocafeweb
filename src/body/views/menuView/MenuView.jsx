@@ -28,10 +28,8 @@ function MenuView() {
     fetchData();
   }, [dispatch]);
 
-  // Obtener valores únicos de la propiedad 'TipoEN'
   const uniqueCategories = Array.from(new Set(menuData.map(item => item.TipoEN)));
 
-  // Función para obtener el texto de la categoría en español
   const getCategoryTitle = (tipoEN) => {
     switch (tipoEN) {
       case 'Coffee':
@@ -43,7 +41,7 @@ function MenuView() {
       case 'Others':
         return tipoEN;
       default:
-        return tipoEN; // Fallback por si no encuentra coincidencia
+        return tipoEN;
     }
   };
 
@@ -52,9 +50,10 @@ function MenuView() {
   }
 
   return (
-    <div className="flex flex-col gap-4 fixed top-0 left-0 w-screen p-5" > {/* Añadir overflow-hidden aquí */}
+    <div className="flex flex-col w-screen border pt-3"> {/* Ajuste aquí */}
+    <h1>Menu</h1>
       {uniqueCategories.map((category) => (
-        <div key={category} className="overflow-hidden"> {/* Asegurar que cada grid tenga overflow-hidden */}
+        <div key={category} className="overflow-hidden w-screen px-5 "> {/* Aseguramos que cada grid tenga overflow horizontal controlado */}
           <CardGrid
             filterKey={category}
             products={menuData}
