@@ -81,3 +81,8 @@ export function updateActiveTab(option) {
     }
   };
 }
+
+
+export function updateSelectedValue() {
+  
+}
