@@ -1,7 +1,8 @@
 import supabase from "../config/supabaseClient";
 import {
   GET_ALL_FROM_TABLE,
-  UPDATE_ACTIVE_TAB
+  UPDATE_ACTIVE_TAB,
+  SET_USER_REG_STATE
 } from "./actions-types";
 
 import axios from "axios";
@@ -85,4 +86,16 @@ export function updateActiveTab(option) {
 
 export function updateSelectedValue() {
   
+}
+export function updateUserRegState(newState) {
+  return async (dispatch) => {
+    try {
+      return dispatch({
+        type: SET_USER_REG_STATE,
+        payload: newState,
+      });
+    } catch (error) {
+      console.error("Error updating user registration state:", error);
+    }
+  };
 }

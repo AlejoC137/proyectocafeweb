@@ -1,96 +1,83 @@
+'use client';
 
-
-// Simulated Google sign-in function
-
-
-
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { FcGoogle } from "react-icons/fc"; // Importa el ícono de Google
-
-// Simulated Google sign-in function
-const signInWithGoogle = async () => {
-  console.log("Signing in with Google")
-}
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { updateUserRegState } from '../redux/actions';
+import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 
 export function AuthFormComponent() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const dispatch = useDispatch();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault()
-    if (isLogin) {
-      console.log("Iniciar sesión:", { email, password })
-    } else {
-      console.log("Registrar usuario:", { email, password })
-    }
-  }
+  const handleRegisterClick = () => {
+    dispatch(updateUserRegState('notReg'));
+  };
 
-  const toggleForm = () => setIsLogin(!isLogin)
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    console.log('Iniciar sesión con:', { email, password });
+  };
 
   return (
-    <Card className="w-screen">
-      <CardHeader>
-        <CardTitle>{isLogin ? "Iniciar sesión" : "Registrarse"}</CardTitle>
-        <CardDescription>
-          {isLogin
-            ? "Ingresa tus credenciales para acceder"
-            : "Crea una nueva cuenta para comenzar"}  
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleFormSubmit}>
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Introduce tu correo"
-                required
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Introduce tu contraseña"
-                required
-              />
-            </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f5f5] px-4">
+      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">Iniciar sesión</h2>
+        <form onSubmit={handleLoginSubmit} className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full p-4 border border-gray-300 rounded-xl bg-white placeholder-gray-500 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+            />
           </div>
+          <div className="flex flex-col space-y-2">
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full p-4 border border-gray-300 rounded-xl bg-white placeholder-gray-500 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-3 bg-[#ff6600] text-white font-bold rounded-xl hover:bg-[#e65c00] transition duration-200"
+          >
+            Iniciar sesión
+          </button>
         </form>
-      </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        <Button className="w-full" type="submit">
-          {isLogin ? "Iniciar sesión" : "Registrarse"}
-        </Button>
-        <Button variant="outline" className="w-full" onClick={signInWithGoogle}>
-          <FcGoogle className="mr-2 h-4 w-4" />
-          {isLogin ? "Iniciar sesión con Google" : "Registrarse con Google"}
-        </Button>
-        <Button variant="link" onClick={toggleForm}  >
-          {isLogin ? "¿Nuevo usuario? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-        </Button>
-      </CardFooter>
-    </Card>
-  )
+
+        <div className="text-center text-sm text-gray-500 mt-6">
+          o inicia sesión con
+        </div>
+
+        <div className="flex justify-center gap-4 mt-4">
+          <button className="bg-[#DB4437] p-3 rounded-full">
+            <FaGoogle className="text-white w-6 h-6" />
+          </button>
+          <button className="bg-[#4267B2] p-3 rounded-full">
+            <FaFacebook className="text-white w-6 h-6" />
+          </button>
+          <button className="bg-black p-3 rounded-full">
+            <FaApple className="text-white w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="text-center text-sm text-gray-500 mt-6">
+          ¿No tienes cuenta?{' '}
+   
+        </div>
+
+        <div className="text-center text-sm mt-6">
+        <button onClick={handleRegisterClick} className="text-indigo-600 font-semibold hover:underline bg-white">
+            Registrarse
+          </button>        </div>
+      </div>
+    </div>
+  );
 }

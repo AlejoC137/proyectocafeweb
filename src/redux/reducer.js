@@ -5,7 +5,8 @@ import {
   MENU,
   ITEMS,
   PRODUCCION,
-  UPDATE_ACTIVE_TAB
+  UPDATE_ACTIVE_TAB,
+  SET_USER_REG_STATE,
 } from './actions-types';
 
 const initialState = {
@@ -13,16 +14,22 @@ const initialState = {
   allMenu: [],
   allItems: [],
   allProduccion: [],
-  currentView: 'HOME', // Estado inicial del currentView (o vista actual)
+  currentView: 'HOME', 
+  userRegState: 'notAuth', // Estado inicial del registro del usuario
 };
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    
     case UPDATE_CURRENT_VIEW:
       return {
         ...state,
-        currentView: action.payload, // Actualiza la vista actual (currentView) según el payload
+        currentView: action.payload,
+      };
+    
+    case SET_USER_REG_STATE:  // Nueva acción para actualizar userRegState
+      return {
+        ...state,
+        userRegState: action.payload,
       };
 
     case GET_ALL_FROM_TABLE:
@@ -30,31 +37,29 @@ const reducer = (state = initialState, action) => {
         case STAFF:
           return {
             ...state,
-            allStaff: action.payload, // Actualiza el estado para STAFF
+            allStaff: action.payload,
           };
         case MENU:
           return {
             ...state,
-            allMenu: action.payload, // Actualiza el estado para MENU
+            allMenu: action.payload,
           };
         case ITEMS:
           return {
             ...state,
-            allItems: action.payload, // Actualiza el estado para ITEMS
+            allItems: action.payload,
           };
         case PRODUCCION:
           return {
             ...state,
-            allProduccion: action.payload, // Actualiza el estado para PRODUCCION
+            allProduccion: action.payload,
           };
-          
-
-          
-   
+        default:
+          return state;
       }
 
     default:
-      return state; // Devuelve el estado actual si la acción no es reconocida
+      return state;
   }
 };
 
