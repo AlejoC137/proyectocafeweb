@@ -77,11 +77,11 @@ export function RegisterFormComponent() {
           </button>
         </form>
 
-        <div className="text-center text-sm text-gray-500 mt-6">
+        <div className="text-center text-sm text-gray-500 ">
           o regístrate con
         </div>
 
-        <div className="flex justify-center gap-2 mt-2">
+        <div className="flex justify-center gap-2 ">
           <button className="bg-[#DB4437] p-1 rounded-2">
             <FaGoogle className="text-white w-4 h-4" />
           </button>
@@ -93,11 +93,11 @@ export function RegisterFormComponent() {
           </button>
         </div>
 
-        <div className="text-center text-sm text-gray-500 mt-6">
+        <div className="text-center text-sm text-gray-500 ">
           ¿Ya tienes una cuenta?{' '}
         </div>
 
-        <div className="text-center text-sm mt-6">
+        <div className="text-center text-sm ">
         <button className="text-indigo-600 font-semibold hover:underline bg-white">Iniciar sesión</button>
         </div>
       </div>

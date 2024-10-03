@@ -1,28 +1,42 @@
-"use client"
+'use client';
 
 import { useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { updateSelectedValue } from "../redux/actions";
 
-export function NumberGridComponent({ options }) {
-  const [selectedValue, setSelectedValue] = useState(null);
+export function NumberGridComponent({ options, multiSelect = false }) {
+  const [selectedValues, setSelectedValues] = useState([]);
   const dispatch = useDispatch();
 
   const handleButtonClick = useCallback((value) => {
-    setSelectedValue(value.label);
-    dispatch(updateSelectedValue(value.label)); // Suponiendo que quieres enviar solo el label
-  }, [dispatch]);
+    let updatedValues;
+    
+    if (multiSelect) {
+      if (selectedValues.includes(value.label)) {
+        // Si ya está seleccionado, lo eliminamos
+        updatedValues = selectedValues.filter(val => val !== value.label);
+      } else {
+        // Si no está seleccionado, lo agregamos
+        updatedValues = [...selectedValues, value.label];
+      }
+    } else {
+      updatedValues = [value.label]; // Si no es multi-select, solo permitimos una selección
+    }
+    
+    setSelectedValues(updatedValues);
+    dispatch(updateSelectedValue(updatedValues)); // Suponiendo que quieres enviar un array
+  }, [multiSelect, selectedValues, dispatch]);
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-screen">
       {options.map((option, index) => (
         <Button
           key={index}
-          variant={selectedValue === option.label ? "default" : "outline"}
+          variant={selectedValues.includes(option.label) ? "default" : "outline"}
           className="h-16 text-lg font-semibold flex items-center justify-center"
           onClick={() => handleButtonClick(option)}
-          aria-pressed={selectedValue === option.label}>
+          aria-pressed={selectedValues.includes(option.label)}>
           {option.icon}
           <span className="ml-2">{option.label}</span>
         </Button>

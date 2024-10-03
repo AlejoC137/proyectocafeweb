@@ -2,12 +2,13 @@ import supabase from "../config/supabaseClient";
 import {
   GET_ALL_FROM_TABLE,
   UPDATE_ACTIVE_TAB,
-  SET_USER_REG_STATE
+  SET_USER_REG_STATE,
+  UPDATE_SELECTED_VALUE
 } from "./actions-types";
 
 import axios from "axios";
 
-
+// Acción para obtener todos los datos de una tabla
 export function getAllFromTable(Table) {
   return async (dispatch) => {
     let { data, error } = await supabase
@@ -25,37 +26,30 @@ export function getAllFromTable(Table) {
       path: Table,
     });
   };
-};
+}
 
+// Acción para arreglar las URLs
 export function fixUrl(datos, campo, buscar, reemplazar) {
   return async (dispatch) => {
     try {
-      // Crear un array para las promesas de actualización
       const updatePromises = datos.map(async (cadaDato) => {
-        // Verificar si el campo existe y contiene la cadena que estamos buscando
         if (cadaDato[campo] && cadaDato[campo].includes(buscar)) {
-          // Reemplazar la parte de la URL
           const nuevaURL = cadaDato[campo].replace(buscar, reemplazar);
-
-          // Hacer la actualización en Supabase para este dato en específico
           const { data, error } = await supabase
-            .from('Menu') // Cambiar 'Menu' por la tabla correspondiente
+            .from('Menu')
             .update({ [campo]: nuevaURL })
-            .eq('_id', cadaDato._id); // Asegúrate de usar la columna adecuada para identificar el registro
+            .eq('_id', cadaDato._id);
 
           if (error) {
             console.error(`Error al actualizar el registro ${cadaDato.id}:`, error);
           }
 
-          return data; // Devolver los datos actualizados si la actualización fue exitosa
+          return data;
         }
-
-        return null; // Si no se requiere actualización, devolver null
+        return null;
       });
 
-      // Esperar que todas las promesas de actualización se completen
       await Promise.all(updatePromises);
-      
       console.log("Actualización completada");
 
     } catch (error) {
@@ -64,29 +58,38 @@ export function fixUrl(datos, campo, buscar, reemplazar) {
   };
 }
 
-
+// Acción para actualizar la pestaña activa
 export function updateActiveTab(option) {
   return async (dispatch) => {
     try {
-      // If you have any async operations, you can place them here.
-      // For now, it's just a synchronous dispatch.
-      
-      // Dispatching the action to update the active tab
       return dispatch({
         type: UPDATE_ACTIVE_TAB,
-        payload: option, // Pass the selected option as payload
+        payload: option,
       });
     } catch (error) {
-      // Handle any error that occurs
       console.error("Error updating active tab:", error);
     }
   };
 }
 
+// Acción para actualizar el valor seleccionado
+export function updateSelectedValue(value) {
+  return async (dispatch) => {
+    try {
+      // Aquí puedes implementar una llamada a la API si es necesario
+      // Ejemplo: const response = await axios.post('/api/update-value', { value });
 
-export function updateSelectedValue() {
-  
+      return dispatch({
+        type: UPDATE_SELECTED_VALUE, // Debes agregar esta acción en action-types.js y en el reducer
+        payload: value,
+      });
+    } catch (error) {
+      console.error("Error updating selected value:", error);
+    }
+  };
 }
+
+// Acción para actualizar el estado de registro del usuario
 export function updateUserRegState(newState) {
   return async (dispatch) => {
     try {

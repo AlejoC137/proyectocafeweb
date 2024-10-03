@@ -7,6 +7,7 @@ import {
   PRODUCCION,
   UPDATE_ACTIVE_TAB,
   SET_USER_REG_STATE,
+  UPDATE_SELECTED_VALUE, // Nueva acción importada
 } from './actions-types';
 
 const initialState = {
@@ -14,8 +15,9 @@ const initialState = {
   allMenu: [],
   allItems: [],
   allProduccion: [],
-  currentView: 'HOME', 
-  userRegState: 'notAuth', // Estado inicial del registro del usuario
+  currentView: 'HOME',
+  userRegState: 'notAuth',
+  selectedValue: null, // Nuevo estado para el valor seleccionado
 };
 
 const reducer = (state = initialState, action) => {
@@ -26,7 +28,7 @@ const reducer = (state = initialState, action) => {
         currentView: action.payload,
       };
     
-    case SET_USER_REG_STATE:  // Nueva acción para actualizar userRegState
+    case SET_USER_REG_STATE:
       return {
         ...state,
         userRegState: action.payload,
@@ -57,6 +59,12 @@ const reducer = (state = initialState, action) => {
         default:
           return state;
       }
+
+    case UPDATE_SELECTED_VALUE:
+      return {
+        ...state,
+        selectedValue: action.payload,
+      };
 
     default:
       return state;

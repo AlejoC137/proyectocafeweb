@@ -3,6 +3,7 @@ export const UPDATE_ACTIVE_TAB = "UPDATE_ACTIVE_TAB";
 export const UPDATE_CURRENT_VIEW = "UPDATE_CURRENT_VIEW";
 export const GET_BY_FILTER_VALUE = "GET_BY_FILTER_VALUE";
 export const SET_USER_REG_STATE = "SET_USER_REG_STATE";  // Nueva acción
+export const UPDATE_SELECTED_VALUE = "UPDATE_SELECTED_VALUE";  // Nueva acción
 
 export const HOME = "HOME";
 export const SUPABASE = "SUPABASE";

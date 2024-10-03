@@ -52,11 +52,11 @@ export function AuthFormComponent() {
           </button>
         </form>
 
-        <div className="text-center text-sm text-gray-500 mt-6">
+        <div className="text-center text-sm text-gray-500 ">
           o inicia sesión con
         </div>
 
-        <div className="flex justify-center gap-4 mt-4">
+        <div className="flex justify-center gap-4 ">
           <button className="bg-[#DB4437] p-3 rounded-full">
             <FaGoogle className="text-white w-6 h-6" />
           </button>
@@ -68,16 +68,16 @@ export function AuthFormComponent() {
           </button>
         </div>
 
-        <div className="text-center text-sm text-gray-500 mt-6">
+        <div className="text-center text-sm text-gray-500">
           ¿No tienes cuenta?{' '}
    
         </div>
 
-        <div className="text-center text-sm mt-6">
+        <div className="text-center text-sm">
         <button onClick={handleRegisterClick} className="text-indigo-600 font-semibold hover:underline bg-white">
             Registrarse
           </button>        </div>
       </div>
     </div>
-  );
+  );  
 }
