@@ -116,11 +116,11 @@ function PickDiet() {
   };
 
   return (
-    <div className="flex flex-col w-screen pb-5">
+    <div className="flex flex-col w-screen">
       {step === 1 && (
         <>
           <h2 className="text-center text-xl font-bold">Cuantos platos quieres?</h2>
-          <NumberGridComponent options={cuantosPlatos} onSelect={handlePlatosSelect} />
+          <NumberGridComponent options={cuantosPlatos} onSelect={handlePlatosSelect} className=" pb-16" />
 
           <h2 className="text-center text-xl font-bold">Selecciona los días de la semana</h2>
           <NumberGridComponent options={cualesDias} onSelect={handleDiasSelect} multiSelect={true} />
