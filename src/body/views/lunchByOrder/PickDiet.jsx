@@ -116,7 +116,7 @@ function PickDiet() {
   };
 
   return (
-    <div className="flex flex-col w-screen">
+    <div className="flex flex-col w-screen pb-5">
       {step === 1 && (
         <>
           <h2 className="text-center text-xl font-bold">Cuantos platos quieres?</h2>

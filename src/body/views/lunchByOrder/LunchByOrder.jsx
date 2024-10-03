@@ -31,7 +31,7 @@ function LunchByOrder() {
   };
 
   return (
-    <div className="flex flex-col w-screen pb-3">
+    <div className="flex flex-col w-screen ">
       {renderComponent()}
     </div>
   );
