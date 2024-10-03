@@ -127,7 +127,7 @@ function PickDiet() {
 
           {isMobile && (
             <button 
-              className="mx-auto my-6 px-4 py-2 bg-blue-500 text-white rounded" 
+              className="mx-auto justify-center pb-10 bg-blue-500 text-white rounded" 
               onClick={handleContinue}
             >
               Continuar
