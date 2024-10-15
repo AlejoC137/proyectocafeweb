@@ -1,3 +1,5 @@
+
+// actions.js
 import supabase from "../config/supabaseClient";
 import {
   GET_ALL_FROM_TABLE,
@@ -144,7 +146,7 @@ export function insertarRecetas(recetasData, upsert = false) {
 
 // Función para procesar el JSON de receta y enviarlo a Supabase
 export function procesarRecetaYEnviarASupabase(recetaJson) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       // Verificar si el objeto receta y la propiedad 'receta' existen
       if (!recetaJson || typeof recetaJson !== 'object' || !recetaJson.receta) {
@@ -154,14 +156,26 @@ export function procesarRecetaYEnviarASupabase(recetaJson) {
       // Extraer los datos del JSON de receta
       const receta = recetaJson.receta;
 
+      // Obtener los ingredientes desde la API para llenar allItems
+
+      // Obtener el estado actualizado
+      const state = getState();
+
       // Inicializar el objeto que coincide con el esquema de la tabla en Supabase
       const recetaParaSupabase = {};
 
       // Generar un UUID para el campo _id si no existe
       recetaParaSupabase._id = uuidv4();
 
+
+      const menuItem = state.allMenu.find(item => item["NombreES"] === receta["nombre"]);
+      
+      console.log(menuItem._id);
+      recetaParaSupabase.forId = menuItem._id ? menuItem._id : null;
+      
+      console.log(recetaParaSupabase.forId);
       // Validar y mapear los campos desde receta a las columnas de la tabla
-      recetaParaSupabase.forId = validarUUID(receta.perteneceA) ? receta.perteneceA : null;
+      recetaParaSupabase.forId = validarUUID(menuItem._id) ?menuItem._id : null;
       recetaParaSupabase.rendimiento = {
         porcion: receta.rendimiento_porcion || null,
         cantidad: receta.rendimiento_cantidad || null,
@@ -194,9 +208,18 @@ export function procesarRecetaYEnviarASupabase(recetaJson) {
           const ingrediente = receta.ingredientes[i];
           const itemIdKey = `item${i + 1}_Id`;
           const itemCuantityUnitsKey = `item${i + 1}_Cuantity_Units`;
-
+  
+          
           if (ingrediente) {
-            recetaParaSupabase[itemIdKey] = validarUUID(ingrediente.id) ? ingrediente.id : null;
+
+            // Buscar el ID en el estado local usando el nombre legado (legacyName)
+            const FullItems = state.allItems.concat(state.allProduccion);            
+            const ingredienteEnEstado = FullItems.find(item => item["Nombre_del_producto"] === ingrediente.nombre);
+            const ingredienteId = ingredienteEnEstado ? ingredienteEnEstado._id : null;
+
+
+
+            recetaParaSupabase[itemIdKey] = validarUUID(ingredienteId) ? ingredienteId : null;
             recetaParaSupabase[itemCuantityUnitsKey] = {
               metric: {
                 cuantity: ingrediente.cantidad || null,
@@ -217,6 +240,9 @@ export function procesarRecetaYEnviarASupabase(recetaJson) {
 
       // Llamar a la acción insertarRecetas para insertar los datos en Supabase
       dispatch(insertarRecetas([recetaParaSupabase]));
+// console.log(recetaParaSupabase);
+
+
 
     } catch (error) {
       console.error('Error al procesar la receta y enviar a Supabase:', error);

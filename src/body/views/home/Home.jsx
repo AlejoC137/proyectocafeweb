@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
+// Home.jsx
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { procesarRecetaYEnviarASupabase } from '../../../redux/actions';
+import { getAllFromTable, procesarRecetaYEnviarASupabase } from '../../../redux/actions';
+import { STAFF, MENU, ITEMS, PRODUCCION} from '../../../redux/actions-types';
 
 function Home() {
   const dispatch = useDispatch();
   const [recetaJsonText, setRecetaJsonText] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const handleInputChange = (e) => {
     setRecetaJsonText(e.target.value);
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          // dispatch(getAllFromTable(STAFF)),
+          dispatch(getAllFromTable(MENU)),
+          dispatch(getAllFromTable(ITEMS)),
+          dispatch(getAllFromTable(PRODUCCION)),
+        ]);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [dispatch]);
+
+
 
   const handleEnviarReceta = () => {
     try {
