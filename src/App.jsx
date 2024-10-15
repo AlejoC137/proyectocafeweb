@@ -21,7 +21,7 @@ function App() {
 
   switch (currentView) {
     case HOME:
-      componentToRender = <Home />;
+      componentToRender = <Home/>;
       break;
     case ABOUT:
       componentToRender = <div>About Page</div>;
@@ -46,6 +46,7 @@ function App() {
      <Route path="/" element={componentToRender} />
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
+     <Route path="/Home" element={<Home />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 

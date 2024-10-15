@@ -7,7 +7,9 @@ import {
   PRODUCCION,
   UPDATE_ACTIVE_TAB,
   SET_USER_REG_STATE,
-  UPDATE_SELECTED_VALUE, // Nueva acción importada
+  UPDATE_SELECTED_VALUE,
+  INSERT_RECETAS_SUCCESS,    // Nueva acción importada
+  INSERT_RECETAS_FAILURE     // Nueva acción importada
 } from './actions-types';
 
 const initialState = {
@@ -17,7 +19,9 @@ const initialState = {
   allProduccion: [],
   currentView: 'HOME',
   userRegState: 'notAuth',
-  selectedValue: null, // Nuevo estado para el valor seleccionado
+  selectedValue: null,
+  recetas: [],              // Estado para guardar las recetas insertadas
+  recetaError: null,        // Estado para guardar el error en caso de fallo
 };
 
 const reducer = (state = initialState, action) => {
@@ -64,6 +68,19 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         selectedValue: action.payload,
+      };
+
+    case INSERT_RECETAS_SUCCESS:
+      return {
+        ...state,
+        recetas: [...state.recetas, ...action.payload],  // Agregar recetas insertadas al estado
+        recetaError: null,                               // Limpiar cualquier error previo
+      };
+
+    case INSERT_RECETAS_FAILURE:
+      return {
+        ...state,
+        recetaError: action.payload,                     // Guardar el mensaje de error
       };
 
     default:

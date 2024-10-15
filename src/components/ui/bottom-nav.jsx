@@ -9,7 +9,7 @@ import { updateActiveTab } from "../../redux/actions"; // Importa la acción de 
 import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT, LUNCH } from '../../redux/actions-types'; // Importa las acciones y vistas
 
 const navItems = [
-  { icon: Home, label: HOME, color: "text-blue-500", path: "/home" },
+  { icon: Home, label: HOME, color: "text-blue-500", path: "/Home" },
   { icon: Search, label: ABOUT, color: "text-green-500", path: "/about" },
   { icon: ShoppingBag, label: CONTACT, color: "text-yellow-500", path: "/contact" },
   { icon: Calendar, label: MENUVIEW, color: "text-purple-500", path: "/MenuView" },
