@@ -7,7 +7,10 @@ import {
   SET_USER_REG_STATE,
   UPDATE_SELECTED_VALUE,
   INSERT_RECETAS_SUCCESS,
-  INSERT_RECETAS_FAILURE
+  INSERT_RECETAS_FAILURE,
+  INSERT_ITEM_FAILURE ,
+  SET_PREPROCESS_DATA,
+  
 } from "./actions-types";
 
 import axios from "axios";
@@ -143,109 +146,154 @@ export function insertarRecetas(recetasData, upsert = false) {
     }
   };
 }
-
 // Función para procesar el JSON de receta y enviarlo a Supabase
-export function procesarRecetaYEnviarASupabase(recetaJson) {
+export function procesarRecetaYEnviarASupabase() {
   return async (dispatch, getState) => {
     try {
-      // Verificar si el objeto receta y la propiedad 'receta' existen
-      if (!recetaJson || typeof recetaJson !== 'object' || !recetaJson.receta) {
-        throw new Error("El JSON de receta no tiene la estructura esperada");
-      }
-
-      // Extraer los datos del JSON de receta
-      const receta = recetaJson.receta;
-
-      // Obtener los ingredientes desde la API para llenar allItems
-
-      // Obtener el estado actualizado
       const state = getState();
+      const recetasPreProcess = state.preProcess;
 
-      // Inicializar el objeto que coincide con el esquema de la tabla en Supabase
-      const recetaParaSupabase = {};
+      for (let e = 0; e < recetasPreProcess.length; e++) {
 
-      // Generar un UUID para el campo _id si no existe
-      recetaParaSupabase._id = uuidv4();
+        const recetaJson = recetasPreProcess[e];
 
-
-      const menuItem = state.allMenu.find(item => item["NombreES"] === receta["nombre"]);
-      
-      console.log(menuItem._id);
-      recetaParaSupabase.forId = menuItem._id ? menuItem._id : null;
-      
-      console.log(recetaParaSupabase.forId);
-      // Validar y mapear los campos desde receta a las columnas de la tabla
-      recetaParaSupabase.forId = validarUUID(menuItem._id) ?menuItem._id : null;
-      recetaParaSupabase.rendimiento = {
-        porcion: receta.rendimiento_porcion || null,
-        cantidad: receta.rendimiento_cantidad || null,
-        unidades: receta.rendimiento_unidades || null,
-      };
-      recetaParaSupabase.emplatado = receta.emplatado || null;
-      recetaParaSupabase.autor = receta.escrito || null;
-      recetaParaSupabase.revisor = receta.revisado || null;
-      recetaParaSupabase.actualizacion = receta.actualizacion || new Date().toISOString();
-
-      // Mapear notas a nota1, nota2, ..., nota10
-      if (receta.notas && Array.isArray(receta.notas)) {
-        for (let i = 0; i < 10; i++) {
-          const notaKey = `nota${i + 1}`;
-          recetaParaSupabase[notaKey] = receta.notas[i] || null;
+        // Verificar si el objeto receta y la propiedad 'receta' existen
+        if (!recetaJson || typeof recetaJson !== 'object' || !recetaJson.receta) {
+          throw new Error('El JSON de receta no tiene la estructura esperada');
         }
-      }
 
-      // Mapear preparación a proces1, proces2, ..., proces20
-      if (receta.preparacion && Array.isArray(receta.preparacion)) {
-        for (let i = 0; i < 20; i++) {
-          const procesKey = `proces${i + 1}`;
-          recetaParaSupabase[procesKey] = receta.preparacion[i] ? receta.preparacion[i].proceso : null;
-        }
-      }
+        // Extraer los datos del JSON de receta
+        const receta = recetaJson.receta;
 
-      // Mapear ingredientes a item1_Id, item1_Cuantity_Units, etc.
-      if (receta.ingredientes && Array.isArray(receta.ingredientes)) {
-        for (let i = 0; i < 20; i++) {
-          const ingrediente = receta.ingredientes[i];
-          const itemIdKey = `item${i + 1}_Id`;
-          const itemCuantityUnitsKey = `item${i + 1}_Cuantity_Units`;
-  
-          
-          if (ingrediente) {
+        // Inicializar el objeto que coincide con el esquema de la tabla en Supabase
+        const recetaParaSupabase = {};
 
-            // Buscar el ID en el estado local usando el nombre legado (legacyName)
-            const FullItems = state.allItems.concat(state.allProduccion);            
-            const ingredienteEnEstado = FullItems.find(item => item["Nombre_del_producto"] === ingrediente.nombre);
-            const ingredienteId = ingredienteEnEstado ? ingredienteEnEstado._id : null;
+        // Generar un UUID para el campo _id si no existe
+        recetaParaSupabase._id = uuidv4();
 
+        // Buscar el ID del menú
+        const menuItem = state.allMenu.find(item => item['NombreES'] === receta['nombre']);
+        recetaParaSupabase.forId = menuItem && validarUUID(menuItem._id) ? menuItem._id : null;
+        recetaParaSupabase.legacyName = receta.nombre;
 
+        recetaParaSupabase.rendimiento = {
+          porcion:  receta.rendimiento_porcion || null,
+          cantidad: receta.rendimiento_cantidad || null,
+          unidades: receta.rendimiento_unidades || null,
+        };
+        recetaParaSupabase.emplatado = receta.emplatado || null;
+        recetaParaSupabase.autor = receta.escrito || null;
+        recetaParaSupabase.revisor = receta.revisado || null;
+        recetaParaSupabase.actualizacion = receta.actualizacion || new Date().toISOString();
 
-            recetaParaSupabase[itemIdKey] = validarUUID(ingredienteId) ? ingredienteId : null;
-            recetaParaSupabase[itemCuantityUnitsKey] = {
-              metric: {
-                cuantity: ingrediente.cantidad || null,
-                units: ingrediente.unidades || null,
-              },
-              imperial: {
-                cuantity: null, // Puedes calcular las unidades imperiales si es necesario
-                units: null,
-              },
-              legacyName: ingrediente.nombre || null,
-            };
-          } else {
-            recetaParaSupabase[itemIdKey] = null;
-            recetaParaSupabase[itemCuantityUnitsKey] = null;
+        // Mapear notas a nota1, nota2, ..., nota10
+        if (receta.notas && Array.isArray(receta.notas)) {
+          for (let i = 0; i < 10; i++) {
+            const notaKey = `nota${i + 1}`;
+            recetaParaSupabase[notaKey] = receta.notas[i] || null;
           }
         }
+
+        // Mapear preparación a proces1, proces2, ..., proces20
+        if (receta.preparacion && Array.isArray(receta.preparacion)) {
+          for (let i = 0; i < 20; i++) {
+            const procesKey = `proces${i + 1}`;
+            recetaParaSupabase[procesKey] = receta.preparacion[i] ? receta.preparacion[i].proceso : null;
+          }
+        }
+
+        // Mapear ingredientes a item1_Id, item1_Cuantity_Units, etc. o producto_interno
+        if (receta.ingredientes && Array.isArray(receta.ingredientes)) {
+          for (let i = 0; i < 20; i++) {
+            const ingrediente = receta.ingredientes[i];
+            const itemIdKey = `item${i + 1}_Id`;
+            const itemCuantityUnitsKey = `item${i + 1}_Cuantity_Units`;
+            const productoInternoIdKey = `producto_interno${i + 1}_Id`;
+            const productoInternoCuantityUnitsKey = `producto_interno${i + 1}_Cuantity_Units`;
+
+            if (ingrediente) {
+              // Buscar el ID en el estado local usando el nombre legado (legacyName)
+              const ingredienteEnItems = state.allItems.find(item => item['Nombre_del_producto'] === ingrediente.nombre);
+              const ingredienteEnProduccion = state.allProduccion.find(item => item['Nombre_del_producto'] === ingrediente.nombre);
+
+              if (ingredienteEnItems) {
+                recetaParaSupabase[itemIdKey] = validarUUID(ingredienteEnItems._id) ? ingredienteEnItems._id : null;
+                recetaParaSupabase[itemCuantityUnitsKey] = {
+                  metric: {
+                    cuantity: ingrediente.cantidad || null,
+                    units: ingrediente.unidades || null,
+                  },
+                  imperial: {
+                    cuantity: null, // Puedes calcular las unidades imperiales si es necesario
+                    units: null,
+                  }, 
+                  legacyName:ingrediente.nombre
+                };
+              } else if (ingredienteEnProduccion) {
+                recetaParaSupabase[productoInternoIdKey] = validarUUID(ingredienteEnProduccion._id) ? ingredienteEnProduccion._id : null;
+                recetaParaSupabase[productoInternoCuantityUnitsKey] = {
+                  metric: {
+                    cuantity: ingrediente.cantidad || null,
+                    units: ingrediente.unidades || null,
+                  },
+                  imperial: {
+                    cuantity: null, // Puedes calcular las unidades imperiales si es necesario
+                    units: null,
+                  },
+                  legacyName:ingrediente.nombre
+                };
+              }
+              recetaParaSupabase.legacyName = receta.nombre;
+            } else {
+              recetaParaSupabase[itemIdKey] = null;
+              recetaParaSupabase[itemCuantityUnitsKey] = null;
+              recetaParaSupabase[productoInternoIdKey] = null;
+              recetaParaSupabase[productoInternoCuantityUnitsKey] = null;
+            }
+          }
+        }
+
+        // Llamar a la acción insertarRecetas para insertar los datos en Supabase
+        dispatch(insertarRecetas([recetaParaSupabase]));
+  //  console.log(recetaParaSupabase);
+   
       }
-
-      // Llamar a la acción insertarRecetas para insertar los datos en Supabase
-      dispatch(insertarRecetas([recetaParaSupabase]));
-// console.log(recetaParaSupabase);
-
-
-
     } catch (error) {
       console.error('Error al procesar la receta y enviar a Supabase:', error);
+    }
+  };
+}
+
+
+
+
+export function preProcess(jsonCompleto) {
+  return async (dispatch) => {
+    try {
+      // Verificar si el objeto es válido
+      if (!jsonCompleto || !Array.isArray(jsonCompleto)) {
+        throw new Error("El JSON proporcionado no tiene la estructura esperada");
+      }
+
+      const recetasProcesadas = jsonCompleto
+        .filter(elemento => elemento.receta) // Filtrar elementos que tienen una propiedad 'receta'
+        .map(elemento => {
+          const receta = elemento.receta;
+          const nombreReceta = elemento["NombreES"].replace(/^\.+|\.+$/g, ""); // Remover puntos al principio y al final
+          return {
+            receta: {
+              ...receta,
+              nombre: nombreReceta,
+            }
+          };
+        });
+
+      dispatch({
+        type: SET_PREPROCESS_DATA,
+        payload: recetasProcesadas,
+      });
+    } catch (error) {
+      console.error('Error al preprocesar las recetas:', error);
     }
   };
 }
@@ -254,4 +302,64 @@ export function procesarRecetaYEnviarASupabase(recetaJson) {
 function validarUUID(uuid) {
   const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   return uuidRegex.test(uuid);
+}
+
+export function actualizarPrecioUnitario(items) {
+  return async (dispatch) => {
+    try {
+      for (let item of items) {
+        // Calcular el precio unitario basado en la lógica proporcionada
+        const precioUnitario = calcularPrecioUnitario(item);
+
+        // Validar que el precio unitario sea un número válido
+        if (isNaN(precioUnitario) || precioUnitario === null) {
+          console.error(`Error al calcular el precio unitario para el item con _id: ${item._id}`);
+          continue; // Saltar a la siguiente iteración si el precio no es válido
+        }
+
+        // Log para verificar los datos antes de la actualización
+        console.log(`Actualizando el item con _id: ${item._id}, precioUnitario: ${precioUnitario}`);
+
+        // Actualizar el valor unitario en el item correspondiente usando update()
+        let { data, error } = await supabase
+          .from('ItemsAlmacen') // Nombre correcto de la tabla
+          .update({
+            precioUnitario: precioUnitario,
+          })
+          .eq('_id', item._id) // Filtrar la fila donde _id coincida
+          .select(); // Retornar los datos actualizados
+
+        // Manejar el error de Supabase si existe
+        if (error) {
+          console.error(`Error al actualizar el item con _id: ${item._id}`, error);
+        } else {
+          console.log(`Item actualizado correctamente: ${item._id}`, data);
+        }
+      }
+    } catch (error) {
+      console.error('Error en la función actualizarPrecioUnitario:', error);
+    }
+  };
+}
+
+
+// Función para calcular el precio unitario de un item
+function calcularPrecioUnitario(item) {
+  let precioUnitario;
+  const ajusteInflacionario = 1.04;
+
+  // Validar si alguno de los valores necesarios es "NaN"
+  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN" || item.COOR === "NaN") {
+    console.error("No se puede calcular el valor porque uno de los parámetros es NaN:", item);
+    return "No se puede calcular el valor porque uno de los parámetros es NaN";
+  }
+
+  // Calcular el precio unitario si todos los valores son válidos
+  const costo = parseFloat(item.COSTO);
+  const cantidad = parseFloat(item.CANTIDAD);
+  const coor = parseFloat(item.COOR);
+
+  precioUnitario = (costo / cantidad) * coor * ajusteInflacionario;
+
+  return parseFloat(precioUnitario.toFixed(2));
 }

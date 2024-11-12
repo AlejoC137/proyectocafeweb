@@ -34,7 +34,11 @@ export function CardInstance({ product, isEnglish }) {
   };
 
   return (
-    <Card className="w-[260px] h-full shadow-lg rounded-xl overflow-hidden">  {/* Set height to 100% */}
+    <Card className="w-[260px] h-full shadow-lg rounded-xl overflow-hidden 
+    border-r-4 border-r-ladrillo
+    border-b-4 border-b-ladrillo
+    "    
+    >  {/* Set height to 100% */}
       {/* Sección de la imagen */}
       <div className="relative h-[220px] w-full">
         <img

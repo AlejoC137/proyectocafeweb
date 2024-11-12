@@ -51,7 +51,9 @@ function MenuView() {
 
   return (
     <div className="flex flex-col w-screen border pt-3"> {/* Ajuste aquí */}
-    <h1>Menu</h1>
+<div className="flex justify-center items-center ">
+  {/* <h1 class="text-4xl font-bold">MENU</h1> */}
+</div>
       {uniqueCategories.map((category) => (
         <div key={category} className="overflow-hidden w-screen px-5 "> {/* Aseguramos que cada grid tenga overflow horizontal controlado */}
           <CardGrid

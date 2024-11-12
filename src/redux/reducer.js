@@ -9,24 +9,27 @@ import {
   SET_USER_REG_STATE,
   UPDATE_SELECTED_VALUE,
   INSERT_RECETAS_SUCCESS,    // Nueva acción importada
-  INSERT_RECETAS_FAILURE     // Nueva acción importada
+  INSERT_RECETAS_FAILURE,     // Nueva acción importada
+  SET_PREPROCESS_DATA
 } from './actions-types';
 
 const initialState = {
   allStaff: [],
   allMenu: [],
   allItems: [],
+  currentLeng: 'ESP',
   allProduccion: [],
-  currentView: 'HOME',
+  currentView: 'MENUVIEW',
   userRegState: 'notAuth',
   selectedValue: null,
   recetas: [],              // Estado para guardar las recetas insertadas
+  preProcess : [],              // Estado para guardar las recetas insertadas
   recetaError: null,        // Estado para guardar el error en caso de fallo
 };
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case UPDATE_CURRENT_VIEW:
+    case UPDATE_ACTIVE_TAB:
       return {
         ...state,
         currentView: action.payload,
@@ -36,6 +39,11 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         userRegState: action.payload,
+      };
+    case SET_PREPROCESS_DATA:
+      return {
+        ...state,
+        preProcess : action.payload,
       };
 
     case GET_ALL_FROM_TABLE:

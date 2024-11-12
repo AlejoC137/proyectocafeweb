@@ -21,14 +21,15 @@ function PickDiet() {
   ];
 
   const cuantosPlatos = [
-    { label: 1, icon: <GiWheat /> },
-    { label: 5, icon: <GiPeanut /> },
+    // { label: 1, icon: <GiWheat /> },
+    // { label: 5, icon: <GiPeanut /> },
     { label: 10, icon: <GiMilkCarton /> },
     { label: 15, icon: <GiMilkCarton /> },
     { label: 20, icon: <GiMilkCarton /> },
     { label: 25, icon: <GiMilkCarton /> },
     { label: 30, icon: <GiMilkCarton /> },
-    { label: "indefinido, puedes cancelar cuando quieras!", icon: <GiMilkCarton /> },
+    { label: "INDEFINIDO", icon: <GiMilkCarton /> },
+    // { label: "∞", icon: <GiMilkCarton /> },
   ];
 
   const cualesDias = [
@@ -119,9 +120,10 @@ function PickDiet() {
     <div className="flex flex-col w-screen">
       {step === 1 && (
         <>
+{/* <br></br> */}
           <h2 className="text-center text-xl font-bold">Cuantos platos quieres?</h2>
-          <NumberGridComponent options={cuantosPlatos} onSelect={handlePlatosSelect} className=" pb-16" />
-
+          <NumberGridComponent options={cuantosPlatos} onSelect={handlePlatosSelect} className="pb-16 text-sm text-center whitespace-normal break-words w-full"/>
+{/* <br></br> */}
           <h2 className="text-center text-xl font-bold">Selecciona los días de la semana</h2>
           <NumberGridComponent options={cualesDias} onSelect={handleDiasSelect} multiSelect={true} />
 
@@ -141,9 +143,10 @@ function PickDiet() {
         <>
           <h2 className="text-center text-xl font-bold">Selecciona tu Dieta</h2>
           <NumberGridComponent options={dietOptions} onSelect={handleDietSelect} />
-
+<br></br>
           <h2 className="text-center text-xl font-bold">Selecciona tus Alergias</h2>
           <NumberGridComponent options={alergyOptions} onSelect={handleAlergySelect} multiSelect={true} />
+<br></br>
 
           <div className="flex justify-between my-6">
             <button 
