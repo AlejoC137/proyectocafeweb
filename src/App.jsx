@@ -59,6 +59,8 @@ function App() {
         {/* Renderiza el BottomNav debajo del componente actual */}
      </Routes>
      <BottomNav />
+     <br></br>
+     <br></br>
       </div>
   );
 }
