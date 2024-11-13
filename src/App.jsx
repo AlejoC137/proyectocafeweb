@@ -13,7 +13,7 @@ import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
 import ActualizarPrecioUnitario from './body/views/actualizarPrecioUnitario/ActualizarPrecioUnitario';
-// import BuscarPreciosInternet from './body/views/BuscarPreciosInternet/BuscarPreciosInternet';
+import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
 // import { Home } from 'lucide-react';
 function App() {
   // Selecciona el estado global que controla la vista actual
@@ -52,7 +52,7 @@ function App() {
      <Route path="/" element={componentToRender} />
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
-     {/* <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} /> */}
+     <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 
