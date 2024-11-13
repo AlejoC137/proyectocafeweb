@@ -8,7 +8,7 @@ import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT, LUNCH } from './re
 // import Contact from './components/Contact';
 // import NotFound from './components/NotFound'; // Componente de fallback si no coincide una ruta
 import BottomNav from './components/ui/bottom-nav'; // Importa BottomNav
-import TopNav from './components/ui/top-nav'; // Importa BottomNav
+// import TopNav from './components/ui/top-nav'; // Importa BottomNav
 import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
@@ -45,7 +45,7 @@ function App() {
 
   return (
     <div >
-     <TopNav />
+     {/* <TopNav /> */}
      <br></br>
      <br></br>
     <Routes>
