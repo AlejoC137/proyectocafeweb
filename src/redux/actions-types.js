@@ -3,6 +3,7 @@ export const GET_ALL_FROM_TABLE = "GET_ALL_FROM_TABLE";
 export const UPDATE_ACTIVE_TAB = "UPDATE_ACTIVE_TAB";
 export const UPDATE_CURRENT_VIEW = "UPDATE_CURRENT_VIEW";
 export const GET_BY_FILTER_VALUE = "GET_BY_FILTER_VALUE";
+export const TODAYS_MENU = "TODAYS_MENU";
 
 // Acciones relacionadas con el estado del usuario y selección
 export const SET_USER_REG_STATE = "SET_USER_REG_STATE";  // Nueva acción

@@ -14,6 +14,8 @@ import MenuView from './body/views/menuView/MenuView';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
 import ActualizarPrecioUnitario from './body/views/actualizarPrecioUnitario/ActualizarPrecioUnitario';
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
+import LandingHome from './body/views/home/LandingHome';
+
 // import { Home } from 'lucide-react';
 function App() {
   // Selecciona el estado global que controla la vista actual
@@ -24,7 +26,7 @@ function App() {
 
   switch (currentView) {
     case HOME:
-      componentToRender = <BuscarPreciosInternet/>;
+      componentToRender = <LandingHome/>;
       break;
     case ABOUT:
       componentToRender = <div>About Page</div>;
@@ -53,12 +55,14 @@ function App() {
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
      <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
+     <Route path="/Home" element={<LandingHome />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 
         {/* Renderiza el BottomNav debajo del componente actual */}
      </Routes>
      <BottomNav />
+     <br></br>
      <br></br>
      <br></br>
       </div>

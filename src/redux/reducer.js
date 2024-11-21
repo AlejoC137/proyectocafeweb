@@ -10,10 +10,38 @@ import {
   UPDATE_SELECTED_VALUE,
   INSERT_RECETAS_SUCCESS,    // Nueva acción importada
   INSERT_RECETAS_FAILURE,     // Nueva acción importada
-  SET_PREPROCESS_DATA
+  SET_PREPROCESS_DATA,
+  TODAYS_MENU
 } from './actions-types';
 
 const initialState = {
+frontPage:{  
+  todaysEspecialBreackFast: {
+            proteina_op1:'Arroz especial con cerdo y soya',
+            proteona_op2:'Pollo a la plancha y arroz blanco',
+            acompañante: 'Torta de chocolo',
+            entrada:'Crema de tomate',
+            ensalada:'Ensalada de cogollo',
+            foto:'',
+            precio:'20K'
+  },
+  todaysEspecialLunch: {
+            proteina_op1:'Arroz especial con cerdo y soya',
+            proteona_op2:'Pollo a la plancha y arroz blanco',
+            acompañante: 'Torta de chocolo',
+            entrada:'Crema de tomate',
+            ensalada:'Ensalada de cogollo',
+            foto:'',
+            precio:'20K'
+  },
+  monthEspecials: {
+            especial_1:{nombre:'',descripcion:'',foto:''},
+            especial_2:{nombre:'',descripcion:'',foto:''},
+            especial_3:{nombre:'',descripcion:'',foto:''},
+            especial_4:{nombre:'',descripcion:'',foto:''},
+
+  },
+},
   allStaff: [],
   allMenu: [],
   allItems: [],
