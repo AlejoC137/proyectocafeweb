@@ -45,7 +45,8 @@ export function CardInstance({ product, isEnglish }) {
       className="w-[260px] h-full shadow-lg rounded-xl overflow-hidden 
       border-r-4 border-r-ladrillo
       border-b-4 border-b-ladrillo
-      relative z-10" /* Añadido z-10 */
+      relative z-10
+      " /* Añadido z-10 */
     >
       {/* Sección de la imagen */}
       <div className="relative h-[220px] w-full z-0 overflow-hidden">

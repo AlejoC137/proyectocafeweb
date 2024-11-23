@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { CardGridHome } from "@/components/ui/cardGridHome";
 
 function LandingHome() {
@@ -23,11 +22,14 @@ function LandingHome() {
 
   return (
     <div className="flex flex-col w-screen border ">
-      <div className="flex justify-center items-center ">
+      {/* Título centrado */}
+      <div className="flex justify-center items-center py-4 bg-gray-100">
+        <h1 className="text-2xl font-bold">ESPECIALES</h1>
       </div>
-      <div className="overflow-hidden w-screen ">
-        {/* Pasa los productos a CardGridHome */}
-        <CardGridHome products={products} category="Especialidades del Mes" />
+
+      {/* Contenedor de las tarjetas */}
+      <div className="w-full">
+        <CardGridHome products={products} category="Especiales" />
       </div>
     </div>
   );
