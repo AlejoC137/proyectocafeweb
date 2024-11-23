@@ -8,36 +8,49 @@ export function CardInstanceHome({ product }) {
     <Card
       className="w-[190px] h-full shadow-lg rounded-xl overflow-hidden border-r-4 border-r-ladrillo border-b-4 border-b-ladrillo"
     >
+      {/* Nombre del producto */}
+      <div className="p-2 bg-gray-100">
+        <h3 className="text-lg font-bold text-gray-900 truncate">
+          {product.nombre || "Especial del Día"}
+        </h3>
+      </div>
+
       {/* Imagen */}
-      <div className="relative h-[180px] w-full">
+      <div className="relative h-[160px] w-full">
         <img
           src={product.foto || "/default-image.jpg"}
-          alt={product.nombre || "Especial"}
+          // alt={product.nombre || "Especial"}
           className="w-full h-full object-cover"
         />
         {/* Botón de favorito */}
-        <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-white/70 rounded-full p-1">
-          <Heart className="h-5 w-5 text-gray-700" />
-        </Button>
+
       </div>
 
-      {/* Contenido */}
-      <CardContent className="p-2 flex flex-col justify-between text-gray-900">
-        {/* Título y precio */}
-        <div className="flex justify-between items-center">
-          <h3 className="text-md font-bold truncate">{product.nombre || "Especial del Día"}</h3>
+      {/* Contenido y descripción */}
+      <CardContent className="p-2 flex flex-col gap- text-gray-900">
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Entrada:</span> {product.entrada}
+        </p>
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Proteína 1:</span> {product.proteina_op1}
+        </p>
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Proteína 2:</span> {product.proteina_op2}
+        </p>
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Acompañante:</span> {product.acompañante}
+        </p>
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Bebida:</span> {product.bebida}
+        </p>
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Ensalada:</span> {product.ensalada}
+        </p>
+
+        {/* Precio */}
+        <div className="mt-2 text-right">
           <span className="text-lg font-semibold text-gray-800">{product.precio || "N/A"}</span>
         </div>
-
-        {/* Descripción */}
-        <p className="text-sm text-gray-500 line-clamp-2">
-          {`Proteína 1: ${product.proteina_op1} | Proteína 2: ${product.proteina_op2} | Acompañante: ${product.acompañante}`}
-        </p>
-
-        {/* Entrada y ensalada */}
-        <p className="text-xs text-gray-500 line-clamp-2">
-          {`Entrada: ${product.entrada} | Ensalada: ${product.ensalada}`}
-        </p>
       </CardContent>
     </Card>
   );

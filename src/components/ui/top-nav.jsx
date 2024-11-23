@@ -23,23 +23,19 @@ export default function TopNav() {
   };
 
   return (
-    <div 
-    className="fixed top-0 left-0 right-0 h-12  flex items-center text-lg justify-between px-4 border-b-2"
+    <div
+      className="fixed top-0 left-0 right-0 h-12 flex items-center text-lg justify-between px-4 border-b-2 bg-white z-50" /* Añadido z-50 */
     >
-      {/* Botón de menú hamburguesa */}
       <button className="p-2 rounded-md bg-white">
         <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
       </button>
 
-      {/* Título central */}
       <h1 className="font-bold text-xl">{getDisplayText().toUpperCase()}</h1>
 
-      {/* Botón de carrito de compras */}
-      <button className="p-2 rounded-md bg-white ">
-        <ShoppingCart 
-         className="h-6 w-6 text-gray-700 dark:text-gray-300"
-          /> 
+      <button className="p-2 rounded-md bg-white">
+        <ShoppingCart className="h-6 w-6 text-gray-700 dark:text-gray-300" />
       </button>
     </div>
   );
 }
+

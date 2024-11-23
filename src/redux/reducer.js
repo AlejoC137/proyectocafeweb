@@ -15,33 +15,51 @@ import {
 } from './actions-types';
 
 const initialState = {
-frontPage:{  
-  todaysEspecialBreackFast: {
-            proteina_op1:'Arroz especial con cerdo y soya',
-            proteona_op2:'Pollo a la plancha y arroz blanco',
-            acompañante: 'Torta de chocolo',
-            entrada:'Crema de tomate',
-            ensalada:'Ensalada de cogollo',
-            foto:'',
-            precio:'20K'
-  },
-  todaysEspecialLunch: {
-            proteina_op1:'Arroz especial con cerdo y soya',
-            proteona_op2:'Pollo a la plancha y arroz blanco',
-            acompañante: 'Torta de chocolo',
-            entrada:'Crema de tomate',
-            ensalada:'Ensalada de cogollo',
-            foto:'',
-            precio:'20K'
-  },
-  monthEspecials: {
-            especial_1:{nombre:'',descripcion:'',foto:''},
-            especial_2:{nombre:'',descripcion:'',foto:''},
-            especial_3:{nombre:'',descripcion:'',foto:''},
-            especial_4:{nombre:'',descripcion:'',foto:''},
-
-  },
-},
+   frontPage : {  
+    todaysEspecialBreackFast: {
+      proteina_op1: 'Arroz especial con cerdo y soya',
+      proteina_op2: 'Pollo a la plancha y arroz blanco',
+      acompañante: 'Torta de chocolo',
+      entrada: 'Crema de tomate',
+      ensalada: 'Ensalada de cogollo',
+      bebida: 'Jugo de piña',
+      foto: 'https://www.recetasnestle.com.co/sites/default/files/2024-06/huevos-shakshuka-hierbas-pan_0.jpg', // Imagen de ejemplo
+      precio: '20K',
+    },
+    todaysEspecialLunch: {
+      proteina_op1: 'Pechuga de pollo al horno con hierbas',
+      proteina_op2: 'Carne mechada con arroz integral',
+      acompañante: 'Arepa de maíz amarillo',
+      entrada: 'Sopa de vegetales',
+      ensalada: 'Ensalada César',
+      bebida: 'Limonada de coco',
+      foto: 'https://cdn.pixabay.com/photo/2016/03/05/19/02/hamburger-1238246_1280.jpg', // Imagen de ejemplo
+      precio: '30K',
+    },
+    monthEspecials: {
+      especial_1: {
+        nombre: 'Pizza Hawaiana',
+        descripcion: 'Deliciosa pizza con piña, jamón y queso mozzarella.',
+        foto: 'https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_1280.jpg', // Imagen de ejemplo
+      },
+      especial_2: {
+        nombre: 'Hamburguesa Doble',
+        descripcion: 'Jugosa hamburguesa doble carne con queso cheddar y papas fritas.',
+        foto: 'https://cdn.pixabay.com/photo/2016/03/05/19/02/hamburger-1238246_1280.jpg', // Imagen de ejemplo
+      },
+      especial_3: {
+        nombre: 'Ensalada Mediterránea',
+        descripcion: 'Ensalada fresca con queso feta, aceitunas y vinagreta de limón.',
+        foto: 'https://cdn.pixabay.com/photo/2016/08/11/09/01/food-1580534_1280.jpg', // Imagen de ejemplo
+      },
+      especial_4: {
+        nombre: 'Tacos al Pastor',
+        descripcion: 'Tacos tradicionales con carne de cerdo marinada y piña.',
+        foto: 'https://cdn.pixabay.com/photo/2017/06/02/18/24/tacos-2368815_1280.jpg', // Imagen de ejemplo
+      },
+    },
+  }
+  ,
   allStaff: [],
   allMenu: [],
   allItems: [],
