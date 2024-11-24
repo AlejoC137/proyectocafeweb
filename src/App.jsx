@@ -16,7 +16,7 @@ import ActualizarPrecioUnitario from './body/views/actualizarPrecioUnitario/Actu
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
 import LandingHome from './body/views/home/LandingHome';
 import Agenda from './body/views/agenda/Agenda';
-import SobreNosotros from './body/views/sobreNosotros/sobreNosotros';
+import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 
 
 // import { Home } from 'lucide-react';
