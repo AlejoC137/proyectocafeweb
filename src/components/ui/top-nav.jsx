@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import { Menu, ShoppingCart } from "lucide-react"; // Importar los íconos
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH } from "../../redux/actions-types"; // Importa las acciones y vistas
 
 export default function TopNav() {
   const currentView = useSelector((state) => state.currentView);
@@ -7,15 +8,15 @@ export default function TopNav() {
 
   const getDisplayText = () => {
     switch (currentView) {
-      case "HOME":
+      case HOME:
         return currentLeng === "ESP" ? "Inicio" : "Home";
-      case "MENUVIEW":
+      case MENUVIEW:
         return currentLeng === "ESP" ? "Menú" : "Menu";
-      case "ABOUT":
+      case AGENDA:
         return currentLeng === "ESP" ? "Acerca de" : "About";
-      case "CONTACT":
-        return currentLeng === "ESP" ? "Contacto" : "Contact";
-      case "LUNCH":
+      case NOSOTROS:
+        return currentLeng === "ESP" ? "Nosotros" : "About Us";
+      case LUNCH:
         return currentLeng === "ESP" ? "Almuerzos" : "Lunch";
       default:
         return currentLeng === "ESP" ? "Vista Desconocida" : "Unknown View";

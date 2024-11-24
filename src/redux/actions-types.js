@@ -12,8 +12,8 @@ export const UPDATE_SELECTED_VALUE = "UPDATE_SELECTED_VALUE";  // Nueva acción
 // Vistas
 export const HOME = "HOME";
 export const SUPABASE = "SUPABASE";
-export const ABOUT = "ABOUT";
-export const CONTACT = "CONTACT";
+export const AGENDA = "AGENDA";
+export const NOSOTROS = "NOSOTROS";
 export const MENUVIEW = "MENUVIEW";
 export const LUNCH = "LUNCH";
 

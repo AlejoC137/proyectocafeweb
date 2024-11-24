@@ -76,7 +76,7 @@ function MenuSelect() {
                     className={styles.percheroElement}
                     src="https://res.cloudinary.com/dwcp7dk9h/image/upload/v1710822094/PERCHERO_02-01_mvlvyz.png" 
                     alt="Your Image Alt Text" 
-                    buttonText={currentLenguaje == 'ES' ? "AGENDA / CONTACTO" : "EVENTS / CONTACT"}
+                    buttonText={currentLenguaje == 'ES' ? "AGENDA / NOSOTROSO" : "EVENTS / NOSOTROS"}
 
                     onClick={() => onPressHandler('https://www.instagram.com/proyecto__cafe?igsh=MWllenJ5Y2wwM2FuaA%3D%3D&utm_source=qr')}
                     imageWidth="40px"

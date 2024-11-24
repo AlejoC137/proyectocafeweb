@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useSelector } from 'react-redux'; // Para acceder al estado global de Redux
 // import './App.css';
 
-import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT, LUNCH } from './redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH } from './redux/actions-types'; // Importa las acciones y vistas
 // BuscarPreciosInternet
 // import About from './components/About';
 // import Contact from './components/Contact';
@@ -15,6 +15,9 @@ import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
 import ActualizarPrecioUnitario from './body/views/actualizarPrecioUnitario/ActualizarPrecioUnitario';
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
 import LandingHome from './body/views/home/LandingHome';
+import Agenda from './body/views/agenda/Agenda';
+import SobreNosotros from './body/views/sobreNosotros/sobreNosotros';
+
 
 // import { Home } from 'lucide-react';
 function App() {
@@ -28,11 +31,11 @@ function App() {
     case HOME:
       componentToRender = <LandingHome/>;
       break;
-    case ABOUT:
-      componentToRender = <div>About Page</div>;
+    case AGENDA:
+      componentToRender = <Agenda/>;
       break;
-    case CONTACT:
-      componentToRender = <div>Contact Page</div>;
+    case NOSOTROS:
+      componentToRender = <SobreNosotros/>;
       break;
     case LUNCH:
       componentToRender = <LunchByOrder />;
@@ -56,6 +59,8 @@ function App() {
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
      <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
      <Route path="/Home" element={<LandingHome />} />
+     <Route path="/Agenda" element={<Agenda />} />
+     <Route path="/SobreNosotros" element={<SobreNosotros />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 

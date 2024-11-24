@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux"; // Importa el hook useDispatch de Redux
 import { Link, useLocation } from "react-router-dom"; // Importa Link para navegación
-import { Home, Search, ShoppingBag, Calendar, User, UtensilsCrossed } from "lucide-react"; // Añade el ícono faltante
+import { Home, UtensilsCrossed, Calendar, Search, User, Guitar } from "lucide-react"; // Iconos más adecuados
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button"; // Usa el componente personalizado Button
 import { updateActiveTab } from "../../redux/actions"; // Importa la acción de Redux
 
-import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, ABOUT, CONTACT, LUNCH } from "../../redux/actions-types"; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH, MENU } from "../../redux/actions-types"; // Importa las acciones y vistas
 
+// Íconos más relevantes para cada opción
 const navItems = [
-  { icon: Home, label: HOME, color: "text-blue-500", path: "/Home" },
-  { icon: Search, label: "AGENDA", color: "text-green-500", path: "/about" },
-  { icon: ShoppingBag, label: CONTACT, color: "text-yellow-500", path: "/contact" },
-  { icon: Calendar, label: MENUVIEW, color: "text-purple-500", path: "/MenuView" },
-  { icon: UtensilsCrossed, label: LUNCH, color: "text-red-500", path: "/LunchByOrder" }, // Completa el ícono faltante
+  { icon: Home, label: HOME, color: "text-blue-500", path: "/Home" }, // Inicio
+  { icon: UtensilsCrossed, label: MENU.toUpperCase(), color: "text-purple-500", path: "/MenuView" }, // Menú
+  { icon: Calendar, label: LUNCH, color: "text-red-500", path: "/LunchByOrder" }, // Almuerzo por pedido
+  { icon: Guitar, label: AGENDA, color: "text-green-500", path: "/Agenda" }, // Agenda
+  { icon: User, label: NOSOTROS, color: "text-yellow-500", path: "/SobreNosotros" }, // Sobre Nosotros
 ];
 
 export default function BottomNav() {
