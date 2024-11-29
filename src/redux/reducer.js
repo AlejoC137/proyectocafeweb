@@ -11,7 +11,8 @@ import {
   INSERT_RECETAS_SUCCESS,    // Nueva acción importada
   INSERT_RECETAS_FAILURE,     // Nueva acción importada
   SET_PREPROCESS_DATA,
-  TODAYS_MENU
+  TODAYS_MENU,
+  SCRAP
 } from './actions-types';
 
 const initialState = {
@@ -154,6 +155,15 @@ const initialState = {
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
+    
+    case SCRAP:
+      return {
+        ...state,
+        scrapedData: action.payload,
+      };
+    
+    
+    
     case UPDATE_ACTIVE_TAB:
       return {
         ...state,

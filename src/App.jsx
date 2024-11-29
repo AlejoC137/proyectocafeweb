@@ -17,6 +17,7 @@ import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPrec
 import LandingHome from './body/views/home/LandingHome';
 import Agenda from './body/views/agenda/Agenda';
 import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
+import Scraper from '../scraper/scraper';
 
 
 // import { Home } from 'lucide-react';
@@ -61,6 +62,7 @@ function App() {
      <Route path="/Home" element={<LandingHome />} />
      <Route path="/Agenda" element={<Agenda />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
+     <Route path="/Scraper" element={<Scraper />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 

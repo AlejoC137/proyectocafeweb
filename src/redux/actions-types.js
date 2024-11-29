@@ -22,9 +22,20 @@ export const ITEMS = "ItemsAlmacen";
 export const MENU = "Menu";
 export const PRODUCCION = "ProduccionInterna";
 export const STAFF = "Staff";
+// Fuentes dd precios
+export const FUENES = []
+
+// Categorieas 
+export const LACTO_CARNICO = 'LACTO_CARNICO'
+export const FRUTAS_VERDURAS = 'FRUTAS_VERDURAS'
+export const ALMACEN = 'ALMACEN'
 
 // Acciones relacionadas con las recetas
 export const INSERT_RECETAS_SUCCESS = "INSERT_RECETAS_SUCCESS";  // Nueva acción para éxito al insertar recetas
 export const INSERT_RECETAS_FAILURE = "INSERT_RECETAS_FAILURE";  // Nueva acción para error al insertar recetas
 export const SET_PREPROCESS_DATA = "SET_PREPROCESS_DATA";  // Nueva acción para error al insertar recetas
 export const INSERT_ITEM_FAILURE  = "INSERT_ITEM_FAILURE ";  // Nueva acción para error al insertar recetas
+
+
+
+export const SCRAP  = "SCRAP ";  // Nueva acción para error al insertar recetas

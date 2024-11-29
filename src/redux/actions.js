@@ -10,11 +10,52 @@ import {
   INSERT_RECETAS_FAILURE,
   INSERT_ITEM_FAILURE ,
   SET_PREPROCESS_DATA,
+  SCRAP,
   
 } from "./actions-types";
 
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid'; // Importar para generar UUIDs
+import * as cheerio from "cheerio";
+
+export function scrapAction(url, pointers) {
+  return async (dispatch) => {
+    try {
+      const response = await axios(url);
+      const html = response.data;
+      const $ = cheerio.load(html); // Ejemplo de uso
+      const resultData = {}; // Objeto para almacenar todos los resultados
+
+      // Iterar sobre los pointers para buscar datos específicos
+      pointers.forEach(({ title, key }) => {
+        const results = [];
+
+        // Buscar cada elemento basado en el selector `key` (clase CSS) y agregarlo al array
+        $('.' + key, html).each(function () {
+          const result = $(this).text().trim();
+          if (result) results.push(result);
+        });
+
+        // Agregar los resultados al objeto con la clave definida en `title`
+        resultData[title] = results;
+      });
+
+      // Despachar los datos recopilados a Redux
+      dispatch({
+        type: SCRAP,
+        payload: resultData,
+      });
+
+      console.log('Datos extraídos:', resultData);
+    } catch (err) {
+      console.error('Error durante el scraping:', err);
+    }
+  };
+}
+
+
+
+
 
 // Acción para obtener todos los datos de una tabla
 export function getAllFromTable(Table) {
