@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { CardInstanceInventario } from "@/components/ui/cardInstanceInventario";
 
-export function CardGridInventario({ products }) {
+export function CardGridInventario({ products , currentType}) {
   // Agrupar productos por GRUPO
   const groupedProducts = products.reduce((acc, product) => {
     const group = product.GRUPO || "POR ASIGNAR GRUPO"; // Usar "POR ASIGNAR GRUPO" si el producto no tiene grupo
@@ -46,7 +46,7 @@ export function CardGridInventario({ products }) {
             {expandedGroups[group] && (
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {groupedProducts[group].map((product, index) => (
-                  <CardInstanceInventario key={index} product={product} />
+                  <CardInstanceInventario key={index} product={product} currentType={currentType} />
                 ))}
               </div>
             )}

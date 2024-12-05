@@ -33,6 +33,14 @@ export const COCINA = 'COCINA'
 export const BARRA = 'BARRA'
 export const MESAS = 'MESAS'
 
+export const AREAS = [ 
+  COCINA,
+  BARRA,
+  MESAS,
+
+
+]
+
 // grupo
 
 export const CARNICO = 'CARNICO'
@@ -83,6 +91,26 @@ export const CATEGORIES = [
     DESECHABLES
   ];
 
+  export const gr = 'gr'
+  export const kl = 'kl'
+  export const ml = 'ml'
+  export const li = 'li'
+  export const un = 'un'
+
+  
+
+
+
+export const unidades = [
+  gr,
+  kl,
+  ml,
+  li,
+  un,
+  ];
+
+export const ItemsAlmacen = "ItemsAlmacen"
+export const ProduccionInterna = "ProduccionInterna"
 
 // Acciones relacionadas con las recetas
 export const INSERT_RECETAS_SUCCESS = "INSERT_RECETAS_SUCCESS";  // Nueva acción para éxito al insertar recetas

@@ -3,10 +3,9 @@ import { useDispatch } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem } from "../../redux/actions";
-import { CATEGORIES, ESTATUS } from "../../redux/actions-types";
+import { CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
 
-
-export function CardInstanceInventario({ product }) {
+export function CardInstanceInventario({ product , currentType}) {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     CANTIDAD: product.CANTIDAD || "",
@@ -38,11 +37,11 @@ export function CardInstanceInventario({ product }) {
         COSTO: formData.COSTO,
         GRUPO: formData.GRUPO,
         Estado: formData.Estado,
-        COOR: 1.05,
+        ...(currentType === ItemsAlmacen && { COOR: "1.05" }), // Incluir COOR solo si es ItemsAlmacen
         FECHA_ACT: new Date().toISOString().split("T")[0],
       };
 
-      await dispatch(updateItem(product._id, updatedFields));
+      await dispatch(updateItem(product._id, updatedFields , currentType));
       setButtonState("done");
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
@@ -53,7 +52,7 @@ export function CardInstanceInventario({ product }) {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ítem?")) {
       try {
         setButtonState("syncing");
-        await dispatch(deleteItem(product._id)); // Llama a la acción para eliminar
+        await dispatch(deleteItem(product._id,currentType)); // Llama a la acción para eliminar
         setButtonState("done");
         alert("Ítem eliminado correctamente.");
       } catch (error) {
@@ -63,16 +62,46 @@ export function CardInstanceInventario({ product }) {
       }
     }
   };
-  
+  const filteredEstatus = ESTATUS.filter((status) => {
+    if (currentType === "ProduccionInterna" && status === "PC") {
+      return false; // Excluir PC si el currentType es ProduccionInterna
+    }
+    if (currentType === "ItemsAlmacen" && status === "PP") {
+      return false; // Excluir PP si el currentType es ItemsAlmacen
+    }
+    return true; // Incluir el resto de opciones
+  });
 
-  const handleStatusChange = (status) => {
+  const handleStatusChange = async (status) => {
     console.log(typeof status);
     
     setFormData((prev) => ({
       ...prev,
       Estado: status,
     }));
+
+
     setButtonState("save"); // Cambiar estado del botón de guardar
+
+
+    try {
+      const updatedFields = {
+        // CANTIDAD: formData.CANTIDAD,
+        // UNIDADES: formData.UNIDADES,
+        // COSTO: formData.COSTO,
+        // GRUPO: formData.GRUPO,
+        Estado: status,
+        // ...(currentType === ItemsAlmacen && { COOR: "1.05" }), // Incluir COOR solo si es ItemsAlmacen
+        // FECHA_ACT: new Date().toISOString().split("T")[0],
+      };
+
+      await dispatch(updateItem(product._id, updatedFields , currentType));
+      setButtonState("done");
+    } catch (error) {
+      console.error("Error al actualizar el ítem:", error);
+      setButtonState("save");
+    }
+    
   };
 
   return (
@@ -95,17 +124,17 @@ export function CardInstanceInventario({ product }) {
           <h3 className="text-base font-semibold text-gray-800 flex-1">
             {product.Nombre_del_producto || "Producto sin nombre"}
           </h3>
-          {/* <Button
-            className="bg-red-500 text-white hover:bg-blue-600"
+          <Button
+            className="bg-red-500 text-white hover:bg-red-400"
             onClick={
               
               handleDelete
             }
           >
             {buttonState === "save" && "🧨"}
-            {buttonState === "syncing" && "🔄"}
-            {buttonState === "done" && "✅"}
-          </Button> */}
+            {buttonState === "syncing" && "💢"}
+            {buttonState === "done" && "💥"}
+          </Button>
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={
@@ -115,13 +144,13 @@ export function CardInstanceInventario({ product }) {
           >
             {buttonState === "save" && "💾"}
             {buttonState === "syncing" && "🔄"}
-            {buttonState === "done" && ""}
+            {buttonState === "done" && "✅"}
           </Button>
         </div>
 
         {/* Botones de Estado */}
         <div className="flex gap-2">
-          {ESTATUS.map((status) => (
+          {filteredEstatus.map((status) => (
             <button
               key={status}
               onClick={() => handleStatusChange(status)}
@@ -166,13 +195,21 @@ export function CardInstanceInventario({ product }) {
           </label>
           <label className="text-sm text-gray-700 flex-1">
             Unidades:
-            <input
-              type="text"
-              name="UNIDADES"
+            <select
+              name="GRUPO"
               value={formData.UNIDADES}
               onChange={handleInputChange}
               className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
-            />
+            >
+              <option value="" disabled>
+                {product.UNIDAD ? `Actual: ${product.UNIDAD}` : "Selecciona unidad"}
+              </option>
+              {unidades.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -188,6 +225,7 @@ export function CardInstanceInventario({ product }) {
               className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
             />
           </label>
+          
           <label className="text-sm text-gray-700 flex-1">
             Grupo:
             <select

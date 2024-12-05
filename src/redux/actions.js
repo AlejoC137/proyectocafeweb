@@ -11,6 +11,8 @@ import {
   INSERT_ITEM_FAILURE ,
   SET_PREPROCESS_DATA,
   SCRAP,
+  ItemsAlmacen,
+  ProduccionInterna
   
 } from "./actions-types";
 
@@ -56,33 +58,7 @@ export function scrapAction(url, pointers) {
 
 
 // Acción para eliminar un ítem de Supabase
-export function deleteItem(itemId) {
-  return async (dispatch) => {
-    try {
-      // Llamada a Supabase para eliminar el registro
-      const { error } = await supabase
-        .from("ItemsAlmacen")
-        .delete()
-        .eq("_id", itemId); // Filtrar por el ID del ítem
 
-      if (error) {
-        console.error("Error al eliminar el ítem:", error);
-        throw new Error("No se pudo eliminar el ítem");
-      }
-
-      // Si es necesario, despacha una acción para actualizar el estado global
-      dispatch({
-        type: "DELETE_ITEM_SUCCESS",
-        payload: itemId, // Enviar el ID del ítem eliminado
-      });
-
-      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
-    } catch (error) {
-      console.error("Error en la acción deleteItem:", error);
-      throw error;
-    }
-  };
-}
 
 
 
@@ -151,27 +127,6 @@ export function updateActiveTab(option) {
 }
 
 // Acción para actualizar un ítem en Supabase
-export function updateItem(itemId, updatedFields) {
-  return async (dispatch) => {
-    try {
-      const { data, error } = await supabase
-        .from('ItemsAlmacen')
-        .update(updatedFields)
-        .eq('_id', itemId)
-        .select();
-
-      if (error) {
-        console.error('Error al actualizar el ítem:', error);
-        return null;
-      }
-
-      console.log('Ítem actualizado correctamente:', data);
-      return data;
-    } catch (error) {
-      console.error('Error en la acción updateItem:', error);
-    }
-  };
-}
 
 
 // Acción para actualizar el valor seleccionado
@@ -395,7 +350,7 @@ function validarUUID(uuid) {
   return uuidRegex.test(uuid);
 }
 
-export function actualizarPrecioUnitario(items) {
+export function actualizarPrecioUnitario(items,type) {
   return async (dispatch) => {
     try {
       for (let item of items) {
@@ -413,7 +368,7 @@ export function actualizarPrecioUnitario(items) {
 
         // Actualizar el valor unitario en el item correspondiente usando update()
         let { data, error } = await supabase
-          .from('ItemsAlmacen') // Nombre correcto de la tabla
+          .from(type) // Nombre correcto de la tabla
           .update({
             precioUnitario: precioUnitario,
           })
@@ -450,7 +405,7 @@ function calcularPrecioUnitario(item) {
   const cantidad = parseFloat(item.CANTIDAD);
   const coor = parseFloat(item.COOR);
 
-  precioUnitario = (costo / cantidad) * coor * ajusteInflacionario;
+  precioUnitario = (costo / cantidad) * ajusteInflacionario * ( coor ? coor : 0);
 
   return parseFloat(precioUnitario.toFixed(2));
 }
@@ -481,6 +436,93 @@ export function copiarAlPortapapeles(items, estado) {
     } catch (error) {
       console.error("Error al copiar al portapapeles:", error);
       alert("Hubo un error al copiar al portapapeles.");
+    }
+  };
+}
+
+
+export function crearItem(itemData,type) {
+  return async (dispatch) => {  
+    try {
+      // Generar un UUID para el nuevo ítem
+      const nuevoItem = {
+        _id: uuidv4(),
+        ...itemData,
+        FECHA_ACT: new Date().toISOString().split("T")[0], // Fecha actual
+      };
+
+      // Insertar el nuevo ítem en Supabase
+      const { data, error } = await supabase
+        .from(type)
+        .insert([nuevoItem])
+        .select();
+
+      if (error) {
+        console.error("Error al crear el ítem:", error);
+        throw new Error("No se pudo crear el ítem");
+      }
+
+      // Despachar la acción para actualizar el estado global
+      dispatch({
+        type: "CREAR_ITEM_SUCCESS",
+        payload: data[0], // El nuevo ítem creado
+      });
+
+      console.log("Ítem creado correctamente:", data[0]);
+      return data[0];
+    } catch (error) {
+      console.error("Error en la acción crearItem:", error);
+      throw error;
+    }
+  };
+}
+
+export function updateItem(itemId, updatedFields,type) {
+  return async (dispatch) => {
+    try {
+      const { data, error } = await supabase
+        .from(type)
+        .update(updatedFields)
+        .eq('_id', itemId)
+        .select();
+
+      if (error) {
+        console.error('Error al actualizar el ítem:', error);
+        return null;
+      }
+
+      console.log('Ítem actualizado correctamente:', data);
+      return data;
+    } catch (error) {
+      console.error('Error en la acción updateItem:', error);
+    }
+  };
+}
+
+export function deleteItem(itemId , type) {
+  return async (dispatch) => {
+    try {
+      // Llamada a Supabase para eliminar el registro
+      const { error } = await supabase
+        .from(type)
+        .delete()
+        .eq("_id", itemId); // Filtrar por el ID del ítem
+
+      if (error) {
+        console.error("Error al eliminar el ítem:", error);
+        throw new Error("No se pudo eliminar el ítem");
+      }
+
+      // Si es necesario, despacha una acción para actualizar el estado global
+      dispatch({
+        type: "DELETE_ITEM_SUCCESS",
+        payload: itemId, // Enviar el ID del ítem eliminado
+      });
+
+      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
+    } catch (error) {
+      console.error("Error en la acción deleteItem:", error);
+      throw error;
     }
   };
 }

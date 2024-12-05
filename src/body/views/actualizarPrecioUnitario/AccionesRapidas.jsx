@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles } from '../../../redux/actions';
-import { ITEMS, PRODUCCION } from '../../../redux/actions-types';
+import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem } from "../../../redux/actions";
+import { ITEMS, PRODUCCION, AREAS, CATEGORIES , unidades, ItemsAlmacen ,
+  ProduccionInterna} from '../../../redux/actions-types';
 
-function AccionesRapidas() {
+
+function AccionesRapidas({currentType}) {
   const dispatch = useDispatch();
   const allItems = useSelector((state) => state.allItems);
+  const allProduccion = useSelector((state) => state.allProduccion);
+console.log(currentType);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,30 +26,90 @@ function AccionesRapidas() {
   }, [dispatch]);
 
   const handleActualizarPrecios = () => {
-    dispatch(actualizarPrecioUnitario(allItems));
+    // dispatch(actualizarPrecioUnitario(allItems,ItemsAlmacen));
+    dispatch(actualizarPrecioUnitario(allProduccion,ProduccionInterna));
   };
 
   const handleCopiarPendientesCompra = () => {
-    dispatch(copiarAlPortapapeles(allItems, "PC")); // PC: Pendiente Compra
+    dispatch(copiarAlPortapapeles(allItems, "PC"));
   };
 
   const handleCopiarPendientesProduccion = () => {
-    dispatch(copiarAlPortapapeles(allItems, "PP")); // PP: Pendiente Producción
+    dispatch(copiarAlPortapapeles(allProduccion, "PP"));
   };
+
+
+  const [formVisible, setFormVisible] = useState(false);
+  const [newItemData, setNewItemData] = useState({
+    Nombre_del_producto: "",
+    Proveedor: [],
+    Estado: "Disponible", // Valor predeterminado
+    Area: "",
+    CANTIDAD: "",
+    UNIDADES: "",
+    COSTO: "",
+    STOCK: "",
+    GRUPO: "",
+    MARCA: [],
+    precioUnitario: 0,
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewItemData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCrearItem = async () => {
+    try {
+      // Construir el objeto newItemData dinámicamente
+
+      const itemData = {
+        ...newItemData,
+        COOR: currentType === ItemsAlmacen ? "1.05" : undefined, // Incluir COOR solo si currentType es ItemsAlmacen
+      };
+  
+      // Eliminar COOR si es undefined (opcional, pero recomendable)
+      if (currentType === ProduccionInterna) {
+        delete itemData.COOR;
+      }
+  
+      await dispatch(crearItem(itemData, currentType));
+      alert("Ítem creado correctamente.");
+  
+      // Resetear el formulario
+      setNewItemData({
+        Nombre_del_producto: "",
+        Proveedor: [],
+        Estado: "PC",
+        Area: "",
+        CANTIDAD: "",
+        UNIDADES: "",
+        COSTO: "",
+        STOCK: "",
+        GRUPO: "",
+        MARCA: [],
+        precioUnitario: 0,
+        ...(currentType === ItemsAlmacen && { COOR: "1.05" }), // Incluir COOR solo si es ItemsAlmacen
+      });
+  
+      setFormVisible(false);
+    } catch (error) {
+      console.error("Error al crear el ítem:", error);
+      alert("Hubo un error al crear el ítem.");
+    }
+  };
+  
 
   return (
     <div className="bg-white p-4">
-      <h2 className="text-lg font-bold">ACCIONES RÁPIDAS</h2>
+      
 
-      {/* Botón para actualizar precios */}
-      <button
-        className="bg-blue-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-blue-600"
-        onClick={handleActualizarPrecios}
-      >
-        Actualizar Precios Unitarios
-      </button>
-
-      <h3 className="text-lg font-bold mt-4">EXPORTAR LISTAS:</h3>
+      <h3 
+      className="text-lg font-bold mt-4"
+      >EXPORTAR LISTAS:</h3>
 
       {/* Botón para copiar pendientes de compra */}
       <button
@@ -62,6 +126,140 @@ function AccionesRapidas() {
       >
         PENDIENTES PRODUCCIÓN
       </button>
+      <h2 className="text-lg font-bold">ACCIONES RÁPIDAS:</h2>
+
+{/* Botón para actualizar precios */}
+<button
+  className="bg-blue-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-blue-600"
+  onClick={handleActualizarPrecios}
+>
+ ACTUALIZAR PRECIOS UNITARIOS
+</button>
+      {/* Botón para mostrar/ocultar formulario de creación */}
+      <button
+        className="bg-green-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-green-600"
+        onClick={() => setFormVisible((prev) => !prev)}
+      >
+        {formVisible ? "CANCELAR CREACION" : "CREAR NUEVO ITEM"}
+      </button>
+
+      {/* Formulario de creación */}
+      {formVisible && (
+        <div className="bg-gray-100 p-4 rounded-md mt-4">
+          <h3 className="text-lg font-bold mb-2">Crear Nuevo Ítem</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="Nombre_del_producto"
+              value={newItemData.Nombre_del_producto}
+              onChange={handleInputChange}
+              placeholder="Nombre del producto"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            {/* <input
+              type="text"
+              name="Proveedor"
+              value={newItemData.Proveedor}
+              onChange={handleInputChange}
+              placeholder="Proveedor"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            /> */}
+            {/* Selector de Área */}
+            <select
+              name="Area"
+              value={newItemData.Area}
+              onChange={handleInputChange}
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Área</option>
+              {AREAS.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              name="CANTIDAD"
+              value={newItemData.CANTIDAD}
+              onChange={handleInputChange}
+              placeholder="Cantidad"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            {/* Selector de unidades */}
+            <select
+              name="UNIDADES"
+              value={newItemData.UNIDADES}
+              onChange={handleInputChange}
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Unidad</option>
+              {unidades.map((unidad) => (
+                <option key={unidad} value={unidad}>
+                  {unidad}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              name="COSTO"
+              value={newItemData.COSTO}
+              onChange={handleInputChange}
+              placeholder="Costo"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="STOCK"
+              value={newItemData.STOCK}
+              onChange={handleInputChange}
+              placeholder="Stock"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            {/* Selector de Grupo */}
+            <select
+              name="GRUPO"
+              value={newItemData.GRUPO}
+              onChange={handleInputChange}
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Grupo</option>
+              {CATEGORIES.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
+            <select
+              name="GRUPO"
+              value={newItemData.GRUPO}
+              onChange={handleInputChange}
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Grupo</option>
+              {CATEGORIES.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
+            {/* <input
+              type="text"
+              name="MARCA"
+              value={newItemData.MARCA}
+              onChange={handleInputChange}
+              placeholder="Marca"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            /> */}
+          </div>
+          <button
+            className="bg-blue-500 text-white py-2 px-4 rounded-md mt-4 hover:bg-blue-600"
+            onClick={handleCrearItem}
+          >
+            GUARDAR NUEVO ITEM
+          </button>
+        </div>
+      )}
     </div>
   );
 }
