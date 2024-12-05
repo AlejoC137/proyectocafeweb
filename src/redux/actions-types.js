@@ -51,6 +51,8 @@ export const GRANOS_CEREALES = 'GRANOS_CEREALES'
 export const LIMPIEZA = 'LIMPIEZA'
 export const DOTACION = 'DOTACION'
 export const CONCERVAS_FERMENTOS = 'CONCERVAS_FERMENTOS'
+export const DESECHABLES = 'DESECHABLES'
+
 
 
 export const CATEGORIES = [
@@ -66,7 +68,8 @@ export const CATEGORIES = [
     LIMPIEZA,
     DOTACION,
     CONCERVAS_FERMENTOS,
-    GUARNICION
+    GUARNICION,
+    DESECHABLES
   ];
 
 
