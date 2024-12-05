@@ -66,6 +66,7 @@ export const CATEGORIES = [
     LIMPIEZA,
     DOTACION,
     CONCERVAS_FERMENTOS,
+    GUARNICION
   ];
 
 
