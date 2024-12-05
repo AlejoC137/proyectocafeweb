@@ -54,8 +54,8 @@ function Inventario() {
         .map((group) => (
           <div key={group} className="mb-6">
             {/* Título del grupo */}
-            <div className="text-2xl font-bold text-center py-2 bg-gray-100">
-              {group.toUpperCase()}
+            <div className="text-2xl font-bold text-center py- bg-gray-100">
+              {/* {group.toUpperCase()} */}
             </div>
             {/* Grid de productos en el grupo */}
             <div className="overflow-hidden w-screen px-5">

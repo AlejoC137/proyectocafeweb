@@ -21,6 +21,8 @@ export function CardGridInventario({ products }) {
     }));
   };
 
+  
+
   return (
     <div className="flex flex-col gap-8">
       {Object.keys(groupedProducts)
@@ -32,11 +34,11 @@ export function CardGridInventario({ products }) {
               onClick={() => toggleGroup(group)}
               className="w-full text-left py-2 px-4 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
             >
-              <span className="text-lg font-bold text-gray-700">
-                {group.toUpperCase()}
-              </span>
               <span className="ml-2 text-sm text-gray-500">
-                {expandedGroups[group] ? "▲ Replegar" : "▼ Desplegar"}
+                {expandedGroups[group] ? "▲ " : "▼ "}
+              </span>
+              <span className="text-sm font-bold text-gray-700">
+                {group.toUpperCase() + ` (${groupedProducts[group].length})`}
               </span>
             </button>
 
