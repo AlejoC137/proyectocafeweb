@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
 import { STAFF, MENU, ITEMS } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
+import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 
 function Inventario() {
   const dispatch = useDispatch();
@@ -49,6 +50,7 @@ function Inventario() {
 
   return (
     <div className="flex flex-col w-screen border pt-3">
+      <AccionesRapidas></AccionesRapidas>
       {Object.keys(groupedItems)
         .sort() // Ordenar los grupos alfabéticamente
         .map((group) => (

@@ -26,9 +26,6 @@ export const STAFF = "Staff";
 export const FUENTES = []
 
 // Categorieas 
-export const LACTO_CARNICO = 'LACTO_CARNICO'
-export const FRUTAS_VERDURAS = 'FRUTAS_VERDURAS'
-export const ALMACEN = 'ALMACEN'
 
 // Areas
 
@@ -53,6 +50,20 @@ export const DOTACION = 'DOTACION'
 export const CONCERVAS_FERMENTOS_PRECOCIDOS = 'CONCERVAS_FERMENTOS_PRECOCIDOS'
 export const DESECHABLES = 'DESECHABLES'
 
+
+export const PC = 'PC'
+export const PP = 'PP'
+export const OK = 'OK'
+export const NA = 'NA'
+
+export const ESTATUS = [ 
+  PC,
+  PP,
+  OK,
+  NA
+
+
+]
 
 
 export const CATEGORIES = [

@@ -12,7 +12,7 @@ import TopNav from './components/ui/top-nav'; // Importa BottomNav
 import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
-import ActualizarPrecioUnitario from './body/views/actualizarPrecioUnitario/ActualizarPrecioUnitario';
+import AccionesRapidas from './body/views/actualizarPrecioUnitario/AccionesRapidas';
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
 import LandingHome from './body/views/home/LandingHome';
 import Agenda from './body/views/agenda/Agenda';
@@ -64,6 +64,7 @@ function App() {
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
      <Route path="/Inventario" element={<Inventario />} />
+     <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 

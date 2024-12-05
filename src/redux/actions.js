@@ -55,6 +55,35 @@ export function scrapAction(url, pointers) {
 
 
 
+// Acción para eliminar un ítem de Supabase
+export function deleteItem(itemId) {
+  return async (dispatch) => {
+    try {
+      // Llamada a Supabase para eliminar el registro
+      const { error } = await supabase
+        .from("ItemsAlmacen")
+        .delete()
+        .eq("_id", itemId); // Filtrar por el ID del ítem
+
+      if (error) {
+        console.error("Error al eliminar el ítem:", error);
+        throw new Error("No se pudo eliminar el ítem");
+      }
+
+      // Si es necesario, despacha una acción para actualizar el estado global
+      dispatch({
+        type: "DELETE_ITEM_SUCCESS",
+        payload: itemId, // Enviar el ID del ítem eliminado
+      });
+
+      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
+    } catch (error) {
+      console.error("Error en la acción deleteItem:", error);
+      throw error;
+    }
+  };
+}
+
 
 
 // Acción para obtener todos los datos de una tabla
@@ -424,4 +453,34 @@ function calcularPrecioUnitario(item) {
   precioUnitario = (costo / cantidad) * coor * ajusteInflacionario;
 
   return parseFloat(precioUnitario.toFixed(2));
+}
+
+
+
+// Acción para filtrar elementos y copiarlos al portapapeles
+export function copiarAlPortapapeles(items, estado) {
+  return async () => {
+    try {
+      // Filtrar los elementos que coincidan con el estado
+      const elementosFiltrados = items.filter((item) => item.Estado === estado);
+
+      if (elementosFiltrados.length === 0) {
+        alert(`No se encontraron elementos con el estado "${estado}".`);
+        return;
+      }
+
+      // Crear una representación en texto de los elementos
+      const textoParaCopiar = elementosFiltrados
+        .map((item) => `- ${item.Nombre_del_producto}: ${item.CANTIDAD} ${item.UNIDADES}`)
+        .join("\n");
+
+      // Copiar al portapapeles
+      await navigator.clipboard.writeText(textoParaCopiar);
+
+      alert(`Se han copiado ${elementosFiltrados.length} elementos con estado "${estado}" al portapapeles.`);
+    } catch (error) {
+      console.error("Error al copiar al portapapeles:", error);
+      alert("Hubo un error al copiar al portapapeles.");
+    }
+  };
 }
