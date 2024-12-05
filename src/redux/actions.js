@@ -121,6 +121,30 @@ export function updateActiveTab(option) {
   };
 }
 
+// Acción para actualizar un ítem en Supabase
+export function updateItem(itemId, updatedFields) {
+  return async (dispatch) => {
+    try {
+      const { data, error } = await supabase
+        .from('ItemsAlmacen')
+        .update(updatedFields)
+        .eq('_id', itemId)
+        .select();
+
+      if (error) {
+        console.error('Error al actualizar el ítem:', error);
+        return null;
+      }
+
+      console.log('Ítem actualizado correctamente:', data);
+      return data;
+    } catch (error) {
+      console.error('Error en la acción updateItem:', error);
+    }
+  };
+}
+
+
 // Acción para actualizar el valor seleccionado
 export function updateSelectedValue(value) {
   return async (dispatch) => {
@@ -304,9 +328,6 @@ export function procesarRecetaYEnviarASupabase() {
     }
   };
 }
-
-
-
 
 export function preProcess(jsonCompleto) {
   return async (dispatch) => {

@@ -23,12 +23,50 @@ export const MENU = "Menu";
 export const PRODUCCION = "ProduccionInterna";
 export const STAFF = "Staff";
 // Fuentes dd precios
-export const FUENES = []
+export const FUENTES = []
 
 // Categorieas 
 export const LACTO_CARNICO = 'LACTO_CARNICO'
 export const FRUTAS_VERDURAS = 'FRUTAS_VERDURAS'
 export const ALMACEN = 'ALMACEN'
+
+// Areas
+
+export const COCINA = 'COCINA'
+export const BARRA = 'BARRA'
+export const MESAS = 'MESAS'
+
+// grupo
+
+export const CARNICO = 'CARNICO'
+export const LACTEO = 'LACTEO'
+export const CAFE = 'CAFE'
+export const PANADERIA = 'PANADERIA'
+export const REPOSTERIA = 'REPOSTERIA'
+export const VERDURAS_FRUTAS = 'VERDURAS_FRUTAS'
+export const BEBIDAS = 'BEBIDAS'
+export const CONDIMENTOS_ESPECIAS_ADITIVOS = 'CONDIMENTOS_ESPECIAS_ADITIVOS'
+export const GRANOS = 'GRANOS'
+export const LIMPIEZA = 'LIMPIEZA'
+export const DOTACION = 'DOTACION'
+export const CONCERVAS_FERMENTOS = 'CONCERVAS_FERMENTOS'
+
+
+export const CATEGORIES = [
+    CARNICO,
+    LACTEO,
+    CAFE,
+    PANADERIA,
+    REPOSTERIA,
+    VERDURAS_FRUTAS,
+    BEBIDAS,
+    CONDIMENTOS_ESPECIAS_ADITIVOS,
+    GRANOS,
+    LIMPIEZA,
+    DOTACION,
+    CONCERVAS_FERMENTOS,
+  ];
+
 
 // Acciones relacionadas con las recetas
 export const INSERT_RECETAS_SUCCESS = "INSERT_RECETAS_SUCCESS";  // Nueva acción para éxito al insertar recetas

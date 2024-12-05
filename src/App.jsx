@@ -18,6 +18,7 @@ import LandingHome from './body/views/home/LandingHome';
 import Agenda from './body/views/agenda/Agenda';
 import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 import Scraper from '../scraper/scraper';
+import Inventario from './body/views/inventario/Inventario';
 
 
 // import { Home } from 'lucide-react';
@@ -48,7 +49,6 @@ function App() {
       componentToRender = <div>Page Not Found</div>; // Fallback para rutas no encontradas
       break;
   }
-
   return (
     <div >
      <TopNav />
@@ -63,6 +63,7 @@ function App() {
      <Route path="/Agenda" element={<Agenda />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
+     <Route path="/Inventario" element={<Inventario />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 
