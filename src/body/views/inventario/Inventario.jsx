@@ -47,7 +47,7 @@ function Inventario() {
   }
 
   return (
-    <div className="flex flex-col w-screen border pt-3">
+    <div className="flex flex-col w-screen border ">
       <h3 className="text-lg font-bold ml-4">ELIJA UNA LISTA</h3>
       <div className="flex justify-center gap-4 ml-4 mr-4 mb-4">
         <button
