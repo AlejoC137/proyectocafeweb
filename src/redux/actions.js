@@ -12,6 +12,7 @@ import {
   SET_PREPROCESS_DATA,
   SCRAP,
   ItemsAlmacen,
+  TOGGLE_SHOW_EDIT,
   ProduccionInterna
   
 } from "./actions-types";
@@ -57,10 +58,17 @@ export function scrapAction(url, pointers) {
 
 
 
-// Acción para eliminar un ítem de Supabase
 
 
-
+export const toggleShowEdit = () => {
+  return (dispatch, getState) => {
+    const currentShowEdit = getState().showEdit; // Obtener el valor actual
+    dispatch({
+      type: TOGGLE_SHOW_EDIT,
+      payload: !currentShowEdit, // Alternar el estado
+    });
+  };
+};
 
 // Acción para obtener todos los datos de una tabla
 export function getAllFromTable(Table) {

@@ -1,12 +1,21 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem } from "../../redux/actions";
 import { CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
 
-export function CardInstanceInventario({ product , currentType}) {
+
+
+
+
+export function CardInstanceInventario({ product, currentType }) {
+  
+  // Obtener el estado global showEdit desde el reducer
+  const showEdit = useSelector((state) => state.showEdit);
+
   const dispatch = useDispatch();
+  
   const [formData, setFormData] = useState({
     CANTIDAD: product.CANTIDAD || "",
     UNIDADES: product.UNIDADES || "",
@@ -104,27 +113,23 @@ export function CardInstanceInventario({ product , currentType}) {
     
   };
 
+  
   return (
     <Card className="w-full shadow-md rounded-lg overflow-hidden border border-gray-200">
-      {/* Imagen del producto */}
-      {product.bannerIMG && (
-        <div className="relative h-[150px] w-full bg-gray-100">
-          <img
-            src={product.bannerIMG || "/default-image.jpg"}
-            alt={product.Nombre_del_producto || "Producto sin nombre"}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-
-      {/* Contenido del producto */}
       <CardContent className="p-4 flex flex-col gap-4">
-        {/* Nombre del producto y botón de guardar en la misma fila */}
+
+
+
+
+      {/* Nombre del producto y botón de guardar en la misma fila */}
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold text-gray-800 flex-1">
             {product.Nombre_del_producto || "Producto sin nombre"}
           </h3>
-          <Button
+          
+          
+          
+          {showEdit && <Button
             className="bg-red-500 text-white hover:bg-red-400"
             onClick={
               
@@ -134,7 +139,11 @@ export function CardInstanceInventario({ product , currentType}) {
             {buttonState === "save" && "🧨"}
             {buttonState === "syncing" && "💢"}
             {buttonState === "done" && "💥"}
-          </Button>
+          </Button>}
+
+
+
+
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={
@@ -164,6 +173,11 @@ export function CardInstanceInventario({ product , currentType}) {
             </button>
           ))}
         </div>
+
+        {showEdit && ( // Mostrar campos solo si showEdit es true
+          
+          <>
+
 
         {/* Precio por unidad y última actualización en la misma fila */}
         <div className="flex gap-4">
@@ -245,6 +259,16 @@ export function CardInstanceInventario({ product , currentType}) {
             </select>
           </label>
         </div>
+
+
+
+
+
+
+        </>
+
+
+        )}
       </CardContent>
     </Card>
   );

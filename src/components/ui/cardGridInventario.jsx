@@ -24,7 +24,7 @@ export function CardGridInventario({ products , currentType}) {
   
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-2 ml-4 mr-4">
       {Object.keys(groupedProducts)
         .sort() // Ordenar los grupos alfabéticamente
         .map((group) => (
@@ -32,7 +32,7 @@ export function CardGridInventario({ products , currentType}) {
             {/* Botón para desplegar/replegar el grupo */}
             <button
               onClick={() => toggleGroup(group)}
-              className="w-full text-left py-2 px-4 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+              className="w-full text-left py-2 px-4  bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
             >
               <span className="ml-2 text-sm text-gray-500">
                 {expandedGroups[group] ? "▲ " : "▼ "}

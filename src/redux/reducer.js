@@ -12,7 +12,8 @@ import {
   INSERT_RECETAS_FAILURE,     // Nueva acción importada
   SET_PREPROCESS_DATA,
   TODAYS_MENU,
-  SCRAP
+  SCRAP,
+  TOGGLE_SHOW_EDIT
 } from './actions-types';
 
 const initialState = {
@@ -141,6 +142,7 @@ const initialState = {
     },
   },
   allStaff: [],
+  showEdit: false,
   allMenu: [],
   allItems: [],
   currentLeng: 'ESP',
@@ -161,7 +163,11 @@ const reducer = (state = initialState, action) => {
         ...state,
         scrapedData: action.payload,
       };
-    
+      case TOGGLE_SHOW_EDIT:
+        return {
+          ...state,
+          showEdit: action.payload,
+        };
     
     
     case UPDATE_ACTIVE_TAB:

@@ -1,15 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem } from "../../../redux/actions";
-import { ITEMS, PRODUCCION, AREAS, CATEGORIES , unidades, ItemsAlmacen ,
-  ProduccionInterna} from '../../../redux/actions-types';
+import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
 
-
-function AccionesRapidas({currentType}) {
+function AccionesRapidas({ currentType }) {
   const dispatch = useDispatch();
   const allItems = useSelector((state) => state.allItems);
   const allProduccion = useSelector((state) => state.allProduccion);
-console.log(currentType);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,15 +16,18 @@ console.log(currentType);
           dispatch(getAllFromTable(PRODUCCION)),
         ]);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error("Error loading data:", error);
       }
     };
     fetchData();
   }, [dispatch]);
 
   const handleActualizarPrecios = () => {
-    // dispatch(actualizarPrecioUnitario(allItems,ItemsAlmacen));
-    dispatch(actualizarPrecioUnitario(allProduccion,ProduccionInterna));
+    dispatch(
+      currentType === ItemsAlmacen
+        ? actualizarPrecioUnitario(allItems, ItemsAlmacen)
+        : actualizarPrecioUnitario(allProduccion, ProduccionInterna)
+    );
   };
 
   const handleCopiarPendientesCompra = () => {
@@ -38,12 +38,11 @@ console.log(currentType);
     dispatch(copiarAlPortapapeles(allProduccion, "PP"));
   };
 
-
   const [formVisible, setFormVisible] = useState(false);
   const [newItemData, setNewItemData] = useState({
     Nombre_del_producto: "",
     Proveedor: [],
-    Estado: "Disponible", // Valor predeterminado
+    Estado: "Disponible",
     Area: "",
     CANTIDAD: "",
     UNIDADES: "",
@@ -64,26 +63,21 @@ console.log(currentType);
 
   const handleCrearItem = async () => {
     try {
-      // Construir el objeto newItemData dinámicamente
-
       const itemData = {
         ...newItemData,
-        COOR: currentType === ItemsAlmacen ? "1.05" : undefined, // Incluir COOR solo si currentType es ItemsAlmacen
+        COOR: currentType === ItemsAlmacen ? "1.05" : undefined,
       };
-  
-      // Eliminar COOR si es undefined (opcional, pero recomendable)
+
       if (currentType === ProduccionInterna) {
         delete itemData.COOR;
       }
-  
+
       await dispatch(crearItem(itemData, currentType));
       alert("Ítem creado correctamente.");
-  
-      // Resetear el formulario
       setNewItemData({
         Nombre_del_producto: "",
         Proveedor: [],
-        Estado: "PC",
+        Estado: "Disponible",
         Area: "",
         CANTIDAD: "",
         UNIDADES: "",
@@ -92,56 +86,58 @@ console.log(currentType);
         GRUPO: "",
         MARCA: [],
         precioUnitario: 0,
-        ...(currentType === ItemsAlmacen && { COOR: "1.05" }), // Incluir COOR solo si es ItemsAlmacen
+        ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
       });
-  
       setFormVisible(false);
     } catch (error) {
       console.error("Error al crear el ítem:", error);
       alert("Hubo un error al crear el ítem.");
     }
   };
-  
 
   return (
     <div className="bg-white p-4">
+      <h2 className="text-lg font-bold">ACCIONES RÁPIDAS</h2>
+
+      {/* Botones en filas de dos */}
+      <div className="grid grid-cols-2 gap-4 ">
+        {/* Primera fila */}
+        <button
+          className="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-600"
+          onClick={handleCopiarPendientesCompra}
+        >
+          PENDIENTES COMPRA
+        </button>
+        <button
+          className="bg-yellow-500 text-white py-1 px-2 rounded-md hover:bg-yellow-600"
+          onClick={handleCopiarPendientesProduccion}
+        >
+          PENDIENTES PRODUCCIÓN
+        </button>
+
+
+      </div>
       
+      <h2 className="text-lg font-bold pt-4">ACCIONES RÁPIDAS</h2>
 
-      <h3 
-      className="text-lg font-bold mt-4"
-      >EXPORTAR LISTAS:</h3>
+      <div className="grid grid-cols-2 gap-4 ">
+        {/* Primera fila */}
 
-      {/* Botón para copiar pendientes de compra */}
-      <button
-        className="bg-green-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-green-600"
-        onClick={handleCopiarPendientesCompra}
-      >
-        PENDIENTES COMPRA
-      </button>
 
-      {/* Botón para copiar pendientes de producción */}
-      <button
-        className="bg-yellow-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-yellow-600"
-        onClick={handleCopiarPendientesProduccion}
-      >
-        PENDIENTES PRODUCCIÓN
-      </button>
-      <h2 className="text-lg font-bold">ACCIONES RÁPIDAS:</h2>
-
-{/* Botón para actualizar precios */}
-<button
-  className="bg-blue-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-blue-600"
-  onClick={handleActualizarPrecios}
->
- ACTUALIZAR PRECIOS UNITARIOS
-</button>
-      {/* Botón para mostrar/ocultar formulario de creación */}
-      <button
-        className="bg-green-500 text-white py-2 px-4 rounded-md mt-2 hover:bg-green-600"
-        onClick={() => setFormVisible((prev) => !prev)}
-      >
-        {formVisible ? "CANCELAR CREACION" : "CREAR NUEVO ITEM"}
-      </button>
+        {/* Segunda fila */}
+        <button
+          className="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600"
+          onClick={handleActualizarPrecios}
+        >
+          ACTUALIZAR PRECIOS UNITARIOS
+        </button>
+        <button
+          className="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-600"
+          onClick={() => setFormVisible((prev) => !prev)}
+        >
+          {formVisible ? "CANCELAR CREACIÓN" : "CREAR NUEVO ITEM"}
+        </button>
+      </div>
 
       {/* Formulario de creación */}
       {formVisible && (
@@ -156,15 +152,6 @@ console.log(currentType);
               placeholder="Nombre del producto"
               className="border bg-white border-gray-300 rounded px-2 py-1"
             />
-            {/* <input
-              type="text"
-              name="Proveedor"
-              value={newItemData.Proveedor}
-              onChange={handleInputChange}
-              placeholder="Proveedor"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            /> */}
-            {/* Selector de Área */}
             <select
               name="Area"
               value={newItemData.Area}
@@ -186,7 +173,6 @@ console.log(currentType);
               placeholder="Cantidad"
               className="border bg-white border-gray-300 rounded px-2 py-1"
             />
-            {/* Selector de unidades */}
             <select
               name="UNIDADES"
               value={newItemData.UNIDADES}
@@ -216,7 +202,6 @@ console.log(currentType);
               placeholder="Stock"
               className="border bg-white border-gray-300 rounded px-2 py-1"
             />
-            {/* Selector de Grupo */}
             <select
               name="GRUPO"
               value={newItemData.GRUPO}
@@ -230,30 +215,9 @@ console.log(currentType);
                 </option>
               ))}
             </select>
-            <select
-              name="GRUPO"
-              value={newItemData.GRUPO}
-              onChange={handleInputChange}
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            >
-              <option value="">Grupo</option>
-              {CATEGORIES.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </select>
-            {/* <input
-              type="text"
-              name="MARCA"
-              value={newItemData.MARCA}
-              onChange={handleInputChange}
-              placeholder="Marca"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            /> */}
           </div>
           <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md mt-4 hover:bg-blue-600"
+            className="bg-blue-500 text-white py-1 px-2 rounded-md mt-4 hover:bg-blue-600"
             onClick={handleCrearItem}
           >
             GUARDAR NUEVO ITEM

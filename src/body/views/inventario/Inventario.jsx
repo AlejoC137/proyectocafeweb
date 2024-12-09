@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
+import { toggleShowEdit } from "../../../redux/actions";
 import { STAFF, MENU, ITEMS, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
@@ -8,12 +9,12 @@ import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 function Inventario() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [currentType, setCurrentType] = useState(ItemsAlmacen); // Estado inicial del toggle
+  const [currentType, setCurrentType] = useState(ItemsAlmacen);
 
   const Items = useSelector((state) => state.allItems || []);
   const Produccion = useSelector((state) => state.allProduccion || []);
+  const showEdit = useSelector((state) => state.showEdit); // Obtener el estado de showEdit
 
-  // Determinar los elementos según el tipo seleccionado
   const filteredItems = currentType === ItemsAlmacen ? Items : Produccion;
 
   useEffect(() => {
@@ -33,24 +34,12 @@ function Inventario() {
     fetchData();
   }, [dispatch]);
 
-  // Ordenar los productos alfabéticamente por Nombre_del_producto
-  const sortedItems = filteredItems.sort((a, b) => {
-    if (a.Nombre_del_producto && b.Nombre_del_producto) {
-      return a.Nombre_del_producto.localeCompare(b.Nombre_del_producto);
-    }
-    return 0;
-  });
-
-  // Agrupar productos por GRUPO, con una sección "POR ASIGNAR GRUPO" para los productos sin grupo
-  const groupedItems = sortedItems.reduce((acc, item) => {
-    const group = item.GRUPO || "POR ASIGNAR GRUPO";
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(item);
-    return acc;
-  }, {});
-
   const handleToggleType = (type) => {
     setCurrentType(type);
+  };
+
+  const handleToggleShowEdit = () => {
+    dispatch(toggleShowEdit()); // Alternar el estado de showEdit
   };
 
   if (loading) {
@@ -59,12 +48,8 @@ function Inventario() {
 
   return (
     <div className="flex flex-col w-screen border pt-3">
-      {/* Botones para cambiar el tipo */}
-      <h3
-            className="text-lg font-bold ml-4"
-
-      >ELIJA UNA LISTA</h3>
-      <div className="flex justify-center gap-2 m-4">
+      <h3 className="text-lg font-bold ml-4">ELIJA UNA LISTA</h3>
+      <div className="flex justify-center gap-4 ml-4 mr-4 mb-4">
         <button
           className={`rounded-md w-1/2 font-bold ${
             currentType === ItemsAlmacen
@@ -87,24 +72,25 @@ function Inventario() {
         </button>
       </div>
 
-      {/* Pasar currentType a AccionesRapidas */}
-      <AccionesRapidas currentType={currentType} />
+      <button
+        className="bg-blue-500 text-white px-2 rounded-md ml-4  mr-4 hover:bg-blue-600"
+        onClick={handleToggleShowEdit}
+      >
+        {showEdit ? "Ocultar Edición" : "Mostrar Edición"}
+      </button>
 
-      {Object.keys(groupedItems)
-        .sort() // Ordenar los grupos alfabéticamente
-        .map((group) => (
-          <div key={group} className="mb-6">
-    
-            {/* Grid de productos en el grupo */}
-            <div className="overflow-hidden w-screen px-5">
-              <CardGridInventario
-                products={groupedItems[group]}
-                category={group}
-                currentType={currentType} // Pasar currentType a CardGridInventario
-              />
-            </div>
-          </div>
-        ))}
+      <AccionesRapidas currentType={currentType} />
+      
+      <h3 className="text-lg font-bold ml-4">LISTAS</h3>
+      {/* {filteredItems.map((item) => ( */}
+        <CardGridInventario
+          // key={item.id}
+          products={filteredItems}
+          category="Grouped"
+          currentType={currentType}
+          showEdit={showEdit} // Pasar showEdit a CardGridInventario
+        />
+      {/* ))} */}
     </div>
   );
 }

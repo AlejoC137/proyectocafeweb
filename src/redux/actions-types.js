@@ -38,7 +38,6 @@ export const AREAS = [
   BARRA,
   MESAS,
 
-
 ]
 
 // grupo
@@ -57,6 +56,7 @@ export const LIMPIEZA = 'LIMPIEZA'
 export const DOTACION = 'DOTACION'
 export const CONCERVAS_FERMENTOS_PRECOCIDOS = 'CONCERVAS_FERMENTOS_PRECOCIDOS'
 export const DESECHABLES = 'DESECHABLES'
+export const ENLATADOS = 'ENLATADOS'
 
 
 export const PC = 'PC'
@@ -88,7 +88,8 @@ export const CATEGORIES = [
     DOTACION,
     CONCERVAS_FERMENTOS_PRECOCIDOS,
     GUARNICION,
-    DESECHABLES
+    DESECHABLES,
+    ENLATADOS
   ];
 
   export const gr = 'gr'
@@ -118,6 +119,6 @@ export const INSERT_RECETAS_FAILURE = "INSERT_RECETAS_FAILURE";  // Nueva acció
 export const SET_PREPROCESS_DATA = "SET_PREPROCESS_DATA";  // Nueva acción para error al insertar recetas
 export const INSERT_ITEM_FAILURE  = "INSERT_ITEM_FAILURE ";  // Nueva acción para error al insertar recetas
 
-
+export const TOGGLE_SHOW_EDIT =  'TOGGLE_SHOW_EDIT'; 
 
 export const SCRAP  = "SCRAP ";  // Nueva acción para error al insertar recetas
