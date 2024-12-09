@@ -1,9 +1,11 @@
-'use client'
+'use client';
 
 import React, { useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { insertarRecetas } from "../../../redux/actions";
 
-const RecetaOptions = () => {
+const RecetaOptions = ({id, Nombre_del_producto}) => {
+  const dispatch = useDispatch();
   const [recetaItems, setRecetaItems] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState({});
   const Items = useSelector((state) => state.allItems || []);
@@ -13,7 +15,7 @@ const RecetaOptions = () => {
 
   const addItem = () => {
     setRecetaItems([...recetaItems, { type: "", quantity: "", units: "" }]);
-    setDropdownVisible((prev) => ({ ...prev, [recetaItems.length]: true })); // Mostrar dropdown para el nuevo campo
+    setDropdownVisible((prev) => ({ ...prev, [recetaItems.length]: true }));
   };
 
   const updateItem = (index, field, value) => {
@@ -24,7 +26,7 @@ const RecetaOptions = () => {
 
   const handleInputChange = (index, value) => {
     updateItem(index, "type", value);
-    setDropdownVisible((prev) => ({ ...prev, [index]: true })); // Mostrar sugerencias al escribir
+    setDropdownVisible((prev) => ({ ...prev, [index]: true }));
 
     const selectedOption = allOptions.find(
       (option) =>
@@ -37,11 +39,43 @@ const RecetaOptions = () => {
   const handleSelectOption = (index, option) => {
     updateItem(index, "type", option.Nombre_del_producto);
     updateItem(index, "units", option.UNIDADES || "/");
-    setDropdownVisible((prev) => ({ ...prev, [index]: false })); // Ocultar dropdown después de seleccionar
+    setDropdownVisible((prev) => ({ ...prev, [index]: false }));
   };
 
   const handleQuantityChange = (index, value) => {
     updateItem(index, "quantity", value);
+  };
+
+  const handleUpdateReceta = () => {
+    // Procesar los datos para cumplir con el esquema requerido
+    const recetaData = recetaItems.map((item, index) => ({
+      [`item${index + 1}_Id`]: allOptions.find((option) => option.Nombre_del_producto === item.type)?._id || null,
+      [`item${index + 1}_Cuantity_Units`]: {
+        metric: {
+          cuantity: item.quantity || null,
+          units: item.units || null,
+        },
+        imperial: {
+          cuantity: null,
+          units: null,
+        },
+        legacyName: item.type,
+      },
+    }));
+
+    const recetaPayload = {
+      _id: crypto.randomUUID(), // Generar un UUID único
+      legacyName: Nombre_del_producto, // Generar un UUID único
+    //   forId: id, // Generar un UUID único
+      autor: "Autor por defecto", // Puedes personalizar esto
+      revisor: "Revisor por defecto", // Puedes personalizar esto
+      actualizacion: new Date().toISOString(),
+      ...Object.assign({}, ...recetaData), // Convertir el array de objetos en un solo objeto
+    };
+
+    // Despachar la acción para insertar las recetas
+    dispatch(insertarRecetas([recetaPayload]));
+    alert("Receta actualizada correctamente.");
   };
 
   return (
@@ -63,10 +97,10 @@ const RecetaOptions = () => {
               onChange={(e) => handleInputChange(index, e.target.value)}
               placeholder="Escribe para buscar..."
               className="p-2 border rounded bg-slate-200 w-full"
-              onFocus={() => setDropdownVisible((prev) => ({ ...prev, [index]: true }))} // Mostrar dropdown al enfocar
+              onFocus={() => setDropdownVisible((prev) => ({ ...prev, [index]: true }))}
               onBlur={() =>
                 setTimeout(() => setDropdownVisible((prev) => ({ ...prev, [index]: false })), 150)
-              } // Ocultar dropdown después de un breve retraso
+              }
             />
             {/* Mostrar sugerencias */}
             {dropdownVisible[index] && item.type && (
@@ -103,6 +137,14 @@ const RecetaOptions = () => {
           </div>
         </div>
       ))}
+
+      {/* Botón para actualizar receta */}
+      <button
+        onClick={handleUpdateReceta}
+        className="self-start px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors mt-4"
+      >
+        Actualizar Receta
+      </button>
     </div>
   );
 };
