@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import supabase from "@/config/supabaseClient"; // Asegúrate de que la ruta sea correcta
 import { deleteItem, updateItem } from "../../redux/actions";
 import { CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
 import RecetaOptions from "../../body/components/recetaOptions/RecetaOptions";
+import axios from "axios";
 
 export function CardInstanceInventario({ product, currentType }) {
+  // Obtener el estado global showEdit desde el reducer
+const test = axios.get(product)
+  console.log(product.Receta);
+  
   const showEdit = useSelector((state) => state.showEdit);
 
   const dispatch = useDispatch();
@@ -17,36 +21,14 @@ export function CardInstanceInventario({ product, currentType }) {
     UNIDADES: product.UNIDADES || "",
     COSTO: product.COSTO || "",
     GRUPO: product.GRUPO || "",
-    Estado: product.Estado || ESTATUS[0],
+    Estado: product.Estado || ESTATUS[0], // Inicializar con el primer valor de ESTATUS
   });
+  const [ help, setHelp] = useState(
+  false);
 
-  const [help, setHelp] = useState(false);
-  const [buttonState, setButtonState] = useState("save");
-  const [recetaData, setRecetaData] = useState(null);
+  const [buttonState, setButtonState] = useState("save"); // Estados: 'save', 'syncing', 'done'
 
   const groupOptions = CATEGORIES;
-
-  useEffect(() => {
-    const fetchReceta = async () => {
-      if (product.receta && validarUUID(product.receta)) {
-        const { data, error } = await supabase
-          .from("Recetas")
-          .select("*")
-          .eq("_id", product.receta);
-
-
-          setRecetaData(data);
-          
-        if (error) {
-          console.error("Error al cargar la receta:", error);
-        } else if (data && data.length > 0) {
-          setRecetaData(data[0]);
-        }
-      }
-    };
-
-    fetchReceta();
-  }, [product.receta]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -66,7 +48,7 @@ export function CardInstanceInventario({ product, currentType }) {
         COSTO: formData.COSTO,
         GRUPO: formData.GRUPO,
         Estado: formData.Estado,
-        ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
+        ...(currentType === ItemsAlmacen && { COOR: "1.05" }), // Incluir COOR solo si es ItemsAlmacen
         FECHA_ACT: new Date().toISOString().split("T")[0],
       };
 
@@ -82,7 +64,7 @@ export function CardInstanceInventario({ product, currentType }) {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ítem?")) {
       try {
         setButtonState("syncing");
-        await dispatch(deleteItem(product._id, currentType));
+        await dispatch(deleteItem(product._id, currentType)); // Llama a la acción para eliminar
         setButtonState("done");
         alert("Ítem eliminado correctamente.");
       } catch (error) {
@@ -94,20 +76,30 @@ export function CardInstanceInventario({ product, currentType }) {
   };
 
   const handleHelp = () => {
-    setHelp(!help);
+    setHelp(!help) 
   };
 
   const filteredEstatus = ESTATUS.filter((status) => {
-    if (currentType === ProduccionInterna && status === "PC") return false;
-    if (currentType === ItemsAlmacen && status === "PP") return false;
-    return true;
+    if (currentType === ProduccionInterna && status === "PC") {
+      return false; // Excluir PC si el currentType es ProduccionInterna
+    }
+    if (currentType === ItemsAlmacen && status === "PP") {
+      return false; // Excluir PP si el currentType es ItemsAlmacen
+    }
+    return true; // Incluir el resto de opciones
   });
 
   const handleStatusChange = async (status) => {
-    setFormData((prev) => ({ ...prev, Estado: status }));
+    setFormData((prev) => ({
+      ...prev,
+      Estado: status,
+    }));
 
     try {
-      const updatedFields = { Estado: status };
+      const updatedFields = {
+        Estado: status,
+      };
+
       await dispatch(updateItem(product._id, updatedFields, currentType));
       setButtonState("done");
     } catch (error) {
@@ -116,14 +108,10 @@ export function CardInstanceInventario({ product, currentType }) {
     }
   };
 
-  const validarUUID = (uuid) => {
-    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-    return uuidRegex.test(uuid);
-  };
-
   return (
     <Card className="w-full shadow-md rounded-lg overflow-hidden border border-gray-200">
       <CardContent className="p-4 flex flex-col gap-4">
+        {/* Nombre del producto y botones en la misma fila */}
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold text-gray-800 flex-1">
             {product.Nombre_del_producto || "Producto sin nombre"}
@@ -156,21 +144,109 @@ export function CardInstanceInventario({ product, currentType }) {
           </Button>
         </div>
 
-        {help && (
-          <RecetaOptions
-            id={product._id}
-            Nombre_del_producto={product.Nombre_del_producto}
-            currentType={currentType}
-          />
-        )}
+        {/* Botones de Estado */}
+        <div className="flex gap-2">
+          {filteredEstatus.map((status) => (
+            <button
+              key={status}
+              onClick={() => handleStatusChange(status)}
+              className={`flex-1 py-2 rounded text-white ${
+                formData.Estado === status
+                  ? "bg-green-500"
+                  : "bg-gray-300 hover:bg-gray-400"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+{help && <RecetaOptions
+id={product._id}
+Nombre_del_producto={product.Nombre_del_producto}
+currentType={currentType}
+/>}
+        {showEdit && (
+          <>
+            {/* Precio por unidad y última actualización */}
+            <div className="flex gap-4">
+              <label className="text-sm text-gray-700 flex-1">
+                Precio por unidad:
+                <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
+                  {product.precioUnitario}
+                </h3>
+              </label>
+              <label className="text-sm text-gray-700 flex-1">
+                Última Actualización:
+                <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
+                  {product.FECHA_ACT}
+                </h3>
+              </label>
+            </div>
 
-        {recetaData && (
-          <div className="mt-4">
-            <h4 className="text-lg font-bold">Detalles de la Receta:</h4>
-            <p><strong>Rendimiento:</strong> {recetaData.rendimiento}</p>
-            <p><strong>Autor:</strong> {recetaData.autor}</p>
-            <p><strong>Revisor:</strong> {recetaData.revisor}</p>
-          </div>
+            {/* Cantidad y Unidades */}
+            <div className="flex gap-4">
+              <label className="text-sm text-gray-700 flex-1">
+                Cantidad:
+                <input
+                  type="text"
+                  name="CANTIDAD"
+                  value={formData.CANTIDAD}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                />
+              </label>
+              <label className="text-sm text-gray-700 flex-1">
+                Unidades:
+                <select
+                  name="UNIDADES"
+                  value={formData.UNIDADES}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                >
+                  <option value="" disabled>
+                    {product.UNIDAD ? `Actual: ${product.UNIDAD}` : "Selecciona unidad"}
+                  </option>
+                  {unidades.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {/* Costo y Grupo */}
+            <div className="flex gap-4">
+              <label className="text-sm text-gray-700 flex-1">
+                Costo:
+                <input
+                  type="text"
+                  name="COSTO"
+                  value={formData.COSTO}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                />
+              </label>
+              <label className="text-sm text-gray-700 flex-1">
+                Grupo:
+                <select
+                  name="GRUPO"
+                  value={formData.GRUPO}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                >
+                  <option value="" disabled>
+                    {product.GRUPO ? `Actual: ${product.GRUPO}` : "Selecciona un grupo"}
+                  </option>
+                  {groupOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
