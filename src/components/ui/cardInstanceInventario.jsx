@@ -10,7 +10,6 @@ import axios from "axios";
 export function CardInstanceInventario({ product, currentType }) {
   // Obtener el estado global showEdit desde el reducer
 const test = axios.get(product)
-  console.log(product.Receta);
   
   const showEdit = useSelector((state) => state.showEdit);
 
@@ -23,8 +22,7 @@ const test = axios.get(product)
     GRUPO: product.GRUPO || "",
     Estado: product.Estado || ESTATUS[0], // Inicializar con el primer valor de ESTATUS
   });
-  const [ help, setHelp] = useState(
-  false);
+ 
 
   const [buttonState, setButtonState] = useState("save"); // Estados: 'save', 'syncing', 'done'
 
@@ -75,9 +73,7 @@ const test = axios.get(product)
     }
   };
 
-  const handleHelp = () => {
-    setHelp(!help) 
-  };
+
 
   const filteredEstatus = ESTATUS.filter((status) => {
     if (currentType === ProduccionInterna && status === "PC") {
@@ -126,14 +122,7 @@ const test = axios.get(product)
               {buttonState === "done" && "💥"}
             </Button>
           )}
-          {currentType === ProduccionInterna && (
-            <Button
-              className="bg-yellow-500 text-white hover:bg-yellow-400"
-              onClick={handleHelp}
-            >
-              📖
-            </Button>
-          )}
+
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleUpdate}
@@ -160,11 +149,12 @@ const test = axios.get(product)
             </button>
           ))}
         </div>
-{help && <RecetaOptions
+<RecetaOptions
 id={product._id}
+receta={product.Receta}
 Nombre_del_producto={product.Nombre_del_producto}
 currentType={currentType}
-/>}
+/>
         {showEdit && (
           <>
             {/* Precio por unidad y última actualización */}

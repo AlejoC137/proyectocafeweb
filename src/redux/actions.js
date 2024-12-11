@@ -13,13 +13,46 @@ import {
   SCRAP,
   ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
-  ProduccionInterna
+  ProduccionInterna,
+  GET_RECETA_SUCCESS,
+GET_RECETA_FAILURE
   
 } from "./actions-types";
 
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid'; // Importar para generar UUIDs
 import * as cheerio from "cheerio";
+
+
+
+
+
+
+
+export async function getReceta(uuid) {
+  console.log("UUID recibido:", uuid);
+
+  try {
+    let { data, error } = await supabase
+      .from('Recetas')
+      .select('*')
+      .eq('_id', uuid);
+
+    if (error) throw error;
+
+    console.log("Receta obtenida dentro de la función:", data[0]);
+    return data[0];
+  } catch (error) {
+    console.error("Error en la función getReceta:", error);
+    return null;
+  }
+}
+
+
+
+
+
+
 
 export function scrapAction(url, pointers) {
   return async (dispatch) => {
@@ -165,44 +198,37 @@ export function updateUserRegState(newState) {
   };
 }
 
-export function insertarRecetas(recetasData, upsert = false) {
+export function insertarRecetas(recetasData) {
   return async (dispatch) => {
     try {
-      let data, error;
-
-      if (upsert) {
-        ({ data, error } = await supabase
-          .from('Recetas')
-          .upsert(recetasData)
-          .select());
-      } else {
-        ({ data, error } = await supabase
-          .from('Recetas')
-          .insert(recetasData)
-          .select());
-      }
+      const { data, error } = await supabase
+        .from('Recetas')
+        .upsert(recetasData, { onConflict: '_id' }) // Asegurar que coincida por '_id'
+        .select();
 
       if (error) {
         console.error("Error inserting/upserting recipes:", error);
-        return dispatch({
-          type: INSERT_RECETAS_FAILURE,
-          payload: error.message,
-        });
+        throw new Error(error.message);
       }
 
-      return dispatch({
+      dispatch({
         type: INSERT_RECETAS_SUCCESS,
         payload: data,
       });
+
+      console.log("Receta procesada correctamente:", data);
+      return data;
     } catch (error) {
       console.error("Error in insertarRecetas:", error);
-      return dispatch({
+      dispatch({
         type: INSERT_RECETAS_FAILURE,
         payload: error.message,
       });
+      throw error;
     }
   };
 }
+
 // Función para procesar el JSON de receta y enviarlo a Supabase
 export function procesarRecetaYEnviarASupabase() {
   return async (dispatch, getState) => {

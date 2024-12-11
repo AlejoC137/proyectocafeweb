@@ -5,6 +5,11 @@ export const UPDATE_CURRENT_VIEW = "UPDATE_CURRENT_VIEW";
 export const GET_BY_FILTER_VALUE = "GET_BY_FILTER_VALUE";
 export const TODAYS_MENU = "TODAYS_MENU";
 
+export const GET_RECETA_SUCCESS = "GET_RECETA_SUCCESS";
+export const GET_RECETA_FAILURE = "GET_RECETA_FAILURE";
+
+
+
 // Acciones relacionadas con el estado del usuario y selección
 export const SET_USER_REG_STATE = "SET_USER_REG_STATE";  // Nueva acción
 export const UPDATE_SELECTED_VALUE = "UPDATE_SELECTED_VALUE";  // Nueva acción
@@ -122,3 +127,4 @@ export const INSERT_ITEM_FAILURE  = "INSERT_ITEM_FAILURE ";  // Nueva acción pa
 export const TOGGLE_SHOW_EDIT =  'TOGGLE_SHOW_EDIT'; 
 
 export const SCRAP  = "SCRAP ";  // Nueva acción para error al insertar recetas
+
