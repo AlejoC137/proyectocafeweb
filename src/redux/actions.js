@@ -547,33 +547,26 @@ export function deleteItem(itemId , type) {
   };
 }
 
-export const getRecepie = (uuid, type) => {
-  // console.log(uuid);zz
-  
-  return async (dispatch) => {
-    try {
-      // Llamada a Supabase para obtener la receta por UUID
-      const { data, error } = await supabase
-        .from(type) // Nombre de la tabla
-        .select("*")
-        .eq("_id", uuid)
-        .single(); // Obtener solo un resultado
-
-      if (error) {
-        console.error("Error al obtener la receta:", error);
-        throw new Error(error.message);
-      }
-
-      // Despachar el resultado a Redux si es necesario
+export const getRecepie = async (uuid, type) => {
 
 
-      console.log("Receta obtenida:", data);
-      // return data;
-      
-    } catch (error) {
-      console.error("Error en la acción getRecepie:", error);
+  try {
+    // Llamada a Supabase para obtener la receta por UUID
+    const { data, error } = await supabase
+      .from(type) // Nombre de la tabla
+      .select("*")
+      .eq("_id", uuid)
+      .single(); // Obtener solo un resultado
 
-      return null;
+    if (error) {
+      console.error("Error al obtener la receta:", error);
+      throw new Error(error.message);
     }
-  };
+
+    // console.log("Receta obtenida:", data);
+    return data;
+  } catch (error) {
+    console.error("Error en la acción getRecepie:", error);
+    return null;
+  }
 };

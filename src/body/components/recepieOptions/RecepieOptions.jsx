@@ -6,40 +6,13 @@ import { ProduccionInterna } from "../../../redux/actions-types";
 function RecepieOptions({ product , Receta }) {
 
 
+console.log(Receta);
+
+
   const dispatch = useDispatch();
 
-  const [recetaActual, setRecetaActual] = useState(null);
 
   // Ejecutar getRecepie solo si product.Receta existe
-  useEffect(() => {
-    if (product.Receta) {
-      dispatch(getRecepie(product.Receta, "RecetasProduccion"))
-        .then((data) => {
-          setRecetaActual(data); // Actualizar el estado local con la receta obtenida
-        })
-        .catch((error) => {
-          console.error("Error al obtener la receta:", error);
-        });
-    }
-  }, [product.Receta, dispatch]);
-
-  const renderReceta = () => {
-    if (recetaActual) {
-      return (
-        <div className="p-2 border rounded bg-gray-200">
-          <h3 className="font-bold mb-2">Receta Actual:</h3>
-          <pre>{JSON.stringify(recetaActual, null, 2)}</pre>
-        </div>
-      );
-    }
-    return <p>No hay receta asociada.</p>;
-  };
-
-  
-   
-      // setLaReceta( getRecepie(product.Receta , 'RecetasProduccion') )
-
-      // console.log(laReceta.data);
 
 
   const Items = useSelector((state) => state.allItems || []);
@@ -167,7 +140,7 @@ function RecepieOptions({ product , Receta }) {
           className="p-2 border rounded bg-slate-50"
         />
       </div>
-      {renderReceta()}
+     
 
       {/* Ingredientes */}
       <div className="mb-4 bg-slate-50">
@@ -229,7 +202,7 @@ function RecepieOptions({ product , Receta }) {
           Añadir Ingrediente
         </button>
       </div>
-
+      <div>{Receta ? "Receta cargada" : "No hay receta"}</div>
       {/* Botón Guardar */}
       <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
         Guardar Receta

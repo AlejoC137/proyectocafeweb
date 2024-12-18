@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,23 @@ import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions"
 
 
 export function CardInstanceInventario({ product, currentType }) {
+  // let receta;
+  // product.Receta ? receta = getRecepie(product.Receta, "RecetasProduccion") : console.log('no receta');
+  
+  const [receta, setReceta] = useState(null);
+  useEffect(() => {
+    const fetchReceta = async () => {
+      if (product.Receta) {
+        const result = await getRecepie(product.Receta, "RecetasProduccion");
+        setReceta(result);
+      } else {
+        console.log("no receta");
+      }
+    };
+
+    fetchReceta();
+  }, [product.Receta]);
+  
   
   // Obtener el estado global showEdit desde el reducer
   const showEdit = useSelector((state) => state.showEdit);
@@ -294,7 +311,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
 
         {book === '📖' && <RecepieOptions
         product={product}
-        // Receta={laReceta}
+        Receta={receta}
         currentType={currentType}
         ></RecepieOptions>}
       </CardContent>
