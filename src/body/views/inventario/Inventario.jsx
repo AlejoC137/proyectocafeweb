@@ -47,7 +47,7 @@ function Inventario() {
   }
 
   return (
-    <div className="flex flex-col w-screen border ">
+    <div className="flex flex-col w-screen border pt-3">
       <h3 className="text-lg font-bold ml-4">ELIJA UNA LISTA</h3>
       <div className="flex justify-center gap-4 ml-4 mr-4 mb-4">
         <button
@@ -85,6 +85,7 @@ function Inventario() {
       {/* {filteredItems.map((item) => ( */}
         <CardGridInventario
           // key={item.id}
+          
           products={filteredItems}
           category="Grouped"
           currentType={currentType}

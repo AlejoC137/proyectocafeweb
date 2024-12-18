@@ -13,46 +13,13 @@ import {
   SCRAP,
   ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
-  ProduccionInterna,
-  GET_RECETA_SUCCESS,
-GET_RECETA_FAILURE
+  ProduccionInterna
   
 } from "./actions-types";
 
 import axios from "axios";
 import { v4 as uuidv4 } from 'uuid'; // Importar para generar UUIDs
 import * as cheerio from "cheerio";
-
-
-
-
-
-
-
-export async function getReceta(uuid) {
-  console.log("UUID recibido:", uuid);
-
-  try {
-    let { data, error } = await supabase
-      .from('Recetas')
-      .select('*')
-      .eq('_id', uuid);
-
-    if (error) throw error;
-
-    console.log("Receta obtenida dentro de la función:", data[0]);
-    return data[0];
-  } catch (error) {
-    console.error("Error en la función getReceta:", error);
-    return null;
-  }
-}
-
-
-
-
-
-
 
 export function scrapAction(url, pointers) {
   return async (dispatch) => {
@@ -88,10 +55,6 @@ export function scrapAction(url, pointers) {
     }
   };
 }
-
-
-
-
 
 export const toggleShowEdit = () => {
   return (dispatch, getState) => {
@@ -198,37 +161,44 @@ export function updateUserRegState(newState) {
   };
 }
 
-export function insertarRecetas(recetasData) {
+export function insertarRecetas(recetasData, upsert = false) {
   return async (dispatch) => {
     try {
-      const { data, error } = await supabase
-        .from('Recetas')
-        .upsert(recetasData, { onConflict: '_id' }) // Asegurar que coincida por '_id'
-        .select();
+      let data, error;
+
+      if (upsert) {
+        ({ data, error } = await supabase
+          .from('Recetas')
+          .upsert(recetasData)
+          .select());
+      } else {
+        ({ data, error } = await supabase
+          .from('Recetas')
+          .insert(recetasData)
+          .select());
+      }
 
       if (error) {
         console.error("Error inserting/upserting recipes:", error);
-        throw new Error(error.message);
+        return dispatch({
+          type: INSERT_RECETAS_FAILURE,
+          payload: error.message,
+        });
       }
 
-      dispatch({
+      return dispatch({
         type: INSERT_RECETAS_SUCCESS,
         payload: data,
       });
-
-      console.log("Receta procesada correctamente:", data);
-      return data;
     } catch (error) {
       console.error("Error in insertarRecetas:", error);
-      dispatch({
+      return dispatch({
         type: INSERT_RECETAS_FAILURE,
         payload: error.message,
       });
-      throw error;
     }
   };
 }
-
 // Función para procesar el JSON de receta y enviarlo a Supabase
 export function procesarRecetaYEnviarASupabase() {
   return async (dispatch, getState) => {
@@ -422,7 +392,6 @@ export function actualizarPrecioUnitario(items,type) {
   };
 }
 
-
 // Función para calcular el precio unitario de un item
 function calcularPrecioUnitario(item) {
   let precioUnitario;
@@ -444,10 +413,8 @@ function calcularPrecioUnitario(item) {
   return parseFloat(precioUnitario.toFixed(2));
 }
 
-
-
 // Acción para filtrar elementos y copiarlos al portapapeles
-export function copiarAlPortapapeles(items, estado) {
+export function copiarAlPortapapeles(items, estado , ) {
   return async () => {
     try {
       // Filtrar los elementos que coincidan con el estado
@@ -474,16 +441,31 @@ export function copiarAlPortapapeles(items, estado) {
   };
 }
 
-
-export function crearItem(itemData,type) {
-  return async (dispatch) => {  
+export function crearItem(itemData, type, forId) {
+  return async (dispatch) => {
     try {
-      // Generar un UUID para el nuevo ítem
-      const nuevoItem = {
+      // Generar un objeto base con UUID
+      let nuevoItem = {
         _id: uuidv4(),
         ...itemData,
-        FECHA_ACT: new Date().toISOString().split("T")[0], // Fecha actual
+
       };
+
+      if (type === "RecetasProduccion") { 
+        nuevoItem = {
+          ...nuevoItem,
+          forId: forId
+        };
+        
+      }
+
+      // Si el tipo NO es 'Recetas', agregar FECHA_ACT
+      if (type !== 'RecetasProduccion') {
+        nuevoItem = {
+          ...nuevoItem,
+          FECHA_ACT: new Date().toISOString().split("T")[0], // Fecha actual
+        };
+      }
 
       // Insertar el nuevo ítem en Supabase
       const { data, error } = await supabase
@@ -511,7 +493,11 @@ export function crearItem(itemData,type) {
   };
 }
 
+
+
+
 export function updateItem(itemId, updatedFields,type) {
+  
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
@@ -560,3 +546,34 @@ export function deleteItem(itemId , type) {
     }
   };
 }
+
+export const getRecepie = (uuid, type) => {
+  // console.log(uuid);zz
+  
+  return async (dispatch) => {
+    try {
+      // Llamada a Supabase para obtener la receta por UUID
+      const { data, error } = await supabase
+        .from(type) // Nombre de la tabla
+        .select("*")
+        .eq("_id", uuid)
+        .single(); // Obtener solo un resultado
+
+      if (error) {
+        console.error("Error al obtener la receta:", error);
+        throw new Error(error.message);
+      }
+
+      // Despachar el resultado a Redux si es necesario
+
+
+      console.log("Receta obtenida:", data);
+      // return data;
+      
+    } catch (error) {
+      console.error("Error en la acción getRecepie:", error);
+
+      return null;
+    }
+  };
+};
