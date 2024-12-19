@@ -12,7 +12,8 @@ import {
   SCRAP,
   ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
-  ProduccionInterna
+  ProduccionInterna,
+  RESET_EXPANDED_GROUPS
   
 } from "./actions-types";
 
@@ -618,5 +619,11 @@ export const trimRecepie = (items, recepie) => {
  console.log(resultado);
  
   return resultado;
+};
+
+export const resetExpandedGroups = () => {
+  return {
+    type: RESET_EXPANDED_GROUPS,
+  };
 };
 

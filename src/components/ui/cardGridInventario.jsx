@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CardInstanceInventario } from "@/components/ui/cardInstanceInventario";
 import { copiarAlPortapapeles } from "../../redux/actions";
 import { ItemsAlmacen, ProduccionInterna } from "../../redux/actions-types";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export function CardGridInventario({ products, currentType }) {
   // Determinar el estado (PC o PP) según el tipo actual
   const ESTATUS = currentType === ProduccionInterna ? "PP" : "PC";
   const dispatch = useDispatch();
+  const globalExpandedGroups = useSelector((state) => state.expandedGroups); // Obtener el estado de expandedGroups desde Redux
 
   // Agrupar productos por GRUPO
   const groupedProducts = products.reduce((acc, product) => {
@@ -17,10 +18,15 @@ export function CardGridInventario({ products, currentType }) {
     return acc;
   }, {});
 
-  // Estado para controlar qué grupos están desplegados
+  // Estado local para controlar qué grupos están desplegados
   const [expandedGroups, setExpandedGroups] = useState({});
 
-  // Alternar el estado de un grupo
+  // Sincronizar el estado local con el estado global
+  useEffect(() => {
+    setExpandedGroups(globalExpandedGroups);
+  }, [globalExpandedGroups]);
+
+  // Alternar el estado de un grupo localmente
   const toggleGroup = (group) => {
     setExpandedGroups((prev) => ({
       ...prev,

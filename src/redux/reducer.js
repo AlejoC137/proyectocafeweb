@@ -13,7 +13,8 @@ import {
   SET_PREPROCESS_DATA,
   TODAYS_MENU,
   SCRAP,
-  TOGGLE_SHOW_EDIT
+  TOGGLE_SHOW_EDIT,
+  RESET_EXPANDED_GROUPS       // Nueva acción importada
 } from './actions-types';
 
 const initialState = {
@@ -153,6 +154,7 @@ const initialState = {
   recetas: [],              // Estado para guardar las recetas insertadas
   preProcess : [],              // Estado para guardar las recetas insertadas
   recetaError: null,        // Estado para guardar el error en caso de fallo
+  expandedGroups: {},       // Estado para controlar la visibilidad de los grupos
 };
 
 const reducer = (state = initialState, action) => {
@@ -230,6 +232,12 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         recetaError: action.payload,                     // Guardar el mensaje de error
+      };
+
+    case RESET_EXPANDED_GROUPS:
+      return {
+        ...state,
+        expandedGroups: {}, // Restablecer la visibilidad de los grupos
       };
 
     default:

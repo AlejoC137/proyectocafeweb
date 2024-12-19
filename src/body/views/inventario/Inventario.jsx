@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFromTable } from "../../../redux/actions";
+import { getAllFromTable, resetExpandedGroups } from "../../../redux/actions";
 import { toggleShowEdit } from "../../../redux/actions";
-import { STAFF, MENU, ITEMS,PRODUCCION, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
+import { STAFF, MENU, ITEMS, PRODUCCION, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { FaWarehouse, FaIndustry, FaEdit, FaTools } from "react-icons/fa";
@@ -38,7 +38,11 @@ function Inventario() {
   }, [dispatch]);
 
   const handleToggleType = (type) => {
-    setCurrentType(type);
+    if (currentType === type) {
+      dispatch(resetExpandedGroups()); // Ocultar los grupos si se hace clic en el mismo botón
+    } else {
+      setCurrentType(type);
+    }
   };
 
   const handleToggleShowEdit = () => {
