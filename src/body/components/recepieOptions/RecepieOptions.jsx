@@ -66,9 +66,9 @@ function RecepieOptions({ product, Receta }) {
 
   const handleRemoveIngredient = (index) => {
     if (showEdit) {
-      const updatedItems = recetaItems.filter((_, idx) => idx !== index);
-      const reorganizedItems = reorganizeRecepie(updatedItems, recetaItems.length);
-      setRecetaItems(reorganizedItems);
+      const updatedItems = [...recetaItems];
+      updatedItems[index] = { name: "", item_Id: null, cuantity: null, units: null };
+      setRecetaItems(updatedItems);
     }
   };
 
@@ -77,7 +77,7 @@ function RecepieOptions({ product, Receta }) {
     const updatedRecepie = [...recepie];
     for (let i = 0; i < originalLength; i++) {
       if (!updatedRecepie[i]) {
-        updatedRecepie.push({ name: "", item_Id: "", cuantity: "", units: "" });
+        updatedRecepie.push({ name: "", item_Id: null, cuantity: null, units: null });
       }
     }
     return updatedRecepie;
@@ -121,9 +121,11 @@ function RecepieOptions({ product, Receta }) {
     items.forEach((item, index) => {
       const idx = index + 1;
       payload[`${prefix}${idx}_Id`] = item.item_Id || null;
-      payload[`${prefix}${idx}_Cuantity_Units`] = JSON.stringify({
-        metric: { cuantity: item.cuantity || null, units: item.units || null },
-      });
+      payload[`${prefix}${idx}_Cuantity_Units`] = item.item_Id
+        ? JSON.stringify({
+            metric: { cuantity: item.cuantity || null, units: item.units || null },
+          })
+        : null;
     });
     return payload;
   };
@@ -169,44 +171,61 @@ function RecepieOptions({ product, Receta }) {
       <div className="mb-4 bg-slate-50">
         <h3 className="font-semibold mb-2 bg-slate-50">Ingredientes</h3>
         {recetaItems.map((item, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2 bg-slate-50">
-            <input
-              type="text"
-              placeholder="Buscar ingrediente"
-              value={item.name}
-              onChange={(e) => handleIngredientChange(index, e.target.value)}
-              className="p-2 border rounded flex-1 w-1/3 bg-slate-50"
-              readOnly={!showEdit}
-            />
-            <input
-              type="number"
-              placeholder="Cantidad"
-              value={item.cuantity}
-              onChange={(e) => {
-                if (showEdit) {
-                  const updatedItems = [...recetaItems];
-                  updatedItems[index].cuantity = e.target.value;
-                  setRecetaItems(updatedItems);
-                }
-              }}
-              className="p-2 border rounded w-1/6 bg-slate-50"
-              readOnly={!showEdit}
-            />
-            <input
-              type="text"
-              placeholder="Unidades"
-              value={item.units}
-              readOnly
-              className="p-2 border rounded w-1/6 bg-slate-50"
-            />
-            {showEdit && (
-              <button
-                onClick={() => handleRemoveIngredient(index)}
-                className="px-2 py-1 bg-red-500 text-white rounded"
-              >
-                X
-              </button>
+          <div key={index} className="flex flex-col mb-2 bg-slate-50">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Buscar ingrediente"
+                value={item.name}
+                onChange={(e) => handleIngredientChange(index, e.target.value)}
+                className="p-2 border rounded flex-1 bg-slate-50"
+                readOnly={!showEdit}
+              />
+              {showEdit && (
+                <button
+                  onClick={() => handleRemoveIngredient(index)}
+                  className="px-2 py-1 bg-red-500 text-white rounded"
+                >
+                  X
+                </button>
+              )}
+            </div>
+            {item.matches && item.matches.length > 0 && (
+              <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+                {item.matches.map((match) => (
+                  <li
+                    key={match._id}
+                    onClick={() => handleIngredientSelect(index, match)}
+                    className="p-2 hover:bg-gray-200 cursor-pointer"
+                  >
+                    {match.Nombre_del_producto}
+                  </li>
+                ))}
+              </ul>
             )}
+            <div className="flex gap-2 mt-2">
+              <input
+                type="number"
+                placeholder="Cantidad"
+                value={item.cuantity || ""}
+                onChange={(e) => {
+                  if (showEdit) {
+                    const updatedItems = [...recetaItems];
+                    updatedItems[index].cuantity = e.target.value;
+                    setRecetaItems(updatedItems);
+                  }
+                }}
+                className="p-2 border rounded w-1/2 bg-slate-50"
+                readOnly={!showEdit}
+              />
+              <input
+                type="text"
+                placeholder="Unidades"
+                value={item.units || ""}
+                readOnly
+                className="p-2 border rounded w-1/2 bg-slate-50"
+              />
+            </div>
           </div>
         ))}
         {showEdit && (

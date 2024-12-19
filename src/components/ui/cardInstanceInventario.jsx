@@ -156,7 +156,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
           
           
           
-         <Button
+{     ( currentType === ProduccionInterna)  &&   <Button
             className="bg-yellow-500 text-white hover:bg-yellow-500"
             onClick={
               
@@ -164,7 +164,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
             }
           >
        {book}
-          </Button>
+          </Button>}
           {/* {showEdit && <Button
             className="bg-yellow-500 text-white hover:bg-yellow-500"
             onClick={
@@ -185,6 +185,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
           >
             {buttonState === "save" && "🧨"}
             {buttonState === "syncing" && "💢"}
+            {buttonState === "done" && "💥"}
 
           </Button>}
 
@@ -318,7 +319,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
         )}
 
 
-        {book === '📖' && <RecepieOptions
+        {  ( currentType === ProduccionInterna)  && (book === '📖') && <RecepieOptions
         product={product}
         Receta={receta}
         currentType={currentType}
