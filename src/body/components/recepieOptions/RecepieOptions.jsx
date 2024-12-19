@@ -7,6 +7,7 @@ function RecepieOptions({ product, Receta }) {
   const dispatch = useDispatch();
   const Items = useSelector((state) => state.allItems || []);
   const Produccion = useSelector((state) => state.allProduccion || []);
+  const showEdit = useSelector((state) => state.showEdit);
   const allOptions = [...Items, ...Produccion];
 
   const [recetaItems, setRecetaItems] = useState([]);
@@ -35,54 +36,83 @@ function RecepieOptions({ product, Receta }) {
   };
 
   const addIngredient = () => {
-    setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "" }]);
+    if (showEdit) {
+      setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "" }]);
+    }
   };
 
   const handleIngredientChange = (index, value) => {
-    const updatedItems = [...recetaItems];
-    updatedItems[index].name = value;
-    const matches = allOptions.filter((option) =>
-      option.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())
-    );
-    updatedItems[index].matches = matches;
-    setRecetaItems(updatedItems);
+    if (showEdit) {
+      const updatedItems = [...recetaItems];
+      updatedItems[index].name = value;
+      const matches = allOptions.filter((option) =>
+        option.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())
+      );
+      updatedItems[index].matches = matches;
+      setRecetaItems(updatedItems);
+    }
   };
 
   const handleIngredientSelect = (index, selectedOption) => {
-    const updatedItems = [...recetaItems];
-    updatedItems[index].name = selectedOption.Nombre_del_producto;
-    updatedItems[index].item_Id = selectedOption._id;
-    updatedItems[index].units = selectedOption.UNIDADES || "";
-    updatedItems[index].matches = [];
-    setRecetaItems(updatedItems);
+    if (showEdit) {
+      const updatedItems = [...recetaItems];
+      updatedItems[index].name = selectedOption.Nombre_del_producto;
+      updatedItems[index].item_Id = selectedOption._id;
+      updatedItems[index].units = selectedOption.UNIDADES || "";
+      updatedItems[index].matches = [];
+      setRecetaItems(updatedItems);
+    }
   };
 
   const handleRemoveIngredient = (index) => {
-    const updatedItems = recetaItems.filter((_, idx) => idx !== index);
-    setRecetaItems(updatedItems);
+    if (showEdit) {
+      const updatedItems = recetaItems.filter((_, idx) => idx !== index);
+      const reorganizedItems = reorganizeRecepie(updatedItems, recetaItems.length);
+      setRecetaItems(reorganizedItems);
+    }
+  };
+
+  // Function to reorganize the recipe ingredients
+  const reorganizeRecepie = (recepie, originalLength) => {
+    const updatedRecepie = [...recepie];
+    for (let i = 0; i < originalLength; i++) {
+      if (!updatedRecepie[i]) {
+        updatedRecepie.push({ name: "", item_Id: "", cuantity: "", units: "" });
+      }
+    }
+    return updatedRecepie;
   };
 
   const handleSaveReceta = async () => {
-    try {
-      const recetaPayload = {
-        _id: Receta ? Receta._id : crypto.randomUUID(),
-        legacyName: legacyName || "Sin nombre",
-        rendimiento: JSON.stringify(rendimiento),
-        autor,
-        revisor,
-        actualizacion: new Date().toISOString(),
-        ...mapItemsToPayload(recetaItems, "item"),
-        ...mapItemsToPayload(productoInternoItems, "producto_interno"),
-      };
+    if (showEdit) {
+      try {
+        const recetaPayload = {
+          _id: Receta ? Receta._id : crypto.randomUUID(),
+          legacyName: legacyName || "Sin nombre",
+          rendimiento: JSON.stringify(rendimiento),
+          autor,
+          revisor,
+          actualizacion: new Date().toISOString(),
+          ...mapItemsToPayload(recetaItems, "item"),
+          ...mapItemsToPayload(productoInternoItems, "producto_interno"),
+        };
 
-      console.log("Objeto a enviar:", recetaPayload);
+        console.log("Objeto a enviar:", recetaPayload);
 
-      await dispatch(crearItem(recetaPayload, "RecetasProduccion", product._id));
-      await dispatch(updateItem(product._id, { Receta: recetaPayload._id }, ProduccionInterna));
-      alert("Receta creada correctamente.");
-    } catch (error) {
-      console.error("Error al guardar la receta:", error);
-      alert("Hubo un error al guardar la receta.");
+        if (Receta) {
+          // Update existing recipe
+          await dispatch(updateItem(Receta._id, recetaPayload, "RecetasProduccion"));
+        } else {
+          // Create new recipe
+          await dispatch(crearItem(recetaPayload, "RecetasProduccion", product._id));
+        }
+
+        await dispatch(updateItem(product._id, { Receta: recetaPayload._id }, ProduccionInterna));
+        alert("Receta guardada correctamente.");
+      } catch (error) {
+        console.error("Error al guardar la receta:", error);
+        alert("Hubo un error al guardar la receta.");
+      }
     }
   };
 
@@ -100,13 +130,14 @@ function RecepieOptions({ product, Receta }) {
 
   return (
     <div className="p-4 border rounded bg-gray-50">
-      <h2 className="text-lg font-bold mb-4">Crear Nueva Receta</h2>
+      <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Receta:':"Editar Receta:"}</h2>
       <input
         type="text"
         placeholder="Nombre de la receta"
         value={legacyName}
-        onChange={(e) => setLegacyName(e.target.value)}
+        onChange={(e) => showEdit && setLegacyName(e.target.value)}
         className="w-full p-2 mb-4 border rounded bg-slate-50"
+        readOnly={!showEdit}
       />
       <div className="mb-4 bg-slate-50">
         <h3 className="font-semibold mb-2 bg-slate-50">Rendimiento</h3>
@@ -114,86 +145,81 @@ function RecepieOptions({ product, Receta }) {
           type="text"
           placeholder="Porción"
           value={rendimiento.porcion}
-          onChange={(e) => setRendimiento({ ...rendimiento, porcion: e.target.value })}
+          onChange={(e) => showEdit && setRendimiento({ ...rendimiento, porcion: e.target.value })}
           className="p-2 border rounded mr-2 bg-slate-50"
+          readOnly={!showEdit}
         />
         <input
           type="number"
           placeholder="Cantidad"
           value={rendimiento.cantidad}
-          onChange={(e) => setRendimiento({ ...rendimiento, cantidad: e.target.value })}
+          onChange={(e) => showEdit && setRendimiento({ ...rendimiento, cantidad: e.target.value })}
           className="p-2 border rounded mr-2 bg-slate-50"
+          readOnly={!showEdit}
         />
         <input
           type="text"
           placeholder="Unidades"
           value={rendimiento.unidades}
-          onChange={(e) => setRendimiento({ ...rendimiento, unidades: e.target.value })}
+          onChange={(e) => showEdit && setRendimiento({ ...rendimiento, unidades: e.target.value })}
           className="p-2 border rounded bg-slate-50"
+          readOnly={!showEdit}
         />
       </div>
       <div className="mb-4 bg-slate-50">
         <h3 className="font-semibold mb-2 bg-slate-50">Ingredientes</h3>
         {recetaItems.map((item, index) => (
-          <div key={index} className="flex flex-col mb-2 bg-slate-50">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Buscar ingrediente"
-                value={item.name}
-                onChange={(e) => handleIngredientChange(index, e.target.value)}
-                className="p-2 border rounded flex-1 bg-slate-50"
-              />
+          <div key={index} className="flex items-center gap-2 mb-2 bg-slate-50">
+            <input
+              type="text"
+              placeholder="Buscar ingrediente"
+              value={item.name}
+              onChange={(e) => handleIngredientChange(index, e.target.value)}
+              className="p-2 border rounded flex-1 w-1/3 bg-slate-50"
+              readOnly={!showEdit}
+            />
+            <input
+              type="number"
+              placeholder="Cantidad"
+              value={item.cuantity}
+              onChange={(e) => {
+                if (showEdit) {
+                  const updatedItems = [...recetaItems];
+                  updatedItems[index].cuantity = e.target.value;
+                  setRecetaItems(updatedItems);
+                }
+              }}
+              className="p-2 border rounded w-1/6 bg-slate-50"
+              readOnly={!showEdit}
+            />
+            <input
+              type="text"
+              placeholder="Unidades"
+              value={item.units}
+              readOnly
+              className="p-2 border rounded w-1/6 bg-slate-50"
+            />
+            {showEdit && (
               <button
                 onClick={() => handleRemoveIngredient(index)}
                 className="px-2 py-1 bg-red-500 text-white rounded"
               >
                 X
               </button>
-            </div>
-            {item.matches && item.matches.length > 0 && (
-              <ul className="border rounded bg-white max-h-40 overflow-y-auto">
-                {item.matches.map((match) => (
-                  <li
-                    key={match._id}
-                    onClick={() => handleIngredientSelect(index, match)}
-                    className="p-2 hover:bg-gray-200 cursor-pointer"
-                  >
-                    {match.Nombre_del_producto}
-                  </li>
-                ))}
-              </ul>
             )}
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                placeholder="Cantidad"
-                value={item.cuantity}
-                onChange={(e) => {
-                  const updatedItems = [...recetaItems];
-                  updatedItems[index].cuantity = e.target.value;
-                  setRecetaItems(updatedItems);
-                }}
-                className="p-2 border rounded w-1/2 bg-slate-50"
-              />
-              <input
-                type="text"
-                placeholder="Unidades"
-                value={item.units}
-                readOnly
-                className="p-2 border rounded w-1/2 bg-slate-50"
-              />
-            </div>
           </div>
         ))}
-        <button onClick={addIngredient} className="px-4 py-2 bg-blue-500 text-white rounded">
-          Añadir Ingrediente
-        </button>
+        {showEdit && (
+          <button onClick={addIngredient} className="px-4 py-2 bg-blue-500 text-white rounded">
+            Añadir Ingrediente
+          </button>
+        )}
       </div>
-      <div>{Receta ? "Receta cargada" : "No hay receta"}</div>
-      <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
-        Guardar Receta
-      </button>
+      {showEdit && (
+        <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
+          Guardar Receta
+        </button>
+      )}
     </div>
   );
 }

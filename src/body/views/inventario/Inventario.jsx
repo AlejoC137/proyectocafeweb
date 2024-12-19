@@ -5,11 +5,13 @@ import { toggleShowEdit } from "../../../redux/actions";
 import { STAFF, MENU, ITEMS, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
+import { FaWarehouse, FaIndustry, FaEdit, FaTools } from "react-icons/fa";
 
 function Inventario() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState(ItemsAlmacen);
+  const [showAccionesRapidas, setShowAccionesRapidas] = useState(false); // Local state to toggle AccionesRapidas
 
   const Items = useSelector((state) => state.allItems || []);
   const Produccion = useSelector((state) => state.allProduccion || []);
@@ -42,56 +44,70 @@ function Inventario() {
     dispatch(toggleShowEdit()); // Alternar el estado de showEdit
   };
 
+  const handleToggleAccionesRapidas = () => {
+    setShowAccionesRapidas((prev) => !prev); // Toggle the visibility of AccionesRapidas
+  };
+
   if (loading) {
     return <div className="text-center mt-10">Cargando...</div>;
   }
 
   return (
-    <div className="flex flex-col w-screen border pt-3">
-      <h3 className="text-lg font-bold ml-4">ELIJA UNA LISTA</h3>
-      <div className="flex justify-center gap-4 ml-4 mr-4 mb-4">
+    <div className="flex flex-col w-screen h-screen">
+      <div className="flex justify-center align-top gap-4 p-4 fixed top-12 left-0 right-0 bg-white z-10">
         <button
-          className={`rounded-md w-1/2 font-bold ${
+          className={`rounded-md w-1/5 font-bold flex flex-col items-center justify-center ${
             currentType === ItemsAlmacen
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700 hover:bg-gray-400"
           }`}
           onClick={() => handleToggleType(ItemsAlmacen)}
         >
-          Almacén
+          🛒
+          <span className="text-xs mt-1 truncate">Almacén</span>
         </button>
         <button
-          className={`rounded-md w-1/2 font-bold ${
+          className={`rounded-md w-1/5 font-bold flex flex-col items-center justify-center ${
             currentType === ProduccionInterna
               ? "bg-blue-500 text-white"
               : "bg-gray-300 text-gray-700 hover:bg-gray-400"
           }`}
           onClick={() => handleToggleType(ProduccionInterna)}
         >
-          Producción
+          🥘
+          <span className="text-xs mt-1 truncate">Producción</span>
+        </button>
+        <button
+          className={`w-1/5 px-2 rounded-md flex flex-col items-center justify-center ${
+            showEdit ? "bg-green-500 text-white" : "bg-blue-500 text-white hover:bg-blue-600"
+          }`}
+          onClick={handleToggleShowEdit}
+        >
+          ⚙️
+          <span className="text-xs mt-1 truncate">Edición</span>
+        </button>
+        <button
+          className={`w-1/5 px-2 rounded-md flex flex-col items-center justify-center ${
+            showAccionesRapidas ? "bg-green-500 text-white" : "bg-blue-500 text-white hover:bg-blue-600"
+          }`}
+          onClick={handleToggleAccionesRapidas}
+        >
+          ⚡
+          <span className="text-xs mt-1 truncate">Acciones</span>
         </button>
       </div>
+<br></br>
+      <div className="flex flex-col mt-20 overflow-y-auto">
+        {showAccionesRapidas && <AccionesRapidas currentType={currentType} />}
 
-      <button
-        className="bg-blue-500 text-white px-2 rounded-md ml-4  mr-4 hover:bg-blue-600"
-        onClick={handleToggleShowEdit}
-      >
-        {showEdit ? "Ocultar Edición" : "Mostrar Edición"}
-      </button>
-
-      <AccionesRapidas currentType={currentType} />
-      
-      <h3 className="text-lg font-bold ml-4">LISTAS</h3>
-      {/* {filteredItems.map((item) => ( */}
+        <h3 className="text-lg font-bold ml-4">{`Listado de ${currentType}`}</h3>
         <CardGridInventario
-          // key={item.id}
-          
           products={filteredItems}
           category="Grouped"
           currentType={currentType}
           showEdit={showEdit} // Pasar showEdit a CardGridInventario
         />
-      {/* ))} */}
+      </div>
     </div>
   );
 }

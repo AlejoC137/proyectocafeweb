@@ -570,8 +570,9 @@ export const getRecepie = async (uuid, type) => {
 };
 
 export const trimRecepie = (items, recepie) => {
-  console.log(recepie);
 
+  console.log(recepie);
+  
   const buscarPorId = (id) => {
     return items.find((item) => item._id === id) || null;
   };
@@ -579,17 +580,30 @@ export const trimRecepie = (items, recepie) => {
   const clavesFiltradas = Object.keys(recepie).filter(
     (key) =>
       (key.startsWith("item") || key.startsWith("producto_interno")) &&
-      (validarUUID(recepie[key]) || (typeof recepie[key] === 'object' && recepie[key] !== null && Object.values(recepie[key]).some(value => value !== "")))
+      recepie[key] !== null
   );
 
-  const resultado = clavesFiltradas.map((key) => {
-    const idValor = recepie[key];
-    const cuantityKey = key.replace("_Id", "_Cuantity_Units");
-    const cuantityValor = recepie[cuantityKey]
-      ? JSON.parse(recepie[cuantityKey]).metric.cuantity
+  const agrupado = {};
+  clavesFiltradas.forEach((key) => {
+    const [nombre, indice] = key.split("_");
+    const claveBase = `${nombre}${indice}`;
+
+    if (!agrupado[claveBase]) agrupado[claveBase] = {};
+    agrupado[claveBase][key] = recepie[key];
+  });
+
+  const resultado = Object.entries(agrupado).map(([claveBase, grupo]) => {
+    const idClave = Object.keys(grupo).find((key) => key.endsWith("_Id"));
+    const cuantityClave = Object.keys(grupo).find((key) =>
+      key.endsWith("_Cuantity_Units")
+    );
+
+    const idValor = grupo[idClave];
+    const cuantityValor = cuantityClave
+      ? JSON.parse(grupo[cuantityClave]).metric.cuantity
       : null;
-    const unitsValor = recepie[cuantityKey]
-      ? JSON.parse(recepie[cuantityKey]).metric.units
+    const unitsValor = cuantityClave
+      ? JSON.parse(grupo[cuantityClave]).metric.units
       : null;
 
     const resultadoBusqueda = buscarPorId(idValor);
@@ -601,9 +615,8 @@ export const trimRecepie = (items, recepie) => {
       units: unitsValor || "",
     };
   });
-
-  console.log(resultado);
-
+ console.log(resultado);
+ 
   return resultado;
 };
 
