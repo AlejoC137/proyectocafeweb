@@ -1,4 +1,3 @@
-
 // actions.js
 import supabase from "../config/supabaseClient";
 import {
@@ -442,6 +441,9 @@ export function copiarAlPortapapeles(items, estado , ) {
 }
 
 export function crearItem(itemData, type, forId) {
+
+  console.log(itemData);
+  
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
@@ -548,25 +550,60 @@ export function deleteItem(itemId , type) {
 }
 
 export const getRecepie = async (uuid, type) => {
-
-
   try {
-    // Llamada a Supabase para obtener la receta por UUID
     const { data, error } = await supabase
-      .from(type) // Nombre de la tabla
+      .from(type)
       .select("*")
       .eq("_id", uuid)
-      .single(); // Obtener solo un resultado
+      .single();
 
     if (error) {
       console.error("Error al obtener la receta:", error);
       throw new Error(error.message);
     }
 
-    // console.log("Receta obtenida:", data);
     return data;
   } catch (error) {
     console.error("Error en la acción getRecepie:", error);
     return null;
   }
 };
+
+export const trimRecepie = (items, recepie) => {
+  console.log(recepie);
+
+  const buscarPorId = (id) => {
+    return items.find((item) => item._id === id) || null;
+  };
+
+  const clavesFiltradas = Object.keys(recepie).filter(
+    (key) =>
+      (key.startsWith("item") || key.startsWith("producto_interno")) &&
+      (validarUUID(recepie[key]) || (typeof recepie[key] === 'object' && recepie[key] !== null && Object.values(recepie[key]).some(value => value !== "")))
+  );
+
+  const resultado = clavesFiltradas.map((key) => {
+    const idValor = recepie[key];
+    const cuantityKey = key.replace("_Id", "_Cuantity_Units");
+    const cuantityValor = recepie[cuantityKey]
+      ? JSON.parse(recepie[cuantityKey]).metric.cuantity
+      : null;
+    const unitsValor = recepie[cuantityKey]
+      ? JSON.parse(recepie[cuantityKey]).metric.units
+      : null;
+
+    const resultadoBusqueda = buscarPorId(idValor);
+
+    return {
+      name: resultadoBusqueda ? resultadoBusqueda.Nombre_del_producto : "",
+      item_Id: idValor,
+      cuantity: cuantityValor || "",
+      units: unitsValor || "",
+    };
+  });
+
+  console.log(resultado);
+
+  return resultado;
+};
+

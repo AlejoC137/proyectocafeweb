@@ -156,7 +156,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
           
           
           
-          {showEdit && <Button
+         <Button
             className="bg-yellow-500 text-white hover:bg-yellow-500"
             onClick={
               
@@ -164,7 +164,16 @@ book === '📕' ? setBook('📖') : setBook('📕')
             }
           >
        {book}
-          </Button>}
+          </Button>
+          {/* {showEdit && <Button
+            className="bg-yellow-500 text-white hover:bg-yellow-500"
+            onClick={
+              
+              handleRecepie
+            }
+          >
+       {book}
+          </Button>} */}
 
 
           {showEdit && <Button
