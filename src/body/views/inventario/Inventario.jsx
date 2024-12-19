@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
 import { toggleShowEdit } from "../../../redux/actions";
-import { STAFF, MENU, ITEMS, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
+import { STAFF, MENU, ITEMS,PRODUCCION, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { FaWarehouse, FaIndustry, FaEdit, FaTools } from "react-icons/fa";
@@ -26,6 +26,7 @@ function Inventario() {
           dispatch(getAllFromTable(STAFF)),
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
+          dispatch(getAllFromTable(PRODUCCION)),
         ]);
         setLoading(false);
       } catch (error) {
