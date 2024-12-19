@@ -595,6 +595,7 @@ export const trimRecepie = (items, recepie) => {
       item_Id: idValor,
       cuantity: cuantityValor || "",
       units: unitsValor || "",
+      source: resultadoBusqueda ? (items.some(item => item._id === idValor) ? 'Items' : 'Produccion') : null
     };
   });
   console.log(resultado);

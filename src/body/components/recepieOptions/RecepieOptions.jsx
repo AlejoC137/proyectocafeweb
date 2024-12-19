@@ -27,7 +27,8 @@ function RecepieOptions({ product, Receta }) {
     const recepieData = await getRecepie(Receta._id, "RecetasProduccion");
     if (recepieData) {
       const trimmedRecepie = trimRecepie(allOptions, recepieData);
-      setRecetaItems(trimmedRecepie);
+      setRecetaItems(trimmedRecepie.filter(item => item.source === 'Items'));
+      setProductoInternoItems(trimmedRecepie.filter(item => item.source === 'Produccion'));
       setLegacyName(recepieData.legacyName || "");
       setRendimiento(JSON.parse(recepieData.rendimiento) || { porcion: "", cantidad: "", unidades: "" });
       setAutor(recepieData.autor || "Autor por defecto");
@@ -37,50 +38,46 @@ function RecepieOptions({ product, Receta }) {
 
   const addIngredient = () => {
     if (showEdit) {
-      setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "" }]);
+      setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "", source: "Items" }]);
     }
   };
 
-  const handleIngredientChange = (index, value) => {
+  const handleIngredientChange = (index, value, source) => {
     if (showEdit) {
-      const updatedItems = [...recetaItems];
+      const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
       updatedItems[index].name = value;
       const matches = allOptions.filter((option) =>
         option.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())
       );
       updatedItems[index].matches = matches;
-      setRecetaItems(updatedItems);
+      source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
     }
   };
 
-  const handleIngredientSelect = (index, selectedOption) => {
+  const handleIngredientSelect = (index, selectedOption, source) => {
     if (showEdit) {
-      const updatedItems = [...recetaItems];
+      const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
       updatedItems[index].name = selectedOption.Nombre_del_producto;
       updatedItems[index].item_Id = selectedOption._id;
       updatedItems[index].units = selectedOption.UNIDADES || "";
       updatedItems[index].matches = [];
-      setRecetaItems(updatedItems);
+      updatedItems[index].source = source;
+      source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
     }
   };
 
-  const handleRemoveIngredient = (index) => {
+  const handleRemoveIngredient = (index, source) => {
     if (showEdit) {
-      const updatedItems = [...recetaItems];
-      updatedItems[index] = { name: "", item_Id: null, cuantity: null, units: null };
-      setRecetaItems(updatedItems);
+      const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+      updatedItems[index] = { name: "", item_Id: null, cuantity: null, units: null, source };
+      source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
     }
   };
 
-  // Function to reorganize the recipe ingredients
-  const reorganizeRecepie = (recepie, originalLength) => {
-    const updatedRecepie = [...recepie];
-    for (let i = 0; i < originalLength; i++) {
-      if (!updatedRecepie[i]) {
-        updatedRecepie.push({ name: "", item_Id: null, cuantity: null, units: null });
-      }
-    }
-    return updatedRecepie;
+
+
+  const testIngridient = (itemId) => {
+    return Items.some(item => item._id === itemId) ? 'item' : 'producto_interno';
   };
 
   const handleSaveReceta = async () => {
@@ -93,8 +90,8 @@ function RecepieOptions({ product, Receta }) {
           autor,
           revisor,
           actualizacion: new Date().toISOString(),
-          ...mapItemsToPayload(recetaItems, "item"),
-          ...mapItemsToPayload(productoInternoItems, "producto_interno"),
+          ...mapItemsToPayload(recetaItems),
+          ...mapItemsToPayload(productoInternoItems),
         };
 
         console.log("Objeto a enviar:", recetaPayload);
@@ -116,12 +113,13 @@ function RecepieOptions({ product, Receta }) {
     }
   };
 
-  const mapItemsToPayload = (items, prefix) => {
+  const mapItemsToPayload = (items) => {
     const payload = {};
     items.forEach((item, index) => {
       const idx = index + 1;
-      payload[`${prefix}${idx}_Id`] = item.item_Id || null;
-      payload[`${prefix}${idx}_Cuantity_Units`] = item.item_Id
+      const keyPrefix = testIngridient(item.item_Id);
+      payload[`${keyPrefix}${idx}_Id`] = item.item_Id || null;
+      payload[`${keyPrefix}${idx}_Cuantity_Units`] = item.item_Id
         ? JSON.stringify({
             metric: { cuantity: item.cuantity || null, units: item.units || null },
           })
@@ -177,13 +175,13 @@ function RecepieOptions({ product, Receta }) {
                 type="text"
                 placeholder="Buscar ingrediente"
                 value={item.name}
-                onChange={(e) => handleIngredientChange(index, e.target.value)}
+                onChange={(e) => handleIngredientChange(index, e.target.value, 'Items')}
                 className="p-2 border rounded flex-1 bg-slate-50"
                 readOnly={!showEdit}
               />
               {showEdit && (
                 <button
-                  onClick={() => handleRemoveIngredient(index)}
+                  onClick={() => handleRemoveIngredient(index, 'Items')}
                   className="px-2 py-1 bg-red-500 text-white rounded"
                 >
                   X
@@ -195,7 +193,7 @@ function RecepieOptions({ product, Receta }) {
                 {item.matches.map((match) => (
                   <li
                     key={match._id}
-                    onClick={() => handleIngredientSelect(index, match)}
+                    onClick={() => handleIngredientSelect(index, match, 'Items')}
                     className="p-2 hover:bg-gray-200 cursor-pointer"
                   >
                     {match.Nombre_del_producto}
@@ -213,6 +211,64 @@ function RecepieOptions({ product, Receta }) {
                     const updatedItems = [...recetaItems];
                     updatedItems[index].cuantity = e.target.value;
                     setRecetaItems(updatedItems);
+                  }
+                }}
+                className="p-2 border rounded w-1/2 bg-slate-50"
+                readOnly={!showEdit}
+              />
+              <input
+                type="text"
+                placeholder="Unidades"
+                value={item.units || ""}
+                readOnly
+                className="p-2 border rounded w-1/2 bg-slate-50"
+              />
+            </div>
+          </div>
+        ))}
+        {productoInternoItems.map((item, index) => (
+          <div key={index} className="flex flex-col mb-2 bg-slate-50">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Buscar ingrediente"
+                value={item.name}
+                onChange={(e) => handleIngredientChange(index, e.target.value, 'Produccion')}
+                className="p-2 border rounded flex-1 bg-slate-50"
+                readOnly={!showEdit}
+              />
+              {showEdit && (
+                <button
+                  onClick={() => handleRemoveIngredient(index, 'Produccion')}
+                  className="px-2 py-1 bg-red-500 text-white rounded"
+                >
+                  X
+                </button>
+              )}
+            </div>
+            {item.matches && item.matches.length > 0 && (
+              <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+                {item.matches.map((match) => (
+                  <li
+                    key={match._id}
+                    onClick={() => handleIngredientSelect(index, match, 'Produccion')}
+                    className="p-2 hover:bg-gray-200 cursor-pointer"
+                  >
+                    {match.Nombre_del_producto}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex gap-2 mt-2">
+              <input
+                type="number"
+                placeholder="Cantidad"
+                value={item.cuantity || ""}
+                onChange={(e) => {
+                  if (showEdit) {
+                    const updatedItems = [...productoInternoItems];
+                    updatedItems[index].cuantity = e.target.value;
+                    setProductoInternoItems(updatedItems);
                   }
                 }}
                 className="p-2 border rounded w-1/2 bg-slate-50"
