@@ -4,7 +4,9 @@ export async function recetaMariaPaula(
   porcentajeCostoDirecto = 0.41,
   indiceInflacionario = 0.08,
   impoconsumo = 0.08,
-  aplicarIVA = 0.05
+  aplicarIVA = 0.05,
+  id,
+  source
 ) {
   try {
     // Inicializar la suma total

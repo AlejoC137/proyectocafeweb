@@ -348,7 +348,6 @@ export function preProcess(jsonCompleto) {
   };
 }
 
-// Función auxiliar para validar UUID
 function validarUUID(uuid) {
   const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   return uuidRegex.test(uuid);
@@ -392,7 +391,6 @@ export function actualizarPrecioUnitario(items,type) {
   };
 }
 
-// Función para calcular el precio unitario de un item
 function calcularPrecioUnitario(item) {
   let precioUnitario;
   const ajusteInflacionario = 1.04;
@@ -413,7 +411,6 @@ function calcularPrecioUnitario(item) {
   return parseFloat(precioUnitario.toFixed(2));
 }
 
-// Acción para filtrar elementos y copiarlos al portapapeles
 export function copiarAlPortapapeles(items, estado , ) {
   return async () => {
     try {
@@ -496,9 +493,6 @@ export function crearItem(itemData, type, forId) {
   };
 }
 
-
-
-
 export function updateItem(itemId, updatedFields,type) {
   
   return async (dispatch) => {
@@ -562,6 +556,7 @@ export const getRecepie = async (uuid, type) => {
       console.error("Error al obtener la receta:", error);
       throw new Error(error.message);
     }
+console.log(data);
 
     return data;
   } catch (error) {
@@ -571,8 +566,9 @@ export const getRecepie = async (uuid, type) => {
 };
 
 export const trimRecepie = (items, recepie) => {
-  console.log(recepie);
+  // console.log(recepie);
   const buscarPorId = (id) => {
+    // console.log(items.find((item) => item._id === id) || null)
     return items.find((item) => item._id === id) || null;
   };
   const clavesFiltradas = Object.keys(recepie).filter(
@@ -586,20 +582,23 @@ export const trimRecepie = (items, recepie) => {
     const cuantityValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.cuantity
       : null;
-    const unitsValor = recepie[cuantityKey]
+      const unitsValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.units
       : null;
-    const resultadoBusqueda = buscarPorId(idValor);
+      const resultadoBusqueda = buscarPorId(idValor);
+      const precioUnitario1 = resultadoBusqueda.precioUnitario
+    
     return {
       name: resultadoBusqueda ? resultadoBusqueda.Nombre_del_producto : "",
       item_Id: idValor,
+      precioUnitario :precioUnitario1,
       cuantity: cuantityValor || "",
       units: unitsValor || "",
       source: resultadoBusqueda ? (items.some(item => item._id === idValor) ? 'Items' : 'Produccion') : null
     };
   });
-  console.log(resultado);
   return resultado;
+
 };
 
 export const resetExpandedGroups = () => {

@@ -222,19 +222,19 @@ book === '📕' ? setBook('📖') : setBook('📕')
           ))}
         </div>
 
-        {showEdit && ( // Mostrar campos solo si showEdit es true
+        {showEdit  && ( // Mostrar campos solo si showEdit es true
           
           <>
 
 
         {/* Precio por unidad y última actualización en la misma fila */}
         <div className="flex gap-4">
-          <label className="text-sm text-gray-700 flex-1">
+        {  (currentType !== ProduccionInterna) &&<label className="text-sm text-gray-700 flex-1">
             Precio por unidad:
             <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
               {product.precioUnitario}
             </h3>
-          </label>
+          </label>}
           <label className="text-sm text-gray-700 flex-1">
             Última Actualización:
             <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
@@ -245,7 +245,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
 
         {/* Cantidad y Unidades en la misma fila */}
         <div className="flex gap-4">
-          <label className="text-sm text-gray-700 flex-1">
+        {(currentType !== ProduccionInterna) &&  <label className="text-sm text-gray-700 flex-1">
             Cantidad:
             <input
               type="text"
@@ -254,7 +254,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
               onChange={handleInputChange}
               className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
             />
-          </label>
+          </label>}
           <label className="text-sm text-gray-700 flex-1">
             Unidades:
             <select
@@ -277,7 +277,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
 
         {/* Costo y Grupo en la misma fila */}
         <div className="flex gap-4">
-          <label className="text-sm text-gray-700 flex-1">
+{   (currentType !== ProduccionInterna) &&       <label className="text-sm text-gray-700 flex-1">
             Costo:
             <input
               type="text"
@@ -286,7 +286,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
               onChange={handleInputChange}
               className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
             />
-          </label>
+          </label>}
           
           <label className="text-sm text-gray-700 flex-1">
             Grupo:

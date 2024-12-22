@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions";
 import { ProduccionInterna } from "../../../redux/actions-types";
+import { recetaMariaPaula } from "../../../redux/calcularReceta";
 
 function RecepieOptions({ product, Receta }) {
   const dispatch = useDispatch();
@@ -16,6 +17,7 @@ function RecepieOptions({ product, Receta }) {
   const [rendimiento, setRendimiento] = useState({ porcion: "", cantidad: "", unidades: "" });
   const [autor, setAutor] = useState("Autor por defecto");
   const [revisor, setRevisor] = useState("Revisor por defecto");
+  const [totalIngredientes, setTotalIngredientes] = useState(0);
 
   useEffect(() => {
     if (Receta) {
@@ -33,12 +35,13 @@ function RecepieOptions({ product, Receta }) {
       setRendimiento(JSON.parse(recepieData.rendimiento) || { porcion: "", cantidad: "", unidades: "" });
       setAutor(recepieData.autor || "Autor por defecto");
       setRevisor(recepieData.revisor || "Revisor por defecto");
+      calculateTotalIngredientes(trimmedRecepie);
     }
   };
 
   const addIngredient = () => {
     if (showEdit) {
-      setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "", source: "Items" }]);
+      setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "", source: "Items", precioUnitario: 0 }]);
     }
   };
 
@@ -60,24 +63,53 @@ function RecepieOptions({ product, Receta }) {
       updatedItems[index].name = selectedOption.Nombre_del_producto;
       updatedItems[index].item_Id = selectedOption._id;
       updatedItems[index].units = selectedOption.UNIDADES || "";
+      updatedItems[index].precioUnitario = selectedOption.precioUnitario || 0;
       updatedItems[index].matches = [];
       updatedItems[index].source = source;
       source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+      calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
     }
   };
 
-  const handleRemoveIngredient = (index, source) => {
+  const findPrecioUnitario = (itemId) => {
+    const matchedItem = allOptions.find(option => option._id === itemId);
+    return matchedItem ? matchedItem.precioUnitario : 0;
+  };
+
+  const handleRemoveIngredient = async (index, source) => {
+    if (showEdit) {
+      const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
+      if (confirmRemove) {
+        const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+        updatedItems.splice(index, 1);
+        updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
+        source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+
+        let preFix = source === 'Items' ? 'item' : 'producto_interno';
+        await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "RecetasProduccion"));
+        calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
+      }
+    }
+  };
+
+  const handleCuantityChange = (index, value, source) => {
     if (showEdit) {
       const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-      updatedItems[index] = { name: "", item_Id: null, cuantity: null, units: null, source };
+      updatedItems[index].cuantity = value;
       source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+      calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
     }
   };
-
-
 
   const testIngridient = (itemId) => {
     return Items.some(item => item._id === itemId) ? 'item' : 'producto_interno';
+  };
+
+  const calculateTotalIngredientes = (items) => {
+    const total = items.reduce((acc, item) => {
+      return acc + (item.precioUnitario * item.cuantity || 0);
+    }, 0);
+    setTotalIngredientes(total);
   };
 
   const handleSaveReceta = async () => {
@@ -128,9 +160,19 @@ function RecepieOptions({ product, Receta }) {
     return payload;
   };
 
+  const handleCalculateReceta = async () => {
+    try {
+      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems]);
+      alert(`El valor de la receta es: ${result.consolidado}`);
+    } catch (error) {
+      console.error("Error al calcular la receta:", error);
+      alert("Hubo un error al calcular la receta.");
+    }
+  };
+
   return (
     <div className="p-4 border rounded bg-gray-50">
-      <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Receta:':"Editar Receta:"}</h2>
+      <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Receta:' : "Editar Receta:"}</h2>
       <input
         type="text"
         placeholder="Nombre de la receta"
@@ -206,14 +248,8 @@ function RecepieOptions({ product, Receta }) {
                 type="number"
                 placeholder="Cantidad"
                 value={item.cuantity || ""}
-                onChange={(e) => {
-                  if (showEdit) {
-                    const updatedItems = [...recetaItems];
-                    updatedItems[index].cuantity = e.target.value;
-                    setRecetaItems(updatedItems);
-                  }
-                }}
-                className="p-2 border rounded w-1/2 bg-slate-50"
+                onChange={(e) => handleCuantityChange(index, e.target.value, 'Items')}
+                className="p-2 border rounded w-1/4 bg-slate-50"
                 readOnly={!showEdit}
               />
               <input
@@ -221,7 +257,21 @@ function RecepieOptions({ product, Receta }) {
                 placeholder="Unidades"
                 value={item.units || ""}
                 readOnly
-                className="p-2 border rounded w-1/2 bg-slate-50"
+                className="p-2 border rounded w-1/4 bg-slate-50"
+              />
+              <input
+                type="text"
+                placeholder="Precio Unitario"
+                value={item.precioUnitario || ""}
+                readOnly
+                className="p-2 border rounded w-1/4 bg-slate-50"
+              />
+              <input
+                type="text"
+                placeholder="Subtotal"
+                value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
+                readOnly
+                className="p-2 border rounded w-1/4 bg-slate-50"
               />
             </div>
           </div>
@@ -264,14 +314,8 @@ function RecepieOptions({ product, Receta }) {
                 type="number"
                 placeholder="Cantidad"
                 value={item.cuantity || ""}
-                onChange={(e) => {
-                  if (showEdit) {
-                    const updatedItems = [...productoInternoItems];
-                    updatedItems[index].cuantity = e.target.value;
-                    setProductoInternoItems(updatedItems);
-                  }
-                }}
-                className="p-2 border rounded w-1/2 bg-slate-50"
+                onChange={(e) => handleCuantityChange(index, e.target.value, 'Produccion')}
+                className="p-2 border rounded w-1/4 bg-slate-50"
                 readOnly={!showEdit}
               />
               <input
@@ -279,7 +323,21 @@ function RecepieOptions({ product, Receta }) {
                 placeholder="Unidades"
                 value={item.units || ""}
                 readOnly
-                className="p-2 border rounded w-1/2 bg-slate-50"
+                className="p-2 border rounded w-1/4 bg-slate-50"
+              />
+              <input
+                type="text"
+                placeholder="Precio Unitario"
+                value={item.precioUnitario || ""}
+                readOnly
+                className="p-2 border rounded w-1/4 bg-slate-50"
+              />
+              <input
+                type="text"
+                placeholder="Subtotal"
+                value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
+                readOnly
+                className="p-2 border rounded w-1/4 bg-slate-50"
               />
             </div>
           </div>
@@ -290,11 +348,17 @@ function RecepieOptions({ product, Receta }) {
           </button>
         )}
       </div>
+      <div className="mb-4 bg-slate-50">
+        <h3 className="font-semibold mb-2 bg-slate-50">Total Ingredientes: {totalIngredientes.toFixed(2)}</h3>
+      </div>
       {showEdit && (
         <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
           Guardar Receta
         </button>
       )}
+      <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
+        Calcular Receta
+      </button>
     </div>
   );
 }
