@@ -135,26 +135,19 @@ function Inventario() {
         {showAccionesRapidas && <AccionesRapidas currentType={currentType} />}
 
         <h3 className="text-lg font-bold ml-4">{`Listado de ${currentType}`}</h3>
-      {/* <CardGridInventario
-        products={filteredItems}
-        category="Grouped"
-        currentType={currentType}
-        showEdit={showEdit} // Pasar showEdit a CardGridInventario
-      />  */}
-    
-    
-      {currentType !== MenuItems ? <CardGridInventario
-        products={filteredItems}
-        category="Grouped"
-        currentType={currentType}
-        showEdit={showEdit} // Pasar showEdit a CardGridInventario
-      /> : <CardGridInventarioMenu
-      products={filteredItems}
-      category="Grouped"
-      currentType={currentType}
-      showEdit={showEdit} // Pasar showEdit a CardGridInventario
-    />
-    }
+        {currentType !== MenuItems ? (
+          <CardGridInventario
+            products={filteredItems}
+            category="Grouped"
+            currentType={currentType}
+            showEdit={showEdit}
+          />
+        ) : (
+          <CardGridInventarioMenu
+            products={filteredItems}
+            showEdit={showEdit}
+          />
+        )}
       </div>
     </div>
   );
