@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions";
 import { ProduccionInterna } from "../../../redux/actions-types";
-import { recetaMariaPaula } from "../../../redux/calcularReceta";
+import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
 function RecepieOptions({ product, Receta }) {
   const dispatch = useDispatch();
@@ -162,7 +162,7 @@ function RecepieOptions({ product, Receta }) {
 
   const handleCalculateReceta = async () => {
     try {
-      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems]);
+      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems],product);
       alert(`El valor de la receta es: ${result.consolidado}`);
     } catch (error) {
       console.error("Error al calcular la receta:", error);
@@ -356,9 +356,9 @@ function RecepieOptions({ product, Receta }) {
           Guardar Receta
         </button>
       )}
-      {/* <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
+      <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
         Calcular Receta
-      </button> */}
+      </button>
     </div>
   );
 }
