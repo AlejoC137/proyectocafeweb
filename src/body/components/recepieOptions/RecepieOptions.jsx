@@ -18,6 +18,8 @@ function RecepieOptions({ product, Receta }) {
   const [autor, setAutor] = useState("Autor por defecto");
   const [revisor, setRevisor] = useState("Revisor por defecto");
   const [totalIngredientes, setTotalIngredientes] = useState(0);
+  const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
+  const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
 
   useEffect(() => {
     if (Receta) {
@@ -35,6 +37,7 @@ function RecepieOptions({ product, Receta }) {
       setRendimiento(JSON.parse(recepieData.rendimiento) || { porcion: "", cantidad: "", unidades: "" });
       setAutor(recepieData.autor || "Autor por defecto");
       setRevisor(recepieData.revisor || "Revisor por defecto");
+      setProces(Array.from({ length: 20 }, (_, i) => recepieData[`proces${i + 1}`] || ""));
       calculateTotalIngredientes(trimmedRecepie);
     }
   };
@@ -124,6 +127,7 @@ function RecepieOptions({ product, Receta }) {
           actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),
           ...mapItemsToPayload(productoInternoItems),
+          ...mapProcesToPayload(proces),
         };
 
         console.log("Objeto a enviar:", recetaPayload);
@@ -160,9 +164,17 @@ function RecepieOptions({ product, Receta }) {
     return payload;
   };
 
+  const mapProcesToPayload = (proces) => {
+    const payload = {};
+    proces.forEach((proc, index) => {
+      payload[`proces${index + 1}`] = proc || null;
+    });
+    return payload;
+  };
+
   const handleCalculateReceta = async () => {
     try {
-      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems],product);
+      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems], product);
       alert(`El valor de la receta es: ${result.consolidado}`);
     } catch (error) {
       console.error("Error al calcular la receta:", error);
@@ -170,195 +182,245 @@ function RecepieOptions({ product, Receta }) {
     }
   };
 
+  const handleProcesChange = (index, value) => {
+    if (showEdit) {
+      const updatedProces = [...proces];
+      updatedProces[index] = value;
+      setProces(updatedProces);
+    }
+  };
+
   return (
     <div className="p-4 border rounded bg-gray-50">
-      <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Receta:' : "Editar Receta:"}</h2>
-      <input
-        type="text"
-        placeholder="Nombre de la receta"
-        value={legacyName}
-        onChange={(e) => showEdit && setLegacyName(e.target.value)}
-        className="w-full p-2 mb-4 border rounded bg-slate-50"
-        readOnly={!showEdit}
-      />
-      <div className="mb-4 bg-slate-50">
-        <h3 className="font-semibold mb-2 bg-slate-50">Rendimiento</h3>
-        <input
-          type="text"
-          placeholder="Porción"
-          value={rendimiento.porcion}
-          onChange={(e) => showEdit && setRendimiento({ ...rendimiento, porcion: e.target.value })}
-          className="p-2 border rounded mr-2 bg-slate-50"
-          readOnly={!showEdit}
-        />
-        <input
-          type="number"
-          placeholder="Cantidad"
-          value={rendimiento.cantidad}
-          onChange={(e) => showEdit && setRendimiento({ ...rendimiento, cantidad: e.target.value })}
-          className="p-2 border rounded mr-2 bg-slate-50"
-          readOnly={!showEdit}
-        />
-        <input
-          type="text"
-          placeholder="Unidades"
-          value={rendimiento.unidades}
-          onChange={(e) => showEdit && setRendimiento({ ...rendimiento, unidades: e.target.value })}
-          className="p-2 border rounded bg-slate-50"
-          readOnly={!showEdit}
-        />
-      </div>
-      <div className="mb-4 bg-slate-50">
-        <h3 className="font-semibold mb-2 bg-slate-50">Ingredientes</h3>
-        {recetaItems.map((item, index) => (
-          <div key={index} className="flex flex-col mb-2 bg-slate-50">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Buscar ingrediente"
-                value={item.name}
-                onChange={(e) => handleIngredientChange(index, e.target.value, 'Items')}
-                className="p-2 border rounded flex-1 bg-slate-50"
-                readOnly={!showEdit}
-              />
-              {showEdit && (
-                <button
-                  onClick={() => handleRemoveIngredient(index, 'Items')}
-                  className="px-2 py-1 bg-red-500 text-white rounded"
-                >
-                  X
-                </button>
-              )}
-            </div>
-            {item.matches && item.matches.length > 0 && (
-              <ul className="border rounded bg-white max-h-40 overflow-y-auto">
-                {item.matches.map((match) => (
-                  <li
-                    key={match._id}
-                    onClick={() => handleIngredientSelect(index, match, 'Items')}
-                    className="p-2 hover:bg-gray-200 cursor-pointer"
-                  >
-                    {match.Nombre_del_producto}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                placeholder="Cantidad"
-                value={item.cuantity || ""}
-                onChange={(e) => handleCuantityChange(index, e.target.value, 'Items')}
-                className="p-2 border rounded w-1/4 bg-slate-50"
-                readOnly={!showEdit}
-              />
-              <input
-                type="text"
-                placeholder="Unidades"
-                value={item.units || ""}
-                readOnly
-                className="p-2 border rounded w-1/4 bg-slate-50"
-              />
-              <input
-                type="text"
-                placeholder="Precio Unitario"
-                value={item.precioUnitario || ""}
-                readOnly
-                className="p-2 border rounded w-1/4 bg-slate-50"
-              />
-              <input
-                type="text"
-                placeholder="Subtotal"
-                value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
-                readOnly
-                className="p-2 border rounded w-1/4 bg-slate-50"
-              />
-            </div>
-          </div>
-        ))}
-        {productoInternoItems.map((item, index) => (
-          <div key={index} className="flex flex-col mb-2 bg-slate-50">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Buscar ingrediente"
-                value={item.name}
-                onChange={(e) => handleIngredientChange(index, e.target.value, 'Produccion')}
-                className="p-2 border rounded flex-1 bg-slate-50"
-                readOnly={!showEdit}
-              />
-              {showEdit && (
-                <button
-                  onClick={() => handleRemoveIngredient(index, 'Produccion')}
-                  className="px-2 py-1 bg-red-500 text-white rounded"
-                >
-                  X
-                </button>
-              )}
-            </div>
-            {item.matches && item.matches.length > 0 && (
-              <ul className="border rounded bg-white max-h-40 overflow-y-auto">
-                {item.matches.map((match) => (
-                  <li
-                    key={match._id}
-                    onClick={() => handleIngredientSelect(index, match, 'Produccion')}
-                    className="p-2 hover:bg-gray-200 cursor-pointer"
-                  >
-                    {match.Nombre_del_producto}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex gap-2 mt-2">
-              <input
-                type="number"
-                placeholder="Cantidad"
-                value={item.cuantity || ""}
-                onChange={(e) => handleCuantityChange(index, e.target.value, 'Produccion')}
-                className="p-2 border rounded w-1/4 bg-slate-50"
-                readOnly={!showEdit}
-              />
-              <input
-                type="text"
-                placeholder="Unidades"
-                value={item.units || ""}
-                readOnly
-                className="p-2 border rounded w-1/4 bg-slate-50"
-              />
-              <input
-                type="text"
-                placeholder="Precio Unitario"
-                value={item.precioUnitario || ""}
-                readOnly
-                className="p-2 border rounded w-1/4 bg-slate-50"
-              />
-              <input
-                type="text"
-                placeholder="Subtotal"
-                value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
-                readOnly
-                className="p-2 border rounded w-1/4 bg-slate-50"
-              />
-            </div>
-          </div>
-        ))}
-        {showEdit && (
-          <button onClick={addIngredient} className="px-4 py-2 bg-blue-500 text-white rounded">
-            Añadir Ingrediente
-          </button>
-        )}
-      </div>
-      <div className="mb-4 bg-slate-50">
-        <h3 className="font-semibold mb-2 bg-slate-50">Total Ingredientes: {totalIngredientes.toFixed(2)}</h3>
-      </div>
-      {showEdit && (
-        <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
-          Guardar Receta
+      <div className="flex mb-4">
+        <button
+          className={`px-4 py-2 ${activeTab === "receta" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          onClick={() => setActiveTab("receta")}
+        >
+          Receta
         </button>
+        <button
+          className={`px-4 py-2 ${activeTab === "proces" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+          onClick={() => setActiveTab("proces")}
+        >
+          Procesos
+        </button>
+      </div>
+
+      {activeTab === "receta" && (
+        <>
+          <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Receta:' : "Editar Receta:"}</h2>
+          <input
+            type="text"
+            placeholder="Nombre de la receta"
+            value={legacyName}
+            onChange={(e) => showEdit && setLegacyName(e.target.value)}
+            className="w-full p-2 mb-4 border rounded bg-slate-50"
+            readOnly={!showEdit}
+          />
+          <div className="mb-4 bg-slate-50">
+            <h3 className="font-semibold mb-2 bg-slate-50">Rendimiento</h3>
+            <input
+              type="text"
+              placeholder="Porción"
+              value={rendimiento.porcion}
+              onChange={(e) => showEdit && setRendimiento({ ...rendimiento, porcion: e.target.value })}
+              className="p-2 border rounded mr-2 bg-slate-50"
+              readOnly={!showEdit}
+            />
+            <input
+              type="number"
+              placeholder="Cantidad"
+              value={rendimiento.cantidad}
+              onChange={(e) => showEdit && setRendimiento({ ...rendimiento, cantidad: e.target.value })}
+              className="p-2 border rounded mr-2 bg-slate-50"
+              readOnly={!showEdit}
+            />
+            <input
+              type="text"
+              placeholder="Unidades"
+              value={rendimiento.unidades}
+              onChange={(e) => showEdit && setRendimiento({ ...rendimiento, unidades: e.target.value })}
+              className="p-2 border rounded bg-slate-50"
+              readOnly={!showEdit}
+            />
+          </div>
+          <div className="mb-4 bg-slate-50">
+            <h3 className="font-semibold mb-2 bg-slate-50">Ingredientes</h3>
+            {recetaItems.map((item, index) => (
+              <div key={index} className="flex flex-col mb-2 bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Buscar ingrediente"
+                    value={item.name}
+                    onChange={(e) => handleIngredientChange(index, e.target.value, 'Items')}
+                    className="p-2 border rounded flex-1 bg-slate-50"
+                    readOnly={!showEdit}
+                  />
+                  {showEdit && (
+                    <button
+                      onClick={() => handleRemoveIngredient(index, 'Items')}
+                      className="px-2 py-1 bg-red-500 text-white rounded"
+                    >
+                      X
+                    </button>
+                  )}
+                </div>
+                {item.matches && item.matches.length > 0 && (
+                  <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+                    {item.matches.map((match) => (
+                      <li
+                        key={match._id}
+                        onClick={() => handleIngredientSelect(index, match, 'Items')}
+                        className="p-2 hover:bg-gray-200 cursor-pointer"
+                      >
+                        {match.Nombre_del_producto}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="number"
+                    placeholder="Cantidad"
+                    value={item.cuantity || ""}
+                    onChange={(e) => handleCuantityChange(index, e.target.value, 'Items')}
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                    readOnly={!showEdit}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Unidades"
+                    value={item.units || ""}
+                    readOnly
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Precio Unitario"
+                    value={item.precioUnitario || ""}
+                    readOnly
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Subtotal"
+                    value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
+                    readOnly
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                  />
+                </div>
+              </div>
+            ))}
+            {productoInternoItems.map((item, index) => (
+              <div key={index} className="flex flex-col mb-2 bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Buscar ingrediente"
+                    value={item.name}
+                    onChange={(e) => handleIngredientChange(index, e.target.value, 'Produccion')}
+                    className="p-2 border rounded flex-1 bg-slate-50"
+                    readOnly={!showEdit}
+                  />
+                  {showEdit && (
+                    <button
+                      onClick={() => handleRemoveIngredient(index, 'Produccion')}
+                      className="px-2 py-1 bg-red-500 text-white rounded"
+                    >
+                      X
+                    </button>
+                  )}
+                </div>
+                {item.matches && item.matches.length > 0 && (
+                  <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+                    {item.matches.map((match) => (
+                      <li
+                        key={match._id}
+                        onClick={() => handleIngredientSelect(index, match, 'Produccion')}
+                        className="p-2 hover:bg-gray-200 cursor-pointer"
+                      >
+                        {match.Nombre_del_producto}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="number"
+                    placeholder="Cantidad"
+                    value={item.cuantity || ""}
+                    onChange={(e) => handleCuantityChange(index, e.target.value, 'Produccion')}
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                    readOnly={!showEdit}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Unidades"
+                    value={item.units || ""}
+                    readOnly
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Precio Unitario"
+                    value={item.precioUnitario || ""}
+                    readOnly
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Subtotal"
+                    value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
+                    readOnly
+                    className="p-2 border rounded w-1/4 bg-slate-50"
+                  />
+                </div>
+              </div>
+            ))}
+            {showEdit && (
+              <button onClick={addIngredient} className="px-4 py-2 bg-blue-500 text-white rounded">
+                Añadir Ingrediente
+              </button>
+            )}
+          </div>
+          <div className="mb-4 bg-slate-50">
+            <h3 className="font-semibold mb-2 bg-slate-50">Total Ingredientes: {totalIngredientes.toFixed(2)}</h3>
+          </div>
+          {showEdit && (
+            <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
+              Guardar Receta
+            </button>
+          )}
+          <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
+            Calcular Receta
+          </button>
+        </>
       )}
-      <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
-        Calcular Receta
-      </button>
+
+      {activeTab === "proces" && (
+        <>
+          <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Procesos:' : "Editar Procesos:"}</h2>
+          {proces.map((proc, index) => (
+            <div key={index} className="mb-4">
+              <input
+                type="text"
+                placeholder={`Proceso ${index + 1}`}
+                value={proc}
+                onChange={(e) => handleProcesChange(index, e.target.value)}
+                className="w-full p-2 border rounded bg-slate-50"
+                readOnly={!showEdit}
+              />
+            </div>
+          ))}
+          {showEdit && (
+            <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
+              Guardar Procesos
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
