@@ -356,9 +356,9 @@ function RecepieOptions({ product, Receta }) {
           Guardar Receta
         </button>
       )}
-      <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
+      {/* <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
         Calcular Receta
-      </button>
+      </button> */}
     </div>
   );
 }

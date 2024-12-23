@@ -5,6 +5,7 @@ import {
   MENU,
   ITEMS,
   PRODUCCION,
+  PROVEE  ,
   UPDATE_ACTIVE_TAB,
   SET_USER_REG_STATE,
   UPDATE_SELECTED_VALUE,
@@ -148,6 +149,7 @@ const initialState = {
   allItems: [],
   currentLeng: 'ESP',
   allProduccion: [],
+  Proveedores: [],
   currentView: 'MENUVIEW',
   userRegState: 'notAuth',
   selectedValue: null,
@@ -155,6 +157,7 @@ const initialState = {
   preProcess : [],              // Estado para guardar las recetas insertadas
   recetaError: null,        // Estado para guardar el error en caso de fallo
   expandedGroups: {},       // Estado para controlar la visibilidad de los grupos
+  selectedProviderId: null, // Estado para guardar el ID del proveedor seleccionado
 };
 
 const reducer = (state = initialState, action) => {
@@ -195,6 +198,11 @@ const reducer = (state = initialState, action) => {
           return {
             ...state,
             allStaff: action.payload,
+          };
+        case PROVEE:
+          return {
+            ...state,
+            Proveedores: action.payload,
           };
         case MENU:
           return {
@@ -238,6 +246,12 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         expandedGroups: {}, // Restablecer la visibilidad de los grupos
+      };
+
+    case 'SET_SELECTED_PROVIDER_ID':
+      return {
+        ...state,
+        selectedProviderId: action.payload,
       };
 
     default:

@@ -13,7 +13,8 @@ import {
   ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
   ProduccionInterna,
-  RESET_EXPANDED_GROUPS
+  RESET_EXPANDED_GROUPS,
+  SET_SELECTED_PROVIDER_ID // Importar la acción
   
 } from "./actions-types";
 
@@ -451,7 +452,7 @@ export function crearItem(itemData, type, forId) {
 
       };
 
-      if (type === "RecetasProduccion") { 
+      if (type === "Proveedores") { 
         nuevoItem = {
           ...nuevoItem,
           forId: forId
@@ -460,7 +461,7 @@ export function crearItem(itemData, type, forId) {
       }
 
       // Si el tipo NO es 'Recetas', agregar FECHA_ACT
-      if (type !== 'RecetasProduccion') {
+      if (type !== 'Proveedores') {
         nuevoItem = {
           ...nuevoItem,
           FECHA_ACT: new Date().toISOString().split("T")[0], // Fecha actual
@@ -493,8 +494,7 @@ export function crearItem(itemData, type, forId) {
   };
 }
 
-export function updateItem(itemId, updatedFields,type) {
-  
+export function updateItem(itemId, updatedFields, type) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
@@ -564,26 +564,6 @@ console.log(data);
     return null;
   }
 };
-export const getProveedor = async (uuid, type) => {
-  try {
-    const { data, error } = await supabase
-      .from(type)
-      .select("*")
-      .eq("_id", uuid)
-      .single();
-
-    if (error) {
-      console.error("Error al obtener el proveedor :", error);
-      throw new Error(error.message);
-    }
-console.log(data);
-
-    return data;
-  } catch (error) {
-    console.error("Error en la acción getProveedor:", error);
-    return null;
-  }
-};
 
 export const trimRecepie = (items, recepie) => {
   // console.log(recepie);
@@ -626,4 +606,151 @@ export const resetExpandedGroups = () => {
     type: RESET_EXPANDED_GROUPS,
   };
 };
+
+export function insertarProveedor(proveedorData, upsert = false) {
+  return async (dispatch) => {
+    try {
+      let data, error;
+
+      if (upsert) {
+        ({ data, error } = await supabase
+          .from('Proveedores')
+          .upsert(proveedorData)
+          .select());
+      } else {
+        ({ data, error } = await supabase
+          .from('Proveedores')
+          .insert(proveedorData)
+          .select());
+      }
+
+      if (error) {
+        console.error("Error inserting/upserting provider:", error);
+        return dispatch({
+          type: INSERT_RECETAS_FAILURE,
+          payload: error.message,
+        });
+      }
+
+      return dispatch({
+        type: INSERT_RECETAS_SUCCESS,
+        payload: data,
+      });
+    } catch (error) {
+      console.error("Error in insertarProveedor:", error);
+      return dispatch({
+        type: INSERT_RECETAS_FAILURE,
+        payload: error.message,
+      });
+    }
+  };
+}
+
+export function crearProveedor(proveedorData) {
+  return async (dispatch) => {
+    try {
+      const nuevoProveedor = {
+        _id: uuidv4(),
+        ...proveedorData,
+      };
+
+      const { data, error } = await supabase
+        .from('Proveedores')
+        .insert([nuevoProveedor])
+        .select();
+
+      if (error) {
+        console.error("Error al crear el proveedor:", error);
+        throw new Error("No se pudo crear el proveedor");
+      }
+
+      dispatch({
+        type: "CREAR_PROVEEDOR_SUCCESS",
+        payload: data[0],
+      });
+
+      console.log("Proveedor creado correctamente:", data[0]);
+      return data[0];
+    } catch (error) {
+      console.error("Error en la acción crearProveedor:", error);
+      throw error;
+    }
+  };
+}
+
+export function updateProveedor(proveedorId, updatedFields) {
+  return async (dispatch) => {
+    try {
+      const { data, error } = await supabase
+        .from('Proveedores')
+        .update(updatedFields)
+        .eq('_id', proveedorId)
+        .select();
+
+      if (error) {
+        console.error('Error al actualizar el proveedor:', error);
+        return null;
+      }
+
+      console.log('Proveedor actualizado correctamente:', data);
+      return data;
+    } catch (error) {
+      console.error('Error en la acción updateProveedor:', error);
+    }
+  };
+}
+
+export function deleteProveedor(proveedorId) {
+  return async (dispatch) => {
+    try {
+      const { error } = await supabase
+        .from('Proveedores')
+        .delete()
+        .eq("_id", proveedorId);
+
+      if (error) {
+        console.error("Error al eliminar el proveedor:", error);
+        throw new Error("No se pudo eliminar el proveedor");
+      }
+
+      dispatch({
+        type: "DELETE_PROVEEDOR_SUCCESS",
+        payload: proveedorId,
+      });
+
+      console.log(`Proveedor con ID ${proveedorId} eliminado correctamente.`);
+    } catch (error) {
+      console.error("Error en la acción deleteProveedor:", error);
+      throw error;
+    }
+  };
+}
+
+export const setSelectedProviderId = (providerId) => {
+  return {
+    type: SET_SELECTED_PROVIDER_ID,
+    payload: providerId,
+  };
+};
+
+export const getProveedor = async (uuid) => {
+  try {
+    const { data, error } = await supabase
+      .from('Proveedores')
+      .select("*")
+      .eq("_id", uuid)
+      .single();
+
+    if (error) {
+      console.error("Error al obtener el proveedor:", error);
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error en la acción getProveedor:", error);
+    return null;
+  }
+};
+
 

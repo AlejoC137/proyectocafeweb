@@ -2,23 +2,30 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { deleteItem, getRecepie, updateItem } from "../../redux/actions";
+import { deleteItem, getRecepie, updateItem , getProveedor } from "../../redux/actions-Proveedores";
 import { CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
-
-
-
-
+import ProveedorOptions from "../../body/components/proveedorOptions/ProveedorOptions";
+import { setSelectedProviderId } from "../../redux/actions-Proveedores";
 
 export function CardInstanceInventario({ product, currentType }) {
   // let receta;
   // product.Receta ? receta = getRecepie(product.Receta, "RecetasProduccion") : console.log('no receta');
+    const Proveedores = useSelector((state) => state.Proveedores || []);
   
   const [receta, setReceta] = useState(null);
   useEffect(() => {
     const fetchReceta = async () => {
       if (product.Receta) {
         const result = await getRecepie(product.Receta, "RecetasProduccion");
+        setReceta(result);
+      } else {
+        console.log("no receta");
+      }
+    };
+    const fetchProveedor = async () => {
+      if (product.Proveedor ) {
+        const result = await getProveedor(product.Receta, "RecetasProduccion");
         setReceta(result);
       } else {
         console.log("no receta");
@@ -33,6 +40,7 @@ export function CardInstanceInventario({ product, currentType }) {
   const showEdit = useSelector((state) => state.showEdit);
 
   const dispatch = useDispatch();
+  const selectedProviderId = useSelector((state) => state.selectedProviderId); // Mover fuera de handleUpdate
   
   const [formData, setFormData] = useState({
     CANTIDAD: product.CANTIDAD || "",
@@ -40,6 +48,7 @@ export function CardInstanceInventario({ product, currentType }) {
     COSTO: product.COSTO || "",
     GRUPO: product.GRUPO || "",
     Estado: product.Estado || ESTATUS[0], // Inicializar con el primer valor de ESTATUS
+    Proveedor: product.Proveedor || "", // Inicializar con el valor del proveedor
   });
 
   const [buttonState, setButtonState] = useState("save"); // Estados: 'save', 'syncing', 'done'
@@ -47,12 +56,34 @@ export function CardInstanceInventario({ product, currentType }) {
 
   const groupOptions = CATEGORIES;
 
+  useEffect(() => {
+    const fetchProveedor = async () => {
+      if (product.Proveedor) {
+        const result = await getProveedor(product.Proveedor);
+        if (result) {
+          setFormData((prev) => ({
+            ...prev,
+            Proveedor: result.Nombre_Proveedor,
+          }));
+        }
+      }
+    };
+
+    fetchProveedor();
+  }, [product.Proveedor]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    if (name === "Proveedor") {
+      const selectedProvider = Proveedores.find(proveedor => proveedor._id === value);
+      if (selectedProvider) {
+        dispatch(setSelectedProviderId(selectedProvider._id));
+      }
+    }
     setButtonState("save");
   };
 
@@ -65,6 +96,7 @@ export function CardInstanceInventario({ product, currentType }) {
         COSTO: formData.COSTO,
         GRUPO: formData.GRUPO,
         Estado: formData.Estado,
+        Proveedor: formData.Proveedor,
         ...(currentType === ItemsAlmacen && { COOR: "1.05" }), // Incluir COOR solo si es ItemsAlmacen
         FECHA_ACT: new Date().toISOString().split("T")[0],
       };
@@ -258,7 +290,7 @@ book === '📕' ? setBook('📖') : setBook('📕')
           <label className="text-sm text-gray-700 flex-1">
             Unidades:
             <select
-              name="GRUPO"
+              name="UNIDADES"
               value={formData.UNIDADES}
               onChange={handleInputChange}
               className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
@@ -306,6 +338,26 @@ book === '📕' ? setBook('📖') : setBook('📕')
               ))}
             </select>
           </label>
+
+          <label className="text-sm text-gray-700 flex-1">
+            Proveedor:
+            <select
+              name="Proveedor"
+              value={formData.Proveedor}
+              onChange={handleInputChange}
+              className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+            >
+              <option value="" disabled>
+                {product.Proveedor ? `Actual: ${formData.Proveedor}` : "Selecciona un Proveedor"}
+              </option>
+              {Proveedores.map((proveedor) => (
+                <option key={proveedor._id} value={proveedor._id}>
+                  {proveedor.Nombre_Proveedor}
+                </option>
+              ))}
+            </select>
+          </label>
+
         </div>
 
 
@@ -319,11 +371,25 @@ book === '📕' ? setBook('📖') : setBook('📕')
         )}
 
 
-        {  ( currentType === ProduccionInterna)  && (book === '📖') && <RecepieOptions
+        {/* {  ( currentType === ProduccionInterna)  ? (book === '📖') && <RecepieOptions
         product={product}
         Receta={receta}
         currentType={currentType}
-        ></RecepieOptions>}
+        ></RecepieOptions> 
+        : <ProveedorOptions
+        product={product}
+        Receta={receta}
+        currentType={currentType}
+        onChange={handleInputChange}
+        ></ProveedorOptions>
+        } */}
+        {  ( currentType === ProduccionInterna) && (book === '📖') && <RecepieOptions
+        product={product}
+        Receta={receta}
+        currentType={currentType}
+        ></RecepieOptions> 
+      
+        }
       </CardContent>
     </Card>
   );

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem } from "../../../redux/actions";
+import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem, crearProveedor } from "../../../redux/actions-Proveedores";
 import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
 
 function AccionesRapidas({ currentType }) {
   const dispatch = useDispatch();
   const allItems = useSelector((state) => state.allItems);
   const allProduccion = useSelector((state) => state.allProduccion);
+  const allProveedores = useSelector((state) => state.allProveedores);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -14,6 +15,7 @@ function AccionesRapidas({ currentType }) {
         await Promise.all([
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
+          dispatch(getAllFromTable("Proveedores")),
         ]);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -41,7 +43,7 @@ function AccionesRapidas({ currentType }) {
   const [formVisible, setFormVisible] = useState(false);
   const [newItemData, setNewItemData] = useState({
     Nombre_del_producto: "",
-    Proveedor: [],
+    Proveedor: "",
     Estado: "Disponible",
     Area: "",
     CANTIDAD: "",
@@ -53,9 +55,26 @@ function AccionesRapidas({ currentType }) {
     precioUnitario: 0,
   });
 
+  const [formProveedorVisible, setFormProveedorVisible] = useState(false);
+  const [newProveedorData, setNewProveedorData] = useState({
+    Nombre_Proveedor: "",
+    Contacto_Nombre: "",
+    Contacto_Numero: "",
+    Direccion: "",
+    "NIT/CC": "",
+  });
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewItemData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleProveedorInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewProveedorData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -76,7 +95,7 @@ function AccionesRapidas({ currentType }) {
       alert("Ítem creado correctamente.");
       setNewItemData({
         Nombre_del_producto: "",
-        Proveedor: [],
+        Proveedor: "",
         Estado: "Disponible",
         Area: "",
         CANTIDAD: "",
@@ -92,6 +111,24 @@ function AccionesRapidas({ currentType }) {
     } catch (error) {
       console.error("Error al crear el ítem:", error);
       alert("Hubo un error al crear el ítem.");
+    }
+  };
+
+  const handleCrearProveedor = async () => {
+    try {
+      await dispatch(crearProveedor(newProveedorData));
+      alert("Proveedor creado correctamente.");
+      setNewProveedorData({
+        Nombre_Proveedor: "",
+        Contacto_Nombre: "",
+        Contacto_Numero: "",
+        Direccion: "",
+        "NIT/CC": "",
+      });
+      setFormProveedorVisible(false);
+    } catch (error) {
+      console.error("Error al crear el proveedor:", error);
+      alert("Hubo un error al crear el proveedor.");
     }
   };
 
@@ -114,16 +151,11 @@ function AccionesRapidas({ currentType }) {
         >
           PENDIENTES PRODUCCIÓN
         </button>
-
-
       </div>
       
       <h2 className="text-lg font-bold pt-4">ACCIONES RÁPIDAS</h2>
 
       <div className="grid grid-cols-2 gap-4 ">
-        {/* Primera fila */}
-
-
         {/* Segunda fila */}
         <button
           className="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600"
@@ -137,9 +169,15 @@ function AccionesRapidas({ currentType }) {
         >
           {formVisible ? "CANCELAR CREACIÓN" : "CREAR NUEVO ITEM"}
         </button>
+        <button
+          className="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-600"
+          onClick={() => setFormProveedorVisible((prev) => !prev)}
+        >
+          {formProveedorVisible ? "CANCELAR CREACIÓN" : "CREAR NUEVO PROVEEDOR"}
+        </button>
       </div>
 
-      {/* Formulario de creación */}
+      {/* Formulario de creación de ítem */}
       {formVisible && (
         <div className="bg-gray-100 p-4 rounded-md mt-4">
           <h3 className="text-lg font-bold mb-2">Crear Nuevo Ítem</h3>
@@ -152,6 +190,19 @@ function AccionesRapidas({ currentType }) {
               placeholder="Nombre del producto"
               className="border bg-white border-gray-300 rounded px-2 py-1"
             />
+            <select
+              name="Proveedor"
+              value={newItemData.Proveedor}
+              onChange={handleInputChange}
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            >
+              <option value="">Proveedor</option>
+              {allProveedores.map((proveedor) => (
+                <option key={proveedor._id} value={proveedor.Nombre_Proveedor}>
+                  {proveedor.Nombre_Proveedor}
+                </option>
+              ))}
+            </select>
             <select
               name="Area"
               value={newItemData.Area}
@@ -221,6 +272,61 @@ function AccionesRapidas({ currentType }) {
             onClick={handleCrearItem}
           >
             GUARDAR NUEVO ITEM
+          </button>
+        </div>
+      )}
+
+      {/* Formulario de creación de proveedor */}
+      {formProveedorVisible && (
+        <div className="bg-gray-100 p-4 rounded-md mt-4">
+          <h3 className="text-lg font-bold mb-2">Crear Nuevo Proveedor</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="Nombre_Proveedor"
+              value={newProveedorData.Nombre_Proveedor}
+              onChange={handleProveedorInputChange}
+              placeholder="Nombre del proveedor"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="Contacto_Nombre"
+              value={newProveedorData.Contacto_Nombre}
+              onChange={handleProveedorInputChange}
+              placeholder="Nombre del contacto"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="Contacto_Numero"
+              value={newProveedorData.Contacto_Numero}
+              onChange={handleProveedorInputChange}
+              placeholder="Número de contacto"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="Direccion"
+              value={newProveedorData.Direccion}
+              onChange={handleProveedorInputChange}
+              placeholder="Dirección"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="NIT/CC"
+              value={newProveedorData["NIT/CC"]}
+              onChange={handleProveedorInputChange}
+              placeholder="NIT/CC"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+          <button
+            className="bg-blue-500 text-white py-1 px-2 rounded-md mt-4 hover:bg-blue-600"
+            onClick={handleCrearProveedor}
+          >
+            GUARDAR NUEVO PROVEEDOR
           </button>
         </div>
       )}

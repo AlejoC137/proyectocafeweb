@@ -8,6 +8,7 @@ export const TODAYS_MENU = "TODAYS_MENU";
 // Acciones relacionadas con el estado del usuario y selección
 export const SET_USER_REG_STATE = "SET_USER_REG_STATE";  // Nueva acción
 export const UPDATE_SELECTED_VALUE = "UPDATE_SELECTED_VALUE";  // Nueva acción
+export const SET_SELECTED_PROVIDER_ID = "SET_SELECTED_PROVIDER_ID"; // Nueva acción para establecer el ID del proveedor seleccionado
 
 // Vistas
 export const HOME = "HOME";
@@ -22,6 +23,7 @@ export const ITEMS = "ItemsAlmacen";
 export const MENU = "Menu";
 export const PRODUCCION = "ProduccionInterna";
 export const STAFF = "Staff";
+export const PROVEE = "Proveedores";
 // Fuentes dd precios
 export const FUENTES = []
 
