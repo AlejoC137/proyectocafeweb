@@ -2,22 +2,38 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups } from "../../../redux/actions";
 import { toggleShowEdit } from "../../../redux/actions";
-import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
+import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna , MenuItems} from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { FaWarehouse, FaIndustry, FaEdit, FaTools } from "react-icons/fa";
 
+import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
 function Inventario() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState(ItemsAlmacen);
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false); // Local state to toggle AccionesRapidas
 
+  const Menu = useSelector((state) => state.allMenu || []);
   const Items = useSelector((state) => state.allItems || []);
   const Produccion = useSelector((state) => state.allProduccion || []);
   const showEdit = useSelector((state) => state.showEdit); // Obtener el estado de showEdit
 
-  const filteredItems = currentType === ItemsAlmacen ? Items : Produccion;
+  let filteredItems;
+  switch (currentType) {
+    case ItemsAlmacen:
+      filteredItems = Items;
+      break;
+    case ProduccionInterna:
+      filteredItems = Produccion;
+      break;
+    case MenuItems:
+      filteredItems = Menu;
+      break;
+    default:
+      filteredItems = [];
+      break;
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +77,18 @@ function Inventario() {
   return (
     <div className="flex flex-col w-screen h-screen">
       <div className="flex justify-center align-top gap-4 p-4 fixed top-12 left-0 right-0 bg-white z-10">
+        <button
+          className={`rounded-md w-1/5 font-bold flex flex-col items-center justify-center ${
+            currentType === MenuItems
+              ? "bg-blue-500 text-white"
+              : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+          }`}
+          // onClick={() => console.log(Menu)}
+          onClick={() => handleToggleType(MenuItems)}
+        >
+          🗺️
+          <span className="text-xs mt-1 truncate">Almacén</span>
+        </button>
         <button
           className={`rounded-md w-1/5 font-bold flex flex-col items-center justify-center ${
             currentType === ItemsAlmacen
@@ -107,12 +135,26 @@ function Inventario() {
         {showAccionesRapidas && <AccionesRapidas currentType={currentType} />}
 
         <h3 className="text-lg font-bold ml-4">{`Listado de ${currentType}`}</h3>
-        <CardGridInventario
-          products={filteredItems}
-          category="Grouped"
-          currentType={currentType}
-          showEdit={showEdit} // Pasar showEdit a CardGridInventario
-        />
+      {/* <CardGridInventario
+        products={filteredItems}
+        category="Grouped"
+        currentType={currentType}
+        showEdit={showEdit} // Pasar showEdit a CardGridInventario
+      />  */}
+    
+    
+      {currentType !== MenuItems ? <CardGridInventario
+        products={filteredItems}
+        category="Grouped"
+        currentType={currentType}
+        showEdit={showEdit} // Pasar showEdit a CardGridInventario
+      /> : <CardGridInventarioMenu
+      products={filteredItems}
+      category="Grouped"
+      currentType={currentType}
+      showEdit={showEdit} // Pasar showEdit a CardGridInventario
+    />
+    }
       </div>
     </div>
   );

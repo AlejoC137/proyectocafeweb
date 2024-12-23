@@ -18,6 +18,7 @@ export const NOSOTROS = "NOSOTROS";
 export const MENUVIEW = "MENUVIEW";
 export const LUNCH = "LUNCH";
 
+export const RECETAS = "RECETAS";
 // Tablas en Supabase
 export const ITEMS = "ItemsAlmacen";
 export const MENU = "Menu";
@@ -114,6 +115,7 @@ export const unidades = [
 
 export const ItemsAlmacen = "ItemsAlmacen"
 export const ProduccionInterna = "ProduccionInterna"
+export const MenuItems = "MenuItems"
 
 // Acciones relacionadas con las recetas
 export const INSERT_RECETAS_SUCCESS = "INSERT_RECETAS_SUCCESS";  // Nueva acción para éxito al insertar recetas
