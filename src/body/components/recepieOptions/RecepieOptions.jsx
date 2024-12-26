@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions";
 import { ProduccionInterna } from "../../../redux/actions-types";
-import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
 function RecepieOptions({ product, Receta }) {
   const dispatch = useDispatch();
@@ -112,6 +111,8 @@ function RecepieOptions({ product, Receta }) {
     const total = items.reduce((acc, item) => {
       return acc + (item.precioUnitario * item.cuantity || 0);
     }, 0);
+
+
     setTotalIngredientes(total);
   };
 
@@ -123,14 +124,15 @@ function RecepieOptions({ product, Receta }) {
           legacyName: legacyName || "Sin nombre",
           rendimiento: JSON.stringify(rendimiento),
           autor,
+          UNIDADES: rendimiento.unidades,
           revisor,
+          precioUnitario: totalIngredientes/rendimiento,
           actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),
           ...mapItemsToPayload(productoInternoItems),
           ...mapProcesToPayload(proces),
         };
 
-        console.log("Objeto a enviar:", recetaPayload);
 
         if (Receta) {
           // Update existing recipe
@@ -172,15 +174,7 @@ function RecepieOptions({ product, Receta }) {
     return payload;
   };
 
-  const handleCalculateReceta = async () => {
-    try {
-      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems], product);
-      alert(`El valor de la receta es: ${result.consolidado}`);
-    } catch (error) {
-      console.error("Error al calcular la receta:", error);
-      alert("Hubo un error al calcular la receta.");
-    }
-  };
+
 
   const handleProcesChange = (index, value) => {
     if (showEdit) {
@@ -393,9 +387,7 @@ function RecepieOptions({ product, Receta }) {
               Guardar Receta
             </button>
           )}
-          {/* <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
-            Calcular Receta
-          </button> */}
+
         </>
       )}
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions.js";
-import { ProduccionInterna , MENU } from "../../../redux/actions-types.js";
+import { ProduccionInterna , MENU, DESAYUNO } from "../../../redux/actions-types.js";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
 function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCreateReceta }) {
@@ -20,6 +20,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   const [totalIngredientes, setTotalIngredientes] = useState(0);
   const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
   const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
+  const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
 
   useEffect(() => {
     
@@ -77,10 +78,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     }
   };
 
-  const findPrecioUnitario = (itemId) => {
-    const matchedItem = allOptions.find(option => option._id === itemId);
-    return matchedItem ? matchedItem.precioUnitario : 0;
-  };
+
 
   const handleRemoveIngredient = async (index, source) => {
     if (showEdit) {
@@ -112,11 +110,16 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   };
 
   const calculateTotalIngredientes = (items) => {
-    const total = items.reduce((acc, item) => {
-      return acc + (item.precioUnitario * item.cuantity || 0);
-    }, 0);
-    setTotalIngredientes(total);
-  };
+    DESAYUNO
+  const resultad = recetaMariaPaula(items , DESAYUNO)
+
+
+
+    setTotalIngredientes(resultad.consolidado);
+    setCalculoDetalles(resultad.detalles);
+    
+    
+  }; 
 
   const handleSaveReceta = async () => {
     if (showEdit) {
@@ -125,7 +128,9 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           _id: Receta ? Receta._id : crypto.randomUUID(),
           legacyName: legacyName || "Sin nombre",
           rendimiento: JSON.stringify(rendimiento),
+          forId: product._id,
           autor,
+          legacyName:product.NombreES,
           revisor,
           actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),
@@ -143,7 +148,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           await dispatch(crearItem(recetaPayload, "Recetas", product._id));
         }
 
-        await dispatch(updateItem(product._id, { Receta: recetaPayload._id }, ProduccionInterna));
+        await dispatch(updateItem(product._id, { Receta: recetaPayload._id }, MENU));
         alert("Receta guardada correctamente.");
       } catch (error) {
         console.error("Error al guardar la receta:", error);
@@ -152,32 +157,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     }
   };
 
-  const handleCreateReceta = async () => {
-    if (showEdit) {
-      try {
-        const recetaPayload = {
-          _id: crypto.randomUUID(),
-          legacyName: legacyName || "Sin nombre",
-          rendimiento: JSON.stringify(rendimiento),
-          autor,
-          revisor,
-          actualizacion: new Date().toISOString(),
-          ...mapItemsToPayload(recetaItems),
-          ...mapItemsToPayload(productoInternoItems),
-          ...mapProcesToPayload(proces),
-        };
 
-        console.log("Objeto a enviar:", recetaPayload);
-
-        // Create new recipe
-        await onCreateReceta(recetaPayload, product._id);
-        alert("Receta creada correctamente.");
-      } catch (error) {
-        console.error("Error al crear la receta:", error);
-        alert("Hubo un error al crear la receta.");
-      }
-    }
-  };
 
   const mapItemsToPayload = (items) => {
     const payload = {};
@@ -202,15 +182,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     return payload;
   };
 
-  const handleCalculateReceta = async () => {
-    try {
-      const result = await recetaMariaPaula([...recetaItems, ...productoInternoItems], product);
-      alert(`El valor de la receta es: ${result.consolidado}`);
-    } catch (error) {
-      console.error("Error al calcular la receta:", error);
-      alert("Hubo un error al calcular la receta.");
-    }
-  };
+
 
   const handleProcesChange = (index, value) => {
     if (showEdit) {
@@ -415,22 +387,19 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
               </button>
             )}
           </div>
-          <div className="mb-4 bg-slate-50">
-            <h3 className="font-semibold mb-2 bg-slate-50">Total Ingredientes: {totalIngredientes.toFixed(2)}</h3>
+          <div className=" bg-slate-50 flex gap-1">
+            <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%CMPi: {CalculoDetalles.pCMPInicial}%</h3>
+            <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%CMPr: {CalculoDetalles.pCMPReal}%</h3>
+            <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$CMP: {CalculoDetalles.vCMP}$</h3>
+            <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$IB: {CalculoDetalles.vIB}</h3>
+            <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%IB: {CalculoDetalles.pIB}%</h3>
           </div>
+          <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded text-center">$PVF: {totalIngredientes.toFixed(2)}</h3>
           {showEdit && (
             <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
               Guardar Receta
             </button>
           )}
-          {/* {showEdit && !Receta && (
-            <button onClick={handleCreateReceta} className="px-4 py-2 bg-blue-500 text-white rounded">
-              Crear Receta
-            </button>
-          )} */}
-          {/* <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
-            Calcular Receta
-          </button> */}
         </>
       )}
 

@@ -544,6 +544,8 @@ export function deleteItem(itemId , type) {
 }
 
 export const getRecepie = async (uuid, type) => {
+  console.log(uuid, type);
+  
   try {
     const { data, error } = await supabase
       .from(type)

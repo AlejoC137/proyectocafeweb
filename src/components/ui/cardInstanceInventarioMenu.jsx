@@ -14,9 +14,13 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 
   useEffect(() => {
     const fetchReceta = async () => {
-      if (product.Receta !== null) {
+      console.log(product.Receta);
+      
+      if ( product.Receta !== null ) {
         const result = await getRecepie(product.Receta, "Recetas");
         setReceta(result);
+        console.log(result);
+        
       }
     };
 
@@ -71,11 +75,12 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 
   return (
     <div className="border p-4 rounded-md shadow-md">
+<div className="flex">
+      <h3 className="text-lg font-bold">{`${product.NombreEN } -`}</h3>
+      <h2 className="text-lg font-bold">- {product.Precio} </h2>
                 
-      <h3 className="text-lg font-bold">{product.NombreEN}</h3>
-<div className="flex
-">
-  
+  </div>
+<div className="flex">
 
                 <button
             onClick={toggleEstado}
@@ -92,7 +97,6 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
           </button>
 
 
-          <p>{product.Precio}</p>
           </div>
 
 
@@ -232,36 +236,18 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
               ))}
             </select>
           </label>
+          <br></br>
           <button
             onClick={handleSave}
-            className="bg-blue-500 text-white p-2 rounded-md"
+            className="bg-blue-500 text-white pt-2  rounded-md"
           >
             Save
           </button>
-          <button
-            onClick={toggleEstado}
-            className={`p-2 rounded-md mt-2 ${editableProduct.Estado === "Activo" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
-          >
-            {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
-          </button>
-          {/* {!receta && (
-            <button
-              onClick={() => handleCreateReceta({}, editableProduct._id)}
-              className="bg-purple-500 text-white p-2 rounded-md mt-2 ml-2"
-            >
-              Crear Receta
-            </button>
-          )} */}
-          <button
-            onClick={handleRecepie}
-            className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"
-          >
-            {book}
-          </button>
+
+
         </>
       ) : (
         <>
-          <p>{product.GRUPO}</p>
 
 
      
