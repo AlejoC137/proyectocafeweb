@@ -71,8 +71,22 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 
   return (
     <div className="border p-4 rounded-md shadow-md">
+                
+                {/* <h3 className="text-lg font-bold">{product.NombreEN}</h3> */}
+                <h3 className="text-lg font-bold">{product.NombreEN}</h3>
+
+                <button
+            onClick={toggleEstado}
+            className={`p-2 rounded-md mt-2 ${editableProduct.Estado === "Activo" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
+          >
+            {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
+          </button>
+
+
+
       {showEdit ? (
         <>
+        <br></br>
           <label className="text-sm text-gray-700 flex-1 font-bold">
             Nombre en Español:
             <input
@@ -195,20 +209,15 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
           >
             Save
           </button>
-          <button
-            onClick={toggleEstado}
-            className={`p-2 rounded-md mt-2 ${editableProduct.Estado === "Activo" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
-          >
-            {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
-          </button>
-          {!receta && (
+
+          {/* {!receta && (
             <button
               onClick={() => handleCreateReceta({}, editableProduct._id)}
               className="bg-purple-500 text-white p-2 rounded-md mt-2 ml-2"
             >
               Crear Receta
             </button>
-          )}
+          )} */}
           <button
             onClick={handleRecepie}
             className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"
@@ -218,24 +227,18 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
         </>
       ) : (
         <>
-          <h3 className="text-lg font-bold">{product.NombreEN}</h3>
           <p>{product.DescripcionMenuEN}</p>
           <p>{product.Precio}</p>
           <p>{product.GRUPO}</p>
-          <button
-            onClick={toggleEstado}
-            className={`p-2 rounded-md mt-2 ${editableProduct.Estado === "Activo" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
-          >
-            {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
-          </button>
-          {!receta && (
+
+          {/* {!receta && (
             <button
               onClick={() => handleCreateReceta({}, editableProduct._id)}
               className="bg-purple-500 text-white p-2 rounded-md mt-2 ml-2"
             >
               Crear Receta
             </button>
-          )}
+          )} */}
           <button
             onClick={handleRecepie}
             className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"

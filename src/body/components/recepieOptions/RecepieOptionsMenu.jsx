@@ -423,11 +423,11 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
               Guardar Receta
             </button>
           )}
-          {showEdit && !Receta && (
+          {/* {showEdit && !Receta && (
             <button onClick={handleCreateReceta} className="px-4 py-2 bg-blue-500 text-white rounded">
               Crear Receta
             </button>
-          )}
+          )} */}
           {/* <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
             Calcular Receta
           </button> */}
