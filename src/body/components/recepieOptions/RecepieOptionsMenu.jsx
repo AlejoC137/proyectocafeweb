@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions";
-import { ProduccionInterna } from "../../../redux/actions-types";
+import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions.js";
+import { ProduccionInterna , MENU } from "../../../redux/actions-types.js";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
-function RecepieOptions({ product, Receta }) {
+function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCreateReceta }) {
   const dispatch = useDispatch();
   const Items = useSelector((state) => state.allItems || []);
   const Produccion = useSelector((state) => state.allProduccion || []);
@@ -22,13 +22,16 @@ function RecepieOptions({ product, Receta }) {
   const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
 
   useEffect(() => {
-    if (Receta) {
-      loadRecepie();
-    }
+    
+    
+    if (Receta && currentType === MENU) {
+      loadRecepie('Recetas');
+    } 
+   
   }, [Receta]);
 
-  const loadRecepie = async () => {
-    const recepieData = await getRecepie(Receta._id, "RecetasProduccion");
+  const loadRecepie = async (source) => {
+    const recepieData = await getRecepie(Receta._id, source);
     if (recepieData) {
       const trimmedRecepie = trimRecepie(allOptions, recepieData);
       setRecetaItems(trimmedRecepie.filter(item => item.source === 'Items'));
@@ -89,7 +92,7 @@ function RecepieOptions({ product, Receta }) {
         source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
 
         let preFix = source === 'Items' ? 'item' : 'producto_interno';
-        await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "RecetasProduccion"));
+        await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "Recetas"));
         calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
       }
     }
@@ -134,10 +137,10 @@ function RecepieOptions({ product, Receta }) {
 
         if (Receta) {
           // Update existing recipe
-          await dispatch(updateItem(Receta._id, recetaPayload, "RecetasProduccion"));
+          await dispatch(updateItem(Receta._id, recetaPayload, "Recetas"));
         } else {
           // Create new recipe
-          await dispatch(crearItem(recetaPayload, "RecetasProduccion", product._id));
+          await dispatch(crearItem(recetaPayload, "Recetas", product._id));
         }
 
         await dispatch(updateItem(product._id, { Receta: recetaPayload._id }, ProduccionInterna));
@@ -145,6 +148,33 @@ function RecepieOptions({ product, Receta }) {
       } catch (error) {
         console.error("Error al guardar la receta:", error);
         alert("Hubo un error al guardar la receta.");
+      }
+    }
+  };
+
+  const handleCreateReceta = async () => {
+    if (showEdit) {
+      try {
+        const recetaPayload = {
+          _id: crypto.randomUUID(),
+          legacyName: legacyName || "Sin nombre",
+          rendimiento: JSON.stringify(rendimiento),
+          autor,
+          revisor,
+          actualizacion: new Date().toISOString(),
+          ...mapItemsToPayload(recetaItems),
+          ...mapItemsToPayload(productoInternoItems),
+          ...mapProcesToPayload(proces),
+        };
+
+        console.log("Objeto a enviar:", recetaPayload);
+
+        // Create new recipe
+        await onCreateReceta(recetaPayload, product._id);
+        alert("Receta creada correctamente.");
+      } catch (error) {
+        console.error("Error al crear la receta:", error);
+        alert("Hubo un error al crear la receta.");
       }
     }
   };
@@ -393,6 +423,11 @@ function RecepieOptions({ product, Receta }) {
               Guardar Receta
             </button>
           )}
+          {showEdit && !Receta && (
+            <button onClick={handleCreateReceta} className="px-4 py-2 bg-blue-500 text-white rounded">
+              Crear Receta
+            </button>
+          )}
           {/* <button onClick={handleCalculateReceta} className="px-4 py-2 bg-orange-500 text-white rounded mt-4">
             Calcular Receta
           </button> */}
@@ -425,4 +460,4 @@ function RecepieOptions({ product, Receta }) {
   );
 }
 
-export default RecepieOptions;
+export default RecepieOptionsMenu;

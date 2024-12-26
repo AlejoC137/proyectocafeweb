@@ -206,7 +206,6 @@ const RecetaOptions = ({ id, Nombre_del_producto, currentType, receta }) => {
           }`}
           disabled={!!receta}
         >
-          {receta ? "Editar Receta" : "Crear Receta"}
         </button>
 
         <button

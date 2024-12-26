@@ -14,6 +14,7 @@ import {
   SET_PREPROCESS_DATA,
   TODAYS_MENU,
   SCRAP,
+  RECETAS_MENU,
   TOGGLE_SHOW_EDIT,
   RESET_EXPANDED_GROUPS       // Nueva acción importada
 } from './actions-types';
@@ -147,6 +148,7 @@ const initialState = {
   showEdit: false,
   allMenu: [],
   allItems: [],
+  allRecetasMenu: [],
   currentLeng: 'ESP',
   allProduccion: [],
   Proveedores: [],
@@ -198,6 +200,11 @@ const reducer = (state = initialState, action) => {
           return {
             ...state,
             allStaff: action.payload,
+          };
+        case RECETAS_MENU:
+          return {
+            ...state,
+            allRecetasMenu: action.payload,
           };
         case PROVEE:
           return {

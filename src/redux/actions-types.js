@@ -18,6 +18,7 @@ export const NOSOTROS = "NOSOTROS";
 export const MENUVIEW = "MENUVIEW";
 export const LUNCH = "LUNCH";
 
+export const RECETAS_MENU = "Recetas";
 export const RECETAS = "RECETAS";
 // Tablas en Supabase
 export const ITEMS = "ItemsAlmacen";

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFromTable, resetExpandedGroups } from "../../../redux/actions";
+import { getAllFromTable, resetExpandedGroups, updateItem } from "../../../redux/actions";
 import { toggleShowEdit } from "../../../redux/actions";
-import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna , MenuItems} from "../../../redux/actions-types";
+import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE,RECETAS_MENU, ItemsAlmacen, ProduccionInterna , MenuItems} from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { FaWarehouse, FaIndustry, FaEdit, FaTools } from "react-icons/fa";
@@ -18,6 +18,8 @@ function Inventario() {
   const Items = useSelector((state) => state.allItems || []);
   const Produccion = useSelector((state) => state.allProduccion || []);
   const showEdit = useSelector((state) => state.showEdit); // Obtener el estado de showEdit
+
+  const recetas = useSelector((state) => state.allRecetasMenu || []);
 
   let filteredItems;
   switch (currentType) {
@@ -43,7 +45,8 @@ function Inventario() {
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
-          dispatch(getAllFromTable(PROVEE))          
+          dispatch(getAllFromTable(PROVEE)),          
+          // dispatch(getAllFromTable(RECETAS_MENU))          
         ]);
         setLoading(false);
       } catch (error) {
@@ -70,6 +73,18 @@ function Inventario() {
     setShowAccionesRapidas((prev) => !prev); // Toggle the visibility of AccionesRapidas
   };
 
+  // const handleUpdateReceta = async () => {
+  //   recetas.forEach((receta) => {
+  //     const menuItem = Menu.find(item => item._id === receta.forId);
+  //     if (menuItem) {
+  //       dispatch(updateItem(menuItem._id, { Receta: receta._id }, MENU));
+  //       console.log(`Receta actualizada para el elemento con id ${receta.forId}`);
+  //     } else {
+  //       console.log(`Elemento con id ${receta.forId} no encontrado en el menú`);
+  //     }
+  //   });
+  // };
+
   if (loading) {
     return <div className="text-center mt-10">Cargando...</div>;
   }
@@ -87,7 +102,7 @@ function Inventario() {
           onClick={() => handleToggleType(MenuItems)}
         >
           🗺️
-          <span className="text-xs mt-1 truncate">Almacén</span>
+          <span className="text-xs mt-1 truncate">Menú</span>
         </button>
         <button
           className={`rounded-md w-1/5 font-bold flex flex-col items-center justify-center ${
@@ -129,6 +144,13 @@ function Inventario() {
           ⚡
           <span className="text-xs mt-1 truncate">Acciones</span>
         </button>
+        {/* <button
+          className="w-1/5 px-2 rounded-md flex flex-col items-center justify-center bg-blue-500 text-white hover:bg-blue-600"
+          onClick={handleUpdateReceta}
+        >
+          🔄
+          <span className="text-xs mt-1 truncate">Actualizar Receta</span>
+        </button> */}
       </div>
 <br></br>
       <div className="flex flex-col mt-20 overflow-y-auto">

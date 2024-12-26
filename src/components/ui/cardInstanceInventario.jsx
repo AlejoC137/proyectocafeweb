@@ -140,6 +140,17 @@ export function CardInstanceInventario({ product, currentType }) {
     }
   };
 
+  const handleCreateReceta = async (recetaData, productId) => {
+    try {
+      await dispatch(crearReceta(recetaData, productId));
+      setReceta(recetaData);
+      alert("Receta creada correctamente.");
+    } catch (error) {
+      console.error("Error al crear la receta:", error);
+      alert("Hubo un error al crear la receta.");
+    }
+  };
+
   return (
     <Card className="w-full shadow-md rounded-lg overflow-hidden border border-gray-200">
       <CardContent className="p-4 flex flex-col gap-4">
@@ -289,7 +300,7 @@ export function CardInstanceInventario({ product, currentType }) {
         )}
 
         {currentType === ProduccionInterna && book === '📖' && (
-          <RecepieOptions product={product} Receta={receta} currentType={currentType} />
+          <RecepieOptions product={product} Receta={receta} currentType={currentType} onCreateReceta={handleCreateReceta} />
         )}
       </CardContent>
     </Card>

@@ -493,8 +493,7 @@ export function crearItem(itemData, type, forId) {
   };
 }
 
-export function updateItem(itemId, updatedFields,type) {
-  
+export function updateItem(itemId, updatedFields, type) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
@@ -556,7 +555,7 @@ export const getRecepie = async (uuid, type) => {
       console.error("Error al obtener la receta:", error);
       throw new Error(error.message);
     }
-console.log(data);
+// console.log(data);
 
     return data;
   } catch (error) {
@@ -626,4 +625,36 @@ export const resetExpandedGroups = () => {
     type: RESET_EXPANDED_GROUPS,
   };
 };
+
+export function crearReceta(recetaData, productId) {
+  return async (dispatch) => {
+    try {
+      // Insertar la nueva receta en Supabase
+      const { data, error } = await supabase
+        .from('Recetas')
+        .insert([recetaData])
+        .select();
+
+      if (error) {
+        console.error("Error al crear la receta:", error);
+        throw new Error("No se pudo crear la receta");
+      }
+
+      // Actualizar el producto con la nueva receta
+      await dispatch(updateItem(productId, { Receta: data[0]._id }, "Menu"));
+
+      // Despachar la acción para actualizar el estado global
+      dispatch({
+        type: INSERT_RECETAS_SUCCESS,
+        payload: data[0], // La nueva receta creada
+      });
+
+      console.log("Receta creada correctamente:", data[0]);
+      return data[0];
+    } catch (error) {
+      console.error("Error en la acción crearReceta:", error);
+      throw error;
+    }
+  };
+}
 
