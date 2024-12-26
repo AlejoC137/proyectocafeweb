@@ -72,8 +72,10 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   return (
     <div className="border p-4 rounded-md shadow-md">
                 
-                {/* <h3 className="text-lg font-bold">{product.NombreEN}</h3> */}
-                <h3 className="text-lg font-bold">{product.NombreEN}</h3>
+      <h3 className="text-lg font-bold">{product.NombreEN}</h3>
+<div className="flex
+">
+  
 
                 <button
             onClick={toggleEstado}
@@ -82,38 +84,54 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
             {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
           </button>
 
+          <button
+            onClick={handleRecepie}
+            className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"
+          >
+            {book}
+          </button>
+
+
+          <p>{product.Precio}</p>
+          </div>
 
 
       {showEdit ? (
         <>
         <br></br>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            Nombre en Español:
-            <input
-              type="text"
-              name="NombreES"
-              value={editableProduct.NombreES || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            Nombre en Inglés:
-            <input
-              type="text"
-              name="NombreEN"
-              value={editableProduct.NombreEN || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
+          <div className="flex gap-4">
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Nombre en Español:
+              <input
+                type="text"
+                name="NombreES"
+                value={editableProduct.NombreES || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Nombre en Inglés:
+              <input
+                type="text"
+                name="NombreEN"
+                value={editableProduct.NombreEN || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+          </div>
+
+          <div className="flex gap-4  ">
+
+
+          <label className="text-sm text-gray-700 flex-1 font-bold ">
             Descripción en Español:
             <textarea
               name="DescripcionMenuES"
               value={editableProduct.DescripcionMenuES || ""}
               onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              className="border p-2 rounded-md  w-full mb-2 bg-slate-100 font-light h-24"
             />
           </label>
           <label className="text-sm text-gray-700 flex-1 font-bold">
@@ -122,69 +140,80 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
               name="DescripcionMenuEN"
               value={editableProduct.DescripcionMenuEN || ""}
               onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light h-24"
             />
           </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            SubTipo en Español:
-            <input
-              type="text"
-              name="SubTipoES"
-              value={editableProduct.SubTipoES || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            SubTipo en Inglés:
-            <input
-              type="text"
-              name="SubTipoEN"
-              value={editableProduct.SubTipoEN || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            Dieta en Español:
-            <input
-              type="text"
-              name="DietaES"
-              value={editableProduct.DietaES || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            Dieta en Inglés:
-            <input
-              type="text"
-              name="DietaEN"
-              value={editableProduct.DietaEN || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            Cuidado en Español:
-            <input
-              type="text"
-              name="CuidadoES"
-              value={editableProduct.CuidadoES || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
-          <label className="text-sm text-gray-700 flex-1 font-bold">
-            Cuidado en Inglés:
-            <input
-              type="text"
-              name="CuidadoEN"
-              value={editableProduct.CuidadoEN || ""}
-              onChange={handleChange}
-              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-            />
-          </label>
+
+          </div>
+
+
+
+          <div className="flex gap-4">
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              SubTipo en Español:
+              <input
+                type="text"
+                name="SubTipoES"
+                value={editableProduct.SubTipoES || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              SubTipo en Inglés:
+              <input
+                type="text"
+                name="SubTipoEN"
+                value={editableProduct.SubTipoEN || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+          </div>
+          <div className="flex gap-4">
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Dieta en Español:
+              <input
+                type="text"
+                name="DietaES"
+                value={editableProduct.DietaES || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Dieta en Inglés:
+              <input
+                type="text"
+                name="DietaEN"
+                value={editableProduct.DietaEN || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+          </div>
+          <div className="flex gap-4">
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Cuidado en Español:
+              <input
+                type="text"
+                name="CuidadoES"
+                value={editableProduct.CuidadoES || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Cuidado en Inglés:
+              <input
+                type="text"
+                name="CuidadoEN"
+                value={editableProduct.CuidadoEN || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+          </div>
           <label className="text-sm text-gray-700 flex-1 font-bold">
             Grupo:
             <select
@@ -209,7 +238,12 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
           >
             Save
           </button>
-
+          <button
+            onClick={toggleEstado}
+            className={`p-2 rounded-md mt-2 ${editableProduct.Estado === "Activo" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
+          >
+            {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
+          </button>
           {/* {!receta && (
             <button
               onClick={() => handleCreateReceta({}, editableProduct._id)}
@@ -227,24 +261,10 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
         </>
       ) : (
         <>
-          <p>{product.DescripcionMenuEN}</p>
-          <p>{product.Precio}</p>
           <p>{product.GRUPO}</p>
 
-          {/* {!receta && (
-            <button
-              onClick={() => handleCreateReceta({}, editableProduct._id)}
-              className="bg-purple-500 text-white p-2 rounded-md mt-2 ml-2"
-            >
-              Crear Receta
-            </button>
-          )} */}
-          <button
-            onClick={handleRecepie}
-            className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"
-          >
-            {book}
-          </button>
+
+     
         </>
       )}
  
