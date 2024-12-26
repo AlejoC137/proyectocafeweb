@@ -78,7 +78,7 @@ export function CardInstanceInventario({ product, currentType }) {
         COSTO: formData.COSTO,
         GRUPO: formData.GRUPO,
         Estado: formData.Estado,
-        Proveedor: formData.Proveedor,
+        Proveedor: formData.Proveedor ? formData.Proveedor : product.Proveedor,
         ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
         FECHA_ACT: new Date().toISOString().split("T")[0],
       };
