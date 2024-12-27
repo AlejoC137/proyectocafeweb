@@ -14,7 +14,8 @@ import {
   TOGGLE_SHOW_EDIT,
   ProduccionInterna,
   RESET_EXPANDED_GROUPS,
-  SET_SELECTED_PROVIDER_ID // Importar la acción
+  SET_SELECTED_PROVIDER_ID, // Importar la acción
+  MenuItems
   
 } from "./actions-types";
 
@@ -441,7 +442,6 @@ export function copiarAlPortapapeles(items, estado , ) {
 
 export function crearItem(itemData, type, forId) {
 
-  console.log(itemData);
   
   return async (dispatch) => {
     try {
@@ -556,7 +556,6 @@ export const getRecepie = async (uuid, type) => {
       console.error("Error al obtener la receta:", error);
       throw new Error(error.message);
     }
-console.log(data);
 
     return data;
   } catch (error) {

@@ -78,21 +78,54 @@ function RecepieOptions({ product, Receta }) {
     return matchedItem ? matchedItem.precioUnitario : 0;
   };
 
-  const handleRemoveIngredient = async (index, source) => {
-    if (showEdit) {
-      const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
-      if (confirmRemove) {
-        const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-        updatedItems.splice(index, 1);
-        updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
-        source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+  // const handleRemoveIngredient = async (index, source) => {
+  //   if (showEdit) {
+  //     const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
+  //     if (confirmRemove) {
+  //       const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+  //       updatedItems.splice(index, 1);
+  //       updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
+  //       source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
 
-        let preFix = source === 'Items' ? 'item' : 'producto_interno';
-        await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "RecetasProduccion"));
-        calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
+  //       let preFix = source === 'Items' ? 'item' : 'producto_interno';
+  //       await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "RecetasProduccion"));
+  //       calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
+  //     }
+  //   }
+  // };
+
+    const handleRemoveIngredient = async (index, source, itemKey) => {
+  
+  
+  
+        const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
+  
+  
+      if (showEdit) {
+        const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
+        if (confirmRemove) {
+          
+          const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+          
+          
+          // updatedItems.splice(index, 1);
+  
+  
+  
+  
+  
+  
+          // updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
+          // source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+  
+          // let preFix = source === 'Items' ? 'item' : 'producto_interno';
+          await dispatch(updateItem(Receta._id, { [itemKey]: null, [cuantityKey]: null }, "RecetasProduccion"));
+          
+          // // await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "Recetas"));
+          calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
+        }
       }
-    }
-  };
+    };
 
   const handleCuantityChange = (index, value, source) => {
     if (showEdit) {
@@ -254,7 +287,7 @@ function RecepieOptions({ product, Receta }) {
                   />
                   {showEdit && (
                     <button
-                      onClick={() => handleRemoveIngredient(index, 'Items')}
+                      onClick={() => handleRemoveIngredient(index, 'Items' , item.key)}
                       className="px-2 py-1 bg-red-500 text-white rounded"
                     >
                       X
@@ -320,7 +353,7 @@ function RecepieOptions({ product, Receta }) {
                   />
                   {showEdit && (
                     <button
-                      onClick={() => handleRemoveIngredient(index, 'Produccion')}
+                      onClick={() => handleRemoveIngredient(index, 'Produccion', item.key)}
                       className="px-2 py-1 bg-red-500 text-white rounded"
                     >
                       X

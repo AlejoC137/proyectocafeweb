@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateItem, getRecepie, insertarRecetas, crearItem, crearReceta } from "../../redux/actions";
-import { CATEGORIES } from "../../redux/actions-types";
+import { CATEGORIES, MenuItems } from "../../redux/actions-types";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 
 export function CardInstanceInventarioMenu({ product, showEdit }) {
@@ -14,17 +14,18 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 
   useEffect(() => {
     const fetchReceta = async () => {
-      console.log(product.Receta);
+      // console.log(product.Receta);
       
-      if ( product.Receta !== null ) {
+      // if (product.Receta !== null && product.Receta !== undefined && /^[0-9a-fA-F]{24}$/.test(product.Receta)) {
+      if (product.Receta !== null && product.Receta !== undefined ) {
         const result = await getRecepie(product.Receta, "Recetas");
         setReceta(result);
-        console.log(result);
+        // console.log(result);
         
       }
     };
 
-    fetchReceta();
+    product.Receta === null ? setReceta(null)   : fetchReceta();
   }, [product.Receta]);
 
   const handleChange = (e) => {
@@ -109,7 +110,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
               <input
                 type="text"
                 name="NombreES"
-                value={editableProduct.NombreES || ""}
+                value={editableProduct.NombreEN || ""}
                 onChange={handleChange}
                 className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
               />
@@ -262,14 +263,14 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 <RecepieOptionsMenu
 product={product}
 Receta={receta}
-currentType="Menu"
+currentType={MenuItems}
 onSaveReceta={handleSaveReceta}
 onCreateReceta={handleCreateReceta}
 />
-
 
 )}
       
     </div>
   );
 }
+

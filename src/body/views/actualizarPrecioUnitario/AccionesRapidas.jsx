@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem, crearProveedor } from "../../../redux/actions-Proveedores";
-import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna } from "../../../redux/actions-types";
+import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU , MenuItems} from "../../../redux/actions-types";
 
 function AccionesRapidas({ currentType }) {
   const dispatch = useDispatch();
   const allItems = useSelector((state) => state.allItems);
   const allProduccion = useSelector((state) => state.allProduccion);
-  const allProveedores = useSelector((state) => state.allProveedores);
+  const allProveedores = useSelector((state) => state.Proveedores);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,6 +64,17 @@ function AccionesRapidas({ currentType }) {
     "NIT/CC": "",
   });
 
+  const [menuItemData, setMenuItemData] = useState({
+    NombreES: "",
+    NombreEN: "",
+    DescripcionES: "",
+    DescripcionEN: "",
+    Precio: 0,
+    Categoria: "",
+    Subcategoria: "",
+    Imagen: "",
+  });
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewItemData((prev) => ({
@@ -75,6 +86,14 @@ function AccionesRapidas({ currentType }) {
   const handleProveedorInputChange = (e) => {
     const { name, value } = e.target;
     setNewProveedorData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleMenuItemInputChange = (e) => {
+    const { name, value } = e.target;
+    setMenuItemData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -111,6 +130,27 @@ function AccionesRapidas({ currentType }) {
     } catch (error) {
       console.error("Error al crear el ítem:", error);
       alert("Hubo un error al crear el ítem.");
+    }
+  };
+
+  const handleCrearMenuItem = async () => {
+    try {
+      await dispatch(crearItem(menuItemData, MENU));
+      alert("Ítem de menú creado correctamente.");
+      setMenuItemData({
+        NombreES: "",
+        NombreEN: "",
+        DescripcionES: "",
+        DescripcionEN: "",
+        Precio: 0,
+        Categoria: "",
+        Subcategoria: "",
+        Imagen: "",
+      });
+      setFormVisible(false);
+    } catch (error) {
+      console.error("Error al crear el ítem de menú:", error);
+      alert("Hubo un error al crear el ítem de menú.");
     }
   };
 
@@ -178,7 +218,7 @@ function AccionesRapidas({ currentType }) {
       </div>
 
       {/* Formulario de creación de ítem */}
-      {formVisible && (
+      {formVisible && currentType !== MenuItems && (
         <div className="bg-gray-100 p-4 rounded-md mt-4">
           <h3 className="text-lg font-bold mb-2">Crear Nuevo Ítem</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -272,6 +312,85 @@ function AccionesRapidas({ currentType }) {
             onClick={handleCrearItem}
           >
             GUARDAR NUEVO ITEM
+          </button>
+        </div>
+      )}
+
+      {/* Formulario de creación de ítem de menú */}
+      {formVisible && currentType === MenuItems && (
+        <div className="bg-gray-100 p-4 rounded-md mt-4">
+          <h3 className="text-lg font-bold mb-2">Crear Nuevo Ítem de Menú</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="NombreES"
+              value={menuItemData.NombreES}
+              onChange={handleMenuItemInputChange}
+              placeholder="Nombre en Español"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="NombreEN"
+              value={menuItemData.NombreEN}
+              onChange={handleMenuItemInputChange}
+              placeholder="Nombre en Inglés"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="DescripcionES"
+              value={menuItemData.DescripcionES}
+              onChange={handleMenuItemInputChange}
+              placeholder="Descripción en Español"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="DescripcionEN"
+              value={menuItemData.DescripcionEN}
+              onChange={handleMenuItemInputChange}
+              placeholder="Descripción en Inglés"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="number"
+              name="Precio"
+              value={menuItemData.Precio}
+              onChange={handleMenuItemInputChange}
+              placeholder="Precio"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="Categoria"
+              value={menuItemData.Categoria}
+              onChange={handleMenuItemInputChange}
+              placeholder="Categoría"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="Subcategoria"
+              value={menuItemData.Subcategoria}
+              onChange={handleMenuItemInputChange}
+              placeholder="Subcategoría"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              name="Imagen"
+              value={menuItemData.Imagen}
+              onChange={handleMenuItemInputChange}
+              placeholder="URL de la Imagen"
+              className="border bg-white border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+          <button
+            className="bg-blue-500 text-white py-1 px-2 rounded-md mt-4 hover:bg-blue-600"
+            onClick={handleCrearMenuItem}
+          >
+            GUARDAR NUEVO ÍTEM DE MENÚ
           </button>
         </div>
       )}

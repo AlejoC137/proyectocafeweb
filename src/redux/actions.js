@@ -577,7 +577,7 @@ export const getProveedor = async (uuid, type) => {
       console.error("Error al obtener el proveedor :", error);
       throw new Error(error.message);
     }
-console.log(data);
+// console.log(data);
 
     return data;
   } catch (error) {
@@ -598,6 +598,7 @@ export const trimRecepie = (items, recepie) => {
       (validarUUID(recepie[key]) || (typeof recepie[key] === 'object' && recepie[key] !== null && Object.values(recepie[key]).some(value => value !== "")))
   );
   const resultado = clavesFiltradas.map((key) => {
+    
     const idValor = recepie[key];
     const cuantityKey = key.replace("_Id", "_Cuantity_Units");
     const cuantityValor = recepie[cuantityKey]
@@ -611,6 +612,7 @@ export const trimRecepie = (items, recepie) => {
     
     return {
       name: resultadoBusqueda ? resultadoBusqueda.Nombre_del_producto : "",
+      key:key,
       item_Id: idValor,
       precioUnitario :precioUnitario1,
       cuantity: cuantityValor || "",

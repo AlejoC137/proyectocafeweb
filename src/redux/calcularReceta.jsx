@@ -31,7 +31,7 @@ export  function recetaMariaPaula(
 let porcentajeCostoDirecto;
 
 
-console.log(currentType);
+// console.log(currentType);
 
 switch (currentType) {
   

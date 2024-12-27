@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { crearItem, getRecepie, trimRecepie, updateItem } from "../../../redux/actions.js";
-import { ProduccionInterna , MENU, DESAYUNO } from "../../../redux/actions-types.js";
+import { ProduccionInterna , MENU, DESAYUNO, MenuItems } from "../../../redux/actions-types.js";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
 function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCreateReceta }) {
@@ -25,11 +25,11 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   useEffect(() => {
     
     
-    if (Receta && currentType === MENU) {
+    if (Receta && currentType === MenuItems) {
       loadRecepie('Recetas');
     } 
    
-  }, [Receta]);
+  }, [Receta, dispatch]);
 
   const loadRecepie = async (source) => {
     const recepieData = await getRecepie(Receta._id, source);
@@ -40,6 +40,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
       setLegacyName(recepieData.legacyName || "");
       setRendimiento(JSON.parse(recepieData.rendimiento) || { porcion: "", cantidad: "", unidades: "" });
       setAutor(recepieData.autor || "Autor por defecto");
+      // setKey(recepieData.key || "no key");
       setRevisor(recepieData.revisor || "Revisor por defecto");
       setProces(Array.from({ length: 20 }, (_, i) => recepieData[`proces${i + 1}`] || ""));
       calculateTotalIngredientes(trimmedRecepie);
@@ -80,17 +81,34 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
 
 
 
-  const handleRemoveIngredient = async (index, source) => {
+  const handleRemoveIngredient = async (index, source, itemKey) => {
+
+
+
+      const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
+
+
     if (showEdit) {
       const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
       if (confirmRemove) {
+        
         const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-        updatedItems.splice(index, 1);
-        updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
-        source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+        
+        
+        // updatedItems.splice(index, 1);
 
-        let preFix = source === 'Items' ? 'item' : 'producto_interno';
-        await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "Recetas"));
+
+
+
+
+
+        // updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
+        // source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+
+        // let preFix = source === 'Items' ? 'item' : 'producto_interno';
+        await dispatch(updateItem(Receta._id, { [itemKey]: null, [cuantityKey]: null }, "Recetas"));
+        
+        // // await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "Recetas"));
         calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
       }
     }
@@ -249,9 +267,12 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           </div>
           <div className="mb-4 bg-slate-50">
             <h3 className="font-semibold mb-2 bg-slate-50">Ingredientes</h3>
+  
+  
             {recetaItems.map((item, index) => (
               <div key={index} className="flex flex-col mb-2 bg-slate-50">
                 <div className="flex items-center gap-2">
+                  
                   <input
                     type="text"
                     placeholder="Buscar ingrediente"
@@ -262,7 +283,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
                   />
                   {showEdit && (
                     <button
-                      onClick={() => handleRemoveIngredient(index, 'Items')}
+                      onClick={() => handleRemoveIngredient(index, 'Items', item.key)}
                       className="px-2 py-1 bg-red-500 text-white rounded"
                     >
                       X
@@ -315,6 +336,8 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
                 </div>
               </div>
             ))}
+        
+          
             {productoInternoItems.map((item, index) => (
               <div key={index} className="flex flex-col mb-2 bg-slate-50">
                 <div className="flex items-center gap-2">
@@ -381,6 +404,8 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
                 </div>
               </div>
             ))}
+          
+          
             {showEdit && (
               <button onClick={addIngredient} className="px-4 py-2 bg-blue-500 text-white rounded">
                 Añadir Ingrediente
