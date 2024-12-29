@@ -63,6 +63,8 @@ export const DESECHABLES = 'DESECHABLES'
 export const ENLATADOS = 'ENLATADOS'
 export const TARDEO = 'TARDEO'
 export const DESAYUNO = 'DESAYUNO'
+export const GRANOS = 'GRANOS'
+export const HARINAS = 'HARINAS'
 
 export const CATEGORIES = [
   TARDEO,
@@ -81,7 +83,9 @@ export const CATEGORIES = [
   CONCERVAS_FERMENTOS_PRECOCIDOS,
   GUARNICION,
   DESECHABLES,
-  ENLATADOS
+  ENLATADOS,
+  GRANOS,
+  HARINAS
 ];
 
 
