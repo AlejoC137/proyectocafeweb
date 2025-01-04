@@ -237,6 +237,30 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
               ))}
             </select>
           </label>
+
+
+          <label className="text-sm text-gray-700 flex-1 font-bold flex ">
+            Foto:
+          </label>
+
+          <label className="text-sm text-gray-700 flex-1 font-bold flex ">
+           {editableProduct.Foto && <a href={editableProduct.Foto} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+              
+              <button
+            onClick={handleSave}
+            className="bg-blue-500 text-white pt-2  rounded-md"
+          >
+            🖼️
+          </button>
+            </a>}
+            <input
+              type="text"
+              name="Foto"
+              value={editableProduct.Foto || ""}
+              onChange={handleChange}
+              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+            />
+          </label>
           <br></br>
           <button
             onClick={handleSave}
