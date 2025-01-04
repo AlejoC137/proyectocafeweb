@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 import { Menu, ShoppingCart } from "lucide-react"; // Importar los íconos
-import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH } from "../../redux/actions-types"; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENU, AGENDA, NOSOTROS, LUNCH } from "../../redux/actions-types"; // Importa las acciones y vistas
 
 export default function TopNav() {
   const currentView = useSelector((state) => state.currentView);
@@ -10,7 +10,7 @@ export default function TopNav() {
     switch (currentView) {
       case HOME:
         return currentLeng === "ESP" ? "Inicio" : "Home";
-      case MENUVIEW:
+      case MENU:
         return currentLeng === "ESP" ? "Menú" : "Menu";
       case AGENDA:
         return currentLeng === "ESP" ? "Acerca de" : "About";

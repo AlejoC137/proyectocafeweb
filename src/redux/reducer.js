@@ -152,7 +152,7 @@ const initialState = {
   currentLeng: 'ESP',
   allProduccion: [],
   Proveedores: [],
-  currentView: 'MENUVIEW',
+  currentView: 'MENU',
   userRegState: 'notAuth',
   selectedValue: null,
   recetas: [],              // Estado para guardar las recetas insertadas

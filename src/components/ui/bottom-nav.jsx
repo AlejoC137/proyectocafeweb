@@ -11,7 +11,7 @@ import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH, MENU } fr
 // Íconos más relevantes para cada opción
 const navItems = [
   { icon: Home, label: HOME, color: "text-blue-500", path: "/Home" }, // Inicio
-  { icon: UtensilsCrossed, label: MENU.toUpperCase(), color: "text-purple-500", path: "/MenuView" }, // Menú
+  { icon: UtensilsCrossed, label: MENU, color: "text-purple-500", path: "/MenuView" }, // Menú
   { icon: Calendar, label: LUNCH, color: "text-red-500", path: "/LunchByOrder" }, // Almuerzo por pedido
   { icon: Guitar, label: AGENDA, color: "text-green-500", path: "/Agenda" }, // Agenda
   { icon: User, label: NOSOTROS, color: "text-yellow-500", path: "/SobreNosotros" }, // Sobre Nosotros
