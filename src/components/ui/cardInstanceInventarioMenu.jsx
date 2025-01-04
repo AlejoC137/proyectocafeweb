@@ -110,7 +110,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
               <input
                 type="text"
                 name="NombreES"
-                value={editableProduct.NombreEN || ""}
+                value={editableProduct.NombreES || ""}
                 onChange={handleChange}
                 className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
               />
