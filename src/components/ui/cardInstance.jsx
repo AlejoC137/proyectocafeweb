@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 export function CardInstance({ product, isEnglish }) {
   const dietWarning = isEnglish ? product.DietaEN : product.DietaES;
   const careWarning = isEnglish ? product.CuidadoEN : product.CuidadoES;
+console.log(product.Foto);
+// console.log(product._id);
 
   const renderIcons = () => {
     const icons = [];
@@ -50,11 +52,11 @@ export function CardInstance({ product, isEnglish }) {
     >
       {/* Sección de la imagen */}
       <div className="relative h-[220px] w-full z-0 overflow-hidden">
-        <img
+{ product.Foto &&       <img
           src={product.Foto}
           alt={isEnglish ? product.NombreEN : product.NombreES}
           className="w-full h-full object-cover"
-        />
+        />}
         {/* Ícono de carrito */}
         <Button
           variant="ghost"

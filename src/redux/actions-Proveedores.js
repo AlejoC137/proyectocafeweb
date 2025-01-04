@@ -441,15 +441,12 @@ export function copiarAlPortapapeles(items, estado , ) {
 }
 
 export function crearItem(itemData, type, forId) {
-
-  
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
       let nuevoItem = {
         _id: uuidv4(),
         ...itemData,
-
       };
 
       if (type === "Proveedores") { 
@@ -457,16 +454,22 @@ export function crearItem(itemData, type, forId) {
           ...nuevoItem,
           forId: forId
         };
-        
       }
 
-      // Si el tipo NO es 'Recetas', agregar FECHA_ACT
-      if (type !== 'Proveedores') {
+      // Si el tipo NO es 'Proveedores' y NO es 'MenuItems', agregar FECHA_ACT
+      if (type !== 'Proveedores' && type !== 'Menu') {
         nuevoItem = {
           ...nuevoItem,
           FECHA_ACT: new Date().toISOString().split("T")[0], // Fecha actual
         };
       }
+
+      // Remove empty string fields
+      Object.keys(nuevoItem).forEach(key => {
+        if (nuevoItem[key] === "") {
+          delete nuevoItem[key];
+        }
+      });
 
       // Insertar el nuevo ítem en Supabase
       const { data, error } = await supabase

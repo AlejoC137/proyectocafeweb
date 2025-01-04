@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem, crearProveedor } from "../../../redux/actions-Proveedores";
-import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU , MenuItems} from "../../../redux/actions-types";
+import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU, MenuItems } from "../../../redux/actions-types";
 
 function AccionesRapidas({ currentType }) {
   const dispatch = useDispatch();
@@ -32,16 +32,14 @@ function AccionesRapidas({ currentType }) {
     );
   };
 
-  const handleCopiarPendientesCompra = () => {
-    dispatch(copiarAlPortapapeles(allItems, "PC"));
-  };
-
-  const handleCopiarPendientesProduccion = () => {
-    dispatch(copiarAlPortapapeles(allProduccion, "PP"));
+  const handleCopiarPendientes = (type) => {
+    dispatch(copiarAlPortapapeles(type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP"));
   };
 
   const [formVisible, setFormVisible] = useState(false);
-  const [newItemData, setNewItemData] = useState({
+  const [formProveedorVisible, setFormProveedorVisible] = useState(false);
+
+  const initialItemData = {
     Nombre_del_producto: "",
     Proveedor: "",
     Estado: "Disponible",
@@ -53,18 +51,18 @@ function AccionesRapidas({ currentType }) {
     GRUPO: "",
     MARCA: [],
     precioUnitario: 0,
-  });
+    ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
+  };
 
-  const [formProveedorVisible, setFormProveedorVisible] = useState(false);
-  const [newProveedorData, setNewProveedorData] = useState({
+  const initialProveedorData = {
     Nombre_Proveedor: "",
     Contacto_Nombre: "",
     Contacto_Numero: "",
     Direccion: "",
     "NIT/CC": "",
-  });
+  };
 
-  const [menuItemData, setMenuItemData] = useState({
+  const initialMenuItemData = {
     NombreES: "",
     NombreEN: "",
     DescripcionES: "",
@@ -73,27 +71,15 @@ function AccionesRapidas({ currentType }) {
     Categoria: "",
     Subcategoria: "",
     Imagen: "",
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewItemData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
-  const handleProveedorInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewProveedorData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const [newItemData, setNewItemData] = useState(initialItemData);
+  const [newProveedorData, setNewProveedorData] = useState(initialProveedorData);
+  const [menuItemData, setMenuItemData] = useState(initialMenuItemData);
 
-  const handleMenuItemInputChange = (e) => {
+  const handleInputChange = (e, setData) => {
     const { name, value } = e.target;
-    setMenuItemData((prev) => ({
+    setData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -110,22 +96,16 @@ function AccionesRapidas({ currentType }) {
         delete itemData.COOR;
       }
 
+      // Remove empty string fields
+      Object.keys(itemData).forEach(key => {
+        if (itemData[key] === "") {
+          delete itemData[key];
+        }
+      });
+
       await dispatch(crearItem(itemData, currentType));
       alert("Ítem creado correctamente.");
-      setNewItemData({
-        Nombre_del_producto: "",
-        Proveedor: "",
-        Estado: "Disponible",
-        Area: "",
-        CANTIDAD: "",
-        UNIDADES: "",
-        COSTO: "",
-        STOCK: "",
-        GRUPO: "",
-        MARCA: [],
-        precioUnitario: 0,
-        ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
-      });
+      setNewItemData(initialItemData);
       setFormVisible(false);
     } catch (error) {
       console.error("Error al crear el ítem:", error);
@@ -135,18 +115,20 @@ function AccionesRapidas({ currentType }) {
 
   const handleCrearMenuItem = async () => {
     try {
-      await dispatch(crearItem(menuItemData, MENU));
-      alert("Ítem de menú creado correctamente.");
-      setMenuItemData({
-        NombreES: "",
-        NombreEN: "",
-        DescripcionES: "",
-        DescripcionEN: "",
-        Precio: 0,
-        Categoria: "",
-        Subcategoria: "",
-        Imagen: "",
+      const menuItem = {
+        ...menuItemData,
+      };
+
+      // Remove empty string fields
+      Object.keys(menuItem).forEach(key => {
+        if (menuItem[key] === "") {
+          delete menuItem[key];
+        }
       });
+
+      await dispatch(crearItem(menuItem, MENU));
+      alert("Ítem de menú creado correctamente.");
+      setMenuItemData(initialMenuItemData);
       setFormVisible(false);
     } catch (error) {
       console.error("Error al crear el ítem de menú:", error);
@@ -158,13 +140,7 @@ function AccionesRapidas({ currentType }) {
     try {
       await dispatch(crearProveedor(newProveedorData));
       alert("Proveedor creado correctamente.");
-      setNewProveedorData({
-        Nombre_Proveedor: "",
-        Contacto_Nombre: "",
-        Contacto_Numero: "",
-        Direccion: "",
-        "NIT/CC": "",
-      });
+      setNewProveedorData(initialProveedorData);
       setFormProveedorVisible(false);
     } catch (error) {
       console.error("Error al crear el proveedor:", error);
@@ -175,28 +151,22 @@ function AccionesRapidas({ currentType }) {
   return (
     <div className="bg-white p-4">
       <h2 className="text-lg font-bold">ACCIONES RÁPIDAS</h2>
-
-      {/* Botones en filas de dos */}
-      <div className="grid grid-cols-2 gap-4 ">
-        {/* Primera fila */}
+      <div className="grid grid-cols-2 gap-4">
         <button
           className="bg-green-500 text-white py-1 px-2 rounded-md hover:bg-green-600"
-          onClick={handleCopiarPendientesCompra}
+          onClick={() => handleCopiarPendientes(ItemsAlmacen)}
         >
           PENDIENTES COMPRA
         </button>
         <button
           className="bg-yellow-500 text-white py-1 px-2 rounded-md hover:bg-yellow-600"
-          onClick={handleCopiarPendientesProduccion}
+          onClick={() => handleCopiarPendientes(ProduccionInterna)}
         >
           PENDIENTES PRODUCCIÓN
         </button>
       </div>
-      
       <h2 className="text-lg font-bold pt-4">ACCIONES RÁPIDAS</h2>
-
-      <div className="grid grid-cols-2 gap-4 ">
-        {/* Segunda fila */}
+      <div className="grid grid-cols-2 gap-4">
         <button
           className="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600"
           onClick={handleActualizarPrecios}
@@ -217,23 +187,27 @@ function AccionesRapidas({ currentType }) {
         </button>
       </div>
 
-      {/* Formulario de creación de ítem */}
       {formVisible && currentType !== MenuItems && (
         <div className="bg-gray-100 p-4 rounded-md mt-4">
           <h3 className="text-lg font-bold mb-2">Crear Nuevo Ítem</h3>
           <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="Nombre_del_producto"
-              value={newItemData.Nombre_del_producto}
-              onChange={handleInputChange}
-              placeholder="Nombre del producto"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
+            {Object.keys(initialItemData).map((key) => (
+              key !== "COOR" && (
+                <input
+                  key={key}
+                  type="text"
+                  name={key}
+                  value={newItemData[key]}
+                  onChange={(e) => handleInputChange(e, setNewItemData)}
+                  placeholder={key.replace(/_/g, " ")}
+                  className="border bg-white border-gray-300 rounded px-2 py-1"
+                />
+              )
+            ))}
             <select
               name="Proveedor"
               value={newItemData.Proveedor}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange(e, setNewItemData)}
               className="border bg-white border-gray-300 rounded px-2 py-1"
             >
               <option value="">Proveedor</option>
@@ -246,7 +220,7 @@ function AccionesRapidas({ currentType }) {
             <select
               name="Area"
               value={newItemData.Area}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange(e, setNewItemData)}
               className="border bg-white border-gray-300 rounded px-2 py-1"
             >
               <option value="">Área</option>
@@ -256,18 +230,10 @@ function AccionesRapidas({ currentType }) {
                 </option>
               ))}
             </select>
-            <input
-              type="text"
-              name="CANTIDAD"
-              value={newItemData.CANTIDAD}
-              onChange={handleInputChange}
-              placeholder="Cantidad"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
             <select
               name="UNIDADES"
               value={newItemData.UNIDADES}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange(e, setNewItemData)}
               className="border bg-white border-gray-300 rounded px-2 py-1"
             >
               <option value="">Unidad</option>
@@ -277,26 +243,10 @@ function AccionesRapidas({ currentType }) {
                 </option>
               ))}
             </select>
-            <input
-              type="text"
-              name="COSTO"
-              value={newItemData.COSTO}
-              onChange={handleInputChange}
-              placeholder="Costo"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="STOCK"
-              value={newItemData.STOCK}
-              onChange={handleInputChange}
-              placeholder="Stock"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
             <select
               name="GRUPO"
               value={newItemData.GRUPO}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange(e, setNewItemData)}
               className="border bg-white border-gray-300 rounded px-2 py-1"
             >
               <option value="">Grupo</option>
@@ -316,75 +266,21 @@ function AccionesRapidas({ currentType }) {
         </div>
       )}
 
-      {/* Formulario de creación de ítem de menú */}
       {formVisible && currentType === MenuItems && (
         <div className="bg-gray-100 p-4 rounded-md mt-4">
           <h3 className="text-lg font-bold mb-2">Crear Nuevo Ítem de Menú</h3>
           <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="NombreES"
-              value={menuItemData.NombreES}
-              onChange={handleMenuItemInputChange}
-              placeholder="Nombre en Español"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="NombreEN"
-              value={menuItemData.NombreEN}
-              onChange={handleMenuItemInputChange}
-              placeholder="Nombre en Inglés"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="DescripcionES"
-              value={menuItemData.DescripcionES}
-              onChange={handleMenuItemInputChange}
-              placeholder="Descripción en Español"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="DescripcionEN"
-              value={menuItemData.DescripcionEN}
-              onChange={handleMenuItemInputChange}
-              placeholder="Descripción en Inglés"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="number"
-              name="Precio"
-              value={menuItemData.Precio}
-              onChange={handleMenuItemInputChange}
-              placeholder="Precio"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="Categoria"
-              value={menuItemData.Categoria}
-              onChange={handleMenuItemInputChange}
-              placeholder="Categoría"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="Subcategoria"
-              value={menuItemData.Subcategoria}
-              onChange={handleMenuItemInputChange}
-              placeholder="Subcategoría"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="Imagen"
-              value={menuItemData.Imagen}
-              onChange={handleMenuItemInputChange}
-              placeholder="URL de la Imagen"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
+            {Object.keys(initialMenuItemData).map((key) => (
+              <input
+                key={key}
+                type="text"
+                name={key}
+                value={menuItemData[key]}
+                onChange={(e) => handleInputChange(e, setMenuItemData)}
+                placeholder={key.replace(/_/g, " ")}
+                className="border bg-white border-gray-300 rounded px-2 py-1"
+              />
+            ))}
           </div>
           <button
             className="bg-blue-500 text-white py-1 px-2 rounded-md mt-4 hover:bg-blue-600"
@@ -395,51 +291,21 @@ function AccionesRapidas({ currentType }) {
         </div>
       )}
 
-      {/* Formulario de creación de proveedor */}
       {formProveedorVisible && (
         <div className="bg-gray-100 p-4 rounded-md mt-4">
           <h3 className="text-lg font-bold mb-2">Crear Nuevo Proveedor</h3>
           <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="Nombre_Proveedor"
-              value={newProveedorData.Nombre_Proveedor}
-              onChange={handleProveedorInputChange}
-              placeholder="Nombre del proveedor"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="Contacto_Nombre"
-              value={newProveedorData.Contacto_Nombre}
-              onChange={handleProveedorInputChange}
-              placeholder="Nombre del contacto"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="Contacto_Numero"
-              value={newProveedorData.Contacto_Numero}
-              onChange={handleProveedorInputChange}
-              placeholder="Número de contacto"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="Direccion"
-              value={newProveedorData.Direccion}
-              onChange={handleProveedorInputChange}
-              placeholder="Dirección"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
-            <input
-              type="text"
-              name="NIT/CC"
-              value={newProveedorData["NIT/CC"]}
-              onChange={handleProveedorInputChange}
-              placeholder="NIT/CC"
-              className="border bg-white border-gray-300 rounded px-2 py-1"
-            />
+            {Object.keys(initialProveedorData).map((key) => (
+              <input
+                key={key}
+                type="text"
+                name={key}
+                value={newProveedorData[key]}
+                onChange={(e) => handleInputChange(e, setNewProveedorData)}
+                placeholder={key.replace(/_/g, " ")}
+                className="border bg-white border-gray-300 rounded px-2 py-1"
+              />
+            ))}
           </div>
           <button
             className="bg-blue-500 text-white py-1 px-2 rounded-md mt-4 hover:bg-blue-600"
