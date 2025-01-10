@@ -102,6 +102,8 @@ function Mesa({ index, ventas }) {
         }));
         console.log("Venta creada correctamente");
       }
+      // Forzar re-render
+      setVentas((prevVentas) => [...prevVentas]);
     } catch (error) {
       console.error("Error al crear/actualizar la venta:", error);
     }
@@ -115,6 +117,8 @@ function Mesa({ index, ventas }) {
         await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
         console.log("Comanda pagada:", formData, orderItems);
         setIsMesaInUse(false);
+        // Forzar re-render
+        setVentas((prevVentas) => [...prevVentas]);
       }
     } catch (error) {
       console.error("Error al pagar la venta:", error);
@@ -129,6 +133,8 @@ function Mesa({ index, ventas }) {
         await dispatch(eliminarVenta(existingVenta._id));
         console.log("Venta eliminada correctamente");
         setIsMesaInUse(false);
+        // Forzar re-render
+        setVentas((prevVentas) => [...prevVentas]);
       }
     } catch (error) {
       console.error("Error al eliminar la venta:", error);
@@ -233,7 +239,7 @@ function Mesa({ index, ventas }) {
       <div className="flex-1 p-2 overflow-y-auto">
         <h3 className="font-bold mb-1 text-sm">Ítems pedidos:</h3>
         {orderItems.map((item, itemIndex) => (
-          <div key={itemIndex} className="mb-1 flex flex-col gap-1">
+          <div key={`${itemIndex}-${item.id}`} className="mb-1 flex flex-col gap-1">
             <Input
               type="text"
               placeholder="Buscar producto..."
