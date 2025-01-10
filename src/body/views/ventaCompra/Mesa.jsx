@@ -102,8 +102,6 @@ function Mesa({ index, ventas }) {
         }));
         console.log("Venta creada correctamente");
       }
-      // Forzar re-render
-      setVentas((prevVentas) => [...prevVentas]);
     } catch (error) {
       console.error("Error al crear/actualizar la venta:", error);
     }
@@ -117,8 +115,6 @@ function Mesa({ index, ventas }) {
         await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
         console.log("Comanda pagada:", formData, orderItems);
         setIsMesaInUse(false);
-        // Forzar re-render
-        setVentas((prevVentas) => [...prevVentas]);
       }
     } catch (error) {
       console.error("Error al pagar la venta:", error);
@@ -133,8 +129,6 @@ function Mesa({ index, ventas }) {
         await dispatch(eliminarVenta(existingVenta._id));
         console.log("Venta eliminada correctamente");
         setIsMesaInUse(false);
-        // Forzar re-render
-        setVentas((prevVentas) => [...prevVentas]);
       }
     } catch (error) {
       console.error("Error al eliminar la venta:", error);
@@ -252,7 +246,7 @@ function Mesa({ index, ventas }) {
               <ul className="border rounded bg-white max-h-40 overflow-y-auto shadow-lg mt-1 text-sm">
                 {item.matches.map((match) => (
                   <li
-                    key={match.id}
+                    key={match._id}
                     onClick={() => handleIngredientSelect(itemIndex, match)}
                     className="p-1 hover:bg-gray-200 cursor-pointer"
                   >

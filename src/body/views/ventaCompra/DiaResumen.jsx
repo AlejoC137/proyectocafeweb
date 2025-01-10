@@ -74,9 +74,9 @@ function DiaResumen() {
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen flex">
+    <div className="p-8 bg-gray-50 min-h-screen grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Resumen del Día */}
-      <div className="p-6 mb-6 bg-white rounded-lg shadow-md">
+      <div className="p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
           Resumen del Día
         </h2>
@@ -91,7 +91,7 @@ function DiaResumen() {
       </div>
 
       {/* Detalles de Ventas */}
-      <div className="p-6 mb-6 bg-white rounded-lg shadow-md">
+      <div className="p-6 bg-white rounded-lg shadow-md">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Detalles de Ventas
         </h3>
