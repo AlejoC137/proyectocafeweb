@@ -46,8 +46,8 @@ function VentaCompra() {
   }
 
   return (
-    <div className="bg-gray-100 grid grid-cols-4 w-screen gap-1 h-[calc(100vh-8rem)] p-2">
-      {[...Array(8)].map((_, index) => (
+    <div className="bg-gray-100 grid grid-cols-3 w-screen gap-1 h-[calc(100vh-8rem)] p-2">
+      {[...Array(6)].map((_, index) => (
         <Mesa key={index} index={index + 1} ventas={ventas} />
       ))}
     </div>

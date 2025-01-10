@@ -82,7 +82,6 @@ function Mesa({ index, ventas }) {
     setComandaSaved(true);
     setButtonState("done");
     setIsMesaInUse(true);
-    console.log("Datos enviados:", formData, orderItems);
 
     // Enviar los datos a la tabla "Ventas" en Supabase
     try {
@@ -92,7 +91,6 @@ function Mesa({ index, ventas }) {
           ...formData,
           Productos: JSON.stringify(orderItems),
         }));
-        console.log("Venta actualizada correctamente");
       } else {
         await dispatch(crearVenta({
           ...formData,
@@ -100,7 +98,6 @@ function Mesa({ index, ventas }) {
           Pagado: false,
           Mesa: index,
         }));
-        console.log("Venta creada correctamente");
       }
     } catch (error) {
       console.error("Error al crear/actualizar la venta:", error);
@@ -108,12 +105,10 @@ function Mesa({ index, ventas }) {
   };
 
   const handlePagar = async () => {
-    // Lógica para marcar la comanda como pagada
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
         await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
-        console.log("Comanda pagada:", formData, orderItems);
         setIsMesaInUse(false);
       }
     } catch (error) {
@@ -122,12 +117,10 @@ function Mesa({ index, ventas }) {
   };
 
   const handleEliminar = async () => {
-    // Lógica para eliminar los datos locales de la comanda
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
         await dispatch(eliminarVenta(existingVenta._id));
-        console.log("Venta eliminada correctamente");
         setIsMesaInUse(false);
       }
     } catch (error) {
@@ -142,149 +135,146 @@ function Mesa({ index, ventas }) {
     setOrderItems([]);
     setComandaSaved(false);
     setButtonState("save");
-    console.log("Datos locales de la comanda eliminados");
   };
 
   return (
-    <div className={`bg-white shadow-md rounded-lg flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x border p-1 ${isMesaInUse ? 'bg-green-100' : ''}`}
-         style={{ height: `calc(50vh - 80px)` }}>
-      {/* Columna izquierda: formulario */}
-      <div className="flex-1 p-1">
-        <form onSubmit={handleSubmit} className="grid gap-1">
-          <h2 className="font-bold text-sm">Mesa #{index}</h2>
-          <div className="flex items-center gap-2 text-sm"> 
-            <label className="flex-shrink-0">Total$:</label>
-            <Input
-              type="text"
-              name="Total_Ingreso"
-              value={formData.Total_Ingreso}
-              onChange={handleChange}
-              className="border rounded p-1 text-sm flex-grow"
-              readOnly
-            />
-          </div>
-          <div className="flex items-center gap-1 text-sm">
-            <label className="flex-shrink-0">Tip:</label>
-            <Input
-              type="text"
-              name="Tip"
-              value={formData.Tip}
-              onChange={handleChange}
-              className="border rounded p-1 text-sm flex-grow"
-              disabled={comandaSaved}
-            />
-          </div>
-          <div className="flex items-center gap-1 text-sm">
-            <label className="flex-shrink-0">Cliente:</label>
-            <Input
-              type="text"
-              name="Cliente"
-              value={formData.Cliente}
-              onChange={handleChange}
-              className="border rounded p-1 text-sm flex-grow"
-              disabled={comandaSaved}
-            />
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <label className="flex-shrink-0">Cajero:</label>
-            <Input
-              type="text"
-              name="Cajero"
-              value={formData.Cajero}
-              onChange={handleChange}
-              className="border rounded p-1 text-sm flex-grow"
-              disabled={comandaSaved}
-            />
-          </div>
-          {/* Botones de acción */}
-          <div className="flex gap-1 mt-2">
-            <Button
-              type="submit"
-              className="bg-blue-500 text-white flex-1 text-sm p-1"
-            >
-              {buttonState === "save" && "💾"}
-              {buttonState === "syncing" && "🔄"}
-              {buttonState === "done" && "✅"}
-            </Button>
-            <Button
-              onClick={handlePagar}
-              disabled={!comandaSaved || orderItems.length === 0}
-              className={`bg-green-500 text-white flex-1 text-sm p-1 ${!comandaSaved || orderItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {buttonState === "save" && "🧾"}
-              {buttonState === "syncing" && "🔄"}
-              {buttonState === "done" && "💸"}
-            </Button>
-            <Button
-              onClick={handleEliminar}
-              className="bg-red-500 text-white flex-1 text-sm p-1"
-              disabled={!comandaSaved || orderItems.length === 0}
-
-            >
-              {buttonState === "save" && "💢"}
-              {buttonState === "syncing" && "💢"}
-              {buttonState === "done" && "💥"}
-            </Button>
-          </div>
-        </form>
+    <div className={`bg-white shadow-md rounded-lg border p-1 grid grid-cols-4 gap-2 ${isMesaInUse ? 'bg-green-100' : ''}`}>
+      {/* Primera fila: Cliente y Cajero */}
+      <div className="col-span-4 grid grid-cols-2 gap-2 align-top">
+        <div className="flex items-center gap-2">
+         <h3
+            className="flex-grow border rounded p-1 text-sm font-semibold"
+            >{ `Mesa#${index}`}</h3>
+          <label className="text-sm font-medium">Cliente:</label>
+          <Input
+            type="text"
+            name="Cliente"
+            value={formData.Cliente}
+            onChange={handleChange}
+            className="flex-grow border rounded p-1 text-sm"
+            disabled={comandaSaved}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Cajero:</label>
+          <Input
+            type="text"
+            name="Cajero"
+            value={formData.Cajero}
+            onChange={handleChange}
+            className="flex-grow border rounded p-1 text-sm"
+            disabled={comandaSaved}
+          />
+        </div>
       </div>
-
-      {/* Columna derecha: ítems pedidos */}
-      <div className="flex-1 p-2 overflow-y-auto">
-        <h3 className="font-bold mb-1 text-sm">Ítems pedidos:</h3>
+  
+      {/* Segunda fila: Ítems pedidos */}
+      <div className="col-span-4">
+        <h3 className="font-bold mb-2 text-sm">Ítems pedidos:</h3>
         {orderItems.map((item, itemIndex) => (
-          <div key={`${itemIndex}-${item.id}`} className="mb-1 flex flex-col gap-1">
+          <div key={itemIndex} className="flex gap-2 items-center mb-2">
             <Input
               type="text"
               placeholder="Buscar producto..."
               value={item.NombreES}
               onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
-              className="border rounded p-1 text-sm flex-grow"
+              className="flex-grow border rounded p-1 text-sm"
             />
-            {/* Lista de coincidencias dinámicas */}
             {item.matches && item.matches.length > 0 && (
-              <ul className="border rounded bg-white max-h-40 overflow-y-auto shadow-lg mt-1 text-sm">
+              <ul className="absolute bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10 w-full">
                 {item.matches.map((match) => (
                   <li
-                    key={match._id}
+                    key={index}
                     onClick={() => handleIngredientSelect(itemIndex, match)}
-                    className="p-1 hover:bg-gray-200 cursor-pointer"
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
                   >
                     {match.NombreES}
                   </li>
                 ))}
               </ul>
             )}
-            <div className="flex items-center gap-1">
-              <Input
-                type="number"
-                placeholder="Cantidad"
-                value={item.quantity}
-                onChange={(e) =>
-                  setOrderItems((prev) =>
-                    prev.map((it, i) =>
-                      i === itemIndex ? { ...it, quantity: e.target.value } : it
-                    )
+            <Input
+              type="number"
+              placeholder="Cantidad"
+              value={item.quantity}
+              onChange={(e) =>
+                setOrderItems((prev) =>
+                  prev.map((it, i) =>
+                    i === itemIndex ? { ...it, quantity: e.target.value } : it
                   )
-                }
-                className="border rounded p-1 text-sm w-12"
-              />
-              <span className="text-sm">${item.Precio}</span>
-              <Button
-                onClick={() => handleRemoveItem(itemIndex)}
-                className="bg-red-500 text-white text-sm p-1"
-              >
-                X
-              </Button>
-            </div>
+                )
+              }
+              className="w-16 border rounded p-1 text-sm"
+            />
+            <span className="text-sm">${item.Precio.toFixed(2)}</span>
+            <Button
+              onClick={() => handleRemoveItem(itemIndex)}
+              className="bg-red-500 text-white text-sm"
+            >
+              X
+            </Button>
           </div>
         ))}
-        <Button onClick={handleAddItem} className="mt-2 bg-green-500 text-white text-sm p-1">
+        <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm">
           Añadir Ítem
         </Button>
       </div>
+  
+      {/* Tercera fila: Tip, Total y Botones */}
+      <div className="col-span-4 grid grid-cols-5 gap-2 items-end">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Tip:</label>
+          <Input
+            type="text"
+            name="Tip"
+            value={formData.Tip}
+            onChange={handleChange}
+            className="w-full border rounded p-1 text-sm"
+            disabled={comandaSaved}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Total$:</label>
+          <Input
+            type="text"
+            name="Total_Ingreso"
+            value={formData.Total_Ingreso}
+            className="w-full border rounded p-1 text-sm"
+            readOnly
+          />
+        </div>
+        <div className="col-span-3 flex gap-2">
+          <Button
+            onClick={handleSubmit}
+            className="flex-1 bg-blue-500 text-white text-sm"
+          >
+            {buttonState === "save" && "💾"}
+            {buttonState === "syncing" && "🔄"}
+            {buttonState === "done" && "✅"}
+          </Button>
+          <Button
+            onClick={handlePagar}
+            disabled={!comandaSaved}
+            className={`flex-1 bg-green-500 text-white text-sm ${
+              !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            💸
+          </Button>
+          <Button
+            onClick={handleEliminar}
+            disabled={!comandaSaved}
+            className={`flex-1 bg-red-500 text-white text-sm ${
+              !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            💥
+          </Button>
+        </div>
+      </div>
     </div>
   );
+  
 }
 
 export default Mesa;
