@@ -138,141 +138,140 @@ function Mesa({ index, ventas }) {
   };
 
   return (
-    <div className={`bg-white shadow-md rounded-lg border p-1 grid grid-cols-4 gap-2 ${isMesaInUse ? 'bg-green-100' : ''}`}>
-      {/* Primera fila: Cliente y Cajero */}
-      <div className="col-span-4 grid grid-cols-2 gap-2 align-top">
-        <div className="flex items-center gap-2">
-         <h3
-            className="flex-grow border rounded p-1 text-sm font-semibold"
-            >{ `Mesa#${index}`}</h3>
-          <label className="text-sm font-medium">Cliente:</label>
-          <Input
-            type="text"
-            name="Cliente"
-            value={formData.Cliente}
-            onChange={handleChange}
-            className="flex-grow border rounded p-1 text-sm"
-            disabled={comandaSaved}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Cajero:</label>
-          <Input
-            type="text"
-            name="Cajero"
-            value={formData.Cajero}
-            onChange={handleChange}
-            className="flex-grow border rounded p-1 text-sm"
-            disabled={comandaSaved}
-          />
-        </div>
+    <div className={`bg-white shadow-md rounded-lg border p-1 grid grid-cols-4 gap-2 ${isMesaInUse ? 'bg-green-100' : ''}`} style={{ alignItems: 'start' }}>
+    {/* Primera fila: Cliente y Cajero */}
+    <div className="col-span-4 grid grid-cols-2 gap-2 align-top">
+      <div className="flex items-center gap-2">
+        <h3 className="flex-grow border rounded p-1 text-sm font-semibold">{`Mesa#${index}`}</h3>
+        <label className="text-sm font-medium">Cliente:</label>
+        <Input
+          type="text"
+          name="Cliente"
+          value={formData.Cliente}
+          onChange={handleChange}
+          className="flex-grow border rounded p-1 text-sm"
+          disabled={comandaSaved}
+        />
       </div>
-  
-      {/* Segunda fila: Ítems pedidos */}
-      <div className="col-span-4">
-        <h3 className="font-bold mb-2 text-sm">Ítems pedidos:</h3>
-        {orderItems.map((item, itemIndex) => (
-          <div key={itemIndex} className="flex gap-2 items-center mb-2">
-            <Input
-              type="text"
-              placeholder="Buscar producto..."
-              value={item.NombreES}
-              onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
-              className="flex-grow border rounded p-1 text-sm"
-            />
-            {item.matches && item.matches.length > 0 && (
-              <ul className="absolute bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10 w-full">
-                {item.matches.map((match) => (
-                  <li
-                    key={index}
-                    onClick={() => handleIngredientSelect(itemIndex, match)}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {match.NombreES}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Input
-              type="number"
-              placeholder="Cantidad"
-              value={item.quantity}
-              onChange={(e) =>
-                setOrderItems((prev) =>
-                  prev.map((it, i) =>
-                    i === itemIndex ? { ...it, quantity: e.target.value } : it
-                  )
-                )
-              }
-              className="w-16 border rounded p-1 text-sm"
-            />
-            <span className="text-sm">${item.Precio.toFixed(2)}</span>
-            <Button
-              onClick={() => handleRemoveItem(itemIndex)}
-              className="bg-red-500 text-white text-sm"
-            >
-              X
-            </Button>
-          </div>
-        ))}
-        <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm">
-          Añadir Ítem
-        </Button>
-      </div>
-  
-      {/* Tercera fila: Tip, Total y Botones */}
-      <div className="col-span-4 grid grid-cols-5 gap-2 items-end">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Tip:</label>
-          <Input
-            type="text"
-            name="Tip"
-            value={formData.Tip}
-            onChange={handleChange}
-            className="w-full border rounded p-1 text-sm"
-            disabled={comandaSaved}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Total$:</label>
-          <Input
-            type="text"
-            name="Total_Ingreso"
-            value={formData.Total_Ingreso}
-            className="w-full border rounded p-1 text-sm"
-            readOnly
-          />
-        </div>
-        <div className="col-span-3 flex gap-2">
-          <Button
-            onClick={handleSubmit}
-            className="flex-1 bg-blue-500 text-white text-sm"
-          >
-            {buttonState === "save" && "💾"}
-            {buttonState === "syncing" && "🔄"}
-            {buttonState === "done" && "✅"}
-          </Button>
-          <Button
-            onClick={handlePagar}
-            disabled={!comandaSaved}
-            className={`flex-1 bg-green-500 text-white text-sm ${
-              !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            💸
-          </Button>
-          <Button
-            onClick={handleEliminar}
-            disabled={!comandaSaved}
-            className={`flex-1 bg-red-500 text-white text-sm ${
-              !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            💥
-          </Button>
-        </div>
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium">Cajero:</label>
+        <Input
+          type="text"
+          name="Cajero"
+          value={formData.Cajero}
+          onChange={handleChange}
+          className="flex-grow border rounded p-1 text-sm"
+          disabled={comandaSaved}
+        />
       </div>
     </div>
+  
+    {/* Segunda fila: Ítems pedidos */}
+    <div className="col-span-4">
+      <h3 className="font-bold mb-2 text-sm">Ítems pedidos:</h3>
+      {orderItems.map((item, itemIndex) => (
+        <div key={itemIndex} className="flex gap-2 items-center mb-2">
+          <Input
+            type="text"
+            placeholder="Buscar producto..."
+            value={item.NombreES}
+            onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
+            className="flex-grow border rounded p-1 text-sm"
+          />
+          {item.matches && item.matches.length > 0 && (
+            <ul className="absolute bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10 w-full">
+              {item.matches.map((match) => (
+                <li
+                  key={match.id}
+                  onClick={() => handleIngredientSelect(itemIndex, match)}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  {match.NombreES}
+                </li>
+              ))}
+            </ul>
+          )}
+          <Input
+            type="number"
+            placeholder="Cantidad"
+            value={item.quantity}
+            onChange={(e) =>
+              setOrderItems((prev) =>
+                prev.map((it, i) =>
+                  i === itemIndex ? { ...it, quantity: e.target.value } : it
+                )
+              )
+            }
+            className="w-16 border rounded p-1 text-sm"
+          />
+          <span className="text-sm">${item.Precio.toFixed(2)}</span>
+          <Button
+            onClick={() => handleRemoveItem(itemIndex)}
+            className="bg-red-500 text-white text-sm"
+          >
+            X
+          </Button>
+        </div>
+      ))}
+      <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm">
+        Añadir Ítem
+      </Button>
+    </div>
+  
+    {/* Tercera fila: Tip, Total y Botones */}
+    <div className="col-span-4 flex gap-2 items-end">
+      <div className="flex items-center gap-2 flex-1">
+        <label className="text-sm font-medium">Tip:</label>
+        <Input
+          type="text"
+          name="Tip"
+          value={formData.Tip}
+          onChange={handleChange}
+          className="flex-grow border rounded p-1 text-sm"
+          // disabled={comandaSaved}
+        />
+      </div>
+      <div className="flex items-center gap-2 flex-1">
+        <label className="text-sm font-medium">Total$:</label>
+        <Input
+          type="text"
+          name="Total_Ingreso"
+          value={formData.Total_Ingreso}
+          className="flex-grow border rounded p-1 text-sm"
+          readOnly
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button
+          onClick={handleSubmit}
+          className="w-[40px] bg-blue-500 text-white text-sm"
+        >
+          {buttonState === "save" && "💾"}
+          {buttonState === "syncing" && "🔄"}
+          {buttonState === "done" && "✅"}
+        </Button>
+        <Button
+          onClick={handlePagar}
+          disabled={!comandaSaved}
+          className={`w-[40px] bg-green-500 text-white text-sm ${
+            !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          💸
+        </Button>
+        <Button
+          onClick={handleEliminar}
+          disabled={!comandaSaved}
+          className={`w-[40px] bg-red-500 text-white text-sm ${
+            !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          💥
+        </Button>
+      </div>
+    </div>
+  </div>
+  
   );
   
 }
