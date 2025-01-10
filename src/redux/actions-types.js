@@ -139,3 +139,5 @@ export const TOGGLE_SHOW_EDIT =  'TOGGLE_SHOW_EDIT';
 export const SCRAP  = "SCRAP ";  // Nueva acción para error al insertar recetas
 
 export const RESET_EXPANDED_GROUPS = "RESET_EXPANDED_GROUPS"; // Nueva acción para restablecer la visibilidad de los grupos
+
+export const ADD_ORDER_ITEM = 'ADD_ORDER_ITEM';

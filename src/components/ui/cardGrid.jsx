@@ -26,7 +26,7 @@ export function CardGrid({ products, isEnglish, category , filterKey }) {
       {/* Label aligned to the left */}
       <div className=" flex justify-start overflow-hidden  ">
         <Label className="text-left text-lg font-bold truncate">
-        {category.toUpperCase()} 
+        {category && category.toUpperCase()} 
         </Label>
         <Label className="text-left text-lg font-bold truncate text-bol">
            →

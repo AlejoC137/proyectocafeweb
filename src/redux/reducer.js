@@ -16,7 +16,8 @@ import {
   SCRAP,
   RECETAS_MENU,
   TOGGLE_SHOW_EDIT,
-  RESET_EXPANDED_GROUPS       // Nueva acción importada
+  RESET_EXPANDED_GROUPS,       // Nueva acción importada
+  ADD_ORDER_ITEM               // Nueva acción importada
 } from './actions-types';
 
 const initialState = {
@@ -160,6 +161,7 @@ const initialState = {
   recetaError: null,        // Estado para guardar el error en caso de fallo
   expandedGroups: {},       // Estado para controlar la visibilidad de los grupos
   selectedProviderId: null, // Estado para guardar el ID del proveedor seleccionado
+  orderItems: [],              // Estado para guardar los ítems pedidos
 };
 
 const reducer = (state = initialState, action) => {
@@ -259,6 +261,12 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         selectedProviderId: action.payload,
+      };
+
+    case ADD_ORDER_ITEM:
+      return {
+        ...state,
+        orderItems: [...state.orderItems, action.payload], // Agregar ítem pedido al estado
       };
 
     default:

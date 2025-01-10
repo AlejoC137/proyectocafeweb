@@ -13,7 +13,8 @@ import {
   ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
   ProduccionInterna,
-  RESET_EXPANDED_GROUPS
+  RESET_EXPANDED_GROUPS,
+  ADD_ORDER_ITEM
   
 } from "./actions-types";
 
@@ -661,4 +662,9 @@ export function crearReceta(recetaData, productId) {
     }
   };
 }
+
+export const addOrderItem = (item) => ({
+  type: ADD_ORDER_ITEM,
+  payload: item,
+});
 

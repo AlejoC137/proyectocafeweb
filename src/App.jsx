@@ -19,6 +19,7 @@ import Agenda from './body/views/agenda/Agenda';
 import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 import Scraper from '../scraper/scraper';
 import Inventario from './body/views/inventario/Inventario';
+import VentaCompra from './body/views/ventaCompra/VentaCompra';
 
 
 // import { Home } from 'lucide-react';
@@ -64,6 +65,7 @@ function App() {
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
      <Route path="/Inventario" element={<Inventario />} />
+     <Route path="/VentaCompra" element={<VentaCompra />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
         {/* Renderiza el componente que corresponde a la vista actual */}
 
