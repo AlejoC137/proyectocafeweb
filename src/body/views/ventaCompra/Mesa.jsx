@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { crearVenta, actualizarVenta } from "../../../redux/actions-VentasCompras";
+import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
 
 function Mesa({ index, ventas }) {
   const [formData, setFormData] = useState({
@@ -15,6 +15,7 @@ function Mesa({ index, ventas }) {
   const [orderItems, setOrderItems] = useState([]);
   const [comandaSaved, setComandaSaved] = useState(false);
   const [buttonState, setButtonState] = useState("save");
+  const [isMesaInUse, setIsMesaInUse] = useState(false);
   const allMenu = useSelector((state) => state.allMenu || []);
   const dispatch = useDispatch();
 
@@ -30,6 +31,7 @@ function Mesa({ index, ventas }) {
       setOrderItems(JSON.parse(existingVenta.Productos));
       setComandaSaved(true);
       setButtonState("done");
+      setIsMesaInUse(true);
     }
   }, [ventas, index]);
 
@@ -79,19 +81,29 @@ function Mesa({ index, ventas }) {
     e.preventDefault();
     setComandaSaved(true);
     setButtonState("done");
+    setIsMesaInUse(true);
     console.log("Datos enviados:", formData, orderItems);
 
     // Enviar los datos a la tabla "Ventas" en Supabase
     try {
-      await dispatch(crearVenta({
-        ...formData,
-        Productos: JSON.stringify(orderItems),
-        Pagado: false,
-        Mesa: index,
-      }));
-      console.log("Venta creada correctamente");
+      const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
+      if (existingVenta) {
+        await dispatch(actualizarVenta(existingVenta._id, {
+          ...formData,
+          Productos: JSON.stringify(orderItems),
+        }));
+        console.log("Venta actualizada correctamente");
+      } else {
+        await dispatch(crearVenta({
+          ...formData,
+          Productos: JSON.stringify(orderItems),
+          Pagado: false,
+          Mesa: index,
+        }));
+        console.log("Venta creada correctamente");
+      }
     } catch (error) {
-      console.error("Error al crear la venta:", error);
+      console.error("Error al crear/actualizar la venta:", error);
     }
   };
 
@@ -102,14 +114,25 @@ function Mesa({ index, ventas }) {
       if (existingVenta) {
         await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
         console.log("Comanda pagada:", formData, orderItems);
+        setIsMesaInUse(false);
       }
     } catch (error) {
       console.error("Error al pagar la venta:", error);
     }
   };
 
-  const handleEliminar = () => {
+  const handleEliminar = async () => {
     // Lógica para eliminar los datos locales de la comanda
+    try {
+      const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
+      if (existingVenta) {
+        await dispatch(eliminarVenta(existingVenta._id));
+        console.log("Venta eliminada correctamente");
+        setIsMesaInUse(false);
+      }
+    } catch (error) {
+      console.error("Error al eliminar la venta:", error);
+    }
     setFormData({
       Total_Ingreso: '',
       Tip: '',
@@ -123,7 +146,7 @@ function Mesa({ index, ventas }) {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x border p-1"
+    <div className={`bg-white shadow-md rounded-lg flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x border p-1 ${isMesaInUse ? 'bg-green-100' : ''}`}
          style={{ height: `calc(50vh - 80px)` }}>
       {/* Columna izquierda: formulario */}
       <div className="flex-1 p-1">
@@ -178,7 +201,6 @@ function Mesa({ index, ventas }) {
             <Button
               type="submit"
               className="bg-blue-500 text-white flex-1 text-sm p-1"
-              disabled={comandaSaved}
             >
               {buttonState === "save" && "💾"}
               {buttonState === "syncing" && "🔄"}
@@ -195,10 +217,11 @@ function Mesa({ index, ventas }) {
             </Button>
             <Button
               onClick={handleEliminar}
+              className="bg-red-500 text-white flex-1 text-sm p-1"
               disabled={!comandaSaved || orderItems.length === 0}
-              className={`bg-red-500 text-white flex-1 text-sm p-1 ${!comandaSaved || orderItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+
             >
-              {buttonState === "save" && "🧨"}
+              {buttonState === "save" && "💢"}
               {buttonState === "syncing" && "💢"}
               {buttonState === "done" && "💥"}
             </Button>
@@ -210,14 +233,13 @@ function Mesa({ index, ventas }) {
       <div className="flex-1 p-2 overflow-y-auto">
         <h3 className="font-bold mb-1 text-sm">Ítems pedidos:</h3>
         {orderItems.map((item, itemIndex) => (
-          <div key={itemIndex} className="mb-1 flex items-center gap-1">
+          <div key={itemIndex} className="mb-1 flex flex-col gap-1">
             <Input
               type="text"
               placeholder="Buscar producto..."
               value={item.NombreES}
               onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
               className="border rounded p-1 text-sm flex-grow"
-              disabled={comandaSaved}
             />
             {/* Lista de coincidencias dinámicas */}
             {item.matches && item.matches.length > 0 && (
@@ -233,31 +255,31 @@ function Mesa({ index, ventas }) {
                 ))}
               </ul>
             )}
-            <Input
-              type="number"
-              placeholder="Cantidad"
-              value={item.quantity}
-              onChange={(e) =>
-                setOrderItems((prev) =>
-                  prev.map((it, i) =>
-                    i === itemIndex ? { ...it, quantity: e.target.value } : it
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                placeholder="Cantidad"
+                value={item.quantity}
+                onChange={(e) =>
+                  setOrderItems((prev) =>
+                    prev.map((it, i) =>
+                      i === itemIndex ? { ...it, quantity: e.target.value } : it
+                    )
                   )
-                )
-              }
-              className="border rounded p-1 text-sm w-16"
-              disabled={comandaSaved}
-            />
-            <span className="text-sm">${item.Precio}</span>
-            <Button
-              onClick={() => handleRemoveItem(itemIndex)}
-              className="bg-red-500 text-white text-sm p-1"
-              disabled={comandaSaved}
-            >
-              X
-            </Button>
+                }
+                className="border rounded p-1 text-sm w-12"
+              />
+              <span className="text-sm">${item.Precio}</span>
+              <Button
+                onClick={() => handleRemoveItem(itemIndex)}
+                className="bg-red-500 text-white text-sm p-1"
+              >
+                X
+              </Button>
+            </div>
           </div>
         ))}
-        <Button onClick={handleAddItem} className="mt-2 bg-green-500 text-white text-sm p-1" disabled={comandaSaved}>
+        <Button onClick={handleAddItem} className="mt-2 bg-green-500 text-white text-sm p-1">
           Añadir Ítem
         </Button>
       </div>
