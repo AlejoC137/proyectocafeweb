@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Mesa from "./Mesa";
-import { MENU } from "../../../redux/actions-types";
+import { MENU , ITEMS ,PRODUCCION} from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 
@@ -32,6 +32,8 @@ function VentaCompra() {
       try {
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
+                    dispatch(getAllFromTable(ITEMS)),
+                    dispatch(getAllFromTable(PRODUCCION)),
         ]);
 
         await fetchVentas();

@@ -197,7 +197,14 @@ function Mesa({ index, ventas, reloadVentas }) {
     <div className="col-span-4">
       <h3 className="font-bold mb-2 text-sm">Ítems pedidos:</h3>
       {orderItems.map((item, itemIndex) => (
+        
         <div key={itemIndex} className="flex gap-2 items-center mb-2">
+                    <Button
+            onClick={() => handleRecetaClick(item)}
+            className="bg-yellow-500 text-white text-sm"
+          >
+            📕
+          </Button>
           <Input
             type="text"
             placeholder="Buscar producto..."
@@ -238,12 +245,7 @@ function Mesa({ index, ventas, reloadVentas }) {
           >
             X
           </Button>
-          <Button
-            onClick={() => handleRecetaClick(item)}
-            className="bg-yellow-500 text-white text-sm"
-          >
-            📕
-          </Button>
+
         </div>
       ))}
       <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm">

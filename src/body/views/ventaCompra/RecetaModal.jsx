@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getRecepie } from "../../../redux/actions";
 
 function RecetaModal({ item, onClose }) {
-   
   const dispatch = useDispatch();
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const allItems = useSelector((state) => state.allItems || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -27,37 +28,50 @@ function RecetaModal({ item, onClose }) {
         }
       } else {
         setError("El ítem no tiene una receta asociada.");
-        setLoading(false);
+        setLoading(false); 
       }
     };
 
     fetchReceta();
   }, [item.Receta]);
 
-  const renderIngredientes = () => (
-    Array.isArray(receta.ingredientes) && (
-      <>
-        <p className="mb-2"><strong>Ingredientes:</strong></p>
-        <ul className="list-disc list-inside mb-4">
-          {receta.ingredientes.map((ingrediente, index) => (
-            <li key={index}>{ingrediente}</li>
-          ))}
-        </ul>
-      </>
-    )
-  );
+  const buscarPorId = (id) => {
+    
+    return allItems.find((items) => items._id === id) || allProduccion.find((items) => items._id === id) || null;
+  };
 
-  const renderItems = () => (
+  const renderIngredientes = () => (
     <>
       {Array.from({ length: 30 }, (_, i) => i + 1).map((i) => {
         const itemIdKey = `item${i}_Id`;
         const itemCuantityUnitsKey = `item${i}_Cuantity_Units`;
         const item = receta[itemIdKey];
         const itemCuantityUnits = receta[itemCuantityUnitsKey] ? JSON.parse(receta[itemCuantityUnitsKey]) : null;
+        const itemData = buscarPorId(item);
+
+
 
         return item && itemCuantityUnits ? (
           <p key={i} className="mb-2">
-            <strong>Ingredientes {i}:</strong> {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units} ({itemCuantityUnits.legacyName})
+            <strong>Ingrediente {i}:</strong> {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units} ({itemData ? itemData.Nombre_del_producto : "Desconocido"})
+          </p>
+        ) : null;
+      })}
+    </>
+  );
+
+  const renderProduccionInterna = () => (
+    <>
+      {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => {
+        const itemIdKey = `producto_interno${i}_Id`;
+        const itemCuantityUnitsKey = `producto_interno${i}_Cuantity_Units`;
+        const item = receta[itemIdKey];
+        const itemCuantityUnits = receta[itemCuantityUnitsKey] ? JSON.parse(receta[itemCuantityUnitsKey]) : null;
+        const itemData = buscarPorId(item);
+
+        return item && itemCuantityUnits ? (
+          <p key={i} className="mb-2">
+            <strong>Producción Interna {i}:</strong> {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units} ({itemData ? itemData.Nombre_del_producto : "Desconocido"})
           </p>
         ) : null;
       })}
@@ -123,7 +137,7 @@ function RecetaModal({ item, onClose }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               {renderIngredientes()}
-              {renderItems()}
+              {renderProduccionInterna()}
             </div>
             <div>
               {renderProcesosYNotas()}
