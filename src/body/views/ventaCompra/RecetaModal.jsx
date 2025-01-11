@@ -71,7 +71,7 @@ function RecetaModal({ item, onClose }) {
 
         return item && itemCuantityUnits ? (
           <p key={i} className="mb-2">
-            <strong>Producción Interna {i}:</strong> {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units} ({itemData ? itemData.Nombre_del_producto : "Desconocido"})
+            <strong>Producción Interna {i}:</strong>  ({itemData ? itemData.Nombre_del_producto : "Desconocido"}) {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units}
           </p>
         ) : null;
       })}
