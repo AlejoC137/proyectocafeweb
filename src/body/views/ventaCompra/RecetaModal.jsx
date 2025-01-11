@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { getRecepie } from "../../../redux/actions";
 
 function RecetaModal({ item, onClose }) {
+   
   const dispatch = useDispatch();
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,7 @@ function RecetaModal({ item, onClose }) {
           const result = await getRecepie(item.Receta, "Recetas");
           if (result) {
             setReceta(result);
+            console.log(result);
           } else {
             setError("No se pudo encontrar la receta.");
           }
@@ -99,6 +101,12 @@ function RecetaModal({ item, onClose }) {
       )}
       {receta.rendimiento && (
         <p className="mb-2"><strong>Rendimiento:</strong> {JSON.parse(receta.rendimiento).cantidad} {JSON.parse(receta.rendimiento).unidades}</p>
+      )}
+      {item.Foto && (
+        <div className="mb-4">
+          <p className="mb-2"><strong>Foto:</strong></p>
+          <img src={item.Foto} alt="Foto de la receta" className="w-full h-auto rounded-md shadow-md" />
+        </div>
       )}
     </>
   );

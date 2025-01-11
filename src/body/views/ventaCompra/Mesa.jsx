@@ -66,6 +66,7 @@ function Mesa({ index, ventas, reloadVentas }) {
     updatedItems[itemIndex].NombreES = selectedOption.NombreES;
     updatedItems[itemIndex].Precio = selectedOption.Precio;
     updatedItems[itemIndex].Receta = selectedOption.Receta; // Añadir la receta seleccionada
+    updatedItems[itemIndex].Foto = selectedOption.Foto; // Añadir la foto seleccionada
     updatedItems[itemIndex].matches = []; // Limpiar las coincidencias tras la selección
     setOrderItems(updatedItems);
   };
