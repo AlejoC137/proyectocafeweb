@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
+import RecetaModal from "./RecetaModal"; // Importa el nuevo componente
 
-function Mesa({ index, ventas }) {
+function Mesa({ index, ventas, reloadVentas }) {
   const [formData, setFormData] = useState({
     Total_Ingreso: '',
     Tip: '',
@@ -16,6 +17,7 @@ function Mesa({ index, ventas }) {
   const [comandaSaved, setComandaSaved] = useState(false);
   const [buttonState, setButtonState] = useState("save");
   const [isMesaInUse, setIsMesaInUse] = useState(false);
+  const [selectedReceta, setSelectedReceta] = useState(null); // Estado para la receta seleccionada
   const allMenu = useSelector((state) => state.allMenu || []);
   const dispatch = useDispatch();
 
@@ -63,6 +65,7 @@ function Mesa({ index, ventas }) {
     updatedItems[itemIndex].id = selectedOption.id;
     updatedItems[itemIndex].NombreES = selectedOption.NombreES;
     updatedItems[itemIndex].Precio = selectedOption.Precio;
+    updatedItems[itemIndex].Receta = selectedOption.Receta; // Añadir la receta seleccionada
     updatedItems[itemIndex].matches = []; // Limpiar las coincidencias tras la selección
     setOrderItems(updatedItems);
   };
@@ -79,11 +82,12 @@ function Mesa({ index, ventas }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!window.confirm("¿Está seguro de que desea guardar esta comanda?")) return;
+
     setComandaSaved(true);
     setButtonState("done");
     setIsMesaInUse(true);
 
-    // Enviar los datos a la tabla "Ventas" en Supabase
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
@@ -91,6 +95,7 @@ function Mesa({ index, ventas }) {
           ...formData,
           Productos: JSON.stringify(orderItems),
         }));
+        alert("Venta actualizada correctamente");
       } else {
         await dispatch(crearVenta({
           ...formData,
@@ -98,33 +103,46 @@ function Mesa({ index, ventas }) {
           Pagado: false,
           Mesa: index,
         }));
+        alert("Venta creada correctamente");
       }
+      reloadVentas();
     } catch (error) {
       console.error("Error al crear/actualizar la venta:", error);
+      alert("Error al crear/actualizar la venta");
     }
   };
 
   const handlePagar = async () => {
+    if (!window.confirm("¿Está seguro de que desea marcar esta comanda como pagada?")) return;
+
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
         await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
         setIsMesaInUse(false);
+        alert("Comanda pagada correctamente");
+        reloadVentas();
       }
     } catch (error) {
       console.error("Error al pagar la venta:", error);
+      alert("Error al pagar la venta");
     }
   };
 
   const handleEliminar = async () => {
+    if (!window.confirm("¿Está seguro de que desea eliminar esta comanda?")) return;
+
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
         await dispatch(eliminarVenta(existingVenta._id));
         setIsMesaInUse(false);
+        alert("Venta eliminada correctamente");
+        reloadVentas();
       }
     } catch (error) {
       console.error("Error al eliminar la venta:", error);
+      alert("Error al eliminar la venta");
     }
     setFormData({
       Total_Ingreso: '',
@@ -135,6 +153,14 @@ function Mesa({ index, ventas }) {
     setOrderItems([]);
     setComandaSaved(false);
     setButtonState("save");
+  };
+
+  const handleRecetaClick = (item) => {
+    setSelectedReceta(item);
+  };
+
+  const handleCloseRecetaModal = () => {
+    setSelectedReceta(null);
   };
 
   return (
@@ -150,7 +176,7 @@ function Mesa({ index, ventas }) {
           value={formData.Cliente}
           onChange={handleChange}
           className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
+          disabled={comandaSaved}
         />
       </div>
       <div className="flex items-center gap-2">
@@ -161,7 +187,7 @@ function Mesa({ index, ventas }) {
           value={formData.Cajero}
           onChange={handleChange}
           className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
+          disabled={comandaSaved}
         />
       </div>
     </div>
@@ -211,6 +237,12 @@ function Mesa({ index, ventas }) {
           >
             X
           </Button>
+          <Button
+            onClick={() => handleRecetaClick(item)}
+            className="bg-yellow-500 text-white text-sm"
+          >
+            📕
+          </Button>
         </div>
       ))}
       <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm">
@@ -228,7 +260,7 @@ function Mesa({ index, ventas }) {
           value={formData.Tip}
           onChange={handleChange}
           className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
+          disabled={comandaSaved}
         />
       </div>
       <div className="flex items-center gap-2 flex-1">
@@ -270,10 +302,12 @@ function Mesa({ index, ventas }) {
         </Button>
       </div>
     </div>
+
+    {selectedReceta && (
+      <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
+    )}
   </div>
-  
   );
-  
 }
 
 export default Mesa;

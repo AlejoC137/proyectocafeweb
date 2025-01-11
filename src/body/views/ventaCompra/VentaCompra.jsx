@@ -10,28 +10,31 @@ function VentaCompra() {
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
 
+  const fetchVentas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("Ventas")
+        .select("*")
+        .eq("Pagado", false);
+
+      if (error) {
+        console.error("Error fetching ventas:", error);
+      } else {
+        setVentas(data);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         await Promise.all([
-          // dispatch(getAllFromTable(STAFF)),
           dispatch(getAllFromTable(MENU)),
-          // dispatch(getAllFromTable(ITEMS)),
-          // dispatch(getAllFromTable(PRODUCCION)),
-          // dispatch(getAllFromTable(PROVEE)),
         ]);
 
-        const { data, error } = await supabase
-          .from("Ventas")
-          .select("*")
-          .eq("Pagado", false);
-
-        if (error) {
-          console.error("Error fetching ventas:", error);
-        } else {
-          setVentas(data);
-        }
-
+        await fetchVentas();
         setLoading(false);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -41,6 +44,10 @@ function VentaCompra() {
     fetchData();
   }, [dispatch]);
 
+  const reloadVentas = () => {
+    fetchVentas();
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -48,7 +55,7 @@ function VentaCompra() {
   return (
     <div className="bg-gray-100 grid grid-cols-3 w-screen gap-1 h-[calc(100vh-8rem)] p-2">
       {[...Array(6)].map((_, index) => (
-        <Mesa key={index} index={index + 1} ventas={ventas} />
+        <Mesa key={index} index={index + 1} ventas={ventas} reloadVentas={reloadVentas} />
       ))}
     </div>
   );
