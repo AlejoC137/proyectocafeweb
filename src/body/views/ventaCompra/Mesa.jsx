@@ -150,7 +150,7 @@ function Mesa({ index, ventas }) {
           value={formData.Cliente}
           onChange={handleChange}
           className="flex-grow border rounded p-1 text-sm"
-          disabled={comandaSaved}
+          // disabled={comandaSaved}
         />
       </div>
       <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ function Mesa({ index, ventas }) {
           value={formData.Cajero}
           onChange={handleChange}
           className="flex-grow border rounded p-1 text-sm"
-          disabled={comandaSaved}
+          // disabled={comandaSaved}
         />
       </div>
     </div>
