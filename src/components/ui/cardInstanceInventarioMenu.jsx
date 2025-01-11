@@ -239,6 +239,17 @@ console.log(product);
             </select>
           </label>
 
+          {/* Nuevo label para editar el Precio */}
+          <label className="text-sm text-gray-700 flex-1 font-bold">
+            Precio:
+            <input
+              type="number"
+              name="Precio"
+              value={editableProduct.Precio || ""}
+              onChange={handleChange}
+              className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+            />
+          </label>
 
           <label className="text-sm text-gray-700 flex-1 font-bold flex ">
             Foto:

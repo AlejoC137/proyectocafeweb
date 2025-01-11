@@ -179,7 +179,7 @@ function DiaResumen() {
                     {producto.nombre}
                   </td>
                   <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
-                    {producto.cantidad},
+                    {producto.cantidad}
                   </td>
                 </tr>
               ))}
