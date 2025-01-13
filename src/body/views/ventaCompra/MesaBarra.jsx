@@ -4,9 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
 import RecetaModal from "./RecetaModal"; // Importa el nuevo componente
-import Pagar from "./Pagar"; // Importa el nuevo componente
 
-function Mesa({ index, ventas, reloadVentas }) {
+function Mesa({ index, ventas, reloadVentas, onPagar }) {
   const [formData, setFormData] = useState({
     Total_Ingreso: '',
     Tip: '',
@@ -19,8 +18,6 @@ function Mesa({ index, ventas, reloadVentas }) {
   const [buttonState, setButtonState] = useState("save");
   const [isMesaInUse, setIsMesaInUse] = useState(false);
   const [selectedReceta, setSelectedReceta] = useState(null); // Estado para la receta seleccionada
-  const [showPagarModal, setShowPagarModal] = useState(false); // Estado para mostrar el modal de pago
-  const [ventaId, setVentaId] = useState(null); // Estado para almacenar el ID de la venta
   const allMenu = useSelector((state) => state.allMenu || []);
   const dispatch = useDispatch();
 
@@ -37,7 +34,6 @@ function Mesa({ index, ventas, reloadVentas }) {
       setComandaSaved(true);
       setButtonState("done");
       setIsMesaInUse(true);
-      setVentaId(existingVenta._id); // Almacenar el ID de la venta existente
     }
   }, [ventas, index]);
 
@@ -100,7 +96,6 @@ function Mesa({ index, ventas, reloadVentas }) {
           ...formData,
           Productos: JSON.stringify(orderItems),
         }));
-        setVentaId(updatedVenta[0]._id); // Almacenar el ID de la venta actualizada
         alert("Venta actualizada correctamente");
       } else {
         const nuevaVenta = await dispatch(crearVenta({
@@ -109,7 +104,6 @@ function Mesa({ index, ventas, reloadVentas }) {
           Pagado: false,
           Mesa: index,
         }));
-        setVentaId(nuevaVenta._id); // Almacenar el ID de la nueva venta creada
         alert("Venta creada correctamente");
       }
       reloadVentas();
@@ -120,11 +114,7 @@ function Mesa({ index, ventas, reloadVentas }) {
   };
 
   const handlePagar = () => {
-    setShowPagarModal(true);
-  };
-
-  const handleClosePagarModal = () => {
-    setShowPagarModal(false);
+    onPagar();
   };
 
   const handleEliminar = async () => {
@@ -281,10 +271,6 @@ function Mesa({ index, ventas, reloadVentas }) {
 
       {selectedReceta && (
         <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
-      )}
-
-      {showPagarModal && (
-        <Pagar ventaId={ventaId} onClose={handleClosePagarModal} />
       )}
     </div>
   );

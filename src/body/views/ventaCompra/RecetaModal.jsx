@@ -1,23 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getRecepie } from "../../../redux/actions";
+import { useParams } from "react-router-dom";
+import { getAllFromTable, getRecepie } from "../../../redux/actions";
+import { Button } from "@/components/ui/button";
+import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, MenuItems } from "../../../redux/actions-types";
 
-function RecetaModal({ item, onClose }) {
+function RecetaModal() {
+  const { id } = useParams();
   const dispatch = useDispatch();
   const [receta, setReceta] = useState(null);
+  const [foto, setFoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const allItems = useSelector((state) => state.allItems || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
+  const allMenu = useSelector((state) => state.allMenu || []);
+
+
 
   useEffect(() => {
+    try {
+       Promise.all([
+        dispatch(getAllFromTable(STAFF)),
+        dispatch(getAllFromTable(MENU)),
+        dispatch(getAllFromTable(ITEMS)),
+        dispatch(getAllFromTable(PRODUCCION)),
+        dispatch(getAllFromTable(PROVEE)),
+      ]);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setLoading(false);
+    } 
     const fetchReceta = async () => {
-      if (item.Receta) {
+
+
+
+      if (id) {
+        
         try {
-          const result = await getRecepie(item.Receta, "Recetas");
+          const result = await getRecepie(id, "Recetas");
+          console.log(result);
           if (result) {
             setReceta(result);
-            console.log(result);
+            const plato = await getRecepie(result.forId, "Menu");
+            setFoto(plato.Foto);
+            
           } else {
             setError("No se pudo encontrar la receta.");
           }
@@ -33,10 +61,9 @@ function RecetaModal({ item, onClose }) {
     };
 
     fetchReceta();
-  }, [item.Receta]);
+  }, [id]);
 
   const buscarPorId = (id) => {
-    
     return allItems.find((items) => items._id === id) || allProduccion.find((items) => items._id === id) || null;
   };
 
@@ -49,11 +76,9 @@ function RecetaModal({ item, onClose }) {
         const itemCuantityUnits = receta[itemCuantityUnitsKey] ? JSON.parse(receta[itemCuantityUnitsKey]) : null;
         const itemData = buscarPorId(item);
 
-
-
         return item && itemCuantityUnits ? (
           <p key={i} className="mb-2">
-            <strong>Ingrediente {i}:</strong> {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units} ({itemData ? itemData.Nombre_del_producto : "Desconocido"})
+            <strong>Ingrediente {i}: </strong>{itemData ? itemData.Nombre_del_producto : "Desconocido"} {itemCuantityUnits.metric.cuantity} {itemCuantityUnits.metric.units} 
           </p>
         ) : null;
       })}
@@ -116,45 +141,60 @@ function RecetaModal({ item, onClose }) {
       {receta.rendimiento && (
         <p className="mb-2"><strong>Rendimiento:</strong> {JSON.parse(receta.rendimiento).cantidad} {JSON.parse(receta.rendimiento).unidades}</p>
       )}
-      {item.Foto && (
+      {receta.Foto && (
         <div className="mb-4">
           <p className="mb-2"><strong>Foto:</strong></p>
-          <img src={item.Foto} alt="Foto de la receta" className="w-full h-auto rounded-md shadow-md" />
+          <img src={receta.Foto} alt="Foto de la receta" className="w-full h-auto rounded-md shadow-md" />
         </div>
       )}
     </>
   );
 
+  const renderImagen = () => {
+    const menuItem = allMenu.find(item => item._id === receta.forId);
+    return menuItem && menuItem.Foto ? (
+      <div className="mb-4">
+        <p className="mb-2"><strong>Imagen del Menú:</strong></p>
+        <img src={menuItem.Foto} alt="Imagen del Menú" className="w-full h-auto rounded-md shadow-md" />
+      </div>
+    ) : null;
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-3/4">
-        <h2 className="text-2xl font-bold mb-4">Receta de {item.NombreES}</h2>
+    <div>
+      <div>
+        <h2 className="text-lg font-semibold mb-4">{receta?.legacyName}</h2>
         {loading ? (
           <p>Cargando receta...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : receta ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
               {renderIngredientes()}
               {renderProduccionInterna()}
             </div>
-            <div>
+            <div className="flex-1">
               {renderProcesosYNotas()}
             </div>
-            <div>
+            <div className="flex-1">
               {renderDemasInfo()}
+            </div>
+            <div className="flex-1">
+              {renderImagen()}
+            {foto && (
+              <div className="mb-4">
+                <p className="mb-2"><strong>Foto del Plato:</strong></p>
+                <img src={foto} alt="Foto del Plato" className="w-full h-auto rounded-md shadow-md" />
+              </div>
+            )}
             </div>
           </div>
         ) : (
           <p>No se pudo cargar la receta.</p>
         )}
-        <button
-          onClick={onClose}
-          className="mt-4 bg-red-500 text-white p-2 rounded"
-        >
-          Cerrar
-        </button>
+        <div className="mt-4 flex justify-end">
+        </div>
       </div>
     </div>
   );

@@ -156,7 +156,8 @@ function Mesa({ index, ventas, reloadVentas }) {
   };
 
   const handleRecetaClick = (item) => {
-    setSelectedReceta(item);
+    const url = `/receta/${item.Receta}`;
+    window.open(url, '_blank');
   };
 
   const handleCloseRecetaModal = () => {
@@ -198,12 +199,12 @@ function Mesa({ index, ventas, reloadVentas }) {
       {orderItems.map((item, itemIndex) => (
         
         <div key={itemIndex} className="flex gap-2 items-center mb-2">
-                    <Button
-            onClick={() => handleRecetaClick(item)}
-            className="bg-yellow-500 text-white text-sm w-[30px]"
-          >
-            📕
-          </Button>
+            <Button
+              onClick={() => handleRecetaClick(item)}
+              className="bg-yellow-500 text-white text-sm w-[30px]"
+            >
+              📕
+            </Button>
           <Input
             type="text"
             placeholder="Buscar producto..."
