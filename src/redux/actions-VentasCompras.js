@@ -133,3 +133,28 @@ export function eliminarVenta(ventaId) {
     }
   };
 }
+
+export function actualizarPago(ventaId, pagoInfo) {
+  return async (dispatch) => {
+    try {
+      const { data, error } = await supabase
+        .from("Ventas")
+        .update({
+          Pagado: true,
+          Pago_Info: pagoInfo,
+        })
+        .eq("_id", ventaId)
+        .select();
+
+      if (error) {
+        console.error('Error al actualizar el pago:', error);
+        return null;
+      }
+
+      console.log('Pago actualizado correctamente:', data);
+      return data;
+    } catch (error) {
+      console.error('Error en la acción actualizarPago:', error);
+    }
+  };
+}

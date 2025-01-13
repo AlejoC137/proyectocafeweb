@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
 import RecetaModal from "./RecetaModal"; // Importa el nuevo componente
+import Pagar from "./Pagar"; // Importa el nuevo componente
 
 function Mesa({ index, ventas, reloadVentas }) {
   const [formData, setFormData] = useState({
@@ -18,6 +19,9 @@ function Mesa({ index, ventas, reloadVentas }) {
   const [buttonState, setButtonState] = useState("save");
   const [isMesaInUse, setIsMesaInUse] = useState(false);
   const [selectedReceta, setSelectedReceta] = useState(null); // Estado para la receta seleccionada
+  const [showPagarModal, setShowPagarModal] = useState(false); // Estado para mostrar el modal de pago
+  const [ventaId, setVentaId] = useState(null); // Estado para almacenar el ID de la venta
+  const [totalPago, setTotalPago] = useState(null); // Estado para almacenar el ID de la venta
   const allMenu = useSelector((state) => state.allMenu || []);
   const dispatch = useDispatch();
 
@@ -34,12 +38,14 @@ function Mesa({ index, ventas, reloadVentas }) {
       setComandaSaved(true);
       setButtonState("done");
       setIsMesaInUse(true);
+      setVentaId(existingVenta._id); // Almacenar el ID de la venta existente
     }
   }, [ventas, index]);
 
   useEffect(() => {
     const total = orderItems.reduce((acc, item) => acc + (item.Precio * item.quantity), 0);
-    const totalWithTip = (parseFloat(total) + parseFloat(formData.Tip || 0)).toFixed(2);
+    const totalWithTip = (parseFloat(total) + parseFloat(formData.Tip || 0)).toFixed(0);
+    setTotalPago(totalWithTip);
     setFormData((prev) => ({ ...prev, Total_Ingreso: totalWithTip }));
   }, [orderItems, formData.Tip]);
 
@@ -92,18 +98,20 @@ function Mesa({ index, ventas, reloadVentas }) {
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
-        await dispatch(actualizarVenta(existingVenta._id, {
+        const updatedVenta = await dispatch(actualizarVenta(existingVenta._id, {
           ...formData,
           Productos: JSON.stringify(orderItems),
         }));
+        setVentaId(updatedVenta[0]._id); // Almacenar el ID de la venta actualizada
         alert("Venta actualizada correctamente");
       } else {
-        await dispatch(crearVenta({
+        const nuevaVenta = await dispatch(crearVenta({
           ...formData,
           Productos: JSON.stringify(orderItems),
           Pagado: false,
           Mesa: index,
         }));
+        setVentaId(nuevaVenta._id); // Almacenar el ID de la nueva venta creada
         alert("Venta creada correctamente");
       }
       reloadVentas();
@@ -113,21 +121,12 @@ function Mesa({ index, ventas, reloadVentas }) {
     }
   };
 
-  const handlePagar = async () => {
-    if (!window.confirm("¿Está seguro de que desea marcar esta comanda como pagada?")) return;
+  const handlePagar = () => {
+    setShowPagarModal(true);
+  };
 
-    try {
-      const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
-      if (existingVenta) {
-        await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
-        setIsMesaInUse(false);
-        alert("Comanda pagada correctamente");
-        reloadVentas();
-      }
-    } catch (error) {
-      console.error("Error al pagar la venta:", error);
-      alert("Error al pagar la venta");
-    }
+  const handleClosePagarModal = () => {
+    setShowPagarModal(false);
   };
 
   const handleEliminar = async () => {
@@ -308,6 +307,9 @@ function Mesa({ index, ventas, reloadVentas }) {
 
     {selectedReceta && (
       <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
+    )}
+    {showPagarModal && (
+      <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} />
     )}
   </div>
   );

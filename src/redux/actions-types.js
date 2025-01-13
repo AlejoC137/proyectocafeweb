@@ -65,8 +65,10 @@ export const TARDEO = 'TARDEO'
 export const DESAYUNO = 'DESAYUNO'
 export const GRANOS = 'GRANOS'
 export const HARINAS = 'HARINAS'
+export const ADICIONES = 'ADICIONES'
 
 export const CATEGORIES = [
+  ADICIONES,
   TARDEO,
   DESAYUNO,
   CARNICO,
