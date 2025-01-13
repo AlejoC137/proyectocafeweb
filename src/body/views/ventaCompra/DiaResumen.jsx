@@ -25,22 +25,27 @@ function DiaResumen() {
         if (error) {
           console.error("Error fetching ventas:", error);
         } else {
-          setVentas(data);
+          const today = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
+
+          
+          const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === today);
+
+          setVentas(ventasHoy);
 
           // Calcular ingresos y tips totales
-          const total = data
+          const total = ventasHoy
             .filter((venta) => venta.Pagado === true)
             .reduce((acc, venta) => acc + parseFloat(venta.Total_Ingreso || 0), 0);
           setTotalIngreso(total);
 
-          const totalTip = data
+          const totalTip = ventasHoy
             .filter((venta) => venta.Pagado === true)
             .reduce((acc, venta) => acc + parseFloat(venta.Tip || 0), 0);
           setTotalTip(totalTip);
 
           // Calcular productos vendidos
           const productosMap = {};
-          data.forEach((venta) => {
+          ventasHoy.forEach((venta) => {
             if (venta.Productos) {
               const productos = JSON.parse(venta.Productos); // Suponiendo que Productos es un JSON
               productos.forEach((producto) => {
@@ -159,7 +164,7 @@ function DiaResumen() {
                       </span>
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {new Date(venta.Date).toLocaleString()}
+                      {new Date(venta.Date).toLocaleString("en-US", { timeZone: "America/Bogota" })}
                     </td>
                   </tr>
                 ))}

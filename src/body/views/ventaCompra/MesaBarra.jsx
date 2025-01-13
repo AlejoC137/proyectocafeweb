@@ -4,14 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
 import RecetaModal from "./RecetaModal"; // Importa el nuevo componente
+import Pagar from "./Pagar"; // Importa el nuevo componente
 
-function Mesa({ index, ventas, reloadVentas, onPagar }) {
+function MesaBarra({ index, ventas, reloadVentas, onPagar }) {
   const [formData, setFormData] = useState({
     Total_Ingreso: '',
     Tip: '',
     Cliente: '',
     Cajero: '',
   });
+  const [showPagarModal, setShowPagarModal] = useState(false); // Estado para mostrar el modal de pago
+  const [ventaId, setVentaId] = useState(null); // Estado para almacenar el ID de la venta
+  const [totalPago, setTotalPago] = useState(null); // Estado para almacenar el ID de la venta
 
   const [orderItems, setOrderItems] = useState([]);
   const [comandaSaved, setComandaSaved] = useState(false);
@@ -34,12 +38,15 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
       setComandaSaved(true);
       setButtonState("done");
       setIsMesaInUse(true);
+      setVentaId(existingVenta._id); // Almacenar el ID de la venta existente
+
     }
   }, [ventas, index]);
 
   useEffect(() => {
     const total = orderItems.reduce((acc, item) => acc + (item.Precio * item.quantity), 0);
-    const totalWithTip = (parseFloat(total) + parseFloat(formData.Tip || 0)).toFixed(2);
+    const totalWithTip = (parseFloat(total) + parseFloat(formData.Tip || 0)).toFixed(0);
+    setTotalPago(totalWithTip);
     setFormData((prev) => ({ ...prev, Total_Ingreso: totalWithTip }));
   }, [orderItems, formData.Tip]);
 
@@ -59,7 +66,9 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
 
     setOrderItems(updatedItems);
   };
-
+  const handleClosePagarModal = () => {
+    setShowPagarModal(false);
+  };
   const handleIngredientSelect = (itemIndex, selectedOption) => {
     const updatedItems = [...orderItems];
     updatedItems[itemIndex].id = selectedOption.id;
@@ -82,8 +91,8 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!window.confirm("¿Está seguro de que desea guardar esta comanda?")) return;
+    // e.preventDefault();
+    // if (!window.confirm("¿Está seguro de que desea guardar esta comanda?")) return;
 
     setComandaSaved(true);
     setButtonState("done");
@@ -96,7 +105,9 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
           ...formData,
           Productos: JSON.stringify(orderItems),
         }));
-        alert("Venta actualizada correctamente");
+        setVentaId(updatedVenta[0]._id); // Almacenar el ID de la venta actualizada
+
+        // alert("Venta actualizada correctamente");
       } else {
         const nuevaVenta = await dispatch(crearVenta({
           ...formData,
@@ -104,17 +115,23 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
           Pagado: false,
           Mesa: index,
         }));
-        alert("Venta creada correctamente");
+        setVentaId(nuevaVenta._id); // Almacenar el ID de la nueva venta creada
+
+        // alert("Venta creada correctamente");
       }
-      reloadVentas();
+      // reloadVentas();
     } catch (error) {
       console.error("Error al crear/actualizar la venta:", error);
       alert("Error al crear/actualizar la venta");
     }
   };
 
+  const handlePaymentComplete = () => {
+    window.location.reload();
+  };
+
   const handlePagar = () => {
-    onPagar();
+    setShowPagarModal(true);
   };
 
   const handleEliminar = async () => {
@@ -204,11 +221,11 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
             ➕
           </Button>
           <Button
-            onClick={handlePagar}
-            disabled={!comandaSaved}
-            className={`w-[40px] bg-green-500 text-white text-sm ${
-              !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            onClick={async () => { await handleSubmit(); await handlePagar(); }}
+            
+            // disabled={!comandaSaved}
+   
+            className={'w-[40px] bg-green-500 text-white text-sm'}
           >
             💸
           </Button>
@@ -272,8 +289,11 @@ function Mesa({ index, ventas, reloadVentas, onPagar }) {
       {selectedReceta && (
         <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
       )}
+          {showPagarModal && (
+      <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
+    )}
     </div>
   );
 }
 
-export default Mesa;
+export default MesaBarra;

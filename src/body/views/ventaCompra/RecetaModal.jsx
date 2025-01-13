@@ -182,12 +182,7 @@ function RecetaModal() {
             </div>
             <div className="flex-1">
               {renderImagen()}
-            {foto && (
-              <div className="mb-4">
-                <p className="mb-2"><strong>Foto del Plato:</strong></p>
-                <img src={foto} alt="Foto del Plato" className="w-full h-auto rounded-md shadow-md" />
-              </div>
-            )}
+            
             </div>
           </div>
         ) : (

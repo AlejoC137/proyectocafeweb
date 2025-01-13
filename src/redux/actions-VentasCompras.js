@@ -54,13 +54,15 @@ export function crearItem(itemData, type, forId) {
 }
 
 export function crearVenta(ventaData) {
+  console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
+  
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
       const nuevaVenta = {
         _id: uuidv4(),
         ...ventaData,
-        Date: new Date().toISOString(), // Fecha actual
+        Date: new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }), // Fecha y hora actual
         Mesa: ventaData.Mesa, // Agregar el campo Mesa
       };
 
