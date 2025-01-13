@@ -101,7 +101,7 @@ function Mesa({ index, ventas, reloadVentas }) {
         await dispatch(crearVenta({
           ...formData,
           Productos: JSON.stringify(orderItems),
-          Pagado: false,
+          Pagado: true,
           Mesa: index,
         }));
         alert("Venta creada correctamente");
@@ -119,7 +119,12 @@ function Mesa({ index, ventas, reloadVentas }) {
     try {
       const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
       if (existingVenta) {
-        await dispatch(actualizarVenta(existingVenta._id, { Pagado: true }));
+        // Guardar la venta antes de marcarla como pagada
+        await dispatch(actualizarVenta(existingVenta._id, {
+          ...formData,
+          Productos: JSON.stringify(orderItems),
+          Pagado: true,
+        }));
         setIsMesaInUse(false);
         alert("Comanda pagada correctamente");
         reloadVentas();
@@ -165,151 +170,134 @@ function Mesa({ index, ventas, reloadVentas }) {
   };
 
   return (
-    <div className={`bg-white shadow-md rounded-lg border p-1 grid grid-cols-4 gap-2 ${isMesaInUse ? 'bg-green-100' : ''}`} style={{ alignItems: 'start' }}>
-    {/* Primera fila: Cliente y Cajero */}
-    <div className="col-span-4 grid grid-cols-2 gap-2 align-top">
-      <div className="flex items-center gap-2">
+    <div className={`bg-white shadow-md rounded-lg border p-1 grid grid-cols-4 gap-1 ${isMesaInUse ? 'bg-green-100' : ''}`} style={{ alignItems: 'start' }}>
+      {/* Primera fila: Cliente y Cajero */}
+      <div className="col-span-4 flex gap-1 items-center">
         <h3 className="flex-grow border rounded p-1 text-sm font-semibold">{`Mesa#${index}`}</h3>
-        <label className="text-sm font-medium">Cliente:</label>
-        <Input
-          type="text"
-          name="Cliente"
-          value={formData.Cliente}
-          onChange={handleChange}
-          className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Cajero:</label>
-        <Input
-          type="text"
-          name="Cajero"
-          value={formData.Cajero}
-          onChange={handleChange}
-          className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
-        />
-      </div>
-    </div>
-  
-    {/* Segunda fila: Ítems pedidos */}
-    <div className="col-span-4">
-      {/* <h3 className="font-bold mb-2 text-sm">Ítems pedidos:</h3> */}
-      {orderItems.map((item, itemIndex) => (
-        
-        <div key={itemIndex} className="flex gap-2 items-center mb-2">
-                    <Button
-            onClick={() => handleRecetaClick(item)}
-            className="bg-yellow-500 text-white text-sm w-[30px]"
-          >
-            📕
-          </Button>
+        <div className="flex-1 flex items-center gap-1">
+          <label className="text-sm font-medium">Cliente:</label>
           <Input
             type="text"
-            placeholder="Buscar producto..."
-            value={item.NombreES}
-            onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
-            className="flex-grow border rounded p-1 text-sm"
+            name="Cliente"
+            value={formData.Cliente}
+            onChange={handleChange}
+            className="w-full border rounded p-1 text-sm"
+            // disabled={comandaSaved}
           />
-          {item.matches && item.matches.length > 0 && (
-            <ul className="absolute bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10 w-full">
-              {item.matches.map((match) => (
-                <li
-                  key={match.id}
-                  onClick={() => handleIngredientSelect(itemIndex, match)}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  {match.NombreES}
-                </li>
-              ))}
-            </ul>
-          )}
+        </div>
+        <div className="flex-1 flex items-center gap-1">
+          <label className="text-sm font-medium">Cajero:</label>
           <Input
-            type="number"
-            placeholder="Cantidad"
-            value={item.quantity}
-            onChange={(e) =>
-              setOrderItems((prev) =>
-                prev.map((it, i) =>
-                  i === itemIndex ? { ...it, quantity: e.target.value } : it
-                )
-              )
-            }
-            className="w-16 border rounded p-1 text-sm"
+            type="text"
+            name="Cajero"
+            value={formData.Cajero}
+            onChange={handleChange}
+            className="w-full border rounded p-1 text-sm"
+            // disabled={comandaSaved}
           />
-          <span className="text-sm">${item.Precio.toFixed(2)}</span>
+        </div>
+        <div className="flex-1 flex items-center gap-1">
+          <label className="text-sm font-medium">Tip:</label>
+          <Input
+            type="text"
+            name="Tip"
+            value={formData.Tip}
+            onChange={handleChange}
+            className="w-full border rounded p-1 text-sm"
+            // disabled={comandaSaved}
+          />
+        </div>
+        <div className="flex-1 flex items-center gap-1">
+          <label className="text-sm font-medium">Total$:</label>
+          <Input
+            type="text"
+            name="Total_Ingreso"
+            value={formData.Total_Ingreso}
+            className="w-full border rounded p-1 text-sm"
+            readOnly
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm w-[30px]">
+            ➕
+          </Button>
           <Button
-            onClick={() => handleRemoveItem(itemIndex)}
-            className="bg-red-500 text-white text-sm w-[30px]"
+            onClick={handleSubmit}
+            className="w-[40px] bg-blue-500 text-white text-sm"
           >
-            ❌
+    💸
           </Button>
 
+          {/* <Button
+            onClick={handleEliminar}
+            disabled={!comandaSaved}
+            className={`w-[40px] bg-red-500 text-white text-sm ${
+              !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            💥
+          </Button> */}
         </div>
-      ))}
-      <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm w-full">
-      ➕🍽️☕
-      </Button>
-    </div>
-  
-    {/* Tercera fila: Tip, Total y Botones */}
-    <div className="col-span-4 flex gap-2 items-end">
-      <div className="flex items-center gap-2 flex-1">
-        <label className="text-sm font-medium">Tip:</label>
-        <Input
-          type="text"
-          name="Tip"
-          value={formData.Tip}
-          onChange={handleChange}
-          className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
-        />
       </div>
-      <div className="flex items-center gap-2 flex-1">
-        <label className="text-sm font-medium">Total$:</label>
-        <Input
-          type="text"
-          name="Total_Ingreso"
-          value={formData.Total_Ingreso}
-          className="flex-grow border rounded p-1 text-sm"
-          readOnly
-        />
-      </div>
-      <div className="flex gap-2">
-        <Button
-          onClick={handleSubmit}
-          className="w-[40px] bg-blue-500 text-white text-sm"
-        >
-          {buttonState === "save" && "💾"}
-          {buttonState === "syncing" && "🔄"}
-          {buttonState === "done" && "✅"}
-        </Button>
-        <Button
-          onClick={handlePagar}
-          disabled={!comandaSaved}
-          className={`w-[40px] bg-green-500 text-white text-sm ${
-            !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          💸
-        </Button>
-        <Button
-          onClick={handleEliminar}
-          disabled={!comandaSaved}
-          className={`w-[40px] bg-red-500 text-white text-sm ${
-            !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          💥
-        </Button>
-      </div>
-    </div>
 
-    {selectedReceta && (
-      <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
-    )}
-  </div>
+      {/* Segunda fila: Ítems pedidos */}
+      <div className="col-span-4">
+        {orderItems.map((item, itemIndex) => (
+          <div key={itemIndex} className="flex gap-1 items-center mb-1">
+            <Button
+              onClick={() => handleRecetaClick(item)}
+              className="bg-yellow-500 text-white text-sm w-[30px]"
+            >
+              📕
+            </Button>
+            <Input
+              type="text"
+              placeholder="Buscar producto..."
+              value={item.NombreES}
+              onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
+              className="flex-grow border rounded p-1 text-sm"
+            />
+            {item.matches && item.matches.length > 0 && (
+              <ul className="absolute bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10 w-full">
+                {item.matches.map((match) => (
+                  <li
+                    key={match.id}
+                    onClick={() => handleIngredientSelect(itemIndex, match)}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {match.NombreES}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Input
+              type="number"
+              placeholder="Cantidad"
+              value={item.quantity}
+              onChange={(e) =>
+                setOrderItems((prev) =>
+                  prev.map((it, i) =>
+                    i === itemIndex ? { ...it, quantity: e.target.value } : it
+                  )
+                )
+              }
+              className="w-16 border rounded p-1 text-sm"
+            />
+            <span className="text-sm">${item.Precio.toFixed(2)}</span>
+           <Button
+             onClick={() => handleRemoveItem(itemIndex)}
+             className="bg-red-500 text-white text-sm w-[30px]"
+           >
+             ❌
+           </Button>
+          </div>
+        ))}
+      </div>
+
+      {selectedReceta && (
+        <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
+      )}
+    </div>
   );
 }
 
