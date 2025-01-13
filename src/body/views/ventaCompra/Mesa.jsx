@@ -129,6 +129,10 @@ function Mesa({ index, ventas, reloadVentas }) {
     setShowPagarModal(false);
   };
 
+  const handlePaymentComplete = () => {
+    window.location.reload();
+  };
+
   const handleEliminar = async () => {
     if (!window.confirm("¿Está seguro de que desea eliminar esta comanda?")) return;
 
@@ -310,7 +314,7 @@ function Mesa({ index, ventas, reloadVentas }) {
       <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
     )}
     {showPagarModal && (
-      <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} />
+      <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
     )}
   </div>
   );

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { actualizarPago } from "../../../redux/actions-VentasCompras";
 
-function Pagar({ ventaId, onClose, total }) {
+function Pagar({ ventaId, onClose, total, onPaymentComplete }) {
   const dispatch = useDispatch();
   const [recibido, setRecibido] = useState(0);
   const [metodo, setMetodo] = useState("");
@@ -25,6 +25,9 @@ function Pagar({ ventaId, onClose, total }) {
       .then(() => {
         console.log(`Pago realizado con ${metodo} para la venta ${ventaId}`);
         onClose();
+        if (onPaymentComplete) {
+          onPaymentComplete();
+        }
       })
       .catch((error) => {
         console.error("Error al actualizar el pago:", error);
