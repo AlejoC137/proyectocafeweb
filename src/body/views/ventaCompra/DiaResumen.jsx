@@ -20,15 +20,26 @@ function DiaResumen() {
         const { data, error } = await supabase
           .from("Ventas")
           .select("*")
-          .order("Date", { ascending: false });
+          .order("Date", { ascending: true });
 
         if (error) {
           console.error("Error fetching ventas:", error);
         } else {
-          const today = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
+          const today = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0];
 
-          
+          data.forEach((venta) => {
+            if (venta.Productos) {
+              const productos = JSON.parse(venta.Productos);
+              productos.forEach((producto) => {
+                console.log(producto);
+              });
+            }
+          });
+
           const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === today);
+
+          // Ordenar las ventas por fecha y hora
+          ventasHoy.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
           setVentas(ventasHoy);
 
@@ -49,19 +60,22 @@ function DiaResumen() {
             if (venta.Productos) {
               const productos = JSON.parse(venta.Productos); // Suponiendo que Productos es un JSON
               productos.forEach((producto) => {
+                if (producto.id === '' && producto.NombreES === '' && producto.Precio === 0 && producto.quantity === 1 && producto.matches.length === 0) {
+                  return; // Descartar el producto
+                }
                 if (productosMap[producto.NombreES]) {
-                  productosMap[producto.NombreES] += producto.quantity;
+                  productosMap[producto.NombreES].cantidad += parseFloat(producto.quantity);
                 } else {
-                  productosMap[producto.NombreES] = producto.quantity;
+                  productosMap[producto.NombreES] = {
+                    nombre: producto.NombreES,
+                    cantidad: parseFloat(producto.quantity),
+                  };
                 }
               });
             }
           });
 
-          const productosArray = Object.entries(productosMap).map(([nombre, cantidad]) => ({
-            nombre,
-            cantidad,
-          }));
+          const productosArray = Object.values(productosMap);
           setProductosVendidos(productosArray);
         }
 
@@ -155,9 +169,7 @@ function DiaResumen() {
                     <td className="py-3 px-4 border-b text-sm text-center">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          venta.Pagado
-                            ? "bg-green-200 text-green-800"
-                            : "bg-red-200 text-red-800"
+                          venta.Pagado ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
                         }`}
                       >
                         {venta.Pagado ? "Sí" : "No"}
