@@ -176,6 +176,8 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
 
   const totalProductosVendidos = productosVendidos.reduce((acc, producto) => acc + producto.cantidad, 0);
 
+  productosVendidos.sort((a, b) => b.cantidad - a.cantidad);
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
       <div>
@@ -184,7 +186,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
           type="date"
           id="date"
           name="date"
-          className="bg-white mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          className=" bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           onChange={handleDateChange}
         />
         <p>Selected Date: {hoy}</p>
@@ -221,18 +223,18 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
             <table className="min-w-full border-collapse border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                  {/* <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Cliente
                   </th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Cajero
-                  </th>
+                  </th> */}
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Total Ingreso
                   </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                  {/* <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Tip
-                  </th>
+                  </th> */}
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Pagado
                   </th>
@@ -247,18 +249,18 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
                     key={venta._id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
+                    {/* <td className="py-3 px-4 border-b text-sm text-gray-700">
                       {venta.Cliente}
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
                       {venta.Cajero}
-                    </td>
+                    </td> */}
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
                       {venta.Total_Ingreso}
                     </td>
-                    <td className="py-3 px-4 border-b text-sm text-blue-600 font-bold">
+                    {/* <td className="py-3 px-4 border-b text-sm text-blue-600 font-bold">
                       {venta.Tip}
-                    </td>
+                    </td> */}
                     <td className="py-3 px-4 border-b text-sm text-center">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -293,7 +295,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Cantidad Vendida
                   </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                  {/* <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     ID Receta
                   </th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
@@ -301,7 +303,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
                   </th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Ingredientes
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody>
@@ -316,7 +318,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
                       {producto.cantidad}
                     </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
+                    {/* <td className="py-3 px-4 border-b text-sm text-gray-700">
                       {producto.recetaId}
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
@@ -328,7 +330,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
                           {ingrediente.name}: {ingrediente.cuantity} {ingrediente.units}
                         </div>
                       ))}
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -336,41 +338,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
           </div>
         </div>
 
-        {/* Recetas Vendidas */}
-        <div className="p-6 bg-white rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            Recetas Vendidas
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Receta
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Cantidad Vendida
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recetas.map((receta, index) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {receta.receta}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
-                      {receta.cantidad}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+
       </div>
     </div>
   );
