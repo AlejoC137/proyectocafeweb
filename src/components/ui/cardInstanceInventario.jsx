@@ -14,6 +14,7 @@ export function CardInstanceInventario({ product, currentType }) {
   const showEdit = useSelector((state) => state.showEdit);
   const [receta, setReceta] = useState(null);
   const [formData, setFormData] = useState({
+    Nombre_del_producto: product.Nombre_del_producto || "",
     CANTIDAD: product.CANTIDAD || "",
     UNIDADES: product.UNIDADES || "",
     COSTO: product.COSTO || "",
@@ -73,6 +74,7 @@ export function CardInstanceInventario({ product, currentType }) {
     setButtonState("syncing");
     try {
       const updatedFields = {
+        Nombre_del_producto: formData.Nombre_del_producto,
         CANTIDAD: formData.CANTIDAD,
         UNIDADES: formData.UNIDADES,
         COSTO: formData.COSTO,
@@ -193,6 +195,16 @@ export function CardInstanceInventario({ product, currentType }) {
 
         {showEdit && (
           <>
+            <label className="text-sm text-gray-700 flex-1">
+            Nombre_del_producto:
+                  <input
+                    type="text"
+                    name="Nombre_del_producto"
+                    value={formData.Nombre_del_producto}
+                    onChange={handleInputChange}
+                    className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                  />
+                </label>
             <div className="flex gap-4">
               {currentType !== ProduccionInterna && (
                 <label className="text-sm text-gray-700 flex-1">
