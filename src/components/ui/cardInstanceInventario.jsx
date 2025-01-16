@@ -20,6 +20,7 @@ export function CardInstanceInventario({ product, currentType }) {
     UNIDADES: product.UNIDADES || "",
     COSTO: product.COSTO || "",
     GRUPO: product.GRUPO || "",
+    precioUnitario: product.precioUnitario || "",
     Estado: product.Estado || ESTATUS[0],
     Proveedor: product.Proveedor || "",
   });
@@ -170,6 +171,8 @@ console.log(product);
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold text-gray-800 flex-1">
             {product.Nombre_del_producto || "Producto sin nombre"}
+            <br></br>
+            {product.precioUnitario || "Producto sin nombre"} {product.UNIDADES || "Producto sin nombre"}
           </h3>
           {currentType === ProduccionInterna && (
             <Button className="bg-yellow-500 text-white hover:bg-yellow-500" onClick={handleRecepie}>
@@ -232,16 +235,16 @@ console.log(product);
                 </h3>
               </label>
             </div>
-            {/* <label className="text-sm text-gray-700 flex-1">
-                  Costo:
+            <label className="text-sm text-gray-700 flex-1">
+            precioUnitario:
                   <input
                     type="text"
-                    name="COSTO"
-                    value={formData.COSTO}
+                    name="precioUnitario"
+                    value={formData.precioUnitario}
                     onChange={handleInputChange}
                     className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                   />
-                </label> */}
+                </label>
 
             <div className="flex gap-4">
               {/* {currentType !== ProduccionInterna && (
