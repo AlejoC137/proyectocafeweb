@@ -393,25 +393,33 @@ export function actualizarPrecioUnitario(items,type) {
   };
 }
 
-function calcularPrecioUnitario(item) {
+export function calcularPrecioUnitario(item) {
+  
   let precioUnitario;
   const ajusteInflacionario = 1.04;
 
   // Validar si alguno de los valores necesarios es "NaN"
-  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN" || item.COOR === "NaN") {
+  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN" ) {
     console.error("No se puede calcular el valor porque uno de los parámetros es NaN:", item);
     return "No se puede calcular el valor porque uno de los parámetros es NaN";
   }
-
+  
+  if (item.COOR === "NaN" ) { item.COOR = 1.05; }
   // Calcular el precio unitario si todos los valores son válidos
   const costo = parseFloat(item.COSTO);
   const cantidad = parseFloat(item.CANTIDAD);
   const coor = parseFloat(item.COOR);
 
-  precioUnitario = (costo / cantidad) * ajusteInflacionario * ( coor ? coor : 0);
+  precioUnitario = (costo / cantidad) * ajusteInflacionario * ( coor ? coor : 1.05);
+  console.log(item);
+  console.log(precioUnitario);
 
   return parseFloat(precioUnitario.toFixed(2));
 }
+
+
+
+
 
 export function copiarAlPortapapeles(items, estado , ) {
   return async () => {

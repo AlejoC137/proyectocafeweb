@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { deleteItem, getRecepie, updateItem, getProveedor } from "../../redux/actions-Proveedores";
+import { deleteItem, getRecepie, updateItem, getProveedor, actualizarPrecioUnitario, calcularPrecioUnitario } from "../../redux/actions-Proveedores";
 import { CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
 import ProveedorOptions from "../../body/components/proveedorOptions/ProveedorOptions";
 import { setSelectedProviderId } from "../../redux/actions-Proveedores";
+import supabase from "../../config/supabaseClient";
 
 export function CardInstanceInventario({ product, currentType }) {
   const Proveedores = useSelector((state) => state.Proveedores || []);
@@ -71,6 +72,16 @@ export function CardInstanceInventario({ product, currentType }) {
   };
 
   const handleUpdate = async () => {
+console.log(product);
+
+    let { data, error } = await supabase
+    .from(currentType) // Nombre correcto de la tabla
+    .update({
+      precioUnitario: calcularPrecioUnitario(product),
+    })
+    .eq('_id', product._id) // Filtrar la fila donde _id coincida
+    .select(); // Retornar los datos actualizados
+
     setButtonState("syncing");
     try {
       const updatedFields = {

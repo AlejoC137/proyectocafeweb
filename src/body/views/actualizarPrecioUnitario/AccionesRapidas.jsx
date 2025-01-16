@@ -26,9 +26,9 @@ function AccionesRapidas({ currentType }) {
 
   const handleActualizarPrecios = () => {
     dispatch(
-      currentType === ItemsAlmacen
-        ? actualizarPrecioUnitario(allItems, ItemsAlmacen)
-        : actualizarPrecioUnitario(allProduccion, ProduccionInterna)
+      currentType === ITEMS
+        ? actualizarPrecioUnitario(allItems, ITEMS)
+        : actualizarPrecioUnitario(allProduccion, PRODUCCION)
     );
   };
 
