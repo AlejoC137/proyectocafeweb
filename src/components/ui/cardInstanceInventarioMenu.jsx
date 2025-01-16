@@ -10,7 +10,9 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   const [receta, setReceta] = useState(null);
   const [showRecepie, setShowRecepie] = useState(false);
   const groupOptions = CATEGORIES;
-  const [book, setBook] = useState("📕");
+  // const [book, setBook] = useState("📕");
+  const [book, setBook] = useState("📖");
+  const [info, setInfo] = useState("📥");
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -73,6 +75,9 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   const handleRecepie = () => {
     setBook((prev) => (prev === '📕' ? '📖' : '📕'));
   };
+  const handleInfo = () => {
+    setInfo((prev) => (prev === '📤' ? '📥' : '📤'));
+  };
 
   return (
     <div className="border p-4 rounded-md shadow-md">
@@ -96,12 +101,18 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
           >
             {book}
           </button>
+          <button
+            onClick={handleInfo}
+            className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"
+          >
+            {info}
+          </button>
 
 
           </div>
 
 
-      {showEdit ? (
+      {showEdit && (info === '📤' )? (
         <>
         <br></br>
           <div className="flex gap-4">

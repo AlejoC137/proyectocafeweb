@@ -221,7 +221,7 @@ export function CardInstanceInventario({ product, currentType }) {
                 </h3>
               </label>
             </div>
-            <label className="text-sm text-gray-700 flex-1">
+            {/* <label className="text-sm text-gray-700 flex-1">
                   Costo:
                   <input
                     type="text"
@@ -230,7 +230,7 @@ export function CardInstanceInventario({ product, currentType }) {
                     onChange={handleInputChange}
                     className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                   />
-                </label>
+                </label> */}
 
             <div className="flex gap-4">
               {currentType !== ProduccionInterna && (
