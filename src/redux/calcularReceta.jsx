@@ -31,7 +31,7 @@ export  function recetaMariaPaula(
 let porcentajeCostoDirecto;
 
 
-// console.log(currentType);
+
 
 switch (currentType) {
   
@@ -101,7 +101,7 @@ switch (currentType) {
     // Calcular el costo total de los ingredientes
     for (const ingrediente of ingredientes) {
       const { field, precioUnitario, cuantity } = ingrediente;
-
+// console.log( { field, precioUnitario, cuantity } )
       // Validar que precioUnitario y cuantity sean números válidos
       if (isNaN(precioUnitario) || precioUnitario === null) {
         throw new Error(`El campo ${field} tiene un precio unitario inválido: ${precioUnitario}`);

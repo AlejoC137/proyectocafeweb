@@ -21,6 +21,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
   const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
   const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
+  const [costoDirecto, setCostoDirecto] = useState(); // State to manage active tab
 
   useEffect(() => {
     
@@ -133,6 +134,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
 
 
 
+  setCostoDirecto(resultad.detalles)
     setTotalIngredientes(resultad.consolidado);
     setCalculoDetalles(resultad.detalles);
     
@@ -145,6 +147,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
         const recetaPayload = {
           _id: Receta ? Receta._id : crypto.randomUUID(),
           legacyName: legacyName || "Sin nombre",
+          costo:costoDirecto,
           rendimiento: JSON.stringify(rendimiento),
           forId: product._id,
           autor,

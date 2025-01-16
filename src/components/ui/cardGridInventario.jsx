@@ -20,6 +20,7 @@ export function CardGridInventario({ products, currentType }) {
 
   // Estado local para controlar qué grupos están desplegados
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Sincronizar el estado local con el estado global
   useEffect(() => {
@@ -34,9 +35,27 @@ export function CardGridInventario({ products, currentType }) {
     }));
   };
 
+  const filteredProducts = Object.keys(groupedProducts).reduce((acc, group) => {
+    const filteredGroup = groupedProducts[group].filter(
+      (product) =>
+        searchTerm === "" || (product.Nombre_del_producto && product.Nombre_del_producto.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    if (filteredGroup.length > 0) {
+      acc[group] = filteredGroup;
+    }
+    return acc;
+  }, {});
+
   return (
     <div className="flex flex-col gap-2 ml-4 mr-4 ">
-      {Object.keys(groupedProducts)
+      <input
+        type="text"
+        placeholder="Buscar productos..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="mb-4 p-2 border border-gray-300 rounded-md bg-white"
+      />
+      {Object.keys(filteredProducts)
         .sort() // Ordenar los grupos alfabéticamente
         .map((group) => (
           <div key={group}>
@@ -50,7 +69,7 @@ export function CardGridInventario({ products, currentType }) {
                   {expandedGroups[group] ? "▲ " : "▼ "}
                 </span>
                 <span className="text-sm font-bold text-gray-700">
-                  {group.toUpperCase()} ({groupedProducts[group].length})
+                  {group.toUpperCase()} ({filteredProducts[group].length})
                 </span>
               </button>
 
@@ -58,7 +77,7 @@ export function CardGridInventario({ products, currentType }) {
               <button
                 className="flex items-center justify-center w-8 h-8 mr-2 bg-green-500 text-white text-xs rounded-full hover:bg-green-600"
                 onClick={() => {
-                  dispatch(copiarAlPortapapeles(groupedProducts[group], ESTATUS));
+                  dispatch(copiarAlPortapapeles(filteredProducts[group], ESTATUS));
                 }}
               >
                 📋
@@ -68,7 +87,7 @@ export function CardGridInventario({ products, currentType }) {
             {/* Grid de productos dentro del grupo (se muestra solo si el grupo está expandido) */}
             {expandedGroups[group] && (
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {groupedProducts[group].map((product, index) => (
+                {filteredProducts[group].map((product, index) => (
                   <CardInstanceInventario
                     key={index}
                     product={product}

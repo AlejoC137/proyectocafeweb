@@ -16,6 +16,7 @@ export function CardGridInventarioMenu({ products, showEdit }) {
   }, {});
 
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setExpandedGroups(globalExpandedGroups);
@@ -28,9 +29,26 @@ export function CardGridInventarioMenu({ products, showEdit }) {
     }));
   };
 
+  const filteredProducts = Object.keys(groupedProducts).reduce((acc, group) => {
+    const filteredGroup = groupedProducts[group].filter((product) =>
+      searchTerm === "" || (product.NombreES && product.NombreES.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    if (filteredGroup.length > 0) {
+      acc[group] = filteredGroup;
+    }
+    return acc;
+  }, {});
+
   return (
     <div className="flex flex-col gap-2 ml-4 mr-4">
-      {Object.keys(groupedProducts)
+      <input
+        type="text"
+        placeholder="Buscar productos..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="mb-4 p-2 border border-gray-300 rounded-md bg-white"
+      />
+      {Object.keys(filteredProducts)
         .sort()
         .map((group) => (
           <div key={group}>
@@ -43,13 +61,13 @@ export function CardGridInventarioMenu({ products, showEdit }) {
                   {expandedGroups[group] ? "▲ " : "▼ "}
                 </span>
                 <span className="text-sm font-bold text-gray-700">
-                  {group.toUpperCase()} ({groupedProducts[group].length})
+                  {group.toUpperCase()} ({filteredProducts[group].length})
                 </span>
               </button>
             </div>
             {expandedGroups[group] && (
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {groupedProducts[group].map((product) => (
+                {filteredProducts[group].map((product) => (
                   <CardInstanceInventarioMenu
                     key={product._id}
                     product={product}
