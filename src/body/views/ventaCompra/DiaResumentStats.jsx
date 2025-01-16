@@ -4,18 +4,17 @@ import { useSelector } from "react-redux";
 function DiaResumentStats({ ventasRecepies }) {
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const [infoPorProducto, setInfoPorProducto] = useState([]);
-  
+
   useEffect(() => {
-      console.log(ventasRecepies);
     const calculateCosts = () => {
       const info = ventasRecepies.map((element) => {
         const recetaObj = allRecetasMenu.find((receta) => receta._id === element.recetaId);
-        
+
         if (recetaObj && recetaObj.costo) {
           const data = JSON.parse(recetaObj.costo);
           return { ...element, costoDirecto: data.vCMP * element.cantidad };
         }
-        
+
         return element;
       });
       setInfoPorProducto(info);
@@ -26,13 +25,12 @@ function DiaResumentStats({ ventasRecepies }) {
     } catch (error) {
       console.error("Error in DiaResumentStats useEffect:", error);
     }
-  }, []);
+  }, [ventasRecepies, allRecetasMenu]);
 
   const totalCostoDirecto = infoPorProducto.reduce((acc, producto) => acc + (producto.costoDirecto || 0), 0);
 
   return (
     <div className="">
-      {/* <h2>DiaResumentStats</h2> */}
       <p>Total Costos Directo: {totalCostoDirecto}</p>
       {/* Render additional details if needed */}
     </div>
