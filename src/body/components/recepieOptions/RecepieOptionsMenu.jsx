@@ -129,8 +129,8 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   };
 
   const calculateTotalIngredientes = (items) => {
-    DESAYUNO
-  const resultad = recetaMariaPaula(items , DESAYUNO)
+    
+  const resultad = recetaMariaPaula(items , product.GRUPO);
 
 
 

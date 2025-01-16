@@ -30,6 +30,7 @@ export  function recetaMariaPaula(
 ) {
 let porcentajeCostoDirecto;
 
+console.log(currentType);
 
 
 
@@ -56,7 +57,7 @@ switch (currentType) {
       porcentajeCostoDirecto = 0.25;
       break;
     case BEBIDAS:
-      porcentajeCostoDirecto = 0.55;
+      porcentajeCostoDirecto = 0.40;
       break;
     case CONDIMENTOS_ESPECIAS_ADITIVOS:
       porcentajeCostoDirecto = 0.60;
