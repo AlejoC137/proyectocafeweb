@@ -233,7 +233,8 @@ export function CardInstanceInventario({ product, currentType }) {
                 </label> */}
 
             <div className="flex gap-4">
-              {currentType !== ProduccionInterna && (
+              {/* {currentType !== ProduccionInterna && (
+              )} */}
                 <label className="text-sm text-gray-700 flex-1">
                   Cantidad:
                   <input
@@ -244,7 +245,6 @@ export function CardInstanceInventario({ product, currentType }) {
                     className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                   />
                 </label>
-              )}
               <label className="text-sm text-gray-700 flex-1">
                 Unidades:
                 <select
@@ -266,7 +266,7 @@ export function CardInstanceInventario({ product, currentType }) {
             </div>
 
             <div className="flex gap-4">
-              {currentType !== ProduccionInterna && (
+              {/* {currentType !== ProduccionInterna && ( */}
                 <label className="text-sm text-gray-700 flex-1">
                   Costo:
                   <input
@@ -277,7 +277,7 @@ export function CardInstanceInventario({ product, currentType }) {
                     className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                   />
                 </label>
-              )}
+              {/* // )} */}
               <label className="text-sm text-gray-700 flex-1">
                 Grupo:
                 <select
