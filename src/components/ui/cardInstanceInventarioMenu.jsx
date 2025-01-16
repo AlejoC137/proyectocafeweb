@@ -77,7 +77,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   return (
     <div className="border p-4 rounded-md shadow-md">
 <div className="flex">
-      <h3 className="text-lg font-bold">{`${product.NombreEN } -`}</h3>
+      <h3 className="text-lg font-bold">{`${product.NombreES } -`}</h3>
       <h2 className="text-lg font-bold">- {product.Precio} </h2>
                 
   </div>
