@@ -20,21 +20,23 @@ import { CARNICO,
 export  function recetaMariaPaula(
   ingredientes,
   currentType,
+  porcentajeCostoDirectoEdit,
   id,
   source,
   porciones = 1,
   indiceInflacionario = 0.08,
   impoconsumo = 0.08,
   aplicarIVA = 0.05,
-  // porcentajeCostoDirecto = 0.41,
 ) {
 let porcentajeCostoDirecto;
 
 console.log(currentType);
+ if (porcentajeCostoDirectoEdit) {
+  porcentajeCostoDirecto = porcentajeCostoDirectoEdit;
+  // console.log("porcentajeCostoDirectoEdit", porcentajeCostoDirectoEdit);
+ } else {
 
-
-
-switch (currentType) {
+  switch (currentType) {
   
     
     
@@ -45,7 +47,7 @@ switch (currentType) {
       porcentajeCostoDirecto = 0.35;
       break;
     case CAFE:
-      porcentajeCostoDirecto = 0.50;
+      porcentajeCostoDirecto = 0.35;
       break;
     case PANADERIA:
       porcentajeCostoDirecto = 0.30;
@@ -89,11 +91,18 @@ switch (currentType) {
 
 
       default:
-    porcentajeCostoDirecto = 0.41;
+    porcentajeCostoDirecto = 0.35;
     
 
     break;
 }
+
+ }
+
+
+
+
+
 
   try {
     // Inicializar la suma total

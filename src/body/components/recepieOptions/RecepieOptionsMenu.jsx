@@ -22,6 +22,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
   const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
   const [costoDirecto, setCostoDirecto] = useState(); // State to manage active tab
+  const [editvCMP, setEditvCMP] = useState(); // State to manage active tab
 
   useEffect(() => {
     
@@ -30,7 +31,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
       loadRecepie('Recetas');
     } 
    
-  }, [Receta, dispatch]);
+  }, [Receta, dispatch, editvCMP]);
 
   const loadRecepie = async (source) => {
     const recepieData = await getRecepie(Receta._id, source);
@@ -52,6 +53,14 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     if (showEdit) {
       setRecetaItems([...recetaItems, { name: "", item_Id: "", cuantity: "", units: "", source: "Items", precioUnitario: 0 }]);
     }
+  };
+  const HandleSetEditvCMP = (e) => {
+
+    console.log(e.target.value);
+    
+    // if (showEdit) {
+      setEditvCMP(e.target.value);
+    // }
   };
 
   const handleIngredientChange = (index, value, source) => {
@@ -130,7 +139,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
 
   const calculateTotalIngredientes = (items) => {
     
-  const resultad = recetaMariaPaula(items , product.GRUPO);
+  const resultad = recetaMariaPaula(items , product.GRUPO , (editvCMP? `.${editvCMP}` : null) );
 
 
 
@@ -415,7 +424,14 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
               </button>
             )}
           </div>
+
           <div className=" bg-slate-50 flex gap-1">
+          <input 
+
+onChange={HandleSetEditvCMP}
+className="bg-white border-black w-[80px] p-1 border rounded mb-2">
+
+</input>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%CMPi: {CalculoDetalles.pCMPInicial}%</h3>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%CMPr: {CalculoDetalles.pCMPReal}%</h3>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$CMP: {CalculoDetalles.vCMP}$</h3>
@@ -430,6 +446,9 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           )}
         </>
       )}
+
+
+
 
       {activeTab === "proces" && (
         <>
