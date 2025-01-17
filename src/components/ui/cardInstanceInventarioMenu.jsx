@@ -167,6 +167,26 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 
           <div className="flex gap-4">
             <label className="text-sm text-gray-700 flex-1 font-bold">
+              Tipo en Español:
+              <input
+                type="text"
+                name="TipoES"
+                value={editableProduct.TipoES || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Tipo en Inglés:
+              <input
+                type="text"
+                name="TipoEN"
+                value={editableProduct.TipoEN || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
               SubTipo en Español:
               <input
                 type="text"
