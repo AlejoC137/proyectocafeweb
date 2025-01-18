@@ -22,6 +22,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
   const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
   const [costoDirecto, setCostoDirecto] = useState(); // State to manage active tab
+  const [processTime, setProcessTime] = useState(Receta.ProcessTime); // State to manage active tab
   const [editvCMP, setEditvCMP] = useState(); // State to manage active tab
 
   useEffect(() => {
@@ -139,7 +140,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
 
   const calculateTotalIngredientes = (items) => {
     
-  const resultad = recetaMariaPaula(items , product.GRUPO , (editvCMP? `.${editvCMP}` : null) );
+  const resultad = recetaMariaPaula(items , product.GRUPO , (editvCMP? `.${editvCMP}` : null) , processTime);
 
 
 
@@ -150,6 +151,15 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     
   }; 
 
+
+  const handleProcessTimeChange = (e) => {
+    console.log(e.target.value);
+    
+    setProcessTime(e.target.value)
+  }
+
+
+
   const handleSaveReceta = async () => {
     if (showEdit) {
       try {
@@ -157,6 +167,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           _id: Receta ? Receta._id : crypto.randomUUID(),
           legacyName: legacyName || "Sin nombre",
           costo:costoDirecto,
+          ProcessTime:processTime,
           rendimiento: JSON.stringify(rendimiento),
           forId: product._id,
           autor,
@@ -452,19 +463,50 @@ className="bg-white border-black w-[80px] p-1 border rounded mb-2">
 
       {activeTab === "proces" && (
         <>
-          <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Procesos:' : "Editar Procesos:"}</h2>
-          {proces.map((proc, index) => (
-            <div key={index} className="mb-4">
-              <input
+                 <input
                 type="text"
-                placeholder={`Proceso ${index + 1}`}
-                value={proc}
-                onChange={(e) => handleProcesChange(index, e.target.value)}
+                placeholder={`${processTime}`}
+                value={processTime}
+                
+                onChange={handleProcessTimeChange}
                 className="w-full p-2 border rounded bg-slate-50"
                 readOnly={!showEdit}
               />
-            </div>
-          ))}
+          <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Procesos:' : "Editar Procesos:"}</h2>
+          {showEdit && proces.map((proc, index) => (
+  <div key={index} className="mb-4">
+    <textarea
+      placeholder={`Proceso ${index + 1}`}
+      value={proc}
+      onChange={(e) => handleProcesChange(index, e.target.value)}
+      className="w-full p-2 border rounded bg-slate-50 resize-none"
+      rows={3} // Controla el número inicial de líneas visibles
+      readOnly={!showEdit}
+      style={{
+        whiteSpace: 'pre-wrap', // Permite que el texto haga wrap
+        overflowWrap: 'break-word', // Asegura que el texto no desborde
+      }}
+    />
+  </div>
+))}
+{!showEdit && proces.map((proc, index) => (
+  proc && (
+    <div key={index} className="mb-4">
+      <textarea
+        placeholder={`Proceso ${index + 1}`}
+        value={proc}
+        readOnly={!showEdit}
+        className="w-full p-2 border rounded bg-slate-50 resize-none"
+        rows={3}
+        style={{
+          whiteSpace: 'pre-wrap',
+          overflowWrap: 'break-word',
+        }}
+      />
+    </div>
+  )
+))}
+
           {showEdit && (
             <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
               Guardar Procesos
