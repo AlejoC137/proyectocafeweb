@@ -123,7 +123,7 @@ export function recetaMariaPaula(
         pCMPInicial: Number(porcentajeCostoDirecto),
         pCMPReal: Number(pCostoReal.toFixed(2)),
         PPVii: Number(PPVii.toFixed(0)),
-        // Detalle del costo del tiempo
+        costoTiempo:costoTiempo// Detalle del costo del tiempo
       },
     };
   } catch (error) {
