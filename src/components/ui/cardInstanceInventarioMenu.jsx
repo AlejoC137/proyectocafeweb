@@ -12,8 +12,8 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   const groupOptions = CATEGORIES;
   const [book, setBook] = useState("📕");
   // const [book, setBook] = useState("📖");
-  // const [info, setInfo] = useState("📥");
-  const [info, setInfo] = useState("📤");
+  const [info, setInfo] = useState("📥");
+  // const [info, setInfo] = useState("📤");
  
   useEffect(() => {
     const fetchReceta = async () => {

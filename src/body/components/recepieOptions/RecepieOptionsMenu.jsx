@@ -19,10 +19,11 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   const [revisor, setRevisor] = useState("Revisor por defecto");
   const [totalIngredientes, setTotalIngredientes] = useState(0);
   const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
-  const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
+  const [activeTab, setActiveTab] = useState("proces"); // State to manage active tab
+  // const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
   const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
   const [costoDirecto, setCostoDirecto] = useState(); // State to manage active tab
-  const [processTime, setProcessTime] = useState(Receta.ProcessTime); // State to manage active tab
+  const [processTime, setProcessTime] = useState(Receta?.ProcessTime); // State to manage active tab
   const [editvCMP, setEditvCMP] = useState(); // State to manage active tab
 
   useEffect(() => {
