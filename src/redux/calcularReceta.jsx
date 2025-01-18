@@ -17,7 +17,13 @@ import { CARNICO,
 } from "./actions-types";
 
 // Valor fijo por unidad de tiempo
-const COSTO_POR_TIEMPO = 150;
+
+
+const COSTO_POR_TIEMPO_MANODEOBRA = 150;
+const COSTO_POR_TIEMPO_SERVICIOS = 150;
+const COSTO_POR_TIEMPO = COSTO_POR_TIEMPO_SERVICIOS + COSTO_POR_TIEMPO_MANODEOBRA;
+
+
 
 export function recetaMariaPaula(
   ingredientes,
@@ -77,7 +83,7 @@ export function recetaMariaPaula(
 
     // Agregar costo del tiempo
     const costoTiempo = tiempo * COSTO_POR_TIEMPO;
-    total += costoTiempo;
+    // total += costoTiempo;
 
     // Agregar 5% de condimentos
     const condimentos = total * 0.05;
@@ -90,9 +96,10 @@ export function recetaMariaPaula(
     // Calcular el Costo Materia Prima (CMP)
     const CMP = total / porciones;
 
-    const PPV = CMP / porcentajeCostoDirecto;
+    const PPV = CMP / (porcentajeCostoDirecto);
     const PPVii = PPV + PPV * indiceInflacionario;
-    const IB = PPV - CMP;
+    const IB = PPV - CMP - costoTiempo;
+    // const IB = PPV - CMP;
 
     // Agregar impoconsumo
     const impoconsumoValor = PPVii * impoconsumo;
@@ -116,7 +123,7 @@ export function recetaMariaPaula(
         pCMPInicial: Number(porcentajeCostoDirecto),
         pCMPReal: Number(pCostoReal.toFixed(2)),
         PPVii: Number(PPVii.toFixed(0)),
-        costoTiempo, // Detalle del costo del tiempo
+        // Detalle del costo del tiempo
       },
     };
   } catch (error) {
