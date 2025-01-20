@@ -449,7 +449,7 @@ className="bg-white border-black w-[80px] p-1 border rounded mb-2">
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$CMP: {CalculoDetalles.vCMP}$</h3>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$IB: {CalculoDetalles.vIB}</h3>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%IB: {CalculoDetalles.pIB}%</h3>
-            <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$T: {CalculoDetalles.costoTiempo}</h3>
+            {/* <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$T: {CalculoDetalles.costoTiempo}</h3> */}
           </div>
           <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded text-center">$PVF: {totalIngredientes.toFixed(2)}</h3>
           {showEdit && (

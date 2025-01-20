@@ -24,6 +24,15 @@ export function CardInstanceInventario({ product, currentType }) {
     Estado: product.Estado || ESTATUS[0],
     Proveedor: product.Proveedor || "",
   });
+  const [provData, setProvData] = useState({
+    Proveedor_Name:'',
+
+  });
+
+
+
+  
+
   const [buttonState, setButtonState] = useState("save");
   const [book, setBook] = useState("📕");
   const groupOptions = CATEGORIES;
@@ -45,9 +54,11 @@ export function CardInstanceInventario({ product, currentType }) {
         if (product.Proveedor) {
           const result = await getProveedor(product.Proveedor);
           if (result) {
-            setFormData((prev) => ({
+
+            setProvData((prev) => ({
               ...prev,
-              Proveedor: result.Nombre_Proveedor,
+              Proveedor_Name: result.Nombre_Proveedor,
+            
             }));
           }
         }
@@ -55,7 +66,7 @@ export function CardInstanceInventario({ product, currentType }) {
 
       fetchProveedor();
     }
-  }, [product.Proveedor, currentType]);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -320,8 +331,8 @@ console.log(product);
                     onChange={handleInputChange}
                     className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                   >
-                    <option value="" disabled>
-                      {product.Proveedor ? `Actual: ${formData.Proveedor}` : "Selecciona un Proveedor"}
+                    <option value="" >
+                      {product.Proveedor ? `${provData.Proveedor_Name}` : "Selecciona un Proveedor"}
                     </option>
                     {Proveedores.map((proveedor) => (
                       <option key={proveedor._id} value={proveedor._id}>

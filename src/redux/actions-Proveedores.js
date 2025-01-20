@@ -7,15 +7,11 @@ import {
   UPDATE_SELECTED_VALUE,
   INSERT_RECETAS_SUCCESS,
   INSERT_RECETAS_FAILURE,
-  INSERT_ITEM_FAILURE ,
   SET_PREPROCESS_DATA,
   SCRAP,
-  ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
-  ProduccionInterna,
   RESET_EXPANDED_GROUPS,
   SET_SELECTED_PROVIDER_ID, // Importar la acción
-  MenuItems
   
 } from "./actions-types";
 
@@ -421,32 +417,77 @@ export function calcularPrecioUnitario(item) {
 
 
 
-export function copiarAlPortapapeles(items, estado , ) {
+
+export function copiarAlPortapapeles(items, estado, ordenador, source) {
   return async () => {
     try {
+      if (!source || source.length === 0) {
+        alert(`No se encontró información en la fuente especificada.`);
+        return;
+      }
+
       // Filtrar los elementos que coincidan con el estado
-      const elementosFiltrados = items.filter((item) => item.Estado === estado);
+      let elementosFiltrados = items.filter((item) => item.Estado === estado);
 
       if (elementosFiltrados.length === 0) {
         alert(`No se encontraron elementos con el estado "${estado}".`);
         return;
       }
 
-      // Crear una representación en texto de los elementos
-      const textoParaCopiar = elementosFiltrados
-        .map((item) => `- ${item.Nombre_del_producto}: ${item.CANTIDAD} ${item.UNIDADES}`)
-        .join("\n");
+      // Ordenar los elementos si se proporciona un criterio de ordenación
+      if (ordenador) {
+        elementosFiltrados = elementosFiltrados.sort((a, b) => {
+          if (a[ordenador] < b[ordenador]) return -1;
+          if (a[ordenador] > b[ordenador]) return 1;
+          return 0;
+        });
+      }
+
+      // Agrupar los elementos por la propiedad del ordenador
+      const elementosAgrupados = elementosFiltrados.reduce((grupos, item) => {
+        const key = item[ordenador] || "Sin especificar";
+        if (!grupos[key]) {
+          grupos[key] = [];
+        }
+        grupos[key].push(item);
+        return grupos;
+      }, {});
+
+      // Crear una representación en texto de los elementos agrupados
+      const textoParaCopiar = Object.entries(elementosAgrupados)
+        .map(([categoriaId, items]) => {
+          // Buscar la categoría en la fuente por ID
+          const categoriaData = source.find((entry) => entry._id === categoriaId);
+          const categoria = categoriaData ? categoriaData.Nombre_Proveedor : "Sin especificar";
+          const contacto = categoriaData ? categoriaData.Contacto_Nombre : "N/A";
+          const nit = categoriaData ? categoriaData["NIT/CC"] : "N/A";
+          const direccion = categoriaData ? categoriaData.Direccion : "N/A";
+
+          const productos = items
+            .map(
+              (item) => `- ${item.Nombre_del_producto}: ${item.CANTIDAD} ${item.UNIDADES}`
+            )
+            .join("\n");
+          return `${ordenador} ${categoria}\nContacto: ${contacto}\nNIT/CC: ${nit}\nDirección: ${direccion}\n${productos}`;
+        })
+        .join("\n\n");
 
       // Copiar al portapapeles
       await navigator.clipboard.writeText(textoParaCopiar);
 
-      alert(`Se han copiado ${elementosFiltrados.length} elementos con estado "${estado}" al portapapeles.`);
+      alert(
+        `Se han copiado ${elementosFiltrados.length} elementos con estado "${estado}" al portapapeles.`
+      );
     } catch (error) {
       console.error("Error al copiar al portapapeles:", error);
       alert("Hubo un error al copiar al portapapeles.");
     }
   };
 }
+
+
+
+
 
 export function crearItem(itemData, type, forId) {
   return async (dispatch) => {

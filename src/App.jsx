@@ -23,6 +23,8 @@ import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import DiaResumen from './body/views/ventaCompra/DiaResumen';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
 
+
+// import CalculoNomina from './body/views/CalculoNomina/CalculoNomina.jsx';
 // import { Home } from 'lucide-react';
 function App() {
   // Selecciona el estado global que controla la vista actual
@@ -70,6 +72,7 @@ function App() {
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
+     {/* <Route path="/CalculoNomina" element={<CalculoNomina />} /> */}
         {/* Renderiza el componente que corresponde a la vista actual */}
 
 

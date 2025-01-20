@@ -33,7 +33,7 @@ function AccionesRapidas({ currentType }) {
   };
 
   const handleCopiarPendientes = (type) => {
-    dispatch(copiarAlPortapapeles(type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP"));
+    dispatch(copiarAlPortapapeles( type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP" , "Proveedor" , allProveedores ));
   };
 
   const [formVisible, setFormVisible] = useState(false);
