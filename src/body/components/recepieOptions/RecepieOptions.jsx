@@ -19,6 +19,7 @@ function RecepieOptions({ product, Receta }) {
   const [totalIngredientes, setTotalIngredientes] = useState(0);
   const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
   const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
+  const [processTime, setProcessTime] = useState(Receta?.ProcessTime); // State to manage process time
 
   useEffect(() => {
     if (Receta) {
@@ -37,6 +38,7 @@ function RecepieOptions({ product, Receta }) {
       setAutor(recepieData.autor || "Autor por defecto");
       setRevisor(recepieData.revisor || "Revisor por defecto");
       setProces(Array.from({ length: 20 }, (_, i) => recepieData[`proces${i + 1}`] || ""));
+      setProcessTime(recepieData.ProcessTime || "");
       calculateTotalIngredientes(trimmedRecepie);
     }
   };
@@ -73,59 +75,17 @@ function RecepieOptions({ product, Receta }) {
     }
   };
 
-  const findPrecioUnitario = (itemId) => {
-    const matchedItem = allOptions.find(option => option._id === itemId);
-    return matchedItem ? matchedItem.precioUnitario : 0;
-  };
-
-  // const handleRemoveIngredient = async (index, source) => {
-  //   if (showEdit) {
-  //     const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
-  //     if (confirmRemove) {
-  //       const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-  //       updatedItems.splice(index, 1);
-  //       updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
-  //       source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
-
-  //       let preFix = source === 'Items' ? 'item' : 'producto_interno';
-  //       await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "RecetasProduccion"));
-  //       calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
-  //     }
-  //   }
-  // };
-
-    const handleRemoveIngredient = async (index, source, itemKey) => {
-  
-  
-  
-        const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
-  
-  
-      if (showEdit) {
-        const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
-        if (confirmRemove) {
-          
-          const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-          
-          
-          // updatedItems.splice(index, 1);
-  
-  
-  
-  
-  
-  
-          // updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
-          // source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
-  
-          // let preFix = source === 'Items' ? 'item' : 'producto_interno';
-          await dispatch(updateItem(Receta._id, { [itemKey]: null, [cuantityKey]: null }, "RecetasProduccion"));
-          
-          // // await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "Recetas"));
-          calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
-        }
+  const handleRemoveIngredient = async (index, source, itemKey) => {
+    const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
+    if (showEdit) {
+      const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
+      if (confirmRemove) {
+        const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+        await dispatch(updateItem(Receta._id, { [itemKey]: null, [cuantityKey]: null }, "RecetasProduccion"));
+        calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
       }
-    };
+    }
+  };
 
   const handleCuantityChange = (index, value, source) => {
     if (showEdit) {
@@ -144,8 +104,6 @@ function RecepieOptions({ product, Receta }) {
     const total = items.reduce((acc, item) => {
       return acc + (item.precioUnitario * item.cuantity || 0);
     }, 0);
-
-
     setTotalIngredientes(total);
   };
 
@@ -159,13 +117,13 @@ function RecepieOptions({ product, Receta }) {
           autor,
           UNIDADES: rendimiento.unidades,
           revisor,
-          precioUnitario: totalIngredientes/rendimiento,
+          precioUnitario: totalIngredientes / rendimiento,
           actualizacion: new Date().toISOString(),
+          ProcessTime: processTime,
           ...mapItemsToPayload(recetaItems),
           ...mapItemsToPayload(productoInternoItems),
           ...mapProcesToPayload(proces),
         };
-
 
         if (Receta) {
           // Update existing recipe
@@ -207,14 +165,16 @@ function RecepieOptions({ product, Receta }) {
     return payload;
   };
 
-
-
   const handleProcesChange = (index, value) => {
     if (showEdit) {
       const updatedProces = [...proces];
       updatedProces[index] = value;
       setProces(updatedProces);
     }
+  };
+
+  const handleProcessTimeChange = (e) => {
+    setProcessTime(e.target.value);
   };
 
   return (
@@ -287,7 +247,7 @@ function RecepieOptions({ product, Receta }) {
                   />
                   {showEdit && (
                     <button
-                      onClick={() => handleRemoveIngredient(index, 'Items' , item.key)}
+                      onClick={() => handleRemoveIngredient(index, 'Items', item.key)}
                       className="px-2 py-1 bg-red-500 text-white rounded"
                     >
                       X
@@ -426,18 +386,47 @@ function RecepieOptions({ product, Receta }) {
 
       {activeTab === "proces" && (
         <>
+          <input
+            type="text"
+            placeholder={`${processTime}`}
+            value={processTime}
+            onChange={handleProcessTimeChange}
+            className="w-full p-2 border rounded bg-slate-50"
+            readOnly={!showEdit}
+          />
           <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Procesos:' : "Editar Procesos:"}</h2>
-          {proces.map((proc, index) => (
+          {showEdit && proces.map((proc, index) => (
             <div key={index} className="mb-4">
-              <input
-                type="text"
+              <textarea
                 placeholder={`Proceso ${index + 1}`}
                 value={proc}
                 onChange={(e) => handleProcesChange(index, e.target.value)}
-                className="w-full p-2 border rounded bg-slate-50"
+                className="w-full p-2 border rounded bg-slate-50 resize-none"
+                rows={3}
                 readOnly={!showEdit}
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'break-word',
+                }}
               />
             </div>
+          ))}
+          {!showEdit && proces.map((proc, index) => (
+            proc && (
+              <div key={index} className="mb-4">
+                <textarea
+                  placeholder={`Proceso ${index + 1}`}
+                  value={proc}
+                  readOnly={!showEdit}
+                  className="w-full p-2 border rounded bg-slate-50 resize-none"
+                  rows={3}
+                  style={{
+                    whiteSpace: 'pre-wrap',
+                    overflowWrap: 'break-word',
+                  }}
+                />
+              </div>
+            )
           ))}
           {showEdit && (
             <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
