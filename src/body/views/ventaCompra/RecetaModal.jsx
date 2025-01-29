@@ -47,12 +47,21 @@ function RecetaModal() {
             setFoto(plato.Foto);
             
           } else {
-            setError("No se pudo encontrar la receta.");
+            throw new Error("No se encontró en Recetas");
           }
         } catch (err) {
-          setError("Error al obtener la receta.");
-        } finally {
-          setLoading(false);
+          try {
+            const result = await getRecepie(id, "RecetasProduccion");
+            if (result) {
+              setReceta(result);
+            } else {
+              throw new Error("No se encontró en RecetasProduccion");
+            }
+          } catch (err) {
+            setError("Error al obtener la receta.");
+          } finally {
+            setLoading(false);
+          }
         }
       } else {
         setError("El ítem no tiene una receta asociada.");
