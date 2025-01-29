@@ -142,11 +142,16 @@ function RecepieOptions({ product, Receta }) {
     }
   };
 
+
+
+  
   const mapItemsToPayload = (items) => {
     const payload = {};
-    items.forEach((item, index) => {
-      const idx = index + 1;
+    let itemCounter = 1;
+    let produccionCounter = 1;
+    items.forEach((item) => {
       const keyPrefix = testIngridient(item.item_Id);
+      const idx = keyPrefix === 'item' ? itemCounter++ : produccionCounter++;
       payload[`${keyPrefix}${idx}_Id`] = item.item_Id || null;
       payload[`${keyPrefix}${idx}_Cuantity_Units`] = item.item_Id
         ? JSON.stringify({
@@ -237,6 +242,7 @@ function RecepieOptions({ product, Receta }) {
             {recetaItems.map((item, index) => (
               <div key={index} className="flex flex-col mb-2 bg-slate-50">
                 <div className="flex items-center gap-2">
+                {item.key}
                   <input
                     type="text"
                     placeholder="Buscar ingrediente"

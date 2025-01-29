@@ -203,9 +203,11 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
 
   const mapItemsToPayload = (items) => {
     const payload = {};
-    items.forEach((item, index) => {
-      const idx = index + 1;
+    let itemCounter = 1;
+    let produccionCounter = 1;
+    items.forEach((item) => {
       const keyPrefix = testIngridient(item.item_Id);
+      const idx = keyPrefix === 'item' ? itemCounter++ : produccionCounter++;
       payload[`${keyPrefix}${idx}_Id`] = item.item_Id || null;
       payload[`${keyPrefix}${idx}_Cuantity_Units`] = item.item_Id
         ? JSON.stringify({
