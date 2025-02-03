@@ -246,8 +246,8 @@ function DiaResumen() {
           </p>
           <p className="text-lg text-gray-700">
             <span className="font-medium">Total Pagado con Tarjeta: </span>
-            <span className="text-red-600 font-bold">{(totalTarjeta-(totalTarjeta*0.03))}$</span>
-            <span className="text-red-600 font-bold"> {'(-3% RDB)'}</span>
+            <span className="text-pink-600 font-bold">{(totalTarjeta-(totalTarjeta*0.03))}$</span>
+            <span className="text-pink-600 font-bold"> {'(-3% RDB)'}</span>
           </p>
           <p className="text-lg text-gray-700">
             <span className="font-medium">Total Pagado en Efectivo: </span>
@@ -256,6 +256,10 @@ function DiaResumen() {
           <p className="text-lg text-gray-700">
             <span className="font-medium">Total Pagado por Transferencia: </span>
             <span className="text-blue-600 font-bold">{totalTransferencia}$</span>
+          </p>
+          <p className="text-lg text-gray-700">
+            <span className="font-medium">Total Ipo Consumo: </span>
+            <span className="text-red-600 font-bold"> {totalIngreso*0.08}$</span>
           </p>
         </div>
       </div>

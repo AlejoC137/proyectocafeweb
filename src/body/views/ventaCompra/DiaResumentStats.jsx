@@ -28,10 +28,12 @@ function DiaResumentStats({ ventasRecepies }) {
   }, [ventasRecepies, allRecetasMenu]);
 
   const totalCostoDirecto = infoPorProducto.reduce((acc, producto) => acc + (producto.costoDirecto || 0), 0);
+console.log(ventasRecepies);
 
   return (
     <div className="">
       <p>Total Costos Directo: {totalCostoDirecto}</p>
+      {/* <p>Total Costos Directo: {infoPorProducto}</p> */}
       {/* Render additional details if needed */}
     </div>
   );
