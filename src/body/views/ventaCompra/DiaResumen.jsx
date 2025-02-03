@@ -16,6 +16,9 @@ function DiaResumen() {
   const [productosVendidos, setProductosVendidos] = useState([]);
   const [recetas, setRecetas] = useState([]);
   const [hoy, setHoy] = useState(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]);
+  const [totalTarjeta, setTotalTarjeta] = useState(0);
+  const [totalEfectivo, setTotalEfectivo] = useState(0);
+  const [totalTransferencia, setTotalTransferencia] = useState(0);
   // const [hoy, setHoy] = useState('2/1/2025');
   const allMenu = useSelector((state) => state.allMenu);
   const allItems = useSelector((state) => state.allItems);
@@ -54,8 +57,6 @@ function DiaResumen() {
         } else {
           const productosRecetas = [];
 
-
-
           data.forEach((venta) => {
             if (venta.Productos) {
               const productos = JSON.parse(venta.Productos);
@@ -68,7 +69,7 @@ function DiaResumen() {
           });
 
           const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === hoy );
-          console.log(ventasHoy);
+          // console.log(ventasHoy);
 
           // Ordenar las ventas por fecha y hora
           ventasHoy.sort((a, b) => new Date(a.Date) - new Date(b.Date));
@@ -86,6 +87,46 @@ function DiaResumen() {
             .filter((venta) => venta.Pagado === true)
             .reduce((acc, venta) => acc + parseFloat(venta.Tip || 0), 0);
           setTotalTip(totalTip);
+
+          // Calculate total payments by method
+          let tarjeta = 0;
+          let efectivo = 0;
+          let transferencia = 0;
+
+          ventasHoy.forEach((venta) => {
+            if (venta.Pago_Info) {
+              let pagos;
+              try {
+                pagos = JSON.parse(venta.Pago_Info);
+              } catch (e) {
+                console.error("Error parsing Pago_Info:", e);
+                return;
+              }
+              // console.log(pagos.metodo);
+
+              // if (Array.isArray(pagos)) {
+                // pagos.forEach((pago) => {
+                  if (pagos.metodo === "Tarjeta") {
+                    tarjeta += parseFloat(venta.Total_Ingreso || 0);
+                  } if (pagos.metodo === "Efectivo") {
+                    efectivo += parseFloat(venta.Total_Ingreso || 0);
+                  }  
+                  if (pagos.metodo === "Transferencia") {
+             
+                    
+                    transferencia += parseFloat(venta.Total_Ingreso || 0);
+                  }
+                  // console.log(transferencia);
+                  
+               
+                // });
+              }
+            // }
+          });
+
+          setTotalTarjeta(tarjeta);
+          setTotalEfectivo(efectivo);
+          setTotalTransferencia(transferencia);
 
           // Calcular productos vendidos
           const productosMap = {};
@@ -135,10 +176,6 @@ function DiaResumen() {
         setLoading(false);
       }
     };
-
-
-
-
 
     fetchData();
     const calculateRecipeValues = async () => {
@@ -207,6 +244,19 @@ function DiaResumen() {
             <span className="font-medium">Total Productos Vendidos: </span>
             <span className="text-purple-600 font-bold">{totalProductosVendidos}</span>
           </p>
+          <p className="text-lg text-gray-700">
+            <span className="font-medium">Total Pagado con Tarjeta: </span>
+            <span className="text-red-600 font-bold">{(totalTarjeta-(totalTarjeta*0.03))}$</span>
+            <span className="text-red-600 font-bold"> {'(-3% RDB)'}</span>
+          </p>
+          <p className="text-lg text-gray-700">
+            <span className="font-medium">Total Pagado en Efectivo: </span>
+            <span className="text-yellow-600 font-bold">{totalEfectivo}$</span>
+          </p>
+          <p className="text-lg text-gray-700">
+            <span className="font-medium">Total Pagado por Transferencia: </span>
+            <span className="text-blue-600 font-bold">{totalTransferencia}$</span>
+          </p>
         </div>
       </div>
 
@@ -237,6 +287,9 @@ function DiaResumen() {
                   </th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Fecha y Hora
+                  </th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                    Método de Pago
                   </th>
                 </tr>
               </thead>
@@ -269,6 +322,20 @@ function DiaResumen() {
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
                       {new Date(venta.Date).toLocaleString("en-US", { timeZone: "America/Bogota" })}
+                    </td>
+                    <td className="py-3 px-4 border-b text-sm text-gray-700">
+                      {venta.Pago_Info && (() => {
+                        let pagos;
+                        try {
+                          pagos = JSON.parse(venta.Pago_Info);
+                        } catch (e) {
+                          console.error("Error parsing Pago_Info:", e);
+                          return null;
+                        }
+                        return pagos ? 
+                          <div >{pagos.metodo}$</div>
+                         : null;
+                      })()}
                     </td>
                   </tr>
                 ))}
