@@ -16,30 +16,24 @@ function DiaResumen() {
   const [productosVendidos, setProductosVendidos] = useState([]);
   const [recetas, setRecetas] = useState([]);
   const [hoy, setHoy] = useState(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]);
+  // const [hoy, setHoy] = useState('2/1/2025');
   const allMenu = useSelector((state) => state.allMenu);
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const allProduccion = useSelector((state) => state.allProduccion);
 
   const handleDateChange = (e) => {
-    const date = e.target.value
-    const dateList = date.split("-")
+    const date = e.target.value;
+    const dateList = date.split("-");
+
+    // Remove leading zeros from month and day
+    dateList[1] = dateList[1].replace(/^0+/, '');
+    dateList[2] = dateList[2].replace(/^0+/, '');
 
     let formattedDate = `${dateList[1]}/${dateList[2]}/${dateList[0]}`;
-    
-    if (formattedDate[0] === '0') {
-      formattedDate = formattedDate.slice(1);
-    }
-
-    setHoy(formattedDate)
-    console.log(formattedDate); // Output: "01/16/2025"
-    
-
-
-new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
 
     setHoy(formattedDate);
-    // console.log(formattedDate);
+    console.log(formattedDate); // Output: "2/3/2025"
   };
 
   useEffect(() => {
@@ -60,6 +54,8 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
         } else {
           const productosRecetas = [];
 
+
+
           data.forEach((venta) => {
             if (venta.Productos) {
               const productos = JSON.parse(venta.Productos);
@@ -72,6 +68,7 @@ new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]
           });
 
           const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === hoy );
+          console.log(ventasHoy);
 
           // Ordenar las ventas por fecha y hora
           ventasHoy.sort((a, b) => new Date(a.Date) - new Date(b.Date));
