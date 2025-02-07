@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { MENU, RECETAS_MENU } from "../../../redux/actions-types";
+import { MENU, PROVEE, RECETAS_MENU } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
@@ -46,6 +46,8 @@ function DiaResumen() {
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(RECETAS_MENU)),
         ]);
+
+        
 
         const { data, error } = await supabase
           .from("Ventas")

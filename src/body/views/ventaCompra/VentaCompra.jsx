@@ -3,9 +3,14 @@ import { useDispatch } from "react-redux";
 import Mesa from "./Mesa";
 import MesaBarra from "./MesaBarra";
 import Pagar from "./Pagar";
-import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
+import { MENU, ITEMS, PRODUCCION , PROVEE} from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
+import Gastos from "../../components/Gastos/Gastos";
+import { crearCompra } from "../../../redux/actions-VentasCompras";
+
+
+
 
 function VentaCompra() {
   const dispatch = useDispatch();
@@ -14,7 +19,10 @@ function VentaCompra() {
   const [showPagarModal, setShowPagarModal] = useState(false);
   const [ventaId, setVentaId] = useState(null);
   const [totalPago, setTotalPago] = useState(null);
+  const [showGastos, setShowGastos] = useState(false);
 
+
+  
   // Fetch ventas from Supabase
   const fetchVentas = async () => {
     try {
@@ -42,6 +50,7 @@ function VentaCompra() {
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
+          dispatch(getAllFromTable(PROVEE)),
         ]);
 
         await fetchVentas();
@@ -53,7 +62,8 @@ function VentaCompra() {
     };
 
     fetchData();
-  }, [dispatch]);
+  // }, [dispatch]);
+  }, []);
 
   // Reload ventas after updates
   const reloadVentas = async () => {
@@ -81,19 +91,28 @@ function VentaCompra() {
   return (
     <div className="bg-gray-100 h-[calc(100vh-8rem)] w-full overflow-auto">
       {/* MesaBarra ocupa toda la primera columna */}
-      <div className="col-span-1 pl-1 pr-1 pt-1">
-        <MesaBarra
-          key="mesa-barra"
-          index={0}
-          ventas={ventas}
-          reloadVentas={reloadVentas}
-          onPagar={handlePagar}
-        />
+      <div className="col-span-2 pl-1 pr-1 pt-1 flex">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-4"
+          onClick={() => setShowGastos(!showGastos)}
+        >
+          {showGastos ? "Formato de Compra" : "Compra "}
+        </button>
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-4"
+          onClick={() => handleActualizar()}
+        >
+          {"Actualizar"}
+        </button>
+
       </div>
+      {showGastos && <Gastos />}
+
+
 
       <div className="gap-1 p-1">
         {/* Las demás mesas ocupan las columnas restantes */}
-        <div className="col-span-3 grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
           {[...Array(6)].map((_, index) => (
             <Mesa
               key={`mesa-${index + 1}`}
