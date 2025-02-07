@@ -40,8 +40,8 @@ function Mesa({ index, ventas, reloadVentas }) {
       setIsMesaInUse(true);
       setVentaId(existingVenta._id); // Almacenar el ID de la venta existente
     }
-  }, []);
-  // }, [ventas, index]);
+  // }, []);
+  }, [ventas, index]);
 
   useEffect(() => {
     const total = orderItems.reduce((acc, item) => acc + (item.Precio * item.quantity), 0);

@@ -62,8 +62,8 @@ function VentaCompra() {
     };
 
     fetchData();
-  // }, [dispatch]);
-  }, []);
+  }, [dispatch]);
+  // }, []);
 
   // Reload ventas after updates
   const reloadVentas = async () => {
