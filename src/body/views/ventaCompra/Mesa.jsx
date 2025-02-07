@@ -42,7 +42,7 @@ function Mesa({ index, ventas, reloadVentas }) {
     }
   // }, []);
   }, [ventas, index]);
-//2
+
   useEffect(() => {
     const total = orderItems.reduce((acc, item) => acc + (item.Precio * item.quantity), 0);
     const totalWithTip = (parseFloat(total) + parseFloat(formData.Tip || 0)).toFixed(0);
