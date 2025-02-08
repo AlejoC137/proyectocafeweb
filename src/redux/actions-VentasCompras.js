@@ -92,44 +92,44 @@
 //   };
 // }
 
-// export function crearCompra(compraData) {
-//   console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
+export function crearCompra(compraData) {
+  console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
   
-//   return async (dispatch) => {
-//     try {
-//       // Generar un objeto base con UUID
-//       const nuevaCompra = {
-//         _id: uuidv4(),
-//         ...compraData,
-//         // Date: new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }), // Fecha y hora actual
-//         // Mesa: ventaData.Mesa, // Agregar el campo Mesa
-//       };
+  return async (dispatch) => {
+    try {
+      // Generar un objeto base con UUID
+      const nuevaCompra = {
+        _id: uuidv4(),
+        ...compraData,
+        // Date: new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }), // Fecha y hora actual
+        // Mesa: ventaData.Mesa, // Agregar el campo Mesa
+      };
 
-//       // Insertar la nueva venta en Supabase
-//       const { data, error } = await supabase
-//         .from("Compras")
-//         .insert([nuevaCompra])
-//         .select();
+      // Insertar la nueva venta en Supabase
+      const { data, error } = await supabase
+        .from("Compras")
+        .insert([nuevaCompra])
+        .select();
 
-//       if (error) {
-//         console.error("Error al crear la compra:", error);
-//         throw new Error("No se pudo crear la venta");
-//       }
+      if (error) {
+        console.error("Error al crear la compra:", error);
+        throw new Error("No se pudo crear la venta");
+      }
 
-//       // Despachar la acción para actualizar el estado global
-//       dispatch({
-//         type: "CREAR_COMPRA_SUCCESS",
-//         payload: data[0], // La nueva venta creada
-//       });
+      // Despachar la acción para actualizar el estado global
+      dispatch({
+        type: "CREAR_COMPRA_SUCCESS",
+        payload: data[0], // La nueva venta creada
+      });
 
-//       console.log("Venta creada correctamente:", data[0]);
-//       return data[0];
-//     } catch (error) {
-//       console.error("Error en la acción crearVenta:", error);
-//       throw error;
-//     }
-//   };
-// }
+      console.log("Venta creada correctamente:", data[0]);
+      return data[0];
+    } catch (error) {
+      console.error("Error en la acción crearVenta:", error);
+      throw error;
+    }
+  };
+}
 
 // export function actualizarVenta(ventaId, updatedFields) {
 //   return async (dispatch) => {
