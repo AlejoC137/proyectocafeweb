@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import Mesa from "./Mesa";
-import MesaBarra from "./MesaBarra";
-import Pagar from "./Pagar";
-import { MENU, ITEMS, PRODUCCION , PROVEE} from "../../../redux/actions-types";
-import { getAllFromTable } from "../../../redux/actions";
-import supabase from "../../../config/supabaseClient";
-import Gastos from "../../components/Gastos/Gastos";
-import { crearCompra } from "../../../redux/actions-VentasCompras";
+import Mesa from "./Mesa.jsx";
+import MesaBarra from "./MesaBarra.jsx";
+import Pagar from "./Pagar.jsx";
+import { MENU, ITEMS, PRODUCCION , PROVEE} from "../../../redux/actions-types.js";
+import { getAllFromTable } from "../../../redux/actions.js";
+import supabase from "../../../config/supabaseClient.js";
+import Gastos from "../../components/Gastos/Gastos.jsx";
+import { crearCompra } from "../../../redux/actions-VentasCompras.js";
 
 function VentaCompra() {
 const dispatch = useDispatch();
