@@ -133,7 +133,7 @@ import Pagar from "./Pagar";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
-import Gastos from "../../components/Gastos/Gastos";
+import Gastos from "../../components/gastos/Gastos";
 
 function VentaCompra() {
   const dispatch = useDispatch();
@@ -208,7 +208,7 @@ function VentaCompra() {
 
   return (
     <div className="bg-gray-100 h-[calc(100vh-8rem)] w-full overflow-auto">
-      <Gastos>su</Gastos>
+      <Gastos></Gastos>
       {/* MesaBarra ocupa toda la primera columna */}
       <div className="col-span-1 pl-1 pr-1 pt-1">
         <MesaBarra
