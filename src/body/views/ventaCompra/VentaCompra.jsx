@@ -5,7 +5,7 @@ import MesaBarra from "./MesaBarra";
 import Pagar from "./Pagar";
 // import Gastos from "./Gastos"; // Import Gastos component
 import Gastos from "../../components/gastos/Gastos";
-import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
+import { MENU, ITEMS, PRODUCCION, PROVEE } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 
@@ -46,6 +46,7 @@ function VentaCompra() {
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
+          dispatch(getAllFromTable(PROVEE)),
         ]);
 
         await fetchVentas();

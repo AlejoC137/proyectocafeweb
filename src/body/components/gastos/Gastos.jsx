@@ -19,6 +19,7 @@ function Gastos() {
   const [Categoria, setCategoria] = useState("");
   const [linkDocSoporte, setLinkDocSoporte] = useState("");
   const [Proveedor_Id, setProveedorId] = useState("");
+  const [Concepto, setConcepto] = useState("");
 
   // Función para manejar el envío del formulario
   const handleSubmit = async (e) => {
@@ -35,6 +36,7 @@ function Gastos() {
       Categoria,
       linkDocSoporte,
       Proveedor_Id,
+      Concepto
     };
 
     try {
@@ -180,6 +182,23 @@ function Gastos() {
               <option value="MESAS">MESAS</option>
               <option value="JARDINERIA">JARDINERIA</option>
               <option value="TIENDA">TIENDA</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Concepto:</label>
+            <select
+              value={Concepto}
+              onChange={(e) => setConcepto(e.target.value)}
+              className="w-full p-2 border bg-white rounded"
+              required
+            >
+              <option value="">Seleccione...</option>
+              <option value="NOMINA">NOMINA</option>
+              <option value="INSUMOS">INSUMOS</option>
+              <option value="SITIO">SITIO</option>
+              <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+              <option value="SERVICIOS">SERVICIO_EXT</option>
+
             </select>
           </div>
 
