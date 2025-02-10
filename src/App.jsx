@@ -22,6 +22,7 @@ import Inventario from './body/views/inventario/Inventario';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import DiaResumen from './body/views/ventaCompra/DiaResumen';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
+import Gastos from './body/components/gastos/Gastos';
 
 
 // import CalculoNomina from './body/views/CalculoNomina/CalculoNomina.jsx';
@@ -69,6 +70,7 @@ function App() {
      <Route path="/Scraper" element={<Scraper />} />
      <Route path="/Inventario" element={<Inventario />} />
      <Route path="/VentaCompra" element={<VentaCompra />} />
+     <Route path="/Gastos" element={<Gastos />} />
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
