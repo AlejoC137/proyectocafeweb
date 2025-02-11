@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { MENU, PROVEE, RECETAS_MENU } from "../../../redux/actions-types";
+import { COMPRAS, MENU, PROVEE, RECETAS_MENU } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
@@ -19,11 +19,12 @@ function DiaResumen() {
   const [totalTarjeta, setTotalTarjeta] = useState(0);
   const [totalEfectivo, setTotalEfectivo] = useState(0);
   const [totalTransferencia, setTotalTransferencia] = useState(0);
-  // const [hoy, setHoy] = useState('2/1/2025');
+  
   const allMenu = useSelector((state) => state.allMenu);
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const allProduccion = useSelector((state) => state.allProduccion);
+  const allCompras = useSelector((state) => state.Compras); // Fetch Compras from Redux
 
   const handleDateChange = (e) => {
     const date = e.target.value;
@@ -36,7 +37,7 @@ function DiaResumen() {
     let formattedDate = `${dateList[1]}/${dateList[2]}/${dateList[0]}`;
 
     setHoy(formattedDate);
-    console.log(formattedDate); // Output: "2/3/2025"
+    // console.log(formattedDate); // Output: "2/3/2025"
   };
 
   useEffect(() => {
@@ -45,14 +46,16 @@ function DiaResumen() {
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(RECETAS_MENU)),
+          dispatch(getAllFromTable(COMPRAS)),
         ]);
 
-        
+        // console.log("Compras from Redux:", allCompras); // Log Compras to console
 
         const { data, error } = await supabase
           .from("Ventas")
           .select("*")
           .order("Date", { ascending: true });
+
 
         if (error) {
           console.error("Error fetching ventas:", error);
@@ -180,6 +183,11 @@ function DiaResumen() {
     };
 
     fetchData();
+  }, [ hoy]);
+  // }, [ ]);
+
+  useEffect(() => {
+
     const calculateRecipeValues = async () => {
       const updatedProductosVendidos = await Promise.all(productosVendidos.map(async (producto) => {
         if (producto.recetaId !== "N/A") {
@@ -196,15 +204,8 @@ function DiaResumen() {
       setProductosVendidos(updatedProductosVendidos);
     };
 
-    // if (productosVendidos.length > 0 && allMenu.length > 0) {
-      calculateRecipeValues();
-    // }
-
-  }, [dispatch, hoy]);
-
-  // useEffect(() => {
-
-  // }, [allMenu, productosVendidos, allItems, allProduccion ]);
+    calculateRecipeValues();
+  }, []);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -213,6 +214,11 @@ function DiaResumen() {
   const totalProductosVendidos = productosVendidos.reduce((acc, producto) => acc + producto.cantidad, 0);
 
   productosVendidos.sort((a, b) => b.cantidad - a.cantidad);
+
+  // Filter and sum the Valor fields from allCompras for today
+  const totalCompras = allCompras
+    .filter((compra) => compra.Date === hoy)
+    .reduce((acc, compra) => acc + parseFloat(compra.Valor), 0);
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
@@ -227,45 +233,18 @@ function DiaResumen() {
         />
         <p>Selected Date: {hoy}</p>
       </div>
-      <DiaResumentStats ventasRecepies={productosVendidos} />
+      <DiaResumentStats
+        ventasRecepies={productosVendidos}
+        totalIngreso={totalIngreso}
+        totalTip={totalTip}
+        totalProductosVendidos={totalProductosVendidos}
+        totalTarjeta={totalTarjeta}
+        totalEfectivo={totalEfectivo}
+        totalTransferencia={totalTransferencia}
+        totalCompras={totalCompras}
+      />
       {/* Resumen del Día */}
-      <div className="p-6 bg-white rounded-lg shadow-md mb-6 flex justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Resumen del Día
-          </h2>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Ingreso del Día (Pagado): </span>
-            <span className="text-green-600 font-bold">{totalIngreso}$</span>
-          </p>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Tip del Día (Pagado): </span>
-            <span className="text-blue-600 font-bold">{totalTip}$</span>
-          </p>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Productos Vendidos: </span>
-            <span className="text-purple-600 font-bold">{totalProductosVendidos}</span>
-          </p>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Pagado con Tarjeta: </span>
-            <span className="text-pink-600 font-bold">{(totalTarjeta-(totalTarjeta*0.03))}$</span>
-            <span className="text-pink-600 font-bold"> {'(-3% RDB)'}</span>
-          </p>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Pagado en Efectivo: </span>
-            <span className="text-yellow-600 font-bold">{totalEfectivo}$</span>
-          </p>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Pagado por Transferencia: </span>
-            <span className="text-blue-600 font-bold">{totalTransferencia}$</span>
-          </p>
-          <p className="text-lg text-gray-700">
-            <span className="font-medium">Total Ipo Consumo: </span>
-            <span className="text-red-600 font-bold"> {totalIngreso*0.08}$</span>
-          </p>
-        </div>
-      </div>
-
+      {/* Removed inline rendering */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Detalles de Ventas */}
         <div className="p-6 bg-white rounded-lg shadow-md">
@@ -276,18 +255,9 @@ function DiaResumen() {
             <table className="min-w-full border-collapse border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
-                  {/* <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Cliente
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Cajero
-                  </th> */}
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Total Ingreso
                   </th>
-                  {/* <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Tip
-                  </th> */}
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Pagado
                   </th>
@@ -305,18 +275,9 @@ function DiaResumen() {
                     key={venta._id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    {/* <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {venta.Cliente}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {venta.Cajero}
-                    </td> */}
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
                       {venta.Total_Ingreso}
                     </td>
-                    {/* <td className="py-3 px-4 border-b text-sm text-blue-600 font-bold">
-                      {venta.Tip}
-                    </td> */}
                     <td className="py-3 px-4 border-b text-sm text-center">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -365,15 +326,6 @@ function DiaResumen() {
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Cantidad Vendida
                   </th>
-                  {/* <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    ID Receta
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Valor Receta
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Ingredientes
-                  </th> */}
                 </tr>
               </thead>
               <tbody>
@@ -388,19 +340,6 @@ function DiaResumen() {
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
                       {producto.cantidad}
                     </td>
-                    {/* <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {producto.recetaId}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {producto.recetaValor}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {producto.ingredientes.map((ingrediente, i) => (
-                        <div key={i}>
-                          {ingrediente.name}: {ingrediente.cuantity} {ingrediente.units}
-                        </div>
-                      ))}
-                    </td> */}
                   </tr>
                 ))}
               </tbody>

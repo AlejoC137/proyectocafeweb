@@ -6,6 +6,7 @@ import {
   ITEMS,
   PRODUCCION,
   PROVEE  ,
+  COMPRAS  ,
   UPDATE_ACTIVE_TAB,
   SET_USER_REG_STATE,
   UPDATE_SELECTED_VALUE,
@@ -153,6 +154,7 @@ const initialState = {
   currentLeng: 'ESP',
   allProduccion: [],
   Proveedores: [],
+  Compras: [],
   currentView: 'MENU',
   userRegState: 'notAuth',
   selectedValue: null,
@@ -212,6 +214,11 @@ const reducer = (state = initialState, action) => {
           return {
             ...state,
             Proveedores: action.payload,
+          };
+        case COMPRAS:
+          return {
+            ...state,
+            Compras: action.payload,
           };
         case MENU:
           return {

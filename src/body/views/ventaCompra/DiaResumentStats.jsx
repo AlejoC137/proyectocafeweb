@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
-function DiaResumentStats({ ventasRecepies }) {
+const DiaResumentStats = ({
+  ventasRecepies,
+  totalIngreso,
+  totalTip,
+  totalProductosVendidos,
+  totalTarjeta,
+  totalEfectivo,
+  totalTransferencia,
+  totalCompras
+}) => {
+
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const [infoPorProducto, setInfoPorProducto] = useState([]);
 
@@ -28,17 +38,58 @@ function DiaResumentStats({ ventasRecepies }) {
   }, [ventasRecepies, allRecetasMenu]);
 
   const totalCostoDirecto = infoPorProducto.reduce((acc, producto) => acc + (producto.costoDirecto || 0), 0);
-console.log(ventasRecepies);
-console.log(allRecetasMenu);
+
+  const formatNumber = (number) => {
+    return number.toLocaleString('es-ES');
+  };
 
   return (
-    <div className="">
-      <p>Total Costos Directo: {totalCostoDirecto}</p>
-      {/* <p>Total Costos Directo: {infoPorProducto}</p> */}
-      {/* Render additional details if needed */}
+    <div className="p-6 bg-white rounded-lg shadow-md mb-6 flex justify-between">
+      <div>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          Resumen del Día
+        </h2>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Ingreso del Día (Pagado): </span>
+          <span className="text-green-600 font-bold">{formatNumber(totalIngreso)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Tip del Día (Pagado): </span>
+          <span className="text-blue-600 font-bold">{formatNumber(totalTip)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Productos Vendidos: </span>
+          <span className="text-purple-600 font-bold">{formatNumber(totalProductosVendidos)}</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Pagado con Tarjeta: </span>
+          <span className="text-yellow-600 font-bold">{formatNumber(totalTarjeta - (totalTarjeta * 0.03))}$</span>
+          <span className="text-yellow-600 font-bold"> {'(-3% RDB)'}</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Pagado en Efectivo: </span>
+          <span className="text-yellow-600 font-bold">{formatNumber(totalEfectivo)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Pagado por Transferencia: </span>
+          <span className="text-yellow-600 font-bold">{formatNumber(totalTransferencia)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Costo directo: </span>
+          <span className="text-red-600 font-bold">{formatNumber(totalCostoDirecto)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Ipo Consumo: </span>
+          <span className="text-red-600 font-bold">{formatNumber(totalIngreso * 0.08)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Total Compras: </span>
+          <span className="text-red-600 font-bold">{formatNumber(totalCompras)}$</span>
+        </p>
+      </div>
     </div>
   );
-}
+};
 
 export default DiaResumentStats;
 

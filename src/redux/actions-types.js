@@ -26,6 +26,7 @@ export const MENU = "Menu";
 export const PRODUCCION = "ProduccionInterna";
 export const STAFF = "Staff";
 export const PROVEE = "Proveedores";
+export const COMPRAS = "Compras";
 // Fuentes dd precios
 export const FUENTES = []
 
