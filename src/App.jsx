@@ -23,6 +23,7 @@ import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import DiaResumen from './body/views/ventaCompra/DiaResumen';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
 import Gastos from './body/components/gastos/Gastos';
+import Proveedores from './body/views/proveedores/Proveedores';
 
 
 // import CalculoNomina from './body/views/CalculoNomina/CalculoNomina.jsx';
@@ -73,6 +74,7 @@ function App() {
      <Route path="/Gastos" element={<Gastos />} />
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
+     <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
      {/* <Route path="/CalculoNomina" element={<CalculoNomina />} /> */}
         {/* Renderiza el componente que corresponde a la vista actual */}
