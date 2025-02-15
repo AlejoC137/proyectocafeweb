@@ -3,12 +3,10 @@ import { useDispatch } from "react-redux";
 import Mesa from "./Mesa";
 import MesaBarra from "./MesaBarra";
 import Pagar from "./Pagar";
-// import Gastos from "./Gastos"; // Import Gastos component
 import Gastos from "../../components/gastos/Gastos";
 import { MENU, ITEMS, PRODUCCION, PROVEE } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
-
 
 function VentaCompra() {
   const dispatch = useDispatch();
@@ -17,9 +15,8 @@ function VentaCompra() {
   const [showPagarModal, setShowPagarModal] = useState(false);
   const [ventaId, setVentaId] = useState(null);
   const [totalPago, setTotalPago] = useState(null);
-  const [showGastos, setShowGastos] = useState(false); // State to control Gastos visibility
+  const [showGastos, setShowGastos] = useState(false);
 
-  // Fetch ventas from Supabase
   const fetchVentas = async () => {
     try {
       const { data, error } = await supabase
@@ -37,11 +34,9 @@ function VentaCompra() {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch data from Redux and Supabase
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
@@ -60,7 +55,6 @@ function VentaCompra() {
     fetchData();
   }, [dispatch]);
 
-  // Reload ventas after updates
   const reloadVentas = async () => {
     setLoading(true);
     await fetchVentas();
@@ -93,9 +87,8 @@ function VentaCompra() {
         {showGastos ? "Ocultar Gastos" : "Mostrar Gastos"}
       </button>
 
-      {showGastos && <Gastos />} {/* Conditionally render Gastos */}
+      {showGastos && <Gastos />}
 
-      {/* MesaBarra ocupa toda la primera columna */}
       <div className="col-span-1 pl-1 pr-1 pt-1">
         <MesaBarra
           key="mesa-barra"
@@ -107,8 +100,7 @@ function VentaCompra() {
       </div>
 
       <div className="gap-1 p-1">
-        {/* Las demás mesas ocupan las columnas restantes */}
-        <div className="col-span-3 grid grid-cols-3 gap-1">
+        <div className="col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-1">
           {[...Array(6)].map((_, index) => (
             <Mesa
               key={`mesa-${index + 1}`}
