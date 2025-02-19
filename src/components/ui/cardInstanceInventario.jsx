@@ -28,6 +28,18 @@ export function CardInstanceInventario({ product, currentType }) {
     }
   })();
 
+  const initialAlmacenamiento = (() => {
+    try {
+      return typeof product.ALMACENAMIENTO === "string" ? JSON.parse(product.ALMACENAMIENTO) : product.ALMACENAMIENTO;
+    } catch (e) {
+      console.error("Invalid JSON in product.ALMACENAMIENTO:", e);
+      return {
+        ALMACENAMIENTO: "",
+        BODEGA: "",
+      };
+    }
+  })();
+// fff   ffdfd
   const [formData, setFormData] = useState({
     Nombre_del_producto: product.Nombre_del_producto || "",
     CANTIDAD: product.CANTIDAD || "",
@@ -37,7 +49,7 @@ export function CardInstanceInventario({ product, currentType }) {
     precioUnitario: product.precioUnitario || "",
     Estado: product.Estado || ESTATUS[0],
     Proveedor: product.Proveedor || "",
-    ALMACENAMIENTO: product.ALMACENAMIENTO || "",
+    ALMACENAMIENTO: initialAlmacenamiento,
     STOCK: initialStock || {
       minimo: "",
       maximo: "",
@@ -83,10 +95,20 @@ export function CardInstanceInventario({ product, currentType }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name === "ALMACENAMIENTO" || name === "BODEGA") {
+      setFormData((prev) => ({
+        ...prev,
+        ALMACENAMIENTO: {
+          ...prev.ALMACENAMIENTO,
+          [name]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
     if (name === "Proveedor" && currentType === ItemsAlmacen) {
       const selectedProvider = Proveedores.find(proveedor => proveedor._id === value);
       if (selectedProvider) {
@@ -132,7 +154,7 @@ export function CardInstanceInventario({ product, currentType }) {
         ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
         FECHA_ACT: new Date().toISOString().split("T")[0],
         STOCK: formData.STOCK,
-        ALMACENAMIENTO: formData.ALMACENAMIENTO,
+        ALMACENAMIENTO: JSON.stringify(formData.ALMACENAMIENTO),
       };
 
       await dispatch(updateItem(product._id, updatedFields, currentType));
@@ -312,12 +334,30 @@ export function CardInstanceInventario({ product, currentType }) {
                 Almacenamiento:
                 <select
                   name="ALMACENAMIENTO"
-                  value={formData.ALMACENAMIENTO}
+                  value={formData.ALMACENAMIENTO?.ALMACENAMIENTO}
                   onChange={handleInputChange}
                   className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                 >
                   <option value="" disabled>
-                    {product.ALMACENAMIENTO ? `Actual: ${product.ALMACENAMIENTO}` : "Selecciona almacenamiento"}
+                    {product.ALMACENAMIENTO?.ALMACENAMIENTO ? `Actual: ${product.ALMACENAMIENTO?.ALMACENAMIENTO}` : "Selecciona almacenamiento"}
+                  </option>
+                  {BODEGA.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm text-gray-700 flex-1">
+                Bodega:
+                <select
+                  name="BODEGA"
+                  value={formData.ALMACENAMIENTO?.BODEGA}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                >
+                  <option value="" disabled>
+                    {product.ALMACENAMIENTO?.BODEGA ? `Actual: ${product.ALMACENAMIENTO?.BODEGA}` : "Selecciona bodega"}
                   </option>
                   {BODEGA.map((option) => (
                     <option key={option} value={option}>
