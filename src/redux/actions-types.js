@@ -174,6 +174,7 @@ export const CANASTA_INFERIOR_BARRA = 'CANASTA_INFERIOR_BARRA'
 export const PAPELERIA = 'PAPELERIA'
 
 export const FRUTERA = 'FRUTERA'
+export const NO_APLICA = 'NO_APLICA'
 
 
 
@@ -195,5 +196,6 @@ export const BODEGA = [
   REPISA_BARRA,
   CANASTA_INFERIOR_BARRA,
   PAPELERIA,
-  FRUTERA
+  FRUTERA,
+  NO_APLICA,
 ];
