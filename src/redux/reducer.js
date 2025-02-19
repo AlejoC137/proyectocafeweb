@@ -6,6 +6,7 @@ import {
   ITEMS,
   PRODUCCION,
   PROVEE  ,
+  PROCEDE  ,
   COMPRAS  ,
   UPDATE_ACTIVE_TAB,
   SET_USER_REG_STATE,
@@ -150,6 +151,7 @@ const initialState = {
   showEdit: false,
   allMenu: [],
   allItems: [],
+  allProcedimientos: [],
   allRecetasMenu: [],
   currentLeng: 'ESP',
   allProduccion: [],
@@ -234,6 +236,11 @@ const reducer = (state = initialState, action) => {
           return {
             ...state,
             allProduccion: action.payload,
+          };
+        case PROCEDE:
+          return {
+            ...state,
+            allProcedimientos: action.payload,
           };
         default:
           return state;

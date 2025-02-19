@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { deleteItem, getRecepie, updateItem, getProveedor, actualizarPrecioUnitario, calcularPrecioUnitario } from "../../redux/actions-Proveedores";
-import { CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
+import { BODEGA, CATEGORIES, ESTATUS, ItemsAlmacen, ProduccionInterna, unidades } from "../../redux/actions-types";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
 import ProveedorOptions from "../../body/components/proveedorOptions/ProveedorOptions";
 import { setSelectedProviderId } from "../../redux/actions-Proveedores";
@@ -14,6 +14,20 @@ export function CardInstanceInventario({ product, currentType }) {
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
   const [receta, setReceta] = useState(null);
+
+  const initialStock = (() => {
+    try {
+      return typeof product.STOCK === "string" ? JSON.parse(product.STOCK) : product.STOCK;
+    } catch (e) {
+      console.error("Invalid JSON in product.STOCK:", e);
+      return {
+        minimo: "",
+        maximo: "",
+        actual: "",
+      };
+    }
+  })();
+
   const [formData, setFormData] = useState({
     Nombre_del_producto: product.Nombre_del_producto || "",
     CANTIDAD: product.CANTIDAD || "",
@@ -23,15 +37,16 @@ export function CardInstanceInventario({ product, currentType }) {
     precioUnitario: product.precioUnitario || "",
     Estado: product.Estado || ESTATUS[0],
     Proveedor: product.Proveedor || "",
+    ALMACENAMIENTO: product.ALMACENAMIENTO || "",
+    STOCK: initialStock || {
+      minimo: "",
+      maximo: "",
+      actual: "",
+    },
   });
   const [provData, setProvData] = useState({
-    Proveedor_Name:'',
-
+    Proveedor_Name: '',
   });
-
-
-
-  
 
   const [buttonState, setButtonState] = useState("save");
   const [book, setBook] = useState("📕");
@@ -54,11 +69,9 @@ export function CardInstanceInventario({ product, currentType }) {
         if (product.Proveedor) {
           const result = await getProveedor(product.Proveedor);
           if (result) {
-
             setProvData((prev) => ({
               ...prev,
               Proveedor_Name: result.Nombre_Proveedor,
-            
             }));
           }
         }
@@ -83,16 +96,28 @@ export function CardInstanceInventario({ product, currentType }) {
     setButtonState("save");
   };
 
+  const handleStockChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      STOCK: {
+        ...prev.STOCK,
+        [name]: value,
+      },
+    }));
+    setButtonState("save");
+  };
+
   const handleUpdate = async () => {
-console.log(product);
+    console.log(product);
 
     let { data, error } = await supabase
-    .from(currentType) // Nombre correcto de la tabla
-    .update({
-      precioUnitario: calcularPrecioUnitario(product),
-    })
-    .eq('_id', product._id) // Filtrar la fila donde _id coincida
-    .select(); // Retornar los datos actualizados
+      .from(currentType) // Nombre correcto de la tabla
+      .update({
+        precioUnitario: calcularPrecioUnitario(product),
+      })
+      .eq('_id', product._id) // Filtrar la fila donde _id coincida
+      .select(); // Retornar los datos actualizados
 
     setButtonState("syncing");
     try {
@@ -106,6 +131,8 @@ console.log(product);
         Proveedor: formData.Proveedor ? formData.Proveedor : product.Proveedor,
         ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
         FECHA_ACT: new Date().toISOString().split("T")[0],
+        STOCK: formData.STOCK,
+        ALMACENAMIENTO: formData.ALMACENAMIENTO,
       };
 
       await dispatch(updateItem(product._id, updatedFields, currentType));
@@ -217,19 +244,102 @@ console.log(product);
             </button>
           ))}
         </div>
+        <div className="flex gap-4">
+          <label className="text-sm text-gray-700 flex-1">
+            Stock Mínimo:
+            {
+            //showEdit
+            true
+            ? (
+              <input
+                type="text"
+                name="minimo"
+                value={formData.STOCK.minimo}
+                onChange={handleStockChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                placeholder={product.STOCK?.minimo || ""}
+              />
+            ) : (
+              <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
+                {formData.STOCK?.minimo || ""}
+              </h3>
+            )}
+          </label>
+          <label className="text-sm text-gray-700 flex-1">
+            Stock Máximo:
+        
+            {
+            //showEdit
+            true
+            ? (
+              <input
+                type="text"
+                name="maximo"
+                value={formData.STOCK?.maximo}
+                onChange={handleStockChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                placeholder={product.STOCK?.maximo || ""}
+              />
+            ) : (
+              <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
+                {formData.STOCK?.maximo || "" }
+              </h3>
+            )}
+          </label>
+          <label className="text-sm text-gray-700 flex-1">
+            Stock Actual:
+            {
+            //showEdit
+            true
+            ? (
+              <input
+                type="text"
+                name="actual"
+                value={formData.STOCK?.actual}
+                onChange={handleStockChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                placeholder={product.STOCK?.actual || ""}
+              />
+            ) : (
+              <h3 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1">
+                {formData.STOCK?.actual || ""}
+              </h3>
+            )}
+          </label>
+        </div>
+        <div className="flex gap-4">
+              <label className="text-sm text-gray-700 flex-1">
+                Almacenamiento:
+                <select
+                  name="ALMACENAMIENTO"
+                  value={formData.ALMACENAMIENTO}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                >
+                  <option value="" disabled>
+                    {product.ALMACENAMIENTO ? `Actual: ${product.ALMACENAMIENTO}` : "Selecciona almacenamiento"}
+                  </option>
+                  {BODEGA.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
         {showEdit && (
           <>
             <label className="text-sm text-gray-700 flex-1">
-            Nombre_del_producto:
-                  <input
-                    type="text"
-                    name="Nombre_del_producto"
-                    value={formData.Nombre_del_producto}
-                    onChange={handleInputChange}
-                    className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
-                  />
-                </label>
+              Nombre_del_producto:
+              <input
+                type="text"
+                name="Nombre_del_producto"
+                value={formData.Nombre_del_producto}
+                onChange={handleInputChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+              />
+            </label>
             <div className="flex gap-4">
               {currentType !== ProduccionInterna && (
                 <label className="text-sm text-gray-700 flex-1">
@@ -247,29 +357,27 @@ console.log(product);
               </label>
             </div>
             <label className="text-sm text-gray-700 flex-1">
-            precioUnitario:
-                  <input
-                    type="text"
-                    name="precioUnitario"
-                    value={formData.precioUnitario}
-                    onChange={handleInputChange}
-                    className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
-                  />
-                </label>
+              precioUnitario:
+              <input
+                type="text"
+                name="precioUnitario"
+                value={formData.precioUnitario}
+                onChange={handleInputChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+              />
+            </label>
 
             <div className="flex gap-4">
-              {/* {currentType !== ProduccionInterna && (
-              )} */}
-                <label className="text-sm text-gray-700 flex-1">
-                  Cantidad:
-                  <input
-                    type="text"
-                    name="CANTIDAD"
-                    value={formData.CANTIDAD}
-                    onChange={handleInputChange}
-                    className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
-                  />
-                </label>
+              <label className="text-sm text-gray-700 flex-1">
+                Cantidad:
+                <input
+                  type="text"
+                  name="CANTIDAD"
+                  value={formData.CANTIDAD}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                />
+              </label>
               <label className="text-sm text-gray-700 flex-1">
                 Unidades:
                 <select
@@ -291,18 +399,16 @@ console.log(product);
             </div>
 
             <div className="flex gap-4">
-              {/* {currentType !== ProduccionInterna && ( */}
-                <label className="text-sm text-gray-700 flex-1">
-                  Costo:
-                  <input
-                    type="text"
-                    name="COSTO"
-                    value={formData.COSTO}
-                    onChange={handleInputChange}
-                    className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
-                  />
-                </label>
-              {/* // )} */}
+              <label className="text-sm text-gray-700 flex-1">
+                Costo:
+                <input
+                  type="text"
+                  name="COSTO"
+                  value={formData.COSTO}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                />
+              </label>
               <label className="text-sm text-gray-700 flex-1">
                 Grupo:
                 <select
@@ -331,7 +437,7 @@ console.log(product);
                     onChange={handleInputChange}
                     className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                   >
-                    <option value="" >
+                    <option value="">
                       {product.Proveedor ? `${provData.Proveedor_Name}` : "Selecciona un Proveedor"}
                     </option>
                     {Proveedores.map((proveedor) => (
@@ -343,6 +449,7 @@ console.log(product);
                 </label>
               )}
             </div>
+           
           </>
         )}
 

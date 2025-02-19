@@ -20,10 +20,12 @@ import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 import Scraper from '../scraper/scraper';
 import Inventario from './body/views/inventario/Inventario';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
+import Actividades from './body/views/actividades/Actividades';
 import DiaResumen from './body/views/ventaCompra/DiaResumen';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
+import ProcedimientosManager from './body/views/actividades/ProcedimientosManager';
 
 
 // import CalculoNomina from './body/views/CalculoNomina/CalculoNomina.jsx';
@@ -67,10 +69,12 @@ function App() {
      <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
      <Route path="/Home" element={<LandingHome />} />
      <Route path="/Agenda" element={<Agenda />} />
+     <Route path="/ProcedimientosManager" element={<ProcedimientosManager />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
      <Route path="/Inventario" element={<Inventario />} />
      <Route path="/VentaCompra" element={<VentaCompra />} />
+     <Route path="/Actividades" element={<Actividades />} />
      <Route path="/Gastos" element={<Gastos />} />
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
