@@ -36,6 +36,22 @@ function AccionesRapidas({ currentType }) {
     dispatch(copiarAlPortapapeles( type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP" , "Proveedor" , allProveedores ));
   };
 
+  const handleCopiarInfoItems = () => {
+    const items = currentType === ITEMS ? allItems : allProduccion;
+    const headers = Object.keys(items[0]).join("\t");
+    const rows = items.map(item => Object.values(item).join("\t")).join("\n");
+    const clipboardData = `${headers}\n${rows}`;
+
+    navigator.clipboard.writeText(clipboardData)
+      .then(() => {
+        alert("Información copiada al portapapeles.");
+      })
+      .catch(err => {
+        console.error("Error al copiar al portapapeles:", err);
+        alert("Hubo un error al copiar la información.");
+      });
+  };
+
   const [formVisible, setFormVisible] = useState(false);
   const [formProveedorVisible, setFormProveedorVisible] = useState(false);
 
@@ -184,6 +200,12 @@ function AccionesRapidas({ currentType }) {
           onClick={() => setFormProveedorVisible((prev) => !prev)}
         >
           {formProveedorVisible ? "CANCELAR CREACIÓN" : "CREAR NUEVO PROVEEDOR"}
+        </button>
+        <button
+          className="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600"
+          onClick={handleCopiarInfoItems}
+        >
+          COPIAR INFO ITEMS
         </button>
       </div>
 
