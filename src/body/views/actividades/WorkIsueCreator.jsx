@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { crearProcedimiento, actualizarProcedimiento, eliminarProcedimiento, getAllFromTable as getAllFromTableProcedimientos } from "../../../redux/actions-Procedimientos";
 import { PROCEDE } from "../../../redux/actions-types";
 
-function ProcedimientosManager() {
+function WorkIsueCreator() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [receta, setReceta] = useState(null);
@@ -28,17 +28,21 @@ function ProcedimientosManager() {
     Ejecutor: "",
     Receta: "",
     tittle: "",
+    Menu: "",
   });
   const [editing, setEditing] = useState(null);
+  const [hoy, setHoy] = useState(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]);
 
-  useEffect(() => {
-    dispatch(getAllFromTable(PROCEDE));
-    dispatch(getAllFromTable(STAFF));
-  }, [dispatch]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, Dates: { ...formData.Dates, [name]: value } });
   };
 
   const handleSubmit = async (e) => {
@@ -57,6 +61,7 @@ function ProcedimientosManager() {
         Ejecutor: "",
         Receta: "",
         tittle: "",
+        Menu: "",
       });
       setEditing(null);
       alert("Procedimiento guardado correctamente");
@@ -85,57 +90,32 @@ function ProcedimientosManager() {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md mb-6">
+      <h2 className="text-lg font-semibold">Crear WorkIsue</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white">
-            <label className="text-sm font-medium">Fecha de Creación:</label>
-            <Input
-              type="text"
-              name="Dates"
-              value={formData.Dates.isued}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm w-full"
+          <div>
+            <label htmlFor="isued" className="block bg-white text-sm font-medium text-gray-700">Fecha de Creación:</label>
+            <input
+              type="date"
+              id="isued"
+              name="isued"
+              className="bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              value={formData.Dates.isued.split('T')[0]}
+              onChange={handleDateChange}
             />
+            <p>Selected Date: {formData.Dates.isued.split('T')[0]}</p>
           </div>
-          <div className="bg-white">
-            <label className="text-sm font-medium">Fecha de Finalización:</label>
-            <Input
-              type="text"
-              name="Dates"
-              value={formData.Dates.finished}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm w-full"
+          <div>
+            <label htmlFor="finished" className="block bg-white text-sm font-medium text-gray-700">Fecha de Finalización:</label>
+            <input
+              type="date"
+              id="finished"
+              name="finished"
+              className="bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              value={formData.Dates.finished.split('T')[0]}
+              onChange={handleDateChange}
             />
-          </div>
-          <div className="bg-white">
-            <label className="text-sm font-medium">Terminado:</label>
-            <Input
-              type="checkbox"
-              name="Terminado"
-              checked={formData.Terminado}
-              onChange={(e) => setFormData({ ...formData, Terminado: e.target.checked })}
-              className="border bg-white rounded p-1 text-sm"
-            />
-          </div>
-          <div className="bg-white">
-            <label className="text-sm font-medium">Pagado:</label>
-            <Input
-              type="text"
-              name="Pagado"
-              value={formData.Pagado.pagadoFull}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm w-full"
-            />
-          </div>
-          <div className="bg-white">
-            <label className="text-sm font-medium">Adelanto:</label>
-            <Input
-              type="text"
-              name="Pagado"
-              value={formData.Pagado.adelanto}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm w-full"
-            />
+            <p>Selected Date: {formData.Dates.finished.split('T')[0]}</p>
           </div>
           <div className="bg-white">
             <label className="text-sm font-medium">Categoría:</label>
@@ -183,6 +163,22 @@ function ProcedimientosManager() {
               className="border bg-white rounded p-1 text-sm w-full"
             />
           </div>
+          <div className="bg-white">
+            <label className="text-sm font-medium">Menú:</label>
+            <select
+              name="Menu"
+              value={formData.Menu}
+              onChange={handleChange}
+              className="border bg-white rounded p-1 text-sm w-full"
+            >
+              <option className="bg-white" value="">Seleccionar Menú</option>
+              {allMenu.map((menu) => (
+                <option className="bg-white" key={menu._id} value={menu._id}>
+                  {menu.Nombre}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <Button type="submit" className="bg-blue-500 text-white text-sm mt-4">
           Guardar
@@ -202,6 +198,7 @@ function ProcedimientosManager() {
               <p className="text-sm">Categoría: {procedimiento.Categoria}</p>
               <p className="text-sm">Ejecutor: {procedimiento.Ejecutor}</p>
               <p className="text-sm">Receta: {procedimiento.Receta}</p>
+              <p className="text-sm">Menú: {procedimiento.Menu}</p>
             </div>
             <div className="flex gap-2 bg-white">
               <Button onClick={() => handleEdit(procedimiento)} className="bg-yellow-500 text-white text-sm">
@@ -218,4 +215,4 @@ function ProcedimientosManager() {
   );
 }
 
-export default ProcedimientosManager;
+export default WorkIsueCreator;

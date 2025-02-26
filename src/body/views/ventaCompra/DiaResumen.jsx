@@ -5,6 +5,7 @@ import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
 import DiaResumentStats from "./DiaResumentStats";
+import { fetchAndProcessSales } from "./slicer"; // Import the function
 
 function DiaResumen() {
   const dispatch = useDispatch();
@@ -20,12 +21,15 @@ function DiaResumen() {
   const [totalEfectivo, setTotalEfectivo] = useState(0);
   const [totalTransferencia, setTotalTransferencia] = useState(0);
   
+  
+  
   const allMenu = useSelector((state) => state.allMenu);
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) => state.Compras); // Fetch Compras from Redux
-
+  
+  // console.log(allCompras);
   const handleDateChange = (e) => {
     const date = e.target.value;
     const dateList = date.split("-");
@@ -51,10 +55,16 @@ function DiaResumen() {
 
         // console.log("Compras from Redux:", allCompras); // Log Compras to console
 
+        // const responce = await supabase
         const { data, error } = await supabase
           .from("Ventas")
           .select("*")
+          .filter("Date", "eq", hoy)
           .order("Date", { ascending: true });
+
+// console.log("Venta" , data[900].Date);
+// console.log("Fencha" , hoy);
+console.log(data);
 
 
         if (error) {
@@ -207,6 +217,11 @@ function DiaResumen() {
     calculateRecipeValues();
   }, []);
 
+  const handleFetchSales = async () => {
+    const processedSales = await fetchAndProcessSales(dispatch);
+    console.log("Fetched and Processed Sales:", processedSales);
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -349,6 +364,12 @@ function DiaResumen() {
 
 
       </div>
+      {/* <button
+        onClick={handleFetchSales}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        Fetch and Process Sales
+      </button> */}
     </div>
   );
 }

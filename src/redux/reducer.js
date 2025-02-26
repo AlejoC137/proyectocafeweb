@@ -6,6 +6,7 @@ import {
   ITEMS,
   PRODUCCION,
   PROVEE  ,
+  WORKISUE  ,
   PROCEDE  ,
   COMPRAS  ,
   UPDATE_ACTIVE_TAB,
@@ -19,7 +20,8 @@ import {
   RECETAS_MENU,
   TOGGLE_SHOW_EDIT,
   RESET_EXPANDED_GROUPS,       // Nueva acción importada
-  ADD_ORDER_ITEM               // Nueva acción importada
+  ADD_ORDER_ITEM   ,
+  RECETAS_PROCEDIMIENTOS            // Nueva acción importada
 } from './actions-types';
 
 const initialState = {
@@ -153,6 +155,8 @@ const initialState = {
   allItems: [],
   allProcedimientos: [],
   allRecetasMenu: [],
+  allRecetasProcedimientos: [],
+  allWorkIsue: [],
   currentLeng: 'ESP',
   allProduccion: [],
   Proveedores: [],
@@ -212,11 +216,23 @@ const reducer = (state = initialState, action) => {
             ...state,
             allRecetasMenu: action.payload,
           };
+        case RECETAS_PROCEDIMIENTOS:
+          return {
+            ...state,
+            allRecetasProcedimientos: action.payload,
+          };
         case PROVEE:
           return {
             ...state,
             Proveedores: action.payload,
           };
+        case WORKISUE:
+          return {
+            ...state,
+            allWorkIsue: action.payload,
+          };
+
+
         case COMPRAS:
           return {
             ...state,
