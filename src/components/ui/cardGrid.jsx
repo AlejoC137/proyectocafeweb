@@ -48,7 +48,7 @@ export function CardGrid({ products, isEnglish, category, filterKey }) {
       <div className="container mx-auto">
         <div ref={containerRef} className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4">
           {products
-            .filter((product) => product.TipoEN === filterKey)
+            .filter((product) => product.TipoEN === filterKey && (product.Estado === "Activo"))
             .map((product) => (
               <div key={product._id} className="snap-center flex-shrink-0 w-[260px]" onClick={() => setSelectedProduct(product)}>
                 <CardInstance product={product} isEnglish={isEnglish} />
