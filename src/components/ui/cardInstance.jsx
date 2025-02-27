@@ -69,7 +69,7 @@ export function CardInstance({ product, isEnglish }) {
             <div className="flex justify-between items-center">
               <h3 className="text-md font-bold truncate">
                 {isEnglish ? product.NombreEN : product.NombreES}
-              </h3>
+              </h3> 
               <span className="text-lg font-semibold text-gray-800">${product.Precio}</span>
             </div>
                 {/* <p className="text-sm text-gray-500 line-clamp-2">
