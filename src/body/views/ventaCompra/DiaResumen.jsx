@@ -364,12 +364,12 @@ console.log(data);
 
 
       </div>
-      {/* <button
+      <button
         onClick={handleFetchSales}
         className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
       >
         Fetch and Process Sales
-      </button> */}
+      </button>
     </div>
   );
 }
