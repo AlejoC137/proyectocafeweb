@@ -15,7 +15,7 @@ function MenuView() {
     const fetchData = async () => {
       try {
         await Promise.all([
-          dispatch(getAllFromTable(STAFF)),
+          // dispatch(getAllFromTable(STAFF)),
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
         ]);
