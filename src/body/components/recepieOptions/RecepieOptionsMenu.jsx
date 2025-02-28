@@ -18,21 +18,17 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   const [autor, setAutor] = useState("Autor por defecto");
   const [revisor, setRevisor] = useState("Revisor por defecto");
   const [totalIngredientes, setTotalIngredientes] = useState(0);
-  const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
+  const [proces, setProces] = useState([]); // Initialize empty proces array
   const [activeTab, setActiveTab] = useState("proces"); // State to manage active tab
-  // const [activeTab, setActiveTab] = useState("receta"); // State to manage active tab
   const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
   const [costoDirecto, setCostoDirecto] = useState(); // State to manage active tab
   const [processTime, setProcessTime] = useState(Receta?.ProcessTime); // State to manage active tab
   const [editvCMP, setEditvCMP] = useState(); // State to manage active tab
 
   useEffect(() => {
-    
-    
     if (Receta && currentType === MenuItems) {
       loadRecepie('Recetas');
     } 
-   
   }, [Receta, dispatch, editvCMP]);
 
   const loadRecepie = async (source) => {
@@ -44,7 +40,6 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
       setLegacyName(recepieData.legacyName || "");
       setRendimiento(JSON.parse(recepieData.rendimiento) || { porcion: "", cantidad: "", unidades: "" });
       setAutor(recepieData.autor || "Autor por defecto");
-      // setKey(recepieData.key || "no key");
       setRevisor(recepieData.revisor || "Revisor por defecto");
       setProces(Array.from({ length: 20 }, (_, i) => recepieData[`proces${i + 1}`] || ""));
       calculateTotalIngredientes(trimmedRecepie);
@@ -57,12 +52,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     }
   };
   const HandleSetEditvCMP = (e) => {
-
-    console.log(e.target.value);
-    
-    // if (showEdit) {
-      setEditvCMP(e.target.value);
-    // }
+    setEditvCMP(e.target.value);
   };
 
   const handleIngredientChange = (index, value, source) => {
@@ -91,36 +81,13 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     }
   };
 
-
-
   const handleRemoveIngredient = async (index, source, itemKey) => {
-
-
-
-      const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
-
-
+    const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
     if (showEdit) {
       const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
       if (confirmRemove) {
-        
         const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-        
-        
-        // updatedItems.splice(index, 1);
-
-
-
-
-
-
-        // updatedItems.push({ name: "", item_Id: null, cuantity: null, units: null, source, precioUnitario: 0 });
-        // source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
-
-        // let preFix = source === 'Items' ? 'item' : 'producto_interno';
         await dispatch(updateItem(Receta._id, { [itemKey]: null, [cuantityKey]: null }, "Recetas"));
-        
-        // // await dispatch(updateItem(Receta._id, { [`${preFix}${index + 1}_Id`]: null, [`${preFix}${index + 1}_Cuantity_Units`]: null }, "Recetas"));
         calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
       }
     }
@@ -140,26 +107,15 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   };
 
   const calculateTotalIngredientes = (items) => {
-    
-  const resultad = recetaMariaPaula(items , product.GRUPO , (editvCMP? `.${editvCMP}` : null) , processTime);
-
-
-
-  setCostoDirecto(resultad.detalles)
+    const resultad = recetaMariaPaula(items , product.GRUPO , (editvCMP? `.${editvCMP}` : null) , processTime);
+    setCostoDirecto(resultad.detalles)
     setTotalIngredientes(resultad.consolidado);
     setCalculoDetalles(resultad.detalles);
-    
-    
   }; 
 
-
   const handleProcessTimeChange = (e) => {
-    console.log(e.target.value);
-    
     setProcessTime(e.target.value)
   }
-
-
 
   const handleSaveReceta = async () => {
     if (showEdit) {
@@ -180,13 +136,9 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           ...mapProcesToPayload(proces),
         };
 
-        console.log("Objeto a enviar:", recetaPayload);
-
         if (Receta) {
-          // Update existing recipe
           await dispatch(updateItem(Receta._id, recetaPayload, "Recetas"));
         } else {
-          // Create new recipe
           await dispatch(crearItem(recetaPayload, "Recetas", product._id));
         }
 
@@ -198,8 +150,6 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
       }
     }
   };
-
-
 
   const mapItemsToPayload = (items) => {
     const payload = {};
@@ -226,13 +176,17 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     return payload;
   };
 
-
-
   const handleProcesChange = (index, value) => {
     if (showEdit) {
       const updatedProces = [...proces];
       updatedProces[index] = value;
       setProces(updatedProces);
+    }
+  };
+
+  const addProcess = () => {
+    if (showEdit) {
+      setProces([...proces, ""]);
     }
   };
 
@@ -451,7 +405,6 @@ className="bg-white border-black w-[80px] p-1 border rounded mb-2">
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$CMP: {CalculoDetalles.vCMP}$</h3>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$IB: {CalculoDetalles.vIB}</h3>
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%IB: {CalculoDetalles.pIB}%</h3>
-            {/* <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">$T: {CalculoDetalles.costoTiempo}</h3> */}
           </div>
           <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded text-center">$PVF: {totalIngredientes.toFixed(2)}</h3>
           {showEdit && (
@@ -462,55 +415,38 @@ className="bg-white border-black w-[80px] p-1 border rounded mb-2">
         </>
       )}
 
-
-
-
       {activeTab === "proces" && (
         <>
-                 <input
-                type="text"
-                placeholder={`${processTime}`}
-                value={processTime}
-                
-                onChange={handleProcessTimeChange}
-                className="w-full p-2 border rounded bg-slate-50"
-                readOnly={!showEdit}
-              />
+          <input
+            type="text"
+            placeholder={`${processTime}`}
+            value={processTime}
+            onChange={handleProcessTimeChange}
+            className="w-full p-2 border rounded bg-slate-50"
+            readOnly={!showEdit}
+          />
           <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Procesos:' : "Editar Procesos:"}</h2>
-          {showEdit && proces.map((proc, index) => (
-  <div key={index} className="mb-4">
-    <textarea
-      placeholder={`Proceso ${index + 1}`}
-      value={proc}
-      onChange={(e) => handleProcesChange(index, e.target.value)}
-      className="w-full p-2 border rounded bg-slate-50 resize-none"
-      rows={3} // Controla el número inicial de líneas visibles
-      readOnly={!showEdit}
-      style={{
-        whiteSpace: 'pre-wrap', // Permite que el texto haga wrap
-        overflowWrap: 'break-word', // Asegura que el texto no desborde
-      }}
-    />
-  </div>
-))}
-{!showEdit && proces.map((proc, index) => (
-  proc && (
-    <div key={index} className="mb-4">
-      <textarea
-        placeholder={`Proceso ${index + 1}`}
-        value={proc}
-        readOnly={!showEdit}
-        className="w-full p-2 border rounded bg-slate-50 resize-none"
-        rows={3}
-        style={{
-          whiteSpace: 'pre-wrap',
-          overflowWrap: 'break-word',
-        }}
-      />
-    </div>
-  )
-))}
-
+          {proces.map((proc, index) => (
+            <div key={index} className="mb-4">
+              <textarea
+                placeholder={`Proceso ${index + 1}`}
+                value={proc}
+                onChange={(e) => handleProcesChange(index, e.target.value)}
+                className="w-full p-2 border rounded bg-slate-50 resize-none"
+                rows={3}
+                readOnly={!showEdit}
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'break-word',
+                }}
+              />
+            </div>
+          ))}
+          {showEdit && (
+            <button onClick={addProcess} className="px-4 py-2 bg-blue-500 text-white rounded">
+              Añadir Proceso
+            </button>
+          )}
           {showEdit && (
             <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
               Guardar Procesos

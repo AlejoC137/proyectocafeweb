@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { crearItem, updateItem, getRecepie, trimRecepie } from "../../../redux/actions";
-import { ProduccionInterna, MENU , PROCEDE} from "../../../redux/actions-types";
+import { ProduccionInterna, MENU, PROCEDE } from "../../../redux/actions-types";
 import { Button } from "@/components/ui/button";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
 
@@ -11,7 +11,6 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
   const Produccion = useSelector((state) => state.allProduccion || []);
   const showEdit = useSelector((state) => state.showEdit);
   const allOptions = [...Items, ...Produccion];
-console.log(receta);
 
   const [recetaItems, setRecetaItems] = useState([]);
   const [productoInternoItems, setProductoInternoItems] = useState([]);
@@ -20,17 +19,17 @@ console.log(receta);
   const [autor, setAutor] = useState("Autor por defecto");
   const [revisor, setRevisor] = useState("Revisor por defecto");
   const [totalIngredientes, setTotalIngredientes] = useState(0);
-  const [proces, setProces] = useState(Array(20).fill("")); // Initialize 20 empty proces
-  const [activeTab, setActiveTab] = useState("proces"); // State to manage active tab
-  const [CalculoDetalles, setCalculoDetalles] = useState({}); // State to manage active tab
-  const [costoDirecto, setCostoDirecto] = useState(); // State to manage active tab
-  const [processTime, setProcessTime] = useState(receta?.ProcessTime); // State to manage active tab
-  const [editvCMP, setEditvCMP] = useState(); // State to manage active tab
+  const [proces, setProces] = useState([]);
+  const [activeTab, setActiveTab] = useState("proces");
+  const [CalculoDetalles, setCalculoDetalles] = useState({});
+  const [costoDirecto, setCostoDirecto] = useState();
+  const [processTime, setProcessTime] = useState(receta?.ProcessTime);
+  const [editvCMP, setEditvCMP] = useState();
 
   useEffect(() => {
     if (receta && currentType === PROCEDE) {
       loadRecepie('RecetasProcedimientos');
-    } 
+    }
   }, [receta, dispatch, editvCMP]);
 
   const loadRecepie = async (source) => {
@@ -59,61 +58,49 @@ console.log(receta);
     }
   };
 
-  const HandleSetEditvCMP = (e) => {
-    setEditvCMP(e.target.value);
-  };
-
-  const handleIngredientChange = (index, value, source) => {
+  const handleChange = (index, value, source, field) => {
     if (showEdit) {
       const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-      updatedItems[index].name = value;
-      const matches = allOptions.filter((option) =>
-        option.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())
-      );
-      updatedItems[index].matches = matches;
-      source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
-    }
-  };
-
-  const handleIngredientSelect = (index, selectedOption, source) => {
-    if (showEdit) {
-      const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-      updatedItems[index].name = selectedOption.Nombre_del_producto;
-      updatedItems[index].item_Id = selectedOption._id;
-      updatedItems[index].units = selectedOption.UNIDADES || "";
-      updatedItems[index].precioUnitario = selectedOption.precioUnitario || 0;
-      updatedItems[index].matches = [];
-      updatedItems[index].source = source;
+      updatedItems[index][field] = value;
+      if (field === 'name') {
+        const matches = allOptions.filter((option) =>
+          option.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())
+        );
+        updatedItems[index].matches = matches;
+      }
       source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
       calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
     }
   };
 
-  const handleRemoveIngredient = async (index, source) => {
-    const itemKey = source === 'Items' ? `item${index + 1}_Id` : `producto_interno${index + 1}_Id`;
-    const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
+  const handleSelect = (index, selectedOption, source) => {
+    if (showEdit) {
+      const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        name: selectedOption.Nombre_del_producto,
+        item_Id: selectedOption._id,
+        units: selectedOption.UNIDADES || "",
+        precioUnitario: selectedOption.precioUnitario || 0,
+        matches: [],
+        source,
+      };
+      source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
+      calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
+    }
+  };
 
+  const handleRemove = async (index, source) => {
     if (showEdit) {
       const confirmRemove = window.confirm("¿Estás seguro de que deseas eliminar este ingrediente?");
       if (confirmRemove) {
         const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
+        const itemKey = source === 'Items' ? `item${index + 1}_Id` : `producto_interno${index + 1}_Id`;
+        const cuantityKey = itemKey.replace("_Id", "_Cuantity_Units");
         await dispatch(updateItem(receta, { [itemKey]: null, [cuantityKey]: null }, "RecetasProcedimientos"));
         calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
       }
     }
-  };
-
-  const handleCuantityChange = (index, value, source) => {
-    if (showEdit) {
-      const updatedItems = source === 'Items' ? [...recetaItems] : [...productoInternoItems];
-      updatedItems[index].cuantity = value;
-      source === 'Items' ? setRecetaItems(updatedItems) : setProductoInternoItems(updatedItems);
-      calculateTotalIngredientes([...recetaItems, ...productoInternoItems]);
-    }
-  };
-
-  const testIngridient = (itemId) => {
-    return Items.some(item => item._id === itemId) ? 'item' : 'producto_interno';
   };
 
   const calculateTotalIngredientes = (items) => {
@@ -121,10 +108,6 @@ console.log(receta);
     setCostoDirecto(resultad.detalles);
     setTotalIngredientes(resultad.consolidado);
     setCalculoDetalles(resultad.detalles);
-  };
-
-  const handleProcessTimeChange = (e) => {
-    setProcessTime(e.target.value);
   };
 
   const handleSaveReceta = async () => {
@@ -149,10 +132,8 @@ console.log(receta);
         console.log("Objeto a enviar:", recetaPayload);
 
         if (receta) {
-          // Update existing recipe
           await dispatch(updateItem(receta, recetaPayload, "RecetasProcedimientos"));
         } else {
-          // Create new recipe
           await dispatch(crearItem(recetaPayload, "RecetasProcedimientos", product._id));
         }
 
@@ -188,6 +169,79 @@ console.log(receta);
       payload[`proces${index + 1}`] = proc || null;
     });
     return payload;
+  };
+
+  const renderIngredient = (item, index, source) => (
+    <div key={index} className="flex flex-col mb-2 bg-slate-50">
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="Buscar ingrediente"
+          value={item.name}
+          onChange={(e) => handleChange(index, e.target.value, source, 'name')}
+          className="p-2 border rounded flex-1 bg-slate-50"
+          readOnly={!showEdit}
+        />
+        {showEdit && (
+          <button
+            onClick={() => handleRemove(index, source)}
+            className="px-2 py-1 bg-red-500 text-white rounded"
+          >
+            X
+          </button>
+        )}
+      </div>
+      {item.matches && item.matches.length > 0 && (
+        <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+          {item.matches.map((match) => (
+            <li
+              key={match._id}
+              onClick={() => handleSelect(index, match, source)}
+              className="p-2 hover:bg-gray-200 cursor-pointer"
+            >
+              {match.Nombre_del_producto}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex gap-2 mt-2">
+        <input
+          type="number"
+          placeholder="Cantidad"
+          value={item.cuantity || ""}
+          onChange={(e) => handleChange(index, e.target.value, source, 'cuantity')}
+          className="p-2 border rounded w-1/4 bg-slate-50"
+          readOnly={!showEdit}
+        />
+        <input
+          type="text"
+          placeholder="Unidades"
+          value={item.units || ""}
+          readOnly
+          className="p-2 border rounded w-1/4 bg-slate-50"
+        />
+        <input
+          type="text"
+          placeholder="Precio Unitario"
+          value={item.precioUnitario || ""}
+          readOnly
+          className="p-2 border rounded w-1/4 bg-slate-50"
+        />
+        <input
+          type="text"
+          placeholder="Subtotal"
+          value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
+          readOnly
+          className="p-2 border rounded w-1/4 bg-slate-50"
+        />
+      </div>
+    </div>
+  );
+
+  const addProcess = () => {
+    if (showEdit) {
+      setProces([...proces, ""]);
+    }
   };
 
   const handleProcesChange = (index, value) => {
@@ -255,138 +309,8 @@ console.log(receta);
           </div>
           <div className="mb-4 bg-slate-50">
             <h3 className="font-semibold mb-2 bg-slate-50">Ingredientes</h3>
-            {recetaItems.map((item, index) => (
-              <div key={index} className="flex flex-col mb-2 bg-slate-50">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Buscar ingrediente"
-                    value={item.name}
-                    onChange={(e) => handleIngredientChange(index, e.target.value, 'Items')}
-                    className="p-2 border rounded flex-1 bg-slate-50"
-                    readOnly={!showEdit}
-                  />
-                  {showEdit && (
-                    <button
-                      onClick={() => handleRemoveIngredient(index, 'Items')}
-                      className="px-2 py-1 bg-red-500 text-white rounded"
-                    >
-                      X
-                    </button>
-                  )}
-                </div>
-                {item.matches && item.matches.length > 0 && (
-                  <ul className="border rounded bg-white max-h-40 overflow-y-auto">
-                    {item.matches.map((match) => (
-                      <li
-                        key={match._id}
-                        onClick={() => handleIngredientSelect(index, match, 'Items')}
-                        className="p-2 hover:bg-gray-200 cursor-pointer"
-                      >
-                        {match.Nombre_del_producto}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="number"
-                    placeholder="Cantidad"
-                    value={item.cuantity || ""}
-                    onChange={(e) => handleCuantityChange(index, e.target.value, 'Items')}
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                    readOnly={!showEdit}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Unidades"
-                    value={item.units || ""}
-                    readOnly
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Precio Unitario"
-                    value={item.precioUnitario || ""}
-                    readOnly
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Subtotal"
-                    value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
-                    readOnly
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                  />
-                </div>
-              </div>
-            ))}
-            {productoInternoItems.map((item, index) => (
-              <div key={index} className="flex flex-col mb-2 bg-slate-50">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Buscar ingrediente"
-                    value={item.name}
-                    onChange={(e) => handleIngredientChange(index, e.target.value, 'Produccion')}
-                    className="p-2 border rounded flex-1 bg-slate-50"
-                    readOnly={!showEdit}
-                  />
-                  {showEdit && (
-                    <button
-                      onClick={() => handleRemoveIngredient(index, 'Produccion')}
-                      className="px-2 py-1 bg-red-500 text-white rounded"
-                    >
-                      X
-                    </button>
-                  )}
-                </div>
-                {item.matches && item.matches.length > 0 && (
-                  <ul className="border rounded bg-white max-h-40 overflow-y-auto">
-                    {item.matches.map((match) => (
-                      <li
-                        key={match._id}
-                        onClick={() => handleIngredientSelect(index, match, 'Produccion')}
-                        className="p-2 hover:bg-gray-200 cursor-pointer"
-                      >
-                        {match.Nombre_del_producto}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="number"
-                    placeholder="Cantidad"
-                    value={item.cuantity || ""}
-                    onChange={(e) => handleCuantityChange(index, e.target.value, 'Produccion')}
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                    readOnly={!showEdit}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Unidades"
-                    value={item.units || ""}
-                    readOnly
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Precio Unitario"
-                    value={item.precioUnitario || ""}
-                    readOnly
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Subtotal"
-                    value={(item.precioUnitario * item.cuantity).toFixed(2) || ""}
-                    readOnly
-                    className="p-2 border rounded w-1/4 bg-slate-50"
-                  />
-                </div>
-              </div>
-            ))}
+            {recetaItems.map((item, index) => renderIngredient(item, index, 'Items'))}
+            {productoInternoItems.map((item, index) => renderIngredient(item, index, 'Produccion'))}
             {showEdit && (
               <button onClick={addIngredient} className="px-4 py-2 bg-blue-500 text-white rounded">
                 Añadir Ingrediente
@@ -395,7 +319,7 @@ console.log(receta);
           </div>
           <div className=" bg-slate-50 flex gap-1">
             <input 
-              onChange={HandleSetEditvCMP}
+              onChange={(e) => setEditvCMP(e.target.value)}
               className="bg-white border-black w-[80px] p-1 border rounded mb-2"
             />
             <h3 className="font-semibold mb-2 bg-slate-300 p-1 border rounded">%CMPi: {CalculoDetalles.pCMPInicial}%</h3>
@@ -419,44 +343,32 @@ console.log(receta);
             type="text"
             placeholder={`${processTime}`}
             value={processTime}
-            onChange={handleProcessTimeChange}
+            onChange={(e) => setProcessTime(e.target.value)}
             className="w-full p-2 border rounded bg-slate-50"
             readOnly={!showEdit}
           />
           <h2 className="text-lg font-bold mb-4">{showEdit === false ? 'Procesos:' : "Editar Procesos:"}</h2>
-          {showEdit && proces.map((proc, index) => (
+          {proces.map((proc, index) => (
             <div key={index} className="mb-4">
               <textarea
                 placeholder={`Proceso ${index + 1}`}
                 value={proc}
                 onChange={(e) => handleProcesChange(index, e.target.value)}
                 className="w-full p-2 border rounded bg-slate-50 resize-none"
-                rows={3} // Controla el número inicial de líneas visibles
+                rows={3}
                 readOnly={!showEdit}
                 style={{
-                  whiteSpace: 'pre-wrap', // Permite que el texto haga wrap
-                  overflowWrap: 'break-word', // Asegura que el texto no desborde
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'break-word',
                 }}
               />
             </div>
           ))}
-          {!showEdit && proces.map((proc, index) => (
-            proc && (
-              <div key={index} className="mb-4">
-                <textarea
-                  placeholder={`Proceso ${index + 1}`}
-                  value={proc}
-                  readOnly={!showEdit}
-                  className="w-full p-2 border rounded bg-slate-50 resize-none"
-                  rows={3}
-                  style={{
-                    whiteSpace: 'pre-wrap',
-                    overflowWrap: 'break-word',
-                  }}
-                />
-              </div>
-            )
-          ))}
+          {showEdit && (
+            <button onClick={addProcess} className="px-4 py-2 bg-blue-500 text-white rounded">
+              Añadir Proceso
+            </button>
+          )}
           {showEdit && (
             <button onClick={handleSaveReceta} className="px-4 py-2 bg-green-500 text-white rounded">
               Guardar Procesos
@@ -467,4 +379,5 @@ console.log(receta);
     </div>
   );
 }
+
 export default RecepieOptionsProcedimientos;

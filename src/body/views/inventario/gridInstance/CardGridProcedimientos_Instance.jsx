@@ -8,6 +8,7 @@ import RecepieOptionsProcedimientos from "../../../components/recepieOptions/Rec
 
 export function CardGridProcedimientos_Instance({ item, currentType, book, product, receta, handleSaveReceta, handleCreateReceta }) {
 
+  console.log(currentType);
   
   
   
@@ -56,6 +57,7 @@ export function CardGridProcedimientos_Instance({ item, currentType, book, produ
       setButtonState("save");
     }
   };
+console.log(item._id , currentType);
 
   const handleDelete = async () => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ítem?")) {
