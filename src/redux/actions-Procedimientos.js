@@ -204,11 +204,6 @@ export function actualizarPago(workIsueId, pagoInfo) {
 export const crearProcedimiento = (procedimientoData) => {
   return async (dispatch) => {
     try {
-      // Validar que todos los campos requeridos tengan valores correctos
-      if (!procedimientoData.Ejecutor) {
-        throw new Error("El campo Ejecutor es obligatorio y debe ser un UUID válido.");
-      }
-
       const nuevoProcedimiento = {
         _id: uuidv4(),
         ...procedimientoData,

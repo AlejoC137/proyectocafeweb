@@ -80,6 +80,7 @@ function VentaCompra() {
   if (loading) {
     return <div className="text-center text-lg font-semibold">Loading...</div>;
   }
+console.log(ventas);
 
   return (
     <div className="bg-gray-100 h-[calc(100vh-8rem)] w-full overflow-auto">

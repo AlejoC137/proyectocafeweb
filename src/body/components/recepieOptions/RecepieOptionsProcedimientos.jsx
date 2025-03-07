@@ -134,10 +134,10 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
         if (receta) {
           await dispatch(updateItem(receta, recetaPayload, "RecetasProcedimientos"));
         } else {
-          await dispatch(crearItem(recetaPayload, "RecetasProcedimientos", product._id));
+          const createdReceta = await dispatch(crearItem(recetaPayload, "RecetasProcedimientos", product._id));
+          await dispatch(updateItem(product._id, { Receta: createdReceta._id }, PROCEDE));
         }
 
-        await dispatch(updateItem(product._id, { Receta: recetaPayload._id }, PROCEDE));
         alert("Receta guardada correctamente.");
       } catch (error) {
         console.error("Error al guardar la receta:", error);
@@ -151,7 +151,7 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
     let itemCounter = 1;
     let produccionCounter = 1;
     items.forEach((item) => {
-      const keyPrefix = testIngridient(item.item_Id);
+      const keyPrefix = item.item_Id.startsWith("item") ? "item" : "producto_interno";
       const idx = keyPrefix === 'item' ? itemCounter++ : produccionCounter++;
       payload[`${keyPrefix}${idx}_Id`] = item.item_Id || null;
       payload[`${keyPrefix}${idx}_Cuantity_Units`] = item.item_Id

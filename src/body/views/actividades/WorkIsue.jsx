@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearWorkIsue, actualizarWorkIsue, eliminarWorkIsue } from "../../../redux/actions-WorkIsue";
+import { AREAS } from "../../../redux/actions-types";
 
 const WorkIsue = ({ workIsue }) => {
   const dispatch = useDispatch();

@@ -40,11 +40,19 @@ export const FUENTES = []
 export const COCINA = 'COCINA'
 export const BARRA = 'BARRA'
 export const MESAS = 'MESAS'
+export const LIBROS_TIENDA = 'LIBROS_TIENDA'
+export const JARDINERIA = 'JARDINERIA'
+export const BAÑO = 'BAÑO'
+export const DESPACHO = 'DESPACHO'
 
 export const AREAS = [ 
   COCINA,
   BARRA,
   MESAS,
+  JARDINERIA,
+  LIBROS_TIENDA,
+  BAÑO,
+DESPACHO
 
 ]
 

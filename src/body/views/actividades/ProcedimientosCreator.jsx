@@ -12,12 +12,9 @@ function ProcedimientosCreator() {
   const dispatch = useDispatch();
   const allStaff = useSelector((state) => state.allStaff || []);
   const [formData, setFormData] = useState({
-    Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] },
-    Terminado: false,
-    Pagado: { pagadoFull: false, adelanto: "NoAplica" },
     Categoria: "",
-    Ejecutor: "",
     tittle: "",
+    DescripcionGeneral: "", // Default value
   });
 
   useEffect(() => {
@@ -34,30 +31,14 @@ function ProcedimientosCreator() {
     }));
   };
 
-  const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      Dates: { ...prev.Dates, [name]: value },
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Validar que todos los campos requeridos tengan valores correctos
-      if (!formData.Ejecutor) {
-        throw new Error("El campo Ejecutor es obligatorio y debe ser un UUID válido.");
-      }
-
       await dispatch(crearProcedimiento(formData));
       setFormData({
-        Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] },
-        Terminado: false,
-        Pagado: { pagadoFull: false, adelanto: "NoAplica" },
         Categoria: "",
-        Ejecutor: "",
         tittle: "",
+        DescripcionGeneral: "",
       });
       alert("Procedimiento guardado correctamente");
     } catch (error) {
@@ -71,64 +52,6 @@ function ProcedimientosCreator() {
       <h2 className="text-lg font-semibold">Crear Procedimientos</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="isued" className="block bg-white text-sm font-medium text-gray-700">Fecha de Creación:</label>
-            <input
-              type="date"
-              id="isued"
-              name="isued"
-              className="bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={formData.Dates.isued.split('T')[0]}
-              onChange={handleDateChange}
-            />
-            <p>Selected Date: {formData.Dates.isued.split('T')[0]}</p>
-          </div>
-          <div>
-            <label htmlFor="finished" className="block bg-white text-sm font-medium text-gray-700">Fecha de Finalización:</label>
-            <input
-              type="date"
-              id="finished"
-              name="finished"
-              className="bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={formData.Dates.finished.split('T')[0]}
-              onChange={handleDateChange}
-            />
-            <p>Selected Date: {formData.Dates.finished.split('T')[0]}</p>
-          </div>
-          <div className="bg-white">
-            <label className="text-sm font-medium">Terminado:</label>
-            <Input
-              type="checkbox"
-              name="Terminado"
-              checked={formData.Terminado}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm"
-            />
-          </div>
-          <div className="bg-white">
-            <label className="text-sm font-medium">Pagado:</label>
-            <select
-              name="Pagado"
-              value={formData.Pagado.pagadoFull}
-              onChange={(e) => setFormData({ ...formData, Pagado: { ...formData.Pagado, pagadoFull: e.target.value === "true" } })}
-              className="border bg-white rounded p-1 text-sm w-full"
-            >
-              <option className="bg-white" value="false">No</option>
-              <option className="bg-white" value="true">Sí</option>
-            </select>
-          </div>
-          {formData.Pagado.pagadoFull === false && (
-            <div className="bg-white">
-              <label className="text-sm font-medium">Adelanto:</label>
-              <Input
-                type="text"
-                name="adelanto"
-                value={formData.Pagado.adelanto}
-                onChange={(e) => setFormData({ ...formData, Pagado: { ...formData.Pagado, adelanto: e.target.value } })}
-                className="border bg-white rounded p-1 text-sm w-full"
-              />
-            </div>
-          )}
           <div className="bg-white">
             <label className="text-sm font-medium">Categoría:</label>
             <select
@@ -146,22 +69,6 @@ function ProcedimientosCreator() {
             </select>
           </div>
           <div className="bg-white">
-            <label className="text-sm font-medium">Ejecutor:</label>
-            <select
-              name="Ejecutor"
-              value={formData.Ejecutor}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm w-full"
-            >
-              <option className="bg-white" value="">Seleccionar Ejecutor</option>
-              {allStaff.map((staff) => (
-                <option className="bg-white" key={staff._id} value={staff._id}>
-                  {staff.Nombre} {staff.Apellido}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="bg-white">
             <label className="text-sm font-medium">Título:</label>
             <Input
               type="text"
@@ -169,6 +76,16 @@ function ProcedimientosCreator() {
               value={formData.tittle}
               onChange={handleChange}
               className="border bg-white rounded p-1 text-sm w-full"
+            />
+          </div>
+          <div className="bg-white col-span-2">
+            <label className="text-sm font-medium">Descripción General:</label>
+            <textarea
+              name="DescripcionGeneral"
+              value={formData.DescripcionGeneral}
+              onChange={handleChange}
+              className="border bg-white rounded p-1 text-sm w-full"
+              rows="4"
             />
           </div>
         </div>

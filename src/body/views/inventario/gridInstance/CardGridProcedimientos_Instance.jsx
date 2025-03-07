@@ -24,6 +24,7 @@ export function CardGridProcedimientos_Instance({ item, currentType, book, produ
     Procedimientos: item.Procedimientos || "",
     Estado: item.Estado || "",
     tittle: item.tittle || "",
+    Receta: item.Receta || "",
   };
 
   const [formData, setFormData] = useState(initialState);

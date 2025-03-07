@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CardGridWorkIsue_Instance } from "./CardGridWorkIsue_Instance";
 import { copiarAlPortapapeles } from "../../../../redux/actions";
-import { WorkIsue } from "../../../../redux/actions-types";
+import { AREAS, WorkIsue } from "../../../../redux/actions-types";
 
 export function CardGridWorkIsue() {
   const allWorkIsue = useSelector((state) => state.allWorkIsue || []);
@@ -10,7 +10,7 @@ export function CardGridWorkIsue() {
   const globalExpandedGroups = useSelector((state) => state.expandedGroups);
 
   const groupedWorkIsue = allWorkIsue.reduce((acc, workIsue) => {
-    const group = workIsue.Categoria || "SIN CATEGORÍA";
+    const group = AREAS.includes(workIsue.Categoria) ? workIsue.Categoria : "SIN CATEGORÍA";
     if (!acc[group]) acc[group] = [];
     acc[group].push(workIsue);
     return acc;

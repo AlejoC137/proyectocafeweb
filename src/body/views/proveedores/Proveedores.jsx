@@ -31,7 +31,7 @@ function Proveedores() {
   }
 
   return (
-    <div className="flex flex-col w-screen h-screen">
+    <div className="flex flex-col w-screen" style={{ paddingBottom: '120px' }}> {/* Adjusted paddingBottom */}
       <button onClick={handleToggleShowEdit} className="self-end m-4 p-2 bg-blue-500 text-white rounded">
         Toggle Edit
       </button>

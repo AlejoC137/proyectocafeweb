@@ -44,7 +44,7 @@ export function CardGridProcedimientos() {
   }, {});
 
   return (
-    <div className="flex flex-col gap-2 ml-4 mr-4 ">
+    <div className="flex flex-col gap-2 ml-4 mr-4" style={{ paddingBottom: '120px' }}> {/* Adjusted paddingBottom */}
       <input
         type="text"
         placeholder="Buscar Procedimientos..."
@@ -78,7 +78,7 @@ export function CardGridProcedimientos() {
               </button>
             </div>
             {expandedGroups[group] && (
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredProcedimientos[group].map((procedimiento, index) => (
                   <CardGridProcedimientos_Instance
                     key={index}
@@ -89,8 +89,6 @@ export function CardGridProcedimientos() {
                 ))}
               </div>
             )}
-
-
           </div>
         ))}
     </div>
