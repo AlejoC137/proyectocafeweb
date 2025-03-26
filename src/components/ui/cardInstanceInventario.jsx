@@ -54,7 +54,10 @@ export function CardInstanceInventario({ product, currentType }) {
       minimo: "",
       maximo: "",
       actual: "",
+      
     },
+
+    Merma: product.Merma || 0.00,
   });
   const [provData, setProvData] = useState({
     Proveedor_Name: '',
@@ -149,6 +152,7 @@ export function CardInstanceInventario({ product, currentType }) {
         UNIDADES: formData.UNIDADES,
         COSTO: formData.COSTO,
         GRUPO: formData.GRUPO,
+        Merma: formData.Merma,
         Estado: formData.Estado,
         Proveedor: formData.Proveedor ? formData.Proveedor : product.Proveedor,
         ...(currentType === ItemsAlmacen && { COOR: "1.05" }),
@@ -159,6 +163,7 @@ export function CardInstanceInventario({ product, currentType }) {
 
       await dispatch(updateItem(product._id, updatedFields, currentType));
       setButtonState("done");
+      window.location.reload(); // Reload the page after a successful update
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
       setButtonState("save");
@@ -445,6 +450,16 @@ export function CardInstanceInventario({ product, currentType }) {
                   type="text"
                   name="COSTO"
                   value={formData.COSTO}
+                  onChange={handleInputChange}
+                  className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+                />
+              </label>
+              <label className="text-sm text-gray-700 flex-1">
+                {"% Merma (0.00):"}
+                <input
+                  type="text"
+                  name="Merma"
+                  value={formData.Merma}
                   onChange={handleInputChange}
                   className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                 />

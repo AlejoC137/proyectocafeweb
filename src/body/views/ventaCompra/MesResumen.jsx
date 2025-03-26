@@ -7,7 +7,7 @@ import { recetaMariaPaula } from "../../../redux/calcularReceta";
 import DiaResumentStats from "./DiaResumentStats";
 import { fetchAndProcessSales } from "./slicer"; // Import the function
 
-function DiaResumen() {
+function MesResumen() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
@@ -20,7 +20,7 @@ function DiaResumen() {
   const [totalTarjeta, setTotalTarjeta] = useState(0);
   const [totalEfectivo, setTotalEfectivo] = useState(0);
   const [totalTransferencia, setTotalTransferencia] = useState(0);
-  
+  const mes =hoy.split("/")[0] 
   
   
   const allMenu = useSelector((state) => state.allMenu);
@@ -53,18 +53,28 @@ function DiaResumen() {
           dispatch(getAllFromTable(COMPRAS)),
         ]);
 
-        // console.log("Compras from Redux:", allCompras); // Log Compras to console
+
+        const { data: data, error: error } = await supabase
+        .from('Ventas')
+        .select('*')
+        .order('Date', { ascending: false }) // Ordena por fecha descendente (más recientes primero)
+        // .range(0, 5);
+
+        const ventasMES = data.filter((venta) => venta.Date.split("/")[0] ===  mes );
+
+// console.log(ventasMES);
+
+        // console.log(Ventas);
 
         // const responce = await supabase
-        const { data, error } = await supabase
-          .from("Ventas")
-          .select("*")
-          .filter("Date", "eq", hoy)
-          .order("Date", { ascending: true });
+        // const { data, error } = await supabase
+        //   .from("Ventas")
+        //   .select("*")
+        //   .filter("Date", "eq", hoy)
+        //   .order("Date", { ascending: true });
 
 // console.log("Venta" , data[900].Date);
 // console.log("Fencha" , hoy);
-console.log(data);
 
 
         if (error) {
@@ -83,7 +93,8 @@ console.log(data);
             }
           });
 
-          const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === hoy );
+          // const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === hoy );
+          const ventasHoy = ventasMES
           // console.log(ventasHoy);
 
           // Ordenar las ventas por fecha y hora
@@ -258,6 +269,7 @@ console.log(data);
         totalTransferencia={totalTransferencia}
         totalCompras={totalCompras}
       />
+
       {/* Resumen del Día */}
       {/* Removed inline rendering */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -374,4 +386,5 @@ console.log(data);
   );
 }
 
-export default DiaResumen;
+export default MesResumen;
+

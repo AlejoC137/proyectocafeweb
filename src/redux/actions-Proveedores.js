@@ -403,12 +403,16 @@ export function calcularPrecioUnitario(item) {
   if (item.COOR === "NaN" ) { item.COOR = 1.05; }
   // Calcular el precio unitario si todos los valores son válidos
   const costo = parseFloat(item.COSTO);
-  const cantidad = parseFloat(item.CANTIDAD);
+  const cantidad = (parseFloat(item.CANTIDAD) - (parseFloat(item.CANTIDAD) * parseFloat(item.Merma)));
+  const Merma = parseFloat(item.Merma);
   const coor = parseFloat(item.COOR);
 
-  precioUnitario = (costo / cantidad) * ajusteInflacionario * ( coor ? coor : 1.05);
-  console.log(item);
-  console.log(precioUnitario);
+  // precioUnitario = (costo / (cantidad-(cantidad*Merma)) ) * ajusteInflacionario * ( coor ? coor : 1.05);
+  precioUnitario = (costo / cantidad ) * ajusteInflacionario * ( coor ? coor : 1.05);
+
+
+console.log(precioUnitario);
+
 
   return parseFloat(precioUnitario.toFixed(2));
 }

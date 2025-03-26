@@ -22,10 +22,13 @@ import Inventario from './body/views/inventario/Inventario';
 import Manager from './body/views/inventario/Manager';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import Actividades from './body/views/actividades/Actividades';
-import DiaResumen from './body/views/ventaCompra/DiaResumen';
+import MesResumen from './body/views/ventaCompra/MesResumen.jsx';
+import DiaResumen from './body/views/ventaCompra/DiaResumen.jsx';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
+import MenuPrint from './body/components/Menu/MenuPrint';
+
 // import Manager from './body/views/actividades/Manager';
 
 
@@ -77,15 +80,15 @@ function App() {
      <Route path="/VentaCompra" element={<VentaCompra />} />
      <Route path="/Actividades" element={<Actividades />} />
      <Route path="/Gastos" element={<Gastos />} />
+     <Route path="/MenuPrint" element={<MenuPrint />} />
      <Route path="/DiaResumen" element={<DiaResumen />} />
+     <Route path="/MesResumen" element={<MesResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
-     {/* <Route path="/CalculoNomina" element={<CalculoNomina />} /> */}
-        {/* Renderiza el componente que corresponde a la vista actual */}
-
-
-        {/* Renderiza el BottomNav debajo del componente actual */}
+{/* <Route path="/CalculoNomina" element={<CalculoNomina />} /> */}
+{/* Renderiza el componente que corresponde a la vista actual */}
+{/* Renderiza el BottomNav debajo del componente actual */}
      </Routes>
      <BottomNav />
      <br></br>

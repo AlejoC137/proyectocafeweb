@@ -46,11 +46,11 @@ navigate('/RecetaCard'); // Navega a la ruta /RecetaCard después de despachar
   </div>
 )}
 
-      <div className="font-Bobby_Jones_Soft text-notBlack text-12pt text-center truncate">
+      <div className="font-SPACEGROTESK_VARIABLEFONT_WGHT text-notBlack text-12pt text-center truncate">
         {props.name}
       </div>
       
-      <div className="font-Bobby_Jones_Soft text-notBlack text-10pt text-center ">
+      <div className="font-SPACEGROTESK_VARIABLEFONT_WGHT text-notBlack text-10pt text-center ">
         {props.precio} 
       </div>
 
@@ -63,7 +63,7 @@ navigate('/RecetaCard'); // Navega a la ruta /RecetaCard después de despachar
         />
         {/* Description Overlay */}
         {(showDescription && props.descripcion) && (
-          <div className="absolute top-0 left-0 w-full h-full flex font-Bobby_Jones_Soft text-notBlack border border-lilaDark rounded-2xl items-center justify-center bg-white bg-opacity-75" onClick={toggleDescription}>
+          <div className="absolute top-0 left-0 w-full h-full flex font-SPACEGROTESK_VARIABLEFONT_WGHT text-notBlack border border-lilaDark rounded-2xl items-center justify-center bg-white bg-opacity-75" onClick={toggleDescription}>
             <div className="text-center">{props.name} - {props.descripcion}</div>
           </div>
         )}

@@ -25,7 +25,7 @@ function MenuButtons({ categories }) {
         <button
           key={index}
           onClick={() => handleOnClickCat(category)}
-          className={`w-full  mr-1 rounded-2xl border border-lilaDark p-1 font-Bobby_Jones_Soft text-lilaDark  text-15pt text-center ${
+          className={`w-full  mr-1 rounded-2xl border border-lilaDark p-1 font-SPACEGROTESK_VARIABLEFONT_WGHT text-lilaDark  text-15pt text-center ${
             selectedCat === category ? 'bg-ladrillo text-notBlack' : 'bg-softGrey text-cream'
           }`}
         >

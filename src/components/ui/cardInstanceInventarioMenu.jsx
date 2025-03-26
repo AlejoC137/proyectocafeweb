@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateItem, getRecepie, insertarRecetas, crearItem, crearReceta } from "../../redux/actions";
+import { updateItem, getRecepie, insertarRecetas, crearItem, crearReceta, deleteItem } from "../../redux/actions";
 import { CATEGORIES, MenuItems } from "../../redux/actions-types";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 
@@ -13,6 +13,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   const [book, setBook] = useState("📕");
   // const [book, setBook] = useState("📖");
   const [info, setInfo] = useState("📥");
+  const [deletet, setDeletet] = useState("❌");
   // const [info, setInfo] = useState("📤");
  
   useEffect(() => {
@@ -45,6 +46,11 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
     setEditableProduct({ ...editableProduct, Estado: newEstado });
     dispatch(updateItem(editableProduct._id, { Estado: newEstado }, "Menu"));
   };
+  const togglePrint = () => {
+    const newPrint = editableProduct.PRINT === true ? false : true ;
+    setEditableProduct({ ...editableProduct, PRINT: newPrint });
+    dispatch(updateItem(editableProduct._id, { PRINT: newPrint }, "Menu"));
+  };
 
   const toggleRecepie = () => {
     setShowRecepie(!showRecepie);
@@ -61,6 +67,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
       alert("Hubo un error al guardar la receta.");
     }
   };
+
 
   const handleCreateReceta = async (recetaData, productId) => {
     try {
@@ -79,6 +86,19 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   const handleInfo = () => {
     setInfo((prev) => (prev === '📤' ? '📥' : '📤'));
   };
+  const handleDelete = async () => {
+    try {
+      await dispatch(deleteItem(editableProduct._id, "Menu"));
+
+  
+      alert("Receta eliminada correctamente.");
+  
+      setDeletet((prev) => (prev === '❌' ? '💀' : '❌'));
+    } catch (error) {
+      console.error("Error al eliminar la receta:", error);
+      alert("Hubo un error al eliminar la receta.");
+    }
+  };
 
   return (
     <div className="border p-4 rounded-md shadow-md">
@@ -89,13 +109,19 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   </div>
 <div className="flex">
 
+
+                <button
+            onClick={togglePrint}
+            className={`p-2 rounded-md mt-2 ${editableProduct.PRINT === true ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
+          >
+            {editableProduct.PRINT === true ? "No Print" : "Print"}
+          </button>
                 <button
             onClick={toggleEstado}
             className={`p-2 rounded-md mt-2 ${editableProduct.Estado === "Activo" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
           >
             {editableProduct.Estado === "Activo" ? "Inactivar" : "Activar"}
           </button>
-
           <button
             onClick={handleRecepie}
             className="bg-yellow-500 text-white p-2 rounded-md mt-2 ml-2"
@@ -108,6 +134,12 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
           >
             {info}
           </button>
+          {/* <button
+            onClick={handleDelete}
+            className="bg-red-500 text-white p-2 rounded-md mt-2 ml-2"
+          >
+            {deletet}
+          </button> */}
 
 
           </div>

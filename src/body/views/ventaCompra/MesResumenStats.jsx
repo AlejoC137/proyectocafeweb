@@ -15,12 +15,16 @@ const MesResumen = ({
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const [infoPorProducto, setInfoPorProducto] = useState([]);
 
+
+  
   useEffect(() => {
     const calculateCosts = () => {
       const info = ventasRecepies.map((element) => {
         const recetaObj = allRecetasMenu.find((receta) => receta._id === element.recetaId);
 
         if (recetaObj && recetaObj.costo) {
+          console.log(recetaObj.costo);
+          
           const data = JSON.parse(recetaObj.costo);
           return { ...element, costoDirecto: data.vCMP * element.cantidad };
         }
@@ -37,6 +41,7 @@ const MesResumen = ({
     }
   }, [ventasRecepies, allRecetasMenu]);
 
+  // console.log(infoPorProducto);
   const totalCostoDirecto = infoPorProducto.reduce((acc, producto) => acc + (producto.costoDirecto || 0), 0);
 
   const formatNumber = (number) => {

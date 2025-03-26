@@ -42,18 +42,18 @@
 //                     alt="Your Image Alt Text"
 //                     imageWidth="40px"
 //                 />
-//                 <div className='font-Bobby_Jones_Soft text-15pt text-center'>
+//                 <div className='font-SPACEGROTESK_VARIABLEFONT_WGHT text-15pt text-center'>
 //                     {currentLenguaje === 'ES' ? `Lunes - Sábado : 8:00 AM - 7:30 PM, Domingo: 9:00 AM - 2:30 PM` : `Monday - Saturday: 8:00 AM - 7:30 PM, Sunday: 9:00 AM - 2:30 PM`}
 //                 </div>
 //                 <div className="flex">
 //                     <button
-//                         className={`w-1/2 mb-1 mr-0.5 rounded-2xl border border-lilaDark p-1 font-Bobby_Jones_Soft text-15pt text-center ${currentLenguaje === 'ES' ? 'bg-ladrillo text-notBlack' : 'text-lilaDark bg-softGrey'}`}
+//                         className={`w-1/2 mb-1 mr-0.5 rounded-2xl border border-lilaDark p-1 font-SPACEGROTESK_VARIABLEFONT_WGHT text-15pt text-center ${currentLenguaje === 'ES' ? 'bg-ladrillo text-notBlack' : 'text-lilaDark bg-softGrey'}`}
 //                         onClick={switchToSpanish}
 //                     >
 //                         Español
 //                     </button>
 //                     <button
-//                         className={`w-1/2 mb-1 ml-0.5 rounded-2xl border border-lilaDark p-1 font-Bobby_Jones_Soft text-15pt text-center ${currentLenguaje === 'EN' ? 'bg-ladrillo text-notBlack' : 'text-lilaDark bg-softGrey'}`}
+//                         className={`w-1/2 mb-1 ml-0.5 rounded-2xl border border-lilaDark p-1 font-SPACEGROTESK_VARIABLEFONT_WGHT text-15pt text-center ${currentLenguaje === 'EN' ? 'bg-ladrillo text-notBlack' : 'text-lilaDark bg-softGrey'}`}
 //                         onClick={switchToEnglish}
 //                     >
 //                         English
