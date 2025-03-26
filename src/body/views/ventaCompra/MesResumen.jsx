@@ -4,7 +4,7 @@ import { COMPRAS, MENU, PROVEE, RECETAS_MENU } from "../../../redux/actions-type
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
-import DiaResumentStats from "./DiaResumentStats";
+import MesResumenStats from "./MesResumenStats";
 import { fetchAndProcessSales } from "./slicer"; // Import the function
 
 function MesResumen() {
@@ -259,7 +259,7 @@ function MesResumen() {
         />
         <p>Selected Date: {hoy}</p>
       </div>
-      <DiaResumentStats
+      <MesResumenStats
         ventasRecepies={productosVendidos}
         totalIngreso={totalIngreso}
         totalTip={totalTip}

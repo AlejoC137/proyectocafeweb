@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
-const MesResumen = ({
+const MesResumenStats = ({
   ventasRecepies,
   totalIngreso,
   totalTip,
@@ -15,16 +15,12 @@ const MesResumen = ({
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const [infoPorProducto, setInfoPorProducto] = useState([]);
 
-
-  
   useEffect(() => {
     const calculateCosts = () => {
       const info = ventasRecepies.map((element) => {
         const recetaObj = allRecetasMenu.find((receta) => receta._id === element.recetaId);
 
         if (recetaObj && recetaObj.costo) {
-          console.log(recetaObj.costo);
-          
           const data = JSON.parse(recetaObj.costo);
           return { ...element, costoDirecto: data.vCMP * element.cantidad };
         }
@@ -41,8 +37,8 @@ const MesResumen = ({
     }
   }, [ventasRecepies, allRecetasMenu]);
 
-  // console.log(infoPorProducto);
   const totalCostoDirecto = infoPorProducto.reduce((acc, producto) => acc + (producto.costoDirecto || 0), 0);
+console.log(infoPorProducto);
 
   const formatNumber = (number) => {
     return number.toLocaleString('es-ES');
@@ -96,5 +92,5 @@ const MesResumen = ({
   );
 };
 
-export default MesResumen;
+export default MesResumenStats;
 
