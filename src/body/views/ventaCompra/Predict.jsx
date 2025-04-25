@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import supabase from "../../../config/supabaseClient"; // Import supabase client
-import { useParams } from "react-router-dom";
 
-function Predict() {
+function Predict({ menuItem }) {
   const [ventasGroupedByDate, setVentasGroupedByDate] = useState([]);
   const [averageByDay, setAverageByDay] = useState({});
   const [trend, setTrend] = useState(null);
-  const { menuItem } = useParams();
 
   // Ensure menuItem has a default value if null or undefined
   const selectedMenuItem = menuItem || "Menu";
@@ -40,7 +38,6 @@ function Predict() {
         if (!acc[venta.Date]) {
           acc[venta.Date] = {
             date: venta.Date,
-            dia: venta.Date,
             totalIngreso: 0,
             totalCantidad: 0,
             ventas: [],
@@ -56,44 +53,69 @@ function Predict() {
 
       setVentasGroupedByDate(Object.values(grouped));
 
-      // Calculate averages grouped by day of the week
-      const dayTotals = {};
-      const dayCounts = {};
-      const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]; // Corrected order
-
-      Object.values(grouped).forEach((group) => {
-        const date = new Date(group.date);
-        const dayName = dayNames[date.getDay()]; // Correctly map day names
-
-        if (!dayTotals[dayName]) {
-          dayTotals[dayName] = 0;
-          dayCounts[dayName] = 0;
-        }
-
-        dayTotals[dayName] += group.totalCantidad; // Sum totalCantidad for the day
-        dayCounts[dayName] += 1; // Count occurrences of the day
-
-      
-      });
-
-      const dayAverages = {};
-      for (const dayName in dayTotals) {
-        dayAverages[dayName] = dayTotals[dayName] / dayCounts[dayName]; // Calculate average for each day
-      }
-console.log(dayAverages);
-
-      setAverageByDay(dayAverages); // Update state with averages
+      // Calculate predictions
+      calculateAverageByDay(filteredVentas);
+      calculateTrend(filteredVentas);
     } catch (error) {
       console.error("Error fetching ventas with Menu:", error);
     }
   };
 
+  const calculateAverageByDay = (ventas) => {
+    const dayTotals = {};
+    const dayCounts = {};
+    const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+    ventas.forEach((venta) => {
+      const productos = JSON.parse(venta.Productos);
+      const producto = productos.find((p) => p.NombreES === selectedMenuItem);
+      if (producto) {
+        const date = new Date(venta.Date);
+        const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+        if (!dayTotals[day]) {
+          dayTotals[day] = 0;
+          dayCounts[day] = 0;
+        }
+
+        dayTotals[day] += parseFloat(producto.quantity || 0);
+        dayCounts[day] += 1;
+      }
+    });
+
+    const averages = {};
+    for (const day in dayTotals) {
+      averages[dayNames[day]] = dayTotals[day] / dayCounts[day];
+    }
+
+    setAverageByDay(averages);
+  };
+
+  const calculateTrend = (ventas) => {
+    const sortedVentas = [...ventas].sort((a, b) => new Date(a.Date) - new Date(b.Date));
+    const quantities = sortedVentas.map((venta) => {
+      const productos = JSON.parse(venta.Productos);
+      const producto = productos.find((p) => p.NombreES === selectedMenuItem);
+      return producto ? parseFloat(producto.quantity || 0) : 0;
+    });
+
+    if (quantities.length < 2) {
+      setTrend("No suficiente información");
+      return;
+    }
+
+    const diffs = [];
+    for (let i = 1; i < quantities.length; i++) {
+      diffs.push(quantities[i] - quantities[i - 1]);
+    }
+
+    const averageDiff = diffs.reduce((acc, diff) => acc + diff, 0) / diffs.length;
+    setTrend(averageDiff > 0 ? "Creciente" : averageDiff < 0 ? "Decreciente" : "Estable");
+  };
 
   useEffect(() => {
     fetchVentasWithMenu();
   }, [selectedMenuItem]);
-
-  const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
@@ -109,41 +131,35 @@ console.log(dayAverages);
             </tr>
           </thead>
           <tbody>
-            {ventasGroupedByDate.map((group) => {
-              const date = new Date(group.date);
-              const dayName = dayNames[date.getDay()]; // Determine the name of the day
-              return (
-                <tr key={group.date} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4 border-b text-sm text-gray-700">
-                    {group.date} ({dayName}) {/* Display the date and day name */}
-                  </td>
-                  <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">{group.totalIngreso}</td>
-                  <td className="py-3 px-4 border-b text-sm text-gray-700">{group.totalCantidad}</td>
-                  <td className="py-3 px-4 border-b text-sm text-blue-500">
-                    <details>
-                      <summary className="cursor-pointer">Ver Detalles</summary>
-                      <ul className="mt-2">
-                        {group.ventas.map((venta) => (
-                          <li key={venta._id} className="text-gray-600">
-                            Hora: {venta.Time}, Método de Pago:{" "}
-                            {(() => {
-                              let pagoInfo;
-                              try {
-                                pagoInfo = JSON.parse(venta.Pago_Info);
-                              } catch (e) {
-                                console.error("Error parsing Pago_Info:", e);
-                                return "Desconocido";
-                              }
-                              return pagoInfo?.metodo || "Desconocido";
-                            })()}
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
-                  </td>
-                </tr>
-              );
-            })}
+            {ventasGroupedByDate.map((group) => (
+              <tr key={group.date} className="hover:bg-gray-50 transition-colors">
+                <td className="py-3 px-4 border-b text-sm text-gray-700">{group.date}</td>
+                <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">{group.totalIngreso}</td>
+                <td className="py-3 px-4 border-b text-sm text-gray-700">{group.totalCantidad}</td>
+                <td className="py-3 px-4 border-b text-sm text-blue-500">
+                  <details>
+                    <summary className="cursor-pointer">Ver Detalles</summary>
+                    <ul className="mt-2">
+                      {group.ventas.map((venta) => (
+                        <li key={venta._id} className="text-gray-600">
+                          Hora: {venta.Time}, Método de Pago:{" "}
+                          {(() => {
+                            let pagoInfo;
+                            try {
+                              pagoInfo = JSON.parse(venta.Pago_Info);
+                            } catch (e) {
+                              console.error("Error parsing Pago_Info:", e);
+                              return "Desconocido";
+                            }
+                            return pagoInfo?.metodo || "Desconocido";
+                          })()}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       ) : (
@@ -155,9 +171,9 @@ console.log(dayAverages);
         <div className="mb-4">
           <h3 className="text-lg font-semibold">Promedio por día de la semana:</h3>
           <ul>
-            {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map((day) => (
+            {Object.entries(averageByDay).map(([day, avg]) => (
               <li key={day} className="text-gray-700">
-                {day}: {averageByDay[day] ? averageByDay[day].toFixed(2) : "0.00"} unidades
+                {day}: {avg.toFixed(2)} unidades
               </li>
             ))}
           </ul>

@@ -210,10 +210,6 @@ function Mesa({ index, ventas, reloadVentas }) {
             >
               📕
             </Button>
-            const handleRecetaClick = (item) => {
-    const url = `/receta/${item.Receta}`;
-    window.open(url, '_blank');
-  };
           <Input
             type="text"
             placeholder="Buscar producto..."
