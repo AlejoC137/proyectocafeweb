@@ -10,7 +10,6 @@ function Gastos() {
   const dispatch = useDispatch();
 
   // Estados para los campos del formulario
-  const [fecha, setFecha] = useState(hoy);
   const [Valor, setValor] = useState("");
   const [MedioDeCompra, setMedioDeCompra] = useState("");
   const [MedioDePago, setMedioDePago] = useState("");
@@ -27,7 +26,7 @@ function Gastos() {
 
     // Crear el objeto con los datos del formulario
     const gastoData = {
-      Date: fecha,
+      Date: hoy,
       Valor: parseFloat(Valor), // Convertir a número
       MedioDeCompra,
       MedioDePago,

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
@@ -40,55 +41,95 @@ function MenuPrint() {
   }
 
   return (
-    <div className="flex flex-col items-center w-custom-width2480px h-screen font-SpaceGrotesk font-light" ref={printRef}>
+    <div className="flex flex-col items-center w-custom-width1200px h-screen font-SpaceGrotesk font-light" ref={printRef}>
       <Button onClick={handlePrint} className="mb-5 print:hidden font-SpaceGrotesk font-medium">
         🖨️
       </Button>
+  
       <div id="print-area">
-        <div className="pt-5 gap-2 w-custom-width2480px flex flex-row">
-          <div className="w-1/6 h-44 flex items-center justify-center">
+        <div className="pt-5 gap-2 w-custom-width1200px flex flex-row">
+          <div className="w-1/12 h-20 flex items-center justify-center">
             <img src={BaseSillaLogo} alt="Base Silla Logo" className="h-full" />
           </div>
-          <div className="w-1/6 h-44 flex items-center justify-center">
-            <img src={QrMenu} alt="Base Silla Logo" className="h-full" />
+          <div className="w-1/12 h-20 flex items-center justify-center">
+            <img src={QrMenu} alt="QR Menu" className="h-full" />
           </div>
-          <div className="w-1/6 h-44 flex items-center justify-center">
+          <div className="w-1/12 h-20 flex items-center justify-center">
             <img src={BaseSillaLogo} alt="Base Silla Logo" className="h-full" />
           </div>
-          <div className="w-1/6 h-44 flex items-center justify-center">
+          <div className="w-1/12 h-20 flex items-center justify-center">
             <img src={BaseSillaLogo} alt="Base Silla Logo" className="h-full" />
           </div>
-          <div className="w-1/6 h-44 flex items-center justify-center">
+          <div className="w-1/12 h-20 flex items-center justify-center">
             <img src={BaseSillaLogo} alt="Base Silla Logo" className="h-full" />
           </div>
-          <div className="w-1/6 h-44 flex items-center justify-center">
+          <div className="w-1/12 h-20 flex items-center justify-center">
             <img src={BaseSillaLogo} alt="Base Silla Logo" className="h-full" />
           </div>
         </div>
-
-        <div className="pt-5 gap-2 w-custom-width2480px flex flex-row">
-          <CardGridPrint withDividerValue={3} className="w-1/3" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-          <CardGridPrint withDividerValue={3} className="w-1/3" filterKey={PANADERIA} products={menuData} category={[PANADERIA, REPOSTERIA]} isEnglish={true} />
-          <CardGridPrint withDividerValue={3} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
-        </div>
-
-        <div className="pt-5 gap-2 w-custom-width2480px flex flex-row py-4">
-          <CardGridPrint withDividerValue={6} className="w-1/6" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-          <CardGridPrint withDividerValue={6} className="w-1/6" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-          <CardGridPrint withDividerValue={6} className="w-1/6" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-          <CardGridPrint withDividerValue={6} className="w-1/6" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-          <CardGridPrint withDividerValue={6} className="w-1/6" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-          <CardGridPrint withDividerValue={6} className="w-1/6" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
-        </div>
-
-        <div className="pt-5 gap-2 w-custom-width2480px h-screen flex flex-row overflow-hidden font-SpaceGrotesk font-light">
-          <CardGridPrint withDividerValue={3} filterKey={BEBIDAS} products={menuData} category={BEBIDAS} isEnglish={true} />
-          <CardGridPrint withDividerValue={3} filterKey={CAFE} products={menuData} className="p-1" category={CAFE} isEnglish={true} />
-          <CardGridPrint withDividerValue={3} filterKey={ENLATADOS} products={menuData} category={ENLATADOS} isEnglish={true} />
+  
+        {/* TRES COLUMNAS IGUALES */}
+        <div className="pt-0 gap-4 flex flex-row justify-center">
+          {/* BUENA COMIDA */}
+          <div className="flex flex-col gap-2 w-custom-width400px">
+            <h1>BUENA COMIDA</h1>
+            <h2>{DESAYUNO}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={DESAYUNO} products={menuData} category={DESAYUNO} isEnglish={true} />
+            </div>
+            <br />
+            <br />
+            <h2>{TARDEO}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
+            </div>
+            <h2>{PANADERIA}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={PANADERIA} products={menuData} category={PANADERIA} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={REPOSTERIA} products={menuData} category={REPOSTERIA} isEnglish={true} />
+            </div>
+          </div>
+  
+          {/* CAFÉ */}
+          <div className="flex flex-col gap-2 w-custom-width400px">
+            <h1>CAFÉ</h1>
+            <h2>{CAFE}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={CAFE} products={menuData} category={CAFE} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={BEBIDAS} products={menuData} category={BEBIDAS} isEnglish={true} />
+            </div>
+            <br />
+            <br />
+            <h2>{TARDEO}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
+            </div>
+          </div>
+  
+          {/* BEBIDAS */}
+          <div className="flex flex-col gap-2 w-custom-width400px">
+            <h1>BEBIDAS</h1>
+            <h2>{CAFE}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={CAFE} products={menuData} category={CAFE} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={BEBIDAS} products={menuData} category={BEBIDAS} isEnglish={true} />
+            </div>
+            <br />
+            <br />
+            <h2>{TARDEO}</h2>
+            <div className="flex flex-row gap-2">
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
+              <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} category={TARDEO} isEnglish={true} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
+  
 }
 
 export default MenuPrint;

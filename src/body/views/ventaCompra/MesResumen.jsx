@@ -6,9 +6,12 @@ import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
 import MesResumenStats from "./MesResumenStats";
 import { fetchAndProcessSales } from "./slicer"; // Import the function
+import Predict from "./Predict";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function MesResumen() {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize navigate
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
   const [productosRecetasHoy, setProductosRecetasHoy] = useState([]);
@@ -29,6 +32,16 @@ function MesResumen() {
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) => state.Compras); // Fetch Compras from Redux
   
+
+      
+            const handleRecetaClick = (item) => {
+console.log(item.nombre);
+
+
+              const url = `/Predict/${item.nombre}`;
+    window.open(url, '_blank');
+  };
+
   // console.log(allCompras);
   const handleDateChange = (e) => {
     const date = e.target.value;
@@ -353,6 +366,9 @@ function MesResumen() {
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Cantidad Vendida
                   </th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                    Acción
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -366,6 +382,15 @@ function MesResumen() {
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
                       {producto.cantidad}
+                    </td>
+                    <td className="py-3 px-4 border-b text-sm">
+                    <button
+              onClick={() => handleRecetaClick(producto  )}
+              className="bg-yellow-500 text-white text-sm w-[30px]"
+            >
+              📕
+            </button>
+
                     </td>
                   </tr>
                 ))}

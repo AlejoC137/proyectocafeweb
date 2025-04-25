@@ -28,7 +28,7 @@ export function CardInstancePrint({ product, isEnglish }) {
   };
 
   return (
-    <Card className="w-full h-full overflow-hidden p-1 shadow-none" onClick={() => setShowDetail(true)}>
+    <Card className="w-full h-full overflow-hidden pt-1 pl-1 pr-1 shadow-none" onClick={() => setShowDetail(true)}>
       <div className="relative z-0 overflow-hidden">
         <Button variant="ghost" size="icon" className="absolute bg-white/70">
           <ShoppingCart className="h-5 w-5 text-gray-700" />

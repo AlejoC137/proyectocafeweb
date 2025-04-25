@@ -553,9 +553,17 @@ export function crearItem(itemData, type, forId) {
 export function updateItem(itemId, updatedFields, type) {
   return async (dispatch) => {
     try {
+      // Ensure numeric fields are properly validated
+      const sanitizedFields = { ...updatedFields };
+      Object.keys(sanitizedFields).forEach((key) => {
+        if (typeof sanitizedFields[key] === "string" && sanitizedFields[key].trim() === "") {
+          sanitizedFields[key] = null; // Convert empty strings to null
+        }
+      });
+
       const { data, error } = await supabase
         .from(type)
-        .update(updatedFields)
+        .update(sanitizedFields)
         .eq('_id', itemId)
         .select();
 

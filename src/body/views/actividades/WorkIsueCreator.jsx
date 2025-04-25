@@ -11,15 +11,18 @@ function WorkIsueCreator() {
   
   const dispatch = useDispatch();
   const allStaff = useSelector((state) => state.allStaff || []);
+  const allProcedimientos = useSelector((state) => state.allProcedimientos || []);
   const [formData, setFormData] = useState({
     Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] },
     Terminado: false,
     Pagado: { pagadoFull: false, adelanto: "NoAplica", susceptible: false },
     Categoria: "",
     Ejecutor: "",
-    Procedimientos: "",
+    Procedimientos: [],
     tittle: "",
   });
+  const [procedimientosList, setProcedimientosList] = useState([]);
+  const [procedimientosSelectors, setProcedimientosSelectors] = useState([0]);
 
   useEffect(() => {
     dispatch(getAllFromTable(PROCEDE));
@@ -42,6 +45,34 @@ function WorkIsueCreator() {
     }));
   };
 
+  const handleAddSelector = () => {
+    setProcedimientosSelectors((prev) => [...prev, prev.length]);
+  };
+
+  const handleProcedimientoChange = (index, value) => {
+    const procedimiento = allProcedimientos.find((proc) => proc._id === value);
+    if (procedimiento) {
+      const updatedList = [...procedimientosList];
+      updatedList[index] = procedimiento;
+      setProcedimientosList(updatedList);
+      setFormData((prev) => ({
+        ...prev,
+        Procedimientos: updatedList,
+      }));
+    }
+  };
+
+  const handleRemoveSelector = (index) => {
+    const updatedSelectors = procedimientosSelectors.filter((_, i) => i !== index);
+    const updatedList = procedimientosList.filter((_, i) => i !== index);
+    setProcedimientosSelectors(updatedSelectors);
+    setProcedimientosList(updatedList);
+    setFormData((prev) => ({
+      ...prev,
+      Procedimientos: updatedList,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -52,9 +83,11 @@ function WorkIsueCreator() {
         Pagado: { pagadoFull: false, adelanto: "NoAplica", susceptible: false },
         Categoria: "",
         Ejecutor: "",
-        Procedimientos: "",
+        Procedimientos: [],
         tittle: "",
       });
+      setProcedimientosList([]);
+      setProcedimientosSelectors([0]);
       alert("Procedimiento guardado correctamente");
     } catch (error) {
       console.error("Error al guardar el procedimiento:", error);
@@ -100,11 +133,10 @@ function WorkIsueCreator() {
               className="border bg-white rounded p-1 text-sm w-full"
             >
               <option className="bg-white" value="">Seleccionar Categoría</option>
-   {AREAS.map((area) => (
+              {AREAS.map((area) => (
                 <option className="bg-white" key={area} value={area}>{area}</option>
               ))}
-                  
-                              </select>
+            </select>
           </div>
           <div className="bg-white">
             <label className="text-sm font-medium">Ejecutor:</label>
@@ -124,13 +156,42 @@ function WorkIsueCreator() {
           </div>
           <div className="bg-white">
             <label className="text-sm font-medium">Procedimientos:</label>
-            <Input
-              type="text"
-              name="Procedimientos"
-              value={formData.Procedimientos}
-              onChange={handleChange}
-              className="border bg-white rounded p-1 text-sm w-full"
-            />
+            {procedimientosSelectors.map((selector, index) => (
+              <div key={selector} className="flex items-center gap-2 mt-2">
+                <select
+                  value={procedimientosList[index]?._id || ""}
+                  onChange={(e) => handleProcedimientoChange(index, e.target.value)}
+                  className="border bg-white rounded p-1 text-sm w-full"
+                >
+                  <option className="bg-white" value="">
+                    Seleccionar Procedimiento
+                  </option>
+                  {allProcedimientos.map((proc) => (
+                    <option
+                      className="bg-white"
+                      key={proc._id}
+                      value={proc._id}
+                    >
+                      {proc.tittle} 
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  onClick={() => handleRemoveSelector(index)}
+                  className="bg-red-500 text-white text-sm"
+                >
+                  x
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={handleAddSelector}
+              className="bg-green-500 text-white text-sm mt-2"
+            >
+              +
+            </Button>
           </div>
           <div className="bg-white">
             <label className="text-sm font-medium">Título:</label>

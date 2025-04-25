@@ -21,15 +21,12 @@ function PickDiet() {
   ];
 
   const cuantosPlatos = [
-    // { label: 1, icon: <GiWheat /> },
-    // { label: 5, icon: <GiPeanut /> },
     { label: 10, icon: <GiMilkCarton /> },
     { label: 15, icon: <GiMilkCarton /> },
     { label: 20, icon: <GiMilkCarton /> },
     { label: 25, icon: <GiMilkCarton /> },
     { label: 30, icon: <GiMilkCarton /> },
     { label: "INDEFINIDO", icon: <GiMilkCarton /> },
-    // { label: "∞", icon: <GiMilkCarton /> },
   ];
 
   const cualesDias = [
@@ -49,7 +46,7 @@ function PickDiet() {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [step, setStep] = useState(1);
-  const [chefSelection, setChefSelection] = useState(false); // Estado para el checkbox
+  const [chefSelection, setChefSelection] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -103,11 +100,11 @@ function PickDiet() {
   };
 
   const handleChooseAgain = () => {
-    setStep(1); // Volver al primer paso
+    setStep(1);
   };
 
   const calculateTotal = () => {
-    const basePrice = 10; // Ejemplo de precio base
+    const basePrice = 10;
     const totalPlatos = selectedPlatos?.label || 0;
     return basePrice * totalPlatos;
   };
@@ -117,13 +114,11 @@ function PickDiet() {
   };
 
   return (
-    <div className="flex flex-col w-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       {step === 1 && (
         <>
-{/* <br></br> */}
           <h2 className="text-center text-xl font-bold">Cuantos platos quieres?</h2>
           <NumberGridComponent options={cuantosPlatos} onSelect={handlePlatosSelect} className="pb-16 text-sm text-center whitespace-normal break-words w-full"/>
-{/* <br></br> */}
           <h2 className="text-center text-xl font-bold">Selecciona los días de la semana</h2>
           <NumberGridComponent options={cualesDias} onSelect={handleDiasSelect} multiSelect={true} />
 
@@ -143,10 +138,10 @@ function PickDiet() {
         <>
           <h2 className="text-center text-xl font-bold">Selecciona tu Dieta</h2>
           <NumberGridComponent options={dietOptions} onSelect={handleDietSelect} />
-<br></br>
+          <br></br>
           <h2 className="text-center text-xl font-bold">Selecciona tus Alergias</h2>
           <NumberGridComponent options={alergyOptions} onSelect={handleAlergySelect} multiSelect={true} />
-<br></br>
+          <br></br>
 
           <div className="flex justify-between my-6">
             <button 
@@ -166,7 +161,7 @@ function PickDiet() {
       )}
 
       {step === 3 && (
-        <div className="mx-auto my-8 p-6 bg-white rounded-lg shadow-md max-w-md">
+        <div className="mx-auto my-8 p-6 bg-white rounded-lg shadow-md max-w-md text-center">
           <h2 className="text-center text-2xl font-bold mb-4">Resumen del Pedido</h2>
           <p><strong>Platos seleccionados:</strong> {selectedPlatos?.label || 'N/A'}</p>
           <p><strong>Días seleccionados:</strong> {selectedDias.length > 0 ? selectedDias.join(', ') : 'N/A'}</p>

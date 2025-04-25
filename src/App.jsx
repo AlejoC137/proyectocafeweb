@@ -25,6 +25,7 @@ import Actividades from './body/views/actividades/Actividades';
 import MesResumen from './body/views/ventaCompra/MesResumen.jsx';
 import DiaResumen from './body/views/ventaCompra/DiaResumen.jsx';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
+import Predict from './body/views/ventaCompra/Predict';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
@@ -86,6 +87,7 @@ function App() {
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
+     <Route path="/Predict/:menuItem" element={<Predict />} />
 {/* <Route path="/CalculoNomina" element={<CalculoNomina />} /> */}
 {/* Renderiza el componente que corresponde a la vista actual */}
 {/* Renderiza el BottomNav debajo del componente actual */}

@@ -7,7 +7,8 @@ module.exports = {
   theme: {
     extend: {
       width: {
-        'custom-width2480px': '1200px',
+        'custom-width1200px': '1200px',
+        'custom-width400px': '400px',
       },
       height: {
         'custom-height225': '225px',

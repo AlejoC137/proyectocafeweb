@@ -65,7 +65,7 @@ function Inventario() {
 
   return (
     <div className="flex flex-col w-screen h-screen">
-      <div className="flex justify-center align-top gap-4 p-4 fixed top-12 left-0 right-0 bg-white z-10">
+      <div className="flex border-b-2  justify-center align-top gap-4 p-4 fixed top-12 left-0 right-0 bg-white z-10">
         {[
           { type: MenuItems, label: "Menú", icon: "🗺️" },
           { type: ItemsAlmacen, label: "Almacén", icon: "🛒" },
