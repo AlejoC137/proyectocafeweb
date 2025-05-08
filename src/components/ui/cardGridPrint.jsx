@@ -3,22 +3,30 @@ import React, { useRef, useState } from 'react';
 import { CardInstancePrint } from "@/components/ui/cardInstancePrint";
 import { CardInstanceDetail } from "@/components/ui/cardInstanceDetail";
 
-export function CardGridPrint({ products, isEnglish, category, filterKey, withDividerValue }) {
+export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO,TITTLE, filterKey, withDividerValue }) {
   const containerRef = useRef(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
 
 
-  const filteredProducts = Array.isArray(category)
-    ? products.filter((product) => category.includes(product.GRUPO) && product.Estado === "Activo")
-    : products.filter((product) => product.GRUPO === filterKey && product.Estado === "Activo");
+  const filteredProducts = Array.isArray(GRUPO)
+    ? products.filter((product) => 
+        GRUPO.includes(product.GRUPO) && 
+        product.Estado === "Activo" && 
+        (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO)
+      )
+    : products.filter((product) => 
+        product.GRUPO === filterKey && 
+        product.Estado === "Activo" && 
+        (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO)
+      );
 
   return (
     <div className={`
-    w-1/${withDividerValue}
+    ${withDividerValue === 1 ? "w-full" : `w-1/${withDividerValue}`}
     h-full relative 
     overflow-hidden`}>
-      {selectedProduct && (
+      {/* {selectedProduct && (
         <div className="fixed inset-0 flex justify-center items-center overflow-hidden ">
           <CardInstanceDetail 
             product={selectedProduct} 
@@ -30,10 +38,11 @@ export function CardGridPrint({ products, isEnglish, category, filterKey, withDi
             }}
           />
         </div>
-      )}
+      )} */}
       <div className="flex flex-col items-start gap-1">
         <Label className="text-left text-lg font-medium break-words w-full font-SpaceGrotesk">
-          {Array.isArray(category) ? category.join(' & ').toUpperCase() : category.toUpperCase()} 
+          {/* {Array.isArray(GRUPO) ? GRUPO.join(' & ').toUpperCase() : GRUPO.toUpperCase()}  */}
+          {TITTLE ? TITTLE[isEnglish ? "EN" : "ES"].toUpperCase() : GRUPO.toUpperCase()} 
         </Label>
         
         <div ref={containerRef} className="flex flex-col overflow-y-auto scrollbar-hide snap-y snap-mandatory scroll-smooth gap-1 w-full font-light">

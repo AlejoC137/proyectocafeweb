@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateItem, getRecepie, insertarRecetas, crearItem, crearReceta, deleteItem } from "../../redux/actions";
-import { CATEGORIES, MenuItems } from "../../redux/actions-types";
+import { 
+  CATEGORIES, 
+  SUB_CATEGORIES, 
+  
+  MenuItems } from "../../redux/actions-types";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 
 export function CardInstanceInventarioMenu({ product, showEdit }) {
@@ -10,6 +14,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
   const [receta, setReceta] = useState(null);
   const [showRecepie, setShowRecepie] = useState(false);
   const groupOptions = CATEGORIES;
+  const sub_groupOptions = SUB_CATEGORIES;
   const [book, setBook] = useState("📕");
   // const [book, setBook] = useState("📖");
   const [info, setInfo] = useState("📥");
@@ -295,6 +300,24 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
                 {product.GRUPO ? `Actual: ${product.GRUPO}` : "Selecciona un grupo"}
               </option>
               {groupOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm text-gray-700 flex-1 font-bold">
+            Sub Grupo:
+            <select
+              name="SUB_GRUPO"
+              value={editableProduct.SUB_GRUPO || ""}
+              onChange={handleChange}
+              className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+            >
+              <option value="" disabled>
+                {product.SUB_GRUPO ? `Actual: ${product.SUB_GRUPO}` : "Selecciona un SUB_GRUPO"}
+              </option>
+              {sub_groupOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>

@@ -42,7 +42,7 @@ export function CardInstancePrint({ product, isEnglish }) {
           <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>${product.Precio}</span>
         </div>
         
-        <div className="flex items-center">{renderIcons()}</div>
+        {/* <div className="flex items-center">{renderIcons()}</div> */}
       </CardContent>
     </Card>
   );
