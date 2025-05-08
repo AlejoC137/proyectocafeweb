@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
-import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO  } from "../../../redux/actions-types";
+import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO, BEBIDAS_FRIAS,BEBIDAS_CALIENTES   } from "../../../redux/actions-types";
 import { CardGridPrint } from "@/components/ui/cardGridPrint";
 import { Button } from "@/components/ui/button";
 import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
@@ -82,14 +82,16 @@ function MenuPrint() {
               <h1 className="self-end text-center w-full" >- CAFÉ Y MÁS -</h1>
               <h2>{"CAFÉ"}</h2>
               <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={"Espresso"} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={"Metodos"} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
               </div>
               <br />
               <h2 className="">{BEBIDAS}</h2>
               <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={BEBIDAS}  products={menuData} GRUPO={"Caliente"} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={BEBIDAS} products={menuData} GRUPO={"Frio"} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={BEBIDAS}  products={menuData} 
+                GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES}  TITTLE={{ES:"Caliente",EN:"Hot"}} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={BEBIDAS} products={menuData} 
+                GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS}  TITTLE={{ES:"Frío",EN:"Cold"}} isEnglish={leng} />
               </div>
             </div>
 
