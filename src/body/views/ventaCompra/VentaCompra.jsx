@@ -80,7 +80,8 @@ function VentaCompra() {
   if (loading) {
     return <div className="text-center text-lg font-semibold">Loading...</div>;
   }
-console.log(ventas);
+// console.log(ventas);
+
 
   return (
     <div className="bg-gray-100 h-[calc(100vh-8rem)] w-full overflow-auto">
@@ -102,15 +103,50 @@ console.log(ventas);
 
       <div className="gap-1 p-1">
         <div className="col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-1">
-          {[...Array(6)].map((_, index) => (
+          {/* {[...Array(6)].map((_, index) => ( */}
             <Mesa
-              key={`mesa-${index + 1}`}
-              index={index + 1}
+              key={`mesa-${1}`}
+              index={1}
               ventas={ventas}
               reloadVentas={reloadVentas}
               onPagar={handlePagar}
             />
-          ))}
+            <Mesa
+              key={`mesa-${2}`}
+              index={2}
+              ventas={ventas}
+              reloadVentas={reloadVentas}
+              onPagar={handlePagar}
+            />
+            <Mesa
+              key={`mesa-${3}`}
+              index={3}
+              ventas={ventas}
+              reloadVentas={reloadVentas}
+              onPagar={handlePagar}
+            />
+            <Mesa
+              key={`mesa-${4}`}
+              index={4}
+              ventas={ventas}
+              reloadVentas={reloadVentas}
+              onPagar={handlePagar}
+            />
+            <Mesa
+              key={`mesa-${5}`}
+              index={5}
+              ventas={ventas}
+              reloadVentas={reloadVentas}
+              onPagar={handlePagar}
+            />
+            <Mesa
+              key={`mesa-${6}`}
+              index={6}
+              ventas={ventas}
+              reloadVentas={reloadVentas}
+              onPagar={handlePagar}
+            />
+          {/* ))} */}
         </div>
       </div>
 
