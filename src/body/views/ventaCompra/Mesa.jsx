@@ -6,9 +6,7 @@ import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actio
 import RecetaModal from "./RecetaModal"; // Importa el nuevo componente
 import Pagar from "./Pagar"; // Importa el nuevo componente
 
-function Mesa({ index, ventas, 
-  reloadVentas
- }) {
+function Mesa({ index, ventas, reloadVentas }) {
   const [formData, setFormData] = useState({
     Total_Ingreso: '',
     Tip: '',
@@ -16,7 +14,6 @@ function Mesa({ index, ventas,
     Cajero: '',
   });
 
-  const [reloadVentasInst, setReloadVentas] = useState(true);
   const [orderItems, setOrderItems] = useState([]);
   const [comandaSaved, setComandaSaved] = useState(false);
   const [buttonState, setButtonState] = useState("save");
@@ -42,20 +39,8 @@ function Mesa({ index, ventas,
       setButtonState("done");
       setIsMesaInUse(true);
       setVentaId(existingVenta._id); // Almacenar el ID de la venta existente
-    } else {
-      // Si la venta ya no existe (por ejemplo, después de pagar/eliminar), limpia el estado local
-      setFormData({
-        Total_Ingreso: '',
-        Tip: '',
-        Cliente: '',
-        Cajero: '',
-      });
-      setOrderItems([]);
-      setComandaSaved(false);
-      setButtonState("save");
-      setIsMesaInUse(false);
-      setVentaId(null);
     }
+  // }, []);
   }, [ventas, index]);
 
   useEffect(() => {
@@ -130,8 +115,7 @@ function Mesa({ index, ventas,
         setVentaId(nuevaVenta._id); // Almacenar el ID de la nueva venta creada
         alert("Venta creada correctamente");
       }
-     reloadVentasInst === true? setReloadVentas(false) : setReloadVentas(true) // Recargar los datos de ventas
-      // reloadVentas(); // Solo recarga los datos de ventas, no la ventana completa
+      reloadVentas();
     } catch (error) {
       console.error("Error al crear/actualizar la venta:", error);
       alert("Error al crear/actualizar la venta");
@@ -147,7 +131,7 @@ function Mesa({ index, ventas,
   };
 
   const handlePaymentComplete = () => {
-    reloadVentas(); // Solo recarga los datos de ventas, no la ventana completa
+    window.location.reload();
   };
 
   const handleEliminar = async () => {
@@ -165,7 +149,15 @@ function Mesa({ index, ventas,
       console.error("Error al eliminar la venta:", error);
       alert("Error al eliminar la venta");
     }
-    // El estado local se limpiará automáticamente en el useEffect cuando ventas cambie
+    setFormData({
+      Total_Ingreso: '',
+      Tip: '',
+      Cliente: '',
+      Cajero: '',
+    });
+    setOrderItems([]);
+    setComandaSaved(false);
+    setButtonState("save");
   };
 
   const handleRecetaClick = (item) => {
@@ -251,7 +243,7 @@ function Mesa({ index, ventas,
             }
             className="w-16 border rounded p-1 text-sm"
           />
-          <span className="text-sm">${item.Precio.toFixed(0)}</span>
+          <span className="text-sm">${item.Precio.toFixed(2)}</span>
           <Button
             onClick={() => handleRemoveItem(itemIndex)}
             className="bg-red-500 text-white text-sm w-[30px]"
