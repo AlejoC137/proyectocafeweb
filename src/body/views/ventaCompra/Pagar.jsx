@@ -95,17 +95,6 @@ function Pagar({ ventaId, onClose, total, onPaymentComplete }) {
                   ))}
                 </div>
 
-                                <div className="grid grid-cols-1 gap-2 mt-2">
-
-                    <Button
-                      key={total}
-                      onClick={() => handleRecibidoButton(total)}
-                      className="bg-gray-300 text-black"
-                    >
-                     Completo: {formatNumber(total)}
-                    </Button>
-
-              </div>
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium">Cambio:</label>
