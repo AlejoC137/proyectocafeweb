@@ -8,22 +8,26 @@ module.exports = {
     extend: {
       width: {
         'custom-width1200px': '1200px',
+        'custom-width350px': '400px',
         'custom-width400px': '400px',
       },
       height: {
         'custom-height225': '225px',
         'custom-height550': '550px'
       },
-      fontFamily: {
-        Bobby_Jones_Soft: ['Bobby_Jones_Soft', 'sans-serif'],
-        SpaceGrotesk: ['Space Grotesk', 'sans-serif']
-      },
+
+  fontFamily: {
+  BobbyJones: ['Bobby Jones Regular', 'sans-serif'],
+  LilitaOne: ['Lilita One', 'sans-serif'], 
+  SpaceGrotesk: ['Space Grotesk', 'sans-serif'],
+},
       fontSize: {
         '10pt': '10pt',
         '12pt': '12pt',
         '13pt': '13pt',
         '15pt': '15pt',
-        '20pt': '20pt'
+        '20pt': '20pt',
+        '30pt': '30pt'
       },
       colors: {
         pureRed: '#ff0000',

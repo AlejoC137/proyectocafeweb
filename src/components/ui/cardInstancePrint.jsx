@@ -8,7 +8,6 @@ export function CardInstancePrint({ product, isEnglish }) {
 
   const dietWarning = isEnglish ? product.DietaEN : product.DietaES;
   const careWarning = isEnglish ? product.CuidadoEN : product.CuidadoES;
-
   const renderIcons = () => {
     const icons = [];
     if (dietWarning === "Vegetarian" || dietWarning === "Vegetarino") {
@@ -41,8 +40,14 @@ export function CardInstancePrint({ product, isEnglish }) {
           </h3>
           <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>${product.Precio}</span>
         </div>
+        <div className="flex justify-between items-center">
+          <h3 className="text-md font-medium truncate font-SpaceGrotesk" style={{ fontSize: '10px' }}>
+            {isEnglish ? product.DescripcionMenuEN
+ : product.DescripcionMenuES}
+          </h3>
+ 
+        </div>
         
-        {/* <div className="flex items-center">{renderIcons()}</div> */}
       </CardContent>
     </Card>
   );

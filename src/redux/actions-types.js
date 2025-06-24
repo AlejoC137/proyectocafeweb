@@ -102,6 +102,31 @@ export const CATEGORIES = [ //GRUPO
   HARINAS
 ];
 
+
+
+export const CATEGORIES_t = {
+  CAFE: { es: "Café", en: "Coffee" },
+  DESAYUNO: { es: "Desayuno", en: "Breakfast" },
+  BEBIDAS: { es: "Bebidas", en: "Drinks" },
+  PANADERIA: { es: "Panadería", en: "Bakery" },
+  REPOSTERIA: { es: "Repostería", en: "Pastry" },
+  TARDEO: { es: "Tardeo", en: "Afternoon Snack" },
+  ADICIONES: { es: "Adiciones", en: "Add-ons" },
+  CARNICO: { es: "Cárnico", en: "Meat" },
+  LACTEO: { es: "Lácteo", en: "Dairy" },
+  VERDURAS_FRUTAS: { es: "Verduras y Frutas", en: "Fruits and Vegetables" },
+  CONDIMENTOS_ESPECIAS_ADITIVOS: { es: "Condimentos, Especias y Aditivos", en: "Condiments, Spices and Additives" },
+  GRANOS_CEREALES: { es: "Granos y Cereales", en: "Grains and Cereals" },
+  LIMPIEZA: { es: "Limpieza", en: "Cleaning" },
+  DOTACION: { es: "Dotación", en: "Equipment" },
+  CONCERVAS_FERMENTOS_PRECOCIDOS: { es: "Conservas, Fermentos y Precocidos", en: "Preserves, Ferments and Precooked" },
+  GUARNICION: { es: "Guarnición", en: "Side Dish" },
+  DESECHABLES: { es: "Desechables", en: "Disposables" },
+  ENLATADOS: { es: "Enlatados", en: "Canned Goods" },
+  GRANOS: { es: "Granos", en: "Grains" },
+  HARINAS: { es: "Harinas", en: "Flours" }
+};
+
 export const CAFE_ESPRESSO = 'CAFE_ESPRESSO'
 export const CAFE_METODOS = 'CAFE_METODOS'
 export const BEBIDAS_FRIAS = 'BEBIDAS_FRIAS'

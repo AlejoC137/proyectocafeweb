@@ -64,10 +64,13 @@ function App() {
   }
   return (
     <div >
+      
      <TopNav />
+     
      <br></br>
      <br></br>
     <Routes>
+      
      <Route path="/" element={componentToRender} />
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />

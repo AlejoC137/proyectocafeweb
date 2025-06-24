@@ -30,6 +30,7 @@ export default function TopNav() {
       <button className="p-2 rounded-md bg-white">
         <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
       </button>
+     <h1 className="font-LilitaOne text-xl">Proyecto Café</h1>
 
       <h1 className="font-bold text-xl">{getDisplayText().toUpperCase()}</h1>
 

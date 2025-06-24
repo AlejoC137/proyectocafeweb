@@ -40,8 +40,8 @@ export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO,TITTLE, fi
         </div>
       )} */}
       <div className="flex flex-col items-start gap-1">
-        <Label className="text-left text-lg font-medium break-words w-full font-SpaceGrotesk">
-          {/* {Array.isArray(GRUPO) ? GRUPO.join(' & ').toUpperCase() : GRUPO.toUpperCase()}  */}
+        <Label className="text-left text-lg font-medium break-words w-full font-LilitaOne  ">
+          {/* {Array.isArray(GRUPO) ? GRUPO.join(' & ').toUpperCase() : GRUPO.toUpperCase()}{' '} */}
           {TITTLE ? TITTLE[isEnglish ? "EN" : "ES"].toUpperCase() : GRUPO.toUpperCase()} 
         </Label>
         
