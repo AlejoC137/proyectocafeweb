@@ -62,7 +62,8 @@ function MenuPrint() {
   <h1 className="text-4xl font-SpaceGrotesk font-bold leading-tight">
     {leng ? "Welcome to Proyecto Café" : "Bienvenido a Proyecto Café"}
   </h1>
-  <p className="text-lg font-SpaceGrotesk font-light mt-2 leading-snug">
+
+  <p className="text-2x1 font-SpaceGrotesk font-light mt-2 leading-snug">
     {leng
       ? "These are the essentials and recommendations. To view the full menu with photos and details, please scan the QR code on the next page."
       : "Aquí están los esenciales y recomendaciones. Para ver la carta completa con fotos y detalles, por favor escanea el código QR en la siguiente página."}
@@ -71,7 +72,7 @@ function MenuPrint() {
 
 
           {/* TRES COLUMNAS IGUALES */}
-          <div className="pt-0 gap-4 flex flex-row justify-center">
+          <div className="pt-0 gap-4 flex  flex-row justify-center h-custom-height550 ">
 
             {/* CAFÉ */}
             <div className="flex flex-col gap-1 w-custom-width400px">
@@ -141,8 +142,8 @@ function MenuPrint() {
 
 
 <div className=" text-center mb-4">
-  <h1 className="text-4xl font-SpaceGrotesk font-bold leading-tight">
-    {leng ? "Más sobre Proyecto Café" : "More of Proyecto Café"}
+  <h1 className="text-3xl font-LilitaOne font-bold leading-tight">
+    {leng ? "More of Proyecto Café" : "MMás sobre Proyecto Café"}
   </h1>
   {/* <p className="text-lg font-SpaceGrotesk font-light mt-2 leading-snug">
     {leng
@@ -179,7 +180,7 @@ function MenuPrint() {
 
   {/* Columna 3: Logo */}
 <div className="flex flex-col justify-between items-center w-custom-width400px h-full">
-  <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-2/3 object-contain" />
+  <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/3 object-contain" />
 <p className="text-center font-SpaceGrotesk text-sm mt-2 px-2">
   {leng
     ? "Base Silla. Café, cultura y encuentro en torno a una mesa. Un espacio para compartir, crear y disfrutar con propósito."
