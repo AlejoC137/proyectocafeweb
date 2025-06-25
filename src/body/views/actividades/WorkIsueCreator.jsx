@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
 import { Button } from "@/components/ui/button";
-import { STAFF, PROCEDE, AREAS } from "../../../redux/actions-types";
+import { STAFF, PROCEDE, AREAS, PRODUCCION } from "../../../redux/actions-types";
 import { Input } from "@/components/ui/input";
 import { crearProcedimiento } from "../../../redux/actions-Procedimientos";
+import { crearWorkIsue } from "../../../redux/actions-WorkIsue";
 
 function WorkIsueCreator() {
   console.log(AREAS);
@@ -12,20 +13,22 @@ function WorkIsueCreator() {
   const dispatch = useDispatch();
   const allStaff = useSelector((state) => state.allStaff || []);
   const allProcedimientos = useSelector((state) => state.allProcedimientos || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
   const [formData, setFormData] = useState({
-    Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] },
+    Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: "" },
     Terminado: false,
     Pagado: { pagadoFull: false, adelanto: "NoAplica", susceptible: false },
     Categoria: "",
     Ejecutor: "",
     Procedimientos: [],
-    tittle: "",
+    Tittle: "",
   });
   const [procedimientosList, setProcedimientosList] = useState([]);
   const [procedimientosSelectors, setProcedimientosSelectors] = useState([0]);
 
   useEffect(() => {
     dispatch(getAllFromTable(PROCEDE));
+    dispatch(getAllFromTable(PRODUCCION));
     dispatch(getAllFromTable(STAFF));
   }, [dispatch]);
 
@@ -49,17 +52,23 @@ function WorkIsueCreator() {
     setProcedimientosSelectors((prev) => [...prev, prev.length]);
   };
 
+  // Combina ambos arreglos y marca su origen
+  const allProcedimientosAndProduccion = [
+    ...allProcedimientos.map((proc) => ({ ...proc, _tipo: "procedimiento" })),
+    ...allProduccion.map((prod) => ({ ...prod, _tipo: "produccion" })),
+  ];
+
+  // Cambia el handler para guardar _id y _tipo
   const handleProcedimientoChange = (index, value) => {
-    const procedimiento = allProcedimientos.find((proc) => proc._id === value);
-    if (procedimiento) {
-      const updatedList = [...procedimientosList];
-      updatedList[index] = procedimiento;
-      setProcedimientosList(updatedList);
-      setFormData((prev) => ({
-        ...prev,
-        Procedimientos: updatedList,
-      }));
-    }
+    // value es _tipo|_id
+    const [tipo, id] = value.split("|");
+    const updatedList = [...procedimientosList];
+    updatedList[index] = { _id: id, _tipo: tipo };
+    setProcedimientosList(updatedList);
+    setFormData((prev) => ({
+      ...prev,
+      Procedimientos: updatedList,
+    }));
   };
 
   const handleRemoveSelector = (index) => {
@@ -76,15 +85,15 @@ function WorkIsueCreator() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(crearProcedimiento(formData));
+      await dispatch(crearWorkIsue(formData));
       setFormData({
-        Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] },
+        Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: "" },
         Terminado: false,
         Pagado: { pagadoFull: false, adelanto: "NoAplica", susceptible: false },
         Categoria: "",
         Ejecutor: "",
         Procedimientos: [],
-        tittle: "",
+        Tittle: "",
       });
       setProcedimientosList([]);
       setProcedimientosSelectors([0]);
@@ -100,6 +109,18 @@ function WorkIsueCreator() {
       <h2 className="text-lg font-semibold">Crear WorkIsue</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="isued" className="block bg-white text-sm font-medium text-gray-700">Fecha de Ejecución:</label>
+            <input
+              type="date"
+              id="isued"
+              name="isued"
+              className="bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              value={formData.Dates.date_asigmente.split('T')[0]}
+              onChange={handleDateChange}
+            />
+            <p>Selected Date: {formData.Dates.date_asigmente.split('T')[0]}</p>
+          </div>
           <div>
             <label htmlFor="isued" className="block bg-white text-sm font-medium text-gray-700">Fecha de Creación:</label>
             <input
@@ -159,20 +180,26 @@ function WorkIsueCreator() {
             {procedimientosSelectors.map((selector, index) => (
               <div key={selector} className="flex items-center gap-2 mt-2">
                 <select
-                  value={procedimientosList[index]?._id || ""}
+                  value={
+                    procedimientosList[index]
+                      ? `${procedimientosList[index]._tipo}|${procedimientosList[index]._id}`
+                      : ""
+                  }
                   onChange={(e) => handleProcedimientoChange(index, e.target.value)}
                   className="border bg-white rounded p-1 text-sm w-full"
                 >
                   <option className="bg-white" value="">
-                    Seleccionar Procedimiento
+                    Seleccionar Procedimiento o Producción
                   </option>
-                  {allProcedimientos.map((proc) => (
+                  {allProcedimientosAndProduccion.map((item) => (
                     <option
                       className="bg-white"
-                      key={proc._id}
-                      value={proc._id}
+                      key={item._tipo + "|" + item._id}
+                      value={item._tipo + "|" + item._id}
                     >
-                      {proc.tittle} 
+                      {item._tipo === "procedimiento"
+                        ? `PROC: ${item.tittle || item.Nombre || item.Nombre_del_producto}`
+                        : `PROD: ${item.Nombre_del_producto || item.tittle || item.Nombre}`}
                     </option>
                   ))}
                 </select>
@@ -197,8 +224,8 @@ function WorkIsueCreator() {
             <label className="text-sm font-medium">Título:</label>
             <Input
               type="text"
-              name="tittle"
-              value={formData.tittle}
+              name="Tittle"
+              value={formData.Tittle}
               onChange={handleChange}
               className="border bg-white rounded p-1 text-sm w-full"
             />

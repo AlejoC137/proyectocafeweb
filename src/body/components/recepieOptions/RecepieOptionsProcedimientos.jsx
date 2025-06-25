@@ -14,7 +14,7 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
 
   const [recetaItems, setRecetaItems] = useState([]);
   const [productoInternoItems, setProductoInternoItems] = useState([]);
-  const [legacyName, setLegacyName] = useState(product?.Nombre_del_producto || "");
+  const [legacyName, setLegacyName] = useState(receta?.legacyName || "");
   const [rendimiento, setRendimiento] = useState({ porcion: "", cantidad: "", unidades: "" });
   const [autor, setAutor] = useState("Autor por defecto");
   const [revisor, setRevisor] = useState("Revisor por defecto");
@@ -121,7 +121,6 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
           rendimiento: JSON.stringify(rendimiento),
           forId: product._id,
           autor,
-          legacyName: product.NombreES,
           revisor,
           actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),
@@ -146,12 +145,15 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
     }
   };
 
+   const testIngridient = (itemId) => {
+    return Items.some(item => item._id === itemId) ? 'item' : 'producto_interno';
+  };
   const mapItemsToPayload = (items) => {
     const payload = {};
     let itemCounter = 1;
     let produccionCounter = 1;
     items.forEach((item) => {
-      const keyPrefix = item.item_Id.startsWith("item") ? "item" : "producto_interno";
+      const keyPrefix = testIngridient(item.item_Id);
       const idx = keyPrefix === 'item' ? itemCounter++ : produccionCounter++;
       payload[`${keyPrefix}${idx}_Id`] = item.item_Id || null;
       payload[`${keyPrefix}${idx}_Cuantity_Units`] = item.item_Id

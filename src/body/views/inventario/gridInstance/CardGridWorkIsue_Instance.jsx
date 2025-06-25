@@ -10,7 +10,8 @@ export function CardGridWorkIsue_Instance({ item, currentType }) {
   const showEdit = useSelector((state) => state.showEdit);
 
   const [formData, setFormData] = useState({
-    Dates: item.Dates || { isued: new Date().toISOString(), finished: "", date_asigmente: [] },
+    Tittle: item.Tittle || "",
+    Dates: item.Dates || { isued: new Date().toISOString(), finished: "", date_asigmente: '' },
     Terminado: item.Terminado || false,
     Pagado: item.Pagado || { pagadoFull: false, adelanto: "NoAplica" },
     Categoria: item.Categoria || "",
@@ -99,7 +100,7 @@ export function CardGridWorkIsue_Instance({ item, currentType }) {
       <CardContent className="p-4 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold text-gray-800 flex-1">
-            {item.Nombre} {item.Apellido}
+           {formData.Tittle ? formData.Tittle: ""}
           </h3>
           {showEdit && (
             <Button className="bg-red-500 text-white hover:bg-red-400" onClick={handleDelete}>
@@ -132,11 +133,32 @@ export function CardGridWorkIsue_Instance({ item, currentType }) {
         {showEdit && (
           <>
             <label className="text-sm text-gray-700 flex-1">
+              Nombre:
+              <input
+                type="text"
+                name="Tittle"
+                value={formData.Tittle ? formData.Tittle: ""}
+                onChange={handleDateChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+              />
+            </label>
+
+            <label className="text-sm text-gray-700 flex-1">
               Fecha de Creación:
               <input
                 type="date"
                 name="isued"
                 value={formData.Dates.isued ? formData.Dates.isued.split('T')[0] : ""}
+                onChange={handleDateChange}
+                className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
+              />
+            </label>
+            <label className="text-sm text-gray-700 flex-1">
+              Fecha de Realizacion:
+              <input
+                type="date"
+                name="isued"
+                value={formData.Dates.date_asigmente ? formData.Dates.date_asigmente.split('T')[0] : ""}
                 onChange={handleDateChange}
                 className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
               />

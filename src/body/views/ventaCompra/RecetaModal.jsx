@@ -5,7 +5,7 @@ import { getAllFromTable, getRecepie } from "../../../redux/actions";
 import { Button } from "@/components/ui/button";
 import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE } from "../../../redux/actions-types";
 
-function RecetaModal() {
+function RecetaModal({type}) {
   const { id } = useParams();
   const dispatch = useDispatch();
   const [receta, setReceta] = useState(null);
@@ -48,26 +48,38 @@ function RecetaModal() {
     const fetchReceta = async () => {
       if (id) {
         try {
+          // 1. Buscar en Recetas
           const result = await getRecepie(id, "Recetas");
           if (result) {
             setReceta(result);
             const plato = await getRecepie(result.forId, "Menu");
             setFoto(plato.Foto);
-          } else {
-            throw new Error("No se encontró en Recetas");
+            return;
           }
+          throw new Error("No se encontró en Recetas");
         } catch (err) {
           try {
+            // 2. Buscar en RecetasProduccion
             const result = await getRecepie(id, "RecetasProduccion");
             if (result) {
               setReceta(result);
-            } else {
-              throw new Error("No se encontró en RecetasProduccion");
+              return;
             }
+            throw new Error("No se encontró en RecetasProduccion");
           } catch (err) {
-            setError("Error al obtener la receta.");
-          } finally {
-            setLoading(false);
+            try {
+              // 3. Buscar en RecetasProcedimientos
+              const result = await getRecepie(id, "RecetasProcedimientos");
+              if (result) {
+                setReceta(result);
+                return;
+              }
+              throw new Error("No se encontró en RecetasProcedimientos");
+            } catch (err) {
+              setError("Error al obtener la receta.");
+            } finally {
+              setLoading(false);
+            }
           }
         }
       } else {

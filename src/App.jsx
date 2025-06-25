@@ -29,6 +29,7 @@ import Predict from './body/views/ventaCompra/Predict';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
+import StaffPortal from './body/views/staff/staffPortal.jsx';
 
 // import Manager from './body/views/actividades/Manager';
 
@@ -80,6 +81,7 @@ function App() {
      <Route path="/Manager" element={<Manager />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
+     <Route path="/StaffPortal" element={<StaffPortal />} />
      <Route path="/Inventario" element={<Inventario />} />
      <Route path="/VentaCompra" element={<VentaCompra />} />
      <Route path="/Actividades" element={<Actividades />} />
