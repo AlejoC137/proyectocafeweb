@@ -30,6 +30,7 @@ import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
+import CalculoNomina from './body/views/staff/CalculoNomina';
 
 // import Manager from './body/views/actividades/Manager';
 
@@ -64,14 +65,11 @@ function App() {
       break;
   }
   return (
-    <div >
-      
+    <div className='flex w-full' >
      <TopNav />
-     
      <br></br>
      <br></br>
     <Routes>
-      
      <Route path="/" element={componentToRender} />
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
@@ -93,11 +91,11 @@ function App() {
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
      <Route path="/Predict/:menuItem" element={<Predict />} />
-{/* <Route path="/CalculoNomina" element={<CalculoNomina />} /> */}
-{/* Renderiza el componente que corresponde a la vista actual */}
-{/* Renderiza el BottomNav debajo del componente actual */}
+     <Route path="/CalculoNomina" element={<CalculoNomina />} />
+     {/* Renderiza el componente que corresponde a la vista actual */}
+     {/* Renderiza el BottomNav debajo del componente actual */}
      </Routes>
-     <BottomNav />
+     {/* <BottomNav /> */}
      <br></br>
      <br></br>
      <br></br>

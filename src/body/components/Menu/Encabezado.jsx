@@ -1,4 +1,4 @@
-import { CATEGORIES_t } from "../../../redux/actions-types";
+import { CATEGORIES_t, ENLATADOS } from "../../../redux/actions-types";
 
 function Encabezado({ GRUPO, isEnglish }) {
   const translation = CATEGORIES_t[GRUPO];
@@ -6,7 +6,7 @@ function Encabezado({ GRUPO, isEnglish }) {
 
   return (
     <div className="text-md font- truncate font-SpaceGrotesk" style={{ fontSize: '30px' }}> 
-      <h2>{label}</h2>
+      {GRUPO === ENLATADOS ?  <h2>Enbotellados</h2> : <h2>{label}</h2>}
     </div>
   );
 }

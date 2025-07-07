@@ -94,6 +94,7 @@ function WorkIsueCreator() {
         Ejecutor: "",
         Procedimientos: [],
         Tittle: "",
+        Notas: "",
       });
       setProcedimientosList([]);
       setProcedimientosSelectors([0]);
@@ -226,6 +227,16 @@ function WorkIsueCreator() {
               type="text"
               name="Tittle"
               value={formData.Tittle}
+              onChange={handleChange}
+              className="border bg-white rounded p-1 text-sm w-full"
+            />
+          </div>
+          <div className="bg-white">
+            <label className="text-sm font-medium">Notas:</label>
+            <Input
+              type="text"
+              name="Notas"
+              value={formData.Notas}
               onChange={handleChange}
               className="border bg-white rounded p-1 text-sm w-full"
             />

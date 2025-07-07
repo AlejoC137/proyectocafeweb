@@ -25,19 +25,19 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
   const [costoDirecto, setCostoDirecto] = useState();
   const [processTime, setProcessTime] = useState(receta?.ProcessTime);
   const [editvCMP, setEditvCMP] = useState();
-
+  
   useEffect(() => {
     if (receta && currentType === PROCEDE) {
       loadRecepie('RecetasProcedimientos');
     }
   }, [receta, dispatch, editvCMP]);
-
+  
   const loadRecepie = async (source) => {
     if (!receta) {
       console.error("Receta is undefined or missing _id");
       return;
     }
-
+    
     const recepieData = await getRecepie(receta, source);
     if (recepieData) {
       const trimmedRecepie = trimRecepie(allOptions, recepieData);
@@ -49,7 +49,12 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
       setRevisor(recepieData.revisor || "Revisor por defecto");
       setProces(Array.from({ length: 20 }, (_, i) => recepieData[`proces${i + 1}`] || ""));
       calculateTotalIngredientes(trimmedRecepie);
+       setProcessTime(recepieData.ProcessTime)
+      
+      console.log(recepieData);
+
     }
+    
   };
 
   const addIngredient = () => {
@@ -341,6 +346,8 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
 
       {activeTab === "proces" && (
         <>
+                  <h2 className="text-lg font-bold mb-4">{ 'Tiempo de proceso:' }</h2>
+
           <input
             type="text"
             placeholder={`${processTime}`}

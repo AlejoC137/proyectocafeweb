@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 export function CardInstancePrint({ product, isEnglish }) {
   const [showDetail, setShowDetail] = useState(false);
 
+  // Formatea el precio a "K" si es mayor o igual a 1000
+  const formatPrice = (precio) => {
+    if (precio >= 1000) {
+      return `${precio / 1000}K`;
+    }
+    return precio;
+  };
+
   const dietWarning = isEnglish ? product.DietaEN : product.DietaES;
   const careWarning = isEnglish ? product.CuidadoEN : product.CuidadoES;
   const renderIcons = () => {
@@ -35,10 +43,12 @@ export function CardInstancePrint({ product, isEnglish }) {
       </div>
       <CardContent className="p-1 flex flex-col justify-between text-gray-900 font-light">
         <div className="flex justify-between items-center">
-          <h3 className="text-md font-medium truncate font-SpaceGrotesk" style={{ fontSize: '13px' }}>
+          <h3 className="text-10pt truncate font-bold font-custom font-SpaceGrotesk">
             {isEnglish ? product.NombreEN : product.NombreES}
           </h3>
-          <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>${product.Precio}</span>
+          <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>
+            ${formatPrice(product.Precio)}
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <h3 className="text-md font-medium truncate font-SpaceGrotesk" style={{ fontSize: '10px' }}>

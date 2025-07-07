@@ -67,7 +67,8 @@ function StaffWorkIssues_Instance({ issue }) {
 
   return (
     <div className="border rounded p-3 bg-gray-50 shadow">
-      <div className="font-bold text-lg mb-2">{issue.Tittle || "Sin título"}</div>
+      <div className="font-bold text-lg mb-1">{issue.Tittle || "Sin título"}</div>
+      <div className="font text-lg mb-1">Notas: {issue.Notas || "Sin Notas"}</div>
       {/* <div className="mb-1"><strong>ID:</strong> {issue._id}</div> */}
       <div className="mb-1"><strong>Categoría:</strong> {issue.Categoria}</div>
       {/* <div className="mb-1"><strong>Ejecutor:</strong> {issue.Ejecutor}</div> */}

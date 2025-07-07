@@ -13,7 +13,7 @@ module.exports = {
       },
       height: {
         'custom-height225': '225px',
-        'custom-height550': '700px'
+        'custom-height750': '850px'
       },
 
   fontFamily: {

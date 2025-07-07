@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
-import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO, BEBIDAS_FRIAS,BEBIDAS_CALIENTES   } from "../../../redux/actions-types";
+import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO, BEBIDAS_FRIAS,BEBIDAS_CALIENTES,PANADERIA_REPOSTERIA_DULCE, PANADERIA_REPOSTERIA_SALADA  } from "../../../redux/actions-types";
 import { CardGridPrint } from "@/components/ui/cardGridPrint";
 import { Button } from "@/components/ui/button";
 import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
@@ -59,11 +59,11 @@ function MenuPrint() {
         <div id="print-area" className="">
 
 <div className=" text-center mb-4">
-  <h1 className="text-4xl font-SpaceGrotesk font-bold leading-tight">
+  <h1 className="text-4xl font-SpaceGrotesk font-bold mt-4 leading-tight">
     {leng ? "Welcome to Proyecto Café" : "Bienvenido a Proyecto Café"}
   </h1>
 
-  <p className="text-2x1 font-SpaceGrotesk font-light mt-2 leading-snug">
+  <p className="text-2x1  font-SpaceGrotesk font-bold mt-2 leading-snug">
     {leng
       ? "These are the essentials and recommendations. To view the full menu with photos and details, please scan the QR code on the next page."
       : "Aquí están los esenciales y recomendaciones. Para ver la carta completa con fotos y detalles, por favor escanea el código QR en la siguiente página."}
@@ -72,7 +72,7 @@ function MenuPrint() {
 
 
           {/* TRES COLUMNAS IGUALES */}
-          <div className="pt-0 gap-4 flex  flex-row justify-center h-custom-height550 ">
+          <div className="pt-0 gap-4 flex  flex-row justify-center h-custom-height750 ">
 
             {/* CAFÉ */}
             <div className="flex flex-col gap-1 w-custom-width400px">
@@ -105,18 +105,19 @@ function MenuPrint() {
 
               {/* <h2>{TARDEO}</h2> */}
               <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={1} className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
                 {/* <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={TARDEO} products={menuData} GRUPO={TARDEO} isEnglish={leng} /> */}
               </div>
               <br />
               <Encabezado isEnglish={leng} GRUPO={PANADERIA} />
               <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={PANADERIA} products={menuData} GRUPO={PANADERIA} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={REPOSTERIA} products={menuData} GRUPO={REPOSTERIA} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={PANADERIA} products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
+                <CardGridPrint withDividerValue={2} className="w-1/3" filterKey={REPOSTERIA} products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
               </div>
             </div>
 
-
+,
 
             {/* ALGO MÁS */}
             <div className="flex flex-col gap-1 w-custom-width400px">
@@ -142,8 +143,8 @@ function MenuPrint() {
 
 
 <div className=" text-center mb-4">
-  <h1 className="text-3xl font-LilitaOne font-bold leading-tight">
-    {leng ? "More of Proyecto Café" : "MMás sobre Proyecto Café"}
+  <h1 className="text-3xl font-LilitaOne  mt-4 font-bold leading-tight">
+    {leng ? "More of Proyecto Café" : "Más sobre Proyecto Café"}
   </h1>
   {/* <p className="text-lg font-SpaceGrotesk font-light mt-2 leading-snug">
     {leng
