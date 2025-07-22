@@ -21,7 +21,8 @@ import {
   TOGGLE_SHOW_EDIT,
   RESET_EXPANDED_GROUPS,       // Nueva acción importada
   ADD_ORDER_ITEM   ,
-  RECETAS_PROCEDIMIENTOS            // Nueva acción importada
+  RECETAS_PROCEDIMIENTOS,            // Nueva acción importada
+  AGENDA
 } from './actions-types';
 
 const initialState = {
@@ -70,85 +71,8 @@ const initialState = {
     },
   }
   ,
-  agendaMes: {
-    evento_1: {
-      fecha: "2024-12-05",
-      horaInicio: "10:00 AM",
-      horaFinal: "02:00 PM",
-      nombre: "Seminario de Innovación Tecnológica",
-      autores: "Dr. Juan Pérez, Ing. Ana García",
-      valor: "$50,000",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Seminario+Tecnología",
-      linkInscripcion: "https://www.eventbrite.com/e/seminario-innovacion-tecnologica",
-      infoAdicional: "Exploración de las últimas tendencias tecnológicas e impacto en la industria.",
-    },
-    evento_2: {
-      fecha: "2024-12-10",
-      horaInicio: "08:00 AM",
-      horaFinal: "12:00 PM",
-      nombre: "Maratón Anual de Emprendedores",
-      autores: "Asociación de Jóvenes Empresarios",
-      valor: "Entrada Libre",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Maratón+Emprendedores",
-      linkInscripcion: "https://www.eventbrite.com/e/maraton-anual-de-emprendedores",
-      infoAdicional: "Un evento para conectar emprendedores y promover ideas innovadoras.",
-    },
-    evento_3: {
-      fecha: "2024-12-15",
-      horaInicio: "06:00 PM",
-      horaFinal: "10:00 PM",
-      nombre: "Concierto de Música Clásica",
-      autores: "Orquesta Filarmónica de Bogotá",
-      valor: "$70,000",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Concierto+Música+Clásica",
-      linkInscripcion: "https://www.eventbrite.com/e/concierto-musica-clasica",
-      infoAdicional: "Una noche mágica con obras de Mozart, Beethoven y Tchaikovsky.",
-    },
-    evento_4: {
-      fecha: "2024-12-20",
-      horaInicio: "03:00 PM",
-      horaFinal: "07:00 PM",
-      nombre: "Taller de Cocina Internacional",
-      autores: "Chef María López",
-      valor: "$90,000",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Taller+Cocina",
-      linkInscripcion: "https://www.eventbrite.com/e/taller-de-cocina-internacional",
-      infoAdicional: "Aprende recetas de cocina italiana, japonesa y mexicana en un taller práctico.",
-    },
-    evento_5: {
-      fecha: "2024-12-22",
-      horaInicio: "09:00 AM",
-      horaFinal: "05:00 PM",
-      nombre: "Hackathon de Desarrollo de Software",
-      autores: "TechLab Colombia",
-      valor: "Entrada Libre",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Hackathon+Software",
-      linkInscripcion: "https://www.eventbrite.com/e/hackathon-desarrollo-software",
-      infoAdicional: "Compite con otros desarrolladores para resolver desafíos de programación.",
-    },
-    evento_6: {
-      fecha: "2024-12-28",
-      horaInicio: "04:00 PM",
-      horaFinal: "08:00 PM",
-      nombre: "Exposición de Arte Moderno",
-      autores: "Galería Central",
-      valor: "$20,000",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Exposición+Arte",
-      linkInscripcion: "https://www.eventbrite.com/e/exposicion-arte-moderno",
-      infoAdicional: "Descubre piezas únicas de artistas contemporáneos nacionales e internacionales.",
-    },
-    evento_7: {
-      fecha: "2024-12-31",
-      horaInicio: "09:00 PM",
-      horaFinal: "12:30 AM",
-      nombre: "Fiesta de Fin de Año",
-      autores: "Hotel Bogotá Plaza",
-      valor: "$150,000",
-      bannerIMG: "https://via.placeholder.com/600x300?text=Fiesta+Fin+de+Año",
-      linkInscripcion: "https://www.eventbrite.com/e/fiesta-de-fin-de-ano",
-      infoAdicional: "Celebra el fin de año con música en vivo, cena especial y espectáculos de fuegos artificiales.",
-    },
-  },
+
+  allAgenda: [],
   allStaff: [],
   showEdit: false,
   allMenu: [],
@@ -257,6 +181,11 @@ const reducer = (state = initialState, action) => {
           return {
             ...state,
             allProcedimientos: action.payload,
+          };
+        case AGENDA:
+          return {
+            ...state,
+            allAgenda: action.payload,
           };
         default:
           return state;

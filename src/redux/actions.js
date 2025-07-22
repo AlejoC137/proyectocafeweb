@@ -14,7 +14,9 @@ import {
   TOGGLE_SHOW_EDIT,
   ProduccionInterna,
   RESET_EXPANDED_GROUPS,
-  ADD_ORDER_ITEM
+  ADD_ORDER_ITEM,
+  AGENDA,
+  ITEMS
   
 } from "./actions-types";
 
@@ -78,6 +80,7 @@ export function getAllFromTable(Table) {
       console.error(error);
       return null;
     }
+
 
     return dispatch({
       type: GET_ALL_FROM_TABLE,

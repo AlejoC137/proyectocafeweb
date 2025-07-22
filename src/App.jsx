@@ -70,7 +70,7 @@ function App() {
      <br></br>
      <br></br>
     <Routes>
-     <Route path="/" element={componentToRender} />
+     {/* <Route path="/" element={componentToRender} /> */}
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
      <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
@@ -79,7 +79,8 @@ function App() {
      <Route path="/Manager" element={<Manager />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
-     <Route path="/StaffPortal" element={<StaffPortal />} />
+     <Route path="/" element={<StaffPortal />} />
+     {/* <Route path="/StaffPortal" element={<StaffPortal />} /> */}
      <Route path="/Inventario" element={<Inventario />} />
      <Route path="/VentaCompra" element={<VentaCompra />} />
      <Route path="/Actividades" element={<Actividades />} />

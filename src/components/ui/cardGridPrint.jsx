@@ -2,8 +2,10 @@ import { Label } from "@/components/ui/label";
 import React, { useRef, useState } from 'react';
 import { CardInstancePrint } from "@/components/ui/cardInstancePrint";
 import { CardInstanceDetail } from "@/components/ui/cardInstanceDetail";
+import Encabezado from "../../body/components/Menu/Encabezado";
+import { CAFE } from "../../redux/actions-types";
 
-export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO,TITTLE, filterKey, withDividerValue }) {
+export function CardGridPrint({ products,cardHeight, isEnglish, GRUPO, SUB_GRUPO,TITTLE, filterKey, withDividerValue }) {
   const containerRef = useRef(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -25,7 +27,9 @@ export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO,TITTLE, fi
     <div className={`
     ${withDividerValue === 1 ? "w-full" : `w-1/${withDividerValue}`}
     h-full relative 
-    overflow-hidden`}>
+    overflow-hidden`}
+    style={{ height: cardHeight ? `${cardHeight}px` : '100%' }}
+    >
       {/* {selectedProduct && (
         <div className="fixed inset-0 flex justify-center items-center overflow-hidden ">
           <CardInstanceDetail 
@@ -40,9 +44,14 @@ export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO,TITTLE, fi
         </div>
       )} */}
       <div className="flex flex-col items-start gap-1">
-        <Label className="text-left text-lg font-medium break-words w-full font-LilitaOne  ">
           {/* {Array.isArray(GRUPO) ? GRUPO.join(' & ').toUpperCase() : GRUPO.toUpperCase()}{' '} */}
+        <Label className="text-left flex text-lg font-medium break-words w-full 
+        truncate font-SpaceGrotesk font-bold 
+          ">
+{/* font-LilitaOne */}
+        {/* <Encabezado isEnglish={isEnglish} GRUPO={GRUPO} /> */}
           {TITTLE ? TITTLE[isEnglish ? "EN" : "ES"].toUpperCase() : GRUPO.toUpperCase()} 
+       
         </Label>
         
         <div ref={containerRef} className="flex flex-col overflow-y-auto scrollbar-hide snap-y snap-mandatory scroll-smooth gap-1 w-full font-light">
@@ -51,6 +60,7 @@ export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO,TITTLE, fi
             .map((product) => (
               <div key={product._id} className="snap-center flex w-full " onClick={() => setSelectedProduct(product)}>
                 <CardInstancePrint product={product} isEnglish={isEnglish} />
+
               </div>
             ))}
         </div>

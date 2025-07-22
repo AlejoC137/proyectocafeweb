@@ -13,7 +13,7 @@ export const SET_SELECTED_PROVIDER_ID = "SET_SELECTED_PROVIDER_ID"; // Nueva acc
 // Vistas
 export const HOME = "HOME";
 export const SUPABASE = "SUPABASE";
-export const AGENDA = "AGENDA";
+export const AGENDA = "Agenda";
 export const NOSOTROS = "NOSOTROS";
 export const MENUVIEW = "MENUVIEW";
 export const LUNCH = "LUNCH";
