@@ -56,6 +56,7 @@ DESPACHO
 
 ]
 
+
 // grupo
 
 export const CARNICO = 'CARNICO'
@@ -176,6 +177,7 @@ export const ESTATUS = [
   export const ml = 'ml'
   export const li = 'li'
   export const un = 'un'
+  export const SET_LANGUAGE = 'SET_LANGUAGE'
 
   
 
@@ -240,6 +242,8 @@ export const PAPELERIA = 'PAPELERIA'
 
 export const FRUTERA = 'FRUTERA'
 export const NO_APLICA = 'NO_APLICA'
+export const ESP = 'ESP'
+export const ENG = 'ENG'
 
 
 
@@ -269,3 +273,20 @@ export const BODEGA = [
 export const SMMV_COL_2025_HORA = 6189
 export const SMMV_COL_2025_MINU = SMMV_COL_2025_HORA/60
 
+export const BARISTA = 'BARISTA'
+export const DESPACHADOR = 'DESPACHADOR'
+export const AUX_PRODUCCION = 'AUX_PRODUCCION'
+export const COCINERO = 'COCINERO'
+export const EVENTOS  = 'EVENTOS'
+export const REDES  = 'REDES'
+export const MANAGER  = 'MANAGER'
+
+export const ROLES = [
+BARISTA,
+DESPACHADOR,
+AUX_PRODUCCION,
+COCINERO,
+EVENTOS,
+REDES,
+MANAGER
+]

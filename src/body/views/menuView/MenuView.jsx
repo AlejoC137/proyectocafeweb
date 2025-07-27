@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { CardGrid } from '@/components/ui/cardGrid';
+import { CardGrid } from '@/components/ui/cardGrid'; // Asegúrate que la ruta sea correcta
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllFromTable } from '../../../redux/actions';
-import { STAFF, MENU, ITEMS } from '../../../redux/actions-types';
+import { MENU, ITEMS, ESP, CATEGORIES_t, ENG } from '../../../redux/actions-types';
 
 function MenuView() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
   const menuData = useSelector((state) => state.allMenu);
+  const currentLeng = useSelector((state) => state.currentLeng);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         await Promise.all([
-          // dispatch(getAllFromTable(STAFF)),
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
         ]);
@@ -28,21 +27,31 @@ function MenuView() {
     fetchData();
   }, [dispatch]);
 
-  const uniqueCategories = Array.from(new Set(menuData.map(item => item.TipoEN)));
+  // Se obtienen las categorías únicas basadas en el GRUPO del producto.
+  const uniqueCategories = Array.from(new Set(menuData.map(item => item.GRUPO)));
 
-  const getCategoryTitle = (tipoEN) => {
-    switch (tipoEN) {
-      case 'Coffee':
-        return 'Café Frío y Caliente';
-      case 'Breackfast':
-        return 'Desayuno Salado y Dulce';
-      case 'Lunch':
-        return 'Almuerzo y Para la Tarde';
-      case 'Others':
-        return tipoEN;
-      default:
-        return tipoEN;
+  /**
+   * Busca la traducción de un grupo de categoría en el objeto CATEGORIES_t.
+   * @param {string} elGrupo - La clave de la categoría (ej. "CAFE").
+   * @returns {{ES: string, EN: string}} Un objeto con la traducción en español e inglés.
+   */
+  const getCategoryTitle = (elGrupo) => {
+    const grupo = CATEGORIES_t[elGrupo];
+    
+    // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
+    if (currentLeng === ESP   && grupo  ) {
+      return    grupo.es
+
+    
     }
+    if (currentLeng === ENG && grupo ) {
+     
+      return    grupo.en
+
+  
+    }
+    
+    // Si no se encuentra, se devuelve el nombre del grupo como fallback.
   };
 
   if (loading) {
@@ -50,17 +59,19 @@ function MenuView() {
   }
 
   return (
-    <div className="flex flex-col w-screen border pt-3"> {/* Ajuste aquí */}
-<div className="flex justify-center items-center ">
-  {/* <h1 class="text-4xl font-bold">MENU</h1> */}
-</div>
+    <div className="flex flex-col w-screen border pt-24">
+      <div className="flex justify-center items-center">
+        {/* Título principal del menú si es necesario */}
+      </div>
       {uniqueCategories.map((category) => (
-        <div key={category} className="overflow-hidden w-screen px-5 "> {/* Aseguramos que cada grid tenga overflow horizontal controlado */}
+        <div key={category} className="overflow-hidden w-screen px-5 mb-6">
           <CardGrid
-            filterKey={category}
+            // La clave para filtrar ahora es el GRUPO
+            filterKey={category} 
             products={menuData}
-            category={getCategoryTitle(category)}
-            isEnglish={true}
+            // El título ahora viene de la función de traducción
+            TITTLE={getCategoryTitle(category)}
+            isEnglish={ currentLeng }
           />
         </div>
       ))}

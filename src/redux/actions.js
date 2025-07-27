@@ -16,7 +16,10 @@ import {
   RESET_EXPANDED_GROUPS,
   ADD_ORDER_ITEM,
   AGENDA,
-  ITEMS
+  ITEMS,
+  SET_LANGUAGE,
+  ESP,
+  ENG
   
 } from "./actions-types";
 
@@ -444,7 +447,7 @@ export function copiarAlPortapapeles(items, estado , ) {
 
 export function crearItem(itemData, type, forId) {
 
-  console.log(itemData);
+  // console.log(itemData);
   
   return async (dispatch) => {
     try {
@@ -670,4 +673,13 @@ export const addOrderItem = (item) => ({
   type: ADD_ORDER_ITEM,
   payload: item,
 });
+
+export const setLenguage = (language) => {
+  return (dispatch) => {
+    dispatch({
+      type: SET_LANGUAGE,
+      payload: language,
+    });
+  };
+};
 

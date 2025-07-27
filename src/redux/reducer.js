@@ -22,7 +22,10 @@ import {
   RESET_EXPANDED_GROUPS,       // Nueva acción importada
   ADD_ORDER_ITEM   ,
   RECETAS_PROCEDIMIENTOS,            // Nueva acción importada
-  AGENDA
+  AGENDA,
+  ESP,
+  ENG,
+  SET_LANGUAGE
 } from './actions-types';
 
 const initialState = {
@@ -81,7 +84,7 @@ const initialState = {
   allRecetasMenu: [],
   allRecetasProcedimientos: [],
   allWorkIsue: [],
-  currentLeng: 'ESP',
+  currentLeng: ESP,
   allProduccion: [],
   Proveedores: [],
   Compras: [],
@@ -108,6 +111,12 @@ const reducer = (state = initialState, action) => {
         return {
           ...state,
           showEdit: action.payload,
+        };
+    
+      case SET_LANGUAGE:
+        return {
+          ...state,
+          currentLeng: action.payload,
         };
     
     

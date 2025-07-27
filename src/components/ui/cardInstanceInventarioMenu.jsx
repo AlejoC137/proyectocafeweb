@@ -287,6 +287,16 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
                 className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
               />
             </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Order Menu Print:
+              <input
+                type="text"
+                name="Order"
+                value={editableProduct.Order || ""}
+                onChange={handleChange}
+                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
+              />
+            </label>
           </div>
           <label className="text-sm text-gray-700 flex-1 font-bold">
             Grupo:

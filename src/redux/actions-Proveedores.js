@@ -817,3 +817,42 @@ export const getProveedor = async (uuid) => {
 };
 
 
+export function crearStaff(staffData) {
+  return async (dispatch) => {
+    try {
+      // Prepara el nuevo objeto para el personal, incluyendo un ID único.
+      const nuevoStaff = {
+        _id: uuidv4(),
+        ...staffData,
+      };
+
+      // Inserta el nuevo registro en la tabla 'Staff'.
+      const { data, error } = await supabase
+        .from('Staff')
+        .insert([nuevoStaff])
+        .select(); // .select() devuelve el registro creado.
+
+      // Manejo de errores de Supabase.
+      if (error) {
+        console.error("Error al crear el miembro del personal:", error);
+        throw new Error(`No se pudo crear el miembro del personal: ${error.message}`);
+      }
+
+      // Si la creación es exitosa, actualiza el estado de Redux.
+      dispatch({
+        // Puedes seguir usando "CREAR_ITEM_SUCCESS" si tu reducer está configurado para ello,
+        // o cambiarlo a "CREAR_STAFF_SUCCESS" para mayor especificidad.
+        type: "CREAR_ITEM_SUCCESS", 
+        payload: data[0], // El nuevo miembro del personal creado.
+      });
+
+      console.log("Miembro del personal creado correctamente:", data[0]);
+      return data[0]; // Devuelve el nuevo objeto.
+
+    } catch (error) {
+      // Captura cualquier otro error en el proceso.
+      console.error("Error en la acción crearStaff:", error);
+      throw error; // Lanza el error para que el componente pueda manejarlo.
+    }
+  };
+}

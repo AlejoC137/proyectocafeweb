@@ -97,8 +97,8 @@ function MenuPrint() {
             <div className="flex flex-col gap-1 w-custom-width400px">
               <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Comida":"Food"}</h1>
               <div className="flex flex-row gap-1 ">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Dulce",EN:"Sweet"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Salado",EN:"Salty"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Salty BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
               </div>
               <br />
               <div className="flex flex-row gap-1">

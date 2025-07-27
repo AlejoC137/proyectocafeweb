@@ -3,13 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Flame, Leaf, AlertTriangle } from "lucide-react"; // Icons for diet and care warnings
 import { Button } from "@/components/ui/button";
 import { CardInstanceDetail } from "./cardInstanceDetail";
+import { ENG, ESP } from "../../redux/actions-types";
 // import {CardInstanceDetail} from "./CardInstanceDetail";
 
 export function CardInstance({ product, isEnglish }) {
+
+
+ const leng = isEnglish === ESP ? false : true;
+ 
   const [showDetail, setShowDetail] = useState(false);
 
-  const dietWarning = isEnglish ? product.DietaEN : product.DietaES;
-  const careWarning = isEnglish ? product.CuidadoEN : product.CuidadoES;
+  const dietWarning = leng ? product.DietaEN : product.DietaES;
+  const careWarning = leng ? product.CuidadoEN : product.CuidadoES;
 
   const renderIcons = () => {
     const icons = [];
@@ -53,7 +58,7 @@ export function CardInstance({ product, isEnglish }) {
             {product.Foto && (
               <img
                 src={product.Foto}
-                alt={isEnglish ? product.NombreEN : product.NombreES}
+                alt={leng ? product.NombreEN : product.NombreES}
                 className="w-full h-full object-cover"
               />
             )}
@@ -67,15 +72,15 @@ export function CardInstance({ product, isEnglish }) {
           </div>
           <CardContent className="p-2 flex flex-col justify-between text-gray-900">
             <div className="flex justify-between items-center">
-              <h3 className="text-md font-bold truncate">
-                {isEnglish ? product.NombreEN : product.NombreES}
+              <h3 className="text-md font-bold truncate font-LilitaOne " >
+                {leng ? product.NombreEN : product.NombreES}
               </h3> 
               <span className="text-lg font-semibold text-gray-800">${product.Precio}</span>
             </div>
                 {/* <p className="text-sm text-gray-500 line-clamp-2">
                   {isEnglish ? product.DescripcionMenuEN : product.DescripcionMenuES}
                 </p> */}
-                {isEnglish ? "Click for details..." : "Click para detalles..."}
+                {leng ? "Click for details..." : "Click para detalles..."}
                 <div className="flex items-center justify-between text-sm">
               <div className="flex items-center">{renderIcons()}</div>
               <span className="text-gray-500">{product.AproxTime} min 🕐</span>
