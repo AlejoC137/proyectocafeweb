@@ -106,26 +106,26 @@ export const CATEGORIES = [ //GRUPO
 
 
 export const CATEGORIES_t = {
-  CAFE: { es: "Café", en: "Coffee" },
-  DESAYUNO: { es: "Desayuno", en: "Breakfast" },
-  BEBIDAS: { es: "Bebidas", en: "Drinks" },
-  PANADERIA: { es: "Panadería", en: "Bakery" },
-  REPOSTERIA: { es: "Repostería", en: "Pastry" },
-  TARDEO: { es: "Tardeo", en: "Afternoon Snack" },
-  ADICIONES: { es: "Adiciones", en: "Add-ons" },
-  CARNICO: { es: "Cárnico", en: "Meat" },
-  LACTEO: { es: "Lácteo", en: "Dairy" },
-  VERDURAS_FRUTAS: { es: "Verduras y Frutas", en: "Fruits and Vegetables" },
-  CONDIMENTOS_ESPECIAS_ADITIVOS: { es: "Condimentos, Especias y Aditivos", en: "Condiments, Spices and Additives" },
-  GRANOS_CEREALES: { es: "Granos y Cereales", en: "Grains and Cereals" },
-  LIMPIEZA: { es: "Limpieza", en: "Cleaning" },
-  DOTACION: { es: "Dotación", en: "Equipment" },
-  CONCERVAS_FERMENTOS_PRECOCIDOS: { es: "Conservas, Fermentos y Precocidos", en: "Preserves, Ferments and Precooked" },
-  GUARNICION: { es: "Guarnición", en: "Side Dish" },
-  DESECHABLES: { es: "Desechables", en: "Disposables" },
-  ENLATADOS: { es: "Enlatados", en: "Canned Goods" },
-  GRANOS: { es: "Granos", en: "Grains" },
-  HARINAS: { es: "Harinas", en: "Flours" }
+  CAFE: { es: "Café", en: "Coffee" , icon:"☕"},
+  DESAYUNO: { es: "Desayuno", en: "Breakfast" , icon:"🥞"},
+  BEBIDAS: { es: "Bebidas", en: "Drinks" , icon:"🍹" },
+  PANADERIA: { es: "Panadería", en: "Bakery" , icon:"🥐"},
+  REPOSTERIA: { es: "Repostería", en: "Pastry" , icon:"🍰"},
+  TARDEO: { es: "Tardeo", en: "Afternoon Snack" , icon:"🥪"},
+  ADICIONES: { es: "Adiciones", en: "Add-ons" , icon:"🥚"},
+  CARNICO: { es: "Cárnico", en: "Meat", icon:"☕" },
+  LACTEO: { es: "Lácteo", en: "Dairy" , icon:"🐄"},
+  VERDURAS_FRUTAS: { es: "Verduras y Frutas", en: "Fruits and Vegetables", icon:"🐄" },
+  CONDIMENTOS_ESPECIAS_ADITIVOS: { es: "Condimentos, Especias y Aditivos", en: "Condiments, Spices and Additives" , icon:"🧂"},
+  GRANOS_CEREALES: { es: "Granos y Cereales", en: "Grains and Cereals", icon:"🌰" },
+  LIMPIEZA: { es: "Limpieza", en: "Cleaning", icon:"🧼" },
+  DOTACION: { es: "Dotación", en: "Equipment" , icon:"📇"},
+  CONCERVAS_FERMENTOS_PRECOCIDOS: { es: "Conservas, Fermentos y Precocidos", en: "Preserves, Ferments and Precooked", icon:"🍯" },
+  GUARNICION: { es: "Guarnición", en: "Side Dish" , icon:"🍟"},
+  DESECHABLES: { es: "Desechables", en: "Disposables" , icon:"🥡"},
+  ENLATADOS: { es: "Enlatados", en: "Canned Goods", icon:"🥫" },
+  GRANOS: { es: "Granos", en: "Grains", icon:"🥜" },
+  HARINAS: { es: "Harinas", en: "Flours", icon:"🌾" }
 };
 
 export const CAFE_ESPRESSO = 'CAFE_ESPRESSO'

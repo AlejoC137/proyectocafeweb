@@ -35,7 +35,7 @@ function MenuView() {
    * @param {string} elGrupo - La clave de la categoría (ej. "CAFE").
    * @returns {{ES: string, EN: string}} Un objeto con la traducción en español e inglés.
    */
-  const getCategoryTitle = (elGrupo) => {
+  const getCategoryTitle = (elGrupo, getIcon) => {
     const grupo = CATEGORIES_t[elGrupo];
     
     // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
@@ -47,6 +47,21 @@ function MenuView() {
     if (currentLeng === ENG && grupo ) {
      
       return    grupo.en
+
+  
+    }
+
+    
+    // Si no se encuentra, se devuelve el nombre del grupo como fallback.
+  };
+  const getCategoryIcon = (elGrupo, getIcon) => {
+    const grupo = CATEGORIES_t[elGrupo];
+    
+    // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
+
+    if (getIcon === "icon" && grupo ) {
+     
+      return    grupo.icon
 
   
     }
@@ -71,6 +86,7 @@ function MenuView() {
             products={menuData}
             // El título ahora viene de la función de traducción
             TITTLE={getCategoryTitle(category)}
+            ICON={getCategoryIcon(category,"icon")}
             isEnglish={ currentLeng }
           />
         </div>

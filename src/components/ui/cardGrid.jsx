@@ -4,7 +4,7 @@ import { CardInstance } from "@/components/ui/cardInstance";
 import { CardInstanceDetail } from "@/components/ui/cardInstanceDetail";
 
 // La prop 'TITTLE' ahora reemplaza a 'category' para mayor claridad.
-export function CardGrid({ products, isEnglish, TITTLE, filterKey }) {
+export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
   const containerRef = useRef(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   // Estado para controlar si la sección está abierta o cerrada. Por defecto, está abierta.
@@ -42,7 +42,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey }) {
   
         {/* Icono que cambia según el estado 'isOpen' */}
         <Label className="text-left text-2xl font-SpaceGrotesk font-bold truncate m-2 cursor-pointer flex items-center gap-2">
-          <span>{TITTLE}</span>
+          <span>{TITTLE} {ICON}</span>
           {isOpen ? (
             // Flecha hacia abajo (abierto)
             <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
