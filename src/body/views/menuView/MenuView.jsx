@@ -59,12 +59,12 @@ function MenuView() {
   }
 
   return (
-    <div className="flex flex-col w-screen border pt-24">
+    <div className="flex flex-col w-screen border pt-20">
       <div className="flex justify-center items-center">
         {/* Título principal del menú si es necesario */}
       </div>
       {uniqueCategories.map((category) => (
-        <div key={category} className="overflow-hidden w-screen px-5 mb-6">
+        <div key={category} className="overflow-hidden w-screen px-3 mb-3">
           <CardGrid
             // La clave para filtrar ahora es el GRUPO
             filterKey={category} 

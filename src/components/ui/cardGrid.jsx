@@ -8,7 +8,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey }) {
   const containerRef = useRef(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   // Estado para controlar si la sección está abierta o cerrada. Por defecto, está abierta.
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // Función para cambiar el estado de visibilidad
   const toggleVisibility = () => {
@@ -18,7 +18,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey }) {
   return (
     <div className="relative">
       {selectedProduct && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50 p-4">
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-40 p-4">
           <CardInstanceDetail 
             product={selectedProduct} 
             onClose={() => setSelectedProduct(null)}
@@ -58,11 +58,11 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey }) {
       </button>
       {isOpen && (
         <div className="container mx-auto">
-          <div ref={containerRef} className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth gap-x-4">
+          <div ref={containerRef} className="flex overflow-x-auto scrollbar-hide snap-x  snap-mandatory scroll-smooth gap-x-4">
             {products
               .filter((product) => product.GRUPO === filterKey && (product.Estado === "Activo"))
               .map((product) => (
-                <div key={product._id} className="snap-center flex-shrink-0 w-[260px]" onClick={() => setSelectedProduct(product)}>
+                <div key={product._id} className="snap-center  flex-shrink-0 w-[280px]" onClick={() => setSelectedProduct(product)}>
                   <CardInstance product={product} isEnglish={isEnglish} />
                 </div>
               ))}
