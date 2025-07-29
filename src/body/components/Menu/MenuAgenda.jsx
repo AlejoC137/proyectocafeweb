@@ -36,10 +36,10 @@ import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, EN
 function MenuAgenda({ isEnglish }) {
   const infoFija = {
     ES: {
-      Intro: `no por solo gusto sino necesidad la de disponer este espacio a aquiellos que lo puedan usar , como material y mediador, todos los meses haremos intercambio de idiomas , haremos talleres , eventos de musica , arte y cultura, y todo lo que se nos ocurra. a uds y a nosotros.`
+      Intro: `con la misión de disponer este espacio para aquellos que lo puedan usar como material y mediador. Todos los meses haremos intercambio de idiomas, talleres, eventos de música, arte y cultura, y todo lo que se nos ocurra, a ustedes y a nosotros.`
     },
     EN: {
-      Intro: `not just for pleasure but out of necessity to make this space available to those who can use it, as material and mediator, every month we will hold language exchanges, workshops, music, art and culture events, and everything we can think of. for you and for us.`
+      Intro: `.with the mission of making this space available to those who can use it as a material and a mediator. Every month we will have language exchanges, workshops, music, art, and culture events, and everything that occurs to us—to you and to us`
     }
   };
 

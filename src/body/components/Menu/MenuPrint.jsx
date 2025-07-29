@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
 import QrMenu from "@/assets/QR MENU.png";
 import QrMapa from "@/assets/QR MAPA.png";
+import QrWifi from "@/assets/QR WIFI.png";
 import Encabezado from "./Encabezado";
 import MenuPrintInfo from "./MenuPrintInfo";
 import MenuAgenda from "./MenuAgenda";
@@ -52,7 +53,7 @@ function MenuPrint() {
   }
 
   return (
-    <div className="flex w-screen flex-col items-center justify-center" ref={printRef}>
+    <div className="flex w-screen flex-col items-center justify-center " ref={printRef}>
       {/* Buttons are hidden when printing */}
       <div className="flex gap-4 mt-12 mb-5 print:hidden">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium">
@@ -68,7 +69,7 @@ function MenuPrint() {
 
       {showForm && <MenuPrintFormInfo />}
 
-      <div className="flex justify-center w-full">
+      <div className="flex justify-center ">
         <div id="print-area" className="">
           {/* --- START OF PAGE 1 --- */}
           <div className=" text-center ">
@@ -78,7 +79,7 @@ function MenuPrint() {
           </div>
 
           {/* THREE EQUAL COLUMNS */}
-          <div className="pt-0 gap-4 flex flex-row justify-center h-custom-height750">
+          <div className="pt-0 gap-8 flex flex-row justify-center h-custom-height750">
             {/* COFFEE */}
             <div className="flex flex-col gap-1 w-custom-width400px">
               <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Café y Bebidas":"Coffe & Drinks"}</h1>
@@ -160,11 +161,11 @@ function MenuPrint() {
                   </div>
                   <div className="w-1/2 h-24 flex flex-col items-center justify-center px-1">
                     <img src={QrMapa} alt="QR Maps" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR MAPS</h3>
+                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR G MAPS</h3>
                   </div>
                   <div className="w-1/2 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrMapa} alt="QR Maps" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR INSCRIPCIONES</h3>
+                    <img src={QrWifi} alt="QR Maps" className="h-full object-contain" />
+                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR WIFI</h3>
                   </div>
                 </div>
               </div>
@@ -176,11 +177,11 @@ function MenuPrint() {
 
               {/* Column 3: Logo */}
               <div className="flex flex-col justify-between items-center w-custom-width400px h-full">
-                <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/3 object-contain bg-red-100 " />
-                <p className="text-center text-justify font-SpaceGrotesk w-1/3 text-sm mt-2 px-2">
+                <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
+                <p className="text-center text-justify font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
                   {!leng
-                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada - 2023"
-                    : "fig-1: Silla Plan B - Co-created with Materia nomada - 2023"}
+                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
+                    : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
                 </p>
               </div>
             </div>

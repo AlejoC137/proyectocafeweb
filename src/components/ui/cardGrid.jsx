@@ -16,7 +16,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative overflow-y-hidden">
       {selectedProduct && (
         <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-40 p-4">
           <CardInstanceDetail 

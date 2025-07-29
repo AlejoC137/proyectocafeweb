@@ -10,6 +10,7 @@ module.exports = {
         'custom-width1200px': '1200px',
         'custom-width350px': '400px',
         'custom-width400px': '400px',
+        'custom-widthSillax': '600px',
       },
       height: {
         'custom-height225': '225px',
