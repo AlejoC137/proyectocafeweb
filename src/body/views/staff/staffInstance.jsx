@@ -3,7 +3,7 @@ import React from "react";
 function StaffInstance({ staff }) {
   if (!staff) return null;
   return (
-    <div className="bg-gray-100 p-4 rounded shadow">
+    <div className="bg-red-500 -100 p-4 rounded shadow">
       <h2 className="text-lg font-bold mb-2">Información del Staff</h2>
       <div className="mb-1"><strong>_id:</strong> {staff._id}</div>
       <div className="mb-1"><strong>uuid:</strong> {staff.uuid}</div>

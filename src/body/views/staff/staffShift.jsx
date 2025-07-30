@@ -6,6 +6,7 @@ function StaffShift({ staffId }) {
   const dispatch = useDispatch();
   const allStaff = useSelector((state) => state.allStaff || []);
   const staff = allStaff.find((s) => s._id === staffId);
+console.log("StaffShift staff:", staff);
 
   // Inicializar turnos desde Redux
   const [turnos, setTurnos] = useState(() => {
@@ -51,23 +52,27 @@ function StaffShift({ staffId }) {
 
   // Iniciar turno
   const iniciarTurno = async () => {
-    if (turnoAbierto) {
-      setAlerta("Ya hay un turno iniciado.");
-      return;
-    }
+
+    // if (turnoAbierto) {
+    //   setAlerta("Ya hay un turno iniciado.");
+    //   return;
+    // }
     const ahora = new Date();
     const nuevoTurno = {
       fecha: ahora.toISOString().split("T")[0],
       horaInicio: ahora.toTimeString().split(" ")[0].slice(0, 5),
       horaCierre: "false",
     };
+
+    console.log(nuevoTurno);
+
     const nuevosTurnos = [...turnos, nuevoTurno];
     setTurnos(nuevosTurnos);
 
     await dispatch(
       updateItem(
         staffId,
-        { Turnos: JSON.stringify(nuevosTurnos), Estado: true },
+        { Turnos: JSON.stringify(nuevosTurnos)  },
         "Staff"
       )
     );
@@ -95,7 +100,7 @@ function StaffShift({ staffId }) {
     await dispatch(
       updateItem(
         staffId,
-        { Turnos: JSON.stringify(nuevosTurnos), Estado: false },
+        { Turnos: JSON.stringify(nuevosTurnos), },
         "Staff"
       )
     );

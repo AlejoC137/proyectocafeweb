@@ -683,3 +683,35 @@ export const setLenguage = (language) => {
   };
 };
 
+import { UPDATE_LOG_STAFF } from './actions-types'; // 👈 Import your action type
+
+export const updateLogStaff = (personaId, updatedTurnoPasados) => {
+  return async (dispatch) => {
+    try {
+      const { data, error } = await supabase
+        .from('Staff')
+        .update({ Turnos: updatedTurnoPasados })
+        .eq('_id', personaId)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      dispatch({
+        type: UPDATE_LOG_STAFF,
+        payload: { personaId, updatedTurnoPasados },
+      });
+    
+    
+    // Notificar al usuario y recargar la página si no hay error
+    alert('Turno actualizado correctamente.');
+    window.location.reload();
+
+      return true; // Éxito
+    } catch (error) {
+      console.error('Error updating shift log:', error.message);
+      return false; // Fallo
+    }
+  };
+};

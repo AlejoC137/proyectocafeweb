@@ -818,6 +818,8 @@ export const getProveedor = async (uuid) => {
 
 
 export function crearStaff(staffData) {
+      console.log(staffData)
+
   return async (dispatch) => {
     try {
       // Prepara el nuevo objeto para el personal, incluyendo un ID único.

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllStaff, updateLogStaff } from "../../../redux/actions";
 
-const CalculoNomina = () => {
+const CalculoNomina_ref = () => {
   const dispatch = useDispatch();
   const staff = useSelector((state) => state.staff);
 
@@ -340,4 +340,4 @@ const CalculoNomina = () => {
   );
 };
 
-export default CalculoNomina;
+export default CalculoNomina_ref;
