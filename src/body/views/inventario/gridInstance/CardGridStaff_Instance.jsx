@@ -43,7 +43,7 @@ export function CardGridStaff_Instance({ staff }) {
     Nombre: staff.Nombre || "",
     Apellido: staff.Apellido || "",
     Cargo: staff.Cargo || "",
-    Categoria: staff.Categoria || "",
+    // Categoria: staff.Categoria || "",
     Cuenta:
       typeof staff.Cuenta === "string"
         ? { banco: "", tipo: "", numero: "", ...parseObjectFromString(staff.Cuenta) }
@@ -190,7 +190,7 @@ export function CardGridStaff_Instance({ staff }) {
                   className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                 />
               </label>
-              <label className="text-sm text-gray-700 flex-1">
+              {/* <label className="text-sm text-gray-700 flex-1">
                 Categoría:
                 <input
                   type="text"
@@ -199,7 +199,7 @@ export function CardGridStaff_Instance({ staff }) {
                   onChange={handleInputChange}
                   className="border bg-slate-50 border-gray-300 rounded px-2 py-1 w-full mt-1"
                 />
-              </label>
+              </label> */}
             </div>
             <div className="flex gap-4">
               <label className="text-sm text-gray-700 flex-1">
