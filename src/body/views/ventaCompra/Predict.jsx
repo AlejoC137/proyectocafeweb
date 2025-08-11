@@ -8,6 +8,7 @@ function Predict({ menuItem }) {
 
   // Ensure menuItem has a default value if null or undefined
   const selectedMenuItem = menuItem || "Menu";
+console.log("Selected Menu Item:", selectedMenuItem);
 
   const fetchVentasWithMenu = async () => {
     try {
@@ -20,15 +21,21 @@ function Predict({ menuItem }) {
         console.error("Error fetching ventas:", error);
         return;
       }
+// console.log("Fetched ventas data:", data);
 
       // Filter ventas based on the selected menu item
       const filteredVentas = data.filter((venta) => {
         if (venta.Productos) {
+          console.log("Venta Productos:", venta.Productos);
+          
           const productos = JSON.parse(venta.Productos);
           return productos.some((producto) => producto.NombreES === selectedMenuItem);
         }
         return false;
       });
+
+
+console.log("Filtered ventas for selected menu item:", filteredVentas);
 
       // Group ventas by date and calculate totals
       const grouped = filteredVentas.reduce((acc, venta) => {

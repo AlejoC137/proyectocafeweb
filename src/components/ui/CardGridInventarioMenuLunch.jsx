@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ProductRow } from "@/components/ui/CardInstanceInventarioMenuLunch";
+import { CardInstanceInventarioMenuLunch } from "@/components/ui/CardInstanceInventarioMenuLunch";
 import { useDispatch, useSelector } from "react-redux";
 import { MENU, TARDEO_ALMUERZO } from "../../redux/actions-types";
 import AccionesRapidasMenuLunch from "../../body/views/actualizarPrecioUnitario/AccionesRapidasMenuLunch";
@@ -81,7 +81,7 @@ export function CardGridInventarioMenuLunch({ products, showEdit }) {
             </div> */}
             <div className="mt-4 flex flex-col gap-4">
               {filteredProducts[group].map((product) => (
-                <ProductRow
+                <CardInstanceInventarioMenuLunch
                   key={product._id}
                   product={product}
                   showEdit={showEdit}

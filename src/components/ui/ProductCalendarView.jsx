@@ -13,7 +13,7 @@ const ActionButton = ({ onClick, children, className = '' }) => (
 );
 
 // Componente de Tarjeta para cada Producto del Menú
-export function CardInstanceInventarioMenuLunch({ product }) {
+export function ProductRow({ product }) {
   const dispatch = useDispatch();
 
   // --- ESTADOS ---
@@ -52,12 +52,12 @@ export function CardInstanceInventarioMenuLunch({ product }) {
 
   const handleSave = () => {
     dispatch(updateItem(product._id, editableProduct, "Menu"));
-    setIsEditing(false); // Solo cierra el panel de edición
+    setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setEditableProduct(product);
-    setIsEditing(false); // Solo cierra el panel de edición
+    setIsEditing(false);
   };
 
   const handleDelete = () => {
@@ -183,7 +183,7 @@ function ProductCalendarView({ products }) {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groupedProducts[date].map(product => (
-                <CardInstanceInventarioMenuLunch key={product._id} product={product} />
+                <ProductRow key={product._id} product={product} />
               ))}
             </div>
           </section>

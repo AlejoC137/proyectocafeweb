@@ -39,7 +39,8 @@ console.log(item.nombre);
 
 
               const url = `/Predict/${item.nombre}`;
-    window.open(url, '_blank');
+
+    window.open(url);
   };
 
   // console.log(allCompras);
@@ -272,7 +273,7 @@ console.log(item.nombre);
         />
         <p>Selected Date: {hoy}</p>
       </div>
-      <MesResumenStats
+      {/* <MesResumenStats
         ventasRecepies={productosVendidos}
         totalIngreso={totalIngreso}
         totalTip={totalTip}
@@ -281,7 +282,7 @@ console.log(item.nombre);
         totalEfectivo={totalEfectivo}
         totalTransferencia={totalTransferencia}
         totalCompras={totalCompras}
-      />
+      /> */}
 
       {/* Resumen del Día */}
       {/* Removed inline rendering */}
