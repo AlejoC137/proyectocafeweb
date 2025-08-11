@@ -14,7 +14,7 @@ module.exports = {
       },
       height: {
         'custom-height225': '225px',
-        'custom-height750': '800px'
+        'custom-height750': '825px'
       },
 
   fontFamily: {

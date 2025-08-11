@@ -140,7 +140,7 @@ function MenuPrint() {
 
           {/* --- START OF PAGE 2 (with page break for printing) --- */}
           {/* The 'print:break-before-page' class forces a new page when printing */}
-          <div className="pt-0 gap-4 flex flex-col justify-center print:break-before-page">
+          <div className="pt-0 gap-4 flex flex-col justify-center print:break-before-page ">
             <div className=" text-center mb-4">
               <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
                 {leng ? "More of Proyecto Café" : "Más sobre Proyecto Café"}

@@ -11,6 +11,7 @@ import BottomNav from './components/ui/bottom-nav'; // Importa BottomNav
 import TopNav from './components/ui/top-nav'; // Importa BottomNav
 import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
+import MenuLunch from './body/views/menuView/MenuLunch';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
 import AccionesRapidas from './body/views/actualizarPrecioUnitario/AccionesRapidas';
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
@@ -55,10 +56,11 @@ function App() {
       componentToRender = <SobreNosotros/>;
       break;
     case LUNCH:
-      componentToRender = <LunchByOrder />;
+      componentToRender = <MenuLunch />;
       break;
     case MENUVIEW:
       componentToRender = <MenuView />;
+  
       break;
     default:
       componentToRender = <div>Page Not Found</div>; // Fallback para rutas no encontradas
@@ -72,6 +74,7 @@ function App() {
     <Routes>
      {/* <Route path="/" element={componentToRender} /> */}
      <Route path="/MenuView" element={<MenuView />} />
+     <Route path="/MenuLunch" element={<MenuLunch />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
      <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
      <Route path="/Home" element={<LandingHome />} />

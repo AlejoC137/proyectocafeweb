@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import {WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE } from "../../../redux/actions-types";
+import {WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems } from "../../../redux/actions-types";
 import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapidasActividades";
 import { CardGridWorkIsue } from "./gridInstance/CardGridWorkIsue";
 import { CardGridStaff } from "./gridInstance/CardGridStaff";
 import { CardGridProcedimientos } from "./gridInstance/CardGridProcedimientos";
+import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
+import { CardGridInventarioMenuLunch } from "@/components/ui/CardGridInventarioMenuLunch";
 
 function Manager() {
   const dispatch = useDispatch();
@@ -18,11 +20,14 @@ function Manager() {
   const AllWorkIsue = useSelector((state) => state.AllWorkIsue || []);
   const recetas = useSelector((state) => state.allRecetasMenu || []);
   const showEdit = useSelector((state) => state.showEdit);
+  const Menu = useSelector((state) => state.allMenu || []);
 
   const filteredItems = {
     [Staff]: AllStaff,
     [WorkIsue]: AllWorkIsue,
     [Procedimientos]: AllProcedimientos,
+    [MenuItems]: Menu,
+    
   }[currentType] || [];
 
   useEffect(() => {
@@ -74,10 +79,10 @@ function Manager() {
 
 
 
-
-          { type: Procedimientos, label: "Procedimientos", icon: "🗺️" },
-          { type: Staff, label: "Staff", icon: "🛒" },
-          { type: WorkIsue, label: "WorkIssues", icon: "🥘" },
+          { type: MenuItems, label: "Menú", icon: "🗺️" },
+          { type: Procedimientos, label: "Procedimientos", icon: "📝" },
+          { type: Staff, label: "Staff", icon: "👩‍🚀" },
+          { type: WorkIsue, label: "WorkIssues", icon: "🧹" },
         ].map(({ type, label, icon }) => (
           <button
             key={type}
@@ -113,13 +118,26 @@ function Manager() {
       <div className="flex flex-col mt-20 overflow-y-auto">
         {showAccionesRapidasActividades && <AccionesRapidasActividades currentType={currentType} />}
         <h3 className="text-lg font-bold ml-4">{`Listado de ${currentType}`}</h3>
-        {currentType === WorkIsue ? (
-          <CardGridWorkIsue currentType={currentType} />
-        ) : currentType === Staff ? (
-          <CardGridStaff currentType={currentType} />
-        ) : (
-          <CardGridProcedimientos currentType={currentType} />
-        )}
+        {
+          (() => {
+            switch (currentType) {
+              case WorkIsue:
+                return <CardGridWorkIsue currentType={currentType} />;
+              case Staff:
+                return <CardGridStaff currentType={currentType} />;
+              case MenuItems:
+                return (
+                  <CardGridInventarioMenuLunch
+                    products={filteredItems}
+                    showEdit={showEdit}
+                  />
+                );
+              case Procedimientos:
+              default:
+                return <CardGridProcedimientos currentType={currentType} />;
+            }
+          })()
+        }
       </div>
     </div>
   );

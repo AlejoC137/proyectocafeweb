@@ -4,6 +4,8 @@ import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearI
 import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU, MenuItems } from "../../../redux/actions-types";
 
 function AccionesRapidas({ currentType }) {
+  console.log(currentType);
+  
   const dispatch = useDispatch();
   const allItems = useSelector((state) => state.allItems);
   const allProduccion = useSelector((state) => state.allProduccion);
@@ -85,7 +87,7 @@ function AccionesRapidas({ currentType }) {
     DescripcionEN: "",
     Precio: 0,
     Categoria: "",
-    Subcategoria: "",
+    SUB_GRUPO: "",
     Imagen: "",
   };
 
