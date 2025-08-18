@@ -7,6 +7,7 @@ import Gastos from "../../components/gastos/Gastos";
 import { MENU, ITEMS, PRODUCCION, PROVEE } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
+import MenuDelDiaPrint from "./MenuDelDiaPrint";
 
 function VentaCompra() {
   const dispatch = useDispatch();
@@ -99,6 +100,8 @@ console.log(ventas);
           onPagar={handlePagar}
         />
       </div>
+
+<MenuDelDiaPrint></MenuDelDiaPrint>
 
       <div className="gap-1 p-1">
         <div className="col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-1">

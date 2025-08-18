@@ -38,7 +38,7 @@ const MesResumenStats = ({
   }, [ventasRecepies, allRecetasMenu]);
 
   const totalCostoDirecto = infoPorProducto.reduce((acc, producto) => acc + (producto.costoDirecto || 0), 0);
-console.log(infoPorProducto);
+// console.log(infoPorProducto);
 
   const formatNumber = (number) => {
     return number.toLocaleString('es-ES');
