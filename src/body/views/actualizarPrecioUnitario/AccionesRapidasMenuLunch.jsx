@@ -108,7 +108,7 @@ const handleCrearMenuItem = async () => {
 
       {formVisible && currentType === MenuItems && (
         <div className="bg-gray-50 p-6 rounded-lg mt-4 border border-gray-200">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800">Crear Nuevo Ítem de Menú</h3>
+          <h3 className="text-2xl font-bold mb-6 text-gray-800">Crear Nuevo Menú</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <label className="text-sm text-gray-700 font-bold">
