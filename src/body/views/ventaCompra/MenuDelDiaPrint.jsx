@@ -133,7 +133,6 @@ function MenuDelDiaPrint() {
       </div>
 
       <div className="flex gap-4 print:hidden mb-5">
-        <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium">Imprimir</Button>
         <Button onClick={handleDownloadPng} className="font-SpaceGrotesk font-medium" variant="outline">Descargar PNG</Button>
       </div>
 
