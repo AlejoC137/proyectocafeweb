@@ -50,14 +50,26 @@ export function CardInstanceInventarioMenuLunch({ product }) {
     setEditableProduct(prev => ({ ...prev, Comp_Lunch: lunchJsonString }));
   }, []);
 
+  // Manejador para la edición general (Nombre, Precio)
   const handleSave = () => {
     dispatch(updateItem(product._id, editableProduct, "Menu"));
-    setIsEditing(false); // Solo cierra el panel de edición
+    setIsEditing(false);
   };
-
+  
   const handleCancelEdit = () => {
     setEditableProduct(product);
-    setIsEditing(false); // Solo cierra el panel de edición
+    setIsEditing(false);
+  };
+  
+  // --- NUEVO: Manejadores específicos para el formulario de almuerzo ---
+  const handleSaveLunchForm = () => {
+    dispatch(updateItem(product._id, editableProduct, "Menu"));
+    setIsLunchFormVisible(false); // Cierra el formulario de almuerzo al guardar
+  };
+
+  const handleCancelLunchForm = () => {
+    setEditableProduct(product); // Revierte cualquier cambio en el estado local
+    setIsLunchFormVisible(false); // Cierra el formulario de almuerzo
   };
 
   const handleDelete = () => {
@@ -98,23 +110,35 @@ export function CardInstanceInventarioMenuLunch({ product }) {
 
       {/* --- CONTENIDO EXPANDIBLE DEBAJO --- */}
 
-      {/* Sección de Edición (aparece al hacer clic en ✏️) */}
+      {/* Sección de Edición General (aparece al hacer clic en ✏️) */}
       {isEditing && (
         <div className="p-4 bg-yellow-50 border-b space-y-4">
-           <h4 className="font-bold text-yellow-800">Editando Producto</h4>
-           <input type="text" name="NombreES" value={editableProduct.NombreES} onChange={handleChange} className="p-2 border rounded-md w-full" />
-           <input type="number" name="Precio" value={editableProduct.Precio} onChange={handleChange} className="p-2 border rounded-md w-full" />
-           <div className="flex space-x-2">
-             <ActionButton onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 w-full"><span>✅</span><span>Guardar</span></ActionButton>
-             <ActionButton onClick={handleCancelEdit} className="bg-gray-500 hover:bg-gray-600 w-full"><span>❌</span><span>Cancelar</span></ActionButton>
-           </div>
+            <h4 className="font-bold text-yellow-800">Editando Producto</h4>
+            <input type="text" name="NombreES" value={editableProduct.NombreES} onChange={handleChange} className="p-2 border rounded-md w-full" />
+            <input type="number" name="Precio" value={editableProduct.Precio} onChange={handleChange} className="p-2 border rounded-md w-full" />
+            <div className="flex space-x-2">
+              <ActionButton onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 w-full"><span>✅</span><span>Guardar</span></ActionButton>
+              <ActionButton onClick={handleCancelEdit} className="bg-gray-500 hover:bg-gray-600 w-full"><span>❌</span><span>Cancelar</span></ActionButton>
+            </div>
         </div>
       )}
 
-      {/* Sección del Formulario de Almuerzo (aparece al hacer clic en 📝) */}
+      {/* MODIFICADO: Sección del Formulario de Almuerzo con botones de acción */}
       {isLunchFormVisible && (
-        <div className="p-4 bg-green-50 border-b">
-          <FormularioMenuAlmuerzo onMenuChange={handleLunchDataChange} initialData={initialLunchData} />
+        <div className="p-4 bg-green-50 border-b space-y-4">
+          <h4 className="font-bold text-green-800">Editando Componentes del Almuerzo</h4>
+          <FormularioMenuAlmuerzo onMenuChange={handleLunchDataChange} initialData={initialLunchData}  product={ product}/>
+          {/* NUEVO: Botones para guardar o cancelar los cambios del almuerzo */}
+          <div className="flex space-x-2 pt-2">
+            <ActionButton onClick={handleSaveLunchForm} className="bg-blue-500 hover:bg-blue-600 w-full">
+              <span>💾</span>
+              <span>Guardar Almuerzo</span>
+            </ActionButton>
+            <ActionButton onClick={handleCancelLunchForm} className="bg-gray-500 hover:bg-gray-600 w-full">
+              <span>❌</span>
+              <span>Cancelar</span>
+            </ActionButton>
+          </div>
         </div>
       )}
 
@@ -127,70 +151,3 @@ export function CardInstanceInventarioMenuLunch({ product }) {
     </div>
   );
 }
-
-
-/**
- * Componente principal que agrupa y ordena los productos por fecha.
- */
-function ProductCalendarView({ products }) {
-  const groupedProducts = useMemo(() => {
-    const groups = {};
-    products.forEach(product => {
-      let dateKey = 'Sin Fecha';
-      try {
-        if (product.Comp_Lunch && typeof product.Comp_Lunch === 'string') {
-          const lunchData = JSON.parse(product.Comp_Lunch);
-          if (lunchData.fecha && lunchData.fecha.fecha) {
-            dateKey = lunchData.fecha.fecha;
-          }
-        }
-      } catch (e) {
-        console.error(`Error al parsear Comp_Lunch para el producto ${product._id}:`, e);
-      }
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(product);
-    });
-    return groups;
-  }, [products]);
-
-  const sortedDates = Object.keys(groupedProducts).sort((a, b) => {
-    if (a === 'Sin Fecha') return 1;
-    if (b === 'Sin Fecha') return -1;
-    return new Date(b) - new Date(a);
-  });
-
-  const formatDate = (dateString) => {
-    if (dateString === 'Sin Fecha') return 'Menús Sin Fecha Asignada';
-    const date = new Date(`${dateString}T00:00:00`);
-    return date.toLocaleDateString('es-CO', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  return (
-    <div className="p-4 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Calendario de Menús</h1>
-      <div className="space-y-8">
-        {sortedDates.map(date => (
-          <section key={date}>
-            <h2 className="text-2xl font-bold mb-4 text-gray-700 border-b-2 border-purple-500 pb-2">
-              {formatDate(date)}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {groupedProducts[date].map(product => (
-                <CardInstanceInventarioMenuLunch key={product._id} product={product} />
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default ProductCalendarView;

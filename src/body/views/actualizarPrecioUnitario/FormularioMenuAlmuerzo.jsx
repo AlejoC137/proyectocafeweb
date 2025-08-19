@@ -12,7 +12,7 @@ const categorias = [
 
 // Define el estado inicial, con el campo 'fecha' como un objeto.
 const initialState = {
-  fecha: { dia: "", fecha: "" }, // Estructura solicitada
+  fecha: { dia: "", fecha: "" },
   entrada: { nombre: "", descripcion: "" },
   proteina: { nombre: "", descripcion: "" },
   carbohidrato: { nombre: "", descripcion: "" },
@@ -23,21 +23,28 @@ const initialState = {
 
 /**
  * Formulario para capturar los componentes de un menú de almuerzo.
- * Comunica su estado completo, incluyendo el objeto de fecha, a un componente padre
- * a través de la prop `onMenuChange`.
+ * Acepta `initialData` para pre-llenar los campos del formulario.
  * @param {Object} props - Propiedades del componente.
- * @param {Function} props.onMenuChange - Función callback para notificar cambios al padre.
+ * @param {Function} props.onMenuChange - Callback para notificar cambios al padre.
+ * @param {Object} [props.initialData] - Datos iniciales para rellenar el formulario.
  */
-function FormularioMenuAlmuerzo({ onMenuChange }) {
-  const [form, setForm] = useState(initialState);
+function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
+  // El estado se inicializa con initialData si existe, si no, con el estado vacío.
+  const [form, setForm] = useState(initialData || initialState);
 
-  // useEffect se ejecuta cada vez que el estado 'form' cambia.
+  // Este efecto sincroniza el estado del formulario si la prop initialData cambia.
   useEffect(() => {
-    // Si la función 'onMenuChange' fue pasada como prop, la llama con el estado actual.
+    // Si se proveen nuevos datos iniciales, se actualiza el estado del formulario.
+    // Esto asegura que si el usuario selecciona otro ítem, el formulario muestre los datos correctos.
+    setForm(initialData || initialState);
+  }, [initialData]);
+
+  // Este efecto notifica al componente padre cada vez que el estado 'form' cambia.
+  useEffect(() => {
     if (onMenuChange) {
       onMenuChange(form);
     }
-  }, [form, onMenuChange]); // Dependencias del efecto.
+  }, [form, onMenuChange]);
 
   /**
    * Actualiza el estado de los campos anidados (categorías del menú).
@@ -53,23 +60,17 @@ function FormularioMenuAlmuerzo({ onMenuChange }) {
   };
 
   /**
-   * Maneja el cambio en el input de fecha, calcula el día de la semana
-   * y actualiza el estado.
+   * Maneja el cambio en el input de fecha, calcula el día de la semana y actualiza el estado.
    */
   const handleDateChange = (e) => {
     const selectedDate = e.target.value; // Formato: "YYYY-MM-DD"
 
-    // Si la fecha se borra, resetea el estado de la fecha.
     if (!selectedDate) {
       setForm((prev) => ({ ...prev, fecha: { dia: "", fecha: "" } }));
       return;
     }
-
-    // Se añade 'T00:00:00' para evitar problemas de zona horaria que podrían
-    // resultar en el día incorrecto.
-    const dateObj = new Date(`${selectedDate}T00:00:00`);
     
-    // Obtiene el nombre del día de la semana en español.
+    const dateObj = new Date(`${selectedDate}T00:00:00`);
     const dayOfWeek = dateObj.toLocaleDateString('es-CO', { weekday: 'long' });
 
     setForm((prev) => ({
@@ -93,7 +94,8 @@ function FormularioMenuAlmuerzo({ onMenuChange }) {
                 type="date"
                 name="fecha"
                 className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white w-full md:w-1/2"
-                value={form.fecha.fecha || ''} // Se enlaza al campo anidado 'fecha'
+                // Aseguramos que el valor sea el correcto o un string vacío si no existe
+                value={form.fecha?.fecha || ''} 
                 onChange={handleDateChange}
             />
         </div>
@@ -108,22 +110,29 @@ function FormularioMenuAlmuerzo({ onMenuChange }) {
                 <input
                   type="text"
                   className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
-                  value={form[key].nombre}
+                  // Usamos optional chaining (?.) y '||' para más seguridad
+                  value={form[key]?.nombre || ''}
                   onChange={(e) =>
                     handleCategoryChange(key, "nombre", e.target.value)
                   }
-                  placeholder={`Nombre de ${label.toLowerCase()}`}
+                  // El placeholder muestra el dato inicial o un texto genérico
+                  placeholder={
+                    initialData?.[key]?.nombre || `Nombre de ${label.toLowerCase()}`
+                  }
                 />
               </label>
               <label className="flex flex-col font-medium text-gray-700">
                 Descripción:
                 <textarea
                   className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
-                  value={form[key].descripcion}
+                  value={form[key]?.descripcion || ''}
                   onChange={(e) =>
                     handleCategoryChange(key, "descripcion", e.target.value)
                   }
-                  placeholder={`Descripción de ${label.toLowerCase()}`}
+                  // El placeholder muestra el dato inicial o un texto genérico
+                  placeholder={
+                    initialData?.[key]?.descripcion || `Descripción de ${label.toLowerCase()}`
+                  }
                   rows={2}
                 />
               </label>
