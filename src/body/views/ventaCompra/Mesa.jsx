@@ -25,7 +25,6 @@ function Mesa({ index, ventaActual, onVentaChange }) {
   const allMenu = useSelector((state) => state.allMenu || []);
   const dispatch = useDispatch();
 
-  // Función para formatear la moneda a pesos colombianos sin decimales
   const formatCurrency = (value) => {
     const number = Number(value) || 0;
     return `$ ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(number)}`;
@@ -160,6 +159,14 @@ function Mesa({ index, ventaActual, onVentaChange }) {
     setShowPagarModal(false);
     onVentaChange();
   };
+  
+  // <-- LÓGICA RESTAURADA A LA VERSIÓN ORIGINAL -->
+  const handleRecetaClick = (item) => {
+    if (item && item.Receta) {
+      const url = `/receta/${item.Receta}`;
+      window.open(url, '_blank');
+    }
+  };
 
   const isMesaInUse = !!ventaActual || orderItems.length > 0;
   const cardBorderColor = buttonState === "save" && isMesaInUse ? 'border-orange-500' : 'border-gray-300';
@@ -194,6 +201,9 @@ function Mesa({ index, ventaActual, onVentaChange }) {
             <div className="space-y-2">
                 {orderItems.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex gap-2 items-center">
+                        <Button onClick={() => handleRecetaClick(item)} className="w-10 h-10 text-xl bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!item.Receta}>
+                          📕
+                        </Button>
                         <div className="flex-grow relative">
                             <Input 
                                 type="text"
