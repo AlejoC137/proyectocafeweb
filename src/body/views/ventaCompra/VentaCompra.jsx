@@ -2,25 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Mesa from "./Mesa";
 import MesaBarra from "./MesaBarra";
-import Pagar from "./Pagar";
 import Gastos from "../../components/gastos/Gastos";
 import { MENU, ITEMS, PRODUCCION, PROVEE } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import MenuDelDiaPrint from "./MenuDelDiaPrint";
+import { Button } from "@/components/ui/button"; // Importamos el botón para consistencia
+import { Eye, UtensilsCrossed } from "lucide-react"; // Iconos para los botones
 
+/**
+ * Componente principal para la gestión de ventas, con un diseño modernizado.
+ * Organiza las mesas y la barra, y permite alternar la visibilidad de
+ * los gastos y el menú del día.
+ */
 function VentaCompra() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
-  const [showPagarModal, setShowPagarModal] = useState(false);
-  const [ventaId, setVentaId] = useState(null);
-  const [totalPago, setTotalPago] = useState(null);
   const [showGastos, setShowGastos] = useState(false);
-  
-  // --- 1. NUEVO ESTADO PARA CONTROLAR LA VISIBILIDAD DEL MENÚ ---
   const [showMenu, setShowMenu] = useState(false);
 
+  // Carga las ventas activas (no pagadas) desde Supabase
   const fetchVentas = async () => {
     try {
       const { data, error } = await supabase
@@ -30,28 +32,33 @@ function VentaCompra() {
 
       if (error) {
         console.error("Error fetching ventas:", error);
+        alert("No se pudieron cargar las ventas activas.");
       } else {
         setVentas(data);
       }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error cargando datos de ventas:", error);
+      alert("Ocurrió un error al cargar los datos de ventas.");
     }
   };
 
+  // Efecto inicial para cargar todos los datos necesarios para la aplicación
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
+        // Cargamos datos maestros en paralelo
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(PROVEE)),
         ]);
-
+        // Una vez cargados los datos maestros, cargamos las ventas
         await fetchVentas();
-        setLoading(false);
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.error("Error cargando datos iniciales:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -59,69 +66,68 @@ function VentaCompra() {
     fetchData();
   }, [dispatch]);
 
-  const reloadVentas = async () => { /* ... (sin cambios) */ };
-  const handlePagar = (ventaId, total) => { /* ... (sin cambios) */ };
-  const handleClosePagarModal = () => { /* ... (sin cambios) */ };
-  
-  const toggleGastos = () => {
-    setShowGastos(!showGastos);
-  };
-  
-  // --- 2. NUEVA FUNCIÓN PARA CAMBIAR EL ESTADO DEL MENÚ ---
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
-
+  // Si está cargando, muestra un mensaje
   if (loading) {
-    return <div className="text-center text-lg font-semibold">Loading...</div>;
-  }
-
-  return (
-    <div className="bg-gray-100 h-[calc(100vh-8rem)] w-full overflow-auto p-4">
-
-      {/* --- 3. BOTONES DE CONTROL Y RENDERIZADO CONDICIONAL --- */}
-      <div className="flex gap-2 mb-4">
-        <button onClick={toggleGastos} className="p-2 bg-blue-500 text-white rounded">
-          {showGastos ? "Ocultar Gastos" : "Mostrar Gastos"}
-        </button>
-        
-        <button onClick={toggleMenu} className="p-2 bg-blue-500 text-white rounded">
-          {showMenu ? "Ocultar Almuerzo" : "Mostrar Almuerzo"}
-        </button>
-      </div>
-
-      {/* El menú y los gastos ahora solo aparecen si sus respectivos estados son verdaderos */}
-      {showMenu && <MenuDelDiaPrint />}
-      {showGastos && <Gastos />}
-
-      {/* El resto del componente de Mesas no cambia */}
-      <div className="col-span-1 pt-1">
-        <MesaBarra
-          key="mesa-barra"
-          index={0}
-          ventas={ventas}
-          reloadVentas={reloadVentas}
-          onPagar={handlePagar}
-        />
-      </div>
-
-      <div className="gap-1 pt-1">
-        <div className="col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-1">
-          {[...Array(6)].map((_, index) => (
-            <Mesa
-              key={`mesa-${index + 1}`}
-              index={index + 1}
-              ventas={ventas}
-              reloadVentas={reloadVentas}
-              onPagar={handlePagar}
-            />
-          ))}
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-100">
+        <div className="text-center">
+          <div className="h-12 w-12 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto"></div>
+          <p className="text-lg font-semibold text-gray-700 mt-4">Cargando Datos...</p>
         </div>
       </div>
+    );
+  }
 
-      {showPagarModal && (
-        <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} />
-      )}
+  // Renderizado del componente principal
+  return (
+    <div className="h-[calc(100vh-5rem)] w-screen  bg-slate-100 dark:bg-slate-900 overflow-auto p-4 md:p-6">
+      <div className="max-w-screen-2xl mx-auto">
+        {/* --- Cabecera con Controles --- */}
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white mr-auto">Gestión de Ventas</h1>
+          <Button onClick={() => setShowGastos(!showGastos)} variant="outline" className="gap-2">
+            <Eye size={16} />
+            {showGastos ? "Ocultar Gastos" : "Mostrar Gastos"}
+          </Button>
+          <Button onClick={() => setShowMenu(!showMenu)} variant="outline" className="gap-2">
+             <UtensilsCrossed size={16} />
+            {showMenu ? "Ocultar Almuerzo" : "Mostrar Almuerzo"}
+          </Button>
+        </div>
+
+        {/* --- Componentes Condicionales (Gastos y Menú) --- */}
+        <div className="space-y-4 mb-6">
+          {showMenu && <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4"><MenuDelDiaPrint /></div>}
+          {showGastos && <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4"><Gastos /></div>}
+        </div>
+
+        {/* --- Contenido Principal (Barra y Mesas) --- */}
+        <div className="space-y-6">
+          {/* Componente para la Barra */}
+          <MesaBarra
+            key="mesa-barra"
+            index={0} // '0' para identificar que es la barra
+            ventas={ventas}
+            reloadVentas={fetchVentas}
+          />
+
+          {/* Grid responsivo para las Mesas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => {
+              const mesaIndex = index + 1;
+              const ventaParaMesa = ventas.find(venta => venta.Mesa === mesaIndex && !venta.Pagado);
+              return (
+                <Mesa
+                  key={`mesa-${mesaIndex}`}
+                  index={mesaIndex}
+                  ventaActual={ventaParaMesa}
+                  onVentaChange={fetchVentas}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

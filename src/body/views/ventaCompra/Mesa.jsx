@@ -1,323 +1,264 @@
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
-import RecetaModal from "./RecetaModal"; // Importa el nuevo componente
-import Pagar from "./Pagar"; // Importa el nuevo componente
+import Pagar from "./Pagar";
 
-function Mesa({ index, ventas, reloadVentas }) {
-  const [formData, setFormData] = useState({
-    Total_Ingreso: '',
-    Tip: '',
-    Cliente: '',
-    Cajero: '',
-  });
+// Íconos de lucide-react para acciones en línea de ítems
+import { PlusCircle, MinusCircle, XCircle } from 'lucide-react';
 
+/**
+ * Componente final para gestionar una mesa, con formato de moneda local,
+ * íconos de emoji, y un diseño más robusto y legible.
+ * @param {number} index - El número de la mesa.
+ * @param {object} ventaActual - La venta existente para esta mesa (o null).
+ * @param {function} onVentaChange - Callback para notificar al padre sobre cambios.
+ */
+function Mesa({ index, ventaActual, onVentaChange }) {
+  const [formData, setFormData] = useState({ Cliente: '', Cajero: '', Tip: '0' });
   const [orderItems, setOrderItems] = useState([]);
-  const [comandaSaved, setComandaSaved] = useState(false);
-  const [buttonState, setButtonState] = useState("save");
-  const [isMesaInUse, setIsMesaInUse] = useState(false);
-  const [selectedReceta, setSelectedReceta] = useState(null); // Estado para la receta seleccionada
-  const [showPagarModal, setShowPagarModal] = useState(false); // Estado para mostrar el modal de pago
-  const [ventaId, setVentaId] = useState(null); // Estado para almacenar el ID de la venta
-  const [totalPago, setTotalPago] = useState(null); // Estado para almacenar el ID de la venta
+  const [ventaId, setVentaId] = useState(null);
+  const [buttonState, setButtonState] = useState("save"); // 'save', 'syncing', 'done'
+  const [showPagarModal, setShowPagarModal] = useState(false);
+
   const allMenu = useSelector((state) => state.allMenu || []);
   const dispatch = useDispatch();
 
+  // Función para formatear la moneda a pesos colombianos sin decimales
+  const formatCurrency = (value) => {
+    const number = Number(value) || 0;
+    return `$ ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(number)}`;
+  };
+  
   useEffect(() => {
-    const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
-    if (existingVenta) {
+    if (ventaActual) {
       setFormData({
-        Total_Ingreso: existingVenta.Total_Ingreso,
-        Tip: existingVenta.Tip,
-        Cliente: existingVenta.Cliente,
-        Cajero: existingVenta.Cajero,
+        Cliente: ventaActual.Cliente || '',
+        Cajero: ventaActual.Cajero || '',
+        Tip: ventaActual.Tip || '0',
       });
-      setOrderItems(JSON.parse(existingVenta.Productos));
-      setComandaSaved(true);
+      try {
+        setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
+      } catch (e) {
+        console.error("Error parsing Productos JSON:", e);
+        setOrderItems([]);
+      }
+      setVentaId(ventaActual._id);
       setButtonState("done");
-      setIsMesaInUse(true);
-      setVentaId(existingVenta._id); // Almacenar el ID de la venta existente
+    } else {
+      setFormData({ Cliente: '', Cajero: '', Tip: '0' });
+      setOrderItems([]);
+      setVentaId(null);
+      setButtonState("save");
     }
-  // }, []);
-  }, [ventas, index]);
+  }, [ventaActual]);
 
-  useEffect(() => {
-    const total = orderItems.reduce((acc, item) => acc + (item.Precio * item.quantity), 0);
-    const totalWithTip = (parseFloat(total) + parseFloat(formData.Tip || 0)).toFixed(0);
-    setTotalPago(totalWithTip);
-    setFormData((prev) => ({ ...prev, Total_Ingreso: totalWithTip }));
+  const totalPago = useMemo(() => {
+    const totalItems = orderItems.reduce((acc, item) => acc + (Number(item.Precio) * Number(item.quantity)), 0);
+    return (parseFloat(totalItems) + parseFloat(formData.Tip || 0));
   }, [orderItems, formData.Tip]);
 
-  const handleAddItem = () => {
-    setOrderItems([...orderItems, { id: '', NombreES: '', Precio: 0, quantity: 1, matches: [] }]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setButtonState("save");
+  };
+  
+  const handleOpenMesa = () => {
+      setOrderItems([{ id: '', NombreES: '', Precio: 0, quantity: 1, matches: [] }]);
+      setButtonState("save");
   };
 
+  const handleAddItem = () => {
+    setOrderItems(prev => [...prev, { id: '', NombreES: '', Precio: 0, quantity: 1, matches: [] }]);
+    setButtonState("save");
+  };
+  
+  const handleRemoveItem = (itemIndex) => {
+    setOrderItems(prev => prev.filter((_, i) => i !== itemIndex));
+    setButtonState("save");
+  };
+
+  const handleQuantityChange = (itemIndex, amount) => {
+    const updatedItems = orderItems.map((item, i) => {
+      if (i === itemIndex) {
+        const newQuantity = Math.max(1, (item.quantity || 1) + amount);
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    });
+    setOrderItems(updatedItems);
+    setButtonState("save");
+  };
+  
   const handleIngredientChange = (itemIndex, value) => {
     const updatedItems = [...orderItems];
     updatedItems[itemIndex].NombreES = value;
-
-    // Generar coincidencias dinámicamente
-    const matches = allMenu.filter((option) =>
+    const matches = value ? allMenu.filter((option) =>
       option.NombreES.toLowerCase().includes(value.toLowerCase())
-    );
+    ) : [];
     updatedItems[itemIndex].matches = matches;
-
     setOrderItems(updatedItems);
+    setButtonState("save");
   };
-
+  
   const handleIngredientSelect = (itemIndex, selectedOption) => {
     const updatedItems = [...orderItems];
-    updatedItems[itemIndex].id = selectedOption.id;
-    updatedItems[itemIndex].NombreES = selectedOption.NombreES;
-    updatedItems[itemIndex].Precio = selectedOption.Precio;
-    updatedItems[itemIndex].Receta = selectedOption.Receta; // Añadir la receta seleccionada
-    updatedItems[itemIndex].Foto = selectedOption.Foto; // Añadir la foto seleccionada
-    updatedItems[itemIndex].matches = []; // Limpiar las coincidencias tras la selección
+    updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        id: selectedOption._id,
+        NombreES: selectedOption.NombreES,
+        Precio: selectedOption.Precio,
+        Receta: selectedOption.Receta,
+        matches: [],
+    };
     setOrderItems(updatedItems);
-  };
-
-  const handleRemoveItem = (itemIndex) => {
-    const updatedItems = orderItems.filter((_, i) => i !== itemIndex);
-    setOrderItems(updatedItems);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setButtonState("save");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!window.confirm("¿Está seguro de que desea guardar esta comanda?")) return;
+    if (buttonState !== 'save' || !window.confirm("¿Confirmar y guardar cambios?")) return;
 
-    setComandaSaved(true);
-    setButtonState("done");
-    setIsMesaInUse(true);
+    setButtonState("syncing");
+    const ventaData = {
+      ...formData,
+      Total_Ingreso: totalPago,
+      Productos: JSON.stringify(orderItems),
+      Mesa: index,
+      Pagado: false,
+    };
 
     try {
-      const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
-      if (existingVenta) {
-        const updatedVenta = await dispatch(actualizarVenta(existingVenta._id, {
-          ...formData,
-          Productos: JSON.stringify(orderItems),
-        }));
-        setVentaId(updatedVenta[0]._id); // Almacenar el ID de la venta actualizada
-        alert("Venta actualizada correctamente");
+      if (ventaId) {
+        await dispatch(actualizarVenta(ventaId, ventaData));
       } else {
-        const nuevaVenta = await dispatch(crearVenta({
-          ...formData,
-          Productos: JSON.stringify(orderItems),
-          Pagado: false,
-          Mesa: index,
-        }));
-        setVentaId(nuevaVenta._id); // Almacenar el ID de la nueva venta creada
-        alert("Venta creada correctamente");
+        const nuevaVenta = await dispatch(crearVenta(ventaData));
+        setVentaId(nuevaVenta._id);
       }
-      reloadVentas();
+      setButtonState("done");
+      onVentaChange();
     } catch (error) {
-      console.error("Error al crear/actualizar la venta:", error);
-      alert("Error al crear/actualizar la venta");
+      console.error("Error al guardar la venta:", error);
+      setButtonState("save");
     }
   };
-
-  const handlePagar = () => {
-    setShowPagarModal(true);
-  };
-
-  const handleClosePagarModal = () => {
-    setShowPagarModal(false);
+  
+  const handleEliminar = async () => {
+    if (!ventaId || !window.confirm("¿Está seguro de que desea ELIMINAR esta venta? Esta acción no se puede deshacer.")) return;
+    
+    try {
+      await dispatch(eliminarVenta(ventaId));
+      onVentaChange();
+    } catch (error) {
+      console.error("Error al eliminar la venta:", error);
+    }
   };
 
   const handlePaymentComplete = () => {
-    window.location.reload();
+    setShowPagarModal(false);
+    onVentaChange();
   };
 
-  const handleEliminar = async () => {
-    if (!window.confirm("¿Está seguro de que desea eliminar esta comanda?")) return;
-
-    try {
-      const existingVenta = ventas.find(venta => venta.Mesa === index && !venta.Pagado);
-      if (existingVenta) {
-        await dispatch(eliminarVenta(existingVenta._id));
-        setIsMesaInUse(false);
-        alert("Venta eliminada correctamente");
-        reloadVentas();
-      }
-    } catch (error) {
-      console.error("Error al eliminar la venta:", error);
-      alert("Error al eliminar la venta");
-    }
-    setFormData({
-      Total_Ingreso: '',
-      Tip: '',
-      Cliente: '',
-      Cajero: '',
-    });
-    setOrderItems([]);
-    setComandaSaved(false);
-    setButtonState("save");
-  };
-
-  const handleRecetaClick = (item) => {
-    const url = `/receta/${item.Receta}`;
-    window.open(url, '_blank');
-  };
-
-  const handleCloseRecetaModal = () => {
-    setSelectedReceta(null);
-  };
+  const isMesaInUse = !!ventaActual || orderItems.length > 0;
+  const cardBorderColor = buttonState === "save" && isMesaInUse ? 'border-orange-500' : 'border-gray-300';
 
   return (
-    <div className={`bg-white shadow-md rounded-lg border p-1 grid grid-cols-4 gap-2 ${isMesaInUse ? 'bg-green-100' : ''}`} style={{ alignItems: 'start' }}>
-    {/* Primera fila: Cliente y Cajero */}
-    <div className="col-span-4 grid grid-cols-2 gap-2 align-top">
-      <div className="flex items-center gap-2">
-        <h3 className="flex-grow border rounded p-1 text-sm font-semibold">{`Mesa#${index}`}</h3>
-        <label className="text-sm font-medium">Cliente:</label>
-        <Input
-          type="text"
-          name="Cliente"
-          value={formData.Cliente}
-          onChange={handleChange}
-          className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Cajero:</label>
-        <Input
-          type="text"
-          name="Cajero"
-          value={formData.Cajero}
-          onChange={handleChange}
-          className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
-        />
-      </div>
-    </div>
-  
-    {/* Segunda fila: Ítems pedidos */}
-    <div className="col-span-4">
-      {/* <h3 className="font-bold mb-2 text-sm">Ítems pedidos:</h3> */}
-      {orderItems.map((item, itemIndex) => (
-        
-        <div key={itemIndex} className="flex gap-2 items-center mb-2">
-            <Button
-              onClick={() => handleRecetaClick(item)}
-              className="bg-yellow-500 text-white text-sm w-[30px]"
-            >
-              📕
-            </Button>
-          <Input
-            type="text"
-            placeholder="Buscar producto..."
-            value={item.NombreES}
-            onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
-            className="flex-grow border rounded p-1 text-sm"
-          />
-          {item.matches && item.matches.length > 0 && (
-            <ul className="absolute bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10 w-full">
-              {item.matches.map((match) => (
-                <li
-                  key={match.id}
-                  onClick={() => handleIngredientSelect(itemIndex, match)}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  {match.NombreES}
-                </li>
-              ))}
-            </ul>
-          )}
-          <Input
-            type="number"
-            placeholder="Cantidad"
-            value={item.quantity}
-            onChange={(e) =>
-              setOrderItems((prev) =>
-                prev.map((it, i) =>
-                  i === itemIndex ? { ...it, quantity: e.target.value } : it
-                )
-              )
-            }
-            className="w-16 border rounded p-1 text-sm"
-          />
-          <span className="text-sm">${item.Precio.toFixed(2)}</span>
-          <Button
-            onClick={() => handleRemoveItem(itemIndex)}
-            className="bg-red-500 text-white text-sm w-[30px]"
-          >
-            ❌
-          </Button>
-
+    <div className={`bg-white shadow-md rounded-lg border-2 ${cardBorderColor} flex flex-col transition-all`}>
+      <div className="p-3 border-b-2 border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-md">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-gray-800">Mesa {index}</h2>
+          <span className={`h-3 w-3 rounded-full ${isMesaInUse ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
         </div>
-      ))}
-      <Button onClick={handleAddItem} className="bg-green-500 text-white text-sm w-full">
-      ➕🍽️☕
-      </Button>
-    </div>
-  
-    {/* Tercera fila: Tip, Total y Botones */}
-    <div className="col-span-4 flex gap-2 items-end">
-      <div className="flex items-center gap-2 flex-1">
-        <label className="text-sm font-medium">Tip:</label>
-        <Input
-          type="text"
-          name="Tip"
-          value={formData.Tip}
-          onChange={handleChange}
-          className="flex-grow border rounded p-1 text-sm"
-          // disabled={comandaSaved}
-        />
+        <div className="w-1/2">
+          <Input 
+            type="text" 
+            name="Cliente" 
+            placeholder="Nombre Cliente"
+            value={formData.Cliente} 
+            onChange={handleInputChange} 
+            className="text-sm h-9"
+            disabled={!isMesaInUse}
+          />
+        </div>
       </div>
-      <div className="flex items-center gap-2 flex-1">
-        <label className="text-sm font-medium">Total$:</label>
-        <Input
-          type="text"
-          name="Total_Ingreso"
-          value={formData.Total_Ingreso}
-          className="flex-grow border rounded p-1 text-sm"
-          readOnly
-        />
-      </div>
-      <div className="flex gap-2">
-        <Button
-          onClick={handleSubmit}
-          className="w-[40px] bg-blue-500 text-white text-sm"
-        >
-          {buttonState === "save" && "💾"}
-          {buttonState === "syncing" && "🔄"}
-          {buttonState === "done" && "✅"}
-        </Button>
-        <Button
-          onClick={handlePagar}
-          disabled={!comandaSaved}
-          className={`w-[40px] bg-green-500 text-white text-sm ${
-            !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          💸
-        </Button>
-        <Button
-          onClick={handleEliminar}
-          disabled={!comandaSaved}
-          className={`w-[40px] bg-red-500 text-white text-sm ${
-            !comandaSaved ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          💥
-        </Button>
-      </div>
-    </div>
 
-    {selectedReceta && (
-      <RecetaModal item={selectedReceta} onClose={handleCloseRecetaModal} />
-    )}
-    {showPagarModal && (
-      <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
-    )}
-  </div>
+      <div className="p-3 flex-grow bg-white min-h-[250px] relative">
+        {!isMesaInUse ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <p className="font-semibold text-lg">Mesa Libre</p>
+                <Button onClick={handleOpenMesa} className="mt-4">Abrir Mesa</Button>
+            </div>
+        ) : (
+            <div className="space-y-2">
+                {orderItems.map((item, itemIndex) => (
+                    <div key={itemIndex} className="flex gap-2 items-center">
+                        <div className="flex-grow relative">
+                            <Input 
+                                type="text"
+                                placeholder="Buscar producto..."
+                                value={item.NombreES}
+                                onChange={(e) => handleIngredientChange(itemIndex, e.target.value)}
+                                className="text-base h-10"
+                            />
+                             {item.matches && item.matches.length > 0 && (
+                              <ul className="absolute bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto z-20 w-full mt-1">
+                                {item.matches.map((match) => (
+                                  <li key={match._id} onClick={() => handleIngredientSelect(itemIndex, match)} className="p-2 hover:bg-gray-100 cursor-pointer text-sm">{match.NombreES}</li>
+                                ))}
+                              </ul>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Button onClick={() => handleQuantityChange(itemIndex, -1)} variant="ghost" size="icon" className="h-9 w-9 text-gray-600 hover:text-gray-800"><MinusCircle size={20} /></Button>
+                            <span className="font-bold w-6 text-center text-lg">{item.quantity || 1}</span>
+                            <Button onClick={() => handleQuantityChange(itemIndex, 1)} variant="ghost" size="icon" className="h-9 w-9 text-gray-600 hover:text-gray-800"><PlusCircle size={20} /></Button>
+                        </div>
+                        <span className="w-24 text-right font-medium text-gray-700 text-base">{formatCurrency(item.Precio * (item.quantity || 1))}</span>
+                        <Button onClick={() => handleRemoveItem(itemIndex)} variant="ghost" size="icon" className="text-red-500 hover:text-red-700 h-9 w-9"><XCircle size={20} /></Button>
+                    </div>
+                ))}
+                <Button onClick={handleAddItem} variant="outline" className="w-full mt-2 border-dashed h-10">Añadir Producto</Button>
+            </div>
+        )}
+      </div>
+
+      {isMesaInUse && (
+        <div className="p-3 border-t-2 border-gray-200 flex justify-between items-center bg-gray-50 rounded-b-md">
+            <div className="flex items-center gap-2">
+                <label className="font-semibold text-sm">Propina:</label>
+                <Input 
+                    name="Tip"
+                    type="number" 
+                    value={formData.Tip}
+                    onChange={handleInputChange} 
+                    className="w-24 h-10 text-base"
+                    placeholder="0"
+                />
+            </div>
+            <div className="text-right">
+                <p className="text-sm text-gray-500 font-medium">TOTAL</p>
+                <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalPago)}</p>
+            </div>
+            <div className="flex gap-2">
+                <Button onClick={handleSubmit} title="Guardar Cambios" className="w-12 h-12 text-2xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled={buttonState !== 'save'}>
+                  {buttonState === 'syncing' ? <div className="h-6 w-6 border-2 border-dashed rounded-full animate-spin border-white"></div> : '💾'}
+                </Button>
+                <Button onClick={() => setShowPagarModal(true)} title="Pagar" className="w-12 h-12 text-2xl bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled={buttonState !== 'done'}>
+                  💸
+                </Button>
+                <Button onClick={handleEliminar} title="Eliminar Venta" className="w-12 h-12 text-2xl bg-red-600 hover:bg-red-700">
+                  🗑️
+                </Button>
+            </div>
+        </div>
+      )}
+
+      {showPagarModal && (
+        <Pagar onClose={() => setShowPagarModal(false)} ventaId={ventaId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
+      )}
+    </div>
   );
 }
 

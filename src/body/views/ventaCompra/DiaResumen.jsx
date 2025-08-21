@@ -235,6 +235,10 @@ console.log(data);
     .filter((compra) => compra.Date === hoy)
     .reduce((acc, compra) => acc + parseFloat(compra.Valor), 0);
 
+
+
+    console.log(ventas);
+    
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
       <div>
@@ -277,6 +281,9 @@ console.log(data);
                     Pagado
                   </th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                    Contenido de venta
+                  </th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
                     Fecha y Hora
                   </th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
@@ -302,8 +309,37 @@ console.log(data);
                         {venta.Pagado ? "Sí" : "No"}
                       </span>
                     </td>
+                    <td className="py-3 px-4 border-b text-sm text-center">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          venta.Productos ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                        }`}
+                      >
+                        {venta.Productos
+                          ? (() => {
+                              try {
+                                const productosArr = JSON.parse(venta.Productos);
+                                if (Array.isArray(productosArr) && productosArr.length > 0) {
+                                  return productosArr
+                                    .map(
+                                      (prod) =>
+                                        `${prod.NombreES ?? "Sin nombre"} (${prod.quantity ?? 0})`
+                                    )
+                                    .join(", ");
+                                } else {
+                                  return "Sin productos";
+                                }
+                              } catch (e) {
+                                return "Error al leer productos";
+                              }
+                            })()
+                          : "No"}
+                      </span>
+                    </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {new Date(venta.Date).toLocaleString("en-US", { timeZone: "America/Bogota" })}
+                     {venta.Date && venta.Date } 
+                     <br />
+                     {venta.Time && venta.Time}
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
                       {venta.Pago_Info && (() => {
