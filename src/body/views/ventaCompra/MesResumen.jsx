@@ -1,29 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { COMPRAS, ITEMS, MENU, RECETAS_MENU , PRODUCCION } from "../../../redux/actions-types";
+import { COMPRAS, ITEMS, MENU, RECETAS_MENU, PRODUCCION } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
 import MesResumenStats from "./MesResumenStats";
-import { fetchAndProcessSales } from "./slicer"; // Import the function
-import Predict from "./Predict"; // Asegúrate que la ruta de importación sea correcta
+import { fetchAndProcessSales } from "./slicer";
+import Predict from "./Predict";
 
 function MesResumen() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
-  const [productosRecetasHoy, setProductosRecetasHoy] = useState([]);
-  const [totalIngreso, setTotalIngreso] = useState(0);
-  const [totalTip, setTotalTip] = useState(0);
-  const [productosVendidos, setProductosVendidos] = useState([]);
-  const [recetas, setRecetas] = useState([]);
-  const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]); // Formato YYYY-MM-DD para el input date
-  const [totalTarjeta, setTotalTarjeta] = useState(0);
-  const [totalEfectivo, setTotalEfectivo] = useState(0);
-  const [totalTransferencia, setTotalTransferencia] = useState(0);
-
-  // --- ESTADO PARA EL MODAL/COMPONENTE PREDICT ---
-  // 1. Añadimos los estados para controlar la visibilidad del componente Predict y el item seleccionado.
+  const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
+  const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]);
+  
+  // --- Estados para el modal Predict ---
   const [showPredict, setShowPredict] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -33,180 +25,202 @@ function MesResumen() {
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) => state.Compras);
 
-  // 2. Actualizamos la lógica del handler para que actualice el estado.
-  const handleRecetaClick = (item) => {
- 
-    setSelectedItem(item); // Guarda el producto en el que se hizo clic
-    setShowPredict(true);  // Activa la visualización del componente Predict
-  };
-  
-  const handleClosePredict = () => {
-    setShowPredict(false); // Cierra el componente Predict
-    setSelectedItem(null); // Limpia el item seleccionado
-  };
+  const { selectedMonth, selectedYear } = useMemo(() => {
+    const selectedDate = new Date(hoy);
+    selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
+    return {
+      selectedMonth: selectedDate.getMonth(),
+      selectedYear: selectedDate.getFullYear(),
+    };
+  }, [hoy]);
 
-  const handleDateChange = (e) => {
-    const date = e.target.value; // El valor ya está en formato YYYY-MM-DD
-    setHoy(date);
-  };
+useEffect(() => {
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      // Carga los datos de Redux en paralelo
+      await Promise.all([
+        dispatch(getAllFromTable(MENU)),
+        dispatch(getAllFromTable(ITEMS)),
+        dispatch(getAllFromTable(PRODUCCION)),
+        dispatch(getAllFromTable(RECETAS_MENU)),
+        dispatch(getAllFromTable(COMPRAS)),
+      ]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          dispatch(getAllFromTable(MENU)),
-          dispatch(getAllFromTable(ITEMS)),
-          dispatch(getAllFromTable(PRODUCCION)),
-          dispatch(getAllFromTable(RECETAS_MENU)),
-          dispatch(getAllFromTable(COMPRAS)),
-        ]);
+      let allVentas = [];
+      let page = 0;
+      const pageSize = 1000; // El tamaño de cada lote que pedimos
 
+      // Bucle para pedir datos en lotes hasta que no haya más
+      while (true) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+
+        // Pedimos un lote de registros usando .range()
         const { data, error } = await supabase
           .from('Ventas')
           .select('*')
-          .order('Date', { ascending: false });
+          .order('Date', { ascending: false })
+          .range(from, to);
+console.log(data);
 
-        if (error) {
-          throw error;
+        if (error) throw error;
+
+        // Añadimos el lote de datos al array principal
+        if (data) {
+          allVentas = [...allVentas, ...data];
         }
 
-        // 3. Lógica de filtrado de fecha mejorada.
-        // const selectedDate = new Date(hoy);
-        // Ajustamos la fecha para evitar problemas de zona horaria al comparar
-        selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
-        const selectedMonth = selectedDate.getMonth();
-        const selectedYear = selectedDate.getFullYear();
+        // Si el lote devuelto tiene menos de 1000, significa que es la última página.
+        if (!data || data.length < pageSize) {
+          break; // Salimos del bucle
+        }
 
-        const ventasMES = data.filter((venta) => {
-          const ventaDate = new Date(venta.Date);
-          return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
-        });
-
-        // Ordenar las ventas por fecha y hora
-        ventasMES.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-        setVentas(ventasMES);
-
-        // Calcular ingresos, tips y pagos
-        let total = 0;
-        let tipTotal = 0;
-        let tarjeta = 0;
-        let efectivo = 0;
-        let transferencia = 0;
-        const productosMap = {};
-
-    ventasMES.forEach((venta) => {
-  if (venta.Pagado) {
-    const ingresoVenta = parseFloat(venta.Total_Ingreso || 0);
-    total += ingresoVenta;
-    tipTotal += parseFloat(venta.Tip || 0);
-
-    if (venta.Pago_Info) {
-      try {
-        const pagos = JSON.parse(venta.Pago_Info);
-        if (pagos.metodo === "Tarjeta") tarjeta += ingresoVenta;
-        if (pagos.metodo === "Efectivo") efectivo += ingresoVenta;
-        if (pagos.metodo === "Transferencia") transferencia += ingresoVenta;
-      } catch (e) {
-        console.error("Error parsing Pago_Info:", e);
+        // Si no, pasamos a la siguiente página para la próxima iteración
+        page++;
       }
-    }
-  }
-  
-  if (venta.Productos) {
-    try {
-      const productos = JSON.parse(venta.Productos);
-      productos.forEach((producto) => {
-        if (!producto.NombreES) return; // Ignorar si no hay nombre
 
-        if (productosMap[producto.NombreES]) {
-          productosMap[producto.NombreES].cantidad += parseFloat(producto.quantity || 0);
-        } else {
-          // --- LÓGICA MODIFICADA AQUÍ ---
-
-          // 1. Inicia con el ID de receta de la venta, si es que existe.
-          let recetaIdDefinitiva = producto.Receta || null;
-
-          // 2. Si no se encontró un ID en la venta, busca en 'allMenu' como respaldo.
-          if (!recetaIdDefinitiva) {
-            const menuItem = allMenu.find(menu => menu.NombreES === producto.NombreES);
-            
-            // 3. Si se encuentra el producto en el menú y tiene una receta, úsala.
-            if (menuItem && menuItem.Receta) {
-              recetaIdDefinitiva = menuItem.Receta;
-            }
-          }
-
-          // 4. Crea el nuevo producto en el mapa con el ID de receta final.
-          productosMap[producto.NombreES] = {
-            nombre: producto.NombreES,
-            cantidad: parseFloat(producto.quantity || 0),
-            // Usa el ID encontrado o "N/A" si sigue sin existir.
-            recetaId: recetaIdDefinitiva || "N/A", 
-            recetaValor: 0,
-            ingredientes: []
-          };
-        }
+      // Ahora 'allVentas' contiene absolutamente todos los registros de la tabla.
+      // Procedemos a filtrar el mes seleccionado en el navegador.
+      const ventasDelMes = allVentas.filter((venta) => {
+        const ventaDate = new Date(venta.Date);
+        return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
       });
-    } catch (e) {
-        console.error("Error parsing Productos:", e);
+
+      // Ordenamos y actualizamos el estado
+      ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+      setVentas(ventasDelMes);
+
+    } catch (error) {
+      console.error("Error al cargar todos los datos:", error);
+    } finally {
+      setLoading(false);
     }
-  }
-});
+  };
 
-        setTotalIngreso(total);
-        setTotalTip(tipTotal);
-        setTotalTarjeta(tarjeta);
-        setTotalEfectivo(efectivo);
-        setTotalTransferencia(transferencia);
+  fetchAllData();
+}, [dispatch, selectedMonth, selectedYear]);
 
-        const productosArray = Object.values(productosMap);
-        productosArray.sort((a, b) => b.cantidad - a.cantidad);
-        setProductosVendidos(productosArray);
+  const datosCalculadosDelMes = useMemo(() => {
+    let total = 0;
+    let tipTotal = 0;
+    let tarjeta = 0;
+    let efectivo = 0;
+    let transferencia = 0;
+    const productosMap = {};
 
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
+    ventas.forEach((venta) => {
+      if (venta.Pagado) {
+        const ingresoVenta = parseFloat(venta.Total_Ingreso || 0);
+        total += ingresoVenta;
+        tipTotal += parseFloat(venta.Tip || 0);
+
+        if (venta.Pago_Info) {
+          try {
+            const pagos = JSON.parse(venta.Pago_Info);
+            if (pagos.metodo === "Tarjeta") tarjeta += ingresoVenta;
+            if (pagos.metodo === "Efectivo") efectivo += ingresoVenta;
+            if (pagos.metodo === "Transferencia") transferencia += ingresoVenta;
+          } catch (e) {
+            console.error("Error al parsear Pago_Info:", e);
+          }
+        }
       }
+
+      if (venta.Productos) {
+        try {
+          const productos = JSON.parse(venta.Productos);
+          productos.forEach((producto) => {
+            if (!producto.NombreES) return;
+            
+            const cantidad = parseFloat(producto.quantity || 0);
+
+            if (productosMap[producto.NombreES]) {
+              productosMap[producto.NombreES].cantidad += cantidad;
+            } else {
+              let recetaIdDefinitiva = producto.Receta || allMenu.find(menu => menu.NombreES === producto.NombreES)?.Receta || null;
+
+              productosMap[producto.NombreES] = {
+                nombre: producto.NombreES,
+                cantidad: cantidad,
+                recetaId: recetaIdDefinitiva || "N/A",
+                recetaValor: 0,
+                ingredientes: [],
+              };
+            }
+          });
+        } catch (e) {
+          console.error("Error al parsear Productos:", e);
+        }
+      }
+    });
+
+    const productosVendidos = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
+    
+    const totalCompras = allCompras
+      .filter((compra) => {
+        const compraDate = new Date(compra.Date);
+        return compraDate.getMonth() === selectedMonth && compraDate.getFullYear() === selectedYear;
+      })
+      .reduce((acc, compra) => acc + parseFloat(compra.Valor || 0), 0);
+
+    return {
+      totalIngreso: total,
+      totalTip: tipTotal,
+      totalTarjeta: tarjeta,
+      totalEfectivo: efectivo,
+      totalTransferencia: transferencia,
+      productosVendidos,
+      totalCompras,
+      totalProductosVendidos: productosVendidos.reduce((acc, p) => acc + p.cantidad, 0),
     };
+  }, [ventas, allCompras, allMenu, selectedMonth, selectedYear]);
 
-    fetchData();
-  }, [hoy, dispatch]); // Se agrega dispatch al array de dependencias
-
-  // 4. Se corrige el array de dependencias para este useEffect.
-  // Ahora se ejecutará cada vez que 'productosVendidos' se actualice.
   useEffect(() => {
-    if (productosVendidos.length === 0 || !allItems.length || !allMenu.length) {
-      return; // No hacer nada si no hay datos necesarios.
+    if (datosCalculadosDelMes.productosVendidos.length === 0 || !allItems.length || !allMenu.length) {
+      setProductosVendidosConReceta([]);
+      return;
     }
 
     const calculateRecipeValues = async () => {
-      const updatedProductosVendidos = await Promise.all(
-        productosVendidos.map(async (producto) => {
+      const updatedProductos = await Promise.all(
+        datosCalculadosDelMes.productosVendidos.map(async (producto) => {
           if (producto.recetaId !== "N/A") {
-            const menuItem = allMenu.find((item) => item.uuid_receta === producto.recetaId);
-            if (menuItem) {
-              try {
+            try {
+              const menuItem = allMenu.find((item) => item.uuid_receta === producto.recetaId);
+              if (menuItem) {
                 const recetaData = await getRecepie(menuItem.uuid_receta, "Recetas");
                 const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
                 const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
                 return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
-              } catch (error) {
-                console.error(`Error processing recipe for ${producto.nombre}:`, error);
               }
+            } catch (error) {
+              console.error(`Error procesando receta para ${producto.nombre}:`, error);
             }
           }
           return producto;
         })
       );
-      setProductosVendidos(updatedProductosVendidos);
+      setProductosVendidosConReceta(updatedProductos);
     };
 
     calculateRecipeValues();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allMenu, allItems, allProduccion]); // Se ejecuta cuando los datos de Redux o los productos vendidos cambien.
+  }, [datosCalculadosDelMes.productosVendidos, allMenu, allItems, allProduccion]);
 
+
+  const handleRecetaClick = (item) => {
+    setSelectedItem(item);
+    setShowPredict(true);
+  };
+  
+  const handleClosePredict = () => {
+    setShowPredict(false);
+    setSelectedItem(null);
+  };
+
+  const handleDateChange = (e) => {
+    setHoy(e.target.value);
+  };
 
   const handleFetchSales = async () => {
     const processedSales = await fetchAndProcessSales(dispatch);
@@ -214,65 +228,48 @@ function MesResumen() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Cargando...</div>;
   }
-  
-  const totalProductosVendidos = productosVendidos.reduce((acc, producto) => acc + producto.cantidad, 0);
-
-  // Se filtra por el mes actual, igual que las ventas.
-  const selectedDate = new Date(hoy);
-  const selectedMonth = selectedDate.getMonth();
-  const selectedYear = selectedDate.getFullYear();
-
-  const totalCompras = allCompras
-    .filter((compra) => {
-        const compraDate = new Date(compra.Date);
-        return compraDate.getMonth() === selectedMonth && compraDate.getFullYear() === selectedYear;
-    })
-    .reduce((acc, compra) => acc + parseFloat(compra.Valor || 0), 0);
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
       <div>
-        <label htmlFor="date" className="block bg-white text-sm font-medium text-gray-700">Select Date:</label>
+        <label htmlFor="date" className="block bg-white text-sm font-medium text-gray-700">Seleccionar Fecha:</label>
         <input
           type="date"
           id="date"
           name="date"
-          value={hoy} // Controlar el valor del input
+          value={hoy}
           className="bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           onChange={handleDateChange}
         />
-        <p>Selected Date: {new Date(hoy).toLocaleDateString('es-CO', { timeZone: 'UTC' })}</p>
+        <p>Mostrando resumen para el mes de: {new Date(hoy).toLocaleDateString('es-CO', { timeZone: 'UTC', month: 'long', year: 'numeric' })}</p>
       </div>
       
-      {/* Componente de estadísticas descomentado */}
       <MesResumenStats
-        ventasRecepies={productosVendidos}
-        totalIngreso={totalIngreso}
-        totalTip={totalTip}
-        totalProductosVendidos={totalProductosVendidos}
-        totalTarjeta={totalTarjeta}
-        totalEfectivo={totalEfectivo}
-        totalTransferencia={totalTransferencia}
-        totalCompras={totalCompras}
+        ventasRecepies={productosVendidosConReceta}
+        totalIngreso={datosCalculadosDelMes.totalIngreso}
+        totalTip={datosCalculadosDelMes.totalTip}
+        totalProductosVendidos={datosCalculadosDelMes.totalProductosVendidos}
+        totalTarjeta={datosCalculadosDelMes.totalTarjeta}
+        totalEfectivo={datosCalculadosDelMes.totalEfectivo}
+        totalTransferencia={datosCalculadosDelMes.totalTransferencia}
+        totalCompras={datosCalculadosDelMes.totalCompras}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* Detalles de Ventas */}
         <div className="p-6 bg-white rounded-lg shadow-md">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Detalles de Ventas del Mes</h3>
-          <div className="overflow-x-auto max-h-96"> {/* Se agrega max-h-96 para scroll */}
+          <div className="overflow-x-auto max-h-96">
             <table className="min-w-full border-collapse border border-gray-200">
-                {/* ... Thead ... */}
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Total Ingreso</th>
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Pagado</th>
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Fecha y Hora</th>
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Método de Pago</th>
-                  </tr>
-                </thead>
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Total Ingreso</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Pagado</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Fecha y Hora</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Método de Pago</th>
+                </tr>
+              </thead>
               <tbody>
                 {ventas.map((venta, index) => (
                   <tr key={venta.id || index} className="hover:bg-gray-50 transition-colors">
@@ -288,12 +285,7 @@ function MesResumen() {
                       {new Date(venta.Date).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {venta.Pago_Info && (() => {
-                        try {
-                          const pagos = JSON.parse(venta.Pago_Info);
-                          return pagos.metodo || 'N/A';
-                        } catch (e) { return 'Error'; }
-                      })()}
+                      {venta.Pago_Info && JSON.parse(venta.Pago_Info).metodo || 'N/A'}
                     </td>
                   </tr>
                 ))}
@@ -302,21 +294,19 @@ function MesResumen() {
           </div>
         </div>
 
-        {/* Productos Vendidos */}
         <div className="p-6 bg-white rounded-lg shadow-md">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Productos Vendidos en el Mes</h3>
-          <div className="overflow-x-auto max-h-96"> {/* Se agrega max-h-96 para scroll */}
+          <div className="overflow-x-auto max-h-96">
             <table className="min-w-full border-collapse border border-gray-200">
-               {/* ... Thead ... */}
-               <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Producto</th>
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Cantidad Vendida</th>
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Acción</th>
-                  </tr>
-                </thead>
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Producto</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Cantidad Vendida</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Acción</th>
+                </tr>
+              </thead>
               <tbody>
-                {productosVendidos.map((producto, index) => (
+                {productosVendidosConReceta.map((producto, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4 border-b text-sm text-gray-700">{producto.nombre}</td>
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">{producto.cantidad}</td>
@@ -337,8 +327,6 @@ function MesResumen() {
         </div>
       </div>
       
-      {/* 5. Renderizado condicional del componente Predict. */}
-      {/* Se muestra como un overlay/modal cuando showPredict es true. */}
       {showPredict && selectedItem && (
         <Predict item={selectedItem} onClose={handleClosePredict} />
       )}
