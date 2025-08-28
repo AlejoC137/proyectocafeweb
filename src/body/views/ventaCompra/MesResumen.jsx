@@ -62,7 +62,7 @@ useEffect(() => {
           .select('*')
           .order('Date', { ascending: false })
           .range(from, to);
-console.log(data);
+// console.log(data);
 
         if (error) throw error;
 
