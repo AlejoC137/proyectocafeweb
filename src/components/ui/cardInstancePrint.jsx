@@ -35,15 +35,15 @@ export function CardInstancePrint({ product, isEnglish }) {
   };
 
   return (
-    <Card className="w-full h-full overflow-hidden pt-1 pl-1 pr-1 shadow-none" onClick={() => setShowDetail(true)}>
-      <div className="relative z-0 overflow-hidden">
+    <Card className="w-full h-full overflow-hidden pt-0 pl-1 pr-1 shadow-none" onClick={() => setShowDetail(true)}>
+      <div className="relative z-0 overflow-hidden ">
         <Button variant="ghost" size="icon" className="absolute bg-white/70">
           <ShoppingCart className="h-5 w-5 text-gray-700" />
         </Button>
       </div>
-      <CardContent className="p-1 flex flex-col justify-between text-gray-900 font-light">
+      <CardContent className="p-0 flex flex-col justify-between text-gray-900 font-light">
         <div className="flex justify-between items-center">
-          <h3 className="text-10pt truncate font-bold font-custom font-SpaceGrotesk">
+          <h3 className="text-10pt truncate  border-b   border-black  dark:border-slate-800 w-full font-bold font-custom font-SpaceGrotesk">
             {isEnglish ? product.NombreEN : product.NombreES}
           </h3>
           <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>
@@ -51,13 +51,11 @@ export function CardInstancePrint({ product, isEnglish }) {
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <h3 className="text-md font-medium truncate font-SpaceGrotesk" style={{ fontSize: '10px' }}>
-            {isEnglish ? product.DescripcionMenuEN
- : product.DescripcionMenuES}
+          {/* 👇 CAMBIO REALIZADO AQUÍ 👇 */}
+          <h3 className="text-md font-medium line-clamp-2 font-SpaceGrotesk" style={{ fontSize: '10px' }}>
+            {isEnglish ? product.DescripcionMenuEN : product.DescripcionMenuES}
           </h3>
- 
         </div>
-        
       </CardContent>
     </Card>
   );

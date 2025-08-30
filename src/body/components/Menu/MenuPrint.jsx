@@ -82,34 +82,32 @@ function MenuPrint() {
           <div className="pt-0 gap-8 flex flex-row justify-center h-custom-height750">
             {/* COFFEE */}
             <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Café y Bebidas":"Coffe & Drinks"}</h1>
-              <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
+              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Café":"Coffee"}</h1>
+              <div className="flex flex-col gap-1">
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
+                <br />
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
               </div>
               <br />
-              <div className="flex flex-row gap-1 ">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={BEBIDAS}  products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES}  TITTLE={{ES:"Caliente",EN:"Hot"}} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={BEBIDAS} products={menuData}  GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS}  TITTLE={{ES:"Frío",EN:"Cold"}} isEnglish={leng} />
-              </div>
+   
             </div>
 
             {/* GOOD FOOD */}
             <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Comida":"Food"}</h1>
-              <div className="flex flex-row gap-1 ">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Salty BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
+              <h1 className="self-end text-center w-full  font-LilitaOne text-2xl mb-2">{!leng ?"Bebidas":"Drinks"}</h1>
+                    <div className="flex flex-col gap-1 ">
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={BEBIDAS}  products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES}  TITTLE={{ES:"Caliente",EN:"Hot"}} isEnglish={leng} />
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={BEBIDAS} products={menuData}  GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS}  TITTLE={{ES:"Frío",EN:"Cold"}} isEnglish={leng} />
               </div>
               <br />
-              <div className="flex flex-row gap-1">
+              {/* <div className="flex flex-row gap-1">
                 <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
-              </div>
+              </div> */}
               <br />
-              <div className="flex flex-row gap-1">
+              {/* <div className="flex flex-row gap-1">
                 <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={PANADERIA} products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA}/>
                 <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={REPOSTERIA} products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
-              </div>
+              </div> */}
             </div>
 
             {/* SOMETHING ELSE */}
@@ -120,8 +118,71 @@ function MenuPrint() {
               </div>
               <br />
               <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"COMIDA"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"BEBIDAS"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} />
+                {/* <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"COMIDA"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} /> */}
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"BEBIDAS"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between">
+            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
+              | Proyecto Café |
+            </h4>
+            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
+              | Transversal 39 #65D - 22, Conquistadores |
+            </h4>
+            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
+              | +57 300 821 4593 @proyecto_ _cafe |
+            </h4>
+          </div>
+
+          <div className=" text-center ">
+            <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
+              {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
+            </h1>
+          </div>
+
+          {/* THREE EQUAL COLUMNS */}
+          <div className="pt-0 gap-8 flex flex-row justify-center h-custom-height750">
+            {/* COFFEE */}
+            <div className="flex flex-col gap-1 w-custom-width400px">
+              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Horneados":"Baked Goods"}</h1>
+              {/* <div className="flex flex-row gap-1">
+                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
+                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
+              </div> */}
+              {/* <br /> */}
+                       <div className="flex flex-col gap-1">
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={PANADERIA} products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA}/>
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={REPOSTERIA} products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
+              </div>
+            </div>
+
+            {/* GOOD FOOD */}
+            <div className="flex flex-col gap-1 w-custom-width400px">
+              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Desayuno":"BreakFast"}</h1>
+              <div className="flex flex-col gap-1 ">
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Salty BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
+              </div>
+              <br />
+              <div className="flex flex-row gap-1">
+
+              </div>
+              <br />
+
+            </div>
+
+            {/* SOMETHING ELSE */}
+            <div className="flex flex-col gap-1 w-custom-width400px">
+              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
+              <div className="flex flex-row gap-1">
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
+              </div>
+              <br />
+              <div className="flex flex-row gap-1">
+                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"COMIDA"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} />
+                {/* <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"BEBIDAS"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} /> */}
               </div>
             </div>
           </div>

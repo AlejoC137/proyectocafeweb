@@ -42,7 +42,7 @@ export function CardGridPrint({ products, cardHeight, isEnglish, GRUPO, SUB_GRUP
         </div>
       )} */}
       <div className="flex flex-col items-start gap-1">
-        <Label className="text-left flex text-lg font-medium break-words w-full 
+        <Label className="text-left flex text-lg justify-center break-words w-full 
         truncate font-SpaceGrotesk font-bold 
           ">
           {TITTLE ? TITTLE[isEnglish ? "EN" : "ES"].toUpperCase() : GRUPO.toUpperCase()}
