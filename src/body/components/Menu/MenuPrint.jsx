@@ -8,9 +8,10 @@ import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
 import QrMenu from "@/assets/QR MENU.png";
 import QrMapa from "@/assets/QR MAPA.png";
 import QrWifi from "@/assets/QR WIFI.png";
-import Encabezado from "./Encabezado";
+import QrAgenda from "@/assets/QR AGENDA.png";
 import MenuPrintInfo from "./MenuPrintInfo";
 import MenuAgenda from "./MenuAgenda";
+import MenuMenu from "./MenuMenu";
 import MenuPrintFormInfo from "./MenuPrintForm";
 
 function MenuPrint() {
@@ -39,7 +40,6 @@ function MenuPrint() {
   }, [dispatch]);
 
   const handlePrint = () => {
-    // This function prepares the content for printing
     const printContent = printRef.current.innerHTML;
     const originalContent = document.body.innerHTML;
     document.body.innerHTML = printContent;
@@ -54,7 +54,6 @@ function MenuPrint() {
 
   return (
     <div className="flex w-screen flex-col items-center justify-center " ref={printRef}>
-      {/* Buttons are hidden when printing */}
       <div className="flex gap-4 mt-12 mb-5 print:hidden">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium">
           🖨️
@@ -70,174 +69,185 @@ function MenuPrint() {
       {showForm && <MenuPrintFormInfo />}
 
       <div className="flex justify-center ">
-        <div id="print-area" className="">
-          {/* --- START OF PAGE 1 --- */}
-          <div className=" text-center ">
-            <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
-              {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
-            </h1>
-          </div>
-
-          {/* THREE EQUAL COLUMNS */}
-          <div className="pt-0 gap-8 flex flex-row justify-center h-custom-height750">
-            {/* COFFEE */}
-            <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Café":"Coffee"}</h1>
-              <div className="flex flex-col gap-1">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
+        <div id="print-area" className="print:h-auto">
+          
+          {/* --- INICIO PÁGINA 1 --- */}
+          {/* CORRECTO: Se añade flex, flex-col y print:h-screen para crear el layout de página completa */}
+          <div className="print:break-after-page flex flex-col print:h-screen">
+            <div className=" text-center ">
+              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
+                {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
+              </h1>
+            </div>
+            
+            {/* CORRECTO: Se añade 'grow' para que esta sección ocupe el espacio disponible */}
+            <div className="pt-0 gap-8 flex flex-row justify-center items-start grow">
+              {/* COFFEE */}
+              <div className="flex flex-col gap-1 w-custom-width400px">
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Café":"Coffee"}</h1>
+                <div className="flex flex-col gap-1">
+                  <CardGridPrint products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
+                  <br />
+                  <CardGridPrint products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
+                </div>
+              </div>
+              {/* DRINKS */}
+              <div className="flex flex-col gap-1 w-custom-width400px">
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Bebidas":"Drinks"}</h1>
+                <div className="flex flex-col gap-1 ">
+                  <CardGridPrint products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES}  TITTLE={{ES:"Caliente",EN:"Hot"}} isEnglish={leng} />
+                  <CardGridPrint products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS}  TITTLE={{ES:"Frío",EN:"Cold"}} isEnglish={leng} />
+                </div>
+              </div>
+              {/* SOMETHING ELSE */}
+              <div className="flex flex-col gap-1 w-custom-width400px">
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
+                <div className="flex flex-row gap-1">
+                  <CardGridPrint products={menuData} TITTLE={{ES:"ENBOTELLADOS",EN:"BOTTLED"}} GRUPO={"ENLATADOS"} isEnglish={leng} />
+                </div>
                 <br />
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
+                <div className="flex flex-row gap-1">
+                  <CardGridPrint products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} />
+                </div>
               </div>
-              <br />
-   
             </div>
 
-            {/* GOOD FOOD */}
-            <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full  font-LilitaOne text-2xl mb-2">{!leng ?"Bebidas":"Drinks"}</h1>
-                    <div className="flex flex-col gap-1 ">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={BEBIDAS}  products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES}  TITTLE={{ES:"Caliente",EN:"Hot"}} isEnglish={leng} />
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={BEBIDAS} products={menuData}  GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS}  TITTLE={{ES:"Frío",EN:"Cold"}} isEnglish={leng} />
-              </div>
-              <br />
-              {/* <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
-              </div> */}
-              <br />
-              {/* <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={PANADERIA} products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA}/>
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={REPOSTERIA} products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
-              </div> */}
-            </div>
-
-            {/* SOMETHING ELSE */}
-            <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
-              <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={ENLATADOS} products={menuData} TITTLE={{ES:"ENBOTELLADOS",EN:"BOTTLED"}} GRUPO={"CAFÉ"} isEnglish={leng} />
-              </div>
-              <br />
-              <div className="flex flex-row gap-1">
-                {/* <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"COMIDA"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} /> */}
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"BEBIDAS"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} />
-              </div>
+            <div className="flex justify-between mt-4 pb-4">
+              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Proyecto Café |</h4>
+              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
+              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
             </div>
           </div>
+          
+          {/* --- INICIO PÁGINA 2 --- */}
+          <div className="print:break-after-page flex flex-col print:h-screen">
+            <div className=" text-center ">
+              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
+                {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
+              </h1>
+            </div>
 
-          <div className="flex justify-between">
-            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
-              | Proyecto Café |
-            </h4>
-            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
-              | Transversal 39 #65D - 22, Conquistadores |
-            </h4>
-            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
-              | +57 300 821 4593 @proyecto_ _cafe |
-            </h4>
-          </div>
-
-          <div className=" text-center ">
-            <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
-              {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
-            </h1>
-          </div>
-
-          {/* THREE EQUAL COLUMNS */}
-          <div className="pt-0 gap-8 flex flex-row justify-center h-custom-height750">
-            {/* COFFEE */}
-            <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Horneados":"Baked Goods"}</h1>
-              {/* <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
-                <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={CAFE} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
-              </div> */}
-              {/* <br /> */}
-                       <div className="flex flex-col gap-1">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={PANADERIA} products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA}/>
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={REPOSTERIA} products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
+            <div className="pt-0 gap-8 flex flex-row justify-center items-start grow">
+              {/* BAKED GOODS */}
+              <div className="flex flex-col gap-1 w-custom-width400px">
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Horneados":"Baked Goods"}</h1>
+                <div className="flex flex-col gap-1">
+                  <CardGridPrint products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA}/>
+                  <CardGridPrint products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
+                </div>
+              </div>
+              {/* BREAKFAST */}
+              <div className="flex flex-col gap-1 w-custom-width400px">
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Desayuno":"Breakfast"}</h1>
+                <div className="flex flex-col gap-1 ">
+                  <CardGridPrint products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet Breakfast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
+                  <CardGridPrint products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Savory Breakfast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
+                </div>
+              </div>
+              {/* MORE */}
+              <div className="flex flex-col gap-1 w-custom-width400px">
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
+                <div className="flex flex-row gap-1">
+                  <CardGridPrint products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
+                </div>
+                <br />
+                <div className="flex flex-row gap-1">
+                  <CardGridPrint products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"ADICIONES"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} />
+                </div>
               </div>
             </div>
 
-            {/* GOOD FOOD */}
-            <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Desayuno":"BreakFast"}</h1>
-              <div className="flex flex-col gap-1 ">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={DESAYUNO} products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Salty BreckFast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
-              </div>
-              <br />
-              <div className="flex flex-row gap-1">
-
-              </div>
-              <br />
-
-            </div>
-
-            {/* SOMETHING ELSE */}
-            <div className="flex flex-col gap-1 w-custom-width400px">
-              <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
-              <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={TARDEO} products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
-              </div>
-              <br />
-              <div className="flex flex-row gap-1">
-                <CardGridPrint withDividerValue={1} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"COMIDA"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} />
-                {/* <CardGridPrint withDividerValue={2} cardHeight='' className="w-1/3" filterKey={ADICIONES} products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"BEBIDAS"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} /> */}
-              </div>
+            <div className="flex justify-between mt-4 pb-4">
+              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Proyecto Café |</h4>
+              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
+              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
             </div>
           </div>
-
-          <div className="flex justify-between">
-            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
-              | Proyecto Café |
-            </h4>
-            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
-              | Transversal 39 #65D - 22, Conquistadores |
-            </h4>
-            <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">
-              | +57 300 821 4593 @proyecto_ _cafe |
-            </h4>
-          </div>
-
-          {/* --- START OF PAGE 2 (with page break for printing) --- */}
-          {/* The 'print:break-before-page' class forces a new page when printing */}
-          <div className="pt-0 gap-4 flex flex-col justify-center print:break-before-page ">
+          
+          {/* --- INICIO PÁGINA 3 --- */}
+          <div className="flex flex-col print:h-screen">
             <div className=" text-center mb-4">
               <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
                 {leng ? "More of Proyecto Café" : "Más sobre Proyecto Café"}
               </h1>
             </div>
-
-            {/* THREE EQUAL COMPACT COLUMNS */}
-            <div className="flex flex-row justify-between w-full gap-2 mb-6">
-              {/* Column 1: QRs + Agenda */}
+            <div className="flex flex-row justify-between w-full gap-2 mb-6 grow">
+              <div className="flex flex-col gap-2 w-custom-width400px">
+                <div className="pt-2">
+                  <MenuMenu isEnglish={leng} />
+                </div>
+                <div className="flex flex-row w-full h-32 justify-between pt-5">
+                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
+                    <img src={QrMenu} alt="QR Menu" className="h-full object-contain" />
+                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR MENU</h3>
+                  </div>
+        
+                </div>
+              </div>
+          
+              <div className="flex flex-col gap-2 w-custom-width400px">
+                <div className="pt-2">
+                <MenuPrintInfo isEnglish={leng} />
+                </div>
+                <div className="flex flex-row w-full h-32 justify-between pt-5">
+                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
+                    <img src={QrMapa} alt="QR Map" className="h-full object-contain" />
+                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR MAP</h3>
+                  </div>
+        
+                </div>
+              </div>
+        <div className="flex flex-col gap-2 w-custom-width400px">
+                <div className="pt-2">
+                  <MenuAgenda isEnglish={leng} />
+                </div>
+                <div className="flex flex-row w-full h-32 justify-between pt-5">
+                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
+                    <img src={QrAgenda} alt="QR Agenda" className="h-full object-contain" />
+                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR AGENDA</h3>
+                  </div>
+        
+                </div>
+              </div>      
+    
+            </div>
+            <div className="flex justify-between">
+              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Proyecto Café |</h4>
+              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
+              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
+            </div>
+          </div>
+          {/* --- INICIO PÁGINA 4 --- */}
+          <div className="flex flex-col print:h-screen">
+            <div className=" text-center mb-4">
+              <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
+                {leng ? "More of Proyecto Café" : "Más sobre Proyecto Café"}
+              </h1>
+            </div>
+            <div className="flex flex-row justify-between w-full gap-2 mb-6 grow">
               <div className="flex flex-col gap-2 w-custom-width400px">
                 <div className="pt-2">
                   <MenuAgenda isEnglish={leng} />
                 </div>
                 <div className="flex flex-row w-full h-32 justify-between pt-5">
-                  <div className="w-1/2 h-24 flex flex-col items-center justify-center px-1">
+                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
                     <img src={QrMenu} alt="QR Menu" className="h-full object-contain" />
                     <h3 className="text-center font-LilitaOne text-sm mt-1">QR MENU</h3>
                   </div>
-                  <div className="w-1/2 h-24 flex flex-col items-center justify-center px-1">
+                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
                     <img src={QrMapa} alt="QR Maps" className="h-full object-contain" />
                     <h3 className="text-center font-LilitaOne text-sm mt-1">QR G MAPS</h3>
                   </div>
-                  <div className="w-1/2 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrWifi} alt="QR Maps" className="h-full object-contain" />
+                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
+                    <img src={QrWifi} alt="QR Wifi" className="h-full object-contain" />
                     <h3 className="text-center font-LilitaOne text-sm mt-1">QR WIFI</h3>
                   </div>
                 </div>
               </div>
-
-              {/* Column 2: MenuPrintInfo */}
               <div className="flex flex-col gap-2 w-custom-width400px">
                 <MenuPrintInfo isEnglish={leng} />
               </div>
-
-              {/* Column 3: Logo */}
-              <div className="flex flex-col justify-between items-center w-custom-width400px h-full">
+              <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
                 <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
                 <p className="text-center text-justify font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
                   {!leng
@@ -246,17 +256,10 @@ function MenuPrint() {
                 </p>
               </div>
             </div>
-
             <div className="flex justify-between">
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">
-                | Proyecto Café |
-              </h4>
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">
-                | Transversal 39 #65D - 22, Conquistadores |
-              </h4>
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">
-                | +57 300 821 4593 @proyecto_ _cafe |
-              </h4>
+              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Proyecto Café |</h4>
+              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
+              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
             </div>
           </div>
         </div>

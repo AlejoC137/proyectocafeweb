@@ -1,9 +1,9 @@
 function MenuPrintInfo({ isEnglish }) {
   const infoFija = {
     ES: {
-      Intro: `Proyecto Café es una micropanadería, un almorzadero que quiere ser gourmet, un lugar donde se toma buen café; un lugar hecho entre familia y amigos. Quizás es también una forma de enmarcar mis sentimientos y tristezas. Es un lugar de elefantes y cosmonautas. Es una obra inacabable, algo bonito y propio. Todos los que han aportado son el proyecto; usted que lee esto también lo es. Concretamente, el proyecto es la voluntad de efectuar las ideas en la realidad. Hagamos proyectos juntos, con un café. Nuestra misión es apoyar los proyectos de las personas que tengan esta voluntad.
+      Intro: // `Proyecto Café es una micropanadería, un almorzadero que quiere ser gourmet, un lugar donde se toma buen café; un lugar hecho entre familia y amigos. Quizás es también una forma de enmarcar mis sentimientos y tristezas. Es un lugar de elefantes y cosmonautas. Es una obra inacabable, algo bonito y propio. Todos los que han aportado son el proyecto; usted que lee esto también lo es. Concretamente, el proyecto es la voluntad de efectuar las ideas en la realidad. Hagamos proyectos juntos, con un café. Nuestra misión es apoyar los proyectos de las personas que tengan esta voluntad.
 
-<strong>Nuestro Equipo</strong>:
+`<strong>Nuestro Equipo</strong>:
 Margarita, Alejandro, Samantha, Juan, Isabela.
 
 <strong>Horario de atención:</strong>
@@ -17,9 +17,9 @@ Domingo: 9:00 a.m. – 2:00 p.m.
 <strong>Pregunta por promociones, especiales, eventos y el menú del día.</strong>`
     },
     EN: {
-      Intro: `Proyecto Café is a micro-bakery, a lunch spot that aspires to be gourmet, a place to drink good coffee; a place made among family and friends. Perhaps it is also a way of framing my feelings and sorrows. It is a place of elephants and cosmonauts. It is an endless work, something beautiful and my own. All who have contributed are the project; you who are reading this are too. Specifically, the project is the will to bring ideas into reality. Let's make projects together, with a coffee. Our mission is to support the projects of people who have this will.
+     Intro: // `Proyecto Café is a micro-bakery, a lunch spot that aspires to be gourmet, a place to drink good coffee; a place made among family and friends. Perhaps it is also a way of framing my feelings and sorrows. It is a place of elephants and cosmonauts. It is an endless work, something beautiful and my own. All who have contributed are the project; you who are reading this are too. Specifically, the project is the will to bring ideas into reality. Let's make projects together, with a coffee. Our mission is to support the projects of people who have this will.
 
-<strong>Our Team</strong>:  
+`<strong>Our Team</strong>:  
 Margarita, Alejandro, Samantha, Juan, Isabela.
 
 <strong>Opening hours:</strong>  
