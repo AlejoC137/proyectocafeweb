@@ -39,8 +39,11 @@ function StaffPortal() {
 
   const [activeView, setActiveView] = useState(null);
   const [propinaInput, setPropinaInput] = useState("");
+  const [selectedStaffId, setSelectedStaffId] = useState("");
 
   useEffect(() => {
+    // console.log("All Staff Data:", allStaff);
+    
     const fetchData = async () => {
       try {
         await dispatch(getAllFromTable(STAFF));
@@ -78,6 +81,20 @@ function StaffPortal() {
 
   const handleGoToNomina = () => {
     navigate("/CalculoNomina");
+  };
+
+  const handleSelectStaff = (e) => {
+    setError("");
+    setActiveView(null);
+    const staffId = e.target.value;
+    setSelectedStaffId(staffId);
+    const staff = allStaff.find((s) => s._id === staffId);
+    if (staff) {
+      setStaffFound(staff);
+    } else {
+      setStaffFound(null);
+      setError("No se encontró personal seleccionado.");
+    }
   };
 
   // Botones principales del sistema
@@ -164,37 +181,23 @@ function StaffPortal() {
   ] : [];
 
   return (
-    <PageLayout title="Portal de Staff" loading={loading}>
+    <PageLayout loading={loading}>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Sección de búsqueda de personal */}
-        <ContentCard title="Buscar Personal">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="flex gap-3">
-              <Input
-                type="text"
-                placeholder="Ingrese los primeros 4 dígitos del CC"
-                value={ccInput}
-                onChange={(e) => setCcInput(e.target.value.replace(/\D/g, ""))}
-                className="flex-1"
-                maxLength={10}
-              />
-              <Button type="submit" className="gap-2">
-                <Search size={16} />
-                Buscar
-              </Button>
-            </div>
-            
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-              </div>
-            )}
-          </form>
-        </ContentCard>
+ 
 
         {/* Sección de propinas */}
-        <ContentCard title="Gestión de Propinas">
-          <form onSubmit={handlePropinaSubmit} className="flex gap-3">
+    
+
+        {/* Botones generales del sistema */}
+        <ContentCard title="Acceso al Sistema">
+          <ActionButtonGroup 
+            buttons={systemButtons} 
+            layout="grid" 
+            className="grid-cols-2 md:grid-cols-3"
+          />
+            {/* <ContentCard > */}
+         <form onSubmit={handlePropinaSubmit} className="flex gap-3 pt-3">
             <Input
               type="number"
               min="0"
@@ -208,30 +211,44 @@ function StaffPortal() {
               Actualizar
             </Button>
           </form>
-        </ContentCard>
-
-        {/* Botones generales del sistema */}
-        <ContentCard title="Acceso al Sistema">
-          <ActionButtonGroup 
-            buttons={systemButtons} 
-            layout="grid" 
-            className="grid-cols-2 md:grid-cols-3"
-          />
+         
+                 <form className="">
+            <div className="flex gap-3 pt-3">
+              <select
+                value={selectedStaffId}
+                onChange={handleSelectStaff}
+                className="flex-1 border rounded px-2 py-2"
+              >
+                <option value="">Seleccione Staff</option>
+                {allStaff.map((staff) => (
+                  <option key={staff._id} value={staff._id}>
+                    {staff.Nombre} {staff.Apellido}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mt-2">
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              </div>
+            )}
+          </form>
+        {/* </ContentCard> */}
         </ContentCard>
 
         {/* Panel específico del staff encontrado */}
         {staffFound && (
           <ContentCard 
-            title={`Panel de ${staffFound.Nombre || 'Staff'}`}
+            // title={`Panel de ${staffFound.Nombre || 'Staff'}`}
             className="border-green-200 dark:border-green-800"
           >
             <div className="space-y-4">
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
+              {/* <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
                 <p className="text-sm text-green-700 dark:text-green-300">
                   ✅ Personal encontrado: <strong>{staffFound.Nombre}</strong>
                   {staffFound.isAdmin && <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">ADMIN</span>}
                 </p>
-              </div>
+              </div> */}
               
               <ActionButtonGroup 
                 buttons={staffButtons} 

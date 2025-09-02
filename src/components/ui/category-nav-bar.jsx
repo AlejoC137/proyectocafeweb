@@ -48,7 +48,7 @@ function CategoryNavBar({
   const buttonWidth = totalButtons > 0 ? `${100 / totalButtons}%` : '100%';
 
   return (
-    <div className={`flex justify-center align-top gap-2 p-3 fixed top-18 left-0 right-0 bg-cream-bg/95 backdrop-blur-sm border-b border-sage-green z-40 shadow-sm ${className}`}>
+    <div className={`flex justify-center align-top gap-1 p-1 mt-2 fixed top-18 left-0 right-0 bg-cream-bg/95 backdrop-blur-sm border border-sage-green z-40 shadow-sm ${className}`}>
       {/* Botones de categorías */}
       {categories.map(({ type, label, icon }) => {
         const IconComponent = defaultIcons[icon] || UtensilsCrossed;
