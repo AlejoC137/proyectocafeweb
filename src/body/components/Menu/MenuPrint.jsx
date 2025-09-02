@@ -21,6 +21,7 @@ function MenuPrint() {
   const [showForm, setShowForm] = useState(false);
   const printRef = useRef(null);
   const menuData = useSelector((state) => state.allMenu);
+  const qrSize = "h-[200px]"; // Puedes ajustar el valor aquí
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,7 +169,7 @@ function MenuPrint() {
           <div className="flex flex-col print:h-screen">
             <div className=" text-center mb-4">
               <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
-                {leng ? "More of Proyecto Café" : "Más sobre Proyecto Café"}
+                {/* {leng ? "Menu" : "Menú"} */}
               </h1>
             </div>
             <div className="flex flex-row justify-between w-full gap-2 mb-6 grow">
@@ -176,34 +177,45 @@ function MenuPrint() {
                 <div className="pt-2">
                   <MenuMenu isEnglish={leng} />
                 </div>
-                <div className="flex flex-row w-full h-32 justify-between pt-5">
-                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrMenu} alt="QR Menu" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR MENU</h3>
+                <div className="flex flex-row w-full  justify-between ">
+                  <div className="w-full flex flex-col items-center justify-center">
+                    <img src={QrMenu} alt="QR Menu " className={`object-contain ${qrSize}`} />
+                    {/* <h3 className="text-center font-LilitaOne pt-2 text-sm">QR MENU</h3> */}
+                  </div>
+        
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 w-custom-width400px">
+                                <div className=" text-center mb-4">
+
+                        <h1 className="text-3xl font-LilitaOne mt-3 font-bold leading-tight">
+          {!leng ? "More about Proyecto Café." : "Más sobre Proyecto Café."}
+        </h1>
+                <div className="pt-2">
+                  <MenuPrintInfo isEnglish={leng} />
+                </div>
+                </div>
+                <div className="flex flex-row w-full  justify-between ">
+                  <div className="w-full flex flex-col items-center justify-center">
+                    <img src={QrMapa} alt="QR MAPA " className={`object-contain ${qrSize}`} />
+                    <h3 className="text-center font-LilitaOne pt-2 text-sm">QR Mapa</h3>
                   </div>
         
                 </div>
               </div>
           
-              <div className="flex flex-col gap-2 w-custom-width400px">
-                <div className="pt-2">
-                <MenuPrintInfo isEnglish={leng} />
-                </div>
-                <div className="flex flex-row w-full h-32 justify-between pt-5">
-                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrMapa} alt="QR Map" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR MAP</h3>
-                  </div>
-        
-                </div>
-              </div>
+
         <div className="flex flex-col gap-2 w-custom-width400px">
                 <div className="pt-2">
                   <MenuAgenda isEnglish={leng} />
                 </div>
-                <div className="flex flex-row w-full h-32 justify-between pt-5">
-                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrAgenda} alt="QR Agenda" className="h-full object-contain" />
+                <div className="flex flex-row w-full  justify-center ">
+                  <div className=" flex flex-col items-center bg-red-700 px-1">
+                    <img 
+                    src={QrAgenda} 
+                    alt="QR Agenda" 
+                    className={`object-contain ${qrSize} mx-auto `} 
+                    />
                     <h3 className="text-center font-LilitaOne text-sm mt-1">QR AGENDA</h3>
                   </div>
         
@@ -221,39 +233,35 @@ function MenuPrint() {
           <div className="flex flex-col print:h-screen">
             <div className=" text-center mb-4">
               <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
-                {leng ? "More of Proyecto Café" : "Más sobre Proyecto Café"}
+                {leng ? "Proyecto Café" : "Proyecto Café"}
               </h1>
             </div>
             <div className="flex flex-row justify-between w-full gap-2 mb-6 grow">
-              <div className="flex flex-col gap-2 w-custom-width400px">
-                <div className="pt-2">
-                  <MenuAgenda isEnglish={leng} />
-                </div>
-                <div className="flex flex-row w-full h-32 justify-between pt-5">
-                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrMenu} alt="QR Menu" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR MENU</h3>
-                  </div>
-                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrMapa} alt="QR Maps" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR G MAPS</h3>
-                  </div>
-                  <div className="w-1/3 h-24 flex flex-col items-center justify-center px-1">
-                    <img src={QrWifi} alt="QR Wifi" className="h-full object-contain" />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR WIFI</h3>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 w-custom-width400px">
-                <MenuPrintInfo isEnglish={leng} />
+           
+       
+              <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
+                {/* <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
+                <p className="text-center  font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
+                  {!leng
+                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
+                    : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
+                </p> */}
               </div>
               <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
                 <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
-                <p className="text-center text-justify font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
+                <p className="text-center  font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
                   {!leng
                     ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
                     : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
                 </p>
+              </div>
+              <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
+                {/* <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
+                <p className="text-center  font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
+                  {!leng
+                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
+                    : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
+                </p> */}
               </div>
             </div>
             <div className="flex justify-between">

@@ -9,7 +9,7 @@ Margarita, Alejandro, Samantha, Juan, Isabela.
 <strong>Horario de atención:</strong>
 Lunes a viernes: 8:00 a.m. – 7:00 p.m.  
 Sábado: 8:00 a.m. – 6:00 p.m.  
-Domingo: 9:00 a.m. – 2:00 p.m.
+Domingo y festivo: Cerrado
 
 <strong>WiFi:</strong> Proyecto_cafe  
 <strong>Contraseña:</strong> FreddieMercury
@@ -25,7 +25,7 @@ Margarita, Alejandro, Samantha, Juan, Isabela.
 <strong>Opening hours:</strong>  
 Monday to Friday: 8:00 a.m. – 7:00 p.m.  
 Saturday: 8:00 a.m. – 6:00 p.m.  
-Sunday: 9:00 a.m. – 2:00 p.m.
+Sunday: Closed
 
 <strong>WiFi:</strong> Proyecto_cafe  
 <strong>Password:</strong> FreddieMercury

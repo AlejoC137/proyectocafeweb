@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useSelector } from 'react-redux'; // Para acceder al estado global de Redux
+import fondoImage from './assets/fondo.png';
 // import './App.css';
 
 import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH } from './redux/actions-types'; // Importa las acciones y vistas
@@ -67,17 +68,31 @@ function App() {
       break;
   }
   return (
-    <div className='flex w-full' >
-     <TopNav />
-     <br></br>
-     <br></br>
-    <Routes>
+    <div 
+      className='flex w-full min-h-screen relative'
+      style={{
+        backgroundImage: `url(${fondoImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Overlay para transparencia del 50% */}
+      <div className="absolute inset-0 bg-cream-bg/60 dark:bg-slate-900/50 pointer-events-none z-0"></div>
+      
+      {/* Contenido de la aplicación */}
+      <div className="relative z-10 w-full">
+        <TopNav />
+        <br></br>
+        <br></br>
+        <Routes>
      {/* <Route path="/" element={componentToRender} /> */}
      <Route path="/MenuView" element={<MenuView />} />
      <Route path="/MenuLunch" element={<MenuLunch />} />
      <Route path="/LunchByOrder" element={<LunchByOrder />} />
      <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
-     <Route path="/Home" element={<LandingHome />} />
+     <Route path="/Home" element={<Home />} />
      <Route path="/Agenda" element={<Agenda />} />
      <Route path="/Manager" element={<Manager />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
@@ -104,6 +119,7 @@ function App() {
      <br></br>
      <br></br>
       </div>
+    </div>
   );
 }
 

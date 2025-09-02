@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actions-VentasCompras";
 import RecetaModal from "./RecetaModal";
 import Pagar from "./Pagar";
-import { PlusCircle, MinusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, MinusCircle, XCircle, BookOpen, Save, CreditCard, Trash2 } from 'lucide-react';
 
 /**
  * Componente MesaBarra corregido. Ahora incluye un botón para iniciar
@@ -192,12 +192,11 @@ function MesaBarra({ index, ventas, reloadVentas }) {
             <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPago)}</p>
         </div>
         <div className="flex gap-2 justify-end md:col-span-3">
-            <Button onClick={handleSubmit} title="Guardar Cambios" className="w-10 h-10 text-xl bg-blue-500 hover:bg-blue-600" disabled={buttonState !== 'save' || !isMesaInUse}>
-                  {buttonState === 'syncing' ? <div className="h-6 w-6 border-2 border-dashed rounded-full animate-spin border-white"></div> : ''}
-                {buttonState === 'syncing' ? <div className="h-5 w-5 border-2 border-dashed rounded-full animate-spin border-white"></div> : '💾'}
+            <Button onClick={handleSubmit} title="Guardar Cambios" className="w-10 h-10 bg-blue-500 hover:bg-blue-600" disabled={buttonState !== 'save' || !isMesaInUse}>
+                {buttonState === 'syncing' ? <div className="h-5 w-5 border-2 border-dashed rounded-full animate-spin border-white"></div> : <Save size={20} />}
             </Button>
-            <Button onClick={() => setShowPagarModal(true)} title="Pagar" className="w-10 h-10 text-xl bg-green-600 hover:bg-green-700" disabled={buttonState !== 'done'}>💸</Button>
-            <Button onClick={handleEliminar} title="Eliminar Venta" className="w-10 h-10 text-xl bg-red-600 hover:bg-red-700" disabled={!ventaId}>🗑️</Button>
+            <Button onClick={() => setShowPagarModal(true)} title="Pagar" className="w-10 h-10 bg-green-600 hover:bg-green-700" disabled={buttonState !== 'done'}><CreditCard size={20} /></Button>
+            <Button onClick={handleEliminar} title="Eliminar Venta" className="w-10 h-10 bg-red-600 hover:bg-red-700" disabled={!ventaId}><Trash2 size={20} /></Button>
         </div>
       </div>
 
@@ -222,7 +221,7 @@ function MesaBarra({ index, ventas, reloadVentas }) {
               </div>
               <span className="col-span-4 md:col-span-2 text-right font-medium text-gray-700">{formatCurrency(item.Precio * (item.quantity || 1))}</span>
               <div className="col-span-3 md:col-span-2 flex items-center justify-end gap-1">
-                <Button onClick={() => setSelectedReceta(item)} className="bg-yellow-500 text-white h-9 w-9" size="icon">📕</Button>
+                <Button onClick={() => setSelectedReceta(item)} className="bg-yellow-500 text-white h-9 w-9" size="icon"><BookOpen size={20} /></Button>
                 <Button onClick={() => handleRemoveItem(itemIndex)} variant="ghost" size="icon" className="text-red-500 hover:text-red-700 h-9 w-9"><XCircle size={20} /></Button>
               </div>
             </div>

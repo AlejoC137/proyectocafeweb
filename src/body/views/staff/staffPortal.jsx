@@ -6,6 +6,27 @@ import { STAFF, WORKISUE } from "../../../redux/actions-types";
 import StaffInstance from "./staffInstance";
 import StaffShift from "./staffShift";
 import StaffWorkIssues from "./staffWorkIssues";
+import PageLayout from "../../../components/ui/page-layout";
+import ContentCard from "../../../components/ui/content-card";
+import ActionButtonGroup from "../../../components/ui/action-button-group";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Search, 
+  Settings, 
+  Edit, 
+  Clock, 
+  DollarSign, 
+  Brain, 
+  Package, 
+  Printer, 
+  CreditCard, 
+  Users, 
+  Calendar, 
+  CalendarDays,
+  Wrench,
+  BarChart3
+} from "lucide-react";
 
 function StaffPortal() {
   const dispatch = useDispatch();
@@ -59,158 +80,188 @@ function StaffPortal() {
     navigate("/CalculoNomina");
   };
 
+  // Botones principales del sistema
+  const systemButtons = [
+    {
+      label: "Work Issues",
+      icon: Wrench,
+      onClick: () => setActiveView("workissues"),
+      variant: "secondary"
+    },
+    {
+      label: "Manager",
+      icon: Brain,
+      onClick: () => navigate("/Manager"),
+      variant: "secondary"
+    },
+    {
+      label: "Inventario",
+      icon: Package,
+      onClick: () => navigate("/Inventario"),
+      variant: "secondary"
+    },
+    {
+      label: "Menu Print",
+      icon: Printer,
+      onClick: () => navigate("/MenuPrint"),
+      variant: "secondary"
+    },
+    {
+      label: "Venta / Compra",
+      icon: CreditCard,
+      onClick: () => navigate("/VentaCompra"),
+      variant: "default"
+    },
+    {
+      label: "Proveedores",
+      icon: Users,
+      onClick: () => navigate("/Proveedores"),
+      variant: "secondary"
+    }
+  ];
+
+  // Botones específicos del staff encontrado
+  const staffButtons = staffFound ? [
+    {
+      label: "Editar Información",
+      icon: Edit,
+      onClick: () => setActiveView("instance"),
+      variant: "outline"
+    },
+    {
+      label: "Turnos",
+      icon: Clock,
+      onClick: () => setActiveView("shift"),
+      variant: "outline"
+    },
+    {
+      label: "Gastos",
+      icon: DollarSign,
+      onClick: () => navigate("/Gastos"),
+      variant: "outline"
+    },
+    // Botones de administrador
+    ...(staffFound.isAdmin ? [
+      {
+        label: "Ver Nómina",
+        icon: BarChart3,
+        onClick: handleGoToNomina,
+        variant: "destructive"
+      },
+      {
+        label: "Resumen del Día",
+        icon: Calendar,
+        onClick: () => navigate("/DiaResumen"),
+        variant: "destructive"
+      },
+      {
+        label: "Resumen del Mes",
+        icon: CalendarDays,
+        onClick: () => navigate("/MesResumen"),
+        variant: "destructive"
+      }
+    ] : [])
+  ] : [];
+
   return (
-    <div className="min-h-screen flex items-center justify-center h-screen w-screen">
-      <div className="p-4 max-w-[450px] w-full mx-auto font-SpaceGrotesk text-notBlack bg-cream rounded-lg shadow-md">
-        {/* Formulario de búsqueda */}
-        <form onSubmit={handleSearch} className="mb-4 flex gap-2">
-          <input
-            type="text"
-            placeholder="Ingrese CC"
-            value={ccInput}
-            onChange={(e) => setCcInput(e.target.value.replace(/\D/g, ""))}
-            className="border border-softGrey rounded-lg px-3 py-2 text-[12pt] flex-1"
-          />
-          <button
-            type="submit"
-            className="bg-lilaDark text-white px-4 py-2 rounded-xl shadow"
-          >
-            Buscar
-          </button>
-        </form>
-
-        {loading && (
-          <div className="text-muted-foreground mb-2">Cargando datos...</div>
-        )}
-        {error && <div className="text-pureRed mb-2">{error}</div>}
-
-        {/* Propina siempre visible */}
-        <form onSubmit={handlePropinaSubmit} className="mb-4 flex gap-2">
-          <input
-            type="number"
-            min="0"
-            placeholder="Ingresar propina"
-            value={propinaInput}
-            onChange={(e) => setPropinaInput(e.target.value.replace(/\D/g, ""))}
-            className="border border-softGrey rounded-lg px-3 py-2 text-[12pt] flex-1"
-          />
-          <button
-            type="submit"
-            className="bg-greenish text-white px-4 py-2 rounded-xl shadow"
-          >
-            Actualizar Propina
-          </button>
-        </form>
-
-        {/* Botones generales */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <button
-            className="bg-ladrillo text-white py-3 rounded-2xl shadow-md"
-            onClick={() => setActiveView("workissues")}
-          >
-            🛠️ Work Issues
-          </button>
-          <button
-            className="bg-notBlack text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/Manager")}
-          >
-            🧠 Manager
-          </button>
-          <button
-            className="bg-indigo-600 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/Inventario")}
-          >
-            📦 Inventario
-          </button>
-          <button
-            className="bg-sky-600 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/MenuPrint")}
-          >
-            🖨️ Menu Print
-          </button>
-          
-          <button
-            className="bg-pink-600 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/VentaCompra")}
-          >
-            💰 Venta / Compra
-          </button>
-          <button
-            className="bg-teal-600 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/Proveedores")}
-          >
-            📇 Proveedores
-          </button>
-        </div>
-
-        {staffFound && (
-          <div>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <button
-                // className="bg-blue-600 text-white py-3 rounded-2xl shadow-md"
-                            className="bg-sky-600 text-white py-3 rounded-2xl shadow-md"
-
-                onClick={() => setActiveView("instance")}
-              >
-                ✏️ Editar Información
-              </button>
-
-
-              <button
-                className="bg-yellow-500 text-white py-3 rounded-2xl shadow-md"
-
-                onClick={() => setActiveView("shift")}
-              >
-                🕒 Turnos
-              </button>
-              <button
-                className="bg-green-500 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/Gastos")}
-              >
-                💵 Gastos
-              </button>
-
-              {staffFound.isAdmin && (
-                <button
-                  className="bg-purple-500 text-white py-3 rounded-2xl shadow-md"
-                  onClick={handleGoToNomina}
-                >
-                  📊 Ver Nómina
-                </button>
-              )}
-
-              {staffFound.isAdmin && (
-                <button
-                  className="bg-purple-500 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/DiaResumen")}
-                >
-                  📆 Ver resumen del día
-                </button>
-              )}
-              {staffFound.isAdmin && (
-                <button
-                  className="bg-purple-500 text-white py-3 rounded-2xl shadow-md"
-            onClick={() => navigate("/MesResumen")}
-                >
-                  📅 Ver resumen del mes
-                </button>
-              )}
+    <PageLayout title="Portal de Staff" loading={loading}>
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Sección de búsqueda de personal */}
+        <ContentCard title="Buscar Personal">
+          <form onSubmit={handleSearch} className="space-y-4">
+            <div className="flex gap-3">
+              <Input
+                type="text"
+                placeholder="Ingrese los primeros 4 dígitos del CC"
+                value={ccInput}
+                onChange={(e) => setCcInput(e.target.value.replace(/\D/g, ""))}
+                className="flex-1"
+                maxLength={10}
+              />
+              <Button type="submit" className="gap-2">
+                <Search size={16} />
+                Buscar
+              </Button>
             </div>
-            {activeView === "instance" && (
-              <StaffInstance staff={staffFound} editable />
+            
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              </div>
             )}
-            {activeView === "shift" && (
-              <StaffShift staffId={staffFound._id} estaffid={staffFound._id} />
-            )}
-          </div>
+          </form>
+        </ContentCard>
+
+        {/* Sección de propinas */}
+        <ContentCard title="Gestión de Propinas">
+          <form onSubmit={handlePropinaSubmit} className="flex gap-3">
+            <Input
+              type="number"
+              min="0"
+              placeholder="Monto de propina"
+              value={propinaInput}
+              onChange={(e) => setPropinaInput(e.target.value)}
+              className="flex-1"
+            />
+            <Button type="submit" variant="secondary" className="gap-2">
+              <DollarSign size={16} />
+              Actualizar
+            </Button>
+          </form>
+        </ContentCard>
+
+        {/* Botones generales del sistema */}
+        <ContentCard title="Acceso al Sistema">
+          <ActionButtonGroup 
+            buttons={systemButtons} 
+            layout="grid" 
+            className="grid-cols-2 md:grid-cols-3"
+          />
+        </ContentCard>
+
+        {/* Panel específico del staff encontrado */}
+        {staffFound && (
+          <ContentCard 
+            title={`Panel de ${staffFound.Nombre || 'Staff'}`}
+            className="border-green-200 dark:border-green-800"
+          >
+            <div className="space-y-4">
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  ✅ Personal encontrado: <strong>{staffFound.Nombre}</strong>
+                  {staffFound.isAdmin && <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">ADMIN</span>}
+                </p>
+              </div>
+              
+              <ActionButtonGroup 
+                buttons={staffButtons} 
+                layout="grid" 
+                className="grid-cols-2 md:grid-cols-3"
+              />
+            </div>
+          </ContentCard>
         )}
 
-        {/* Work issues disponibles siempre */}
+        {/* Vistas específicas */}
+        {activeView === "instance" && staffFound && (
+          <ContentCard title="Editar Información del Personal">
+            <StaffInstance staff={staffFound} editable />
+          </ContentCard>
+        )}
+        
+        {activeView === "shift" && staffFound && (
+          <ContentCard title="Gestión de Turnos">
+            <StaffShift staffId={staffFound._id} estaffid={staffFound._id} />
+          </ContentCard>
+        )}
+
         {activeView === "workissues" && (
-          <StaffWorkIssues staffId={staffFound ? staffFound._id : null} />
+          <ContentCard title="Work Issues">
+            <StaffWorkIssues staffId={staffFound ? staffFound._id : null} />
+          </ContentCard>
         )}
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

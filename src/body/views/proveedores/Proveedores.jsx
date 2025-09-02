@@ -4,6 +4,11 @@ import { getAllFromTable, toggleShowEdit } from "../../../redux/actions";
 import { PROVEE } from "../../../redux/actions-types";
 import { CardGridProveedores } from "@/components/ui/CardGridProveedores";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
+import PageLayout from "../../../components/ui/page-layout";
+import ContentCard from "../../../components/ui/content-card";
+import ActionButtonGroup from "../../../components/ui/action-button-group";
+import { Button } from "@/components/ui/button";
+import { Edit, Users, Plus, Zap } from "lucide-react";
 
 function Proveedores() {
   const dispatch = useDispatch();
@@ -34,39 +39,52 @@ function Proveedores() {
     dispatch(toggleShowEdit());
   };
 
-  // Renderiza el contenido principal basado en el estado (carga, error o éxito)
-  const renderContent = () => {
-    if (loading) {
-      return <div className="text-center mt-10 text-gray-600">Cargando proveedores...</div>;
+  // Botones de acción para el header
+  const actionButtons = [
+    {
+      label: showEdit ? "Desactivar Edición" : "Activar Edición",
+      icon: Edit,
+      onClick: handleToggleShowEdit,
+      variant: showEdit ? "destructive" : "outline"
     }
-    if (error) {
-      return <div className="text-center mt-10 text-red-500 bg-red-100 p-4 rounded-lg">{error}</div>;
-    }
-    return <CardGridProveedores />;
-  };
+  ];
 
   return (
-    <div className="flex flex-col w-screen p-4" style={{ paddingBottom: '120px' }}>
-      <header className="flex justify-between items-center mb-4 flex-wrap gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Gestión de Proveedores</h1>
-        <button
-          onClick={handleToggleShowEdit}
-          className={`px-4 py-2 text-white rounded-md font-semibold transition-colors shadow-sm hover:shadow-md ${
-            showEdit ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
-          }`}
-        >
-          {showEdit ? "🔒 Desactivar Edición" : "✏️ Activar Edición"}
-        </button>
-      </header>
+    <PageLayout 
+      title="Gestión de Proveedores" 
+      actions={<ActionButtonGroup buttons={actionButtons} />}
+      loading={loading}
+    >
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Users className="text-red-500" size={20} />
+            <p className="text-red-700 dark:text-red-300">{error}</p>
+          </div>
+        </div>
+      )}
 
-      {/* Componente para agregar nuevos proveedores */}
-      <AccionesRapidas currentType={PROVEE} />
+      {/* Acciones rápidas para agregar proveedores */}
+      <ContentCard title="Acciones Rápidas" className="mb-6">
+        <AccionesRapidas currentType={PROVEE} />
+      </ContentCard>
 
-      {/* Contenido principal */}
-      <div className="mt-4">
-        {renderContent()}
-      </div>
-    </div>
+      {/* Lista de proveedores */}
+      <ContentCard 
+        title="Lista de Proveedores" 
+        actions={
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <Users size={16} />
+            <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
+          </div>
+        }
+        noPadding
+      >
+        <div className="p-4">
+          <CardGridProveedores />
+        </div>
+      </ContentCard>
+    </PageLayout>
   );
 }
 

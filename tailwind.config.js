@@ -15,18 +15,26 @@ module.exports = {
       },
     },
     extend: {
-      // --- Paleta de Colores Personalizada ---
+      // --- Paleta de Colores Unificada (shadcn/ui + extensiones específicas) ---
       colors: {
-        pureRed: '#ff0000',
-        lilaDark: '#5B7ABB',
-        ladrillo: '#e3a18b',
-        greenish: '#95bcbe',
-        softGrey: '#d8d7d6',
-        notBlack: '#2d2823',
-        cream: '#f9e6c7',
+        // DEPRECATED: Migrar gradualmente estos colores al sistema unificado
+        // Mantener temporalmente para compatibilidad, pero usar con moderación
+        pureRed: '#ef4444', // → Migrar a destructive
+        lilaDark: '#3b82f6', // → Migrar a primary
+        ladrillo: '#f97316', // → Migrar a secondary con orange
+        greenish: '#10b981', // → Migrar a accent con emerald
+        softGrey: '#e5e7eb', // → Migrar a muted
+        notBlack: '#1f2937', // → Migrar a slate-800
+        cream: '#fef7ed', // → Migrar a background variations
         
-        // --- Variables de Tema (Estilo shadcn/ui) ---
-        // Estos colores se definen con variables HSL en tu archivo CSS global.
+        // --- Nueva Paleta Cafetería (Gemini suggestion) ---
+        'cream-bg': '#F5F0E1', // Fondo principal, color crema pálido
+        'sage-green': '#A5B8A1', // Verde principal, para fondos de sección, barras laterales
+        'terracotta-pink': '#E0A996', // Rosa ladrillo, para tarjetas, acentos sutiles
+        'cobalt-blue': '#3A4FDE', // Azul vibrante, para botones de acción (CTAs), iconos, elementos interactivos
+        'light-leaf': '#D9E4D7', // Un verde muy claro para elementos de fondo sutiles
+        
+        // --- Sistema Unificado shadcn/ui ---
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -77,6 +85,9 @@ module.exports = {
         BobbyJones: ['Bobby Jones Regular', 'sans-serif'],
         LilitaOne: ['Lilita One', 'sans-serif'], 
         SpaceGrotesk: ['Space Grotesk', 'sans-serif'],
+        Montserrat: ['Montserrat', 'sans-serif'],
+        PlaywriteDE: ['Playwrite DE Grund', 'cursive'],
+        'sans': ['Playwrite DE Grund', 'Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'], // Playwrite DE como fuente principal
       },
       // --- Tamaños de Fuente Personalizados ---
       fontSize: {

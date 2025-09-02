@@ -4,14 +4,14 @@
 
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  font-family: 'Playwrite DE Grund', 'Montserrat', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 700; /* Bold como peso principal */
   padding: 0;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #374151; /* text-gray-700 for better contrast on cream */
+  background-color: #F5F0E1; /* cream-bg */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -143,5 +143,38 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground; /* Asegura que el fondo y el texto estén bien configurados */
     @apply px-0; /* Asegura que el body no tenga padding horizontal */
+  }
+}
+
+/* Clases de utilidad para Playwrite DE Grund */
+@layer utilities {
+  .font-playwrite-bold {
+    font-family: 'Playwrite DE Grund', cursive;
+    font-weight: 700;
+  }
+  
+  .font-playwrite-semibold {
+    font-family: 'Playwrite DE Grund', cursive;
+    font-weight: 600;
+  }
+  
+  .font-playwrite-medium {
+    font-family: 'Playwrite DE Grund', cursive;
+    font-weight: 500;
+  }
+}
+
+/* Clases globales para textos bold */
+@layer components {
+  p, span, label, li {
+    @apply font-bold;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-SpaceGrotesk font-bold;
+  }
+  
+  button {
+    @apply font-PlaywriteDE font-bold;
   }
 }

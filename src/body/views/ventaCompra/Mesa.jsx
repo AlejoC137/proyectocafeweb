@@ -6,7 +6,7 @@ import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actio
 import Pagar from "./Pagar";
 
 // Íconos de lucide-react para acciones en línea de ítems
-import { PlusCircle, MinusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, MinusCircle, XCircle, BookOpen, Save, CreditCard, Trash2 } from 'lucide-react';
 
 /**
  * Componente final para gestionar una mesa, con formato de moneda local,
@@ -201,8 +201,8 @@ function Mesa({ index, ventaActual, onVentaChange }) {
             <div className="space-y-2">
                 {orderItems.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex gap-2 items-center">
-                        <Button onClick={() => handleRecetaClick(item)} className="w-10 h-10 text-xl bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!item.Receta}>
-                          📕
+                        <Button onClick={() => handleRecetaClick(item)} className="w-10 h-10 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!item.Receta}>
+                          <BookOpen size={20} />
                         </Button>
                         <div className="flex-grow relative">
                             <Input 
@@ -252,14 +252,14 @@ function Mesa({ index, ventaActual, onVentaChange }) {
                 <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalPago)}</p>
             </div>
             <div className="flex gap-2">
-                <Button onClick={handleSubmit} title="Guardar Cambios" className="w-12 h-12 text-2xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled={buttonState !== 'save'}>
-                  {buttonState === 'syncing' ? <div className="h-6 w-6 border-2 border-dashed rounded-full animate-spin border-white"></div> : '💾'}
+                <Button onClick={handleSubmit} title="Guardar Cambios" className="w-12 h-12 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled={buttonState !== 'save'}>
+                  {buttonState === 'syncing' ? <div className="h-6 w-6 border-2 border-dashed rounded-full animate-spin border-white"></div> : <Save size={24} />}
                 </Button>
-                <Button onClick={() => setShowPagarModal(true)} title="Pagar" className="w-12 h-12 text-2xl bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled={buttonState !== 'done'}>
-                  💸
+                <Button onClick={() => setShowPagarModal(true)} title="Pagar" className="w-12 h-12 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled={buttonState !== 'done'}>
+                  <CreditCard size={24} />
                 </Button>
-                <Button onClick={handleEliminar} title="Eliminar Venta" className="w-12 h-12 text-2xl bg-red-600 hover:bg-red-700">
-                  🗑️
+                <Button onClick={handleEliminar} title="Eliminar Venta" className="w-12 h-12 bg-red-600 hover:bg-red-700">
+                  <Trash2 size={24} />
                 </Button>
             </div>
         </div>

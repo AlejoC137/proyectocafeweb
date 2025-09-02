@@ -1,12 +1,13 @@
 import React from "react";
 import { Menu, ShoppingCart, Languages } from "lucide-react"; // Añadido 'Languages' que faltaba
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ENG, ESP } from "../../redux/actions-types";
 import { useDispatch, useSelector } from "react-redux";
 import { setLenguage } from "../../redux/actions";
-
+import laTaza from "@/assets/TAZA.svg";
 export default function TopNav() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   // Se usa el estado de Redux para el idioma
   const currentLeng = useSelector((state) => state.currentLeng);
   const location = useLocation();
@@ -17,6 +18,13 @@ export default function TopNav() {
   const handleLanguageToggle = () => {
     // Despacha la acción para cambiar el idioma en el store de Redux
     dispatch(setLenguage(currentLeng === ESP ? ENG : ESP));
+  };
+
+  /**
+   * Función para navegar a la página de inicio
+   */
+  const handleGoHome = () => {
+    navigate('/');
   };
 
   /**
@@ -83,28 +91,45 @@ export default function TopNav() {
   };
 
   return (
-    <div
-      className="fixed top-0 left-0 font-LilitaOne right-0 h-12 flex items-center text-lg justify-between px-4 border-b-2 bg-white z-50"
-    >
-      <button className="p-2 rounded-md bg-white">
-        <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-      </button>
-      
-      <h1 className="font-LilitaOne text-xl">Proyecto Café</h1>
-      <h1 className="font-bold text-xl">{getDisplayText()}</h1>
-
-      <div className="flex items-center gap-2">
-        {/* Botón para cambiar el idioma */}
-        <button onClick={handleLanguageToggle} className="p-2 rounded-md bg-white flex items-center gap-1 font-semibold">
-          <Languages className="h-5 w-5 font-LilitaOne text-gray-700 dark:text-gray-300" />
-          {/* Se reemplazó 'language' por 'currentLeng' */}
-          {currentLeng === ESP ? 'ENG' : 'ESP'}
+    <div className="fixed top-0 left-0 right-0 bg-cream-bg border-b-2 border-sage-green shadow-md z-50">
+      {/* Primera fila: Logo y controles */}
+      <div className="h-10 flex items-center justify-between px-4">
+        <button className="p-1.5 rounded-lg bg-sage-green/20 hover:bg-sage-green/30 transition-colors">
+          <Menu className="h-5 w-5 text-sage-green" />
+        </button>
+        <div className="flex items-center gap-2">
+  <button 
+          onClick={handleGoHome}
+          className="font-SpaceGrotesk text-lg font-bold text-cobalt-blue hover:text-sage-green transition-colors cursor-pointer flex items-center gap-0"
+        >
+          <img src={laTaza} alt="la taza" className="w-6 h-6 inline" />
+          PC 
         </button>
 
-        <button className="p-2 rounded-md bg-white">
-          <ShoppingCart className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-        </button>
+
+                <div className="h-8 flex items-center justify-center px-4 bg-gradient-to-r from-light-leaf/30 to-transparent">
+        <h1 className="font-SpaceGrotesk font-bold text-sm text-gray-700 truncate">{getDisplayText()}</h1>
       </div>
+        </div>
+      
+        <div className="flex items-center gap-2">
+          {/* Botón para cambiar el isdioma */}
+          <button 
+            onClick={handleLanguageToggle} 
+            className="px-2 py-1 rounded-md bg-terracotta-pink hover:bg-terracotta-pink/80 flex items-center gap-1 font-bold font-PlaywriteDE text-white transition-colors shadow-sm text-xs"
+          >
+            <Languages className="h-3 w-3" />
+            {currentLeng === ESP ? 'ENG' : 'ESP'}
+          </button>
+
+          <button className="p-1.5 rounded-lg bg-cobalt-blue hover:bg-cobalt-blue/80 transition-colors shadow-sm">
+            <ShoppingCart className="h-4 w-4 text-white" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Segunda fila: Información del sitio */}
+
     </div>
   );
 }
