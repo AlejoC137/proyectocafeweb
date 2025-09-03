@@ -27,7 +27,7 @@ const RecetaOptions = () => {
 
   return (
     (<div
-      className="flex flex-col gap-4 bg-gray-50 p-4 rounded-md border border-slate-200 dark:border-slate-800">
+      className="flex flex-col gap-4 bg-gray-50 p-4 rounded-md border border-slate-200">
       <Button onClick={addItem} className="self-start">Añadir Item</Button>
       {recetaItems.map((item, index) => (
         <div key={index} className="flex gap-2">

@@ -228,8 +228,8 @@ function StaffPortal() {
               </select>
             </div>
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mt-2">
-                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-2">
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
           </form>
@@ -240,11 +240,11 @@ function StaffPortal() {
         {staffFound && (
           <ContentCard 
             // title={`Panel de ${staffFound.Nombre || 'Staff'}`}
-            className="border-green-200 dark:border-green-800"
+            className="border-green-200"
           >
             <div className="space-y-4">
-              {/* <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
-                <p className="text-sm text-green-700 dark:text-green-300">
+              {/* <div className="bg-green-50 rounded-md p-3">
+                <p className="text-sm text-green-700">
                   ✅ Personal encontrado: <strong>{staffFound.Nombre}</strong>
                   {staffFound.isAdmin && <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">ADMIN</span>}
                 </p>

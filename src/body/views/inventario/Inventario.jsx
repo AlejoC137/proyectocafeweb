@@ -5,6 +5,8 @@ import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
+import { TableViewInventario } from "@/components/ui/tableViewInventario";
+import { ViewToggle } from "@/components/ui/viewToggle";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
@@ -16,6 +18,7 @@ function Inventario() {
   const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState(ItemsAlmacen);
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
+  const [viewMode, setViewMode] = useState("cards"); // "cards" o "table"
 
   const Menu = useSelector((state) => state.allMenu || []);
   const Items = useSelector((state) => state.allItems || []);
@@ -93,24 +96,41 @@ function Inventario() {
       )}
 
       {/* Contenido principal del inventario */}
-      <ContentCard title={`Listado de ${currentType}`}>
-        {currentType !== MenuItems ? (
-          <CardGridInventario
-            products={filteredItems}
-            category="Grouped"
-            currentType={currentType}
-            showEdit={showEdit}
+      <ContentCard 
+        title={`Listado de ${currentType}`}
+        actions={
+          <ViewToggle 
+            viewMode={viewMode} 
+            onViewModeChange={setViewMode}
           />
+        }
+      >
+        {viewMode === "cards" ? (
+          // Vista de tarjetas (actual)
+          currentType !== MenuItems ? (
+            <CardGridInventario
+              products={filteredItems}
+              category="Grouped"
+              currentType={currentType}
+              showEdit={showEdit}
+            />
+          ) : (
+            <CardGridInventarioMenu
+              products={filteredItems}
+              showEdit={showEdit}
+            />
+          )
         ) : (
-          <CardGridInventarioMenu
+          // Vista de tabla tipo Excel
+          <TableViewInventario
             products={filteredItems}
-            showEdit={showEdit}
+            currentType={currentType}
           />
         )}
       </ContentCard>
 
       {/* Información de estado */}
-      <div className="flex justify-between items-center text-sm text-slate-600 dark:text-slate-400">
+      <div className="flex justify-between items-center text-sm text-slate-600">
         <span>Total de elementos: {filteredItems.length}</span>
         <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
       </div>

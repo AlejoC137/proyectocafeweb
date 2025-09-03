@@ -22,22 +22,22 @@ function Agenda() {
     <PageLayout title="Agenda del Mes">
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center gap-2">
             <Calendar className="text-blue-600" size={20} />
             <div>
-              <p className="text-sm text-blue-600 dark:text-blue-400">Total Eventos</p>
-              <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{totalEventos}</p>
+              <p className="text-sm text-blue-600">Total Eventos</p>
+              <p className="text-2xl font-bold text-blue-800">{totalEventos}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
           <div className="flex items-center gap-2">
             <CalendarDays className="text-green-600" size={20} />
             <div>
-              <p className="text-sm text-green-600 dark:text-green-400">Eventos Hoy</p>
-              <p className="text-2xl font-bold text-green-800 dark:text-green-200">{eventosHoy}</p>
+              <p className="text-sm text-green-600">Eventos Hoy</p>
+              <p className="text-2xl font-bold text-green-800">{eventosHoy}</p>
             </div>
           </div>
         </div>
@@ -49,7 +49,7 @@ function Agenda() {
           {totalEventos > 0 ? (
             <CardGridAgenda products={products} category="Eventos" />
           ) : (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            <div className="text-center py-12 text-slate-500">
               <Calendar size={48} className="mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium">No hay eventos programados</p>
               <p className="text-sm">Los eventos aparecerán aquí cuando se agreguen a la agenda</p>

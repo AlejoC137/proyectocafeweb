@@ -109,12 +109,12 @@ function Home() {
         <div className="space-y-6">
           {/* Campo de entrada JSON */}
           <div>
-            <label className="block text-sm font-bold text-cobalt-blue dark:text-slate-300 mb-2 font-PlaywriteDE">
+            <label className="block text-sm font-bold text-cobalt-blue mb-2 font-PlaywriteDE">
               <Upload className="inline mr-2" size={16} />
               JSON de Receta
             </label>
             <textarea
-              className="w-full p-4 border border-sage-green dark:border-slate-600 rounded-lg resize-none text-sm font-mono bg-white dark:bg-slate-900 min-h-[300px] focus:ring-2 focus:ring-cobalt-blue focus:border-cobalt-blue transition-all shadow-sm"
+              className="w-full p-4 border border-sage-green rounded-lg resize-none text-sm font-mono bg-white min-h-[300px] focus:ring-2 focus:ring-cobalt-blue focus:border-cobalt-blue transition-all shadow-sm"
               value={recetaJsonText}
               onChange={handleInputChange}
               placeholder='Ingrese el JSON de la receta aquí...\n\nEjemplo:\n{\n  "nombre": "Café Latte",\n  "ingredientes": [...],\n  "instrucciones": "..."\n}'
@@ -123,19 +123,19 @@ function Home() {
           
           {/* Mensajes de estado */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex items-center gap-2">
                 <AlertCircle className="text-red-500" size={16} />
-                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             </div>
           )}
           
           {preProcessedData && Array.isArray(preProcessedData) && (
-            <div className="bg-light-leaf dark:bg-green-900/20 border border-sage-green dark:border-green-800 rounded-lg p-4">
+            <div className="bg-light-leaf border border-sage-green rounded-lg p-4">
               <div className="flex items-center gap-2">
                 <CheckCircle className="text-sage-green" size={16} />
-                <p className="text-sm text-gray-700 dark:text-green-300 font-PlaywriteDE font-bold">
+                <p className="text-sm text-gray-700 font-PlaywriteDE font-bold">
                   ✅ Receta procesada exitosamente. {preProcessedData.length} elementos listos para enviar.
                 </p>
               </div>
@@ -143,9 +143,9 @@ function Home() {
           )}
           
           {/* Información de ayuda */}
-          <div className="bg-terracotta-pink/10 dark:bg-blue-900/20 border border-terracotta-pink dark:border-blue-800 rounded-lg p-4">
-            <h3 className="text-sm font-bold text-cobalt-blue dark:text-blue-200 mb-2 font-SpaceGrotesk">💡 Instrucciones:</h3>
-            <ul className="text-xs text-gray-700 dark:text-blue-300 space-y-1 font-PlaywriteDE font-bold">
+          <div className="bg-terracotta-pink/10 border border-terracotta-pink rounded-lg p-4">
+            <h3 className="text-sm font-bold text-cobalt-blue mb-2 font-SpaceGrotesk">💡 Instrucciones:</h3>
+            <ul className="text-xs text-gray-700 space-y-1 font-PlaywriteDE font-bold">
               <li>• Pegue un JSON válido con la estructura de la receta</li>
               <li>• Haga clic en "Procesar Receta" para validar y preparar los datos</li>
               <li>• Una vez procesado, use "Enviar Todas" para guardar en la base de datos</li>

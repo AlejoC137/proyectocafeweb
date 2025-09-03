@@ -10,15 +10,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-cobalt-blue text-white shadow-md hover:bg-cobalt-blue/90 hover:shadow-lg dark:bg-cobalt-blue dark:text-white dark:hover:bg-cobalt-blue/90",
+          "bg-cobalt-blue text-white shadow-md hover:bg-cobalt-blue/90 hover:shadow-lg",
         destructive:
-          "bg-red-500 text-white shadow-md hover:bg-red-500/90 hover:shadow-lg dark:bg-red-900 dark:text-white dark:hover:bg-red-900/90",
+          "bg-red-500 text-white shadow-md hover:bg-red-500/90 hover:shadow-lg",
         outline:
-          "border border-sage-green bg-white shadow-sm hover:bg-sage-green/10 hover:text-sage-green text-sage-green dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200",
+          "border border-sage-green bg-white shadow-sm hover:bg-sage-green/10 hover:text-sage-green text-sage-green",
         secondary:
-          "bg-terracotta-pink text-white shadow-md hover:bg-terracotta-pink/90 hover:shadow-lg dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600",
-        ghost: "hover:bg-sage-green/10 hover:text-sage-green text-gray-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:text-slate-300",
-        link: "text-cobalt-blue underline-offset-4 hover:underline dark:text-blue-400",
+          "bg-terracotta-pink text-white shadow-md hover:bg-terracotta-pink/90 hover:shadow-lg",
+        ghost: "hover:bg-sage-green/10 hover:text-sage-green text-gray-700",
+        link: "text-cobalt-blue underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",

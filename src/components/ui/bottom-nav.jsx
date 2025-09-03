@@ -31,7 +31,7 @@ export default function BottomNav() {
   return (
     <div className="flex flex-col">
       {/* Barra de navegación inferior fija */}
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t-2 border-sage-green shadow-lg dark:bg-slate-950 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t-2 border-sage-green shadow-lg z-50">
         <ul className="h-full flex justify-between items-center">
           {navItems.map(({ icon: Icon, label, color, path }) => (
             <li key={label} className="flex-grow">
@@ -41,8 +41,8 @@ export default function BottomNav() {
                   className={cn(
                     "h-full flex flex-col items-center justify-center transition-all duration-300 ease-in-out font-PlaywriteDE font-bold",
                     location.pathname === path
-                      ? "bg-light-leaf dark:bg-slate-700" // Botón seleccionado: verde claro
-                      : "bg-white dark:bg-slate-900 hover:bg-sage-green/10 dark:hover:bg-slate-800/50" // Botones no seleccionados
+                      ? "bg-light-leaf" // Botón seleccionado: verde claro
+                      : "bg-white hover:bg-sage-green/10" // Botones no seleccionados
                   )}
                   style={{ width: `calc(100vw / (${navItems.length}))` }}
                   onClick={() => handleTabClick(label)} // Handler de clic añadido

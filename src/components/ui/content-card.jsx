@@ -21,14 +21,14 @@ function ContentCard({
   const paddingClass = noPadding ? "" : "p-4 md:p-6";
 
   return (
-    <div className={`relative bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-light-leaf overflow-hidden ${className}`}>
+    <div className={`relative bg-white rounded-xl shadow-lg border border-light-leaf overflow-hidden ${className}`}>
       {/* Decoración sutil de hojas */}
       <CoffeeLeafDecoration position="top-right" size="sm" />
       {/* Header del card si hay título o acciones */}
       {(title || actions) && (
-        <div className="flex items-center justify-between p-4 border-b border-light-leaf dark:border-slate-700 bg-gradient-to-r from-light-leaf/30 to-transparent">
+        <div className="flex items-center justify-between p-4 border-b border-light-leaf bg-gradient-to-r from-light-leaf/30 to-transparent">
           {title && (
-            <h2 className="text-lg font-bold text-cobalt-blue dark:text-white font-SpaceGrotesk">
+            <h2 className="text-lg font-bold text-cobalt-blue font-SpaceGrotesk">
               {title}
             </h2>
           )}

@@ -23,13 +23,13 @@ function PageLayout({
   }
 
   return (
-    <div className={`h-[calc(100vh-4.5rem)] w-screen bg-transparent dark:bg-transparent overflow-auto p-4 md:p-6 ${className}`}>
+    <div className={`h-[calc(100vh-4.5rem)] w-screen bg-transparent overflow-auto p-4 md:p-6 ${className}`}>
       <div className="max-w-screen-2xl mx-auto">
         {/* Header unificado con título y acciones */}
         {(title || actions) && (
           <div className="flex flex-wrap items-center gap-4 mb-6">
             {title && (
-              <h1 className="text-2xl font-bold text-cobalt-blue dark:text-white mr-auto font-SpaceGrotesk">
+              <h1 className="text-2xl font-bold text-cobalt-blue mr-auto font-SpaceGrotesk">
                 {title}
               </h1>
             )}

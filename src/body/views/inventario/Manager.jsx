@@ -148,49 +148,49 @@ function Manager() {
     <PageLayout title="Manager - Centro de Control" actions={headerActions} loading={loading}>
       {/* Quick stats */}
       {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center gap-2">
             <BarChart3 className="text-blue-600" size={20} />
             <div>
-              <p className="text-sm text-blue-600 dark:text-blue-400">Total {stats.label}</p>
-              <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{stats.total}</p>
+              <p className="text-sm text-blue-600">Total {stats.label}</p>
+              <p className="text-2xl font-bold text-blue-800">{stats.total}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
           <div className="flex items-center gap-2">
             <Settings className="text-green-600" size={20} />
             <div>
-              <p className="text-sm text-green-600 dark:text-green-400">Modo edición</p>
-              <p className="text-lg font-bold text-green-800 dark:text-green-200">
+              <p className="text-sm text-green-600">Modo edición</p>
+              <p className="text-lg font-bold text-green-800">
                 {showEdit ? 'Activado' : 'Desactivado'}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
           <div className="flex items-center gap-2">
             <Zap className="text-purple-600" size={20} />
             <div>
-              <p className="text-sm text-purple-600 dark:text-purple-400">Acciones rápidas</p>
-              <p className="text-lg font-bold text-purple-800 dark:text-purple-200">
+              <p className="text-sm text-purple-600">Acciones rápidas</p>
+              <p className="text-lg font-bold text-purple-800">
                 {showAccionesRapidasActividades ? 'Visibles' : 'Ocultas'}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+        <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
           <div className="flex items-center gap-2">
             {currentType === Staff && <Users className="text-amber-600" size={20} />}
             {currentType === WorkIsue && <Wrench className="text-amber-600" size={20} />}
             {currentType === Procedimientos && <FileText className="text-amber-600" size={20} />}
             {currentType === MenuItems && <UtensilsCrossed className="text-amber-600" size={20} />}
             <div>
-              <p className="text-sm text-amber-600 dark:text-amber-400">Categoría activa</p>
-              <p className="text-lg font-bold text-amber-800 dark:text-amber-200 capitalize">
+              <p className="text-sm text-amber-600">Categoría activa</p>
+              <p className="text-lg font-bold text-amber-800 capitalize">
                 {currentType}
               </p>
             </div>
@@ -209,7 +209,7 @@ function Manager() {
       <ContentCard 
         title={`Listado de ${currentType}`}
         actions={
-          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
             {currentType === Staff && <Users size={16} />}
             {currentType === WorkIsue && <Wrench size={16} />}
             {currentType === Procedimientos && <FileText size={16} />}
@@ -223,7 +223,7 @@ function Manager() {
           {stats.total > 0 ? (
             renderGrid()
           ) : (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            <div className="text-center py-12 text-slate-500">
               {currentType === Staff && <Users size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === WorkIsue && <Wrench size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === Procedimientos && <FileText size={48} className="mx-auto mb-4 opacity-50" />}

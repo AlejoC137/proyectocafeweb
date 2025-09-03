@@ -114,7 +114,7 @@ export function RegisterFormComponent() {
           ¿Ya tienes una cuenta?{" "}
           <a
             href="/login"
-            className="text-slate-900 hover:underline dark:text-slate-50"
+            className="text-slate-900 hover:underline"
           >
             Inicia sesión
           </a>

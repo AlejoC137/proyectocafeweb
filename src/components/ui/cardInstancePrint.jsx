@@ -43,7 +43,7 @@ export function CardInstancePrint({ product, isEnglish }) {
       </div>
       <CardContent className="p-0 flex flex-col justify-between text-gray-900 font-light">
         <div className="flex justify-between items-center">
-          <h3 className="text-10pt truncate  border-b   border-black  dark:border-slate-800 w-full font-bold font-custom font-SpaceGrotesk">
+          <h3 className="text-10pt truncate  border-b   border-black w-full font-bold font-custom font-SpaceGrotesk">
             {isEnglish ? product.NombreEN : product.NombreES}
           </h3>
           <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>

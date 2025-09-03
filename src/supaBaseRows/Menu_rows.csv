@@ -1,0 +1,2074 @@
+NombreES,NombreEN,Precio,DescripcionMenuES,DescripcionMenuEN,TipoES,TipoEN,SubTipoES,SubTipoEN,DietaES,DietaEN,CuidadoES,CuidadoEN,Estado,Foto,Receta,_id,GRUPO,PRINT,SUB_GRUPO,Order,Comp_Lunch
+Pepino Relleno de Pollo,,22000,,,,,,,,,,,Activo,,,00e6b2e5-bd50-44e8-a707-732f502e2d05,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""lunes"",
+    ""fecha"": ""2025-09-01""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema de ahuyama"",
+    ""descripcion"": ""Suave y reconfortante crema casera de ahuyama.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Pepino relleno de pollo"",
+    ""descripcion"": ""Fresco pepino relleno con una deliciosa preparación de pollo desmechado.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": ""Chips de plátano"",
+    ""descripcion"": ""Láminas de plátano crujientes y doradas.""
+  },
+  ""ensalada"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo del día"",
+    ""descripcion"": ""Refrescante jugo natural para acompañar tu almuerzo.""
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""llevar"",
+      ""notas"": ""sin sopa""
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""señora"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""tatiana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""señora"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""sin sopa""
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""señora"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""teresita"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""teresita"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""señora perro"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""evyatar"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    }
+  ]
+}"
+Sánduche de huevo,Egg sanwich,20000,"Pan de masa madre con huevo revuelto,  mayo-picante, tocino ahumado  y queso mozzarella","Sourdough bread with scrambled egg, spicy mayo, smoked bacon and mozzarella cheese",Desayuno,Breackfast,Salado,Salty,Carnico,Meat,Picante,Spice,Activo,,1e1a3e07-0f04-4adc-b706-f12df09b323d,03cbb93b-ed79-4846-9935-50f11c6bd8a6,DESAYUNO,true,DESAYUNO_SALADO,,
+Bombom,Bombom,7000,Doble espresso con leche condensada,Double espresso with condensed milk,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=12bitzHA54OYSnBFvVWS0pC0tZUrxIh7h&sz=w1000-h1000,306b473f-85bc-40f5-a1c1-77ea4ed577ca,042d6434-f65c-48f1-b053-79f16a2db42c,CAFE,true,,,
+Adición Pollo,Add Chicken,8000,,,Adición,Sides,,,,,,,Activo,,d104fd94-0540-466b-8d1d-b19cce69fc43,0560a532-e3a7-4c46-aed0-efbca05e413f,ADICIONES,true,ADICIONES_COMIDAS,,
+"Sánduche de pollo ",Chiken sandwich,22000,"Pan de masa madre, pechuga de pollo a la plancha, salsa de ajo, tomate fresco, rúgula y acompañado de nachos","Sourdough bread, grilled chicken breast, garlic sauce, fresh tomato, rugula and side of nachos",Sanduches,Sandwitch,Salado,Salty,Carnico,,NA,NA,Activo,https://drive.google.com/thumbnail?id=14jauOCvNYO2HUNV3d9kaBjZMKVSMtG_3&sz=w1000-h1000,a2dd8bef-8e45-4a0c-a957-672bbe5f6ae8,056cf3b1-c18d-439b-b05d-74e583525903,TARDEO,true,,,
+Adicion Aguacate,Add Avocado,6000,,,Adición,Sides,,,,,,,Activo,,ffaf45b8-2d47-4a27-ab46-14787858c8a4,05b20215-537d-44b9-81b2-2c6608d528ad,ADICIONES,true,ADICIONES_COMIDAS,,
+Costilla BBQ,,22000,,,,,,,,,,,Activo,,,07827e2b-af1d-4ba9-a908-2de0a92a1025,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""martes"",
+    ""fecha"": ""2025-09-02""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de verduras"",
+    ""descripcion"": ""Una reconfortante sopa casera con un mix de verduras frescas.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Costilla BBQ"",
+    ""descripcion"": ""Tierna costilla de cerdo bañada en una deliciosa salsa BBQ agridulce.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": "" Arroz blanco"",
+    ""descripcion"": ""Arroz blanco suelto.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Puré de papa"",
+    ""descripcion"": ""Cremoso puré de papa nativa.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada de Cogollo, Pepino y semillas de girasol"",
+    ""descripcion"": ""Fresca ensalada con cogollos europeos y pepino cohombro y semillas de girasol.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de Sandía Limón"",
+    ""descripcion"": ""Una combinación ultra refrescante de sandía dulce y limón ácido.""
+  }
+}"
+Chocolate caliente,Hot chocolate,9000,"Espumoso chocolate en leche, con un toque de panela y chai","Foamy chocolate in milk, with a touch of panela and chai",Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=12k8hWeRU0BRQKAW-yq1N0l-gB_j-JT7b&sz=w1000-h1000,70aa12b3-483e-4c7d-bfff-3a8b0ba53615,083ac46f-23d3-45e7-8821-1d664249982a,BEBIDAS,true,BEBIDAS_CALIENTES,,
+Tinto de Verano,,0,,,,,,,,,,,Inactivo,,d02165be-e1c5-4d16-9628-673948dc0e07,0c6a6571-1cf1-4e35-98d2-18fa20b74ee9,BEBIDAS,,,,
+Cold brew clásico,Classic cold brew,9000,"Infusión de café molido a temperatura ambiente, servido con hielo","Room temperature steeped coffee, served with ice",Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=17j2qiTUKzW8cgKP1PqJqS9DOVSHU_lx1&sz=w1000-h1000,43f61af8-3f23-4dfe-ba81-10e133ba5a18,0de8ddc9-7377-43c9-992a-8a1494ba95fa,CAFE,true,CAFE_METODOS,,
+Affogatto con espuma de café,Coffee foam affogato,10000,Helado de vainilla cubierto de espuma de café,Vanilla ice cream topped with coffee foam,Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=15K-o7N3LFh-Oviyc_rjc6IoOjrhqeB4p&sz=w1000-h1000,0cc41787-80d0-4610-b9fa-d5e1a06a029e,0f31bc29-2357-4251-9ca6-dcaf95f9ce4a,CAFE,false,CAFE_METODOS,,
+Soda limón & romero,Lemon & rosemary soda,7000,Soda con limón tahití y romero macerado,Soda with Tahitian lemon and macerated rosemary,Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Inactivo,https://drive.google.com/thumbnail?id=14QbAOiTVGkSva9qwpKej8Es766a4T41e&sz=w1000-h1000,,14ae1d05-a150-46a6-b036-465aca144b9b,REPOSTERIA,,,,
+Agua en Botella Con Gas,Bottlered Water With Gas,3500,,,Bebidas,Drinks,Frío,Cold,,,,,Activo,,,15cb8ed7-ea6a-4f79-a1ef-7589abdcf53e,BEBIDAS,,,,
+Adicion Arepa,Add Arepa,3000,,,Adición,Sides,,,,,,,Activo,,,17f1446c-08f5-419e-9e78-26586ebeb14b,ADICIONES,true,ADICIONES_COMIDAS,,
+Té chai latte,"Chai Tea Latte ",10000,Té chai en leche espumada espolvoreado con canela,Chai tea in frothed milk sprinkled with cinnamon,Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=171fATH58EPwz6YE8IDlWJfxlz7gQ7dPh&sz=w1000-h1000,cba05045-135f-46fd-9d74-1c5496ccba1e,1adde2ad-b028-4bcb-a89b-c3dc7704332d,BEBIDAS,true,,,
+"Bowl de yogurt griego, granola, chocolate y nueces","Greek yogurt bowl, granola, chocolate & walnuts",20000,"Yogurt griego artesanal servido con granola, chocolate, nueces y frutas de temporada","Artisanal greek yogurt served with granola, chocolate, walnuts & seasonal fruits",Desayuno,Breackfast,Dulce,Sweet,Vegetarino,Vegeterian,Nueces,Walnuts,Activo,https://drive.google.com/thumbnail?id=12b_UrnrSx2Z92N3K6HO1HLJ9qKG0cv2v&sz=w1000-h1000,,1f4dd3e0-85de-4514-80d3-ed5e88242c1c,DESAYUNO,true,DESAYUNO_DULCE,,
+Palito de Queso,"Cheese Stick ",8000,"Palito de queso fresco, servido con mermelada de frutas de la casa.","Fresh cheese stick, served with house-made fruit jam.",Adición,Sides,,,,,,,Activo,,55b9f6c5-3091-4ad7-88f3-2465ff080a7d,205c9730-8e4b-4d57-a077-329daacb0399,PANADERIA,true,PANADERIA_REPOSTERIA_SALADA,,
+Club colombia,Club colombia,6000,"Cervezas club dorada, club negra","Club dorada, Club Negra beers",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13N2KT3mrGWKaR567myGVCX7RObjeT2ro&sz=w1000-h1000,50ab11c1-4191-4e9a-a608-78d35dec7230,215cfda7-e6ad-4df9-bd9c-1d3ec25c362d,ENLATADOS,true,,,
+Carne Desmechada,,22000,,,,,,,,,,,Activo,,,219c7124-369a-4a2b-84e0-a539274025ac,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""viernes"",
+    ""fecha"": ""2025-09-05""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de Tortilla"",
+    ""descripcion"": ""Sabrosa sopa con trocitos de tortilla frita.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Carne Desmechada (Cascara)"",
+    ""descripcion"": ""Carne cascara, tierna y cocinada lentamente hasta desmechar.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con Papa"",
+    ""descripcion"": ""Una combinación contundente de arroz blanco con trozos de papa.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Maduro con Queso"",
+    ""descripcion"": ""El balance perfecto de dulce y salado: plátano maduro horneado con queso costeño.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada de Rúgula y Tomate"",
+    ""descripcion"": ""Ensalada con el sabor intenso de la rúgula, tomate fresco y un aderezo de vinagre balsámico.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de Piña"",
+    ""descripcion"": ""Jugo tropical y refrescante de piña fresca para terminar la semana.""
+  }
+}"
+Guandolo flor de Jamaica,Hibiscus flower guandolo,7000,"Bebida tradicional a base de panela, limón y naranja, con jarabe de flor de Jamaica","Tradicional drink made with panela, lemon and orange, with hibiscus flower syrup",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13bXCkZB_WzZ41JWqGQeIep9v2zkAMbxr&sz=w1000-h1000,0105e8db-ac17-44fe-b48c-65bb0db517af,27062f04-7583-49a5-8c12-dab8456e8e1c,BEBIDAS,,,,
+POLLO_BECHAMEL,,22000,,,,,,,,,,,Activo,,,27565556-e1f5-4ff6-b23f-ff4e2efcbcbb,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""martes"",
+    ""fecha"": ""2025-08-26""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema de espinaca "",
+    ""descripcion"": ""De la granja de Juan ""
+  },
+  ""proteina"": {
+    ""nombre"": ""Pollo a la bechamel "",
+    ""descripcion"": ""Pechuga, en salsa bechamel con brócoli ""
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con habichuela "",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": ""Chips de papas "",
+    ""descripcion"": ""Finas y crocantes ""
+  },
+  ""ensalada"": {
+    ""nombre"": ""De lechuga "",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": ""De fruta fresca "",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Federico"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Luces"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Martina"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""2 Santos"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""2 Santos"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""Tati"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""Andres"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""Mesa Grande"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""Amix Old"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""Amix Old"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""Joven"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""Aurelio"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 15,
+      ""nombre"": ""Extras"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 16,
+      ""nombre"": ""Extras "",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Desechable para Comida,Disposable for Food,2000,,,,,,,,,,,,,,27c2aa0b-4468-4419-89c9-863849bb2be1,ADICIONES,,ADICIONES_COMIDAS,,
+Chorizo y Mote,Chorizo & Mote,19000,"Arepa de Mote con Aguacate, Chorizo criollo y pico de gallo",Mote Arepa with Avocado farmers chorizo and pico de gallo,Desayuno,Breackfast,Salado,Salty,Carnico,Meat,NA,NA,Activo,https://drive.google.com/thumbnail?id=13xzpKD4PTi5-WzAIdg3LS8lpDBD7EeH1&sz=w1000-h1000,52bd9ee4-ac6f-4997-b266-ea61e3858647,27d110b0-b685-42eb-aa68-f1aac6115ceb,DESAYUNO,true,DESAYUNO_SALADO,,
+Tinto,Tinto,4500,,,,,,,,,,,Activo,,f6b22292-c67e-4876-b098-64d7aaf12f9c,28bd5c5d-f134-456c-8bef-56c00407ca0a,CAFE,true,,,
+Alfajor,Alfajor,6000,Sánduche de galletas suaves relleno de dulce de leche,Soft cookie sandwich filled with caramel spread,Postres,Deserts,Dulce,Sweet,NA,NA,NA,NA,Inactivo,https://drive.google.com/thumbnail?id=12BTi-KVzIyHeg7oKG3s6qI5HGUShkGQw&sz=w1000-h1000,,2bd8ce2f-5e56-4357-bb95-dff719a7c841,REPOSTERIA,,,,
+Affogato con vino de café,"Coffee wine affogato ",10000,Helado de vainilla bañado en vino de café,Vanilla ice cream bathed in coffee wine,Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,,79c7b41f-1ae1-4912-bde8-bda38a300643,2d21e926-b97c-4eff-ab2c-9db24cb905a9,CAFE,,,,
+Latte espuma de café,Coffee foam latte,10000,Merengue de café con leche fría,Coffee merangue with cold milk,Café,Coffee,,,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=145pVTlR7ztzWhgBn3TSTaTSP-lq81yFW&sz=w1000-h1000,1edf9b5c-e6db-4764-8194-2fee75fb1543,2ff185df-51a3-484a-8f03-aea3973878fa,CAFE,true,CAFE_METODOS,,
+POLLO_CRISPY CON MIEL MOSTAZA,,22000,,,,,,,,,,,Activo,,,31bcc769-7afd-4d35-9445-55d948f5e702,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""jueves"",
+    ""fecha"": ""2025-08-21""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de pasta"",
+    ""descripcion"": """"
+  },
+  ""proteina"": {
+    ""nombre"": ""Pollo Crispy con Miel Mostaza"",
+    ""descripcion"": ""Apanado con panko y con mostaza Djon""
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con ajonjolí"",
+    ""descripcion"": ""Ligeramente tostado""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Chips de platano verde"",
+    ""descripcion"": ""Con Mayo-ShackShuka""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Mix de lechuga, Zanahoria y Zuccini"",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutas naturales"",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Federico"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Tattoo"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Mauricio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""903""
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""tataiana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""martina"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""señor pollo"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""señor pollo"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""sin sopa""
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""señora"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""ben"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""negro"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Adicion Sirope,Add Syrope,4000,,,Adición,Sides,,,,,,,,,,3215690d-f6c8-432e-8fca-974b37b05744,ADICIONES,,,,
+Adicion Leche Almendras,Add Almont Milk,2000,,,Adición,Sides,,,,,,,Activo,,,322a5ab2-bc86-4e0d-8f6a-d6362bdc869a,ADICIONES,true,ADICIONES_BEBIDAS,,
+Cold brew naranja & panela,Orange & panela cold brew,12500,"Infusión de café molido a temperatura ambiente, servido con un jarabe de naranja y panela y hielo","Room temperature steeped coffee, served with orange and panela syrup and ice",Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13IuduxjnKz4MMIim-v1To_KsJsaBx0aK&sz=w1000-h1000,4fecdb7d-e371-457b-91c4-6c96faf0d8c9,36258094-727d-4f92-9c4a-abd653dd4b0b,CAFE,true,,,
+Adicion Sopa,Add Soup,6000,,,,,,,,,,,,,,3633592f-fea2-41b2-ab32-1a3b3efb5958,ADICIONES,true,ADICIONES_COMIDAS,,
+Adicion Queso Mozzarella,Add Mozzarella Cheese,4000,,,Adición,Sides,,,,,,,Activo,,,366bf5aa-7f5e-4aa7-abc5-08141d74f615,ADICIONES,true,ADICIONES_COMIDAS,,
+Prensa francesa,French press,7000,"Cuerpo denso, amargor leve y acidez baja","Dense body, slight bitterness and low acidity",Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=16hV8G7r31zZfAG10idTUUA3a2fH4cTZX&sz=w1000-h1000,fa7716d0-f911-43d2-af39-2c98e1c77a77,3a8d5b74-d98d-4c9d-a5a0-616c1fef370b,CAFE,true,CAFE_METODOS,,
+Adicion Baileys,Add Baileys,5000,,,,,,,,,,,Activo,,,3ad4a0db-be58-47b9-b2e6-c14555362060,ADICIONES,true,ADICIONES_BEBIDAS,,
+RES_MUCHACHO SUDADO,,22000,,,,,,,,,,,Activo,,,3d6f69df-472c-4c32-8c2d-8f3b13ad2156,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""lunes"",
+    ""fecha"": ""2025-08-25""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema de ahuyama"",
+    ""descripcion"": ""Con semillas de calabaza tostadas.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Muchacho sudado"",
+    ""descripcion"": "" Res cocinado lentamente en una rica salsa gravy.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con coco"",
+    ""descripcion"": ""Delicioso arroz con el toque dulce y caribeño del coco, hecho en casa.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Yuca Fritas"",
+    ""descripcion"": ""Crocante por fuera, suave por dentro.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada fresca del día"",
+    ""descripcion"": ""Vinagreta de romero ""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutos amarillos"",
+    ""descripcion"": ""Ligeramente dulce""
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": ""Pollo a la plancha "",
+    ""descripcion"": ""Pechuga ""
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""lucia"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""karen"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""andres"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""tatiana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""tatiana"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""Kate 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""kate 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""kate 2"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""mauricio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""Juan Gabriel"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Brioche 660g,Brioche 660g,0,,,,,,,,,,,Activo,,,3f0adea1-575e-481d-a1ec-8d1ad990b8ff,PANADERIA,true,PANADERIA_REPOSTERIA_SALADA,,
+Americano,Americano,6000,Doble espresso más agua,Double espresso base plus water,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000,29b92e76-3d68-4e38-a814-f841ea6e411d,3f5d73af-70a9-4ce2-862c-bf8caf450c99,CAFE,true,CAFE_ESPRESSO,2,
+Lasagna: Carne o Pollo,Lasagna: Meat or Chicken,26000,,,,,,,,,,,Inactivo,,,4081e595-809f-48ca-9930-081a67c2cccb,TARDEO,,,,
+Torta de banano y chocolate,Banana & chocolate cake,12000,"Textura cremosa de banano y chocolate, acompañada de nueces picadas","Creamy texture of banana and chocolate, accompanied by chopped nuts",Postres,Deserts,Dulce,Sweet,Vegetarino,Vegeterian,Nueces,Walnuts,Inactivo,https://drive.google.com/thumbnail?id=153U_H5x5NfnQybSlbyRxt9ALG_J2YkD5&sz=w1000-h1000,,425d2ed0-3297-436f-bdb1-19f026686058,REPOSTERIA,,,,
+Cold brew leche,Milk cold brew,12500,"Infusión de café molido a temperatura ambiente, servido con leche y hielo","Room temperature steeped coffee, served with milk and ice",Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=17O-41BGVIrnYg6TNuiXwEf-9djuG8WrL&sz=w1000-h1000,197da459-ce20-49e4-aa07-ab0aac7352da,42ae275f-db4d-47fd-a939-c2a5ee48071c,CAFE,,,,
+Jugo de Naranja,Orange Juce,9200,Recién exprimido,"Flesh squeezed ",,,,,,,,,Activo,,130fffe0-a93c-406a-b13a-01f5942383ca,46095652-70b7-4f61-862b-a48b94ae89f3,BEBIDAS,true,BEBIDAS_FRIAS,,
+Americano frío,Iced americano,6000,Base de espresso más agua y hielo,Espresso base plus water and ice,Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=129dEVlWMuaJ-xQbvl8vFmGqnQUKjbWD6&sz=w1000-h1000,6decaecd-16eb-413f-a3bb-6630838581b0,47a84533-92a4-4627-87eb-4b6f396f76e9,CAFE,,,,
+Espresso,Espresso,5500,Bebida base con gran concentración de café,Base drink with a high concentration of coffee,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=1342eqjZjKk7TIzOzS63WUu37Ukb4fBGz&sz=w1000-h1000,296b20c8-d5c4-45e8-81b6-f795fd9b3bdb,481d6823-29ea-4a98-bb02-89e7b3feac97,CAFE,true,CAFE_ESPRESSO,1,
+Adición Hogao,Add Hogao,3000,,,Adición,Sides,,,,,,,Activo,,74dc2d14-84bf-493d-9565-7e41967973e1,4cc2a3e9-4c26-4bdf-b2b7-3f83efd609fc,ADICIONES,true,ADICIONES_COMIDAS,,
+Brioche 45g,Brioche 45g,2000,,,,,,,,,,,Activo,,,4ff3738c-6429-45d6-8c8e-3b67f8766e36,PANADERIA,true,PANADERIA_REPOSTERIA_SALADA,,
+Tostadas serrano,Serrano toast,20000,"Base de brioche tostado en caramelo,  jamón serrano, queso holandés y cebolla caramelizada","Toasted caramelized brioche bread base, serrano ham,  dutch cheese, and caramelized onion",Sanduches,Sandwitch,Salado,Salty,Carnico,Meat,NA,NA,Inactivo,,,514f7b89-00e8-41e7-bff7-506fef8cdc9a,TARDEO,,,,
+Pie de manzana,Apple pie,16000,"El mejor pie de manzana verde de Medellín, con helado de vainilla","The best green apple pie of Medellín, with vanilla ice cream",Postres,Deserts,Dulce,Sweet,Vegetarino,Vegeterian,NA,NA,Activo,"https://drive.google.com/thumbnail?id=1Az6kUgHQb4qMKXnPBBSDYqVCBB1kzrPt&sz=w1000-h1000
+",aa307c3d-74f4-46c6-8707-637b3b9ac587,516125e1-a24e-43f1-bfe1-d789bdfda492,REPOSTERIA,,,,
+Pan de chocolate,Chocolate bread,6000," Portion of brioche bread filled with dark chocolate",Porcion de pan brioche relleno de chocolate oscuro,Panes,Breads,,,,,,,Inactivo,https://drive.google.com/thumbnail?id=13G2G_6bTpCGvLoNE4ALma0t8CjZ9uTFN&sz=w1000-h1000,73ae57ca-2dc4-4fd2-9058-c47cfde8ef58,5206cdd7-47b0-4d8d-b516-aa47685f28cd,REPOSTERIA,,,,
+Pancakes frutos rojos,Red berries pancakes,20000,"Esponjosos pancakes rellenos con frutos rojos, servidos con salsa de mantequilla y sirope.","Fluffy pancakes filled with red berries, served with butter sauce and syrup.",Desayuno,Breackfast,Salado,Salty,NA,NA,,NA,Activo,,c126eba2-7e86-43ac-aaa8-9046e727d01e,5325405e-0589-421c-bfe7-0194e71d655d,DESAYUNO,true,DESAYUNO_DULCE,,
+CERDO_CAZUELA DE FRIJOLES VERDES,,,,,,,,,,,,,Activo,,,53416997-32d1-4daf-9379-e21c2dafeece,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""sábado"",
+    ""fecha"": ""2025-08-23""
+  },
+  ""entrada"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""proteina"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""carbohidrato"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""ensalada"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Leandra"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Leandra"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Leandra"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": ""Sin Arroz""
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""Federico"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""P.Seco"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""P.Seco"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""Yolanda"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""Madre E Hijo"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""Madre E Hijo"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""Antonina"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""GGH 1"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 15,
+      ""nombre"": ""GGH 2"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 16,
+      ""nombre"": ""Raul"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Refrigerio Institucional,,25800,,,,,,,,,,,Inactivo,,,53b53ac0-b31b-46e2-b5b1-4be1872c3cff,TARDEO,,,,
+Croisant Jamon y Queso,Croisant Ham and Cheese,12500,,,,,,,,,,,Activo,,d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a,59af62cd-9011-4c1c-b4bd-a966c1a584ba,PANADERIA,true,PANADERIA_REPOSTERIA_SALADA,,
+Cold brew té verde,Green tea cold brew,12500,"Infusión de café molido a temperatura ambiente, servido con té verde y hielo","Room temperature steeped coffee, served with green tea and ice",Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=171FJablEMuRbM_yqlnipX6tfHC8kFYPh&sz=w1000-h1000,45d9df11-afb2-4e35-8c38-55b978535183,5c3736db-f757-4f50-893d-b8915f84f027,CAFE,,CAFE_METODOS,,
+Adición de Vainilla,Add Vanilla,2000,,,,,,,,,,,Activo,,,5d4396f0-2768-4080-a5a3-309a2e12ae73,ADICIONES,true,ADICIONES_BEBIDAS,,
+Tostadas francesas,French toasts,22000,"Pan de masa madre bañado en leche, caramelo y especias, con crema de queso y frutas","Sourdough bread soaked in milk, caramel, and spices, with cream cheese and fruits",Desayuno,Breackfast,Dulce,Sweet,Vegetarino,Vegeterian,NA,NA,Activo,https://iili.io/KF2uFqP.webp,,61116301-6ab8-4092-a4f8-db91adb1bd05,DESAYUNO,true,DESAYUNO_DULCE,,
+Té de clitoria agustina,Clitoria agustina tea,7000,"Té caliente mágico que cambia de color ",Hot magical color-changing tea,Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Inactivo,https://drive.google.com/thumbnail?id=1ExRgpW_DmxT6nfjY7Gb_i1Bl9NmqOQNB&sz=w1000-h1000,,61c88574-81ec-4c26-9fcd-235f2019f6a6,BEBIDAS,,,,
+Carne Desmechada,,22000,,,,,,,,,,,Activo,,,64e8e9c7-cf44-4dca-936f-ae1fb719b6d4,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""viernes"",
+    ""fecha"": ""2025-09-05""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de Lentejas"",
+    ""descripcion"": ""Sopa tradicional y nutritiva de lentejas, llena de sabor.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Carne desmechada"",
+    ""descripcion"": ""Jugosa y tierna carne de res desmechada, sazonada a la perfección.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz blanco"",
+    ""descripcion"": ""El acompañante perfecto, arroz blanco suelto y bien cocido.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Maduro con queso"",
+    ""descripcion"": ""Dulce plátano maduro horneado con queso derretido.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada fresca"",
+    ""descripcion"": ""Una mezcla de vegetales frescos para equilibrar tu plato.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutas"",
+    ""descripcion"": ""Bebida refrescante preparada con frutas frescas de temporada.""
+  }
+}"
+RES_ALBONDIGAS CRISPY RELLENAS DE QUESO.,,22000,,,,,,,,,,,Activo,,,664098e1-4ff5-4ca3-9428-d6b726b85e70,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""viernes"",
+    ""fecha"": ""2025-08-29""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa minestrone"",
+    ""descripcion"": ""Clásica sopa italiana con variedad de vegetales frescos.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Albóndigas crispy rellenas de queso"",
+    ""descripcion"": """"
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz blanco"",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": ""Puré de plátano maduro"",
+    ""descripcion"": """"
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada con mango y mix de verduras"",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutas"",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Gloria"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Tatinana"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Andres"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Pollo seco 1 "",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Pollo seco 2"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""Pollo seco 3"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""Lialiana 1"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""Lialiana 2"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""Vanessa 1"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""Vanessa 2"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""Marleny 1 "",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""Marleny 2 "",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""Sin Lechuga"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""Joven"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 15,
+      ""nombre"": ""Señor"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 16,
+      ""nombre"": ""Rusa"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 17,
+      ""nombre"": ""Posada"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 18,
+      ""nombre"": ""Posada"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 19,
+      ""nombre"": ""Evyatar"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 20,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ],
+  ""proteina_opcion_2"": {
+    ""nombre"": ""Pollo a la Plancha"",
+    ""descripcion"": ""Pechuga""
+  }
+}"
+Sánduche capresse,Capresse sandwich,20000,"Tomate fresco, pesto, queso mozzarella de búfala y parmessano, acompañado de nachos","Fresh tomato, pesto, buffalo burrata ,  and parmesan, served with nachos",Sanduches,Sandwitch,Salado,Salty,Carnico,Meat,NA,NA,Activo,,,677fe3f2-1041-444c-87cf-561f2f53a49a,TARDEO,,,,
+Adicion Michelado,Add Michelado,3000,,,,,,,,,,,Activo,,,67fee953-f7bd-4a79-bb08-3269c18889eb,ADICIONES,true,ADICIONES_BEBIDAS,,
+Té verde limón & miel,"Green tea, lemon & honey ",6000,"Té verde en agua, con un chorrito de limón y miel","Green tea in water, with a bit of lemon and honey",Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=158AQt6SuIuycPbJAqDi7FI5qbOuqE40Z&sz=w1000-h1000,4b651cd2-dff0-4cf9-aec4-de4f8d64dbc0,6cb22f56-357b-477e-9486-8827fafe60ed,BEBIDAS,,,,
+Soda naranja & panela,Orange & panela soda,7000,Soda con jarabe de naranja y panela,Soda with orange and panela syrup,Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=14MWV9fGeLvAAVhkV9dYfcwt0_Kbw8emm&sz=w1000-h1000,1b64755d-79b4-4166-ac6d-a61a9fd7772d,6dc204f5-e399-4d54-9a1c-0d88a11c65b4,BEBIDAS,,,,
+Arepa chocolo doble queso,Doble Cheese Chocolo Arepa,12000,,,,,,,,,,,Activo,,,76306b74-7491-406d-bc7a-7d6672a440f1,ADICIONES,true,ADICIONES_COMIDAS,,
+Latte en hielo de espresso,Ice espresso latte,8500,Hielo de espresso y leche espumosa,Espresso ice and foaming milk,Café,Coffee,,,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13ix9vBSZNWqID9N0SkqwAJ1WVdtJF-qT&sz=w1000-h1000,af19c51e-daeb-49de-b71b-14f693e32126,7a34d638-a931-4f55-ac74-f03689302a56,CAFE,,,,
+CERDO_CAÑON DE CERDO RELLENO,,22000,,,,,,,,,,,Activo,,40e05b6b-f0bf-42af-82df-9e4cb99fce33,7be9649f-8912-43f3-a2c5-965ab84d521f,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""martes"",
+    ""fecha"": ""2025-08-19""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de Cebolla Francesa"",
+    ""descripcion"": ""Cebolla blanca camerlizada con caldo de carne""
+  },
+  ""proteina"": {
+    ""nombre"": ""Cañon relleno de frutos."",
+    ""descripcion"": ""Frutos secos , manzana y especias""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con Arveja"",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": ""Pure de papa"",
+    ""descripcion"": ""Con romero y tomillo""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Vinagreta de naranja y mostaza"",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutas"",
+    ""descripcion"": """"
+  },
+  ""Opción 2"": {
+    ""nombre"": ""Pollo a la plancha"",
+    ""descripcion"": ""Pechuga""
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Amazon 1"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Amazon 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Tatiana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""Portero Lotto"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Calentao,Calentao,20000,"Plato tradicional paisa con fríjoles, arroz blanco, maduritos picados y huevo frito","Traditional Paisa dish with beans, rice, diced ripe plantains, and fried egg",Desayuno,Breackfast,Salado,Salty,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=12KbuVn1mmYabMi4gZYkbx1Zx2IuePGqx&sz=w1000-h1000,9b99834b-60d5-457c-9d9f-14e548262f87,7daac8c0-9850-4fa0-8b78-1119073f752d,DESAYUNO,true,DESAYUNO_SALADO,,
+Rollo de canela,Cinnamon roll,7000,"Pan dulce relleno de canela, glaseado con azúcar y canela","Sweet bread filled with cinnamon, glazed with sugar and cinnamon",Postres,Deserts,Dulce,Sweet,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=14vp7k3GN0Ja4TEGy_wlfXUIHRxznYABB&sz=w1000-h1000,,7e2f513a-aa00-4f58-8705-273d3b728a90,PANADERIA,true,PANADERIA_REPOSTERIA_DULCE,,
+Pollo Bechamel con Brócoli,,22000,,,,,,,,,,,Activo,,,7eb29cd8-ef0b-4cfd-8a08-74bc9fdb3868,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""domingo"",
+    ""fecha"": ""2025-09-07""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de calabacín"",
+    ""descripcion"": ""Una crema suave y reconfortante de calabacín fresco, ideal para iniciar.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Pollo bechamel con brócoli"",
+    ""descripcion"": ""Trozos de pechuga de pollo jugosos en una cremosa salsa bechamel con brócoli.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con zanahoria"",
+    ""descripcion"": ""Arroz blanco suelto con un toque de color y dulzura de la zanahoria.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Papa criolla frita"",
+    ""descripcion"": ""Pequeñas papas criollas doradas y crujientes por fuera, suaves por dentro.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada fresca"",
+    ""descripcion"": ""Una mezcla de vegetales frescos y aderezo de la casa.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutas"",
+    ""descripcion"": ""Refrescante jugo natural elaborado con una selección de frutas frescas.""
+  }
+}"
+V60,V60,7000,"Taza limpia, cuerpo balanceado y acidéz pronunciada","Light cup, balanced body and pronounced acidity",Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=16ga-U3tWUT2dlKQUq3GTGHdDg9mlOnut&sz=w1000-h1000,a9309ddc-c3ac-46c1-bb28-78995220ef0a,7f1451be-3750-4659-8c72-831d4114a7da,CAFE,true,CAFE_METODOS,,
+"Pilsen, águila & poker","Pilsen, águila & poker",5000,Cervezas,Beers,Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000,09d85a75-bf25-4c21-a556-9b392f433a7d,81c86670-2865-43d4-90d8-531dd07b656e,ENLATADOS,true,,,
+Huevos revueltos pericos,Scrambled eggs pericos,19000,Huevos revueltos con cebolla y tomate Acompañados de arepa blanca con quesito,"Scrambled eggs with onion and tomato, side of white arepa with cheese",Desayuno,Breackfast,Salado,Salty,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=14BNxp-LhToaEoeSJoZoSKkUSwMJq9JK-&sz=w1000-h1000,1b50551d-4cdd-4f59-afcb-4e2644742a9c,81f0ece1-869a-4daa-8048-68876f8c7a56,DESAYUNO,true,DESAYUNO_SALADO,,
+Pepino Relleno,,22000,,,,,,,,,,,Activo,,,848932b9-060f-4063-99bb-8eac9292686a,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""jueves"",
+    ""fecha"": ""2025-09-25""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema Ahuyamín"",
+    ""descripcion"": ""Una suave y reconfortante crema de ahuyama casera.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Pepino Relleno"",
+    ""descripcion"": ""Pepino fresco relleno de una sabrosa mezcla, una opción ligera y deliciosa.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Chips Plátano Verde"",
+    ""descripcion"": ""Láminas de plátano verde crujientes, el snack perfecto.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada"",
+    ""descripcion"": ""Ensalada fresca con lechuga, zuquini, pimentón y tomate.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de Lulo con Hierbabuena"",
+    ""descripcion"": ""Refrescante y exótica combinación de lulo con un toque de hierbabuena.""
+  }
+}"
+Coca Cola 400 ml,Coca Cola 400 ml,5500,,,,,,,,,,,Activo,,,84f16c49-618e-489c-900b-83eceb90006d,ENLATADOS,true,,,
+Torta Red Velvet,Red velvet cake,12000,Deliciosa torta de red velvet con chispas de chocolate y crema de queso,Delicious red velvet cake with chocolate Chips and cream cheese frosting,Postres,Deserts,Dulce,Sweet,NA,Vegetarino,NA,NA,Inactivo,"https://drive.google.com/thumbnail?id=1AzDQkCLa53CPuZJb-kzOcYPPElTokI2H&sz=w1000-h1000
+",,875b2807-33f0-4851-a5dd-e47c37e1541d,REPOSTERIA,,,,
+Agua en Botella Sin Gas,Bottled Water No gas,3000,,,Bebidas,Drinks,Frío,Cold,,,,,Activo,,,89f999a0-c7e7-466e-bf9a-da0a3d1ec15d,BEBIDAS,,,,
+Bowl de yogurt & frutos rojos,Greek yogurt bowl & red fruits,20000,"Yogurt griego artesanal servido con frutos rojos macerados, semillas de chía y frutas de temporada","Artisanal greek yogurt served with macerated red berries, chia seeds, and seasonal fruits",Desayuno,Breackfast,Dulce,Sweet,Vegetarino,Vegeterian,NA,NA,Activo,,,8aa48cf4-8384-470d-b91a-05793a8f4071,DESAYUNO,true,,,
+Pastel Borinqueso,,7000,,,,,,,,,,,Activo,,10f57fd8-6125-4747-a25d-15691ea22526,8d72a7a9-6d01-439f-8027-f56febb13834,PANADERIA,,,,
+Torta de Almojábana,Almojabana Cake,14000,"Amasijo de almojábana de queso y guayaba, servida con crema de queso","Amalgam of cheese and guava almojábana, served with cream cheese",Postres,Deserts,Dulce,Sweet,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=15-Aa4OJnf_l63JSIbBem4LZmitEqHiog&sz=w1000-h1000,,8debd1ac-54e4-4e63-93aa-73821cd01254,REPOSTERIA,true,,,
+Galletas,Cookies,6000,Chocolate / Avena / RedVelvet,Chocolate / Oatmeal / RedVelvet,Postres,Deserts,,,,,,,Activo,https://drive.google.com/thumbnail?id=13bozO9EXdWgndtpKKBYv5mIbhe5qUDO2&sz=w1000-h1000,,8f3a5514-a3ca-4c96-8636-497e4b306ee6,REPOSTERIA,true,PANADERIA_REPOSTERIA_DULCE,,
+Pancakes chocolate,Chocolate pancakes,20000,"Esponjosos pancakes rellenos de chocolate, con nueces, salsa de mantequilla y sirope.","Fluffy pancakes filled with chocolate, with walnuts, butter sauce, and syrup",Desayuno,Breackfast,Dulce,Sweet,Vegetarino,Vegeterian,Nueces,Walnuts,Activo,https://drive.google.com/thumbnail?id=14JcfQaY0mijvv75z0wFpQNlS-S_el8bM&sz=w1000-h1000,ac3af2b5-e415-4578-9571-e0bcbc5e3f79,9352bc9a-7628-4e33-be57-cf9c3c9f540d,DESAYUNO,true,DESAYUNO_DULCE,,
+Frappé,"Frappe ",12000,"Bebida con hielo a partir de café Sabores clásico, vainilla, chocolate y caramelo","Iced coffee beverage Classic, vanilla, chocolate, and caramel flavors",Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13gCh9NzFCS6z4jwMNEhqI1w3ngyTn_lu&sz=w1000-h1000,b999774e-473d-460a-992b-db7f0b674d6a,99611378-cd50-44a1-8dbf-580af18e50ef,BEBIDAS,true,,,
+Brioche 90g,Brioche 90g,4000,,,,,,,,,,,Activo,,,9a27b4eb-6e5c-4539-94ba-e57777b9f1e0,PANADERIA,true,PANADERIA_REPOSTERIA_SALADA,,
+Adicion Tocino,Add Bacon,7000,,,Adición,Sides,,,,,,,Activo,,,9b302b35-ece6-4e94-af7c-ac31b90b06c8,ADICIONES,true,ADICIONES_COMIDAS,,
+Sánduche pepperoni,Pepperoni sandwich,20000,"Peperoni, Queso, Chipottle, Tomate Confí y Cebolla  Caramelizada, acompañado de nachos","Pepperoni, cheese, chipotle, confited tomato, and  caramelized onion, served with nachos",Sanduches,Sandwitch,Salado,Salty,Carnico,Meat,Picante,Spice,Inactivo,https://drive.google.com/thumbnail?id=14jt0hinWH04q6Tl_RvcTXnWhRU1QDfrW&sz=w1000-h1000,,9da4f94f-5860-4b3d-9f0a-68f61bf8c73c,TARDEO,false,,,
+Adicion de Huevos,Add Eggs,7000,,,Adición,Sides,,,,,,,Activo,,cc177900-8686-476e-af5b-127e23809e37,a1609a23-8005-4740-ab63-d5ce623fc082,ADICIONES,true,ADICIONES_COMIDAS,,
+Aromáticas,"Herbal teas ",3000,"Hierbabuena, cidrón, frutos rojos, verdes y tropicales, jengibre-naranja y cúrcuma, y calma y equilibrio","Peppermint, lemon verbena, red berries, green fruits, tropical fruits, ginger-orange-turmeric, and calm-balance",Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000,751ce050-0832-4408-ba99-8b2af4ddd35c,a205c246-c8a3-4702-8329-59fb7318b79f,BEBIDAS,true,BEBIDAS_CALIENTES,,
+Guandolo clásico,Classic guandolo,7000,"Bebida tradicional a base de panela, limón y naranja","Traditional drink made with panela, lemon and orange",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13OeOQgBuN7ZhTZBouOcwTB8IUp4o4M6h&sz=w1000-h1000,1309580c-bce2-434a-8e90-57bc2762c4ff,a25a7ed6-5fde-4c0d-907f-e9f777660f8b,BEBIDAS,true,BEBIDAS_FRIAS,,
+Brownie de chocolate,Chocolate brownie,12000,Delicioso brownie servido con ganash de chocolate y un toque de canela,Delicious brownie served with chocolate ganache and a touch of cinnamon,Postres,Deserts,Dulce,Sweet,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=12ZMCbpxIWruyIHbvaA0uVB_KTH8cLPLM&sz=w1000-h1000,,a56546f5-004d-4820-bfc5-7a9846c0777d,REPOSTERIA,,,,
+Adición de Caramelo,Add Caramel,4000,,,,,,,,,,,Activo,,,a7440f37-3258-4aa8-81ff-f6b6479f2548,ADICIONES,true,ADICIONES_BEBIDAS,,
+Café Opera,Opera Cafe,16000,,,,,,,,,,,Inactivo,,3a6c6a24-7ef5-4466-84d3-af8ead28c582,a8973ba1-aac2-4f78-b6ba-2814c35551c0,CAFE,,,,
+Limonada,Lemonade,7000,"Bebida a base de limón, agua y azúcar  Sabores natural, mango y fresa","Beverage made with lemon, water, and sugar Flavors include natural, mango, and strawberry",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=1456sNWJXWZioBRBAIf5TQL1QQQQw25GV&sz=w1000-h1000,c0d53cb9-07e5-4dac-8d31-88742943f357,aba114e8-4ad4-4f70-8e12-6907bb9568a5,BEBIDAS,true,BEBIDAS_FRIAS,,
+Cañón con Manzana y Caramelo,,22000,,,,,,,,,,,Activo,,,ac83c4f0-ee60-4886-990a-308317281ad1,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""miércoles"",
+    ""fecha"": ""2025-09-03""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema de cebolla"",
+    ""descripcion"": ""Clásica y deliciosa crema de cebolla.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Cañón con Manzana y Caramelo"",
+    ""descripcion"": ""Lomo de cerdo en una exquisita salsa agridulce de manzana y caramelo.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con cilantro"",
+    ""descripcion"": ""Arroz aromatizado con cilantro fresco.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Tortilla de Zanahoria."",
+    ""descripcion"": ""tortilla de zanahoria con queso costeño.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada de Mango con Quinua"",
+    ""descripcion"": ""Una ensalada tropical y nutritiva con trozos de mango y quinua.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de Maracuyá"",
+    ""descripcion"": "" Refrescante Jugo de maracuyá.""
+  }
+}"
+Infusiones,Infusions,6000,"Frutos verdes deshidratados, frutos rojos macerados y  frutos tropicales deshidratados","Dried green fruits, macerated red berries, and dried tropical fruits",Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Activo,,7cc069a9-1eb9-4328-aca1-9e94dad52d3e,acb03a26-f7bf-41ac-8632-17f302dbe4f7,BEBIDAS,true,BEBIDAS_CALIENTES,,
+Pollo a la Miel Mostaza,,22000,,,,,,,,,,,Activo,,,af206155-66ba-4c1b-95ad-0e3bf592b55a,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""jueves"",
+    ""fecha"": ""2025-09-04""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de Lentejas"",
+    ""descripcion"": ""Nutritiva y clásica sopa de lentejas, llena de sabor casero.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Pollo a la Miel Mostaza"",
+    ""descripcion"": ""Jugosa pechuga de pollo en una salsa agridulce y equilibrada de miel y mostaza.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con Zanahoria"",
+    ""descripcion"": ""Arroz blanco suelto con un toque de color y dulzor de la zanahoria.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Papa Rellena de Pollo"",
+    ""descripcion"": ""Deliciosa papa rellena con pollo, un clásico que no falla.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada con Aguacate"",
+    ""descripcion"": ""Una ensalada fresca y cremosa con trozos de aguacate.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Agua Fresca de Jamaica y Naranja"",
+    ""descripcion"": ""Bebida refrescante y natural con la combinación de flor de jamaica y naranja.""
+  }
+}"
+Espresso escarchado,Frosted espresso,6000,Espresso sencillo más hielo de espresso,Single espressi plus espresso ice cubes,Café,Coffee,Frío,Cold,NA,NA,NA,NA,Inactivo,,05984570-9579-4a77-b031-8afceb180a1a,aff12c03-7c60-47dd-a9e4-65d125d79bc2,CAFE,,,,
+Tostadas parmesano,Parmesan toasts,20000,"Base de pan de masa madre, mix de rúgula, queso parmesano, reducción de balsámico, nueces y queso crema","Sourdough base bread, arugula mix, parmesan cheese, balsamic reduction, walnuts and cream cheese",Sanduches,Sandwitch,Salado,Salty,Vegano,Vegano,Nueces,Nueces,Inactivo,https://drive.google.com/thumbnail?id=15Wg5Ao-ogsoaTnnWXdlCH1pJr_FvYu92&sz=w1000-h1000,,b102368c-2058-490d-8c24-51f3f74b6188,TARDEO,,,,
+RES_POSTA CARTAGENERA,,22000,,,,,,,,,,,Activo,,,b196e803-603f-4bfa-b36d-b4c4927f481c,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""miércoles"",
+    ""fecha"": ""2025-08-20""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema Zanahoria"",
+    ""descripcion"": ""Cremosa, con puerro crocante. ""
+  },
+  ""proteina"": {
+    ""nombre"": ""Posta cartagenera"",
+    ""descripcion"": ""en salsa de panela y especias.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz blanco"",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": ""Patacón "",
+    ""descripcion"": ""Con Hogao y Guacamole.""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada"",
+    ""descripcion"": ""Lechuga, Tomate y Cebolla""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo"",
+    ""descripcion"": ""Refrescante jugo de fruta natural del día.""
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": ""Pollo a la Plancha"",
+    ""descripcion"": ""Pechuga""
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Sergio peru"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Sergio peru"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Lucia"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Aurelio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Andres"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""Pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""tatiana"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""pareja 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""pareja 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""juliana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""cura"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""porteria"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    }
+  ]
+}"
+Malteada de café,Coffee milkshake,19000,Bebida a base de helado de vainilla y café,Coffee and vanilla ice cream beverage,Café,Coffee,Frío,Cold,NA,NA,NA,NA,Inactivo,https://drive.google.com/thumbnail?id=140XCuz_FedXqGOOgqxeTfTs4FlXrZQ-b&sz=w1000-h1000,1e81978a-d926-4621-a564-fc542ea8f896,b283afb8-82a5-4c8d-9d58-9c634cfd1b7a,CAFE,true,,,
+Pan de masa madre,Slice sourdough,2500,,,Adición,Sides,,,,,,,Activo,,b67e5df7-e6ca-43cf-a9d1-190a694fd613,c638568b-ab88-4b7d-ae04-461649f03519,ADICIONES,true,ADICIONES_COMIDAS,,
+Moca-chino,Moca-chino,9000,"Doble espresso con cocoa, chocolate y leche espumada","Double espresso with cocoa, chocolate, and frothed milk",Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13yPlTyfxbM6neFVsf90ETCIAYG1u85eM&sz=w1000-h1000,b6d2d8f0-79e5-4158-b3a4-ffbf3a486b90,c6aad56a-f421-4fa9-a789-a394bff64282,CAFE,true,CAFE_ESPRESSO,5,
+Huevos shakshukas,Shakshuka eggs,20000,Huevos fritos en salsa shakshuka  (aderezo  a base de pimentón y tomate) queso y pan de masa madre tostado,Fried eggs in shakshuka sauce (dressing based on paprika and tomato) cheese and toasted sourdough bread,Desayuno,Breackfast,Salado,Salty,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000,df879ac8-8d81-4381-8194-438d3b20062b,cb4cba82-764f-4b71-8d19-33fd93453ec2,DESAYUNO,true,DESAYUNO_SALADO,,
+Madre Monte,Madre Monte,16000,,,,,,,,,,,Activo,,644c2747-4853-4bd2-92d1-7901800bfd50,cfdf9080-b0a1-443b-a77a-e11c254aca1a,ENLATADOS,true,,,
+Capuchino,Capuchino,7500,Doble espresso con leche espumada,Double espresso with frothed milk,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000,60f5928f-6218-459e-a024-ef2ae4ca4e1e,d22d532e-df54-4401-908e-117c96b70e38,CAFE,true,CAFE_ESPRESSO,3,
+Guandolo jengibre,Ginger guandolo,7000,"Bebida tradicional a base de panela y limón, con un toque de jengibre","Traditional beverage made with panela and lemon, with a hint of ginger",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13bWSkystLXwKHS5f9SWsa1zl8O0Ot2HV&sz=w1000-h1000,e93c1a5e-d771-4d1b-b48c-38df99aebb2f,d2873d9f-d193-49bb-b641-43ce98027d4f,BEBIDAS,,,,
+Jugos de frutas,Fruit juices,6000,"Jugos recién exprimidos de naranja, mora, lulo, maracuyá, mango y fresa","Freshly squeezed juices of orange, blackberry, lulo, passion fruit, mango, and strawberry",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000,8d9aad32-242c-4809-854d-fb92d4e2d939,d4d5ff7d-9f00-4199-b9b7-cab08bc3d6d4,BEBIDAS,true,BEBIDAS_FRIAS,,
+Soda frutos rojos,Red berry soda,7000,"Soda con macerado cacero de arándanos, fresas y moras","Soda with homemade jam of blueberries, strawberries, and blackberries",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=14RhblcK4pH4xrL741hQgMWj0nOrfx2ei&sz=w1000-h1000,d12f9886-5f4f-4da8-ba4c-675c1dc41192,d52dd990-3498-43e6-bf8e-3fbce01d65df,BEBIDAS,true,,,
+Aeropress,Aeropress,7000,"Taza ligera, cuerpo complejo, acidez y dulzor balanceados","Light cup, complex body, balanced acidity and sweetness",Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=16feLXEMiSc__A4qX6_-LsWMCnELyjWn7&sz=w1000-h1000,d116d943-ec72-4561-a6cf-d79fbd918832,d602b111-812d-4fdc-9fca-ee163aed8e61,CAFE,true,CAFE_METODOS,,
+Macchiato,Macchiato,8000,Doble espresso con una pequeña cantidad de leche espumosa encima,A double espresso with a small amount of frothed milk on top,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=1445xVw3VTpOui1kFTDv5NP0x9Dx0j82w&sz=w1000-h1000,bf901d28-d594-489a-ba80-6e5aee7ce5dd,d72823c1-0a36-4491-bbd9-240191d8fb25,CAFE,true,CAFE_ESPRESSO,,
+Tostadas de aguacate y huevo,Avocado toast and egg,22000,"Base masa madre, Aguacate cremoso, cebolla encurtida y huevo frito","Sourdough base, Creamy Avocado, Pickled Onion, and Fried Egg",Sanduches,Sandwitch,Salado,Salty,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=14vwqTnm3e9iRQ-FiZ9kTk7R_0UNWsikZ&sz=w1000-h1000,22cae1e2-39bd-4121-a9c5-453057d06b92,d9f463dd-585b-487a-831c-5a5ae5b8a159,TARDEO,true,,,
+Almuerzo,Lunch,22000,Inicia a las 12:30 - Cambia todos los días.,Starts at 12:30 - Changes every day,,,,,,,,,Activo,,,daf9f710-9715-4b93-b23e-d5196097ed3d,TARDEO,true,TARDEO_ALMUERZO,,
+Té negro arándanos & miel,"Black tea, blueberries & honey",6000,Té negro en agua con infusión de arándanos y miel,Black tea steeped in blueberry-infused water with honey,Bebidas,Drinks,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=15F5g3mxrrlCx2a9bdYk5y7sU9yR9Y9mD&sz=w1000-h1000,23180fc2-c339-405d-9bcd-6180e50d7142,dbc87b6e-cbd9-4b0b-af8b-d85aed8716dd,BEBIDAS,,,,
+Test,Test,,,,,,,,,,,,Inactivo,,,dcd00e54-766b-4bc1-8512-a1d0dbe45e69,TARDEO,false,,,
+Caro-chino,Caro-chino,9000,Espresso sencillo con caramelo y leche espumada,Single espresso with caramel and frothed milk,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,,496dba66-0625-4449-aa61-c3cfe67d0b87,dd0411ca-a74d-4d8f-acfd-e1f80196beed,CAFE,,,,
+"RES_PASTA BOLOGNESA ",,22000,,,,,,,,,,,Activo,,,df33bbe7-26c7-432e-aeab-6baf1fb8da4c,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""viernes"",
+    ""fecha"": ""2025-08-22""
+  },
+  ""entrada"": {
+    ""nombre"": ""Caldo de Costilla "",
+    ""descripcion"": """"
+  },
+  ""proteina"": {
+    ""nombre"": ""Boloñesa"",
+    ""descripcion"": ""En salsa de tomate.""
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": ""Pollo a la Plancha"",
+    ""descripcion"": ""Pechuga""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Pasta Fetuccini"",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": ""Pan de masa madre con queso"",
+    ""descripcion"": """"
+  },
+  ""ensalada"": {
+    ""nombre"": ""Vegetales salteados con balsámico"",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": ""De frutas."",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Liliana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Andres"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Perrito 1"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Perrito 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Aurelio 1"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""Aurelio 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""Rocio 1"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""Rocio 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""Luces"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""Moderatto 1"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""Moderattto 2"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""Tatiana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Adición de arroz,Add Rice,5000,,,,,,,,,,,,,,dfbeda8b-6e3d-4014-8f08-399cae9f31b4,ADICIONES,true,,,
+Cena 05072025,,0,,,,,,,,,,,Inactivo,,,e2dfb242-8e65-481b-9736-d175fadab450,TARDEO,false,,,
+Tortilla española,Spanish tortilla,18000,"Confitura de papa nativa y cebolla, con chimichurri y chorizo español","Confiture of native potato and onion, with chimichurri and Spanish chorizo",Desayuno,Breackfast,Salado,Salty,Carnico,Meat,NA,NA,Inactivo,https://drive.google.com/thumbnail?id=14wrftOkQ17XZqtSGnbWkZmlpFsTaPkuj&sz=w1000-h1000,2033bfcd-028f-4473-b630-0d642d98d483,e33021f4-579b-40ca-be83-273297acf620,TARDEO,,,,
+POLLO_PECHUGA FLORENTINO,,22000,,,,,,,,,,,Activo,,,e36e8213-06b0-4eb7-956c-e4a51cd182a2,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""jueves"",
+    ""fecha"": ""2025-08-28""
+  },
+  ""entrada"": {
+    ""nombre"": ""Crema de coliflor"",
+    ""descripcion"": ""Suave y caramelizada, con chips crujientes.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Pollo florentino"",
+    ""descripcion"": ""Con espinaca y parmesano.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con zuccini "",
+    ""descripcion"": ""Salteado y Fresco""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Berenjenas apanadas"",
+    ""descripcion"": ""Crocantes""
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada rusa"",
+    ""descripcion"": ""Con papa, zanahoria y arveja. ""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de frutas"",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Andres"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""tatiana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""evyatar"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Alejandra"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""teresita"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""tersita"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""rosado"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""pareja adultos"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""Pareja adultos"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""susana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""susana"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""susana "",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 15,
+      ""nombre"": ""Liliam"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Torta chocolate & moras,Blackberry & Chocolate Cake,16000,"Esponjoso pastel de chocolate con relleno de moras, chuncks de chocolate y cobertura de chocolate","Fluffy devil´s chocolate cake with blackberry filling, chocolate chunks and chocolate frosting",Postres,Deserts,Dulce,Dulce,Vegetarino,Vegetarino,,,Activo,https://lh3.googleusercontent.com/d/1Az_n0fWrBcwbB2CAtjD0l0Gfp0Dyz6ke=w1000-h1000,b0fc742d-c32a-426c-8351-030b208cbe2f,e4765b62-7051-4ce3-a197-cfed67e18115,REPOSTERIA,true,PANADERIA_REPOSTERIA_DULCE,,
+CERDO_CAZUELA DE FRIJOLES VERDES,,22000,,,,,,,,,,,Activo,,b6fdf631-7c18-468b-9751-778e02c00473,e53082de-23e8-4fd3-8e8d-0afb13c47c65,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""sábado"",
+    ""fecha"": ""2025-08-30""
+  },
+  ""entrada"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""proteina"": {
+    ""nombre"": ""Tocino frito"",
+    ""descripcion"": """"
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz Blanco"",
+    ""descripcion"": """"
+  },
+  ""acompanante"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""ensalada"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""bebida"": {
+    ""nombre"": """",
+    ""descripcion"": """"
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Omaira"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""SIN ARROZ""
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""Rocio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""Federico"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""Amix Perros"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""Amix Perros"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""Amix Bebidas"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""Amix Bebidas"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""Ana C PC"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""Ana C PC"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""Juan Gabriel"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Espresso doble,Double Espresso,0,,,,,,,,,,,Activo,,4aa37801-444d-46d4-916f-980cbef10778,e5458a1a-438e-4354-b374-17683512fff8,CAFE,,,,
+Tarta Basca,Cheese Cake Basco,14000,Con mermelada de frutas de temporada.,With jam of seasonal fruits.,,,,,,,,,Activo,,57f54f7d-949c-4e7d-bdb0-e42633b115da,e75e5906-4eb0-4f0a-91d4-5e5688a6278c,REPOSTERIA,true,PANADERIA_REPOSTERIA_DULCE,,
+"Pancakes huevo & tocino ",Eggs & bacon pancakes,22000,"Esponjosos pancakes rellenos de tocino, servidos con huevo revuelto, salsa de mantequilla y sirope .","Fluffy pancakes filled with bacon, served with scrambled egg, butter sauce and syrup.",Desayuno,Breackfast,Salado,Salty,Carnico,Meat,NA,NA,Activo,https://drive.google.com/thumbnail?id=14Dz-EuTtNG9_9ettdtBAYwc3Wh0syvCY&sz=w1000-h1000,cac69545-6096-4fb0-837e-84b27dd8acd8,e7b93687-81a8-4a83-bdaf-863b073b2082,DESAYUNO,true,DESAYUNO_SALADO,,
+Café ópera,Opera coffee,12000,"Bebida con helado de vainilla, salsa de chocolate, vino de café y cobertura de crema chantilly","Vanilla ice cream beverage with chocolate sauce, coffee wine, and whipped cream topping",Café,Coffee,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=12Qbq6_qXGoWkPJpw8ZecFkFgVp0g3LED&sz=w1000-h1000,0763ba63-2a0f-47aa-b365-4425316cc052,ea4ee334-1e51-4939-9656-f1fb477e10e7,CAFE,,,,
+Kombucha per té,Kombucha per té,12000,"Refrescante bebida fermentada, con contenido de probióticos","Refreshing fermented beverage, with probiotic content",Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,,dec87572-de1f-431c-a001-9fd6f5334d38,eca8f0f2-dfab-4702-a642-195df99ebb36,ENLATADOS,true,,,
+Huevos revueltos 2 quesos,Scrambled eggs & 2 cheeses,19000,"Huevos revueltos con queso mozzarella  y Queso crema, acompañados de arepa blanca","Scrambled eggs with mozzarella cheese  and cream cheese, acccompanied by white arepa",Desayuno,Breackfast,Salado,Salty,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=14BNxp-LhToaEoeSJoZoSKkUSwMJq9JK-&sz=w1000-h1000,63c583d3-b920-4700-b53a-7cabd79cf4a1,ee77f9b7-fdea-441b-b94b-acac5201ec17,DESAYUNO,true,,,
+Soda clásica,Classic soda,4000,Soda clásica con hielo,Classic soda served with ice,Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=14UQhR7gqAd2wV5B7L0PhXccAv7Le4_3u&sz=w1000-h1000,c2d562ae-e4c9-4927-a053-c2b4c5e08806,ef95421c-8f25-43aa-b3cd-71ba458dcd83,BEBIDAS,true,,,
+Torta de zanahoria,Carrot cake,13000,Torta cubierta de crema de queso y relleno arequipe,Cake covered in cream cheese and filled with arequipe,Postres,Deserts,Dulce,Sweet,Vegetarino,Vegeterian,NA,NA,Activo,https://drive.google.com/thumbnail?id=14yqDXLBGP5s7g87lQIj9iTa7R2MFUcjB&sz=w1000-h1000,e52d2c8e-11a4-4199-a80b-bb001cb6f0d3,efb643b8-35be-4835-bd85-7964a5379352,REPOSTERIA,true,PANADERIA_REPOSTERIA_DULCE,,
+Latte,Latte,8000,Base de espresso acompañado con mucha leche,Espresso based with lots of milk,Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000,fef3ffe8-e787-4acf-a3e0-9f288aeb2247,f2a90bbe-1ca3-4537-9747-171066130ca6,CAFE,true,CAFE_ESPRESSO,4,
+Torta de limón,Lemon cake,12000,Torta esponjosa de limón cubierta de glaseado dulce,Fluffy lemon cake topped with sweet glaze,Postres,Deserts,Dulce,Sweet,NA,NA,NA,NA,Inactivo,https://drive.google.com/thumbnail?id=15OEGbOGsO36qsoNkmdApM0f-Pe9mGIUb&sz=w1000-h1000,,f335a915-cfd8-47fd-879d-ad3bb0d19f89,REPOSTERIA,false,,,
+Desayuno americano,American breakfast,20000,"Dos huevos fritos, tocino ahumado, pan tostado y queso","Two fried eggs, smoked bacon, toasted bread, and cheese",Desayuno,Breackfast,Salado,Salty,Carnico,,NA,NA,Activo,https://drive.google.com/thumbnail?id=137jfKGoAACkBcl4953S_-9mdl-NVxK3t&sz=w1000-h1000,ea57e97f-cd6e-48bd-996d-d60aaf0522e4,f4878bdf-2cf3-4b07-ac88-f2ee782d88bb,DESAYUNO,true,DESAYUNO_SALADO,,
+Chai-chino,Chai-chino,10000,Espresso sencillo con té chai y leche espumada,"Single espresso, with chai tea and frothed milk",Café,Coffee,Caliente,Hot,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=12nkdUz6emTsC01ke8kKUlpAzUIUIqzZo&sz=w1000-h1000,f5e91b9e-3b8f-444e-9b26-8d39dc608e3c,f8ff1f7d-29bd-4ec5-98e1-2f131988fa7f,BEBIDAS,,,,
+CERDO_CARNITAS,,22000,,,,,,,,,,,Activo,,,f94625f8-2120-4d77-ac82-563d7f921f46,TARDEO,false,TARDEO_ALMUERZO,,"{
+  ""fecha"": {
+    ""dia"": ""miércoles"",
+    ""fecha"": ""2025-08-27""
+  },
+  ""entrada"": {
+    ""nombre"": ""Sopa de frijol verde"",
+    ""descripcion"": ""Más tinta que frijol.""
+  },
+  ""proteina"": {
+    ""nombre"": ""Carnitas de cerdo"",
+    ""descripcion"": "" Estilo mexicano, marinadas  con achiote y naranja.""
+  },
+  ""carbohidrato"": {
+    ""nombre"": ""Arroz con maíz"",
+    ""descripcion"": ""Arroz blanco tradicional cocinado con granos de maíz dulce.""
+  },
+  ""acompanante"": {
+    ""nombre"": ""Nachos con guacamole"",
+    ""descripcion"": """"
+  },
+  ""ensalada"": {
+    ""nombre"": ""Ensalada Pico de gallo"",
+    ""descripcion"": "" Tomate, cebolla, cilantro y un toque de rábano.""
+  },
+  ""bebida"": {
+    ""nombre"": ""Jugo de Mango"",
+    ""descripcion"": """"
+  },
+  ""proteina_opcion_2"": {
+    ""nombre"": ""Pollo a la plancha"",
+    ""descripcion"": ""Pechuga""
+  },
+  ""lista"": [
+    {
+      ""order"": 1,
+      ""nombre"": ""Lucia"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 2,
+      ""nombre"": ""federico"",
+      ""option"": 1,
+      ""pagado"": false,
+      ""donde"": ""llevar"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 3,
+      ""nombre"": ""luces"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 4,
+      ""nombre"": ""luces"",
+      ""option"": ""2"",
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 5,
+      ""nombre"": ""luces"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 6,
+      ""nombre"": ""andres"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""sin sopa""
+    },
+    {
+      ""order"": 7,
+      ""nombre"": ""yolanda"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 8,
+      ""nombre"": ""pareja bebe"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 9,
+      ""nombre"": ""pareja bebe"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 10,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 11,
+      ""nombre"": ""pareja"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 12,
+      ""nombre"": ""trio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""sin sopa""
+    },
+    {
+      ""order"": 13,
+      ""nombre"": ""trio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": ""sin sopa""
+    },
+    {
+      ""order"": 14,
+      ""nombre"": ""trio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 15,
+      ""nombre"": ""mauricio"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 16,
+      ""nombre"": ""señoras"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    },
+    {
+      ""order"": 17,
+      ""nombre"": ""señoras"",
+      ""option"": 1,
+      ""pagado"": true,
+      ""donde"": ""acá"",
+      ""notas"": """"
+    }
+  ]
+}"
+Croissant de queso,Cheese croissant,8000,Croissant clásico de queso,Classic cheese croissant,Panes,Breads,Salado,Salty,NA,NA,NA,NA,Activo,https://drive.google.com/thumbnail?id=13E74OeYcWg7XEy9U3fFyD34TNLtSQNHO&sz=w1000-h1000,2bac2938-6e4d-47a9-a829-dcf2459a13ef,fb88202b-b0a9-4d30-8588-c800093ab3f3,PANADERIA,true,PANADERIA_REPOSTERIA_SALADA,,
+Milo,Milo,9000,Milo en leche espumosa,Milo in frothed milk,Bebidas,Drinks,Frío,Cold,NA,NA,NA,NA,Activo,,3c4ed275-1c40-44c5-8bbe-e6c2eef2d933,ffe5d477-f546-47cf-aec7-18d61f6362e5,BEBIDAS,true,BEBIDAS_CALIENTES,,

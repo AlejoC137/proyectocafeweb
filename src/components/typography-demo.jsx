@@ -20,7 +20,7 @@ export function TypographyDemo() {
         The king thought long and hard, and finally came up with{""}
         <a
           href="#"
-          className="font-medium text-slate-900 underline underline-offset-4 dark:text-slate-50">
+          className="font-medium text-slate-900 underline underline-offset-4">
           a brilliant plan
         </a>
         : he would tax the jokes in the kingdom.
@@ -71,7 +71,7 @@ export function TypographyDemo() {
       <div className="my-6 w-full overflow-y-auto">
         <table className="w-full">
           <thead>
-            <tr className="m-0 border-t p-0 even:bg-slate-100 dark:even:bg-slate-800">
+            <tr className="m-0 border-t p-0 even:bg-slate-100">
               <th
                 className="border px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right">
                 King's Treasury
@@ -83,7 +83,7 @@ export function TypographyDemo() {
             </tr>
           </thead>
           <tbody>
-            <tr className="m-0 border-t p-0 even:bg-slate-100 dark:even:bg-slate-800">
+            <tr className="m-0 border-t p-0 even:bg-slate-100">
               <td
                 className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
                 Empty
@@ -93,7 +93,7 @@ export function TypographyDemo() {
                 Overflowing
               </td>
             </tr>
-            <tr className="m-0 border-t p-0 even:bg-slate-100 dark:even:bg-slate-800">
+            <tr className="m-0 border-t p-0 even:bg-slate-100">
               <td
                 className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
                 Modest
@@ -103,7 +103,7 @@ export function TypographyDemo() {
                 Satisfied
               </td>
             </tr>
-            <tr className="m-0 border-t p-0 even:bg-slate-100 dark:even:bg-slate-800">
+            <tr className="m-0 border-t p-0 even:bg-slate-100">
               <td
                 className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right">
                 Full

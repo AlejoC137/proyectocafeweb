@@ -56,10 +56,10 @@ function Proveedores() {
       loading={loading}
     >
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <div className="flex items-center gap-2">
             <Users className="text-red-500" size={20} />
-            <p className="text-red-700 dark:text-red-300">{error}</p>
+            <p className="text-red-700">{error}</p>
           </div>
         </div>
       )}
@@ -73,7 +73,7 @@ function Proveedores() {
       <ContentCard 
         title="Lista de Proveedores" 
         actions={
-          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
             <Users size={16} />
             <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
           </div>

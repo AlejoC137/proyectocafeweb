@@ -1,0 +1,50 @@
+Nombre_del_producto,Estado,CANTIDAD,UNIDADES,COSTO,COOR,FECHA_ACT,STOCK,GRUPO,_id,precioUnitario,Area,MARCA,Proveedor,Receta,Merma
+Relleno Manzana Pie,PP,1100,gr,37000,,2025-04-09,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,02690850-49f9-44fe-932b-e96291ede1a0,36.73,,[],,7945c52c-7b9f-4e5f-9bc0-a9eef02ebdbd,0
+Torta Banano,PP,2,un,29000,,2025-02-11,,REPOSTERIA,0442d928-a0b5-49d8-9820-bdaac45203c8,,,[],,ac88f7d5-882b-472e-a29d-8357fb484eff,
+JARABE FLOR DE JAMAICA,OK,1000,NaN,25705.12,1,2024-12-16,NaN,BEBIDAS,05390836-060c-4570-a947-4b75e86d199d,26.73,,,,d3f9acf7-fd60-4d2f-b404-26be4a301e17,
+Cañón relleno de frutos secos y manzana,Disponible,2500,gr,68000,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",CARNICO,0cef00d3-5e33-4ed6-a41f-7f29ca5bf9a2,29.7,,[],,044bbdb5-1b84-42c6-b452-d19848c659ce,0
+"Mostaza fermentada ",PP,,,,,2025-04-09,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",CONCERVAS_FERMENTOS_PRECOCIDOS,107eb960-26fa-4adf-b6bc-7de5bf5c09aa,,,[],,,0
+Galletas de Avena,PP,24,un,42000,,2025-08-11,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,1f044127-5cf0-4026-a078-1fd73cdf0390,1911,COCINA,[],[],c23058b7-1696-4b3b-adf3-ae93e5f161c9,0
+Pan Brioche Tangzhong,PP,2900,gr,31000,1,2025-06-24,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",PANADERIA,24bb7c6d-9dbe-48de-a612-8639f27e1aa8,11.12,,,,fba28b68-4dda-495f-be46-214cb41f3c48,0
+Pesto,OK,1000,gr,36313,,2025-01-16,,CONCERVAS_FERMENTOS_PRECOCIDOS,2629627f-021d-474b-a8f9-9c100f8e9445,39.65,,[],,9c6b9a5a-722e-42be-82b9-eaff1eb4b054,
+COLD BREW BASE,PP,1500,ml,9859.58,1,2024-12-26,NaN,CAFE,2902683e-275f-4f09-9a1d-b41c70a03f66,6.84,,,,2a410360-7931-4f2e-9c8c-cd38bcdcbeaa,
+Jugo Almuerzo,Disponible,8000,ml,14000,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",BEBIDAS,2a834f55-1e6b-415c-bad4-34215dec37ab,1.91,,[],,0ddbc35e-8e86-4a86-9dd0-d8203e9a4b11,0
+JARABE JENGIBRE,OK,1000,ml,6000,,2025-01-29,,BEBIDAS,2d0ea853-8f24-41cb-ae40-d06a6504efe2,6.55,,[],,7d19f154-6a65-44cd-a487-663dc32278c6,
+Leche Cortada,OK,1050,ml,3500,,2025-06-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",LACTEO,2e5c8f24-ed69-4f2f-a388-4a28c5ad3307,3.64,,[],,9f32fea8-d451-4bde-9c1a-503b1b9c77fe,0
+Vinagreta de naranja,Disponible,125,gr,3000,,2025-08-19,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",,39263e15-4111-4137-9e24-eebd0b612d53,26.21,,[],,e68cf37d-beb1-4088-8542-a3b4ddd95135,0
+Pie de Manzana Individual,PP,1,un,5200,,2025-04-09,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,3dfb1f64-9cb6-410a-86a6-3c7af3c2f552,5678.4,,[],,6b22aa7e-26b3-40ae-8467-ea22c9fab99c,0
+Pie de Manzana Completo,Disponible,1,un,30000,,2025-05-03,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,3f738377-e48e-4dcc-aebc-2e67b40a3157,32760,,[],,44f7f9c2-8c3e-4808-a3f1-f284f671d23e,0
+SIROPE DE CHAI,OK,380,ml,35000,1,2025-05-03,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",BEBIDAS,46e95ffc-ab5f-4b19-aa20-54b5eaa06182,95.79,,,,d3f9acf7-fd60-4d2f-b404-26be4a301e17,0
+Masa Crepe,Disponible,16,un,8500,,2025-08-11,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,4c3e40be-d28b-43b4-9b89-54c68f364c22,,,[],,ca80e3de-8f00-4f20-95c8-c672bc3558e3,
+JARABE ROMERO Y LIMÓN TAHITÍ,NA,1000,ml,27000,,2025-01-21,,BEBIDAS,4c950656-6191-4440-983e-65413d05ede2,29.48,,[],,,
+ButterCream Suizo de Chocolate,PP,750,gr,27000,,2025-01-21,,REPOSTERIA,512a1760-5bc4-4ea5-a8eb-f9f76d2d2871,39.31,,[],,a34061d7-c06f-461b-9bdb-264fe16778c7,
+Caldo de Carne,Disponible,3500,ml,37000,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",,533b3931-b286-410e-9c7a-a8742ba41737,11.54,,[],,64003483-095c-4474-bf1f-ed589308dc97,0
+Cebolla caramelizada,PP,300,NaN,4736.75,1,2024-12-05,NaN,CONCERVAS_FERMENTOS_PRECOCIDOS,5d707712-4f05-4945-815e-b493d46b1c11,16.42,,,,,
+Jarabe de Naranja y Panela,OK,1000,ml,16000,,2025-01-16,,BEBIDAS,5f6dc8ba-0218-4467-b5ac-7d921ad4bf71,17.47,,[],,e0662ba6-5dc9-4f3d-8737-5da3c2b7ae2b,
+Cheese Cake Basco,OK,2,un,90900,,2025-04-09,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,64b3992f-e9a3-419d-970f-2ec9d1c3c5b2,49631.4,,[],,e5718380-ad68-42b6-a3bd-7af1aa84df7f,0
+Base Pie,PP,700,gr,11000,,2025-02-11,,REPOSTERIA,65b390c5-3395-4505-b981-16e885ca2856,17.16,,[],,d4a86134-2fbf-4da9-8c2a-d6d1b2399583,
+Frutos Rojos,OK,1800,gr,31000,,2025-01-21,,CONCERVAS_FERMENTOS_PRECOCIDOS,69d72ca2-6ed2-4cb9-9323-4a8cce85e275,18.81,,[],,,
+Torta Chocolate y Moras,PP,1.5,un,56000,,2025-06-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,6a653d73-c078-4f33-a7a8-9ae2bcb47096,40768,,[],,791b665f-8b81-4f2b-af9a-607dc29e38b5,0
+ESPUMA DE CAFE,OK,245,NaN,6524.84,1,2024-12-05,NaN,CAFE,6d6c6c29-2760-4c98-972a-97c1366ad280,27.7,,,,8d471c41-c1a1-43c4-af73-d57d47876ce2,
+Yogurt Griego Interno,OK,1000,NaN,24444.24,1,2024-12-05,NaN,CONCERVAS_FERMENTOS_PRECOCIDOS,78ccabc2-4a2c-4626-b4e0-b767dab95cf5,25.42,,,,,
+JARABE DE VAINILL,OK,1000,li,4000,,2024-12-18,1000,BEBIDAS,7cc65031-8221-444a-a548-5000e6d30aec,4.37,BARRA,[],[],7381a721-6038-4777-b155-8187f8b74dde,
+Cebolla Encurtida,OK,600,gr,10000,,2025-03-07,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",CONCERVAS_FERMENTOS_PRECOCIDOS,7e3d6cdb-e0a9-41f5-a096-f42f6cdebb9e,18.2,,[],,09954c8e-1948-43b2-bf8c-638386f97ae7,
+"Nueces Tostadas en Mantequilla ",PP,870,gr,42500,,2025-01-28,,CONCERVAS_FERMENTOS_PRECOCIDOS,872383c2-cb52-456f-bdc9-9c62442c3692,53.34,,[],,6130f1e8-4d83-433e-9abb-784e5ebeac37,
+Ensalada Generica,Disponible,680,gr,8500,,2025-08-19,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",,8b9a49c8-a023-44c3-a0e2-11d326f57588,13.65,,[],,b5b9ccd0-85a7-4530-90a2-779d21074da2,0
+Pure de papa,Disponible,1400,gr,15300,,2025-08-19,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",,94a61874-3a91-457e-b0e4-d9b49da5e6c3,11.93,,[],,46c5c3d3-cb5f-46b3-be16-7162e2468d74,0
+Tomate Confi,OK,500,NaN,40568.56,1,2024-12-05,NaN,CONCERVAS_FERMENTOS_PRECOCIDOS,9581acfe-bf5a-4a16-b2a1-e650fe7b24e9,84.38,,,,,
+Platanitos fritos,Disponible,850,gr,9300,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",ADICIONES,9788167f-8f4c-4805-bfec-75df2764834d,11.95,,[],,ad6e9aec-0be2-412e-a152-b2ac8759b133,0
+Torta de Zanahoria,PP,2.5,un,100000,,2025-05-03,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,a182d9bd-ea65-45fa-b3bb-28ba2060187c,43680,,[],,941cf171-0ecd-48f0-9b46-1ce8de3bcb19,0
+Yogurt ButterCream,PP,900,gr,26000,,2025-01-27,,REPOSTERIA,b4c5fab7-4243-469b-93df-3dd1b38b14f9,31.55,,[],,6957bf1f-4748-4fc0-8dac-5a03b4a5bbc9,
+Hogao,PP,1000,NaN,9829.25,1,2024-12-19,NaN,CONCERVAS_FERMENTOS_PRECOCIDOS,c090a7ed-c177-4906-901f-1de7a7a89ed6,10.22,,,,992df281-4219-4e62-8ff2-d404071a3e6d,
+Torta de Chocolate Bruce,PP,1.5,un,34000,,2025-01-29,,REPOSTERIA,c36fac2e-1e6c-405b-857a-07dc96181ba4,24752,,[],,5f566a87-019d-4eea-9d91-e935e313f9ee,
+Caramelo,PP,850,NaN,10000,1,2025-01-16,NaN,CONCERVAS_FERMENTOS_PRECOCIDOS,c4bae2d2-11be-4680-8712-c3125c7b1537,12.24,,,,67c5b32c-e86b-499d-9cf4-ee29f8435f72,
+"Frijoles Verdes ",Disponible,9000,gr,57000,,2025-08-17,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",,c6c43d77-4beb-4214-93eb-9921ad748874,6.92,,[],,a8e85d44-315f-4974-8c9f-82954793736b,0
+"Sopa de cebolla francesa ",Disponible,1800,gr,49000,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",,cdad3871-12fd-4506-b362-7279ccda40bb,29.73,,[],,5fba19b6-59de-48e6-b299-4c2a15ec11d4,0
+Tangzhong,OK,800,gr,3200,,2025-01-27,,PANADERIA,cf554caf-dfcb-4edb-a935-81d1f830d962,4.37,,[],,02352761-63f5-4029-a569-4cb07d534dc8,
+Tocino Frito Cazuela,Disponible,2500,gr,150000,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",CARNICO,d3c23ce6-667b-4548-8674-1905524d5ded,65.52,,[],,7046980a-98d7-4365-bb69-3c7fa100c43e,0
+Salsa Picante Lactofementada,Disponible,,,,,2025-08-19,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",CONCERVAS_FERMENTOS_PRECOCIDOS,d7d01528-ee4a-4762-ab9c-d0b48639ff2f,,,[],,ef730bef-76d9-49f4-ba3c-8fbc7281abab,0
+Relleno Rollo de Canela,PP,220,gr,8500,,2025-08-11,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",REPOSTERIA,dece5372-21d1-41b2-b53e-5fa30aebe67f,42.19,,[],,66224264-c392-44a6-b4f9-14e92a23b76f,0
+Arroz Blanco Cocinado,Disponible,180,gr,1300,,2025-08-18,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",GRANOS_CEREALES,e668df03-1f26-40d1-91af-7bb98a1d318d,7.89,,[],,f8a7d50c-31e2-4afa-8790-2c07bb136409,0
+Salsa Shakshukas,PP,1000,gr,7696,1,2025-08-11,"{""minimo"":"""",""maximo"":"""",""actual"":""""}",CONCERVAS_FERMENTOS_PRECOCIDOS,ef6050a1-be9e-418f-ab14-93cf1b69f896,8,,,,860d54fe-648c-42df-b37b-5e5ff8936df8,0
+Queso Ricotta,PP,500,gr,12000,,2025-02-01,,LACTEO,fb27f80d-2df5-40d9-8837-b390c1b07df0,26.21,,[],,,

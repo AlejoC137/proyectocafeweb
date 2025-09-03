@@ -1,0 +1,38 @@
+_id,Propinas,Turno_State,Turnos,Nombre,Apellido,Cargo,Cuenta,Rate,Show,CC,Contratacion,isAdmin,Celular,infoContacto,Direccion
+0fea040a-8891-450a-aea8-03e8687b5c2d,,false,"[{""fecha"":""2025-08-05"",""horaInicio"":""10:29"",""horaCierre"":""14:34""},{""fecha"":""2025-08-06"",""horaInicio"":""14:02"",""horaCierre"":""18:02""},{""fecha"":""2025-08-13"",""horaInicio"":""14:03"",""horaCierre"":""18:20""},{""fecha"":""2025-08-20"",""horaInicio"":""14:01"",""horaCierre"":""18:03""},{""fecha"":""2025-08-22"",""horaInicio"":""13:58"",""horaCierre"":""19:18""},{""fecha"":""2025-08-26"",""horaInicio"":""14:03"",""horaCierre"":""18:04""},{""fecha"":""2025-08-27"",""horaInicio"":""14:09"",""horaCierre"":""17:57""},{""fecha"":""2025-09-01"",""horaInicio"":""15:04"",""horaCierre"":""15:33""}]",Paula Alejandra,Naranjo Torres,AUX_PRODUCCION,"{
+    banco: ""Bancolombia"",
+    tipo: ""Ahorros"",
+    numero: ""31747824111""
+  }",10000,true,1020805061,true,false,3143654345,"{
+    nombreDeContacto: ""Yasmin Torres"",
+    numeroDeContacto: ""3165368649""
+  }",Calle 35#65d-74
+47987701-d92e-4d89-bb0b-6b6bc320d502,,false,"[{""fecha"":""2025-07-30"",""horaInicio"":""01:31"",""horaCierre"":""01:32""}]",Margarita,Aguirre,MANAGER,"{
+    banco: ""Bancolombia"",
+    tipo: ""Ahorros"",
+    numero: ""55100022761""
+  }",2000,true,32015048,true,true,3008085906,"{
+    nombreDeContacto: ""Diego Patiño"",
+    numeroDeContacto: ""3163744456""
+  }",Transversal 35A #65D-48
+54a37bb8-bd75-4617-bfc7-c09d6acfcfbc,,false,"[{""fecha"":""2025-08-01"",""horaInicio"":""08:29"",""horaCierre"":""21:38""},{""fecha"":""2025-08-11"",""horaInicio"":""09:11"",""horaCierre"":""11:31""},{""fecha"":""2025-09-01"",""horaInicio"":""11:31"",""horaCierre"":""false""}]",Juan Diego,Jaramillo,BARISTA,,0,true,1037636617,true,false,3168683805,"{
+    nombreDeContacto: ""Karen"",
+    numeroDeContacto: ""3197465227""
+  }","Km 3 Vereda San Miguel parte alta, Guarne, Antioquia"
+9a4901fe-c07b-43bc-9401-2fb832482bda,,false,"[{""turnoDate"":""2025-08-19"",""horaInicio"":""07:30"",""horaSalida"":""18:26""},{""turnoDate"":""2025-08-23"",""horaInicio"":""08:05"",""horaSalida"":""18:27""},{""turnoDate"":""2025-08-26"",""horaInicio"":""07:59"",""horaSalida"":""18:07""},{""turnoDate"":""2025-08-29"",""horaInicio"":""08:09"",""horaSalida"":""18:14""},{""turnoDate"":""2025-08-30"",""horaInicio"":""07:57"",""horaSalida"":""18:14""},{""turnoDate"":""2025-08-16"",""horaInicio"":""08:00"",""horaSalida"":""18:00""}]",Isabela Maria,Acevedo Alvarez,AUX_PRODUCCION,"{
+    banco: ""Bancolombia"",
+    tipo: ""Nequi"",
+    numero: ""3022225880""
+  }",8000,true,43904848,true,false,3022225880,"{
+    nombreDeContacto: ""Socorro Alvarez"",
+    numeroDeContacto: ""3017574485""
+  }","Carrera 91d  Calla 72-159 casa134 ur robledales "
+d8aed182-352a-40a5-9434-e7413a79197e,,false,"[{""turnoDate"":""2025-08-25"",""horaInicio"":""14:40"",""horaSalida"":""20:05""},{""turnoDate"":""2025-08-28"",""horaInicio"":""14:05"",""horaSalida"":""18:57""},{""turnoDate"":""2025-08-26"",""horaInicio"":"""",""horaSalida"":""""},{""turnoDate"":""2025-08-27"",""horaInicio"":"""",""horaSalida"":""""},{""fecha"":""2025-09-01"",""horaInicio"":""12:47"",""horaCierre"":""19:05""}]","Samantha ",Gallego,AUX_PRODUCCION,"{
+    banco: ""Bancolombia"",
+    tipo: ""Ahorros"",
+    numero: ""00928392023""
+  }",11500,true,1007436970,true,false,3004727113,"{
+    nombreDeContacto: ""Marcela Trujillo"",
+    numeroDeContacto: ""3215706078""
+  }",Calle 48 #94-65
+e79e1d25-bc07-4b57-a970-7dfa0ea48c0b,,false,"[{""turnoDate"":""2025-07-30"",""horaInicio"":""22:28"",""horaSalida"":""23:28""},{""turnoDate"":""2025-07-30"",""horaInicio"":""23:22"",""horaSalida"":""23:32""}]",Diego,Patiño,MANAGER,,1000,true,1035869114,false,true,3008214593,,

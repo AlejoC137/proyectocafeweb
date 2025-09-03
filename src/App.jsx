@@ -79,7 +79,7 @@ function App() {
       }}
     >
       {/* Overlay para transparencia del 50% */}
-      <div className="absolute inset-0 bg-cream-bg/60 dark:bg-slate-900/50 pointer-events-none z-0"></div>
+      <div className="absolute inset-0 bg-cream-bg/60 pointer-events-none z-0"></div>
       
       {/* Contenido de la aplicación */}
       <div className="relative z-10 w-full">

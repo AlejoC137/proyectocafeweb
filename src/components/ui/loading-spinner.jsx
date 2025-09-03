@@ -25,14 +25,14 @@ function LoadingSpinner({
   };
 
   const containerClasses = fullScreen 
-    ? "flex items-center justify-center h-screen bg-slate-100 dark:bg-slate-900"
+    ? "flex items-center justify-center h-screen bg-slate-100"
     : "flex items-center justify-center py-8";
 
   return (
     <div className={containerClasses}>
       <div className="text-center">
         <div className={`${sizeClasses[size]} border-dashed rounded-full animate-spin border-blue-500 mx-auto`}></div>
-        <p className={`${textSizeClasses[size]} font-semibold text-gray-700 dark:text-gray-300 mt-4`}>
+        <p className={`${textSizeClasses[size]} font-semibold text-gray-700 mt-4`}>
           {message}
         </p>
       </div>

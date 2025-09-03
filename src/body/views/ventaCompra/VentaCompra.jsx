@@ -80,11 +80,11 @@ function VentaCompra() {
 
   // Renderizado del componente principal
   return (
-    <div className="h-[calc(100vh-5rem)] w-screen  bg-slate-100 dark:bg-slate-900 overflow-auto p-4 md:p-6">
+    <div className="h-[calc(100vh-5rem)] w-screen  bg-slate-100 overflow-auto p-4 md:p-6">
       <div className="max-w-screen-2xl mx-auto">
         {/* --- Cabecera con Controles --- */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white mr-auto">Gestión de Ventas</h1>
+          <h1 className="text-2xl font-bold text-slate-800 mr-auto">Gestión de Ventas</h1>
           <Button onClick={() => setShowGastos(!showGastos)} variant="outline" className="gap-2">
             <Eye size={16} />
             {showGastos ? "Ocultar Gastos" : "Mostrar Gastos"}
@@ -97,8 +97,8 @@ function VentaCompra() {
 
         {/* --- Componentes Condicionales (Gastos y Menú) --- */}
         <div className="space-y-4 mb-6">
-          {showMenu && <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4"><MenuDelDiaPrint /></div>}
-          {showGastos && <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4"><Gastos /></div>}
+          {showMenu && <div className="bg-white rounded-lg shadow-md p-4"><MenuDelDiaPrint /></div>}
+          {showGastos && <div className="bg-white rounded-lg shadow-md p-4"><Gastos /></div>}
         </div>
 
         {/* --- Contenido Principal (Barra y Mesas) --- */}
