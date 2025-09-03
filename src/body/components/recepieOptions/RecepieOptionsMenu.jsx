@@ -170,6 +170,13 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
     return payload;
   };
 
+  const handleRecetaClick = (item) => {
+    console.log(product.Receta);
+    
+    const url = `/receta/${product.Receta}`;
+    window.open(url, '_blank');
+  };
+
   const mapProcesToPayload = (proces) => {
     const payload = {};
     proces.forEach((proc, index) => {
@@ -195,6 +202,14 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   return (
     <div className="p-4 border rounded bg-gray-50">
       <div className="flex mb-4">
+               <button
+                    onClick={() => handleRecetaClick(Receta)}
+                    // className="bg-yellow-500"
+                    className={`px-4 py-2  bg-yellow-500`}
+
+                  >
+                    📕
+                  </button>
         <button
           className={`px-4 py-2 ${activeTab === "receta" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
           onClick={() => setActiveTab("receta")}

@@ -112,17 +112,19 @@ function RecetaModal({ item, onClose }) {
       }
       setLoading(true);
       try {
-        // NOTA: Estas llamadas son poco eficientes si los datos no cambian.
-        // Considerar cargarlos una sola vez en un componente superior.
         await Promise.all([
           dispatch(getAllFromTable(STAFF)), dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)), dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(PROVEE)),
         ]);
         
-        const result = await getRecepie(id, "Recetas");
+        // Buscar primero en "Recetas", luego en "RecetasProduccion" si no encuentra
+        let result = await getRecepie(id, "Recetas");
+        if (!result) {
+          result = await getRecepie(id, "RecetasProduccion");
+        }
         if (!result) throw new Error("Receta no encontrada");
-
+        
         setReceta(result);
         const plato = await getRecepie(result.forId, "Menu");
         if (plato) setFoto(plato.Foto);
