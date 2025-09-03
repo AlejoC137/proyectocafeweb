@@ -22,7 +22,7 @@ export function TableViewInventario({ products, currentType }) {
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [editingRows, setEditingRows] = useState({});
-  const [openRecipeModals, setOpenRecipeModals] = useState({});
+  const [openRecipeRows, setOpenRecipeRows] = useState({});
   const [recetas, setRecetas] = useState({});
 
   // Obtener valores únicos para filtros
@@ -195,14 +195,14 @@ export function TableViewInventario({ products, currentType }) {
     }
   };
 
-  // Función para manejar el modal de recetas
-  const handleRecipeModal = async (productId, recetaId = null) => {
-    setOpenRecipeModals(prev => ({
+  // Función para manejar las filas de recetas expandibles
+  const handleRecipeToggle = async (productId, recetaId = null) => {
+    setOpenRecipeRows(prev => ({
       ...prev,
       [productId]: !prev[productId]
     }));
     
-    if (recetaId && !recetas[productId]) {
+    if (recetaId && !recetas[productId] && !openRecipeRows[productId]) {
       try {
         const recetaType = currentType === MenuItems ? "Recetas" : "RecetasProduccion";
         const receta = await getRecepie(recetaId, recetaType);
@@ -213,6 +213,33 @@ export function TableViewInventario({ products, currentType }) {
       } catch (error) {
         console.error("Error al cargar receta:", error);
       }
+    }
+  };
+
+  // Función para crear recetas (similar a las tarjetas)
+  const handleCreateReceta = async (recetaData, productId) => {
+    try {
+      const actionType = currentType === MenuItems ? "Menu" : currentType;
+      await dispatch(updateItem(productId, { Receta: recetaData._id }, actionType));
+      setRecetas(prev => ({
+        ...prev,
+        [productId]: recetaData
+      }));
+      alert("Receta creada correctamente.");
+    } catch (error) {
+      console.error("Error al crear la receta:", error);
+      alert("Hubo un error al crear la receta.");
+    }
+  };
+
+  // Función para guardar recetas (para MenuItems)
+  const handleSaveReceta = async (recetaData) => {
+    try {
+      // Esta función se usa principalmente para MenuItems
+      alert("Receta guardada correctamente.");
+    } catch (error) {
+      console.error("Error al guardar la receta:", error);
+      alert("Hubo un error al guardar la receta.");
     }
   };
 
@@ -379,14 +406,17 @@ export function TableViewInventario({ products, currentType }) {
 
   // Función para renderizar filas de la tabla
   const renderTableRows = () => {
-    return sortedProducts.map((item, index) => {
+    const rows = [];
+    
+    sortedProducts.forEach((item, index) => {
       const isEditing = editingRows[item._id];
+      const isRecipeOpen = openRecipeRows[item._id];
       
       if (currentType === MenuItems) {
         // Renderizar filas para MenuItems
         const lunchData = parseCompLunch(item.Comp_Lunch);
         
-        return (
+        rows.push(
           <tr 
             key={item._id} 
             className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
@@ -469,10 +499,10 @@ export function TableViewInventario({ products, currentType }) {
             <td className="px-3 py-2 text-xs">
               <div className="flex gap-1">
                 <Button
-                  onClick={() => handleRecipeModal(item._id, item.Receta)}
+                  onClick={() => handleRecipeToggle(item._id, item.Receta)}
                   className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
                 >
-                  {openRecipeModals[item._id] ? '📖' : '📕'}
+                  {openRecipeRows[item._id] ? '📖' : '📕'}
                 </Button>
                 {isEditing && (
                   <Button
@@ -494,6 +524,27 @@ export function TableViewInventario({ products, currentType }) {
             </td>
           </tr>
         );
+        
+        // Agregar fila de receta si está abierta
+        if (isRecipeOpen) {
+          rows.push(
+            <tr key={`${item._id}-recipe`} className="bg-yellow-50">
+              <td colSpan="8" className="px-3 py-4 border-b border-gray-200">
+                <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                  <RecepieOptionsMenu 
+                    product={item} 
+                    Receta={recetas[item._id]} 
+                    currentType={currentType}
+                    onSaveReceta={handleSaveReceta}
+                    onCreateReceta={handleCreateReceta}
+                  />
+                </div>
+              </td>
+            </tr>
+          );
+        }
+        
+        return;
       }
 
       // Renderizar filas para inventario (ItemsAlmacen y ProduccionInterna)
@@ -504,7 +555,7 @@ export function TableViewInventario({ products, currentType }) {
       const proveedor = currentType === ItemsAlmacen ? 
         Proveedores.find(p => p._id === item.Proveedor) : null;
 
-      return (
+      rows.push(
         <tr 
           key={item._id} 
           className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
@@ -661,10 +712,10 @@ export function TableViewInventario({ products, currentType }) {
             <div className="flex gap-1">
               {(currentType === ProduccionInterna || currentType === MenuItems) && (
                 <Button
-                  onClick={() => handleRecipeModal(item._id, item.Receta)}
+                  onClick={() => handleRecipeToggle(item._id, item.Receta)}
                   className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
                 >
-                  {openRecipeModals[item._id] ? '📖' : '📕'}
+                  {openRecipeRows[item._id] ? '📖' : '📕'}
                 </Button>
               )}
               {isEditing && (
@@ -687,7 +738,38 @@ export function TableViewInventario({ products, currentType }) {
           </td>
         </tr>
       );
+      
+      // Agregar fila de receta si está abierta para productos de inventario
+      if (isRecipeOpen && (currentType === ProduccionInterna || currentType === MenuItems)) {
+        const colSpan = currentType === ItemsAlmacen ? 13 : 12; // Ajustar según número de columnas
+        rows.push(
+          <tr key={`${item._id}-recipe`} className="bg-yellow-50">
+            <td colSpan={colSpan} className="px-3 py-4 border-b border-gray-200">
+              <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                {currentType === MenuItems ? (
+                  <RecepieOptionsMenu 
+                    product={item} 
+                    Receta={recetas[item._id]} 
+                    currentType={currentType}
+                    onSaveReceta={handleSaveReceta}
+                    onCreateReceta={handleCreateReceta}
+                  />
+                ) : (
+                  <RecepieOptions 
+                    product={item} 
+                    Receta={recetas[item._id]} 
+                    currentType={currentType}
+                    onCreateReceta={handleCreateReceta}
+                  />
+                )}
+              </div>
+            </td>
+          </tr>
+        );
+      }
     });
+    
+    return rows;
   };
 
   return (
@@ -784,46 +866,6 @@ export function TableViewInventario({ products, currentType }) {
           </tbody>
         </table>
       </div>
-
-      {/* Modales de recetas */}
-      {Object.entries(openRecipeModals).map(([productId, isOpen]) => {
-        if (!isOpen) return null;
-        
-        const product = products.find(p => p._id === productId);
-        const receta = recetas[productId];
-        
-        return (
-          <div key={productId} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">
-                  Receta para: {product?.Nombre_del_producto || product?.NombreES}
-                </h3>
-                <Button
-                  onClick={() => handleRecipeModal(productId)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </Button>
-              </div>
-              
-              {currentType === MenuItems ? (
-                <RecepieOptionsMenu 
-                  product={product} 
-                  Receta={receta} 
-                  currentType={currentType}
-                />
-              ) : (
-                <RecepieOptions 
-                  product={product} 
-                  Receta={receta} 
-                  currentType={currentType}
-                />
-              )}
-            </div>
-          </div>
-        );
-      })}
 
       {/* Resumen tipo Excel */}
       <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
