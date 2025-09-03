@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
@@ -12,7 +12,7 @@ import {
   MenuItems 
 } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
-import { parseCompLunch } from "../../utils/jsonUtils";
+import { parseCompLunch, safeJsonStringify } from "../../utils/jsonUtils";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 
@@ -35,6 +35,140 @@ export function TableViewManager({ products, currentType }) {
   const [editingRows, setEditingRows] = useState({});
   const [openRecipeModals, setOpenRecipeModals] = useState({});
   const [recetas, setRecetas] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState({});
+
+  // Definir todas las columnas disponibles según el tipo
+  const getAvailableColumns = () => {
+    switch(currentType) {
+      case MenuItems:
+        const isLunchOnly = filterSubGrupo === "ALMUERZO" || filterSubGrupo === "TARDEO_ALMUERZO";
+        
+        if (isLunchOnly) {
+          return {
+            nombre: { label: "Nombre", key: "NombreES", default: true },
+            fecha: { label: "Fecha", key: "fecha", default: true },
+            entrada: { label: "Entrada", key: "entrada", default: true },
+            proteina: { label: "Proteína", key: "proteina", default: true },
+            opcion2: { label: "Opción 2", key: "opcion2", default: true },
+            carbohidrato: { label: "Carbohidrato", key: "carbohidrato", default: true },
+            acompanante: { label: "Acompañante", key: "acompanante", default: true },
+            ensalada: { label: "Ensalada", key: "ensalada", default: true },
+            bebida: { label: "Bebida", key: "bebida", default: true },
+            pedidos: { label: "Pedidos", key: "pedidos", default: true },
+            precio: { label: "Precio", key: "Precio", default: true },
+            estado: { label: "Estado", key: "Estado", default: true },
+            acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+          };
+        }
+        
+        return {
+          nombreES: { label: "Nombre ES", key: "NombreES", default: true },
+          nombreEN: { label: "Nombre EN", key: "NombreEN", default: true },
+          descripcionES: { label: "Descripción ES", key: "DescripcionMenuES", default: false },
+          descripcionEN: { label: "Descripción EN", key: "DescripcionMenuEN", default: false },
+          precio: { label: "Precio", key: "Precio", default: true },
+          grupo: { label: "Grupo", key: "GRUPO", default: true },
+          subGrupo: { label: "SUB_GRUPO", key: "SUB_GRUPO", default: true },
+          tipoES: { label: "Tipo ES", key: "TipoES", default: false },
+          tipoEN: { label: "Tipo EN", key: "TipoEN", default: false },
+          foto: { label: "Foto", key: "Foto", default: false },
+          print: { label: "PRINT", key: "PRINT", default: true },
+          estado: { label: "Estado", key: "Estado", default: true },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      case Staff:
+        return {
+          nombre: { label: "Nombre", key: "Nombre", default: true },
+          apellido: { label: "Apellido", key: "Apellido", default: true },
+          cargo: { label: "Cargo", key: "Cargo", default: true },
+          cc: { label: "CC", key: "CC", default: true },
+          rate: { label: "Rate", key: "Rate", default: true },
+          estado: { label: "Estado", key: "Estado", default: true },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      case WorkIsue:
+        return {
+          titulo: { label: "Título", key: "Tittle", default: true },
+          categoria: { label: "Categoría", key: "Categoria", default: true },
+          prioridad: { label: "Prioridad", key: "Prioridad", default: true },
+          fechas: { label: "Fechas", key: "Dates", default: true },
+          estado: { label: "Estado", key: "Estado", default: true },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      case Procedimientos:
+        return {
+          titulo: { label: "Título", key: "tittle", default: true },
+          categoria: { label: "Categoría", key: "Categoria", default: true },
+          descripcion: { label: "Descripción", key: "Descripción", default: false },
+          estado: { label: "Estado", key: "Estado", default: true },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      default:
+        return {};
+    }
+  };
+
+  const availableColumns = useMemo(() => getAvailableColumns(), [currentType, filterSubGrupo]);
+
+  // Inicializar columnas visibles al cambiar el tipo
+  useEffect(() => {
+    const defaultVisibleColumns = {};
+    Object.entries(availableColumns).forEach(([key, column]) => {
+      defaultVisibleColumns[key] = column.default;
+    });
+    console.log('Initializing visible columns:', defaultVisibleColumns);
+    setVisibleColumns(defaultVisibleColumns);
+  }, [availableColumns]);
+
+  // Debug log para ver el estado actual
+  console.log('Current visibleColumns state:', visibleColumns);
+  console.log('Available columns:', availableColumns);
+
+  // Cerrar el selector de columnas al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showColumnSelector && !event.target.closest('.column-selector-container')) {
+        setShowColumnSelector(false);
+      }
+    };
+
+    if (showColumnSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showColumnSelector]);
+
+  // Funciones para manejar la visibilidad de columnas
+  const toggleColumn = (columnKey) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnKey]: !prev[columnKey]
+    }));
+  };
+
+  const toggleAllColumns = (show) => {
+    const newVisibleColumns = {};
+    Object.keys(availableColumns).forEach(key => {
+      newVisibleColumns[key] = show;
+    });
+    setVisibleColumns(newVisibleColumns);
+  };
+
+  const resetToDefault = () => {
+    const defaultVisibleColumns = {};
+    Object.entries(availableColumns).forEach(([key, column]) => {
+      defaultVisibleColumns[key] = column.default;
+    });
+    setVisibleColumns(defaultVisibleColumns);
+  };
 
   // Obtener categorías únicas según el tipo
   const getUniqueCategories = () => {
@@ -181,6 +315,31 @@ export function TableViewManager({ products, currentType }) {
     }));
   };
 
+  // Función específica para manejar edición de Comp_Lunch
+  const handleCompLunchEdit = (itemId, component, field, value) => {
+    // Obtener los datos actuales de Comp_Lunch
+    const currentItem = products.find(p => p._id === itemId);
+    const currentCompLunch = parseCompLunch(currentItem?.Comp_Lunch) || {};
+    
+    // Crear la nueva estructura
+    const updatedCompLunch = {
+      ...currentCompLunch,
+      [component]: {
+        ...currentCompLunch[component],
+        [field]: value
+      }
+    };
+
+    // Actualizar el estado de edición
+    setEditingRows(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        Comp_Lunch: safeJsonStringify(updatedCompLunch, false)
+      }
+    }));
+  };
+
   // Función para guardar cambios
   const handleSaveRow = async (item) => {
     const editedData = editingRows[item._id] || {};
@@ -205,11 +364,12 @@ export function TableViewManager({ products, currentType }) {
         if (editedData.Pagado) {
           updatedFields.Pagado = editedData.Pagado;
         }
-      } else if (currentType === MenuItems) {
-        // Para MenuItems, usar la acción correcta
+      }
+      
+      // Llamar a updateItem según el tipo
+      if (currentType === MenuItems) {
         await dispatch(updateItem(item._id, updatedFields, "Menu"));
       } else {
-        // Para otros tipos
         await dispatch(updateItem(item._id, updatedFields, currentType));
       }
       
@@ -313,195 +473,287 @@ export function TableViewManager({ products, currentType }) {
 
   // Función para renderizar columnas según el tipo
   const renderTableHeaders = () => {
+    const headers = [];
+    
     switch(currentType) {
       case MenuItems:
         // Determinar si estamos mostrando solo almuerzos
         const isLunchOnly = filterSubGrupo === "ALMUERZO" || filterSubGrupo === "TARDEO_ALMUERZO";
         
         if (isLunchOnly) {
-          return (
-            <>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-                <button onClick={() => handleSort("NombreES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 border-gray-200 hover:text-blue-600">
+          // Headers para vista de almuerzos
+          const lunchHeaders = [
+            { key: 'nombre', content: (
+              <th key="nombre" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+                <button onClick={() => handleSort("NombreES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 border-gray-200 hover:text-blue-600">
                   Nombre <SortIcon column="NombreES" />
                 </button>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Fecha</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Entrada</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Proteína</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Opción 2</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Carbohidrato</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Acompañante</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Ensalada</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Bebida</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Pedidos</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-                <button onClick={() => handleSort("Precio")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+            )},
+            { key: 'fecha', content: (
+              <th key="fecha" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Fecha</th>
+            )},
+            { key: 'entrada', content: (
+              <th key="entrada" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Entrada</th>
+            )},
+            { key: 'proteina', content: (
+              <th key="proteina" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Proteína</th>
+            )},
+            { key: 'opcion2', content: (
+              <th key="opcion2" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Opción 2</th>
+            )},
+            { key: 'carbohidrato', content: (
+              <th key="carbohidrato" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Carbohidrato</th>
+            )},
+            { key: 'acompanante', content: (
+              <th key="acompanante" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Acompañante</th>
+            )},
+            { key: 'ensalada', content: (
+              <th key="ensalada" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Ensalada</th>
+            )},
+            { key: 'bebida', content: (
+              <th key="bebida" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Bebida</th>
+            )},
+            { key: 'pedidos', content: (
+              <th key="pedidos" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Pedidos</th>
+            )},
+            { key: 'precio', content: (
+              <th key="precio" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+                <button onClick={() => handleSort("Precio")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                   Precio <SortIcon column="Precio" />
                 </button>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-                <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+            )},
+            { key: 'estado', content: (
+              <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+                <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                   Estado <SortIcon column="Estado" />
                 </button>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-            </>
-          );
+            )},
+            { key: 'acciones', content: (
+              <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+            )}
+          ];
+          
+          return lunchHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
         }
         
-        return (
-          <>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("NombreES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+        // Headers para vista normal de MenuItems
+        const menuHeaders = [
+          { key: 'nombreES', content: (
+            <th key="nombreES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("NombreES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Nombre ES <SortIcon column="NombreES" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("NombreEN")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'nombreEN', content: (
+            <th key="nombreEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("NombreEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Nombre EN <SortIcon column="NombreEN" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          )},
+          { key: 'descripcionES', content: (
+            <th key="descripcionES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               Descripción ES
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          )},
+          { key: 'descripcionEN', content: (
+            <th key="descripcionEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               Descripción EN
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Precio")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'precio', content: (
+            <th key="precio" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Precio")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Precio <SortIcon column="Precio" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("GRUPO")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'grupo', content: (
+            <th key="grupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Grupo <SortIcon column="GRUPO" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          )},
+          { key: 'subGrupo', content: (
+            <th key="subGrupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               SUB_GRUPO
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("TipoES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'tipoES', content: (
+            <th key="tipoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("TipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Tipo ES <SortIcon column="TipoES" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          )},
+          { key: 'tipoEN', content: (
+            <th key="tipoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               Tipo EN
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          )},
+          { key: 'foto', content: (
+            <th key="foto" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               Foto
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          )},
+          { key: 'print', content: (
+            <th key="print" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               PRINT
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'estado', content: (
+            <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          )}
+        ];
+        
+        return menuHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
       case Staff:
-        return (
-          <>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Nombre")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+        const staffHeaders = [
+          { key: 'nombre', content: (
+            <th key="nombre" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Nombre")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Nombre <SortIcon column="Nombre" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Apellido")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'apellido', content: (
+            <th key="apellido" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Apellido")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Apellido <SortIcon column="Apellido" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Cargo")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'cargo', content: (
+            <th key="cargo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Cargo")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Cargo <SortIcon column="Cargo" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("CC")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'cc', content: (
+            <th key="cc" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("CC")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 CC <SortIcon column="CC" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Rate")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'rate', content: (
+            <th key="rate" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Rate")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Rate <SortIcon column="Rate" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'estado', content: (
+            <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          )}
+        ];
+        
+        return staffHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
       case WorkIsue:
-        return (
-          <>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Tittle")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+        const workIssueHeaders = [
+          { key: 'titulo', content: (
+            <th key="titulo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Tittle")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Título <SortIcon column="Tittle" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Categoria")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'categoria', content: (
+            <th key="categoria" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Categoria")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Categoría <SortIcon column="Categoria" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Prioridad")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'prioridad', content: (
+            <th key="prioridad" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Prioridad")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Prioridad <SortIcon column="Prioridad" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Dates")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'fechas', content: (
+            <th key="fechas" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Dates")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Fechas <SortIcon column="Dates" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'estado', content: (
+            <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          )}
+        ];
+        
+        return workIssueHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
       case Procedimientos:
-        return (
-          <>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("tittle")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+        const procedimientosHeaders = [
+          { key: 'titulo', content: (
+            <th key="titulo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("tittle")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Título <SortIcon column="tittle" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Categoria")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'categoria', content: (
+            <th key="categoria" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Categoria")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Categoría <SortIcon column="Categoria" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Descripción")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'descripcion', content: (
+            <th key="descripcion" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Descripción")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Descripción <SortIcon column="Descripción" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+          )},
+          { key: 'estado', content: (
+            <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          )}
+        ];
+        
+        return procedimientosHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
       default:
-        return <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Sin columnas definidas</th>;
+        return [<th key="default" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Sin columnas definidas</th>];
     }
   };
 
@@ -523,6 +775,8 @@ export function TableViewManager({ products, currentType }) {
 
   // Función para renderizar celdas según el tipo
   const renderTableCells = (item, isEditing) => {
+    const cells = [];
+    
     switch(currentType) {
       case MenuItems:
         // Determinar si estamos mostrando solo almuerzos
@@ -532,82 +786,266 @@ export function TableViewManager({ products, currentType }) {
           // Parsear la información del almuerzo usando la función utilitaria
           const lunchData = parseCompLunch(item.Comp_Lunch);
           
-          return (
-            <>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          const lunchCells = [
+            { key: 'nombre', content: (
+              <td key="nombre" className="px-3 py-2 border-r border-gray-100 text-xs">
                 {showEdit ? renderEditableCell(item, "NombreES") : 
                   <span className="font-medium text-blue-800">{item.NombreES || "Sin nombre"}</span>
                 }
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'fecha', content: (
+              <td key="fecha" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  {lunchData?.fecha ? (
+                  {showEdit ? (
                     <>
-                      <div className="font-medium text-purple-700">{lunchData.fecha.dia}</div>
-                      <div className="text-gray-500">{lunchData.fecha.fecha}</div>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.fecha?.dia || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "fecha", "dia", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Día"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.fecha?.fecha || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "fecha", "fecha", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Fecha"
+                      />
                     </>
                   ) : (
-                    <span className="text-gray-400">Sin fecha</span>
+                    lunchData?.fecha ? (
+                      <>
+                        <div className="font-medium text-purple-700">{lunchData.fecha.dia}</div>
+                        <div className="text-gray-500">{lunchData.fecha.fecha}</div>
+                      </>
+                    ) : (
+                      <span className="text-gray-400">Sin fecha</span>
+                    )
                   )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'entrada', content: (
+              <td key="entrada" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-orange-700">{lunchData?.entrada?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.entrada?.descripcion}>
-                    {lunchData?.entrada?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.entrada?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "entrada", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre entrada"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.entrada?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "entrada", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción entrada"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-orange-700">{lunchData?.entrada?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.entrada?.descripcion}>
+                        {lunchData?.entrada?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'proteina', content: (
+              <td key="proteina" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-red-700">{lunchData?.proteina?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.proteina?.descripcion}>
-                    {lunchData?.proteina?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.proteina?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "proteina", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre proteína"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.proteina?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "proteina", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción proteína"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-red-700">{lunchData?.proteina?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.proteina?.descripcion}>
+                        {lunchData?.proteina?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'opcion2', content: (
+              <td key="opcion2" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-purple-700">{lunchData?.proteina_opcion_2?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.proteina_opcion_2?.descripcion}>
-                    {lunchData?.proteina_opcion_2?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.proteina_opcion_2?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "proteina_opcion_2", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre opción 2"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.proteina_opcion_2?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "proteina_opcion_2", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción opción 2"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-purple-700">{lunchData?.proteina_opcion_2?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.proteina_opcion_2?.descripcion}>
+                        {lunchData?.proteina_opcion_2?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'carbohidrato', content: (
+              <td key="carbohidrato" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-yellow-700">{lunchData?.carbohidrato?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.carbohidrato?.descripcion}>
-                    {lunchData?.carbohidrato?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.carbohidrato?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "carbohidrato", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre carbohidrato"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.carbohidrato?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "carbohidrato", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción carbohidrato"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-yellow-700">{lunchData?.carbohidrato?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.carbohidrato?.descripcion}>
+                        {lunchData?.carbohidrato?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'acompanante', content: (
+              <td key="acompanante" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-green-700">{lunchData?.acompanante?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.acompanante?.descripcion}>
-                    {lunchData?.acompanante?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.acompanante?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "acompanante", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre acompañante"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.acompanante?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "acompanante", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción acompañante"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-green-700">{lunchData?.acompanante?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.acompanante?.descripcion}>
+                        {lunchData?.acompanante?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'ensalada', content: (
+              <td key="ensalada" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-cyan-700">{lunchData?.ensalada?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.ensalada?.descripcion}>
-                    {lunchData?.ensalada?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.ensalada?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "ensalada", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre ensalada"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.ensalada?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "ensalada", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción ensalada"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-cyan-700">{lunchData?.ensalada?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.ensalada?.descripcion}>
+                        {lunchData?.ensalada?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'bebida', content: (
+              <td key="bebida" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
-                  <div className="font-medium text-teal-700">{lunchData?.bebida?.nombre || "N/A"}</div>
-                  <div className="text-gray-500 truncate max-w-24" title={lunchData?.bebida?.descripcion}>
-                    {lunchData?.bebida?.descripcion || ""}
-                  </div>
+                  {showEdit ? (
+                    <>
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.bebida?.nombre || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "bebida", "nombre", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 mb-1"
+                        placeholder="Nombre bebida"
+                      />
+                      <input
+                        type="text"
+                        value={parseCompLunch(editingRows[item._id]?.Comp_Lunch || item.Comp_Lunch)?.bebida?.descripcion || ""}
+                        onChange={(e) => handleCompLunchEdit(item._id, "bebida", "descripcion", e.target.value)}
+                        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                        placeholder="Descripción bebida"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium text-teal-700">{lunchData?.bebida?.nombre || "N/A"}</div>
+                      <div className="text-gray-500 truncate max-w-24" title={lunchData?.bebida?.descripcion}>
+                        {lunchData?.bebida?.descripcion || ""}
+                      </div>
+                    </>
+                  )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'pedidos', content: (
+              <td key="pedidos" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <div className="text-xs">
                   {lunchData?.lista ? (
                     <>
@@ -624,11 +1062,15 @@ export function TableViewManager({ products, currentType }) {
                   )}
                 </div>
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'precio', content: (
+              <td key="precio" className="px-3 py-2 border-r border-gray-100 text-xs">
                 {showEdit ? renderEditableCell(item, "Precio", "number") : 
                   <span className="font-mono font-bold text-green-600">${parseFloat(item.Precio || 0).toFixed(2)}</span>}
               </td>
-              <td className="px-3 py-2 border-r border-gray-100 text-xs">
+            )},
+            { key: 'estado', content: (
+              <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   item.Estado === "Activo" 
                     ? "bg-green-100 text-green-800" 
@@ -637,20 +1079,29 @@ export function TableViewManager({ products, currentType }) {
                   {item.Estado || "Sin estado"}
                 </span>
               </td>
-              <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
-            </>
-          );
+            )},
+            { key: 'acciones', content: (
+              <td key="acciones" className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+            )}
+          ];
+          
+          return lunchCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
         }
         
-        return (
-          <>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        // Celdas para vista normal de MenuItems
+        const menuCells = [
+          { key: 'nombreES', content: (
+            <td key="nombreES" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "NombreES") : <span className="font-medium">{item.NombreES || "Sin nombre"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'nombreEN', content: (
+            <td key="nombreEN" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "NombreEN") : <span className="text-gray-600">{item.NombreEN || "Sin nombre EN"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
+          )},
+          { key: 'descripcionES', content: (
+            <td key="descripcionES" className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
               {showEdit ? (
                 <textarea
                   value={editingRows[item._id]?.DescripcionMenuES || item.DescripcionMenuES || ""}
@@ -664,7 +1115,9 @@ export function TableViewManager({ products, currentType }) {
                 </div>
               )}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
+          )},
+          { key: 'descripcionEN', content: (
+            <td key="descripcionEN" className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
               {showEdit ? (
                 <textarea
                   value={editingRows[item._id]?.DescripcionMenuEN || item.DescripcionMenuEN || ""}
@@ -678,25 +1131,37 @@ export function TableViewManager({ products, currentType }) {
                 </div>
               )}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'precio', content: (
+            <td key="precio" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Precio", "number") : 
                 <span className="font-mono font-bold text-green-600">${parseFloat(item.Precio || 0).toFixed(2)}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'grupo', content: (
+            <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "GRUPO", "select", CATEGORIES) :
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'subGrupo', content: (
+            <td key="subGrupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "SUB_GRUPO", "select", SUB_CATEGORIES) :
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">{item.SUB_GRUPO || "Sin sub-grupo"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'tipoES', content: (
+            <td key="tipoES" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "TipoES") : <span className="text-gray-600">{item.TipoES || "Sin tipo"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'tipoEN', content: (
+            <td key="tipoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "TipoEN") : <span className="text-gray-600">{item.TipoEN || "Sin tipo EN"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs max-w-20">
+          )},
+          { key: 'foto', content: (
+            <td key="foto" className="px-3 py-2 border-r border-gray-100 text-xs max-w-20">
               {showEdit ? (
                 <input
                   type="url"
@@ -715,7 +1180,9 @@ export function TableViewManager({ products, currentType }) {
                 )
               )}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'print', content: (
+            <td key="print" className="px-3 py-2 border-r border-gray-100 text-xs">
               <button
                 onClick={() => {
                   const newPrint = !item.PRINT;
@@ -732,7 +1199,9 @@ export function TableViewManager({ products, currentType }) {
                 {item.PRINT ? "SÍ" : "NO"}
               </button>
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'estado', content: (
+            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
               <button
                 onClick={() => {
                   const newEstado = item.Estado === "Activo" ? "Inactivo" : "Activo";
@@ -749,61 +1218,85 @@ export function TableViewManager({ products, currentType }) {
                 {item.Estado || "Sin estado"}
               </button>
             </td>
-            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <td key="acciones" className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          )}
+        ];
+        
+        return menuCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
       case Staff:
         const cuentaData = parseNestedObject(item.Cuenta, {});
         const contactoData = parseNestedObject(item.infoContacto, {});
         
-        return (
-          <>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        const staffCells = [
+          { key: 'nombre', content: (
+            <td key="nombre" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Nombre") : 
                 <span className="font-medium text-blue-800">{item.Nombre || "Sin nombre"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'apellido', content: (
+            <td key="apellido" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Apellido") : 
                 <span className="font-medium text-gray-700">{item.Apellido || "Sin apellido"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'cargo', content: (
+            <td key="cargo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Cargo") :
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.Cargo || "Sin cargo"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'cc', content: (
+            <td key="cc" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "CC", "number") : 
                 <span className="font-mono text-gray-600">{item.CC || "N/A"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'rate', content: (
+            <td key="rate" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Rate", "number") : 
                 <span className="font-mono font-bold text-green-600">${parseFloat(item.Rate || 0).toFixed(2)}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                item.Estado === "Activo" 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {item.Estado || "Sin estado"}
-              </span>
+          )},
+          { key: 'estado', content: (
+            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Estado", "select", ESTATUS) :
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  item.Estado === "Activo" 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {item.Estado || "Sin estado"}
+                </span>
+              }
             </td>
-            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <td key="acciones" className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          )}
+        ];
+        
+        return staffCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
       case WorkIsue:
-        return (
-          <>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        const workIssueCells = [
+          { key: 'titulo', content: (
+            <td key="titulo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Tittle") : 
                 <span className="font-medium text-blue-800">{item.Tittle || "Sin título"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'categoria', content: (
+            <td key="categoria" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Categoria") :
                 <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">{item.Categoria || "Sin categoría"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'prioridad', content: (
+            <td key="prioridad" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Prioridad", "select", ["Alta", "Media", "Baja"]) :
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   item.Prioridad === "Alta" ? "bg-red-100 text-red-800" :
@@ -813,13 +1306,17 @@ export function TableViewManager({ products, currentType }) {
                   {item.Prioridad || "Sin prioridad"}
                 </span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'fechas', content: (
+            <td key="fechas" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Dates", "date") : 
                 <span className="text-gray-600">
                   {item.Dates ? new Date(item.Dates).toLocaleDateString() : "Sin fecha"}
                 </span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'estado', content: (
+            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
               <span className={`px-2 py-1 rounded-full text-xs ${
                 item.Estado === "Activo" || item.Estado === "Completado"
                   ? "bg-green-100 text-green-800" 
@@ -828,28 +1325,38 @@ export function TableViewManager({ products, currentType }) {
                 {item.Estado || "Sin estado"}
               </span>
             </td>
-            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <td key="acciones" className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          )}
+        ];
+        
+        return workIssueCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
       case Procedimientos:
-        return (
-          <>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        const procedimientosCells = [
+          { key: 'titulo', content: (
+            <td key="titulo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "tittle") : 
                 <span className="font-medium text-blue-800">{item.tittle || "Sin título"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'categoria', content: (
+            <td key="categoria" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Categoria") :
                 <span className="px-2 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs">{item.Categoria || "Sin categoría"}</span>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'descripcion', content: (
+            <td key="descripcion" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Descripción") : 
                 <div className="max-w-48 truncate" title={item.Descripción}>
                   <span className="text-gray-600">{item.Descripción || "Sin descripción"}</span>
                 </div>}
             </td>
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'estado', content: (
+            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
               <span className={`px-2 py-1 rounded-full text-xs ${
                 item.Estado === "Activo" 
                   ? "bg-green-100 text-green-800" 
@@ -858,12 +1365,16 @@ export function TableViewManager({ products, currentType }) {
                 {item.Estado || "Sin estado"}
               </span>
             </td>
-            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
-          </>
-        );
+          )},
+          { key: 'acciones', content: (
+            <td key="acciones" className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          )}
+        ];
+        
+        return procedimientosCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
       default:
-        return <td className="px-3 py-2 text-xs">Tipo no soportado</td>;
+        return [<td key="default" className="px-3 py-2 text-xs">Tipo no soportado</td>];
     }
   };
 
@@ -974,6 +1485,14 @@ export function TableViewManager({ products, currentType }) {
             </select>
           </div>
 
+          {/* Botón para selector de columnas */}
+          <Button
+            onClick={() => setShowColumnSelector(true)}
+            className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm border border-blue-300 flex items-center gap-2"
+          >
+            📋 Columnas
+          </Button>
+
           <div className="text-sm text-gray-600">
             Mostrando {sortedProducts.length} de {products.length} elementos
             {currentType === MenuItems && filterSubGrupo && (
@@ -984,6 +1503,7 @@ export function TableViewManager({ products, currentType }) {
           </div>
         </div>
       </div>
+
 
       {/* Tabla estilo Excel */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
@@ -1038,6 +1558,85 @@ export function TableViewManager({ products, currentType }) {
           </div>
         );
       })}
+
+      {/* Modal para selector de columnas */}
+      {showColumnSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 column-selector-container">
+          <div className="bg-white rounded-lg p-6 max-w-md max-h-[80vh] overflow-y-auto shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Seleccionar Columnas</h3>
+              <button
+                onClick={() => setShowColumnSelector(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            {/* Controles rápidos */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => toggleAllColumns(true)}
+                className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm hover:bg-green-200 transition-colors"
+              >
+                Mostrar Todas
+              </button>
+              <button
+                onClick={() => toggleAllColumns(false)}
+                className="px-3 py-1 bg-red-100 text-red-800 rounded text-sm hover:bg-red-200 transition-colors"
+              >
+                Ocultar Todas
+              </button>
+              <button
+                onClick={resetToDefault}
+                className="px-3 py-1 bg-gray-100 text-gray-800 rounded text-sm hover:bg-gray-200 transition-colors"
+              >
+                Por Defecto
+              </button>
+            </div>
+            
+            {/* Lista de columnas */}
+            <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-200 rounded p-3">
+              {Object.entries(availableColumns).map(([key, column]) => (
+                <div key={key} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                  <label className="flex items-center space-x-3 cursor-pointer flex-1">
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns[key] || false}
+                      onChange={() => !column.fixed && toggleColumn(key)}
+                      disabled={column.fixed}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className={`text-sm ${
+                      column.fixed ? 'text-gray-500 font-medium' : 'text-gray-700'
+                    }`}>
+                      {column.label}
+                      {column.fixed && <span className="ml-1 text-xs">(fijo)</span>}
+                    </span>
+                  </label>
+                  {column.fixed && (
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Requerido</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <div className="flex justify-between items-center text-sm text-gray-600">
+                <span>
+                  {Object.values(visibleColumns).filter(Boolean).length} de {Object.keys(availableColumns).length} columnas visibles
+                </span>
+                <button
+                  onClick={() => setShowColumnSelector(false)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  Aplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Resumen tipo Excel */}
   

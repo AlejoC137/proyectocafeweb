@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
@@ -24,6 +24,118 @@ export function TableViewInventario({ products, currentType }) {
   const [editingRows, setEditingRows] = useState({});
   const [openRecipeRows, setOpenRecipeRows] = useState({});
   const [recetas, setRecetas] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState({});
+
+  // Definir todas las columnas disponibles según el tipo
+  const getAvailableColumns = () => {
+    switch(currentType) {
+      case MenuItems:
+        return {
+          nombreES: { label: "Nombre ES", key: "NombreES", default: true },
+          nombreEN: { label: "Nombre EN", key: "NombreEN", default: true },
+          precio: { label: "Precio", key: "Precio", default: true },
+          grupo: { label: "Grupo", key: "GRUPO", default: true },
+          tipo: { label: "Tipo", key: "TipoES", default: true },
+          estado: { label: "Estado", key: "Estado", default: true },
+          composicionAlmuerzo: { label: "Comp. Almuerzo", key: "Comp_Lunch", default: true },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      case ItemsAlmacen:
+        return {
+          nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
+          cantidad: { label: "Cantidad", key: "CANTIDAD", default: true },
+          unidades: { label: "Unidades", key: "UNIDADES", default: true },
+          costo: { label: "Costo", key: "COSTO", default: true },
+          precioUnitario: { label: "Precio Unit.", key: "precioUnitario", default: true },
+          stock: { label: "Stock", key: "STOCK", default: true },
+          almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
+          grupo: { label: "Grupo", key: "GRUPO", default: true },
+          merma: { label: "Merma %", key: "Merma", default: false },
+          proveedor: { label: "Proveedor", key: "Proveedor", default: true },
+          estado: { label: "Estado", key: "Estado", default: true },
+          fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      case ProduccionInterna:
+        return {
+          nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
+          cantidad: { label: "Cantidad", key: "CANTIDAD", default: true },
+          unidades: { label: "Unidades", key: "UNIDADES", default: true },
+          costo: { label: "Costo", key: "COSTO", default: true },
+          precioUnitario: { label: "Precio Unit.", key: "precioUnitario", default: true },
+          stock: { label: "Stock", key: "STOCK", default: true },
+          almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
+          grupo: { label: "Grupo", key: "GRUPO", default: true },
+          merma: { label: "Merma %", key: "Merma", default: false },
+          estado: { label: "Estado", key: "Estado", default: true },
+          fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
+      default:
+        return {};
+    }
+  };
+
+  const availableColumns = useMemo(() => getAvailableColumns(), [currentType]);
+
+  // Inicializar columnas visibles al cambiar el tipo
+  useEffect(() => {
+    const defaultVisibleColumns = {};
+    Object.entries(availableColumns).forEach(([key, column]) => {
+      defaultVisibleColumns[key] = column.default;
+    });
+    console.log('Initializing visible columns (Inventario):', defaultVisibleColumns);
+    setVisibleColumns(defaultVisibleColumns);
+  }, [availableColumns]);
+
+  // Debug log para ver el estado actual
+  console.log('Current visibleColumns state (Inventario):', visibleColumns);
+  console.log('Available columns (Inventario):', availableColumns);
+
+  // Cerrar el selector de columnas al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showColumnSelector && !event.target.closest('.column-selector-container')) {
+        setShowColumnSelector(false);
+      }
+    };
+
+    if (showColumnSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showColumnSelector]);
+
+  // Funciones para manejar la visibilidad de columnas
+  const toggleColumn = (columnKey) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnKey]: !prev[columnKey]
+    }));
+  };
+
+  const toggleAllColumns = (show) => {
+    const newVisibleColumns = {};
+    Object.keys(availableColumns).forEach(key => {
+      newVisibleColumns[key] = show;
+    });
+    setVisibleColumns(newVisibleColumns);
+  };
+
+  const resetToDefault = () => {
+    const defaultVisibleColumns = {};
+    Object.entries(availableColumns).forEach(([key, column]) => {
+      defaultVisibleColumns[key] = column.default;
+    });
+    setVisibleColumns(defaultVisibleColumns);
+  };
 
   // Obtener valores únicos para filtros
   const uniqueCategories = [...new Set(products.map(p => p.GRUPO).filter(Boolean))];
@@ -298,110 +410,162 @@ export function TableViewInventario({ products, currentType }) {
   // Función para renderizar headers de la tabla
   const renderTableHeaders = () => {
     if (currentType === MenuItems) {
-      return (
-        <>
-          <th className="px-3  py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("NombreES")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 border-gray-200 hover:text-blue-600">
+      const menuHeaders = [
+        { key: 'nombreES', content: (
+          <th key="nombreES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("NombreES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Nombre ES <SortIcon column="NombreES" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("NombreEN")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+        )},
+        { key: 'nombreEN', content: (
+          <th key="nombreEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("NombreEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Nombre EN <SortIcon column="NombreEN" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Precio")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+        )},
+        { key: 'precio', content: (
+          <th key="precio" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("Precio")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Precio <SortIcon column="Precio" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("GRUPO")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+        )},
+        { key: 'grupo', content: (
+          <th key="grupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Grupo <SortIcon column="GRUPO" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("TipoES")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+        )},
+        { key: 'tipo', content: (
+          <th key="tipo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("TipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Tipo <SortIcon column="TipoES" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Estado")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+        )},
+        { key: 'estado', content: (
+          <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Estado <SortIcon column="Estado" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+        )},
+        { key: 'composicionAlmuerzo', content: (
+          <th key="composicionAlmuerzo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
             Comp. Almuerzo
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-        </>
-      );
+        )},
+        { key: 'acciones', content: (
+          <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+        )}
+      ];
+      
+      return menuHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
     }
 
     // Headers para inventario (ItemsAlmacen y ProduccionInterna)
-    return (
-      <>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Nombre_del_producto")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+    const inventoryHeaders = [
+      { key: 'nombre', content: (
+        <th key="nombre" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("Nombre_del_producto")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Nombre <SortIcon column="Nombre_del_producto" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("CANTIDAD")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 border-gray-200 hover:text-blue-600">
+      )},
+      { key: 'cantidad', content: (
+        <th key="cantidad" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("CANTIDAD")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Cantidad <SortIcon column="CANTIDAD" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("UNIDADES")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+      )},
+      { key: 'unidades', content: (
+        <th key="unidades" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("UNIDADES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Unidades <SortIcon column="UNIDADES" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("COSTO")} className=" bg-slate-100 text-gray-950 flex items-center gap-1  hover:text-blue-600">
+      )},
+      { key: 'costo', content: (
+        <th key="costo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("COSTO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Costo <SortIcon column="COSTO" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold  border-r border-gray-200">
-          <button onClick={() => handleSort("precioUnitario")} className="flex bg-slate-100 text-gray-950 items-center gap-1  hover:text-blue-600">
+      )},
+      { key: 'precioUnitario', content: (
+        <th key="precioUnitario" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("precioUnitario")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Precio Unit. <SortIcon column="precioUnitario" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          Stock
+      )},
+      { key: 'stock', content: (
+        <th key="stock" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("STOCK")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+            Stock <SortIcon column="STOCK" />
+          </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+      )},
+      { key: 'almacenamiento', content: (
+        <th key="almacenamiento" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
           Almacenamiento
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+      )},
+      { key: 'grupo', content: (
+        <th key="grupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
           <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Grupo <SortIcon column="GRUPO" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Merma")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+      )},
+      { key: 'merma', content: (
+        <th key="merma" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("Merma")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Merma % <SortIcon column="Merma" />
           </button>
         </th>
-        {currentType === ItemsAlmacen && (
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Proveedor")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+      )}
+    ];
+    
+    // Agregar proveedor solo para ItemsAlmacen
+    if (currentType === ItemsAlmacen) {
+      inventoryHeaders.push({
+        key: 'proveedor', content: (
+          <th key="proveedor" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("Proveedor")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Proveedor <SortIcon column="Proveedor" />
             </button>
           </th>
-        )}
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Estado")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+        )
+      });
+    }
+    
+    // Agregar estado y fecha actualización
+    inventoryHeaders.push(
+      { key: 'estado', content: (
+        <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Estado <SortIcon column="Estado" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("FECHA_ACT")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+      )},
+      { key: 'fechaActualizacion', content: (
+        <th key="fechaActualizacion" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+          <button onClick={() => handleSort("FECHA_ACT")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Última Act. <SortIcon column="FECHA_ACT" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-      </>
+      )},
+      { key: 'acciones', content: (
+        <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+      )}
     );
+    
+    return inventoryHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
   };
 
   // Función para renderizar filas de la tabla
@@ -416,53 +580,49 @@ export function TableViewInventario({ products, currentType }) {
         // Renderizar filas para MenuItems
         const lunchData = parseCompLunch(item.Comp_Lunch);
         
-        rows.push(
-          <tr 
-            key={item._id} 
-            className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-          >
-            {/* Nombre ES */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        const menuCells = [
+          { key: 'nombreES', content: (
+            <td key="nombreES" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
                 renderEditableCell(item, "NombreES") : 
                 <span className="font-medium text-blue-800">{item.NombreES || "Sin nombre"}</span>
               }
             </td>
-
-            {/* Nombre EN */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'nombreEN', content: (
+            <td key="nombreEN" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
                 renderEditableCell(item, "NombreEN") : 
                 <span className="text-gray-600">{item.NombreEN || "Sin nombre EN"}</span>
               }
             </td>
-
-            {/* Precio */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'precio', content: (
+            <td key="precio" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
                 renderEditableCell(item, "Precio", "number") : 
                 <span className="font-mono font-bold text-green-600">${parseFloat(item.Precio || 0).toFixed(2)}</span>
               }
             </td>
-
-            {/* Grupo */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'grupo', content: (
+            <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
                 renderEditableCell(item, "GRUPO") :
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>
               }
             </td>
-
-            {/* Tipo */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'tipo', content: (
+            <td key="tipo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
                 renderEditableCell(item, "TipoES") : 
                 <span className="text-gray-600">{item.TipoES || "Sin tipo"}</span>
               }
             </td>
-
-            {/* Estado */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'estado', content: (
+            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
               <span className={`px-2 py-1 rounded-full text-xs ${
                 item.Estado === "Activo" 
                   ? "bg-green-100 text-green-800" 
@@ -471,9 +631,9 @@ export function TableViewInventario({ products, currentType }) {
                 {item.Estado || "Sin estado"}
               </span>
             </td>
-
-            {/* Comp. Almuerzo */}
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )},
+          { key: 'composicionAlmuerzo', content: (
+            <td key="composicionAlmuerzo" className="px-3 py-2 border-r border-gray-100 text-xs">
               <div className="text-xs">
                 {lunchData ? (
                   <>
@@ -494,9 +654,9 @@ export function TableViewInventario({ products, currentType }) {
                 )}
               </div>
             </td>
-
-            {/* Acciones */}
-            <td className="px-3 py-2 text-xs">
+          )},
+          { key: 'acciones', content: (
+            <td key="acciones" className="px-3 py-2 text-xs">
               <div className="flex gap-1">
                 <Button
                   onClick={() => handleRecipeToggle(item._id, item.Receta)}
@@ -522,14 +682,24 @@ export function TableViewInventario({ products, currentType }) {
                 )}
               </div>
             </td>
+          )}
+        ];
+        
+        rows.push(
+          <tr 
+            key={item._id} 
+            className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
+          >
+            {menuCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content)}
           </tr>
         );
         
         // Agregar fila de receta si está abierta
         if (isRecipeOpen) {
+          const visibleColumnsCount = Object.values(visibleColumns).filter(Boolean).length;
           rows.push(
             <tr key={`${item._id}-recipe`} className="bg-yellow-50">
-              <td colSpan="8" className="px-3 py-4 border-b border-gray-200">
+              <td colSpan={visibleColumnsCount} className="px-3 py-4 border-b border-gray-200">
                 <div className="bg-white rounded-lg p-4 border border-yellow-200">
                   <RecepieOptionsMenu 
                     product={item} 
@@ -555,53 +725,49 @@ export function TableViewInventario({ products, currentType }) {
       const proveedor = currentType === ItemsAlmacen ? 
         Proveedores.find(p => p._id === item.Proveedor) : null;
 
-      rows.push(
-        <tr 
-          key={item._id} 
-          className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-        >
-          {/* Nombre del producto */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+      const inventoryCells = [
+        { key: 'nombre', content: (
+          <td key="nombre" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "Nombre_del_producto") : 
               <span className="font-medium text-blue-800">{item.Nombre_del_producto || "Sin nombre"}</span>
             }
           </td>
-
-          {/* Cantidad */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'cantidad', content: (
+          <td key="cantidad" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "CANTIDAD", "number") : 
               <span className="font-mono">{item.CANTIDAD || "0"}</span>
             }
           </td>
-
-          {/* Unidades */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'unidades', content: (
+          <td key="unidades" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "UNIDADES", "select", unidades) : 
               <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">{item.UNIDADES || "N/A"}</span>
             }
           </td>
-
-          {/* Costo */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'costo', content: (
+          <td key="costo" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "COSTO", "number") : 
               <span className="font-mono font-bold text-green-600">${parseFloat(item.COSTO || 0).toFixed(2)}</span>
             }
           </td>
-
-          {/* Precio Unitario */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'precioUnitario', content: (
+          <td key="precioUnitario" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "precioUnitario", "number") : 
               <span className="font-mono font-bold text-purple-600">${parseFloat(item.precioUnitario || 0).toFixed(2)}</span>
             }
           </td>
-
-          {/* Stock */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'stock', content: (
+          <td key="stock" className="px-3 py-2 border-r border-gray-100 text-xs">
             <div className="space-y-1">
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-500 w-8">Min:</span>
@@ -626,9 +792,9 @@ export function TableViewInventario({ products, currentType }) {
               </div>
             </div>
           </td>
-
-          {/* Almacenamiento */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'almacenamiento', content: (
+          <td key="almacenamiento" className="px-3 py-2 border-r border-gray-100 text-xs">
             <div className="space-y-1">
               <div>
                 <span className="text-xs text-gray-500">Alm:</span>
@@ -646,26 +812,30 @@ export function TableViewInventario({ products, currentType }) {
               </div>
             </div>
           </td>
-
-          {/* Grupo */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'grupo', content: (
+          <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "GRUPO", "select", CATEGORIES) :
               <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>
             }
           </td>
-
-          {/* Merma */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'merma', content: (
+          <td key="merma" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "Merma", "number") : 
               <span className="font-mono text-yellow-600">{parseFloat(item.Merma || 0).toFixed(2)}%</span>
             }
           </td>
-
-          {/* Proveedor (solo para ItemsAlmacen) */}
-          {currentType === ItemsAlmacen && (
-            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )}
+      ];
+      
+      // Agregar proveedor solo para ItemsAlmacen
+      if (currentType === ItemsAlmacen) {
+        inventoryCells.push({
+          key: 'proveedor', content: (
+            <td key="proveedor" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
                 <select
                   value={editingRows[item._id]?.Proveedor || item.Proveedor || ""}
@@ -682,10 +852,14 @@ export function TableViewInventario({ products, currentType }) {
                 <span className="text-xs text-gray-700">{proveedor?.Nombre_Proveedor || "Sin proveedor"}</span>
               }
             </td>
-          )}
-
-          {/* Estado */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+          )
+        });
+      }
+      
+      // Agregar estado y fecha actualización
+      inventoryCells.push(
+        { key: 'estado', content: (
+          <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? 
               renderEditableCell(item, "Estado", "select", ESTATUS.filter(status => {
                 if (currentType === ProduccionInterna && status === "PC") return false;
@@ -701,14 +875,14 @@ export function TableViewInventario({ products, currentType }) {
               </span>
             }
           </td>
-
-          {/* Fecha actualización */}
-          <td className="px-3 py-2 border-r border-gray-100 text-xs">
+        )},
+        { key: 'fechaActualizacion', content: (
+          <td key="fechaActualizacion" className="px-3 py-2 border-r border-gray-100 text-xs">
             <span className="text-gray-600">{item.FECHA_ACT || "N/A"}</span>
           </td>
-
-          {/* Acciones */}
-          <td className="px-3 py-2 text-xs">
+        )},
+        { key: 'acciones', content: (
+          <td key="acciones" className="px-3 py-2 text-xs">
             <div className="flex gap-1">
               {(currentType === ProduccionInterna || currentType === MenuItems) && (
                 <Button
@@ -736,15 +910,24 @@ export function TableViewInventario({ products, currentType }) {
               )}
             </div>
           </td>
+        )}
+      );
+
+      rows.push(
+        <tr 
+          key={item._id} 
+          className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
+        >
+          {inventoryCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content)}
         </tr>
       );
       
       // Agregar fila de receta si está abierta para productos de inventario
       if (isRecipeOpen && (currentType === ProduccionInterna || currentType === MenuItems)) {
-        const colSpan = currentType === ItemsAlmacen ? 13 : 12; // Ajustar según número de columnas
+        const visibleColumnsCount = Object.values(visibleColumns).filter(Boolean).length;
         rows.push(
           <tr key={`${item._id}-recipe`} className="bg-yellow-50">
-            <td colSpan={colSpan} className="px-3 py-4 border-b border-gray-200">
+            <td colSpan={visibleColumnsCount} className="px-3 py-4 border-b border-gray-200">
               <div className="bg-white rounded-lg p-4 border border-yellow-200">
                 {currentType === MenuItems ? (
                   <RecepieOptionsMenu 
@@ -847,11 +1030,20 @@ export function TableViewInventario({ products, currentType }) {
             </div>
           )}
 
+          {/* Botón para selector de columnas */}
+          <Button
+            onClick={() => setShowColumnSelector(true)}
+            className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm border border-blue-300 flex items-center gap-2"
+          >
+            📋 Columnas
+          </Button>
+
           <div className="text-sm text-gray-600">
             Mostrando {sortedProducts.length} de {products.length} productos
           </div>
         </div>
       </div>
+
 
       {/* Tabla estilo Excel */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
@@ -866,6 +1058,113 @@ export function TableViewInventario({ products, currentType }) {
           </tbody>
         </table>
       </div>
+
+      {/* Modal independiente para selector de columnas */}
+      {showColumnSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
+            {/* Header del modal */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <span className="text-blue-600 text-lg">📋</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Personalizar Columnas</h3>
+                  <p className="text-sm text-gray-600">Selecciona las columnas que deseas mostrar</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowColumnSelector(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Controles rápidos */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => toggleAllColumns(true)}
+                className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
+              >
+                ✅ Mostrar Todas
+              </button>
+              <button
+                onClick={() => toggleAllColumns(false)}
+                className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
+              >
+                ❌ Ocultar Todas
+              </button>
+              <button
+                onClick={resetToDefault}
+                className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                🔄 Por Defecto
+              </button>
+            </div>
+            
+            {/* Lista de columnas */}
+            <div className="max-h-80 overflow-y-auto space-y-3 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              {Object.entries(availableColumns).map(([key, column]) => (
+                <div key={key} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
+                  <label className="flex items-center space-x-3 cursor-pointer flex-1">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns[key] || false}
+                        onChange={() => !column.fixed && toggleColumn(key)}
+                        disabled={column.fixed}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
+                      />
+                      {column.fixed && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">!</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <span className={`text-sm font-medium ${
+                        column.fixed ? 'text-gray-500' : 'text-gray-700'
+                      }`}>
+                        {column.label}
+                      </span>
+                      {column.fixed && (
+                        <div className="text-xs text-orange-600 mt-0.5">Columna fija - No se puede ocultar</div>
+                      )}
+                    </div>
+                  </label>
+                  <div className={`w-3 h-3 rounded-full ${
+                    visibleColumns[key] ? 'bg-green-500' : 'bg-red-400'
+                  }`} />
+                </div>
+              ))}
+            </div>
+            
+            {/* Footer con estadísticas */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center text-sm">
+                <div className="text-gray-600">
+                  <span className="font-medium text-blue-600">
+                    {Object.values(visibleColumns).filter(Boolean).length}
+                  </span>
+                  <span> de </span>
+                  <span className="font-medium">{Object.keys(availableColumns).length}</span>
+                  <span> columnas visibles</span>
+                </div>
+                <button
+                  onClick={() => setShowColumnSelector(false)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Aplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Resumen tipo Excel */}
       <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
