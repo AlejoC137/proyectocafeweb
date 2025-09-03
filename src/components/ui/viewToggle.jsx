@@ -8,7 +8,7 @@ export function ViewToggle({ viewMode, onViewModeChange, className = "" }) {
       <div className="flex bg-gray-100 rounded-lg p-1">
         <button
           onClick={() => onViewModeChange("cards")}
-          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+          className={`flex items-center  bg-gray-100  gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
             viewMode === "cards"
               ? "bg-white text-blue-600 shadow-sm"
               : "text-gray-600 hover:text-gray-800"
@@ -22,7 +22,7 @@ export function ViewToggle({ viewMode, onViewModeChange, className = "" }) {
           className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
             viewMode === "table"
               ? "bg-white text-blue-600 shadow-sm"
-              : "text-gray-600 hover:text-gray-800"
+              : "bg-white text-gray-600 hover:text-gray-800"
           }`}
         >
           <List className="w-4 h-4" />

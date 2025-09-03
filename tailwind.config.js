@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // darkMode: ["class"],
+  darkMode: ["class"],
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
@@ -33,6 +33,38 @@ module.exports = {
         'terracotta-pink': '#E0A996', // Rosa ladrillo, para tarjetas, acentos sutiles
         'cobalt-blue': '#3A4FDE', // Azul vibrante, para botones de acción (CTAs), iconos, elementos interactivos
         'light-leaf': '#D9E4D7', // Un verde muy claro para elementos de fondo sutiles
+        
+        // --- Colores Funcionales del Sistema ---
+        // Estados OK/NA
+        'status-ok': '#10b981',      // Verde para OK
+        'status-na': '#64748b',      // Gris para NA
+        'status-pending': '#f59e0b', // Amarillo para pendiente
+        
+        // Acciones de edición y gestión
+        'action-edit': '#3b82f6',    // Azul para editar
+        'action-delete': '#ef4444',  // Rojo para eliminar
+        'action-save': '#10b981',    // Verde para guardar
+        'action-cancel': '#6b7280',  // Gris para cancelar
+        
+        // Funciones de tarjetas y tablas
+        'card-primary': '#8b5cf6',   // Morado para tarjetas principales
+        'card-secondary': '#06b6d4', // Cyan para tarjetas secundarias
+        'excel-export': '#16a34a',   // Verde para Excel
+        'pdf-export': '#dc2626',     // Rojo para PDF
+        
+        // Módulos específicos
+        'almacen-primary': '#a3a3a3', // Gris para almacén
+        'almacen-secondary': '#737373',
+        'produccion-primary': '#f97316', // Naranja para producción
+        'produccion-secondary': '#ea580c',
+        
+        // Tonos adicionales de la paleta base
+        'sage-green-light': '#b8c5b5',
+        'sage-green-dark': '#8fa68b',
+        'terracotta-light': '#e8b5a6',
+        'terracotta-dark': '#d49886',
+        'cobalt-light': '#5a6bff',
+        'cobalt-dark': '#2938de',
         
         // --- Sistema Unificado shadcn/ui ---
         border: "hsl(var(--border))",

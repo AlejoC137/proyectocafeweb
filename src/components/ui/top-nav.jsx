@@ -89,9 +89,9 @@ export default function TopNav() {
         <div className="w-1/3 flex items-center justify-center gap-2">
           <button
             onClick={handleGoHome}
-            className="font-SpaceGrotesk text-lg font-bold text-cobalt-blue transition-transform hover:scale-105 flex items-center gap-1 shrink-0"
+            className="font-SpaceGrotesk bg-gray-100 text-lg font-bold text-cobalt-blue transition-transform p-1 flex items-center gap-1 shrink-0"
           >
-            <img src={laTaza} alt="La Taza Logo" className="w-6 h-6" />
+            <img src={laTaza} alt="La Taza Logo" className=" w-6 h-6" />
             <span>PC</span>
           </button>
           

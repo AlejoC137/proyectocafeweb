@@ -101,37 +101,37 @@ function StaffPortal() {
   const systemButtons = [
     {
       label: "Work Issues",
-      icon: Wrench,
+      icon: "🔧",
       onClick: () => setActiveView("workissues"),
       variant: "secondary"
     },
     {
       label: "Manager",
-      icon: Brain,
+      icon: "🧠",
       onClick: () => navigate("/Manager"),
       variant: "secondary"
     },
     {
       label: "Inventario",
-      icon: Package,
+      icon: "📦",
       onClick: () => navigate("/Inventario"),
       variant: "secondary"
     },
     {
       label: "Menu Print",
-      icon: Printer,
+      icon: "🖨️",
       onClick: () => navigate("/MenuPrint"),
       variant: "secondary"
     },
     {
       label: "Venta / Compra",
-      icon: CreditCard,
+      icon: "💵",
       onClick: () => navigate("/VentaCompra"),
       variant: "default"
     },
     {
       label: "Proveedores",
-      icon: Users,
+      icon: "💁‍♀️",
       onClick: () => navigate("/Proveedores"),
       variant: "secondary"
     }
@@ -141,19 +141,19 @@ function StaffPortal() {
   const staffButtons = staffFound ? [
     {
       label: "Editar Información",
-      icon: Edit,
+      icon: "⚙️",
       onClick: () => setActiveView("instance"),
       variant: "outline"
     },
     {
       label: "Turnos",
-      icon: Clock,
+      icon: "⏲️",
       onClick: () => setActiveView("shift"),
       variant: "outline"
     },
     {
       label: "Gastos",
-      icon: DollarSign,
+      icon: "💸",
       onClick: () => navigate("/Gastos"),
       variant: "outline"
     },
@@ -161,19 +161,19 @@ function StaffPortal() {
     ...(staffFound.isAdmin ? [
       {
         label: "Ver Nómina",
-        icon: BarChart3,
+        icon: "📊",
         onClick: handleGoToNomina,
         variant: "destructive"
       },
       {
         label: "Resumen del Día",
-        icon: Calendar,
+        icon: "📆",
         onClick: () => navigate("/DiaResumen"),
         variant: "destructive"
       },
       {
         label: "Resumen del Mes",
-        icon: CalendarDays,
+        icon: "📅",
         onClick: () => navigate("/MesResumen"),
         variant: "destructive"
       }
@@ -217,7 +217,7 @@ function StaffPortal() {
               <select
                 value={selectedStaffId}
                 onChange={handleSelectStaff}
-                className="flex-1 border rounded px-2 py-2"
+                className="flex-1 border rounded px-2 py-2 bg-gray-100 "
               >
                 <option value="">Seleccione Staff</option>
                 {allStaff.map((staff) => (

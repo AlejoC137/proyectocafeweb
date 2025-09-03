@@ -704,9 +704,9 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
       });
     
     
-    // Notificar al usuario y recargar la página si no hay error
-    alert('Turno actualizado correctamente.');
-    window.location.reload();
+    // Importar utilidades de toast centralizadas
+    const { showSuccessToast } = await import('../utils/toast');
+    showSuccessToast('💾 Turno actualizado correctamente');
 
       return true; // Éxito
     } catch (error) {

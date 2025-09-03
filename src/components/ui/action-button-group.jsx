@@ -47,7 +47,7 @@ function ActionButtonGroup({
             className={`gap-2 ${buttonClassName}`}
             {...otherProps}
           >
-            {Icon && <Icon size={16} />}
+            {Icon && Icon + " "}
             {label}
           </Button>
         );

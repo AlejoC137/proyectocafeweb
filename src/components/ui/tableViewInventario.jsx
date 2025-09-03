@@ -139,7 +139,7 @@ export function TableViewInventario({ products, currentType }) {
   };
 
   const SortIcon = ({ column }) => {
-    if (sortColumn !== column) return <ChevronDown className="w-4 h-4 opacity-50" />;
+    if (sortColumn !== column) return <ChevronDown className="w-4 h-4 bg-opacity-50" />;
     return sortDirection === "asc" ? 
       <ChevronUp className="w-4 h-4" /> : 
       <ChevronDown className="w-4 h-4" />;
@@ -220,7 +220,7 @@ export function TableViewInventario({ products, currentType }) {
         <select
           value={currentValue}
           onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-      className="w-full p-1 border border-gray-300 rounded text-xs bg-white text-gray-900"
+          className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-900"
         >
           <option value="">Seleccionar...</option>
           {options.map((option) => (
@@ -237,7 +237,7 @@ export function TableViewInventario({ products, currentType }) {
         type={type}
         value={currentValue}
         onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-        className="w-full p-1 border border-gray-300 rounded text-xs bg-white text-gray-900"
+        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-900"
         step={type === "number" ? "0.01" : undefined}
       />
     );
@@ -248,33 +248,33 @@ export function TableViewInventario({ products, currentType }) {
     if (currentType === MenuItems) {
       return (
         <>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("NombreES")} className="flex items-center gap-1 hover:text-blue-600">
+          <th className="px-3  py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("NombreES")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 border-gray-200 hover:text-blue-600">
               Nombre ES <SortIcon column="NombreES" />
             </button>
           </th>
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("NombreEN")} className="flex items-center gap-1 hover:text-blue-600">
+            <button onClick={() => handleSort("NombreEN")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Nombre EN <SortIcon column="NombreEN" />
             </button>
           </th>
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Precio")} className="flex items-center gap-1 hover:text-blue-600">
+            <button onClick={() => handleSort("Precio")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Precio <SortIcon column="Precio" />
             </button>
           </th>
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("GRUPO")} className="flex items-center gap-1 hover:text-blue-600">
+            <button onClick={() => handleSort("GRUPO")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Grupo <SortIcon column="GRUPO" />
             </button>
           </th>
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("TipoES")} className="flex items-center gap-1 hover:text-blue-600">
+            <button onClick={() => handleSort("TipoES")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Tipo <SortIcon column="TipoES" />
             </button>
           </th>
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+            <button onClick={() => handleSort("Estado")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Estado <SortIcon column="Estado" />
             </button>
           </th>
@@ -290,27 +290,27 @@ export function TableViewInventario({ products, currentType }) {
     return (
       <>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Nombre_del_producto")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("Nombre_del_producto")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Nombre <SortIcon column="Nombre_del_producto" />
           </button>
         </th>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("CANTIDAD")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("CANTIDAD")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 border-gray-200 hover:text-blue-600">
             Cantidad <SortIcon column="CANTIDAD" />
           </button>
         </th>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("UNIDADES")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("UNIDADES")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Unidades <SortIcon column="UNIDADES" />
           </button>
         </th>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("COSTO")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("COSTO")} className=" bg-slate-100 text-gray-950 flex items-center gap-1  hover:text-blue-600">
             Costo <SortIcon column="COSTO" />
           </button>
         </th>
-        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("precioUnitario")} className="flex items-center gap-1 hover:text-blue-600">
+        <th className="px-3 py-2 text-left text-xs font-semibold  border-r border-gray-200">
+          <button onClick={() => handleSort("precioUnitario")} className="flex bg-slate-100 text-gray-950 items-center gap-1  hover:text-blue-600">
             Precio Unit. <SortIcon column="precioUnitario" />
           </button>
         </th>
@@ -321,29 +321,29 @@ export function TableViewInventario({ products, currentType }) {
           Almacenamiento
         </th>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("GRUPO")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Grupo <SortIcon column="GRUPO" />
           </button>
         </th>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Merma")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("Merma")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Merma % <SortIcon column="Merma" />
           </button>
         </th>
         {currentType === ItemsAlmacen && (
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Proveedor")} className="flex items-center gap-1 hover:text-blue-600">
+            <button onClick={() => handleSort("Proveedor")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Proveedor <SortIcon column="Proveedor" />
             </button>
           </th>
         )}
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("Estado")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Estado <SortIcon column="Estado" />
           </button>
         </th>
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("FECHA_ACT")} className="flex items-center gap-1 hover:text-blue-600">
+          <button onClick={() => handleSort("FECHA_ACT")} className=" bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
             Última Act. <SortIcon column="FECHA_ACT" />
           </button>
         </th>
@@ -446,7 +446,7 @@ export function TableViewInventario({ products, currentType }) {
                 {isEditing && (
                   <Button
                     onClick={() => handleSaveRow(item)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs h-6"
+                    className="bg-gray-100 hover:bg-green-600 text-green-800 px-2 py-1 text-xs h-6 border border-green-300"
                   >
                     💾
                   </Button>
@@ -454,7 +454,7 @@ export function TableViewInventario({ products, currentType }) {
                 {showEdit && (
                   <Button
                     onClick={() => handleDelete(item)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs h-6"
+                    className="bg-gray-100 hover:bg-red-600 text-red-800 px-2 py-1 text-xs h-6 border border-red-300"
                   >
                     🗑️
                   </Button>
@@ -588,7 +588,7 @@ export function TableViewInventario({ products, currentType }) {
                 <select
                   value={editingRows[item._id]?.Proveedor || item.Proveedor || ""}
                   onChange={(e) => handleCellEdit(item._id, "Proveedor", e.target.value)}
-                  className="w-full p-1 border border-gray-300 rounded text-xs bg-white"
+                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
                 >
                   <option value="">Sin proveedor</option>
                   {Proveedores.map((prov) => (
@@ -631,7 +631,7 @@ export function TableViewInventario({ products, currentType }) {
               {isEditing && (
                 <Button
                   onClick={() => handleSaveRow(item)}
-                  className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs h-6"
+                  className="bg-gray-100 hover:bg-green-600 text-green-800 px-2 py-1 text-xs h-6 border border-green-300"
                 >
                   💾
                 </Button>
@@ -639,7 +639,7 @@ export function TableViewInventario({ products, currentType }) {
               {showEdit && (
                 <Button
                   onClick={() => handleDelete(item)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs h-6"
+                  className="bg-gray-100 hover:bg-red-600 text-red-800 px-2 py-1 text-xs h-6 border border-red-300"
                 >
                   🗑️
                 </Button>
@@ -663,7 +663,7 @@ export function TableViewInventario({ products, currentType }) {
               placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 bg-white text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             />
           </div>
           
@@ -672,7 +672,7 @@ export function TableViewInventario({ products, currentType }) {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="border border-gray-300 bg-white text-gray-900 rounded px-3 py-1 text-sm"
+              className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm"
             >
               <option value="">Todos los grupos</option>
               {uniqueCategories.map(category => (
@@ -686,7 +686,7 @@ export function TableViewInventario({ products, currentType }) {
             <select
               value={filterEstado}
               onChange={(e) => setFilterEstado(e.target.value)}
-              className="border border-green-300 rounded px-3 py-1 text-sm bg-green-50 text-gray-900"
+              className="border border-green-300 rounded px-3 py-1 text-sm bg-gray-100 text-gray-900"
             >
               <option value="">Todos los estados</option>
               {uniqueEstados.map(estado => (
@@ -700,7 +700,7 @@ export function TableViewInventario({ products, currentType }) {
             <select
               value={filterAlmacenamiento}
               onChange={(e) => setFilterAlmacenamiento(e.target.value)}
-              className="border border-purple-300 rounded px-3 py-1 text-sm bg-purple-50 text-gray-900"
+              className="border border-purple-300 rounded px-3 py-1 text-sm bg-gray-100 text-gray-900"
             >
               <option value="">Todos los almacenamientos</option>
               {uniqueAlmacenamiento.map(almacen => (
@@ -716,7 +716,7 @@ export function TableViewInventario({ products, currentType }) {
               <select
                 value={filterProveedor}
                 onChange={(e) => setFilterProveedor(e.target.value)}
-                className="border border-orange-300 rounded px-3 py-1 text-sm bg-orange-50 text-gray-900"
+                className="border border-orange-300 rounded px-3 py-1 text-sm bg-gray-100 text-gray-900"
               >
                 <option value="">Todos los proveedores</option>
                 {Proveedores.map(proveedor => (

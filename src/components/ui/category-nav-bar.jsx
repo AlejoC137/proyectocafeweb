@@ -51,7 +51,6 @@ function CategoryNavBar({
     <div className={`flex justify-center align-top gap-1 p-1 mt-2 fixed top-18 left-0 right-0 bg-cream-bg/95 backdrop-blur-sm border border-sage-green z-40 shadow-sm ${className}`}>
       {/* Botones de categorías */}
       {categories.map(({ type, label, icon }) => {
-        const IconComponent = defaultIcons[icon] || UtensilsCrossed;
         
         return (
           <button
@@ -64,7 +63,7 @@ function CategoryNavBar({
             }`}
             onClick={() => onTypeChange(type)}
           >
-            <IconComponent size={16} className="mb-1 flex-shrink-0" />
+            {icon}
             <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
               {label}
             </span>
@@ -83,8 +82,7 @@ function CategoryNavBar({
           }`}
           onClick={onToggleEdit}
         >
-          <Settings size={16} className="mb-1 flex-shrink-0" />
-          <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
+⚙️          <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
             Edición
           </span>
         </button>
@@ -101,7 +99,7 @@ function CategoryNavBar({
           }`}
           onClick={onToggleActions}
         >
-          <Zap size={16} className="mb-1 flex-shrink-0" />
+          ⚡
           <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
             Acciones
           </span>

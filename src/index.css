@@ -107,30 +107,31 @@ button:focus-visible {
     --padding: 0;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Mantener el mismo fondo claro que el tema light */
+    --background: 32 24% 94%; /* cream-bg equivalent in HSL */
+    --foreground: 0 0% 15%; /* Dark text for better contrast on light bg */
+    --card: 32 24% 94%; /* Same cream background for cards */
+    --card-foreground: 0 0% 15%; /* Dark text on cards */
+    --popover: 32 24% 94%; /* Same cream background for popovers */
+    --popover-foreground: 0 0% 15%; /* Dark text on popovers */
+    --primary: 220 85% 25%; /* Dark primary color for contrast */
+    --primary-foreground: 0 0% 98%; /* Light text on primary */
+    --secondary: 25 15% 85%; /* Light secondary with slight warmth */
+    --secondary-foreground: 0 0% 20%; /* Dark text on secondary */
+    --muted: 25 15% 85%; /* Light muted areas */
+    --muted-foreground: 0 0% 35%; /* Darker muted text */
+    --accent: 25 20% 80%; /* Light accent with cream tint */
+    --accent-foreground: 0 0% 20%; /* Dark text on accent */
+    --destructive: 0 84.2% 45%; /* Darker red for contrast */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+    --border: 0 0% 75%; /* Darker borders for visibility */
+    --input: 25 15% 88%; /* Light input backgrounds */
+    --ring: 220 85% 25%; /* Dark ring color */
+    --chart-1: 220 70% 40%;
+    --chart-2: 160 60% 35%;
+    --chart-3: 30 80% 45%;
+    --chart-4: 280 65% 50%;
+    --chart-5: 340 75% 45%;
     --padding: 0;
   }
 }
@@ -141,8 +142,21 @@ button:focus-visible {
     @apply px-0; /* Elimina padding horizontal */
   }
   body {
-    @apply bg-background text-foreground; /* Asegura que el fondo y el texto estén bien configurados */
+    @apply text-foreground; /* Solo aplica el texto, no el fondo */
     @apply px-0; /* Asegura que el body no tenga padding horizontal */
+    background-color: #F5F0E1 !important; /* Fuerza el fondo cream siempre */
+  }
+  
+  /* Forzar fondo cream en elementos principales */
+  html, body, #root {
+    background-color: #F5F0E1 !important;
+  }
+  
+  /* Asegurar que los elementos principales mantengan el fondo cream */
+  .dark body,
+  .dark #root,
+  .dark html {
+    background-color: #F5F0E1 !important;
   }
 }
 
@@ -162,6 +176,65 @@ button:focus-visible {
     font-family: 'Playwrite DE Grund', cursive;
     font-weight: 500;
   }
+
+  /* Utilidades para mantener fondo claro en cualquier tema */
+  .bg-cream-consistent {
+    background-color: #F5F0E1 !important;
+  }
+  
+  .bg-cream-force {
+    background-color: #F5F0E1 !important;
+  }
+  
+  /* Fuerza el fondo cream en elementos específicos */
+  .theme-consistent-bg {
+    background-color: #F5F0E1 !important;
+  }
+  
+  /* Utilidad para texto que se ajusta al fondo claro */
+  .text-dark-on-cream {
+    color: #374151 !important;
+  }
+  
+  .text-darker-on-cream {
+    color: #1f2937 !important;
+  }
+  
+  /* Clases de utilidad para botones con tema consistente */
+  .btn-cream-theme {
+    background-color: #F5F0E1 !important;
+    color: #374151 !important;
+    border: 1px solid #A5B8A1 !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  
+  .btn-cream-theme:hover {
+    background-color: #D9E4D7 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .btn-cream-primary {
+    background-color: #F5F0E1 !important;
+    color: #3A4FDE !important;
+    border: 1px solid #3A4FDE !important;
+  }
+  
+  .btn-cream-primary:hover {
+    background-color: #D9E4D7 !important;
+    border-color: #2938b8 !important;
+  }
+  
+  .btn-cream-danger {
+    background-color: #F5F0E1 !important;
+    color: #dc2626 !important;
+    border: 1px solid #ef4444 !important;
+  }
+  
+  .btn-cream-danger:hover {
+    background-color: #fef2f2 !important;
+    border-color: #dc2626 !important;
+  }
 }
 
 /* Clases globales para textos bold */
@@ -174,7 +247,168 @@ button:focus-visible {
     @apply font-SpaceGrotesk font-bold;
   }
   
+  /* Estilos globales limpios para todos los botones HTML */
   button {
-    @apply font-PlaywriteDE font-bold;
+    @apply font-PlaywriteDE font-medium;
+    background-color: #F5F0E1; /* cream-bg */
+    color: #A5B8A1; /* sage-green */
+    border: 1px solid #A5B8A1;
+    border-radius: 6px;
+    padding: 8px 16px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #A5B8A1;
+    color: white;
+  }
+  
+  button:active {
+    transform: translateY(1px);
+  }
+  
+  /* Estados específicos para botones con clases */
+  button.status-ok {
+    color: #10b981;
+    border-color: #10b981;
+  }
+  
+  button.status-ok:hover {
+    background-color: #10b981;
+    color: white;
+  }
+  
+  button.status-na {
+    color: #64748b;
+    border-color: #64748b;
+  }
+  
+  button.status-na:hover {
+    background-color: #64748b;
+    color: white;
+  }
+  
+  /* Botones de acción */
+  button.action-edit {
+    color: #3b82f6;
+    border-color: #3b82f6;
+  }
+  
+  button.action-edit:hover {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  button.action-delete,
+  button.danger {
+    color: #ef4444;
+    border-color: #ef4444;
+  }
+  
+  button.action-delete:hover,
+  button.danger:hover {
+    background-color: #ef4444;
+    color: white;
+  }
+  
+  /* Botones de exportación */
+  button.excel-export {
+    color: #16a34a;
+    border-color: #16a34a;
+  }
+  
+  button.excel-export:hover {
+    background-color: #16a34a;
+    color: white;
+  }
+  
+  /* Módulos específicos */
+  button.almacen {
+    color: #a3a3a3;
+    border-color: #a3a3a3;
+  }
+  
+  button.almacen:hover {
+    background-color: #a3a3a3;
+    color: white;
+  }
+  
+  button.produccion {
+    color: #f97316;
+    border-color: #f97316;
+  }
+  
+  button.produccion:hover {
+    background-color: #f97316;
+    color: white;
+  }
+}
+
+/* Animaciones personalizadas */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Clases de animación */
+@layer utilities {
+  .animate-gradient {
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  .animate-bounce-slow {
+    animation: bounce 2s ease-in-out infinite;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0)
+    );
+    background-repeat: no-repeat;
+    background-size: 200px 100%;
   }
 }

@@ -8,6 +8,7 @@ import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions"
 import ProveedorOptions from "../../body/components/proveedorOptions/ProveedorOptions";
 import { setSelectedProviderId } from "../../redux/actions-Proveedores";
 import supabase from "../../config/supabaseClient";
+import { showSuccessToast, showErrorToast } from "../../utils/toast";
 
 export function CardInstanceInventario({ product, currentType }) {
   const Proveedores = useSelector((state) => state.Proveedores || []);
@@ -163,10 +164,21 @@ export function CardInstanceInventario({ product, currentType }) {
 
       await dispatch(updateItem(product._id, updatedFields, currentType));
       setButtonState("done");
-      window.location.reload(); // Reload the page after a successful update
+      
+      // Mostrar toast de éxito en lugar de recargar la página
+      showSuccessToast('💾 Guardado correctamente');
+      
+      // Resetear estado después de 2 segundos sin recargar
+      setTimeout(() => setButtonState("save"), 2000);
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
-      setButtonState("save");
+      setButtonState("error");
+      
+      // Mostrar toast de error
+      showErrorToast('💾 Error al guardar: ' + (error.message || 'Error desconocido'));
+      
+      // Resetear estado después de 3 segundos
+      setTimeout(() => setButtonState("save"), 3000);
     }
   };
 

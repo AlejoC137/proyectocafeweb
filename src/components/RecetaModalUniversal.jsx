@@ -2,10 +2,12 @@ import React, { useEffect, useState, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { getAllFromTable, getRecepie } from "../redux/actions";
+import { getAllFromTable, getRecepie, updateItem } from "../redux/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE } from "../redux/actions-types";
+import PinCodeModal from "./ui/PinCodeModal";
+import EditableText from "./ui/EditableText";
 
 // --- COMPONENTE REUTILIZABLE PARA CADA FILA DE INGREDIENTE/PRODUCCIÓN ---
 const RecipeItemRow = ({ item, isEditing, onCheck, onSave, showCheckboxes = false, showEdit = false }) => {
@@ -185,6 +187,12 @@ function RecetaModalUniversal({
   const [porcentaje, setPorcentaje] = useState(100);
   const [editShow, setEditShow] = useState(false);
   
+  // Estados para modificación permanente
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [permanentEditMode, setPermanentEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [recetaSource, setRecetaSource] = useState(null); // "Recetas", "RecetasProduccion", etc.
+  
   // Estado consolidado para ingredientes y producción
   const [ingredientes, setIngredientes] = useState([]);
   const [produccion, setProduccion] = useState([]);
@@ -265,7 +273,10 @@ function RecetaModalUniversal({
         for (const source of sources) {
           try {
             result = await getRecepie(id, source);
-            if (result) break;
+            if (result) {
+              setRecetaSource(source); // Guardar la fuente de la receta
+              break;
+            }
           } catch (err) {
             continue;
           }
@@ -339,6 +350,115 @@ function RecetaModalUniversal({
       cantidad: (prod.originalQuantity * porcentaje) / 100
     })), [produccion, porcentaje]);
 
+  // === FUNCIONES DE MODIFICACIÓN PERMANENTE ===
+  
+  // Función para habilitar modo de edición permanente
+  const handleEnablePermanentEdit = () => {
+    setShowPinModal(true);
+  };
+  
+  // Callback cuando el PIN es correcto
+  const handlePinSuccess = () => {
+    setPermanentEditMode(true);
+    setShowPinModal(false);
+    setEditShow(true); // Habilitar edición automáticamente
+    alert('Modo de modificación permanente habilitado');
+  };
+  
+  // Función para guardar cambios permanentes en la receta
+  const savePermanentChanges = async (itemType, index, newQuantity) => {
+    if (!permanentEditMode || !receta || !recetaSource) return;
+    
+    setIsUpdating(true);
+    try {
+      const prefix = itemType === 'ingredient' ? 'item' : 'producto_interno';
+      const cuantityKey = `${prefix}${index}_Cuantity_Units`;
+      
+      // Obtener la estructura actual de cantidad y unidades
+      const currentCuantityUnitsRaw = receta[cuantityKey];
+      if (!currentCuantityUnitsRaw) {
+        throw new Error('No se encontró la estructura de cantidad y unidades');
+      }
+      
+      let currentCuantityUnits;
+      try {
+        currentCuantityUnits = JSON.parse(currentCuantityUnitsRaw);
+      } catch (e) {
+        throw new Error('Error al parsear la estructura actual');
+      }
+      
+      // Crear la nueva estructura con la cantidad actualizada
+      const updatedCuantityUnits = {
+        ...currentCuantityUnits,
+        metric: {
+          ...currentCuantityUnits.metric,
+          cuantity: Number(newQuantity)
+        }
+      };
+      
+      // Crear el objeto de actualización
+      const updatedFields = {
+        [cuantityKey]: JSON.stringify(updatedCuantityUnits),
+        actualizacion: new Date().toISOString()
+      };
+      
+      // Actualizar en la base de datos
+      const result = await dispatch(updateItem(receta._id, updatedFields, recetaSource));
+      
+      if (result) {
+        // Actualizar el estado local de la receta
+        setReceta(prev => ({
+          ...prev,
+          ...updatedFields
+        }));
+        
+        alert('Cambios guardados permanentemente en la receta');
+      } else {
+        throw new Error('Error al actualizar en la base de datos');
+      }
+      
+    } catch (error) {
+      console.error('Error al guardar cambios permanentes:', error);
+      alert('Error al guardar los cambios: ' + error.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  
+  // Función para actualizar procesos y notas
+  const updateProcessOrNote = async (type, index, newValue) => {
+    if (!permanentEditMode || !receta || !recetaSource) return;
+    
+    setIsUpdating(true);
+    try {
+      const fieldKey = type === 'process' ? `proces${index}` : `nota${index}`;
+      
+      const updatedFields = {
+        [fieldKey]: newValue,
+        actualizacion: new Date().toISOString()
+      };
+      
+      const result = await dispatch(updateItem(receta._id, updatedFields, recetaSource));
+      
+      if (result) {
+        setReceta(prev => ({
+          ...prev,
+          ...updatedFields
+        }));
+        
+        alert(`${type === 'process' ? 'Proceso' : 'Nota'} ${index} actualizado permanentemente`);
+      } else {
+        throw new Error('Error al actualizar en la base de datos');
+      }
+      
+    } catch (error) {
+      console.error('Error al actualizar proceso/nota:', error);
+      alert('Error al actualizar: ' + error.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Manejadores de eventos
   const handleCheck = (setState, index) => {
     setState(prevItems => prevItems.map(item =>
@@ -350,11 +470,20 @@ function RecetaModalUniversal({
     const numValue = Number(newValue);
     if (isNaN(numValue) || numValue <= 0) return;
   
+    // Si está en modo de edición permanente, guardar cambios en la base de datos
+    if (permanentEditMode) {
+      const itemType = setState === setIngredientes ? 'ingredient' : 'production';
+      savePermanentChanges(itemType, index, numValue);
+    }
+    
     setState(prevItems => {
       const itemToUpdate = prevItems.find(item => item.originalIndex === index);
       if (itemToUpdate) {
-        const newPercentage = (numValue / itemToUpdate.originalQuantity) * 100;
-        setPorcentaje(newPercentage);
+        if (!permanentEditMode) {
+          // Solo cambiar porcentaje si no está en modo permanente
+          const newPercentage = (numValue / itemToUpdate.originalQuantity) * 100;
+          setPorcentaje(newPercentage);
+        }
       }
       return prevItems;
     });
@@ -408,22 +537,68 @@ function RecetaModalUniversal({
         }}
       >
         Procesos y Notas
+        {permanentEditMode && (
+          <span className="ml-2 text-xs" style={{ color: 'rgb(34, 197, 94)' }}>
+            (Modo edición permanente activo)
+          </span>
+        )}
       </h3>
-      <div className="space-y-2 text-sm">
-        {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => 
-          receta[`proces${i}`] && (
-            <p key={i} style={{ color: 'rgb(0, 0, 0)' }}>
-              <strong>Proceso {i}:</strong> {receta[`proces${i}`]}
-            </p>
-          )
-        )}
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((i) => 
-          receta[`nota${i}`] && (
-            <p key={i} style={{ color: 'rgb(0, 0, 0)' }}>
-              <strong>Nota {i}:</strong> {receta[`nota${i}`]}
-            </p>
-          )
-        )}
+      
+      {/* Procesos */}
+      <div className="space-y-3">
+        <h4 className="font-medium text-sm" style={{ color: 'rgb(55, 65, 81)' }}>Procesos:</h4>
+        {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => {
+          const hasProcess = receta[`proces${i}`];
+          const shouldShow = hasProcess || permanentEditMode;
+          
+          return shouldShow ? (
+            <div key={`process-${i}`} className="flex items-start gap-2">
+              <span className="font-semibold text-xs min-w-[60px]" style={{ color: 'rgb(107, 114, 128)' }}>
+                Proceso {i}:
+              </span>
+              <div className="flex-1">
+                <EditableText
+                  value={receta[`proces${i}`] || ''}
+                  onSave={(value) => updateProcessOrNote('process', i, value)}
+                  isEditable={permanentEditMode}
+                  placeholder={`Escribir proceso ${i}...`}
+                  multiline={true}
+                  disabled={isUpdating}
+                />
+              </div>
+            </div>
+          ) : null;
+        })}
+      </div>
+      
+      {/* Separador */}
+      <div className="my-4 border-t" style={{ borderColor: 'rgb(229, 231, 235)' }}></div>
+      
+      {/* Notas */}
+      <div className="space-y-3">
+        <h4 className="font-medium text-sm" style={{ color: 'rgb(55, 65, 81)' }}>Notas:</h4>
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((i) => {
+          const hasNote = receta[`nota${i}`];
+          const shouldShow = hasNote || permanentEditMode;
+          
+          return shouldShow ? (
+            <div key={`note-${i}`} className="flex items-start gap-2">
+              <span className="font-semibold text-xs min-w-[50px]" style={{ color: 'rgb(107, 114, 128)' }}>
+                Nota {i}:
+              </span>
+              <div className="flex-1">
+                <EditableText
+                  value={receta[`nota${i}`] || ''}
+                  onSave={(value) => updateProcessOrNote('note', i, value)}
+                  isEditable={permanentEditMode}
+                  placeholder={`Escribir nota ${i}...`}
+                  multiline={true}
+                  disabled={isUpdating}
+                />
+              </div>
+            </div>
+          ) : null;
+        })}
       </div>
     </div>
   );
@@ -546,17 +721,33 @@ function RecetaModalUniversal({
                 </span>
               </div>
               {contextConfig.showEdit && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setEditShow(prev => !prev)}
-                  style={{
-                    backgroundColor: 'rgb(255, 255, 255)',
-                    borderColor: 'rgb(209, 213, 219)',
-                    color: 'rgb(0, 0, 0)'
-                  }}
-                >
-                  {editShow ? "Ocultar Edición" : "Habilitar Edición"}
-                </Button>
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setEditShow(prev => !prev)}
+                    disabled={permanentEditMode}
+                    style={{
+                      backgroundColor: permanentEditMode ? 'rgb(243, 244, 246)' : 'rgb(255, 255, 255)',
+                      borderColor: 'rgb(209, 213, 219)',
+                      color: permanentEditMode ? 'rgb(156, 163, 175)' : 'rgb(0, 0, 0)'
+                    }}
+                  >
+                    {editShow ? "Ocultar Edición" : "Habilitar Edición"}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={handleEnablePermanentEdit}
+                    disabled={permanentEditMode || isUpdating}
+                    style={{
+                      backgroundColor: permanentEditMode ? 'rgb(34, 197, 94)' : 'rgb(255, 255, 255)',
+                      borderColor: permanentEditMode ? 'rgb(22, 163, 74)' : 'rgb(251, 146, 60)',
+                      color: permanentEditMode ? 'rgb(255, 255, 255)' : 'rgb(234, 88, 12)'
+                    }}
+                  >
+                    {isUpdating ? "Actualizando..." : permanentEditMode ? "✓ Modo Permanente Activo" : "🔒 Modificación Permanente"}
+                  </Button>
+                </>
               )}
             </div>
           )}
@@ -630,10 +821,30 @@ function RecetaModalUniversal({
 
   // Retornar según el contexto
   if (contextConfig.showFullModal && onClose) {
-    return ReactDOM.createPortal(mainContent, document.body);
+    return (
+      <>
+        {ReactDOM.createPortal(mainContent, document.body)}
+        <PinCodeModal 
+          isOpen={showPinModal}
+          onClose={() => setShowPinModal(false)}
+          onSuccess={handlePinSuccess}
+          title="Autorización para Modificación Permanente"
+        />
+      </>
+    );
   }
   
-  return mainContent;
+  return (
+    <>
+      {mainContent}
+      <PinCodeModal 
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={handlePinSuccess}
+        title="Autorización para Modificación Permanente"
+      />
+    </>
+  );
 }
 
 export default RecetaModalUniversal;

@@ -264,9 +264,9 @@ export function TableViewManager({ products, currentType }) {
         <select
           value={currentValue}
           onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-          className="w-full p-1 border border-gray-300 rounded text-xs bg-white"
+          className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
         >
-          <option value="">Seleccionar...</option>
+          <option  value="">Seleccionar...</option>
           {options.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -281,7 +281,7 @@ export function TableViewManager({ products, currentType }) {
         type={type}
         value={currentValue}
         onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-        className="w-full p-1 border border-gray-300 rounded text-xs bg-white"
+        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
       />
     );
   };
@@ -297,7 +297,7 @@ export function TableViewManager({ products, currentType }) {
           return (
             <>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-                <button onClick={() => handleSort("NombreES")} className="flex items-center gap-1 hover:text-blue-600">
+                <button onClick={() => handleSort("NombreES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 border-gray-200 hover:text-blue-600">
                   Nombre <SortIcon column="NombreES" />
                 </button>
               </th>
@@ -311,12 +311,12 @@ export function TableViewManager({ products, currentType }) {
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Bebida</th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Pedidos</th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-                <button onClick={() => handleSort("Precio")} className="flex items-center gap-1 hover:text-blue-600">
+                <button onClick={() => handleSort("Precio")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                   Precio <SortIcon column="Precio" />
                 </button>
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-                <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+                <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                   Estado <SortIcon column="Estado" />
                 </button>
               </th>
@@ -328,32 +328,32 @@ export function TableViewManager({ products, currentType }) {
         return (
           <>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("NombreES")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("NombreES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Nombre ES <SortIcon column="NombreES" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("NombreEN")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("NombreEN")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Nombre EN <SortIcon column="NombreEN" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Precio")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Precio")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Precio <SortIcon column="Precio" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("GRUPO")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("GRUPO")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Grupo <SortIcon column="GRUPO" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("TipoES")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("TipoES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Tipo <SortIcon column="TipoES" />
               </button>
             </th>
@@ -365,32 +365,32 @@ export function TableViewManager({ products, currentType }) {
         return (
           <>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Nombre")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Nombre")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Nombre <SortIcon column="Nombre" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Apellido")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Apellido")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Apellido <SortIcon column="Apellido" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Cargo")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Cargo")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Cargo <SortIcon column="Cargo" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("CC")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("CC")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 CC <SortIcon column="CC" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Rate")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Rate")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Rate <SortIcon column="Rate" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
@@ -402,27 +402,27 @@ export function TableViewManager({ products, currentType }) {
         return (
           <>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Tittle")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Tittle")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Título <SortIcon column="Tittle" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Categoria")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Categoria")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Categoría <SortIcon column="Categoria" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Prioridad")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Prioridad")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Prioridad <SortIcon column="Prioridad" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Dates")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Dates")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Fechas <SortIcon column="Dates" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
@@ -434,22 +434,22 @@ export function TableViewManager({ products, currentType }) {
         return (
           <>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("tittle")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("tittle")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Título <SortIcon column="tittle" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Categoria")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Categoria")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Categoría <SortIcon column="Categoria" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Descripción")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Descripción")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Descripción <SortIcon column="Descripción" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Estado <SortIcon column="Estado" />
               </button>
             </th>
@@ -751,7 +751,7 @@ export function TableViewManager({ products, currentType }) {
       {isEditing && (
         <Button
           onClick={() => handleSaveRow(item)}
-          className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs h-6"
+          className="bg-gray-100 hover:bg-green-600 text-green-800 px-2 py-1 text-xs h-6 border border-green-300"
         >
           💾
         </Button>
@@ -759,7 +759,7 @@ export function TableViewManager({ products, currentType }) {
       {showEdit && (
         <Button
           onClick={() => handleDelete(item)}
-          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs h-6"
+          className="bg-gray-100 hover:bg-red-600 text-red-800 px-2 py-1 text-xs h-6 border border-red-300"
         >
           🗑️
         </Button>
@@ -772,23 +772,23 @@ export function TableViewManager({ products, currentType }) {
       {/* Panel de filtros tipo Excel */}
       <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
+          <div className="  bg-slate-100 text-gray-950  flex items-center gap-2">
             <Search className="w-4 h-4 text-gray-500" />
             <input
               type="text"
               placeholder={`Buscar ${currentType}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1 text-sm"
+              className="border border-gray-300 rounded px-3 py-1 text-sm bg-gray-100"
             />
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="  bg-slate-100 text-gray-950  flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-500" />
             <select
               value={filterGrupo}
               onChange={(e) => setFilterGrupo(e.target.value)}
-              className="border border-gray-300 bg-white text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Todos los grupos</option>
               {uniqueGrupos.map(grupo => (
@@ -800,12 +800,12 @@ export function TableViewManager({ products, currentType }) {
           {/* Filtros adicionales para MenuItems */}
           {currentType === MenuItems && (
             <>
-              <div className="flex items-center gap-2">
+              <div className="  bg-slate-100 text-gray-950  flex items-center gap-2">
                 <Filter className="w-4 h-4 text-orange-500" />
                 <select
                   value={filterSubGrupo}
                   onChange={(e) => setFilterSubGrupo(e.target.value)}
-                  className="border border-orange-300 bg-orange-50 text-gray-900 rounded px-3 py-1 text-sm"
+                  className="border border-orange-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm"
                 >
                   <option value="">Todos los sub-grupos</option>
                   {uniqueSubGrupos.map(subGrupo => (
@@ -814,12 +814,12 @@ export function TableViewManager({ products, currentType }) {
                 </select>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="  bg-slate-100 text-gray-950  flex items-center gap-2">
                 <Filter className="w-4 h-4 text-purple-500" />
                 <select
                   value={filterTipo}
                   onChange={(e) => setFilterTipo(e.target.value)}
-                  className="border border-purple-300 bg-purple-50 text-gray-900 rounded px-3 py-1 text-sm"
+                  className="border border-purple-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm"
                 >
                   <option value="">Todos los tipos</option>
                   {uniqueTipos.map(tipo => (
@@ -830,12 +830,12 @@ export function TableViewManager({ products, currentType }) {
             </>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="  bg-slate-100 text-gray-950  flex items-center gap-2">
             <Filter className="w-4 h-4 text-green-500" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-green-300 bg-green-50 text-gray-900 rounded px-3 py-1 text-sm"
+              className="border border-green-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm"
             >
               <option value="">Todos los estados</option>
               {uniqueEstados.map(estado => (
