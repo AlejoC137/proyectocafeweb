@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { deleteItem, updateItem } from "../../redux/actions-Proveedores";
+import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
 import { 
   ESTATUS, 
   CATEGORIES, 
@@ -13,6 +13,8 @@ import {
 } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
+import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
+import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 
 export function TableViewManager({ products, currentType }) {
   const dispatch = useDispatch();
@@ -31,6 +33,8 @@ export function TableViewManager({ products, currentType }) {
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [editingRows, setEditingRows] = useState({});
+  const [openRecipeModals, setOpenRecipeModals] = useState({});
+  const [recetas, setRecetas] = useState({});
 
   // Obtener categorías únicas según el tipo
   const getUniqueCategories = () => {
@@ -233,6 +237,27 @@ export function TableViewManager({ products, currentType }) {
     }
   };
 
+  // Función para manejar el modal de recetas
+  const handleRecipeModal = async (productId, recetaId = null) => {
+    setOpenRecipeModals(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+    
+    if (recetaId && !recetas[productId]) {
+      try {
+        const recetaType = currentType === MenuItems ? "Recetas" : "RecetasProduccion";
+        const receta = await getRecepie(recetaId, recetaType);
+        setRecetas(prev => ({
+          ...prev,
+          [productId]: receta
+        }));
+      } catch (error) {
+        console.error("Error al cargar receta:", error);
+      }
+    }
+  };
+
   // Función para manejar objetos anidados de forma segura
   const parseNestedObject = (obj, fallback = {}) => {
     try {
@@ -338,6 +363,12 @@ export function TableViewManager({ products, currentType }) {
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              Descripción ES
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              Descripción EN
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               <button onClick={() => handleSort("Precio")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
                 Precio <SortIcon column="Precio" />
               </button>
@@ -348,13 +379,25 @@ export function TableViewManager({ products, currentType }) {
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
-                Estado <SortIcon column="Estado" />
-              </button>
+              SUB_GRUPO
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               <button onClick={() => handleSort("TipoES")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
-                Tipo <SortIcon column="TipoES" />
+                Tipo ES <SortIcon column="TipoES" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              Tipo EN
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              Foto
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              PRINT
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="  bg-slate-100 text-gray-950  flex items-center gap-1 hover:text-blue-600">
+                Estado <SortIcon column="Estado" />
               </button>
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
@@ -607,25 +650,104 @@ export function TableViewManager({ products, currentType }) {
             <td className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "NombreEN") : <span className="text-gray-600">{item.NombreEN || "Sin nombre EN"}</span>}
             </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
+              {showEdit ? (
+                <textarea
+                  value={editingRows[item._id]?.DescripcionMenuES || item.DescripcionMenuES || ""}
+                  onChange={(e) => handleCellEdit(item._id, "DescripcionMenuES", e.target.value)}
+                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 resize-none"
+                  rows={2}
+                />
+              ) : (
+                <div className="text-xs text-gray-600 max-w-32 truncate" title={item.DescripcionMenuES}>
+                  {item.DescripcionMenuES || "Sin descripción"}
+                </div>
+              )}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
+              {showEdit ? (
+                <textarea
+                  value={editingRows[item._id]?.DescripcionMenuEN || item.DescripcionMenuEN || ""}
+                  onChange={(e) => handleCellEdit(item._id, "DescripcionMenuEN", e.target.value)}
+                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 resize-none"
+                  rows={2}
+                />
+              ) : (
+                <div className="text-xs text-gray-600 max-w-32 truncate" title={item.DescripcionMenuEN}>
+                  {item.DescripcionMenuEN || "Sin descripción EN"}
+                </div>
+              )}
+            </td>
             <td className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Precio", "number") : 
                 <span className="font-mono font-bold text-green-600">${parseFloat(item.Precio || 0).toFixed(2)}</span>}
             </td>
             <td className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? renderEditableCell(item, "GRUPO") :
+              {showEdit ? renderEditableCell(item, "GRUPO", "select", CATEGORIES) :
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>}
             </td>
             <td className="px-3 py-2 border-r border-gray-100 text-xs">
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                item.Estado === "Activo" 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {item.Estado || "Sin estado"}
-              </span>
+              {showEdit ? renderEditableCell(item, "SUB_GRUPO", "select", SUB_CATEGORIES) :
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">{item.SUB_GRUPO || "Sin sub-grupo"}</span>}
             </td>
             <td className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "TipoES") : <span className="text-gray-600">{item.TipoES || "Sin tipo"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "TipoEN") : <span className="text-gray-600">{item.TipoEN || "Sin tipo EN"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs max-w-20">
+              {showEdit ? (
+                <input
+                  type="url"
+                  value={editingRows[item._id]?.Foto || item.Foto || ""}
+                  onChange={(e) => handleCellEdit(item._id, "Foto", e.target.value)}
+                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                  placeholder="URL de imagen"
+                />
+              ) : (
+                item.Foto ? (
+                  <a href={item.Foto} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                    🖼️
+                  </a>
+                ) : (
+                  <span className="text-gray-400">Sin foto</span>
+                )
+              )}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              <button
+                onClick={() => {
+                  const newPrint = !item.PRINT;
+                  handleCellEdit(item._id, "PRINT", newPrint);
+                  // Guardar inmediatamente el cambio
+                  dispatch(updateItem(item._id, { PRINT: newPrint }, "Menu"));
+                }}
+                className={`px-2 py-1 rounded text-xs ${
+                  item.PRINT
+                    ? "bg-green-100 text-green-800 border border-green-300"
+                    : "bg-red-100 text-red-800 border border-red-300"
+                }`}
+              >
+                {item.PRINT ? "SÍ" : "NO"}
+              </button>
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              <button
+                onClick={() => {
+                  const newEstado = item.Estado === "Activo" ? "Inactivo" : "Activo";
+                  handleCellEdit(item._id, "Estado", newEstado);
+                  // Guardar inmediatamente el cambio
+                  dispatch(updateItem(item._id, { Estado: newEstado }, "Menu"));
+                }}
+                className={`px-2 py-1 rounded-full text-xs ${
+                  item.Estado === "Activo"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {item.Estado || "Sin estado"}
+              </button>
             </td>
             <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
           </>
@@ -748,6 +870,14 @@ export function TableViewManager({ products, currentType }) {
   // Función para renderizar botones de acción
   const renderActionButtons = (item, isEditing) => (
     <div className="flex gap-1">
+      {currentType === MenuItems && (
+        <Button
+          onClick={() => handleRecipeModal(item._id, item.Receta)}
+          className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
+        >
+          {openRecipeModals[item._id] ? '📖' : '📕'}
+        </Button>
+      )}
       {isEditing && (
         <Button
           onClick={() => handleSaveRow(item)}
@@ -868,6 +998,46 @@ export function TableViewManager({ products, currentType }) {
           </tbody>
         </table>
       </div>
+
+      {/* Modales de recetas */}
+      {Object.entries(openRecipeModals).map(([productId, isOpen]) => {
+        if (!isOpen) return null;
+        
+        const product = products.find(p => p._id === productId);
+        const receta = recetas[productId];
+        
+        return (
+          <div key={productId} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">
+                  Receta para: {product?.NombreES || product?.Nombre || product?.Tittle || product?.tittle}
+                </h3>
+                <Button
+                  onClick={() => handleRecipeModal(productId)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+              
+              {currentType === MenuItems ? (
+                <RecepieOptionsMenu 
+                  product={product} 
+                  Receta={receta} 
+                  currentType={currentType}
+                />
+              ) : (
+                <RecepieOptions 
+                  product={product} 
+                  Receta={receta} 
+                  currentType={currentType}
+                />
+              )}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Resumen tipo Excel */}
   

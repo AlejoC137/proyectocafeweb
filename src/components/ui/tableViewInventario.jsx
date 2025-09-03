@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { deleteItem, updateItem } from "../../redux/actions-Proveedores";
+import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
 import { ESTATUS, BODEGA, CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
+import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
+import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 
 export function TableViewInventario({ products, currentType }) {
   const dispatch = useDispatch();
@@ -20,6 +22,8 @@ export function TableViewInventario({ products, currentType }) {
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [editingRows, setEditingRows] = useState({});
+  const [openRecipeModals, setOpenRecipeModals] = useState({});
+  const [recetas, setRecetas] = useState({});
 
   // Obtener valores únicos para filtros
   const uniqueCategories = [...new Set(products.map(p => p.GRUPO).filter(Boolean))];
@@ -188,6 +192,27 @@ export function TableViewInventario({ products, currentType }) {
       
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
+    }
+  };
+
+  // Función para manejar el modal de recetas
+  const handleRecipeModal = async (productId, recetaId = null) => {
+    setOpenRecipeModals(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+    
+    if (recetaId && !recetas[productId]) {
+      try {
+        const recetaType = currentType === MenuItems ? "Recetas" : "RecetasProduccion";
+        const receta = await getRecepie(recetaId, recetaType);
+        setRecetas(prev => ({
+          ...prev,
+          [productId]: receta
+        }));
+      } catch (error) {
+        console.error("Error al cargar receta:", error);
+      }
     }
   };
 
@@ -443,6 +468,12 @@ export function TableViewInventario({ products, currentType }) {
             {/* Acciones */}
             <td className="px-3 py-2 text-xs">
               <div className="flex gap-1">
+                <Button
+                  onClick={() => handleRecipeModal(item._id, item.Receta)}
+                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
+                >
+                  {openRecipeModals[item._id] ? '📖' : '📕'}
+                </Button>
                 {isEditing && (
                   <Button
                     onClick={() => handleSaveRow(item)}
@@ -628,6 +659,14 @@ export function TableViewInventario({ products, currentType }) {
           {/* Acciones */}
           <td className="px-3 py-2 text-xs">
             <div className="flex gap-1">
+              {(currentType === ProduccionInterna || currentType === MenuItems) && (
+                <Button
+                  onClick={() => handleRecipeModal(item._id, item.Receta)}
+                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
+                >
+                  {openRecipeModals[item._id] ? '📖' : '📕'}
+                </Button>
+              )}
               {isEditing && (
                 <Button
                   onClick={() => handleSaveRow(item)}
@@ -745,6 +784,46 @@ export function TableViewInventario({ products, currentType }) {
           </tbody>
         </table>
       </div>
+
+      {/* Modales de recetas */}
+      {Object.entries(openRecipeModals).map(([productId, isOpen]) => {
+        if (!isOpen) return null;
+        
+        const product = products.find(p => p._id === productId);
+        const receta = recetas[productId];
+        
+        return (
+          <div key={productId} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">
+                  Receta para: {product?.Nombre_del_producto || product?.NombreES}
+                </h3>
+                <Button
+                  onClick={() => handleRecipeModal(productId)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+              
+              {currentType === MenuItems ? (
+                <RecepieOptionsMenu 
+                  product={product} 
+                  Receta={receta} 
+                  currentType={currentType}
+                />
+              ) : (
+                <RecepieOptions 
+                  product={product} 
+                  Receta={receta} 
+                  currentType={currentType}
+                />
+              )}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Resumen tipo Excel */}
       <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
