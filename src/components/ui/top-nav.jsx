@@ -1,135 +1,122 @@
 import React from "react";
-import { Menu, ShoppingCart, Languages } from "lucide-react"; // Añadido 'Languages' que faltaba
+import { Menu, ShoppingCart, Languages } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ENG, ESP } from "../../redux/actions-types";
 import { useDispatch, useSelector } from "react-redux";
 import { setLenguage } from "../../redux/actions";
 import laTaza from "@/assets/TAZA.svg";
+
+// Objeto para mapear rutas a títulos. Es más limpio y escalable que un switch.
+const pageTitles = {
+  "": { [ESP]: "Portal de Personal", [ENG]: "Staff Portal" },
+  "HOME": { [ESP]: "Inicio", [ENG]: "Home" },
+  "MENUVIEW": { [ESP]: "Menú", [ENG]: "Menu" },
+  "LUNCHBYORDER": { [ESP]: "Almuerzos", [ENG]: "Lunches" },
+  "BUSCARPRECIOSINTERNET": { [ESP]: "Buscar Precios", [ENG]: "Search Prices" },
+  "AGENDA": { [ESP]: "Agenda", [ENG]: "Agenda" },
+  "MANAGER": { [ESP]: "Administrador", [ENG]: "Manager" },
+  "SOBRENOSOTROS": { [ESP]: "Nosotros", [ENG]: "About Us" },
+  "SCRAPER": { [ESP]: "Extractor Web", [ENG]: "Web Scraper" },
+  "INVENTARIO": { [ESP]: "Inventario", [ENG]: "Inventory" },
+  "VENTACOMPRA": { [ESP]: "Ventas y Compras", [ENG]: "Sales & Purchases" },
+  "ACTIVIDADES": { [ESP]: "Actividades", [ENG]: "Activities" },
+  "GASTOS": { [ESP]: "Gastos", [ENG]: "Expenses" },
+  "MENUPRINT": { [ESP]: "Menú para Imprimir", [ENG]: "Printable Menu" },
+  "DIARESUMEN": { [ESP]: "Resumen del Día", [ENG]: "Daily Summary" },
+  "MESRESUMEN": { [ESP]: "Resumen del Mes", [ENG]: "Monthly Summary" },
+  "ACCIONESRAPIDAS": { [ESP]: "Acciones Rápidas", [ENG]: "Quick Actions" },
+  "PROVEEDORES": { [ESP]: "Proveedores", [ENG]: "Suppliers" },
+  "CALCULONOMINA": { [ESP]: "Cálculo de Nómina", [ENG]: "Payroll Calculation" },
+};
+
+// Componente reutilizable para los botones de íconos
+const IconButton = ({ children, onClick, className = '' }) => (
+  <button
+    onClick={onClick}
+    className={`p-1.5 rounded-lg shadow-sm transition-all duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}
+  >
+    {children}
+  </button>
+);
+
 export default function TopNav() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // Se usa el estado de Redux para el idioma
   const currentLeng = useSelector((state) => state.currentLeng);
   const location = useLocation();
 
-  /**
-   * Función para cambiar el estado del idioma en Redux.
-   */
   const handleLanguageToggle = () => {
-    // Despacha la acción para cambiar el idioma en el store de Redux
     dispatch(setLenguage(currentLeng === ESP ? ENG : ESP));
   };
 
-  /**
-   * Función para navegar a la página de inicio
-   */
   const handleGoHome = () => {
     navigate('/');
   };
 
-  /**
-   * Determina el texto a mostrar en la barra de navegación superior
-   * basándose en la ruta actual de la URL y el estado del idioma de Redux.
-   * @returns {string} El título de la página actual, traducido.
-   */
   const getDisplayText = () => {
     const path = location.pathname.toLowerCase();
 
-    // Se reemplazó 'language' por 'currentLeng'
     if (path.startsWith('/receta/')) {
-        return currentLeng === ESP ? "Detalle de Receta" : "Recipe Detail";
+      return currentLeng === ESP ? "Detalle de Receta" : "Recipe Detail";
     }
     if (path.startsWith('/predict/')) {
-        return currentLeng === ESP ? "Predicción de Venta" : "Sale Prediction";
+      return currentLeng === ESP ? "Predicción de Venta" : "Sale Prediction";
     }
 
     const viewFromUrl = path.substring(1).toUpperCase();
-
-    // Se reemplazó 'language' por 'currentLeng' en todo el switch
-    switch (viewFromUrl) {
-      case "":
-        return currentLeng === ESP ? "Portal de Personal" : "Staff Portal";
-      case "HOME":
-        return currentLeng === ESP ? "Inicio" : "Home";
-      case "MENUVIEW":
-        return currentLeng === ESP ? "Menú" : "Menu";
-      case "LUNCHBYORDER":
-        return currentLeng === ESP ? "Almuerzos" : "Lunches";
-      case "BUSCARPRECIOSINTERNET":
-        return currentLeng === ESP ? "Buscar Precios" : "Search Prices";
-      case "AGENDA":
-        return currentLeng === ESP ? "Agenda" : "Agenda";
-      case "MANAGER":
-        return currentLeng === ESP ? "Administrador" : "Manager";
-      case "SOBRENOSOTROS":
-        return currentLeng === ESP ? "Nosotros" : "About Us";
-      case "SCRAPER":
-        return currentLeng === ESP ? "Extractor Web" : "Web Scraper";
-      case "INVENTARIO":
-        return currentLeng === ESP ? "Inventario" : "Inventory";
-      case "VENTACOMPRA":
-        return currentLeng === ESP ? "Ventas y Compras" : "Sales & Purchases";
-      case "ACTIVIDADES":
-        return currentLeng === ESP ? "Actividades" : "Activities";
-      case "GASTOS":
-        return currentLeng === ESP ? "Gastos" : "Expenses";
-      case "MENUPRINT":
-        return currentLeng === ESP ? "Menú para Imprimir" : "Printable Menu";
-      case "DIARESUMEN":
-        return currentLeng === ESP ? "Resumen del Día" : "Daily Summary";
-      case "MESRESUMEN":
-        return currentLeng === ESP ? "Resumen del Mes" : "Monthly Summary";
-      case "ACCIONESRAPIDAS":
-        return currentLeng === ESP ? "Acciones Rápidas" : "Quick Actions";
-      case "PROVEEDORES":
-        return currentLeng === ESP ? "Proveedores" : "Suppliers";
-      case "CALCULONOMINA":
-        return currentLeng === ESP ? "Cálculo de Nómina" : "Payroll Calculation";
-      default:
-        return viewFromUrl.charAt(0) + viewFromUrl.slice(1).toLowerCase();
+    const titleEntry = pageTitles[viewFromUrl];
+    
+    if (titleEntry) {
+      return titleEntry[currentLeng];
     }
+    
+    // Fallback para rutas no definidas en el objeto
+    return viewFromUrl.charAt(0) + viewFromUrl.slice(1).toLowerCase();
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-cream-bg border-b-2 border-sage-green shadow-md z-50">
-      {/* Primera fila: Logo y controles */}
-      <div className="h-10 flex items-center justify-between px-4">
-        <button className="p-1.5 rounded-lg bg-sage-green/20 hover:bg-sage-green/30 transition-colors">
-          <Menu className="h-5 w-5 text-sage-green" />
-        </button>
-        <div className="flex items-center gap-2">
-  <button 
-          onClick={handleGoHome}
-          className="font-SpaceGrotesk text-lg font-bold text-cobalt-blue hover:text-sage-green transition-colors cursor-pointer flex items-center gap-0"
-        >
-          <img src={laTaza} alt="la taza" className="w-6 h-6 inline" />
-          PC 
-        </button>
-
-
-                <div className="h-8 flex items-center justify-center px-4 bg-gradient-to-r from-light-leaf/30 to-transparent">
-        <h1 className="font-SpaceGrotesk font-bold text-sm text-gray-700 truncate">{getDisplayText()}</h1>
-      </div>
+    <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-md bg-cream-bg border-sage-green text-not-black">
+      <div className="container flex items-center justify-between h-14 px-4">
+        
+        {/* Sección Izquierda: Botón de Menú */}
+        <div className="w-1/3 flex justify-start">
+          <IconButton className="bg-light-leaf text-sage-green hover:bg-sage-green hover:text-white">
+            <Menu className="h-5 w-5" />
+          </IconButton>
         </div>
-      
-        <div className="flex items-center gap-2">
-          {/* Botón para cambiar el isdioma */}
-          <button 
-            onClick={handleLanguageToggle} 
-            className="px-2 py-1 rounded-md bg-terracotta-pink hover:bg-terracotta-pink/80 flex items-center gap-1 font-bold font-PlaywriteDE text-white transition-colors shadow-sm text-xs"
+
+        {/* Sección Central: Logo y Título de la Página */}
+        <div className="w-1/3 flex items-center justify-center gap-2">
+          <button
+            onClick={handleGoHome}
+            className="font-SpaceGrotesk text-lg font-bold text-cobalt-blue transition-transform hover:scale-105 flex items-center gap-1 shrink-0"
+          >
+            <img src={laTaza} alt="La Taza Logo" className="w-6 h-6" />
+            <span>PC</span>
+          </button>
+          
+          <div className="h-full flex items-center pl-4 border-l border-sage-green/50">
+            <h1 className="font-SpaceGrotesk font-bold text-sm truncate text-gray-700">
+              {getDisplayText()}
+            </h1>
+          </div>
+        </div>
+
+        {/* Sección Derecha: Idioma y Carrito */}
+        <div className="w-1/3 flex items-center justify-end gap-2">
+          <button
+            onClick={handleLanguageToggle}
+            className="px-2 py-1 rounded-md flex items-center gap-1.5 font-bold font-PlaywriteDE text-xs shadow-sm transition-all duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-terracotta-pink text-white"
           >
             <Languages className="h-3 w-3" />
             {currentLeng === ESP ? 'ENG' : 'ESP'}
           </button>
-
-          <button className="p-1.5 rounded-lg bg-cobalt-blue hover:bg-cobalt-blue/80 transition-colors shadow-sm">
-            <ShoppingCart className="h-4 w-4 text-white" />
-          </button>
+          
+          <IconButton className="bg-cobalt-blue text-white hover:bg-opacity-80">
+            <ShoppingCart className="h-4 w-4" />
+          </IconButton>
         </div>
       </div>
-      
-      {/* Segunda fila: Información del sitio */}
-
-    </div>
+    </header>
   );
 }

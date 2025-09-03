@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem } from "../../redux/actions-Proveedores";
-import { ESTATUS, AREAS, Staff, WorkIsue, Procedimientos, MenuItems } from "../../redux/actions-types";
+import { 
+  ESTATUS, 
+  CATEGORIES, 
+  SUB_CATEGORIES, 
+  Staff, 
+  WorkIsue, 
+  Procedimientos, 
+  MenuItems 
+} from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 
@@ -12,10 +20,12 @@ export function TableViewManager({ products, currentType }) {
   
   // Estados para filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterSubGroup, setFilterSubGroup] = useState(
+  const [filterGrupo, setFilterGrupo] = useState(
+    currentType === MenuItems ? "TARDEO" : ""
+  ); 
+  const [filterSubGrupo, setFilterSubGrupo] = useState(
     currentType === MenuItems ? "TARDEO_ALMUERZO" : ""
-  ); // Por defecto TARDEO_ALMUERZO para MenuItems (incluye los almuerzos)
+  );
   const [filterTipo, setFilterTipo] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [sortColumn, setSortColumn] = useState("");
@@ -86,9 +96,10 @@ export function TableViewManager({ products, currentType }) {
     }
   };
 
-  const uniqueCategories = getUniqueCategories();
-  const uniqueSubGroups = getUniqueSubGroups();
+  const uniqueGrupos = getUniqueCategories();
+  const uniqueSubGrupos = getUniqueSubGroups();
   const uniqueTipos = getUniqueTipos();
+  const uniqueEstados = [...new Set(products.map(p => p.Estado).filter(Boolean))];
   
   // Filtrar productos
   const filteredProducts = products.filter(product => {
@@ -96,21 +107,21 @@ export function TableViewManager({ products, currentType }) {
     const matchesSearch = !searchTerm || 
       (searchField && searchField.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const categoryField = getCategoryField(product);
-    const matchesCategory = !filterCategory || categoryField === filterCategory;
+    const grupoField = getCategoryField(product);
+    const matchesGrupo = !filterGrupo || grupoField === filterGrupo;
     const matchesStatus = !filterStatus || product.Estado === filterStatus;
     
     // Filtros específicos para MenuItems
-    let matchesSubGroup = true;
+    let matchesSubGrupo = true;
     let matchesTipo = true;
     
     if (currentType === MenuItems) {
-      matchesSubGroup = !filterSubGroup || 
-        (product.SUB_GRUPO && product.SUB_GRUPO.includes(filterSubGroup));
+      matchesSubGrupo = !filterSubGrupo || 
+        (product.SUB_GRUPO && product.SUB_GRUPO.includes(filterSubGrupo));
       matchesTipo = !filterTipo || product.TipoES === filterTipo;
     }
     
-    return matchesSearch && matchesCategory && matchesStatus && matchesSubGroup && matchesTipo;
+    return matchesSearch && matchesGrupo && matchesStatus && matchesSubGrupo && matchesTipo;
   });
 
   // Ordenar productos
@@ -121,7 +132,7 @@ export function TableViewManager({ products, currentType }) {
     let bValue = b[sortColumn] || "";
     
     // Manejar casos especiales para fechas y números
-    if (sortColumn === "Rate" || sortColumn === "CC") {
+    if (sortColumn === "Rate" || sortColumn === "CC" || sortColumn === "Precio") {
       aValue = parseFloat(aValue) || 0;
       bValue = parseFloat(bValue) || 0;
     } else if (sortColumn.includes("Date") || sortColumn === "Dates") {
@@ -193,17 +204,10 @@ export function TableViewManager({ products, currentType }) {
       } else if (currentType === MenuItems) {
         // Para MenuItems, usar la acción correcta
         await dispatch(updateItem(item._id, updatedFields, "Menu"));
-        
-        // Limpiar datos de edición para esta fila
-        setEditingRows(prev => {
-          const newState = { ...prev };
-          delete newState[item._id];
-          return newState;
-        });
-        return; // Salir temprano para MenuItems
+      } else {
+        // Para otros tipos
+        await dispatch(updateItem(item._id, updatedFields, currentType));
       }
-
-      await dispatch(updateItem(item._id, updatedFields, currentType));
       
       // Limpiar datos de edición para esta fila
       setEditingRows(prev => {
@@ -287,7 +291,7 @@ export function TableViewManager({ products, currentType }) {
     switch(currentType) {
       case MenuItems:
         // Determinar si estamos mostrando solo almuerzos
-        const isLunchOnly = filterSubGroup === "ALMUERZO" || filterSubGroup === "TARDEO_ALMUERZO";
+        const isLunchOnly = filterSubGrupo === "ALMUERZO" || filterSubGrupo === "TARDEO_ALMUERZO";
         
         if (isLunchOnly) {
           return (
@@ -357,6 +361,102 @@ export function TableViewManager({ products, currentType }) {
           </>
         );
       
+      case Staff:
+        return (
+          <>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Nombre")} className="flex items-center gap-1 hover:text-blue-600">
+                Nombre <SortIcon column="Nombre" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Apellido")} className="flex items-center gap-1 hover:text-blue-600">
+                Apellido <SortIcon column="Apellido" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Cargo")} className="flex items-center gap-1 hover:text-blue-600">
+                Cargo <SortIcon column="Cargo" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("CC")} className="flex items-center gap-1 hover:text-blue-600">
+                CC <SortIcon column="CC" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Rate")} className="flex items-center gap-1 hover:text-blue-600">
+                Rate <SortIcon column="Rate" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+                Estado <SortIcon column="Estado" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          </>
+        );
+      
+      case WorkIsue:
+        return (
+          <>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Tittle")} className="flex items-center gap-1 hover:text-blue-600">
+                Título <SortIcon column="Tittle" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Categoria")} className="flex items-center gap-1 hover:text-blue-600">
+                Categoría <SortIcon column="Categoria" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Prioridad")} className="flex items-center gap-1 hover:text-blue-600">
+                Prioridad <SortIcon column="Prioridad" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Dates")} className="flex items-center gap-1 hover:text-blue-600">
+                Fechas <SortIcon column="Dates" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+                Estado <SortIcon column="Estado" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          </>
+        );
+      
+      case Procedimientos:
+        return (
+          <>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("tittle")} className="flex items-center gap-1 hover:text-blue-600">
+                Título <SortIcon column="tittle" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Categoria")} className="flex items-center gap-1 hover:text-blue-600">
+                Categoría <SortIcon column="Categoria" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Descripción")} className="flex items-center gap-1 hover:text-blue-600">
+                Descripción <SortIcon column="Descripción" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
+                Estado <SortIcon column="Estado" />
+              </button>
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          </>
+        );
+      
       default:
         return <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Sin columnas definidas</th>;
     }
@@ -383,7 +483,7 @@ export function TableViewManager({ products, currentType }) {
     switch(currentType) {
       case MenuItems:
         // Determinar si estamos mostrando solo almuerzos
-        const isLunchOnly = filterSubGroup === "ALMUERZO" || filterSubGroup === "TARDEO_ALMUERZO";
+        const isLunchOnly = filterSubGrupo === "ALMUERZO" || filterSubGrupo === "TARDEO_ALMUERZO";
         
         if (isLunchOnly) {
           // Parsear la información del almuerzo usando la función utilitaria
@@ -531,6 +631,115 @@ export function TableViewManager({ products, currentType }) {
           </>
         );
       
+      case Staff:
+        const cuentaData = parseNestedObject(item.Cuenta, {});
+        const contactoData = parseNestedObject(item.infoContacto, {});
+        
+        return (
+          <>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Nombre") : 
+                <span className="font-medium text-blue-800">{item.Nombre || "Sin nombre"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Apellido") : 
+                <span className="font-medium text-gray-700">{item.Apellido || "Sin apellido"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Cargo") :
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.Cargo || "Sin cargo"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "CC", "number") : 
+                <span className="font-mono text-gray-600">{item.CC || "N/A"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Rate", "number") : 
+                <span className="font-mono font-bold text-green-600">${parseFloat(item.Rate || 0).toFixed(2)}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                item.Estado === "Activo" 
+                  ? "bg-green-100 text-green-800" 
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {item.Estado || "Sin estado"}
+              </span>
+            </td>
+            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          </>
+        );
+      
+      case WorkIsue:
+        return (
+          <>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Tittle") : 
+                <span className="font-medium text-blue-800">{item.Tittle || "Sin título"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Categoria") :
+                <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">{item.Categoria || "Sin categoría"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Prioridad", "select", ["Alta", "Media", "Baja"]) :
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  item.Prioridad === "Alta" ? "bg-red-100 text-red-800" :
+                  item.Prioridad === "Media" ? "bg-yellow-100 text-yellow-800" :
+                  "bg-green-100 text-green-800"
+                }`}>
+                  {item.Prioridad || "Sin prioridad"}
+                </span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Dates", "date") : 
+                <span className="text-gray-600">
+                  {item.Dates ? new Date(item.Dates).toLocaleDateString() : "Sin fecha"}
+                </span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                item.Estado === "Activo" || item.Estado === "Completado"
+                  ? "bg-green-100 text-green-800" 
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {item.Estado || "Sin estado"}
+              </span>
+            </td>
+            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          </>
+        );
+      
+      case Procedimientos:
+        return (
+          <>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "tittle") : 
+                <span className="font-medium text-blue-800">{item.tittle || "Sin título"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Categoria") :
+                <span className="px-2 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs">{item.Categoria || "Sin categoría"}</span>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Descripción") : 
+                <div className="max-w-48 truncate" title={item.Descripción}>
+                  <span className="text-gray-600">{item.Descripción || "Sin descripción"}</span>
+                </div>}
+            </td>
+            <td className="px-3 py-2 border-r border-gray-100 text-xs">
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                item.Estado === "Activo" 
+                  ? "bg-green-100 text-green-800" 
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {item.Estado || "Sin estado"}
+              </span>
+            </td>
+            <td className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          </>
+        );
+      
       default:
         return <td className="px-3 py-2 text-xs">Tipo no soportado</td>;
     }
@@ -577,13 +786,13 @@ export function TableViewManager({ products, currentType }) {
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-500" />
             <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1 text-sm"
+              value={filterGrupo}
+              onChange={(e) => setFilterGrupo(e.target.value)}
+              className="border border-gray-300 bg-white text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Todas las categorías</option>
-              {uniqueCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
+              <option value="">Todos los grupos</option>
+              {uniqueGrupos.map(grupo => (
+                <option key={grupo} value={grupo}>{grupo}</option>
               ))}
             </select>
           </div>
@@ -594,13 +803,13 @@ export function TableViewManager({ products, currentType }) {
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-orange-500" />
                 <select
-                  value={filterSubGroup}
-                  onChange={(e) => setFilterSubGroup(e.target.value)}
-                  className="border border-orange-300 rounded px-3 py-1 text-sm bg-orange-50"
+                  value={filterSubGrupo}
+                  onChange={(e) => setFilterSubGrupo(e.target.value)}
+                  className="border border-orange-300 bg-orange-50 text-gray-900 rounded px-3 py-1 text-sm"
                 >
                   <option value="">Todos los sub-grupos</option>
-                  {uniqueSubGroups.map(subGroup => (
-                    <option key={subGroup} value={subGroup}>{subGroup}</option>
+                  {uniqueSubGrupos.map(subGrupo => (
+                    <option key={subGrupo} value={subGrupo}>{subGrupo}</option>
                   ))}
                 </select>
               </div>
@@ -610,7 +819,7 @@ export function TableViewManager({ products, currentType }) {
                 <select
                   value={filterTipo}
                   onChange={(e) => setFilterTipo(e.target.value)}
-                  className="border border-purple-300 rounded px-3 py-1 text-sm bg-purple-50"
+                  className="border border-purple-300 bg-purple-50 text-gray-900 rounded px-3 py-1 text-sm"
                 >
                   <option value="">Todos los tipos</option>
                   {uniqueTipos.map(tipo => (
@@ -621,11 +830,25 @@ export function TableViewManager({ products, currentType }) {
             </>
           )}
 
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-green-500" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="border border-green-300 bg-green-50 text-gray-900 rounded px-3 py-1 text-sm"
+            >
+              <option value="">Todos los estados</option>
+              {uniqueEstados.map(estado => (
+                <option key={estado} value={estado}>{estado}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="text-sm text-gray-600">
             Mostrando {sortedProducts.length} de {products.length} elementos
-            {currentType === MenuItems && filterSubGroup && (
+            {currentType === MenuItems && filterSubGrupo && (
               <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">
-                Filtro: {filterSubGroup}
+                Filtro: {filterSubGrupo}
               </span>
             )}
           </div>
@@ -647,34 +870,7 @@ export function TableViewManager({ products, currentType }) {
       </div>
 
       {/* Resumen tipo Excel */}
-      <div className="mt-4 bg-gray-50 p-3 rounded-lg border">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="font-semibold text-gray-700">Total elementos:</span>
-            <span className="ml-2">{sortedProducts.length}</span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">Categorías únicas:</span>
-            <span className="ml-2">{uniqueCategories.length}</span>
-          </div>
-          {currentType === MenuItems && (
-            <>
-              <div>
-                <span className="font-semibold text-gray-700">Precio total:</span>
-                <span className="ml-2 text-green-600 font-bold">
-                  ${sortedProducts.reduce((sum, p) => sum + parseFloat(p.Precio || 0), 0).toFixed(2)}
-                </span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Items activos:</span>
-                <span className="ml-2 text-green-600 font-bold">
-                  {sortedProducts.filter(p => p.Estado === "Activo").length}
-                </span>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+  
     </div>
   );
 }

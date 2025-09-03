@@ -3,14 +3,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
 import {WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems } from "../../../redux/actions-types";
 import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapidasActividades";
+// Vistas tipo grid (cards)
 import { CardGridWorkIsue } from "./gridInstance/CardGridWorkIsue";
 import { CardGridStaff } from "./gridInstance/CardGridStaff";
 import { CardGridProcedimientos } from "./gridInstance/CardGridProcedimientos";
 import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
 import { CardGridInventarioMenuLunch } from "@/components/ui/CardGridInventarioMenuLunch";
+// Vista tipo Excel (tabla)
+import { TableViewManager } from "@/components/ui/tableViewManager";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
+import { ViewToggle } from "@/components/ui/viewToggle";
 import { Button } from "@/components/ui/button";
 import { 
   UtensilsCrossed, 
@@ -19,7 +23,7 @@ import {
   Wrench, 
   Settings, 
   Zap,
-  BarChart3 
+  BarChart3
 } from "lucide-react";
 
 function Manager() {
@@ -27,6 +31,7 @@ function Manager() {
   const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState(Staff);
   const [showAccionesRapidasActividades, setShowAccionesRapidasActividades] = useState(false);
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' por defecto, como Inventario
 
   // Redux selectors
   const AllProcedimientos = useSelector((state) => state.allProcedimientos || []);
@@ -86,6 +91,10 @@ function Manager() {
     setShowAccionesRapidasActividades((prev) => !prev);
   };
 
+  const handleToggleViewMode = () => {
+    setViewMode((prev) => prev === 'table' ? 'cards' : 'table');
+  };
+
   // Categorías para CategoryNavBar
   const categories = [
     { type: MenuItems, label: "Menú", icon: "🗺️" },
@@ -106,23 +115,34 @@ function Manager() {
     />
   );
 
-  // Function to render appropriate grid based on current type
+  // Render vista según el modo seleccionado
   const renderGrid = () => {
-    switch (currentType) {
-      case WorkIsue:
-        return <CardGridWorkIsue currentType={currentType} />;
-      case Staff:
-        return <CardGridStaff currentType={currentType} />;
-      case MenuItems:
-        return (
-          <CardGridInventarioMenuLunch
-            products={filteredItems}
-            showEdit={showEdit}
-          />
-        );
-      case Procedimientos:
-      default:
-        return <CardGridProcedimientos currentType={currentType} />;
+    if (viewMode === 'table') {
+      // Vista tipo Excel (Tabla)
+      return (
+        <TableViewManager
+          products={filteredItems}
+          currentType={currentType}
+        />
+      );
+    } else {
+      // Vista tipo Cards (Grid original)
+      switch (currentType) {
+        case WorkIsue:
+          return <CardGridWorkIsue currentType={currentType} />;
+        case Staff:
+          return <CardGridStaff currentType={currentType} />;
+        case MenuItems:
+          return (
+            <CardGridInventarioMenuLunch
+              products={filteredItems}
+              showEdit={showEdit}
+            />
+          );
+        case Procedimientos:
+        default:
+          return <CardGridProcedimientos currentType={currentType} />;
+      }
     }
   };
 
@@ -205,22 +225,19 @@ function Manager() {
         </ContentCard>
       )}
 
-      {/* Main content grid */}
+      {/* Contenido principal, siguiendo el patrón de Inventario */}
       <ContentCard 
         title={`Listado de ${currentType}`}
         actions={
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            {currentType === Staff && <Users size={16} />}
-            {currentType === WorkIsue && <Wrench size={16} />}
-            {currentType === Procedimientos && <FileText size={16} />}
-            {currentType === MenuItems && <UtensilsCrossed size={16} />}
-            <span>{stats.total} elementos</span>
-          </div>
+          <ViewToggle 
+            viewMode={viewMode} 
+            onViewModeChange={setViewMode}
+          />
         }
-        noPadding
       >
-        <div className="p-4">
-          {stats.total > 0 ? (
+        {viewMode === "cards" ? (
+          // Vista de tarjetas (Cards)
+          filteredItems.length > 0 ? (
             renderGrid()
           ) : (
             <div className="text-center py-12 text-slate-500">
@@ -231,9 +248,20 @@ function Manager() {
               <p className="text-lg font-medium">No hay {stats.label} disponibles</p>
               <p className="text-sm">Los elementos aparecerán aquí cuando se agreguen</p>
             </div>
-          )}
-        </div>
+          )
+        ) : (
+          // Vista de tabla tipo Excel
+          <TableViewManager
+            products={filteredItems}
+            currentType={currentType}
+          />
+        )}
       </ContentCard>
+      {/* Información de estado (similar a Inventario) */}
+      <div className="flex justify-between items-center text-sm text-slate-600 mt-4">
+        <span>Total de elementos: {filteredItems.length}</span>
+        <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
+      </div>
     </PageLayout>
   );
 }

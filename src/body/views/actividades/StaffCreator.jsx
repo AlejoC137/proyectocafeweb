@@ -247,21 +247,30 @@ function StaffCreator() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div><label className="text-sm font-medium">Nombre:</label><Input required name="Nombre" value={formData.Nombre} onChange={handleSimpleChange} /></div>
                 <div><label className="text-sm font-medium">Apellido:</label><Input required name="Apellido" value={formData.Apellido} onChange={handleSimpleChange} /></div>
-                <div><label className="text-sm font-medium">Cargo:</label>
+                <div><label className="text-sm font-medium" style={{ color: '#374151', fontFamily: 'Arial, sans-serif' }}>Cargo:</label>
   <select
     name="Cargo"
     value={formData.Cargo}
     onChange={handleSimpleChange}
-    className="w-full border rounded px-2 py-1"
+    style={{
+      width: '100%',
+      border: '1px solid #D1D5DB',
+      borderRadius: '4px',
+      padding: '8px',
+      backgroundColor: '#FFFFFF',
+      color: '#000000',
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '14px'
+    }}
     required
   >
-    <option value="">Seleccione un cargo</option>
+    <option value="" style={{ backgroundColor: '#FFFFFF', color: '#000000' }}>Seleccione un cargo</option>
     {Array.isArray(ROLES)
       ? ROLES.map((rol) => (
-          <option key={rol} value={rol}>{rol}</option>
+          <option key={rol} value={rol} style={{ backgroundColor: '#FFFFFF', color: '#000000' }}>{rol}</option>
         ))
       : Object.values(ROLES).map((rol) => (
-          <option key={rol} value={rol}>{rol}</option>
+          <option key={rol} value={rol} style={{ backgroundColor: '#FFFFFF', color: '#000000' }}>{rol}</option>
         ))
     }
   </select>

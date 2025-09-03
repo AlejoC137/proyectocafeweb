@@ -16,6 +16,7 @@ export function TableViewInventario({ products, currentType }) {
   const [filterCategory, setFilterCategory] = useState("");
   const [filterEstado, setFilterEstado] = useState("");
   const [filterAlmacenamiento, setFilterAlmacenamiento] = useState("");
+  const [filterProveedor, setFilterProveedor] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [editingRows, setEditingRows] = useState({});
@@ -80,7 +81,12 @@ export function TableViewInventario({ products, currentType }) {
       }
     }
     
-    return matchesSearch && matchesCategory && matchesEstado && matchesAlmacenamiento;
+    let matchesProveedor = true;
+    if (filterProveedor && currentType === ItemsAlmacen) {
+      matchesProveedor = product.Proveedor === filterProveedor;
+    }
+    
+    return matchesSearch && matchesCategory && matchesEstado && matchesAlmacenamiento && matchesProveedor;
   });
 
   // Ordenar productos
@@ -108,6 +114,12 @@ export function TableViewInventario({ products, currentType }) {
         aValue = 0;
         bValue = 0;
       }
+    } else if (sortColumn === "Proveedor") {
+      // Para Proveedor, ordenar por nombre del proveedor
+      const proveedorA = Proveedores.find(p => p._id === a.Proveedor);
+      const proveedorB = Proveedores.find(p => p._id === b.Proveedor);
+      aValue = proveedorA?.Nombre_Proveedor || "";
+      bValue = proveedorB?.Nombre_Proveedor || "";
     }
     
     if (sortDirection === "asc") {
@@ -208,7 +220,7 @@ export function TableViewInventario({ products, currentType }) {
         <select
           value={currentValue}
           onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-          className="w-full p-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+      className="w-full p-1 border border-gray-300 rounded text-xs bg-white text-gray-900"
         >
           <option value="">Seleccionar...</option>
           {options.map((option) => (
@@ -225,7 +237,7 @@ export function TableViewInventario({ products, currentType }) {
         type={type}
         value={currentValue}
         onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-        className="w-full p-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+        className="w-full p-1 border border-gray-300 rounded text-xs bg-white text-gray-900"
         step={type === "number" ? "0.01" : undefined}
       />
     );
@@ -236,40 +248,40 @@ export function TableViewInventario({ products, currentType }) {
     if (currentType === MenuItems) {
       return (
         <>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-            <button onClick={() => handleSort("NombreES")} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("NombreES")} className="flex items-center gap-1 hover:text-blue-600">
               Nombre ES <SortIcon column="NombreES" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-            <button onClick={() => handleSort("NombreEN")} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("NombreEN")} className="flex items-center gap-1 hover:text-blue-600">
               Nombre EN <SortIcon column="NombreEN" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-            <button onClick={() => handleSort("Precio")} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("Precio")} className="flex items-center gap-1 hover:text-blue-600">
               Precio <SortIcon column="Precio" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-            <button onClick={() => handleSort("GRUPO")} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("GRUPO")} className="flex items-center gap-1 hover:text-blue-600">
               Grupo <SortIcon column="GRUPO" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-            <button onClick={() => handleSort("TipoES")} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("TipoES")} className="flex items-center gap-1 hover:text-blue-600">
               Tipo <SortIcon column="TipoES" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-            <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("Estado")} className="flex items-center gap-1 hover:text-blue-600">
               Estado <SortIcon column="Estado" />
             </button>
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
             Comp. Almuerzo
           </th>
-          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300">Acciones</th>
+          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
         </>
       );
     }
@@ -320,7 +332,9 @@ export function TableViewInventario({ products, currentType }) {
         </th>
         {currentType === ItemsAlmacen && (
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            Proveedor
+            <button onClick={() => handleSort("Proveedor")} className="flex items-center gap-1 hover:text-blue-600">
+              Proveedor <SortIcon column="Proveedor" />
+            </button>
           </th>
         )}
         <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
@@ -640,25 +654,25 @@ export function TableViewInventario({ products, currentType }) {
   return (
     <div className="w-full">
       {/* Panel de filtros tipo Excel */}
-      <div className="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 mb-4 rounded-lg">
+      <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <Search className="w-4 h-4 text-gray-500" />
             <input
               type="text"
               placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="border border-gray-300 bg-white text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             />
           </div>
           
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <Filter className="w-4 h-4 text-gray-500" />
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1 text-sm"
+              className="border border-gray-300 bg-white text-gray-900 rounded px-3 py-1 text-sm"
             >
               <option value="">Todos los grupos</option>
               {uniqueCategories.map(category => (
@@ -668,11 +682,11 @@ export function TableViewInventario({ products, currentType }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-green-500 dark:text-green-400" />
+            <Filter className="w-4 h-4 text-green-500" />
             <select
               value={filterEstado}
               onChange={(e) => setFilterEstado(e.target.value)}
-              className="border border-green-300 dark:border-green-600 rounded px-3 py-1 text-sm bg-green-50 dark:bg-green-900/20 text-gray-900 dark:text-gray-100"
+              className="border border-green-300 rounded px-3 py-1 text-sm bg-green-50 text-gray-900"
             >
               <option value="">Todos los estados</option>
               {uniqueEstados.map(estado => (
@@ -682,11 +696,11 @@ export function TableViewInventario({ products, currentType }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+            <Filter className="w-4 h-4 text-purple-500" />
             <select
               value={filterAlmacenamiento}
               onChange={(e) => setFilterAlmacenamiento(e.target.value)}
-              className="border border-purple-300 dark:border-purple-600 rounded px-3 py-1 text-sm bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-gray-100"
+              className="border border-purple-300 rounded px-3 py-1 text-sm bg-purple-50 text-gray-900"
             >
               <option value="">Todos los almacenamientos</option>
               {uniqueAlmacenamiento.map(almacen => (
@@ -695,16 +709,33 @@ export function TableViewInventario({ products, currentType }) {
             </select>
           </div>
 
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          {/* Filtro por proveedor - solo para ItemsAlmacen */}
+          {currentType === ItemsAlmacen && (
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-orange-500" />
+              <select
+                value={filterProveedor}
+                onChange={(e) => setFilterProveedor(e.target.value)}
+                className="border border-orange-300 rounded px-3 py-1 text-sm bg-orange-50 text-gray-900"
+              >
+                <option value="">Todos los proveedores</option>
+                {Proveedores.map(proveedor => (
+                  <option key={proveedor._id} value={proveedor._id}>{proveedor.Nombre_Proveedor}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="text-sm text-gray-600">
             Mostrando {sortedProducts.length} de {products.length} productos
           </div>
         </div>
       </div>
 
       {/* Tabla estilo Excel */}
-      <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
-        <table className="w-full bg-white dark:bg-gray-900">
-          <thead className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <table className="w-full bg-white">
+          <thead className="bg-gray-100 border-b border-gray-200">
             <tr>
               {renderTableHeaders()}
             </tr>
@@ -716,19 +747,19 @@ export function TableViewInventario({ products, currentType }) {
       </div>
 
       {/* Resumen tipo Excel */}
-      <div className="mt-4 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Total productos:</span>
-            <span className="ml-2 text-gray-900 dark:text-gray-100">{sortedProducts.length}</span>
+            <span className="font-semibold text-gray-700">Total productos:</span>
+            <span className="ml-2 text-gray-900">{sortedProducts.length}</span>
           </div>
           <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Grupos únicos:</span>
-            <span className="ml-2 text-gray-900 dark:text-gray-100">{uniqueCategories.length}</span>
+            <span className="font-semibold text-gray-700">Grupos únicos:</span>
+            <span className="ml-2 text-gray-900">{uniqueCategories.length}</span>
           </div>
           <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Valor total:</span>
-            <span className="ml-2 text-green-600 dark:text-green-400 font-bold">
+            <span className="font-semibold text-gray-700">Valor total:</span>
+            <span className="ml-2 text-green-600 font-bold">
               ${sortedProducts.reduce((sum, p) => {
                 const costo = parseFloat(p.COSTO || 0);
                 const cantidad = parseFloat(p.CANTIDAD || 0);
@@ -737,8 +768,8 @@ export function TableViewInventario({ products, currentType }) {
             </span>
           </div>
           <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Productos activos:</span>
-            <span className="ml-2 text-green-600 dark:text-green-400 font-bold">
+            <span className="font-semibold text-gray-700">Productos activos:</span>
+            <span className="ml-2 text-green-600 font-bold">
               {sortedProducts.filter(p => p.Estado === "PC" || p.Estado === "PP" || p.Estado === "Activo").length}
             </span>
           </div>

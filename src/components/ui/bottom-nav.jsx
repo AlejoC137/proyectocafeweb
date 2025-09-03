@@ -31,28 +31,78 @@ export default function BottomNav() {
   return (
     <div className="flex flex-col">
       {/* Barra de navegación inferior fija */}
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t-2 border-sage-green shadow-lg z-50">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 h-20 shadow-lg z-50"
+        style={{
+          backgroundColor: 'rgb(255, 255, 255)', // white puro forzado
+          borderTop: '2px solid rgb(74, 222, 128)', // sage-green forzado
+          boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1)' // sombra sutil hacia arriba
+        }}
+      >
         <ul className="h-full flex justify-between items-center">
-          {navItems.map(({ icon: Icon, label, color, path }) => (
-            <li key={label} className="flex-grow">
-              <Link to={path}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "h-full flex flex-col items-center justify-center transition-all duration-300 ease-in-out font-PlaywriteDE font-bold",
-                    location.pathname === path
-                      ? "bg-light-leaf" // Botón seleccionado: verde claro
-                      : "bg-white hover:bg-sage-green/10" // Botones no seleccionados
-                  )}
-                  style={{ width: `calc(100vw / (${navItems.length}))` }}
-                  onClick={() => handleTabClick(label)} // Handler de clic añadido
-                >
-                  <Icon className={cn("h-5 w-5", color)} />
-                  <span className="text-xs font-bold">{label}</span>
-                </Button>
-              </Link>
-            </li>
-          ))}
+          {navItems.map(({ icon: Icon, label, color, path }) => {
+            const isActive = location.pathname === path;
+            const iconColor = {
+              'text-cobalt-blue': 'rgb(30, 64, 175)', // cobalt-blue forzado
+              'text-sage-green': 'rgb(34, 197, 94)',  // sage-green forzado
+              'text-terracotta-pink': 'rgb(248, 113, 113)' // terracotta-pink forzado
+            }[color] || 'rgb(55, 65, 81)'; // gray-700 forzado
+            
+            return (
+              <li key={label} className="flex-grow">
+                <Link to={path}>
+                  <Button
+                    variant="ghost"
+                    style={{ 
+                      width: `calc(100vw / ${navItems.length})`,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: isActive ? 'rgb(134, 239, 172)' : 'rgb(255, 255, 255)', // light-green / white forzado
+                      color: 'rgb(0, 0, 0)', // black forzado
+                      border: 'none',
+                      borderRadius: '0',
+                      fontFamily: 'PlaywriteDE, Arial, sans-serif',
+                      fontWeight: 'bold',
+                      transition: 'all 0.3s ease-in-out',
+                      cursor: 'pointer'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'rgb(255, 255, 255)';
+                      }
+                    }}
+                    onClick={() => handleTabClick(label)}
+                  >
+                    <Icon 
+                      style={{ 
+                        height: '20px', 
+                        width: '20px', 
+                        color: iconColor 
+                      }} 
+                    />
+                    <span 
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        color: 'rgb(0, 0, 0)', // black forzado
+                        fontFamily: 'PlaywriteDE, Arial, sans-serif'
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </Button>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </div>
