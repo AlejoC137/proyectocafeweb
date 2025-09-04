@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
-import { ESTATUS, BODEGA, CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades } from "../../redux/actions-types";
+import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
@@ -794,7 +794,7 @@ export function TableViewInventario({ products, currentType }) {
           { key: 'grupo', content: (
             <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
-                renderEditableCell(item, "GRUPO") :
+                renderEditableCell(item, "GRUPO", "select", CATEGORIES) :
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>
               }
             </td>
@@ -802,7 +802,7 @@ export function TableViewInventario({ products, currentType }) {
           { key: 'subGrupo', content: (
             <td key="subGrupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
-                renderEditableCell(item, "SUB_GRUPO") : 
+                renderEditableCell(item, "SUB_GRUPO", "select", SUB_CATEGORIES) : 
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.SUB_GRUPO || "Sin subgrupo"}</span>
               }
             </td>
@@ -817,24 +817,60 @@ export function TableViewInventario({ products, currentType }) {
           )},
           { key: 'print', content: (
             <td key="print" className="px-3 py-2 border-r border-gray-100 text-xs">
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                item.PRINT === true 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {item.PRINT === true ? "SÍ" : "NO"}
-              </span>
+              {showEdit ? (
+                <button
+                  onClick={() => {
+                    const newValue = !item.PRINT;
+                    handleCellEdit(item._id, "PRINT", newValue);
+                    handleSaveRow(item); // Auto-guardar al cambiar
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all hover:scale-105 ${
+                    item.PRINT === true 
+                      ? "bg-green-100 text-green-800 hover:bg-green-200" 
+                      : "bg-red-100 text-red-800 hover:bg-red-200"
+                  }`}
+                >
+                  {item.PRINT === true ? "✓ SÍ" : "✗ NO"}
+                </button>
+              ) : (
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  item.PRINT === true 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {item.PRINT === true ? "SÍ" : "NO"}
+                </span>
+              )}
             </td>
           )},
           { key: 'estado', content: (
             <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                item.Estado === "Activo" 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {item.Estado || "Sin estado"}
-              </span>
+              {showEdit ? (
+                <select
+                  value={editingRows[item._id]?.Estado || item.Estado || ""}
+                  onChange={(e) => {
+                    handleCellEdit(item._id, "Estado", e.target.value);
+                    handleSaveRow(item); // Auto-guardar al cambiar
+                  }}
+                  className={`px-2 py-1 rounded-full text-xs font-medium border-none focus:ring-2 focus:ring-blue-500 ${
+                    (editingRows[item._id]?.Estado || item.Estado) === "Activo" 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  <option value="Activo">Activo</option>
+                  <option value="Inactivo">Inactivo</option>
+                  <option value="Suspendido">Suspendido</option>
+                </select>
+              ) : (
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  item.Estado === "Activo" 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {item.Estado || "Sin estado"}
+                </span>
+              )}
             </td>
           )},
           { key: 'foto', content: (
