@@ -35,9 +35,22 @@ export function TableViewInventario({ products, currentType }) {
           nombreES: { label: "Nombre ES", key: "NombreES", default: true },
           nombreEN: { label: "Nombre EN", key: "NombreEN", default: true },
           precio: { label: "Precio", key: "Precio", default: true },
+          descripcionES: { label: "Descripción ES", key: "DescripcionMenuES", default: false },
+          descripcionEN: { label: "Descripción EN", key: "DescripcionMenuEN", default: false },
+          tipoES: { label: "Tipo ES", key: "TipoES", default: true },
+          tipoEN: { label: "Tipo EN", key: "TipoEN", default: false },
+          subTipoES: { label: "SubTipo ES", key: "SubTipoES", default: false },
+          subTipoEN: { label: "SubTipo EN", key: "SubTipoEN", default: false },
+          dietaES: { label: "Dieta ES", key: "DietaES", default: false },
+          dietaEN: { label: "Dieta EN", key: "DietaEN", default: false },
+          cuidadoES: { label: "Cuidado ES", key: "CuidadoES", default: false },
+          cuidadoEN: { label: "Cuidado EN", key: "CuidadoEN", default: false },
           grupo: { label: "Grupo", key: "GRUPO", default: true },
-          tipo: { label: "Tipo", key: "TipoES", default: true },
+          subGrupo: { label: "Sub Grupo", key: "SUB_GRUPO", default: false },
+          order: { label: "Order", key: "Order", default: false },
+          print: { label: "Print", key: "PRINT", default: true },
           estado: { label: "Estado", key: "Estado", default: true },
+          foto: { label: "Foto", key: "Foto", default: false },
           composicionAlmuerzo: { label: "Comp. Almuerzo", key: "Comp_Lunch", default: true },
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
@@ -432,6 +445,76 @@ export function TableViewInventario({ products, currentType }) {
             </button>
           </th>
         )},
+        { key: 'descripcionES', content: (
+          <th key="descripcionES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("DescripcionMenuES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Descripción ES <SortIcon column="DescripcionMenuES" />
+            </button>
+          </th>
+        )},
+        { key: 'descripcionEN', content: (
+          <th key="descripcionEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("DescripcionMenuEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Descripción EN <SortIcon column="DescripcionMenuEN" />
+            </button>
+          </th>
+        )},
+        { key: 'tipoES', content: (
+          <th key="tipoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("TipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Tipo ES <SortIcon column="TipoES" />
+            </button>
+          </th>
+        )},
+        { key: 'tipoEN', content: (
+          <th key="tipoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("TipoEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Tipo EN <SortIcon column="TipoEN" />
+            </button>
+          </th>
+        )},
+        { key: 'subTipoES', content: (
+          <th key="subTipoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("SubTipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              SubTipo ES <SortIcon column="SubTipoES" />
+            </button>
+          </th>
+        )},
+        { key: 'subTipoEN', content: (
+          <th key="subTipoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("SubTipoEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              SubTipo EN <SortIcon column="SubTipoEN" />
+            </button>
+          </th>
+        )},
+        { key: 'dietaES', content: (
+          <th key="dietaES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("DietaES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Dieta ES <SortIcon column="DietaES" />
+            </button>
+          </th>
+        )},
+        { key: 'dietaEN', content: (
+          <th key="dietaEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("DietaEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Dieta EN <SortIcon column="DietaEN" />
+            </button>
+          </th>
+        )},
+        { key: 'cuidadoES', content: (
+          <th key="cuidadoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("CuidadoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Cuidado ES <SortIcon column="CuidadoES" />
+            </button>
+          </th>
+        )},
+        { key: 'cuidadoEN', content: (
+          <th key="cuidadoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("CuidadoEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Cuidado EN <SortIcon column="CuidadoEN" />
+            </button>
+          </th>
+        )},
         { key: 'grupo', content: (
           <th key="grupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
             <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
@@ -439,10 +522,24 @@ export function TableViewInventario({ products, currentType }) {
             </button>
           </th>
         )},
-        { key: 'tipo', content: (
-          <th key="tipo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("TipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Tipo <SortIcon column="TipoES" />
+        { key: 'subGrupo', content: (
+          <th key="subGrupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("SUB_GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Sub Grupo <SortIcon column="SUB_GRUPO" />
+            </button>
+          </th>
+        )},
+        { key: 'order', content: (
+          <th key="order" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("Order")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Order <SortIcon column="Order" />
+            </button>
+          </th>
+        )},
+        { key: 'print', content: (
+          <th key="print" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            <button onClick={() => handleSort("PRINT")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+              Print <SortIcon column="PRINT" />
             </button>
           </th>
         )},
@@ -451,6 +548,11 @@ export function TableViewInventario({ products, currentType }) {
             <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
               Estado <SortIcon column="Estado" />
             </button>
+          </th>
+        )},
+        { key: 'foto', content: (
+          <th key="foto" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+            Foto
           </th>
         )},
         { key: 'composicionAlmuerzo', content: (
@@ -605,6 +707,90 @@ export function TableViewInventario({ products, currentType }) {
               }
             </td>
           )},
+          { key: 'descripcionES', content: (
+            <td key="descripcionES" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "DescripcionMenuES") : 
+                <div className="text-gray-600 max-w-xs truncate" title={item.DescripcionMenuES}>
+                  {item.DescripcionMenuES || "Sin descripción"}
+                </div>
+              }
+            </td>
+          )},
+          { key: 'descripcionEN', content: (
+            <td key="descripcionEN" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "DescripcionMenuEN") : 
+                <div className="text-gray-600 max-w-xs truncate" title={item.DescripcionMenuEN}>
+                  {item.DescripcionMenuEN || "Sin descripción EN"}
+                </div>
+              }
+            </td>
+          )},
+          { key: 'tipoES', content: (
+            <td key="tipoES" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "TipoES") : 
+                <span className="text-gray-600">{item.TipoES || "Sin tipo ES"}</span>
+              }
+            </td>
+          )},
+          { key: 'tipoEN', content: (
+            <td key="tipoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "TipoEN") : 
+                <span className="text-gray-600">{item.TipoEN || "Sin tipo EN"}</span>
+              }
+            </td>
+          )},
+          { key: 'subTipoES', content: (
+            <td key="subTipoES" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "SubTipoES") : 
+                <span className="text-gray-600">{item.SubTipoES || "Sin subtipo ES"}</span>
+              }
+            </td>
+          )},
+          { key: 'subTipoEN', content: (
+            <td key="subTipoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "SubTipoEN") : 
+                <span className="text-gray-600">{item.SubTipoEN || "Sin subtipo EN"}</span>
+              }
+            </td>
+          )},
+          { key: 'dietaES', content: (
+            <td key="dietaES" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "DietaES") : 
+                <span className="text-green-600">{item.DietaES || "Sin dieta ES"}</span>
+              }
+            </td>
+          )},
+          { key: 'dietaEN', content: (
+            <td key="dietaEN" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "DietaEN") : 
+                <span className="text-green-600">{item.DietaEN || "Sin dieta EN"}</span>
+              }
+            </td>
+          )},
+          { key: 'cuidadoES', content: (
+            <td key="cuidadoES" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "CuidadoES") : 
+                <span className="text-orange-600">{item.CuidadoES || "Sin cuidado ES"}</span>
+              }
+            </td>
+          )},
+          { key: 'cuidadoEN', content: (
+            <td key="cuidadoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "CuidadoEN") : 
+                <span className="text-orange-600">{item.CuidadoEN || "Sin cuidado EN"}</span>
+              }
+            </td>
+          )},
           { key: 'grupo', content: (
             <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
@@ -613,12 +799,31 @@ export function TableViewInventario({ products, currentType }) {
               }
             </td>
           )},
-          { key: 'tipo', content: (
-            <td key="tipo" className="px-3 py-2 border-r border-gray-100 text-xs">
+          { key: 'subGrupo', content: (
+            <td key="subGrupo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? 
-                renderEditableCell(item, "TipoES") : 
-                <span className="text-gray-600">{item.TipoES || "Sin tipo"}</span>
+                renderEditableCell(item, "SUB_GRUPO") : 
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.SUB_GRUPO || "Sin subgrupo"}</span>
               }
+            </td>
+          )},
+          { key: 'order', content: (
+            <td key="order" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? 
+                renderEditableCell(item, "Order", "number") : 
+                <span className="font-mono text-gray-700">{item.Order || "0"}</span>
+              }
+            </td>
+          )},
+          { key: 'print', content: (
+            <td key="print" className="px-3 py-2 border-r border-gray-100 text-xs">
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                item.PRINT === true 
+                  ? "bg-green-100 text-green-800" 
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {item.PRINT === true ? "SÍ" : "NO"}
+              </span>
             </td>
           )},
           { key: 'estado', content: (
@@ -630,6 +835,17 @@ export function TableViewInventario({ products, currentType }) {
               }`}>
                 {item.Estado || "Sin estado"}
               </span>
+            </td>
+          )},
+          { key: 'foto', content: (
+            <td key="foto" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {item.Foto ? (
+                <a href={item.Foto} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                  🖼️ Ver
+                </a>
+              ) : (
+                <span className="text-gray-400">Sin foto</span>
+              )}
             </td>
           )},
           { key: 'composicionAlmuerzo', content: (
