@@ -553,13 +553,29 @@ export function crearItem(itemData, type, forId) {
 export function updateItem(itemId, updatedFields, type) {
   return async (dispatch) => {
     try {
-      // Ensure numeric fields are properly validated
+      // Validar que los parámetros requeridos estén presentes
+      if (!itemId || !type) {
+        throw new Error('Item ID y tipo son requeridos para actualizar');
+      }
+
+      if (!updatedFields || Object.keys(updatedFields).length === 0) {
+        throw new Error('No hay campos para actualizar');
+      }
+
+      // Sanitizar campos
       const sanitizedFields = { ...updatedFields };
       Object.keys(sanitizedFields).forEach((key) => {
-        if (typeof sanitizedFields[key] === "string" && sanitizedFields[key].trim() === "") {
-          sanitizedFields[key] = null; // Convert empty strings to null
+        if (typeof sanitizedFields[key] === "string") {
+          const trimmedValue = sanitizedFields[key].trim();
+          sanitizedFields[key] = trimmedValue === "" ? null : trimmedValue;
+        }
+        // Remover campos undefined
+        if (sanitizedFields[key] === undefined) {
+          delete sanitizedFields[key];
         }
       });
+
+      console.log(`Actualizando ítem ${itemId} en tabla ${type}:`, sanitizedFields);
 
       const { data, error } = await supabase
         .from(type)
@@ -568,14 +584,33 @@ export function updateItem(itemId, updatedFields, type) {
         .select();
 
       if (error) {
-        console.error('Error al actualizar el ítem:', error);
-        return null;
+        console.error('Error de Supabase al actualizar el ítem:', error);
+        throw new Error(`Error de base de datos: ${error.message || 'Error desconocido'}`);
       }
 
-      console.log('Ítem actualizado correctamente:', data);
-      return data;
+      if (!data || data.length === 0) {
+        throw new Error('No se encontró el ítem para actualizar o no se realizaron cambios');
+      }
+
+      console.log('Ítem actualizado correctamente:', data[0]);
+      
+      // Despachar acción de éxito al store (opcional)
+      dispatch({
+        type: 'UPDATE_ITEM_SUCCESS',
+        payload: { id: itemId, data: data[0], tableType: type }
+      });
+      
+      return data[0];
     } catch (error) {
       console.error('Error en la acción updateItem:', error);
+      
+      // Despachar acción de error al store (opcional)
+      dispatch({
+        type: 'UPDATE_ITEM_ERROR',
+        payload: { id: itemId, error: error.message, tableType: type }
+      });
+      
+      throw error; // Re-lanzar el error para que lo maneje el componente
     }
   };
 }

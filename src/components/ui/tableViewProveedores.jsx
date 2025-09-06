@@ -133,33 +133,93 @@ export function TableViewProveedores({ products = [] }) {
 
   // Función para manejar edición inline
   const handleCellEdit = (itemId, field, value) => {
-    setEditingRows(prev => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        [field]: value
+    setEditingRows(prev => {
+      const existingEdits = prev[itemId] || {};
+      return {
+        ...prev,
+        [itemId]: {
+          ...existingEdits,
+          [field]: value
+        }
+      };
+    });
+  };
+
+  // Función para validar datos antes del guardado
+  const validateRowData = (editedData) => {
+    const errors = [];
+    
+    // Validar nombre del proveedor
+    if (editedData.Nombre_Proveedor && editedData.Nombre_Proveedor.trim().length < 2) {
+      errors.push('El nombre del proveedor debe tener al menos 2 caracteres');
+    }
+    
+    // Validar número de contacto si está presente
+    if (editedData.Contacto_Numero && editedData.Contacto_Numero.trim()) {
+      const phoneRegex = /^[0-9+\-\s()]+$/;
+      if (!phoneRegex.test(editedData.Contacto_Numero)) {
+        errors.push('El número de contacto contiene caracteres inválidos');
       }
-    }));
+    }
+    
+    // Validar página web si está presente
+    if (editedData.PAGINA_WEB && editedData.PAGINA_WEB.trim()) {
+      try {
+        new URL(editedData.PAGINA_WEB);
+      } catch {
+        errors.push('La página web debe ser una URL válida');
+      }
+    }
+    
+    return errors;
   };
 
   // Función para guardar cambios
   const handleSaveRow = async (item) => {
     const editedData = editingRows[item._id] || {};
     
+    // Si no hay cambios, no hacer nada
+    if (Object.keys(editedData).length === 0) {
+      return;
+    }
+    
+    // Validar datos antes del guardado
+    const validationErrors = validateRowData(editedData);
+    if (validationErrors.length > 0) {
+      alert(`Errores de validación:\n- ${validationErrors.join('\n- ')}`);
+      return;
+    }
+    
     try {
       const updatedFields = { ...editedData };
       
-      await dispatch(updateProveedor(item._id, updatedFields));
-      
-      // Limpiar datos de edición para esta fila
-      setEditingRows(prev => {
-        const newState = { ...prev };
-        delete newState[item._id];
-        return newState;
+      // Limpiar campos vacíos
+      Object.keys(updatedFields).forEach(key => {
+        if (updatedFields[key] === '') {
+          updatedFields[key] = null;
+        } else if (typeof updatedFields[key] === 'string') {
+          updatedFields[key] = updatedFields[key].trim();
+        }
       });
+      
+      const result = await dispatch(updateProveedor(item._id, updatedFields));
+      
+      if (result) {
+        // Limpiar datos de edición para esta fila
+        setEditingRows(prev => {
+          const newState = { ...prev };
+          delete newState[item._id];
+          return newState;
+        });
+        
+        console.log('Proveedor actualizado correctamente');
+      } else {
+        throw new Error('No se pudo actualizar el proveedor');
+      }
       
     } catch (error) {
       console.error("Error al actualizar el proveedor:", error);
+      alert(`Error al guardar: ${error.message || 'Error desconocido'}`);
     }
   };
 

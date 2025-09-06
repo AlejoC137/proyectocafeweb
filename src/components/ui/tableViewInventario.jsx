@@ -276,47 +276,135 @@ export function TableViewInventario({ products, currentType }) {
 
   // Función para manejar edición inline
   const handleCellEdit = (itemId, field, value, subField = null) => {
-    setEditingRows(prev => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        [field]: subField ? {
-          ...(prev[itemId]?.[field] || parseNestedObject(products.find(p => p._id === itemId)?.[field])),
-          [subField]: value
-        } : value
+    setEditingRows(prev => {
+      const currentItem = products.find(p => p._id === itemId);
+      const existingEdits = prev[itemId] || {};
+      
+      if (subField) {
+        // Para campos anidados, obtener el objeto base y actualizarlo
+        const baseObject = existingEdits[field] || parseNestedObject(currentItem?.[field], {});
+        return {
+          ...prev,
+          [itemId]: {
+            ...existingEdits,
+            [field]: {
+              ...baseObject,
+              [subField]: value
+            }
+          }
+        };
+      } else {
+        return {
+          ...prev,
+          [itemId]: {
+            ...existingEdits,
+            [field]: value
+          }
+        };
       }
-    }));
+    });
+  };
+
+  // Función para validar datos antes del guardado
+  const validateRowData = (editedData, currentType) => {
+    const errors = [];
+    
+    // Validaciones numéricas
+    const numericFields = ['CANTIDAD', 'COSTO', 'precioUnitario', 'Merma', 'Precio'];
+    numericFields.forEach(field => {
+      if (editedData[field] !== undefined && editedData[field] !== null && editedData[field] !== '') {
+        const value = parseFloat(editedData[field]);
+        if (isNaN(value) || value < 0) {
+          errors.push(`${field} debe ser un número válido mayor o igual a 0`);
+        }
+      }
+    });
+    
+    // Validar campos requeridos según el tipo
+    if (currentType === MenuItems) {
+      if (editedData.NombreES && editedData.NombreES.trim().length < 2) {
+        errors.push('El nombre en español debe tener al menos 2 caracteres');
+      }
+      if (editedData.Precio !== undefined && parseFloat(editedData.Precio) <= 0) {
+        errors.push('El precio debe ser mayor que 0');
+      }
+    } else {
+      if (editedData.Nombre_del_producto && editedData.Nombre_del_producto.trim().length < 2) {
+        errors.push('El nombre del producto debe tener al menos 2 caracteres');
+      }
+    }
+    
+    return errors;
   };
 
   // Función para guardar cambios
   const handleSaveRow = async (item) => {
     const editedData = editingRows[item._id] || {};
     
+    // Si no hay cambios, no hacer nada
+    if (Object.keys(editedData).length === 0) {
+      return;
+    }
+    
+    // Validar datos antes del guardado
+    const validationErrors = validateRowData(editedData, currentType);
+    if (validationErrors.length > 0) {
+      alert(`Errores de validación:\n- ${validationErrors.join('\n- ')}`);
+      return;
+    }
+    
     try {
       const updatedFields = { ...editedData };
       
       // Manejar objetos anidados
       if (editedData.STOCK) {
-        updatedFields.STOCK = JSON.stringify(editedData.STOCK);
+        // Validar que los valores de stock sean números válidos
+        const stockObj = editedData.STOCK;
+        if (stockObj.minimo !== undefined) stockObj.minimo = parseFloat(stockObj.minimo) || 0;
+        if (stockObj.maximo !== undefined) stockObj.maximo = parseFloat(stockObj.maximo) || 0;
+        if (stockObj.actual !== undefined) stockObj.actual = parseFloat(stockObj.actual) || 0;
+        
+        updatedFields.STOCK = JSON.stringify(stockObj);
       }
+      
       if (editedData.ALMACENAMIENTO) {
         updatedFields.ALMACENAMIENTO = JSON.stringify(editedData.ALMACENAMIENTO);
       }
       
-      // Agregar fecha de actualización
-      updatedFields.FECHA_ACT = new Date().toISOString().split("T")[0];
-      
-      await dispatch(updateItem(item._id, updatedFields, currentType));
-      
-      // Limpiar datos de edición para esta fila
-      setEditingRows(prev => {
-        const newState = { ...prev };
-        delete newState[item._id];
-        return newState;
+      // Convertir valores numéricos string a números
+      ['CANTIDAD', 'COSTO', 'precioUnitario', 'Merma', 'Precio'].forEach(field => {
+        if (updatedFields[field] !== undefined && updatedFields[field] !== '') {
+          const numValue = parseFloat(updatedFields[field]);
+          if (!isNaN(numValue)) {
+            updatedFields[field] = numValue;
+          }
+        }
       });
+      
+      // Agregar fecha de actualización si no es MenuItems
+      if (currentType !== "Menu") {
+        updatedFields.FECHA_ACT = new Date().toISOString().split("T")[0];
+      }
+      
+      const result = await dispatch(updateItem(item._id, updatedFields, currentType));
+      
+      if (result) {
+        // Limpiar datos de edición para esta fila
+        setEditingRows(prev => {
+          const newState = { ...prev };
+          delete newState[item._id];
+          return newState;
+        });
+        
+        // Mostrar mensaje de éxito (opcional)
+        console.log('Ítem actualizado correctamente');
+      } else {
+        throw new Error('No se pudo actualizar el ítem');
+      }
       
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
+      alert(`Error al guardar: ${error.message || 'Error desconocido'}`);
     }
   };
 

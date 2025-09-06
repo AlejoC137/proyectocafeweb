@@ -340,9 +340,53 @@ export function TableViewManager({ products, currentType }) {
     }));
   };
 
+  // Función para validar datos antes del guardado
+  const validateRowData = (editedData, currentType) => {
+    const errors = [];
+    
+    // Validaciones según el tipo
+    if (currentType === Staff) {
+      if (editedData.Nombre && editedData.Nombre.trim().length < 2) {
+        errors.push('El nombre debe tener al menos 2 caracteres');
+      }
+      if (editedData.Rate !== undefined && (isNaN(parseFloat(editedData.Rate)) || parseFloat(editedData.Rate) < 0)) {
+        errors.push('La tarifa debe ser un número válido mayor o igual a 0');
+      }
+    } else if (currentType === WorkIsue) {
+      if (editedData.Tittle && editedData.Tittle.trim().length < 2) {
+        errors.push('El título debe tener al menos 2 caracteres');
+      }
+    } else if (currentType === Procedimientos) {
+      if (editedData.tittle && editedData.tittle.trim().length < 2) {
+        errors.push('El título debe tener al menos 2 caracteres');
+      }
+    } else if (currentType === MenuItems) {
+      if (editedData.NombreES && editedData.NombreES.trim().length < 2) {
+        errors.push('El nombre en español debe tener al menos 2 caracteres');
+      }
+      if (editedData.Precio !== undefined && (isNaN(parseFloat(editedData.Precio)) || parseFloat(editedData.Precio) <= 0)) {
+        errors.push('El precio debe ser un número válido mayor que 0');
+      }
+    }
+    
+    return errors;
+  };
+
   // Función para guardar cambios
   const handleSaveRow = async (item) => {
     const editedData = editingRows[item._id] || {};
+    
+    // Si no hay cambios, no hacer nada
+    if (Object.keys(editedData).length === 0) {
+      return;
+    }
+    
+    // Validar datos antes del guardado
+    const validationErrors = validateRowData(editedData, currentType);
+    if (validationErrors.length > 0) {
+      alert(`Errores de validación:\n- ${validationErrors.join('\n- ')}`);
+      return;
+    }
     
     try {
       const updatedFields = { ...editedData };
@@ -356,6 +400,10 @@ export function TableViewManager({ products, currentType }) {
         if (editedData.infoContacto) {
           updatedFields.infoContacto = JSON.stringify(editedData.infoContacto);
         }
+        // Convertir Rate a número si está presente
+        if (editedData.Rate !== undefined && editedData.Rate !== '') {
+          updatedFields.Rate = parseFloat(editedData.Rate) || 0;
+        }
       } else if (currentType === WorkIsue) {
         // Para WorkIsue, manejar fechas y objetos
         if (editedData.Dates) {
@@ -364,24 +412,40 @@ export function TableViewManager({ products, currentType }) {
         if (editedData.Pagado) {
           updatedFields.Pagado = editedData.Pagado;
         }
+      } else if (currentType === MenuItems) {
+        // Para MenuItems, convertir precio a número
+        if (editedData.Precio !== undefined && editedData.Precio !== '') {
+          updatedFields.Precio = parseFloat(editedData.Precio) || 0;
+        }
       }
+      
+      // Limpiar campos vacíos
+      Object.keys(updatedFields).forEach(key => {
+        if (typeof updatedFields[key] === 'string' && updatedFields[key].trim() === '') {
+          updatedFields[key] = null;
+        }
+      });
       
       // Llamar a updateItem según el tipo
-      if (currentType === MenuItems) {
-        await dispatch(updateItem(item._id, updatedFields, "Menu"));
-      } else {
-        await dispatch(updateItem(item._id, updatedFields, currentType));
-      }
+      const tableType = currentType === MenuItems ? "Menu" : currentType;
+      const result = await dispatch(updateItem(item._id, updatedFields, tableType));
       
-      // Limpiar datos de edición para esta fila
-      setEditingRows(prev => {
-        const newState = { ...prev };
-        delete newState[item._id];
-        return newState;
-      });
+      if (result) {
+        // Limpiar datos de edición para esta fila
+        setEditingRows(prev => {
+          const newState = { ...prev };
+          delete newState[item._id];
+          return newState;
+        });
+        
+        console.log('Ítem actualizado correctamente');
+      } else {
+        throw new Error('No se pudo actualizar el ítem');
+      }
       
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
+      alert(`Error al guardar: ${error.message || 'Error desconocido'}`);
     }
   };
 
