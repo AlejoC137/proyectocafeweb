@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import { PROVEE } from "../../../redux/actions-types";
+import { ITEMS, PROVEE } from "../../../redux/actions-types";
 import { CardGridProveedores } from "@/components/ui/CardGridProveedores";
 import { TableViewProveedores } from "@/components/ui/tableViewProveedores";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
@@ -25,7 +25,12 @@ function Proveedores() {
     const fetchData = async () => {
       try {
         await dispatch(getAllFromTable(PROVEE));
+        await dispatch(getAllFromTable(ITEMS));
+
+        
         setLoading(false);
+        console.log("Proveedores loaded:", proveedores);
+        
       } catch (error) {
         console.error("Error loading data:", error);
         setLoading(false);
