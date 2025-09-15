@@ -7,6 +7,7 @@ import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
+import CuidadoVariations from "./CuidadoVariations";
 
 export function TableViewInventario({ products, currentType }) {
   const dispatch = useDispatch();
@@ -43,8 +44,8 @@ export function TableViewInventario({ products, currentType }) {
           subTipoEN: { label: "SubTipo EN", key: "SubTipoEN", default: false },
           dietaES: { label: "Dieta ES", key: "DietaES", default: false },
           dietaEN: { label: "Dieta EN", key: "DietaEN", default: false },
-          cuidadoES: { label: "Cuidado ES", key: "CuidadoES", default: false },
-          cuidadoEN: { label: "Cuidado EN", key: "CuidadoEN", default: false },
+          cuidadoES: { label: "Cuidado ES", key: "CuidadoES", default: true },
+          cuidadoEN: { label: "Cuidado EN", key: "CuidadoEN", default: true },
           grupo: { label: "Grupo", key: "GRUPO", default: true },
           subGrupo: { label: "Sub Grupo", key: "SUB_GRUPO", default: false },
           order: { label: "Order", key: "Order", default: false },
@@ -865,18 +866,24 @@ export function TableViewInventario({ products, currentType }) {
           )},
           { key: 'cuidadoES', content: (
             <td key="cuidadoES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
+              {!showEdit ? 
                 renderEditableCell(item, "CuidadoES") : 
-                <span className="text-orange-600">{item.CuidadoES || "Sin cuidado ES"}</span>
+                // <span className="text-orange-600">{item.CuidadoES || "Sin cuidado ES"}</span>
+                  <CuidadoVariations isEnglish={false} viewName={"Inventario"} product={item} />
               }
+
+                           
             </td>
           )},
           { key: 'cuidadoEN', content: (
             <td key="cuidadoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
+              {!showEdit ? 
                 renderEditableCell(item, "CuidadoEN") : 
-                <span className="text-orange-600">{item.CuidadoEN || "Sin cuidado EN"}</span>
+                // <span className="text-orange-600">{item.CuidadoEN || "Sin cuidado EN"}</span>
+                   <CuidadoVariations isEnglish={true} viewName={"Inventario"} product={item} />
               }
+
+              
             </td>
           )},
           { key: 'grupo', content: (

@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/cardPrint";
 import { ShoppingCart, Flame, Leaf, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CuidadoVariations from "./CuidadoVariations";
+          // <CuidadoVariations             viewName={'MenuPrint'}           product={product}             isEnglish={isEnglish}             />
 
 export function CardInstancePrint({ product, isEnglish }) {
   const [showDetail, setShowDetail] = useState(false);
 
-  // Formatea el precio a "K" si es mayor o igual a 1000
   const formatPrice = (precio) => {
     if (precio >= 1000) {
       return `${precio / 1000}K`;
@@ -14,6 +15,7 @@ export function CardInstancePrint({ product, isEnglish }) {
     return precio;
   };
 
+  // Esta lógica puede ser reemplazada o complementada por CuidadoVariations
   const dietWarning = isEnglish ? product.DietaEN : product.DietaES;
   const careWarning = isEnglish ? product.CuidadoEN : product.CuidadoES;
   const renderIcons = () => {
@@ -36,22 +38,29 @@ export function CardInstancePrint({ product, isEnglish }) {
 
   return (
     <Card className="w-full h-full overflow-hidden pt-0 pl-1 pr-1 shadow-none" onClick={() => setShowDetail(true)}>
+      
       <div className="relative z-0 overflow-hidden ">
         <Button variant="ghost" size="icon" className="absolute bg-white/70">
           <ShoppingCart className="h-5 w-5 text-gray-700" />
         </Button>
       </div>
       <CardContent className="p-0 flex flex-col justify-between text-gray-900 font-light">
-        <div className="flex justify-between items-center">
-          <h3 className="text-10pt truncate  border-b   border-black w-full font-bold font-custom font-SpaceGrotesk">
-            {isEnglish ? product.NombreEN : product.NombreES}
+        <div className="flex justify-between items-center  border-b border-black">
+          <div className="flex" >
+
+          <h3 className="text-10pt truncate w-full font-bold font-custom font-SpaceGrotesk">
+            {isEnglish ? product.NombreEN : product.NombreES} 
           </h3>
+          <CuidadoVariations             viewName={'MenuPrint'}           product={product}             isEnglish={isEnglish}             />
+          </div>
+          
+          {/* 👇 CAMBIO REALIZADO AQUÍ: Se pasa 'isEnglish' directamente 👇 */}
+          
           <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>
             ${formatPrice(product.Precio)}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          {/* 👇 CAMBIO REALIZADO AQUÍ 👇 */}
           <h3 className="text-md font-medium line-clamp-2 font-SpaceGrotesk" style={{ fontSize: '10px' }}>
             {isEnglish ? product.DescripcionMenuEN : product.DescripcionMenuES}
           </h3>

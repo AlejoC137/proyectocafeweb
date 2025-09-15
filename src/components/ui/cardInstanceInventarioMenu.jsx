@@ -7,8 +7,15 @@ import {
   
   MenuItems } from "../../redux/actions-types";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
+import CuidadoVariations from "./CuidadoVariations";
+import { useParams } from "react-router-dom";
 
 export function CardInstanceInventarioMenu({ product, showEdit }) {
+
+// como saber cual es la direccion del sitio actual es decir /Inventario o /MenuPrint
+
+    const { section } = useParams(); // 'section' contendrá "Inventario" o "MenuPrint"
+
   const dispatch = useDispatch();
   const [editableProduct, setEditableProduct] = useState(product);
   const [receta, setReceta] = useState(null);
@@ -107,6 +114,8 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
 
   return (
     <div className="border p-4 rounded-md shadow-md">
+
+
 <div className="flex">
       <h3 className="text-lg font-bold">{`${product.NombreES } -`}</h3>
       <h2 className="text-lg font-bold">- {product.Precio} </h2>
@@ -268,16 +277,17 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
           </div>
           <div className="flex gap-4">
             <label className="text-sm text-gray-700 flex-1 font-bold">
-              Cuidado en Español:
-              <input
+              Cuidado:
+              <CuidadoVariations isEnglish={false} viewName={"Inventario"} product={product} />
+              {/* <input
                 type="text"
                 name="CuidadoES"
                 value={editableProduct.CuidadoES || ""}
                 onChange={handleChange}
                 className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-              />
+              /> */}
             </label>
-            <label className="text-sm text-gray-700 flex-1 font-bold">
+            {/* <label className="text-sm text-gray-700 flex-1 font-bold">
               Cuidado en Inglés:
               <input
                 type="text"
@@ -286,7 +296,7 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
                 onChange={handleChange}
                 className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
               />
-            </label>
+            </label> */}
             <label className="text-sm text-gray-700 flex-1 font-bold">
               Order Menu Print:
               <input
