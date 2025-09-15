@@ -187,14 +187,14 @@ export default function CuidadoVariations({ product, viewName, isEnglish: isEngl
         
         return data[category].map(item => {
           if (category === 'spice') {
-            return item.level > 0 ? `${title}: ${item.level} ${getIcon(item.icon)}` : null;
+            return item.level > 0 ? ` ${item.level} ${getIcon(item.icon)}` : null;
           }
           if (category === 'variations') {
             // 👇 CAMBIO: Añade el costo extra si es mayor a 0 👇
-            const extraText = item.extra > 0 ? ` (+${item.extra})` : '';
-            return `${title}: ${item.type}${extraText} ${getIcon(item.icon)}`;
+            const extraText = item.extra > 0 ? ` +${item.extra}` : '';
+            return ` ${item.type}${extraText} ${getIcon(item.icon)}`;
           }
-          return `${title}: ${item.type} ${getIcon(item.icon)}`;
+          return ` ${item.type} ${getIcon(item.icon)}`;
         }).filter(Boolean); // Filtra los items nulos (como el picante con nivel 0)
       });
 
