@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { deleteProveedor, updateProveedor } from "../../redux/actions-Proveedores";
+import { deleteProveedor, updateProveedor, copiarAlPortapapeles } from "../../redux/actions-Proveedores";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
+import Procedimiento from "./Procedimiento";
 
 export function TableViewProveedores({ products = [] }) {
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
+  const allItems = useSelector((state) => state.allItems || []);
+  const allProveedores = useSelector((state) => state.Proveedores || []);
   
   // Estados para filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,8 +18,10 @@ export function TableViewProveedores({ products = [] }) {
   const [editingRows, setEditingRows] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({});
+  const [showProcessOrder, setShowProcessOrder] = useState(false);
+  const [selectedProveedor, setSelectedProveedor] = useState(null); // Nuevo estado
 
-  // Definir todas las columnas disponibles para proveedores
+  // Definir todas las columnas disponibles para proveedores (incluyendo todas las de CardGridProveedores)
   const getAvailableColumns = () => {
     return {
       nombre: { label: "Nombre Proveedor", key: "Nombre_Proveedor", default: true },
@@ -25,6 +30,8 @@ export function TableViewProveedores({ products = [] }) {
       direccion: { label: "Dirección", key: "Direccion", default: true },
       nitcc: { label: "NIT/CC", key: "NIT/CC", default: false },
       paginaWeb: { label: "Página Web", key: "PAGINA_WEB", default: false },
+      pendientes: { label: "Pendientes de Compra", key: "pendientes", default: true },
+      totalProductos: { label: "Total Productos", key: "totalProductos", default: false },
       acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
     };
   };
@@ -223,6 +230,33 @@ export function TableViewProveedores({ products = [] }) {
     }
   };
 
+  // Abrir modal y pasar proveedor seleccionado y sus pendientes
+  const handleProcedimiento = (item) => {
+    // Busca el proveedor completo en allProveedores por si products no tiene todos los campos
+    const proveedorCompleto = allProveedores.find(p => p._id === item._id) || item;
+    // Obtener los productos pendientes de compra para este proveedor
+    const pendientes = allItems.filter(prod => prod.Proveedor === proveedorCompleto._id && prod.Estado === "PC");
+    setSelectedProveedor({ ...proveedorCompleto, pendientes });
+    setShowProcessOrder(true);
+  };
+
+  // Guardar cambios desde Procedimiento
+  const handleSaveProcedimiento = async (data) => {
+    try {
+      await dispatch(updateProveedor(data._id, data));
+      setShowProcessOrder(false);
+      setSelectedProveedor(null);
+    } catch (error) {
+      alert("Error al guardar el proveedor");
+    }
+  };
+
+  // Cerrar modal Procedimiento
+  const handleCloseProcedimiento = () => {
+    setShowProcessOrder(false);
+    setSelectedProveedor(null);
+  };
+
   const handleDelete = async (item) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar al proveedor ${item.Nombre_Proveedor}?`)) {
       try {
@@ -232,6 +266,35 @@ export function TableViewProveedores({ products = [] }) {
         console.error("Error al eliminar el proveedor:", error);
         alert("Hubo un error al eliminar el proveedor.");
       }
+    }
+  };
+
+  // --- NUEVA FUNCIÓN: Copiar pendientes de compra agrupados por proveedor al portapapeles ---
+  const handleCopyPending = async () => {
+    // Agrupa los productos pendientes (Estado === "PC") por proveedor
+    const pendientesPorProveedor = allProveedores.map(prov => {
+      const pendientes = allItems.filter(
+        item => item.Estado === "PC" && item.Proveedor === prov._id
+      );
+      if (pendientes.length === 0) return null;
+      return {
+        proveedor: prov,
+        pendientes
+      };
+    }).filter(Boolean);
+
+    if (pendientesPorProveedor.length === 0) {
+      alert("No hay productos pendientes de compra para ningún proveedor.");
+      return;
+    }
+
+    try {
+      // Llama a la acción para copiar agrupado por proveedor
+      await dispatch(copiarAlPortapapeles(pendientesPorProveedor, "PC", "Proveedor", allProveedores));
+      alert("Pendientes de compra agrupados por proveedor copiados al portapapeles.");
+    } catch (error) {
+      console.error("Error al copiar:", error);
+      alert("Hubo un error al copiar los pendientes.");
     }
   };
 
@@ -306,10 +369,14 @@ export function TableViewProveedores({ products = [] }) {
   // Función para renderizar filas de la tabla
   const renderTableRows = () => {
     const rows = [];
-    
+
     sortedProducts.forEach((item, index) => {
       const isEditing = editingRows[item._id];
-      
+
+      // Obtener los productos asociados y pendientes de compra para este proveedor
+      const asociados = allItems.filter(prod => prod.Proveedor === item._id);
+      const pendientes = asociados.filter(prod => prod.Estado === "PC");
+
       const cells = [
         { key: 'nombre', content: (
           <td key="nombre" className="px-3 py-2 border-r border-gray-100 text-xs">
@@ -367,6 +434,28 @@ export function TableViewProveedores({ products = [] }) {
             }
           </td>
         )},
+        { key: 'pendientes', content: (
+          <td key="pendientes" className="px-3 py-2 border-r border-gray-100 text-xs">
+            <span className="font-semibold text-orange-700">{pendientes.length}</span>
+            {pendientes.length > 0 && (
+              <Button
+                onClick={async () => {
+                  await dispatch(copiarAlPortapapeles(pendientes, "PC", "Proveedor", allProveedores));
+                  alert("Pendientes de compra de este proveedor copiados al portapapeles.");
+                }}
+                className="ml-2 bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 text-xs h-6 border border-yellow-600"
+                title="Copiar pendientes de compra de este proveedor"
+              >
+                📋
+              </Button>
+            )}
+          </td>
+        )},
+        { key: 'totalProductos', content: (
+          <td key="totalProductos" className="px-3 py-2 border-r border-gray-100 text-xs">
+            <span className="font-semibold text-blue-700">{asociados.length}</span>
+          </td>
+        )},
         { key: 'acciones', content: (
           <td key="acciones" className="px-3 py-2 text-xs">
             <div className="flex gap-1">
@@ -378,6 +467,12 @@ export function TableViewProveedores({ products = [] }) {
                   💾
                 </Button>
               )}
+              <Button
+                onClick={() => handleProcedimiento(item)}
+                className="bg-gray-100 hover:bg-red-600 text-red-800 px-2 py-1 text-xs h-6 border border-red-300"
+              >
+                Pedir
+              </Button>
               {showEdit && (
                 <Button
                   onClick={() => handleDelete(item)}
@@ -406,6 +501,19 @@ export function TableViewProveedores({ products = [] }) {
 
   return (
     <div className="w-full">
+            {showProcessOrder && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 sm:p-8">
+    <div className="bg-white rounded-xl shadow-2xl w-full max-w-screen-2xl h-[90vh] flex flex-col">
+      <Procedimiento
+        initialOrder={selectedProveedor}
+        pendientes={selectedProveedor?.pendientes || []}
+        onSave={handleSaveProcedimiento}
+        onClose={handleCloseProcedimiento}
+      />
+    </div>
+  </div>
+)}
+
       {/* Panel de filtros tipo Excel */}
       <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
         <div className="flex flex-wrap gap-4 items-center">
@@ -427,7 +535,13 @@ export function TableViewProveedores({ products = [] }) {
           >
             📋 Columnas
           </Button>
-
+          {/* --- NUEVO BOTÓN: Copiar pendientes --- */}
+          <Button
+            onClick={handleCopyPending}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm border border-yellow-600 flex items-center gap-2"
+          >
+            📋 Copiar Pendientes
+          </Button>
           <div className="text-sm text-gray-600">
             Mostrando {sortedProducts.length} de {products.length} proveedores
           </div>

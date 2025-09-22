@@ -16,9 +16,16 @@ function Proveedores() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
-  const [viewMode, setViewMode] = useState("cards"); // "cards" o "table"
+  const [viewMode, setViewMode] = useState("table"); // "cards" o "table"
 
   const proveedores = useSelector((state) => state.Proveedores || []);
+  const items = useSelector((state) => state.Items || []); // O el nombre real
+
+  const proveedoresConPendientes = proveedores.map(prov => ({
+    ...prov,
+    pendientes: items.filter(item => item.proveedorId === prov._id)
+  }));
+
   const showEdit = useSelector((state) => state.showEdit);
 
   useEffect(() => {
@@ -64,6 +71,8 @@ function Proveedores() {
     />
   );
 
+  
+
   return (
     <PageLayout title="Gestión de Proveedores" actions={headerActions} loading={loading}>
       {/* Acciones Rápidas */}
@@ -91,7 +100,7 @@ function Proveedores() {
         ) : (
           // Vista de tabla tipo Excel
           <TableViewProveedores
-            products={proveedores}
+            products={proveedoresConPendientes}
           />
         )}
       </ContentCard>

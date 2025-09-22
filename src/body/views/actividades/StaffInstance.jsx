@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { crearWorkIsue, actualizarWorkIsue, eliminarWorkIsue } from "../../../redux/actions-WorkIsue";
 import Pagar from "./Pagar";
-import WorkIsue from "./WorkIsue";
+import WorkIsue from "./WorkIsueExcelView";
 
 function StaffInstance({ staff, ventas, reloadVentas }) {
   const [formData, setFormData] = useState({

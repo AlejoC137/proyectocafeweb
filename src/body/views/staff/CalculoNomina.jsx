@@ -14,30 +14,39 @@ const CalculoNomina = () => {
   const [modifiedShifts, setModifiedShifts] = useState({});
 
   useEffect(() => {
-    // Si quieres cargar staff al montar, descomenta:
     dispatch(getAllFromTable(STAFF));
   }, [dispatch]);
 
-  const handleCalcular = () => {
-    const data = staff || [];
-    const resultado = calcularHorasYPropinas(data, fechaInicio, fechaFin);
-    const valorPagarPorPersona = calcularValorPagar(
-      resultado,
-      fechaInicio,
-      fechaFin
-    );
+  const parseAndFormatCuenta = (cuentaString) => {
+    if (typeof cuentaString !== "string" || !cuentaString.trim()) {
+      return "N/A";
+    }
+    try {
+      const validJsonString = cuentaString.replace(/(\w+):/g, '"$1":');
+      const cuentaObj = JSON.parse(validJsonString);
+      return `${cuentaObj.banco} - ${cuentaObj.tipo} - ${cuentaObj.numero}`;
+    } catch (error) {
+      return cuentaString;
+    }
+  };
+
+  const realizarCalculoCompleto = (staffData, inicio, fin) => {
+    if (!inicio || !fin) return;
+    const resultado = calcularHorasYPropinas(staffData, inicio, fin);
+    const valorPagarPorPersona = calcularValorPagar(resultado, inicio, fin);
     setResultados(valorPagarPorPersona);
 
-    // Inicializa los turnos editables para cada persona
     const shiftsByPersona = {};
-    valorPagarPorPersona.forEach((persona, idx) => {
-      // Usa persona._id si existe, si no, usa el índice
-      const key = persona._id || idx;
-      shiftsByPersona[key] = [...(persona.turnos || [])];
+    valorPagarPorPersona.forEach((persona) => {
+      shiftsByPersona[persona._id] = [...(persona.turnos || [])];
     });
     setModifiedShifts(shiftsByPersona);
   };
 
+  const handleCalcular = () => {
+    realizarCalculoCompleto(staff, fechaInicio, fechaFin);
+  };
+  
   function calcularHorasYPropinas(data, fechaInicio, fechaFin) {
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
@@ -49,25 +58,16 @@ const CalculoNomina = () => {
       } else if (typeof persona.Turnos === "string" && persona.Turnos.trim()) {
         try {
           const parsed = JSON.parse(persona.Turnos);
-          if (Array.isArray(parsed)) {
-            turnos = parsed;
-          } else if (typeof parsed === "object" && parsed !== null) {
-            turnos = [parsed];
-          }
+          turnos = Array.isArray(parsed) ? parsed : [parsed];
         } catch {
-          turnos = [
-            {
-              fecha: persona.Turnos,
-              horaInicio: "08:00",
-              horaCierre: "17:00",
-            },
-          ];
+          turnos = [];
         }
       }
+
       const turnosNormalizados = turnos.map((t) => ({
         turnoDate: t.fecha || t.turnoDate || t.date || "",
-        horaInicio: t.horaInicio || t.horaEntrada || t.hora || "08:00",
-        horaSalida: t.horaCierre || t.horaSalida || t.horaFin || "17:00",
+        horaInicio: t.horaInicio || t.horaEntrada || t.hora || "00:00",
+        horaSalida: t.horaCierre || t.horaSalida || t.horaFin || "00:00",
       }));
 
       const turnosFiltrados = turnosNormalizados.filter((turno) => {
@@ -75,29 +75,25 @@ const CalculoNomina = () => {
         const fechaTurno = new Date(turno.turnoDate);
         return fechaTurno >= inicio && fechaTurno <= fin;
       });
-
+      
       const CompiladorHorasTrabajadas = (turnos) => {
-        if (!Array.isArray(turnos) || turnos.length === 0) {
-          return 0;
-        }
-        const totalHoras = turnos.reduce((acumulador, turno) => {
-          if (
-            !turno.horaInicio ||
-            !turno.horaSalida ||
-            turno.horaSalida === "PENDING"
-          ) {
+        if (!Array.isArray(turnos) || turnos.length === 0) return 0;
+        
+        return turnos.reduce((acumulador, turno) => {
+          if (!turno.horaInicio || !turno.horaSalida || turno.horaSalida === "PENDING") {
             return acumulador;
           }
-          const [horaInicioStr, minutoInicioaStr] = turno.horaInicio.split(":");
+          const [horaInicioStr, minutoInicioStr] = turno.horaInicio.split(":");
           const [horaSalidaStr, minutoSalidaStr] = turno.horaSalida.split(":");
+          
           const horasTurno =
-            ((horaSalidaStr - horaInicioStr) * 60 +
-              (minutoSalidaStr - minutoInicioaStr)) /
-            60;
-          return acumulador + horasTurno;
+            (parseInt(horaSalidaStr, 10) - parseInt(horaInicioStr, 10)) +
+            (parseInt(minutoSalidaStr, 10) - parseInt(minutoInicioStr, 10)) / 60;
+          
+          return acumulador + (horasTurno > 0 ? horasTurno : 0);
         }, 0);
-        return totalHoras;
       };
+
       const horasTrabajadas = CompiladorHorasTrabajadas(turnosFiltrados);
 
       let propinas = 0;
@@ -108,18 +104,10 @@ const CalculoNomina = () => {
             return fechaPropina >= inicio && fechaPropina <= fin;
           })
           .reduce((total, propina) => total + parseFloat(propina.tipMonto), 0);
-      } else if (typeof persona.Propinas === "number") {
-        propinas = persona.Propinas;
-      } else if (
-        typeof persona.Propinas === "string" &&
-        persona.Propinas.trim() &&
-        !isNaN(Number(persona.Propinas))
-      ) {
-        propinas = Number(persona.Propinas);
       }
 
       return {
-        _id: persona._id, // importante para identificar
+        _id: persona._id,
         nombre: `${persona.Nombre} ${persona.Apellido}`,
         horasTrabajadas: parseFloat(horasTrabajadas.toFixed(2)),
         totalPropinas: parseFloat((propinas / 1000).toFixed(3)),
@@ -127,18 +115,20 @@ const CalculoNomina = () => {
         turnos: turnosFiltrados,
         show: persona.Show !== false,
         Rate: persona.Rate,
+        Cuenta: persona.Cuenta,
       };
     });
   }
 
   function calcularValorPagar(resultado, fechaInicio, fechaFin) {
     return resultado.map((persona) => {
-      const baseRate = Number(persona.Rate) > 0 ? Number(persona.Rate) : 0;
+      const baseRate = Number(persona.Rate) || 0;
       const pagoBase = persona.horasTrabajadas * baseRate;
       const seguridadSocial = pagoBase * 0.1;
       const totalNomina = parseFloat(
         (pagoBase + seguridadSocial + persona.totalPropinas).toFixed(3)
       );
+      
       return {
         ...persona,
         valorPagaPorHoras: parseFloat((pagoBase + seguridadSocial).toFixed(3)),
@@ -148,14 +138,13 @@ const CalculoNomina = () => {
     });
   }
 
-  const handleToggleHistorial = (index) => {
+  const handleToggleHistorial = (personaId) => {
     setHistorialDesplegado((prevState) => ({
       ...prevState,
-      [index]: !prevState[index],
+      [personaId]: !prevState[personaId],
     }));
   };
 
-  // --- CORREGIDOS: Siempre usa array vacío si no existe ---
   const handleShiftFieldChange = (personaId, shiftIndex, field, value) => {
     setModifiedShifts((prevShifts) => {
       const personaShifts = [...(prevShifts[personaId] || [])];
@@ -163,10 +152,7 @@ const CalculoNomina = () => {
         ...personaShifts[shiftIndex],
         [field]: value,
       };
-      return {
-        ...prevShifts,
-        [personaId]: personaShifts,
-      };
+      return { ...prevShifts, [personaId]: personaShifts };
     });
   };
 
@@ -174,200 +160,165 @@ const CalculoNomina = () => {
     setModifiedShifts((prevShifts) => {
       const personaShifts = [...(prevShifts[personaId] || [])];
       personaShifts.splice(shiftIndex, 1);
-      return {
-        ...prevShifts,
-        [personaId]: personaShifts,
-      };
+      return { ...prevShifts, [personaId]: personaShifts };
     });
   };
 
   const handleAddShift = (personaId) => {
     setModifiedShifts((prevShifts) => {
       const personaShifts = [...(prevShifts[personaId] || [])];
-      const newShift = {
-        turnoDate: "",
-        horaInicio: "",
-        horaSalida: "",
-      };
-      personaShifts.push(newShift);
-      return {
-        ...prevShifts,
-        [personaId]: personaShifts,
-      };
+      const newShift = { turnoDate: "", horaInicio: "", horaSalida: "" };
+      return { ...prevShifts, [personaId]: [...personaShifts, newShift] };
     });
   };
 
   const handleUpdateShifts = (persona) => {
-    // Aquí deberías hacer el dispatch a tu backend si lo necesitas
-    dispatch(updateLogStaff(persona._id, modifiedShifts[persona._id]));
-    // También puedes recalcular resultados si quieres ver los cambios reflejados
-    setResultados((prev) =>
-      prev.map((p) =>
-        p._id === persona._id
-          ? { ...p, turnos: modifiedShifts[persona._id] || [] }
-          : p
-      )
+    const updatedTurnos = modifiedShifts[persona._id];
+    dispatch(updateLogStaff(persona._id, updatedTurnos));
+    const staffActualizado = staff.map(p => 
+      p._id === persona._id ? { ...p, Turnos: JSON.stringify(updatedTurnos) } : p
     );
+    realizarCalculoCompleto(staffActualizado, fechaInicio, fechaFin);
   };
 
   return (
-    <div className="flex-col w-full font-SpaceGrotesk text-notBlack min-h-screen flex items-center justify-center h-screen w-screen">
-      <h2 className="text-xl font-semibold mb-4">Cálculo de Nómina y Propinas</h2>
-      <div className="mb-4 ">
-        <label className="block mb-2">Fecha de Inicio:</label>
-        <input
-          type="date"
-          value={fechaInicio}
-          onChange={(e) => setFechaInicio(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block mb-2">Fecha de Fin:</label>
-        <input
-          type="date"
-          value={fechaFin}
-          onChange={(e) => setFechaFin(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-      </div>
-      <button
-        onClick={handleCalcular}
-        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
-      >
-        Calcular Nómina
-      </button>
-      {resultados.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">Resultados:</h3>
-          <table className="table-auto w-full border-collapse border">
-            <thead>
-              <tr>
-                <th className="border px-4 py-2">Nombre</th>
-                <th className="border px-4 py-2">Horas Trabajadas</th>
-                <th className="border px-4 py-2">Total Propinas</th>
-                <th className="border px-4 py-2">Pago por Horas</th>
-                <th className="border px-4 py-2">Total Nómina</th>
-                <th className="border px-4 py-2">Período</th>
-                <th className="border px-4 py-2">Historial</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultados.map((persona, index) =>
-                persona.show ? (
-                  <React.Fragment key={index}>
-                    <tr>
-                      <td className="border px-4 py-2">{persona.nombre}</td>
-                      <td className="border px-4 py-2">{persona.horasTrabajadas}</td>
-                      <td className="border px-4 py-2">{persona.totalPropinas}</td>
-                      <td className="border px-4 py-2">{persona.valorPagaPorHoras}</td>
-                      <td className="border px-4 py-2">{persona.totalNomina}</td>
-                      <td className="border px-4 py-2">{persona.periodo}</td>
-                      <td className="border px-4 py-2">
-                        <button
-                          onClick={() => handleToggleHistorial(index)}
-                          className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-700"
-                        >
-                          {historialDesplegado[index] ? "Ocultar" : "🗂️"}
-                        </button>
-                      </td>
-                    </tr>
-                    {historialDesplegado[index] && (
+    <div className="flex-col w-full font-SpaceGrotesk text-notBlack min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-7xl"> {/* Aumentado el ancho máximo para más columnas */}
+        <h2 className="text-2xl font-semibold mb-4 text-center">Cálculo de Nómina y Propinas</h2>
+        <div className="flex justify-center gap-4 mb-4">
+          <div>
+            <label className="block mb-2">Fecha de Inicio:</label>
+            <input
+              type="date"
+              value={fechaInicio}
+              onChange={(e) => setFechaInicio(e.target.value)}
+              className="border p-2 rounded w-full"
+            />
+          </div>
+          <div>
+            <label className="block mb-2">Fecha de Fin:</label>
+            <input
+              type="date"
+              value={fechaFin}
+              onChange={(e) => setFechaFin(e.target.value)}
+              className="border p-2 rounded w-full"
+            />
+          </div>
+        </div>
+        <div className="text-center">
+          <button
+            onClick={handleCalcular}
+            className="bg-blue-500 text-white py-2 px-6 rounded hover:bg-blue-700 transition-colors"
+          >
+            Calcular Nómina
+          </button>
+        </div>
+
+        {resultados.length > 0 && (
+          <div className="mt-6 overflow-x-auto">
+            <h3 className="text-xl font-semibold mb-2">Resultados:</h3>
+            <table className="table-auto w-full border-collapse border">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-4 py-2">Nombre</th>
+                  <th className="border px-4 py-2">Horas Trab.</th>
+                  <th className="border px-4 py-2">Rate</th> {/* <-- NUEVA COLUMNA */}
+                  <th className="border px-4 py-2">Cuenta Bancaria</th>
+                  <th className="border px-4 py-2">Pago por Horas</th>
+                  <th className="border px-4 py-2">Total Nómina</th>
+                  <th className="border px-4 py-2">Promedio/Hora (Check)</th> {/* <-- NUEVA COLUMNA */}
+                  <th className="border px-4 py-2">Período</th>
+                  <th className="border px-4 py-2">Historial</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resultados.map((persona) => {
+                    // --- NUEVO: Cálculo del valor de chequeo ---
+                    const promedioHora = 
+                        persona.horasTrabajadas > 0 
+                        ? persona.totalNomina / persona.horasTrabajadas 
+                        : 0;
+
+                    return persona.show ? (
+                    <React.Fragment key={persona._id}>
                       <tr>
-                        <td colSpan="7" className="border px-4 py-2">
-                          <table className="table-auto w-full border mt-2">
-                            <thead>
-                              <tr>
-                                <th className="border px-4 py-2">Fecha</th>
-                                <th className="border px-4 py-2">Hora Inicio</th>
-                                <th className="border px-4 py-2">Hora Salida</th>
-                                <th className="border px-4 py-2">Acciones</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(modifiedShifts[persona._id] || persona.turnos || []).map((turno, idx) => (
-                                <tr key={idx}>
-                                  <td className="border px-4 py-2">
-                                    <input
-                                      type="date"
-                                      value={turno.turnoDate}
-                                      onChange={(e) =>
-                                        handleShiftFieldChange(
-                                          persona._id,
-                                          idx,
-                                          "turnoDate",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="border p-1 rounded w-full"
-                                    />
-                                  </td>
-                                  <td className="border px-4 py-2">
-                                    <input
-                                      type="text"
-                                      value={turno.horaInicio}
-                                      onChange={(e) =>
-                                        handleShiftFieldChange(
-                                          persona._id,
-                                          idx,
-                                          "horaInicio",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="border p-1 rounded w-full"
-                                    />
-                                  </td>
-                                  <td className="border px-4 py-2">
-                                    <input
-                                      type="text"
-                                      value={turno.horaSalida}
-                                      onChange={(e) =>
-                                        handleShiftFieldChange(
-                                          persona._id,
-                                          idx,
-                                          "horaSalida",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="border p-1 rounded w-full"
-                                    />
-                                  </td>
-                                  <td className="border px-4 py-2">
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteShift(persona._id, idx)
-                                      }
-                                      className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-700 mr-2"
-                                    >
-                                      Delete
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                        <td className="border px-4 py-2">{persona.nombre}</td>
+                        <td className="border px-4 py-2 text-center">{persona.horasTrabajadas}</td>
+                        {/* --- NUEVO: Celda para el Rate --- */}
+                        <td className="border px-4 py-2 text-right">
+                            {(Number(persona.Rate) || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+                        </td>
+                        <td className="border px-4 py-2">{parseAndFormatCuenta(persona.Cuenta)}</td>
+                        <td className="border px-4 py-2 text-right">{persona.valorPagaPorHoras.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</td>
+                        <td className="border px-4 py-2 text-right">{persona.totalNomina.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</td>
+                        {/* --- NUEVO: Celda para el valor de chequeo --- */}
+                        <td className="border px-4 py-2 text-right font-bold">
+                            {promedioHora.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+                        </td>
+                        <td className="border px-4 py-2">{persona.periodo}</td>
+                        <td className="border px-4 py-2 text-center">
                           <button
-                            onClick={() => handleAddShift(persona._id)}
-                            className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-700 mt-2"
+                            onClick={() => handleToggleHistorial(persona._id)}
+                            className="bg-gray-500 text-white py-1 px-3 rounded hover:bg-gray-700"
                           >
-                            Add Shift
-                          </button>
-                          <button
-                            onClick={() => handleUpdateShifts(persona)}
-                            className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-700 mt-2"
-                          >
-                            Update Shifts
+                            {historialDesplegado[persona._id] ? "Ocultar" : "🗂️"}
                           </button>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ) : null
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      {historialDesplegado[persona._id] && (
+                        <tr>
+                          {/* --- CORREGIDO: Colspan actualizado a 9 --- */}
+                          <td colSpan="9" className="border px-4 py-4 bg-gray-50">
+                            <h4 className="font-semibold mb-2">Editar Turnos de {persona.nombre}</h4>
+                            <table className="table-auto w-full border mt-2">
+                              <thead>
+                                <tr>
+                                  <th className="border px-4 py-2">Fecha</th>
+                                  <th className="border px-4 py-2">Hora Inicio</th>
+                                  <th className="border px-4 py-2">Hora Salida</th>
+                                  <th className="border px-4 py-2">Acciones</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(modifiedShifts[persona._id] || []).map((turno, idx) => (
+                                  <tr key={idx}>
+                                    <td className="border px-2 py-1">
+                                      <input type="date" value={turno.turnoDate.split('T')[0]} onChange={(e) => handleShiftFieldChange(persona._id, idx, "turnoDate", e.target.value)} className="border p-1 rounded w-full" />
+                                    </td>
+                                    <td className="border px-2 py-1">
+                                      <input type="time" value={turno.horaInicio} onChange={(e) => handleShiftFieldChange(persona._id, idx, "horaInicio", e.target.value)} className="border p-1 rounded w-full" />
+                                    </td>
+                                    <td className="border px-2 py-1">
+                                      <input type="time" value={turno.horaSalida} onChange={(e) => handleShiftFieldChange(persona._id, idx, "horaSalida", e.target.value)} className="border p-1 rounded w-full" />
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      <button onClick={() => handleDeleteShift(persona._id, idx)} className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-700">
+                                        Eliminar
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            <div className="mt-2">
+                              <button onClick={() => handleAddShift(persona._id)} className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-700 mr-2">
+                                Añadir Turno
+                              </button>
+                              <button onClick={() => handleUpdateShifts(persona)} className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-700">
+                                Actualizar y Recalcular
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ) : null;
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

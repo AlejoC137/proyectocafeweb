@@ -33,6 +33,7 @@ import Proveedores from './body/views/proveedores/Proveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
 import CalculoNomina from './body/views/staff/CalculoNomina';
+import WorkIsueExcelView from './body/views/actividades/WorkIsueExcelView.jsx';
 
 // import Manager from './body/views/actividades/Manager';
 
@@ -107,6 +108,7 @@ function App() {
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/MesResumen" element={<MesResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
+     <Route path="/WorkIsueExcelView" element={<WorkIsueExcelView />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
      <Route path="/Predict/:menuItem" element={<Predict />} />
