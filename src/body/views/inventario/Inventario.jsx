@@ -5,8 +5,8 @@ import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
-// import { TableViewInventario } from "@/components/ui/tableViewInventario";
-import { TableViewInventario } from "./tableView/TableViewInventario";
+import { TableViewInventario } from "@/components/ui/tableViewInventario";
+// import { TableViewInventario } from "./tableView/TableViewInventario";
 import { ViewToggle } from "@/components/ui/viewToggle";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";

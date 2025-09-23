@@ -8,6 +8,7 @@ import { parseCompLunch } from "../../utils/jsonUtils";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 import CuidadoVariations from "./CuidadoVariations";
+import { TableViewInventarioCycle } from "./tableViewInventarioCycle";
 
 // Helper component for the cyclic status selector
 
@@ -15,39 +16,10 @@ export function TableViewInventario({ products, currentType }) {
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
   const Proveedores = useSelector((state) => state.Proveedores || []);
-  
-const CyclicStatusSelector = ({ initialStatus, options, onStatusChange }) => {
-  const handleClick = () => {
-    const currentIndex = options.indexOf(initialStatus);
-    const nextIndex = (currentIndex + 1) % options.length;
-    const newStatus = options[nextIndex];
-    onStatusChange(newStatus);
-  };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'OK':
-      case 'PC':
-        return "bg-green-100 text-green-800 hover:bg-green-200 border-green-300";
-      case 'NA':
-        return "bg-red-100 text-red-800 hover:bg-red-200 border-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-300";
-    }
-  };
 
-  return (
-    <button
-      onClick={handleClick}
-      type="button"
-      className={`w-full px-2 py-1 rounded-full text-xs font-medium transition-colors border ${getStatusClass(initialStatus)}`}
-    >
-      {initialStatus || options[0]}
-    </button>
-  );
-};
 
-const statusCycleOptions = ['PC', 'NA', 'OK'];
+
 
 
 
@@ -92,7 +64,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           composicionAlmuerzo: { label: "Comp. Almuerzo", key: "Comp_Lunch", default: true },
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
-      
+
       case ItemsAlmacen:
         return {
           nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
@@ -109,7 +81,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
           acciones: { label: "Acciones", key: "acciones", default: false, fixed: true }
         };
-      
+
       case ProduccionInterna:
         return {
           nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
@@ -125,7 +97,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
-      
+
       default:
         return {};
     }
@@ -223,7 +195,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
   const filteredProducts = products.filter(product => {
     let searchField = "";
     let categoryField = "";
-    
+
     if (currentType === MenuItems) {
       searchField = `${product.NombreES || ""} ${product.NombreEN || ""} ${product.DescripcionMenuES || ""}`;
       categoryField = product.GRUPO;
@@ -231,13 +203,13 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
       searchField = product.Nombre_del_producto || "";
       categoryField = product.GRUPO;
     }
-    
+
     const matchesSearch = !searchTerm || 
       searchField.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesCategory = !filterCategory || categoryField === filterCategory;
     const matchesEstado = !filterEstado || product.Estado === filterEstado;
-    
+
     let matchesAlmacenamiento = true;
     if (filterAlmacenamiento && currentType !== MenuItems) {
       try {
@@ -247,22 +219,22 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         matchesAlmacenamiento = false;
       }
     }
-    
+
     let matchesProveedor = true;
     if (filterProveedor && currentType === ItemsAlmacen) {
       matchesProveedor = product.Proveedor === filterProveedor;
     }
-    
+
     return matchesSearch && matchesCategory && matchesEstado && matchesAlmacenamiento && matchesProveedor;
   });
 
   // Ordenar productos
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (!sortColumn) return 0;
-    
+
     let aValue = a[sortColumn] || "";
     let bValue = b[sortColumn] || "";
-    
+
     // Manejar casos especiales para números y fechas
     if (sortColumn === "COSTO" || sortColumn === "precioUnitario" || sortColumn === "Merma" || sortColumn === "CANTIDAD") {
       aValue = parseFloat(aValue) || 0;
@@ -288,7 +260,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
       aValue = proveedorA?.Nombre_Proveedor || "";
       bValue = proveedorB?.Nombre_Proveedor || "";
     }
-    
+
     if (sortDirection === "asc") {
       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
     } else {
@@ -317,7 +289,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
     setEditingRows(prev => {
       const currentItem = products.find(p => p._id === itemId);
       const existingEdits = prev[itemId] || {};
-      
+
       if (subField) {
         // Para campos anidados, obtener el objeto base y actualizarlo
         const baseObject = existingEdits[field] || parseNestedObject(currentItem?.[field], {});
@@ -346,7 +318,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
   // Función para validar datos antes del guardado
   const validateRowData = (editedData, currentType) => {
     const errors = [];
-    
+
     // Validaciones numéricas
     const numericFields = ['CANTIDAD', 'COSTO', 'precioUnitario', 'Merma', 'Precio'];
     numericFields.forEach(field => {
@@ -357,7 +329,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         }
       }
     });
-    
+
     // Validar campos requeridos según el tipo
     if (currentType === MenuItems) {
       if (editedData.NombreES && editedData.NombreES.trim().length < 2) {
@@ -371,7 +343,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         errors.push('El nombre del producto debe tener al menos 2 caracteres');
       }
     }
-    
+
     return errors;
   };
 
@@ -383,17 +355,17 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
     if (Object.keys(editedData).length === 0) {
       return;
     }
-    
+
     // Validar datos antes del guardado
     const validationErrors = validateRowData(editedData, currentType);
     if (validationErrors.length > 0) {
       alert(`Errores de validación:\n- ${validationErrors.join('\n- ')}`);
       return;
     }
-    
+
     try {
       const updatedFields = { ...editedData };
-      
+
       // Manejar objetos anidados
       if (editedData.STOCK) {
         // Validar que los valores de stock sean números válidos
@@ -401,14 +373,14 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         if (stockObj.minimo !== undefined) stockObj.minimo = parseFloat(stockObj.minimo) || 0;
         if (stockObj.maximo !== undefined) stockObj.maximo = parseFloat(stockObj.maximo) || 0;
         if (stockObj.actual !== undefined) stockObj.actual = parseFloat(stockObj.actual) || 0;
-        
+
         updatedFields.STOCK = JSON.stringify(stockObj);
       }
-      
+
       if (editedData.ALMACENAMIENTO) {
         updatedFields.ALMACENAMIENTO = JSON.stringify(editedData.ALMACENAMIENTO);
       }
-      
+
       // Convertir valores numéricos string a números
       ['CANTIDAD', 'COSTO', 'precioUnitario', 'Merma', 'Precio'].forEach(field => {
         if (updatedFields[field] !== undefined && updatedFields[field] !== '') {
@@ -418,14 +390,14 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           }
         }
       });
-      
+
       // Agregar fecha de actualización si no es MenuItems
       if (currentType !== "Menu") {
         updatedFields.FECHA_ACT = new Date().toISOString().split("T")[0];
       }
-      
+
       const result = await dispatch(updateItem(item._id, updatedFields, currentType));
-      
+
       if (result) {
         // Limpiar datos de edición para esta fila
         setEditingRows(prev => {
@@ -433,13 +405,13 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           delete newState[item._id];
           return newState;
         });
-        
+
         // Mostrar mensaje de éxito (opcional)
         console.log('Ítem actualizado correctamente');
       } else {
         throw new Error('No se pudo actualizar el ítem');
       }
-      
+
     } catch (error) {
       console.error("Error al actualizar el ítem:", error);
       alert(`Error al guardar: ${error.message || 'Error desconocido'}`);
@@ -452,7 +424,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
       ...prev,
       [productId]: !prev[productId]
     }));
-    
+
     if (recetaId && !recetas[productId] && !openRecipeRows[productId]) {
       try {
         const recetaType = currentType === MenuItems ? "Recetas" : "RecetasProduccion";
@@ -509,7 +481,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
   // Función para renderizar celdas editables
   const renderEditableCell = (item, field, type = "text", options = null, subField = null) => {
     let currentValue;
-    
+
     if (subField) {
       const nestedObj = editingRows[item._id]?.[field] || parseNestedObject(item[field]);
       currentValue = nestedObj?.[subField] || "";
@@ -690,7 +662,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
         )}
       ];
-      
+
       return menuHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
     }
 
@@ -758,7 +730,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         </th>
       )}
     ];
-    
+
     // Agregar proveedor solo para ItemsAlmacen
     if (currentType === ItemsAlmacen) {
       inventoryHeaders.push({
@@ -771,7 +743,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         )
       });
     }
-    
+
     // Agregar estado y fecha actualización
     inventoryHeaders.push(
       { key: 'estado', content: (
@@ -792,22 +764,22 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
       )}
     );
-    
+
     return inventoryHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
   };
 
   // Función para renderizar filas de la tabla
   const renderTableRows = () => {
     const rows = [];
-    
+
     sortedProducts.forEach((item, index) => {
       const isEditing = editingRows[item._id];
       const isRecipeOpen = openRecipeRows[item._id];
-      
+
       if (currentType === MenuItems) {
         // Renderizar filas para MenuItems
         const lunchData = parseCompLunch(item.Comp_Lunch);
-        
+
         const menuCells = [
           { key: 'nombreES', content: (
             <td key="nombreES" className="px-3 py-2 border-r border-gray-100 text-xs">
@@ -909,7 +881,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
                   <CuidadoVariations isEnglish={false} viewName={"Inventario"} product={item} />
               }
 
-                           
+
             </td>
           )},
           { key: 'cuidadoEN', content: (
@@ -920,7 +892,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
                    <CuidadoVariations isEnglish={true} viewName={"Inventario"} product={item} />
               }
 
-              
+
             </td>
           )},
           { key: 'grupo', content: (
@@ -978,14 +950,20 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           { key: 'estado', content: (
             <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? (
-                <CyclicStatusSelector
-                  initialStatus={editingRows[item._id]?.Estado || item.Estado}
-                  options={statusCycleOptions}
-                  onStatusChange={(newStatus) => {
-                    handleCellEdit(item._id, "Estado", newStatus);
-                    handleSaveRow(item, { ...editingRows[item._id], Estado: newStatus });
-                  }}
-                />
+                // <CyclicStatusSelector
+                //   initialStatus={editingRows[item._id]?.Estado || item.Estado}
+                //   options={statusCycleOptions}
+                //   onStatusChange={(newStatus) => {
+                //     handleCellEdit(item._id, "Estado", newStatus);
+                //     handleSaveRow(item, { ...editingRows[item._id], Estado: newStatus });
+                //   }}
+                // />
+<TableViewInventarioCycle
+  id={item._id}
+  currentType={currentType}
+  currentEstado={item.Estado}
+/>
+
               ) : (
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   item.Estado === "Activo" || item.Estado === "PC" || item.Estado === "PP" || item.Estado === "OK"
@@ -1060,7 +1038,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
             </td>
           )}
         ];
-        
+
         rows.push(
           <tr 
             key={item._id} 
@@ -1069,7 +1047,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
             {menuCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content)}
           </tr>
         );
-        
+
         // Agregar fila de receta si está abierta
         if (isRecipeOpen) {
           const visibleColumnsCount = Object.values(visibleColumns).filter(Boolean).length;
@@ -1089,14 +1067,14 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
             </tr>
           );
         }
-        
+
         return;
       }
 
       // Renderizar filas para inventario (ItemsAlmacen y ProduccionInterna)
       const stockData = parseNestedObject(item.STOCK, { minimo: "", maximo: "", actual: "" });
       const almacenamientoData = parseNestedObject(item.ALMACENAMIENTO, { ALMACENAMIENTO: "", BODEGA: "" });
-      
+
       // Obtener nombre del proveedor
       const proveedor = currentType === ItemsAlmacen ? 
         Proveedores.find(p => p._id === item.Proveedor) : null;
@@ -1206,7 +1184,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           </td>
         )}
       ];
-      
+
       // Agregar proveedor solo para ItemsAlmacen
       if (currentType === ItemsAlmacen) {
         inventoryCells.push({
@@ -1231,20 +1209,22 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           )
         });
       }
-      
+const handleCyclic = (currentState) => { }
       // Agregar estado y fecha actualización
       inventoryCells.push(
         { key: 'estado', content: (
           <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
             {showEdit ? (
-              <CyclicStatusSelector
-                initialStatus={editingRows[item._id]?.Estado || item.Estado}
-                options={statusCycleOptions}
-                onStatusChange={(newStatus) => {
-                  handleCellEdit(item._id, "Estado", newStatus);
-                  handleSaveRow(item, { ...editingRows[item._id], Estado: newStatus });
-                }}
-              />
+              // <CyclicStatusSelector
+              //  currentState={item.Estado}
+              //  onClick={handleCyclic(item.Estado)}
+               
+              // />
+              <TableViewInventarioCycle
+  id={item._id}
+  currentType={currentType}
+  currentEstado={item.Estado}
+/>
             ) : (
               <span className={`px-2 py-1 rounded-full text-xs ${
                 item.Estado === "Activo" || item.Estado === "PC" || item.Estado === "PP" || item.Estado === "OK"
@@ -1301,7 +1281,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
           {inventoryCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content)}
         </tr>
       );
-      
+
       // Agregar fila de receta si está abierta para productos de inventario
       if (isRecipeOpen && (currentType === ProduccionInterna || currentType === MenuItems)) {
         const visibleColumnsCount = Object.values(visibleColumns).filter(Boolean).length;
@@ -1331,7 +1311,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
         );
       }
     });
-    
+
     return rows;
   };
 
@@ -1350,7 +1330,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
               className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-500" />
             <select
@@ -1463,7 +1443,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
                 </svg>
               </button>
             </div>
-            
+
             {/* Controles rápidos */}
             <div className="flex gap-2 mb-4">
               <button
@@ -1485,7 +1465,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
                 🔄 Por Defecto
               </button>
             </div>
-            
+
             {/* Lista de columnas */}
             <div className="max-h-80 overflow-y-auto space-y-3 border border-gray-200 rounded-lg p-4 bg-gray-50">
               {Object.entries(availableColumns).map(([key, column]) => (
@@ -1522,7 +1502,7 @@ const statusCycleOptions = ['PC', 'NA', 'OK'];
                 </div>
               ))}
             </div>
-            
+
             {/* Footer con estadísticas */}
             <div className="mt-6 pt-4 border-t border-gray-200">
               <div className="flex justify-between items-center text-sm">
