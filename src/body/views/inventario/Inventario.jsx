@@ -5,7 +5,8 @@ import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
-import { TableViewInventario } from "@/components/ui/tableViewInventario";
+// import { TableViewInventario } from "@/components/ui/tableViewInventario";
+import { TableViewInventario } from "./tableView/TableViewInventario";
 import { ViewToggle } from "@/components/ui/viewToggle";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
@@ -18,7 +19,7 @@ function Inventario() {
   const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState(ItemsAlmacen);
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
-  const [viewMode, setViewMode] = useState("cards"); // "cards" o "table"
+  const [viewMode, setViewMode] = useState("table"); // "cards" o "table"
 
   const Menu = useSelector((state) => state.allMenu || []);
   const Items = useSelector((state) => state.allItems || []);

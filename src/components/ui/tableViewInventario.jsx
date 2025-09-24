@@ -9,11 +9,48 @@ import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions"
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 import CuidadoVariations from "./CuidadoVariations";
 
+// Helper component for the cyclic status selector
+
 export function TableViewInventario({ products, currentType }) {
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
   const Proveedores = useSelector((state) => state.Proveedores || []);
   
+const CyclicStatusSelector = ({ initialStatus, options, onStatusChange }) => {
+  const handleClick = () => {
+    const currentIndex = options.indexOf(initialStatus);
+    const nextIndex = (currentIndex + 1) % options.length;
+    const newStatus = options[nextIndex];
+    onStatusChange(newStatus);
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'OK':
+      case 'PC':
+        return "bg-green-100 text-green-800 hover:bg-green-200 border-green-300";
+      case 'NA':
+        return "bg-red-100 text-red-800 hover:bg-red-200 border-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-300";
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      type="button"
+      className={`w-full px-2 py-1 rounded-full text-xs font-medium transition-colors border ${getStatusClass(initialStatus)}`}
+    >
+      {initialStatus || options[0]}
+    </button>
+  );
+};
+
+const statusCycleOptions = ['PC', 'NA', 'OK'];
+
+
+
   // Estados para filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -59,18 +96,18 @@ export function TableViewInventario({ products, currentType }) {
       case ItemsAlmacen:
         return {
           nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
-          cantidad: { label: "Cantidad", key: "CANTIDAD", default: true },
-          unidades: { label: "Unidades", key: "UNIDADES", default: true },
-          costo: { label: "Costo", key: "COSTO", default: true },
-          precioUnitario: { label: "Precio Unit.", key: "precioUnitario", default: true },
-          stock: { label: "Stock", key: "STOCK", default: true },
+          cantidad: { label: "Cantidad", key: "CANTIDAD", default: false },
+          unidades: { label: "Unidades", key: "UNIDADES", default: false },
+          costo: { label: "Costo", key: "COSTO", default: false },
+          precioUnitario: { label: "Precio Unit.", key: "precioUnitario", default: false },
+          stock: { label: "Stock", key: "STOCK", default: false },
           almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
-          grupo: { label: "Grupo", key: "GRUPO", default: true },
+          grupo: { label: "Grupo", key: "GRUPO", default: false },
           merma: { label: "Merma %", key: "Merma", default: false },
           proveedor: { label: "Proveedor", key: "Proveedor", default: true },
           estado: { label: "Estado", key: "Estado", default: true },
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
-          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+          acciones: { label: "Acciones", key: "acciones", default: false, fixed: true }
         };
       
       case ProduccionInterna:
@@ -98,13 +135,13 @@ export function TableViewInventario({ products, currentType }) {
 
   // Inicializar columnas visibles al cambiar el tipo
   useEffect(() => {
+    // Solo actualiza si el tipo cambia realmente
     const defaultVisibleColumns = {};
     Object.entries(availableColumns).forEach(([key, column]) => {
       defaultVisibleColumns[key] = column.default;
     });
-    console.log('Initializing visible columns (Inventario):', defaultVisibleColumns);
     setVisibleColumns(defaultVisibleColumns);
-  }, [availableColumns]);
+  }, [currentType]); // <-- Solo depende de currentType
 
   // Debug log para ver el estado actual
   console.log('Current visibleColumns state (Inventario):', visibleColumns);
@@ -339,9 +376,9 @@ export function TableViewInventario({ products, currentType }) {
   };
 
   // Función para guardar cambios
-  const handleSaveRow = async (item) => {
-    const editedData = editingRows[item._id] || {};
-    
+  const handleSaveRow = async (item, overrideData = null) => {
+    const editedData = overrideData || editingRows[item._id] || {};
+
     // Si no hay cambios, no hacer nada
     if (Object.keys(editedData).length === 0) {
       return;
@@ -941,26 +978,18 @@ export function TableViewInventario({ products, currentType }) {
           { key: 'estado', content: (
             <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? (
-                <select
-                  value={editingRows[item._id]?.Estado || item.Estado || ""}
-                  onChange={(e) => {
-                    handleCellEdit(item._id, "Estado", e.target.value);
-                    handleSaveRow(item); // Auto-guardar al cambiar
+                <CyclicStatusSelector
+                  initialStatus={editingRows[item._id]?.Estado || item.Estado}
+                  options={statusCycleOptions}
+                  onStatusChange={(newStatus) => {
+                    handleCellEdit(item._id, "Estado", newStatus);
+                    handleSaveRow(item, { ...editingRows[item._id], Estado: newStatus });
                   }}
-                  className={`px-2 py-1 rounded-full text-xs font-medium border-none focus:ring-2 focus:ring-blue-500 ${
-                    (editingRows[item._id]?.Estado || item.Estado) === "Activo" 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                  <option value="Suspendido">Suspendido</option>
-                </select>
+                />
               ) : (
                 <span className={`px-2 py-1 rounded-full text-xs ${
-                  item.Estado === "Activo" 
-                    ? "bg-green-100 text-green-800" 
+                  item.Estado === "Activo" || item.Estado === "PC" || item.Estado === "PP" || item.Estado === "OK"
+                    ? "bg-green-100 text-green-800"
                     : "bg-red-100 text-red-800"
                 }`}>
                   {item.Estado || "Sin estado"}
@@ -1207,20 +1236,24 @@ export function TableViewInventario({ products, currentType }) {
       inventoryCells.push(
         { key: 'estado', content: (
           <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "Estado", "select", ESTATUS.filter(status => {
-                if (currentType === ProduccionInterna && status === "PC") return false;
-                if (currentType === ItemsAlmacen && status === "PP") return false;
-                return true;
-              })) :
+            {showEdit ? (
+              <CyclicStatusSelector
+                initialStatus={editingRows[item._id]?.Estado || item.Estado}
+                options={statusCycleOptions}
+                onStatusChange={(newStatus) => {
+                  handleCellEdit(item._id, "Estado", newStatus);
+                  handleSaveRow(item, { ...editingRows[item._id], Estado: newStatus });
+                }}
+              />
+            ) : (
               <span className={`px-2 py-1 rounded-full text-xs ${
-                item.Estado === "Activo" || item.Estado === "PP" || item.Estado === "PC"
-                  ? "bg-green-100 text-green-800" 
+                item.Estado === "Activo" || item.Estado === "PC" || item.Estado === "PP" || item.Estado === "OK"
+                  ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}>
                 {item.Estado || "Sin estado"}
               </span>
-            }
+            )}
           </td>
         )},
         { key: 'fechaActualizacion', content: (
