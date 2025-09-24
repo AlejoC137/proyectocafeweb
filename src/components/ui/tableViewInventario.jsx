@@ -3,27 +3,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
 import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades } from "../../redux/actions-types";
-import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
+import { ChevronUp, ChevronDown, Filter, Search, Save } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 import CuidadoVariations from "./CuidadoVariations";
-import { TableViewInventarioCycle } from "./tableViewInventarioCycle";
-
-// Helper component for the cyclic status selector
 
 export function TableViewInventario({ products, currentType }) {
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
   const Proveedores = useSelector((state) => state.Proveedores || []);
 
+  const [editableProducts, setEditableProducts] = useState([]);
 
-
-
-
-
-
-  // Estados para filtros y ordenamiento
+  // Estados para filtros, ordenamiento y UI
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [filterEstado, setFilterEstado] = useState("");
@@ -31,13 +24,116 @@ export function TableViewInventario({ products, currentType }) {
   const [filterProveedor, setFilterProveedor] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
-  const [editingRows, setEditingRows] = useState({});
   const [openRecipeRows, setOpenRecipeRows] = useState({});
   const [recetas, setRecetas] = useState({});
-  const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
 
-  // Definir todas las columnas disponibles según el tipo
+  // Función para parsear objetos anidados de forma segura
+  const parseNestedObject = (obj, fallback = {}) => {
+    try {
+      if (typeof obj === "string") {
+        if (!obj.trim()) return fallback;
+        return JSON.parse(obj);
+      }
+      return obj || fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+  
+  useEffect(() => {
+    // Clona y prepara los productos para la edición, asegurando que los objetos anidados existan
+    const clonedProducts = products.map(p => {
+        const product = { ...p };
+        product.STOCK = parseNestedObject(p.STOCK, { minimo: 0, maximo: 0, actual: 0 });
+        product.ALMACENAMIENTO = parseNestedObject(p.ALMACENAMIENTO, { ALMACENAMIENTO: '', BODEGA: '' });
+        return product;
+    });
+    setEditableProducts(clonedProducts);
+  }, [products]);
+
+  // Maneja los cambios en los inputs de la tabla cuando está en modo edición
+  const handleChange = (index, name, value) => {
+    const updatedProducts = [...editableProducts];
+    const productToUpdate = updatedProducts[index];
+    if (!productToUpdate) return;
+    const keys = name.split(".");
+
+    if (keys.length > 1) {
+      productToUpdate[keys[0]] = {
+        ...(productToUpdate[keys[0]] || {}),
+        [keys[1]]: value,
+      };
+    } else {
+      productToUpdate[name] = value;
+    }
+    setEditableProducts(updatedProducts);
+  };
+
+  // Actualización Optimista: cambia el estado en la UI instantáneamente y luego envía la petición
+  const handleStatusChange = async (productId, newStatus) => {
+    const originalProductsState = [...editableProducts];
+    const productIndex = originalProductsState.findIndex(p => p._id === productId);
+    if (productIndex === -1) return;
+
+    // 1. Actualiza la UI de inmediato
+    const newProductsState = originalProductsState.map(p => 
+        p._id === productId ? { ...p, Estado: newStatus } : p
+    );
+    setEditableProducts(newProductsState);
+
+    // 2. Envía la petición al servidor en segundo plano
+    const payload = { Estado: newStatus };
+    if (currentType !== MenuItems) {
+        payload.FECHA_ACT = new Date().toISOString().split("T")[0];
+    }
+    
+    try {
+        await dispatch(updateItem(productId, payload, currentType));
+    } catch (error) {
+        // 3. Si falla, revierte el cambio y notifica al usuario.
+        console.error("Error al actualizar el estado:", error);
+        alert("❌ Falló la actualización. Revirtiendo el cambio.");
+        setEditableProducts(originalProductsState);
+    }
+  };
+
+  // Guarda todos los cambios realizados en la tabla
+  const handleSaveAll = async () => {
+    const originalProductsMap = new Map(products.map(p => [p._id, p]));
+    const updatePromises = [];
+
+    editableProducts.forEach(editedProduct => {
+      const originalProduct = originalProductsMap.get(editedProduct._id);
+      if (originalProduct && JSON.stringify(editedProduct) !== JSON.stringify(originalProduct)) {
+        const payload = { ...editedProduct };
+        if (payload.STOCK) payload.STOCK = JSON.stringify(payload.STOCK);
+        if (payload.ALMACENAMIENTO) payload.ALMACENAMIENTO = JSON.stringify(payload.ALMACENAMIENTO);
+        delete payload._id;
+        delete payload.__v;
+
+        if (currentType !== MenuItems) {
+          payload.FECHA_ACT = new Date().toISOString().split("T")[0];
+        }
+        updatePromises.push(dispatch(updateItem(editedProduct._id, payload, currentType)));
+      }
+    });
+
+    if (updatePromises.length > 0) {
+      try {
+        await Promise.all(updatePromises);
+        alert(`✅ ${updatePromises.length} ítem(s) guardado(s) correctamente.`);
+      } catch (error) {
+        console.error("Error al guardar los cambios:", error);
+        alert("❌ Ocurrió un error al guardar los cambios.");
+      }
+    } else {
+      alert("ℹ️ No hay cambios para guardar.");
+    }
+  };
+
+  // Define todas las columnas disponibles y su configuración según el tipo de inventario
   const getAvailableColumns = () => {
     switch(currentType) {
       case MenuItems:
@@ -64,7 +160,6 @@ export function TableViewInventario({ products, currentType }) {
           composicionAlmuerzo: { label: "Comp. Almuerzo", key: "Comp_Lunch", default: true },
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
-
       case ItemsAlmacen:
         return {
           nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
@@ -76,28 +171,26 @@ export function TableViewInventario({ products, currentType }) {
           almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
           grupo: { label: "Grupo", key: "GRUPO", default: false },
           merma: { label: "Merma %", key: "Merma", default: false },
-          proveedor: { label: "Proveedor", key: "Proveedor", default: true },
+          proveedor: { label: "Proveedor", key: "Proveedor", default: false },
+          estado: { label: "Estado", key: "Estado", default: true },
+          fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
+          acciones: { label: "Acciones", key: "acciones", default: false, fixed: false }
+        };
+      case ProduccionInterna:
+        return {
+          nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
+          cantidad: { label: "Cantidad", key: "CANTIDAD", default: false },
+          unidades: { label: "Unidades", key: "UNIDADES", default: false },
+          costo: { label: "Costo", key: "COSTO", default: false },
+          precioUnitario: { label: "Precio Unit.", key: "precioUnitario", default: false },
+          stock: { label: "Stock", key: "STOCK", default: false },
+          almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
+          grupo: { label: "Grupo", key: "GRUPO", default: false },
+          merma: { label: "Merma %", key: "Merma", default: false },
           estado: { label: "Estado", key: "Estado", default: true },
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
           acciones: { label: "Acciones", key: "acciones", default: false, fixed: true }
         };
-
-      case ProduccionInterna:
-        return {
-          nombre: { label: "Nombre", key: "Nombre_del_producto", default: true },
-          cantidad: { label: "Cantidad", key: "CANTIDAD", default: true },
-          unidades: { label: "Unidades", key: "UNIDADES", default: true },
-          costo: { label: "Costo", key: "COSTO", default: true },
-          precioUnitario: { label: "Precio Unit.", key: "precioUnitario", default: true },
-          stock: { label: "Stock", key: "STOCK", default: true },
-          almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
-          grupo: { label: "Grupo", key: "GRUPO", default: true },
-          merma: { label: "Merma %", key: "Merma", default: false },
-          estado: { label: "Estado", key: "Estado", default: true },
-          fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
-          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
-        };
-
       default:
         return {};
     }
@@ -105,1207 +198,335 @@ export function TableViewInventario({ products, currentType }) {
 
   const availableColumns = useMemo(() => getAvailableColumns(), [currentType]);
 
-  // Inicializar columnas visibles al cambiar el tipo
+  // Inicializa las columnas visibles por defecto cuando cambia el tipo de inventario
   useEffect(() => {
-    // Solo actualiza si el tipo cambia realmente
     const defaultVisibleColumns = {};
     Object.entries(availableColumns).forEach(([key, column]) => {
       defaultVisibleColumns[key] = column.default;
     });
     setVisibleColumns(defaultVisibleColumns);
-  }, [currentType]); // <-- Solo depende de currentType
+  }, [availableColumns]);
 
-  // Debug log para ver el estado actual
-  console.log('Current visibleColumns state (Inventario):', visibleColumns);
-  console.log('Available columns (Inventario):', availableColumns);
-
-  // Cerrar el selector de columnas al hacer clic fuera
+  // Lógica para el selector de columnas
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showColumnSelector && !event.target.closest('.column-selector-container')) {
         setShowColumnSelector(false);
       }
     };
-
-    if (showColumnSelector) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (showColumnSelector) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showColumnSelector]);
 
-  // Funciones para manejar la visibilidad de columnas
-  const toggleColumn = (columnKey) => {
-    setVisibleColumns(prev => ({
-      ...prev,
-      [columnKey]: !prev[columnKey]
-    }));
-  };
+  const toggleColumn = (columnKey) => setVisibleColumns(prev => ({ ...prev, [columnKey]: !prev[columnKey] }));
 
   const toggleAllColumns = (show) => {
     const newVisibleColumns = {};
-    Object.keys(availableColumns).forEach(key => {
-      newVisibleColumns[key] = show;
-    });
+    Object.keys(availableColumns).forEach(key => { newVisibleColumns[key] = show; });
     setVisibleColumns(newVisibleColumns);
   };
 
   const resetToDefault = () => {
     const defaultVisibleColumns = {};
-    Object.entries(availableColumns).forEach(([key, column]) => {
-      defaultVisibleColumns[key] = column.default;
-    });
+    Object.entries(availableColumns).forEach(([key, column]) => { defaultVisibleColumns[key] = column.default; });
     setVisibleColumns(defaultVisibleColumns);
   };
 
-  // Obtener valores únicos para filtros
-  const uniqueCategories = [...new Set(products.map(p => p.GRUPO).filter(Boolean))];
-  const uniqueEstados = [...new Set(products.map(p => p.Estado).filter(Boolean))];
-  const uniqueAlmacenamiento = [...new Set(products.map(p => {
-    try {
-      const almacen = typeof p.ALMACENAMIENTO === "string" ? JSON.parse(p.ALMACENAMIENTO) : p.ALMACENAMIENTO;
-      return almacen?.ALMACENAMIENTO;
-    } catch {
-      return null;
-    }
-  }).filter(Boolean))];
+  // Obtiene valores únicos para los menús desplegables de los filtros
+  const uniqueCategories = useMemo(() => [...new Set(products.map(p => p.GRUPO).filter(Boolean))], [products]);
+  const uniqueEstados = useMemo(() => [...new Set(products.map(p => p.Estado).filter(Boolean))], [products]);
+  const uniqueAlmacenamiento = useMemo(() => [...new Set(products.map(p => parseNestedObject(p.ALMACENAMIENTO)?.ALMACENAMIENTO).filter(Boolean))], [products]);
 
-  // Función para parsear objetos anidados de forma segura
-  const parseNestedObject = (obj, fallback = {}) => {
-    try {
-      if (typeof obj === "string") {
-        if (obj === "NaN" || obj === "null" || obj === "undefined" || !obj) {
-          return fallback;
-        }
-        if (!obj.startsWith("{") && !obj.startsWith("[")) {
-          return { ...fallback, valor: obj };
-        }
-        return JSON.parse(obj);
-      }
-      return obj || fallback;
-    } catch (e) {
-      console.warn("Invalid nested object JSON:", obj, e);
-      return fallback;
-    }
-  };
+  // Filtra los productos basándose en los criterios de búsqueda y filtros seleccionados
+  const filteredProducts = useMemo(() => {
+    return (editableProducts || []).filter(product => {
+      const searchField = currentType === MenuItems
+        ? `${product.NombreES || ""} ${product.NombreEN || ""}`
+        : product.Nombre_del_producto || "";
+      
+      const matchesSearch = !searchTerm || searchField.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !filterCategory || product.GRUPO === filterCategory;
+      const matchesEstado = !filterEstado || product.Estado === filterEstado;
 
-  // Filtrar productos
-  const filteredProducts = products.filter(product => {
-    let searchField = "";
-    let categoryField = "";
-
-    if (currentType === MenuItems) {
-      searchField = `${product.NombreES || ""} ${product.NombreEN || ""} ${product.DescripcionMenuES || ""}`;
-      categoryField = product.GRUPO;
-    } else {
-      searchField = product.Nombre_del_producto || "";
-      categoryField = product.GRUPO;
-    }
-
-    const matchesSearch = !searchTerm || 
-      searchField.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory = !filterCategory || categoryField === filterCategory;
-    const matchesEstado = !filterEstado || product.Estado === filterEstado;
-
-    let matchesAlmacenamiento = true;
-    if (filterAlmacenamiento && currentType !== MenuItems) {
-      try {
+      let matchesAlmacenamiento = true;
+      if (filterAlmacenamiento && currentType !== MenuItems) {
         const almacen = parseNestedObject(product.ALMACENAMIENTO);
         matchesAlmacenamiento = almacen?.ALMACENAMIENTO === filterAlmacenamiento;
-      } catch {
-        matchesAlmacenamiento = false;
       }
-    }
-
-    let matchesProveedor = true;
-    if (filterProveedor && currentType === ItemsAlmacen) {
-      matchesProveedor = product.Proveedor === filterProveedor;
-    }
-
-    return matchesSearch && matchesCategory && matchesEstado && matchesAlmacenamiento && matchesProveedor;
-  });
-
-  // Ordenar productos
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (!sortColumn) return 0;
-
-    let aValue = a[sortColumn] || "";
-    let bValue = b[sortColumn] || "";
-
-    // Manejar casos especiales para números y fechas
-    if (sortColumn === "COSTO" || sortColumn === "precioUnitario" || sortColumn === "Merma" || sortColumn === "CANTIDAD") {
-      aValue = parseFloat(aValue) || 0;
-      bValue = parseFloat(bValue) || 0;
-    } else if (sortColumn === "FECHA_ACT") {
-      aValue = new Date(aValue);
-      bValue = new Date(bValue);
-    } else if (sortColumn === "STOCK") {
-      // Para STOCK, ordenar por stock actual
-      try {
-        const stockA = parseNestedObject(a.STOCK);
-        const stockB = parseNestedObject(b.STOCK);
-        aValue = parseFloat(stockA?.actual) || 0;
-        bValue = parseFloat(stockB?.actual) || 0;
-      } catch {
-        aValue = 0;
-        bValue = 0;
+      
+      let matchesProveedor = true;
+      if (filterProveedor && currentType === ItemsAlmacen) {
+        matchesProveedor = product.Proveedor === filterProveedor;
       }
-    } else if (sortColumn === "Proveedor") {
-      // Para Proveedor, ordenar por nombre del proveedor
-      const proveedorA = Proveedores.find(p => p._id === a.Proveedor);
-      const proveedorB = Proveedores.find(p => p._id === b.Proveedor);
-      aValue = proveedorA?.Nombre_Proveedor || "";
-      bValue = proveedorB?.Nombre_Proveedor || "";
-    }
 
-    if (sortDirection === "asc") {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-    }
-  });
+      return matchesSearch && matchesCategory && matchesEstado && matchesAlmacenamiento && matchesProveedor;
+    });
+  }, [editableProducts, searchTerm, filterCategory, filterEstado, filterAlmacenamiento, filterProveedor, currentType]);
 
+  // Ordena los productos filtrados
+  const sortedProducts = useMemo(() => {
+    const sortable = [...filteredProducts];
+    sortable.sort((a, b) => {
+        if (!sortColumn) return 0;
+
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
+
+        if (sortColumn === "STOCK") {
+            aValue = parseNestedObject(a.STOCK, { actual: 0 }).actual;
+            bValue = parseNestedObject(b.STOCK, { actual: 0 }).actual;
+        } else if (sortColumn === "Proveedor") {
+            const provA = Proveedores.find(p => p._id === a.Proveedor)?.Nombre_Proveedor || '';
+            const provB = Proveedores.find(p => p._id === b.Proveedor)?.Nombre_Proveedor || '';
+            aValue = provA;
+            bValue = provB;
+        }
+
+        // Conversión a número para campos numéricos para un ordenamiento correcto
+        if (typeof aValue === 'string' && !isNaN(parseFloat(aValue)) && typeof bValue === 'string' && !isNaN(parseFloat(bValue))) {
+            aValue = parseFloat(aValue);
+            bValue = parseFloat(bValue);
+        } else {
+            aValue = String(aValue || '').toLowerCase();
+            bValue = String(bValue || '').toLowerCase();
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    return sortable;
+  }, [filteredProducts, sortColumn, sortDirection, Proveedores]);
+
+  // Maneja el clic en los encabezados para ordenar
   const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
+    setSortDirection(prev => (sortColumn === column && prev === 'asc' ? 'desc' : 'asc'));
+    setSortColumn(column);
   };
 
+  // Componente de ícono para el ordenamiento
   const SortIcon = ({ column }) => {
-    if (sortColumn !== column) return <ChevronDown className="w-4 h-4 bg-opacity-50" />;
-    return sortDirection === "asc" ? 
-      <ChevronUp className="w-4 h-4" /> : 
-      <ChevronDown className="w-4 h-4" />;
+    if (sortColumn !== column) return <ChevronDown className="w-4 h-4 opacity-50" />;
+    return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
   };
 
-  // Función para manejar edición inline
-  const handleCellEdit = (itemId, field, value, subField = null) => {
-    setEditingRows(prev => {
-      const currentItem = products.find(p => p._id === itemId);
-      const existingEdits = prev[itemId] || {};
-
-      if (subField) {
-        // Para campos anidados, obtener el objeto base y actualizarlo
-        const baseObject = existingEdits[field] || parseNestedObject(currentItem?.[field], {});
-        return {
-          ...prev,
-          [itemId]: {
-            ...existingEdits,
-            [field]: {
-              ...baseObject,
-              [subField]: value
-            }
-          }
-        };
-      } else {
-        return {
-          ...prev,
-          [itemId]: {
-            ...existingEdits,
-            [field]: value
-          }
-        };
-      }
-    });
-  };
-
-  // Función para validar datos antes del guardado
-  const validateRowData = (editedData, currentType) => {
-    const errors = [];
-
-    // Validaciones numéricas
-    const numericFields = ['CANTIDAD', 'COSTO', 'precioUnitario', 'Merma', 'Precio'];
-    numericFields.forEach(field => {
-      if (editedData[field] !== undefined && editedData[field] !== null && editedData[field] !== '') {
-        const value = parseFloat(editedData[field]);
-        if (isNaN(value) || value < 0) {
-          errors.push(`${field} debe ser un número válido mayor o igual a 0`);
-        }
-      }
-    });
-
-    // Validar campos requeridos según el tipo
-    if (currentType === MenuItems) {
-      if (editedData.NombreES && editedData.NombreES.trim().length < 2) {
-        errors.push('El nombre en español debe tener al menos 2 caracteres');
-      }
-      if (editedData.Precio !== undefined && parseFloat(editedData.Precio) <= 0) {
-        errors.push('El precio debe ser mayor que 0');
-      }
-    } else {
-      if (editedData.Nombre_del_producto && editedData.Nombre_del_producto.trim().length < 2) {
-        errors.push('El nombre del producto debe tener al menos 2 caracteres');
-      }
-    }
-
-    return errors;
-  };
-
-  // Función para guardar cambios
-  const handleSaveRow = async (item, overrideData = null) => {
-    const editedData = overrideData || editingRows[item._id] || {};
-
-    // Si no hay cambios, no hacer nada
-    if (Object.keys(editedData).length === 0) {
-      return;
-    }
-
-    // Validar datos antes del guardado
-    const validationErrors = validateRowData(editedData, currentType);
-    if (validationErrors.length > 0) {
-      alert(`Errores de validación:\n- ${validationErrors.join('\n- ')}`);
-      return;
-    }
-
-    try {
-      const updatedFields = { ...editedData };
-
-      // Manejar objetos anidados
-      if (editedData.STOCK) {
-        // Validar que los valores de stock sean números válidos
-        const stockObj = editedData.STOCK;
-        if (stockObj.minimo !== undefined) stockObj.minimo = parseFloat(stockObj.minimo) || 0;
-        if (stockObj.maximo !== undefined) stockObj.maximo = parseFloat(stockObj.maximo) || 0;
-        if (stockObj.actual !== undefined) stockObj.actual = parseFloat(stockObj.actual) || 0;
-
-        updatedFields.STOCK = JSON.stringify(stockObj);
-      }
-
-      if (editedData.ALMACENAMIENTO) {
-        updatedFields.ALMACENAMIENTO = JSON.stringify(editedData.ALMACENAMIENTO);
-      }
-
-      // Convertir valores numéricos string a números
-      ['CANTIDAD', 'COSTO', 'precioUnitario', 'Merma', 'Precio'].forEach(field => {
-        if (updatedFields[field] !== undefined && updatedFields[field] !== '') {
-          const numValue = parseFloat(updatedFields[field]);
-          if (!isNaN(numValue)) {
-            updatedFields[field] = numValue;
-          }
-        }
-      });
-
-      // Agregar fecha de actualización si no es MenuItems
-      if (currentType !== "Menu") {
-        updatedFields.FECHA_ACT = new Date().toISOString().split("T")[0];
-      }
-
-      const result = await dispatch(updateItem(item._id, updatedFields, currentType));
-
-      if (result) {
-        // Limpiar datos de edición para esta fila
-        setEditingRows(prev => {
-          const newState = { ...prev };
-          delete newState[item._id];
-          return newState;
-        });
-
-        // Mostrar mensaje de éxito (opcional)
-        console.log('Ítem actualizado correctamente');
-      } else {
-        throw new Error('No se pudo actualizar el ítem');
-      }
-
-    } catch (error) {
-      console.error("Error al actualizar el ítem:", error);
-      alert(`Error al guardar: ${error.message || 'Error desconocido'}`);
-    }
-  };
-
-  // Función para manejar las filas de recetas expandibles
-  const handleRecipeToggle = async (productId, recetaId = null) => {
-    setOpenRecipeRows(prev => ({
-      ...prev,
-      [productId]: !prev[productId]
-    }));
-
-    if (recetaId && !recetas[productId] && !openRecipeRows[productId]) {
-      try {
-        const recetaType = currentType === MenuItems ? "Recetas" : "RecetasProduccion";
-        const receta = await getRecepie(recetaId, recetaType);
-        setRecetas(prev => ({
-          ...prev,
-          [productId]: receta
-        }));
-      } catch (error) {
-        console.error("Error al cargar receta:", error);
-      }
-    }
-  };
-
-  // Función para crear recetas (similar a las tarjetas)
-  const handleCreateReceta = async (recetaData, productId) => {
-    try {
-      const actionType = currentType === MenuItems ? "Menu" : currentType;
-      await dispatch(updateItem(productId, { Receta: recetaData._id }, actionType));
-      setRecetas(prev => ({
-        ...prev,
-        [productId]: recetaData
-      }));
-      alert("Receta creada correctamente.");
-    } catch (error) {
-      console.error("Error al crear la receta:", error);
-      alert("Hubo un error al crear la receta.");
-    }
-  };
-
-  // Función para guardar recetas (para MenuItems)
-  const handleSaveReceta = async (recetaData) => {
-    try {
-      // Esta función se usa principalmente para MenuItems
-      alert("Receta guardada correctamente.");
-    } catch (error) {
-      console.error("Error al guardar la receta:", error);
-      alert("Hubo un error al guardar la receta.");
-    }
-  };
-
+  // Maneja la eliminación de un ítem
   const handleDelete = async (item) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este ítem?")) {
-      try {
-        await dispatch(deleteItem(item._id, currentType));
-        alert("Ítem eliminado correctamente.");
-      } catch (error) {
-        console.error("Error al eliminar el ítem:", error);
-        alert("Hubo un error al eliminar el ítem.");
-      }
+    if (window.confirm(`¿Seguro que quieres eliminar "${item.Nombre_del_producto || item.NombreES}"?`)) {
+      await dispatch(deleteItem(item._id, currentType));
     }
   };
+  
+  // Muestra u oculta la sección de recetas de un producto
+  const handleRecipeToggle = (productId) => setOpenRecipeRows(prev => ({ ...prev, [productId]: !prev[productId] }));
 
-  // Función para renderizar celdas editables
-  const renderEditableCell = (item, field, type = "text", options = null, subField = null) => {
-    let currentValue;
+  // Componente para los botones de cambio de estado
+  const StatusButtonGroup = ({ item }) => {
+    const statuses = ESTATUS.filter(s => {
+      if (currentType === "ProduccionInterna" && s === "PC") return false;
+      if (currentType === "ItemsAlmacen" && s === "PP") return false;
+      return true;
+    });
+  
+    const getStatusClass = (status, isActive) => {
+        if (isActive) {
+            return ((status === 'OK'  ? "bg-green-500 text-white" : "bg-red-500 text-white") ||( (status === 'PC' || status === 'PP')? "bg-red-500 text-white" : "bg-red-500 text-white"))
+        }
+        return "bg-gray-200 text-gray-700 hover:bg-gray-300";
+    };
 
-    if (subField) {
-      const nestedObj = editingRows[item._id]?.[field] || parseNestedObject(item[field]);
-      currentValue = nestedObj?.[subField] || "";
+    return (
+        <div className="flex gap-1">
+            {statuses.map((status) => (
+                <button
+                    key={status}
+                    type="button"
+                    onClick={() => handleStatusChange(item._id, status)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${getStatusClass(status, item.Estado === status)}`}
+                >
+                    {status}
+                </button>
+            ))}
+        </div>
+    );
+  };
+
+  // Renderiza una celda editable (input, select, etc.)
+  const renderEditableCell = (index, name, type = "text", options = []) => {
+    const item = editableProducts[index];
+    if (!item) return null;
+
+    let currentValue = '';
+    const keys = name.split('.');
+    if (keys.length > 1) {
+        currentValue = item[keys[0]] ? (item[keys[0]][keys[1]] ?? '') : '';
     } else {
-      currentValue = editingRows[item._id]?.[field] !== undefined ? 
-        editingRows[item._id][field] : (item[field] || "");
+        currentValue = item[name] ?? '';
+    }
+    
+    const props = {
+      value: currentValue,
+      onChange: (e) => handleChange(index, name, type === 'checkbox' ? e.target.checked : e.target.value),
+      className: "w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-900"
+    };
+
+    if (type === 'checkbox') {
+      return <input type="checkbox" checked={!!currentValue} onChange={props.onChange} className="h-4 w-4"/>
     }
 
     if (type === "select") {
       return (
-        <select
-          value={currentValue}
-          onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-          className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-900"
-        >
+        <select {...props}>
           <option value="">Seleccionar...</option>
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
+          {options.map((opt) => (
+            <option key={opt.value ?? opt} value={opt.value ?? opt}>{opt.label ?? opt}</option>
           ))}
         </select>
       );
     }
-
-    return (
-      <input
-        type={type}
-        value={currentValue}
-        onChange={(e) => handleCellEdit(item._id, field, e.target.value, subField)}
-        className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-900"
-        step={type === "number" ? "0.01" : undefined}
-      />
-    );
+    
+    return <input type={type} {...props} step={type === "number" ? "0.01" : undefined} />;
   };
 
-  // Función para renderizar headers de la tabla
-  const renderTableHeaders = () => {
-    if (currentType === MenuItems) {
-      const menuHeaders = [
-        { key: 'nombreES', content: (
-          <th key="nombreES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("NombreES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Nombre ES <SortIcon column="NombreES" />
-            </button>
-          </th>
-        )},
-        { key: 'nombreEN', content: (
-          <th key="nombreEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("NombreEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Nombre EN <SortIcon column="NombreEN" />
-            </button>
-          </th>
-        )},
-        { key: 'precio', content: (
-          <th key="precio" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Precio")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Precio <SortIcon column="Precio" />
-            </button>
-          </th>
-        )},
-        { key: 'descripcionES', content: (
-          <th key="descripcionES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("DescripcionMenuES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Descripción ES <SortIcon column="DescripcionMenuES" />
-            </button>
-          </th>
-        )},
-        { key: 'descripcionEN', content: (
-          <th key="descripcionEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("DescripcionMenuEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Descripción EN <SortIcon column="DescripcionMenuEN" />
-            </button>
-          </th>
-        )},
-        { key: 'tipoES', content: (
-          <th key="tipoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("TipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Tipo ES <SortIcon column="TipoES" />
-            </button>
-          </th>
-        )},
-        { key: 'tipoEN', content: (
-          <th key="tipoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("TipoEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Tipo EN <SortIcon column="TipoEN" />
-            </button>
-          </th>
-        )},
-        { key: 'subTipoES', content: (
-          <th key="subTipoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("SubTipoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              SubTipo ES <SortIcon column="SubTipoES" />
-            </button>
-          </th>
-        )},
-        { key: 'subTipoEN', content: (
-          <th key="subTipoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("SubTipoEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              SubTipo EN <SortIcon column="SubTipoEN" />
-            </button>
-          </th>
-        )},
-        { key: 'dietaES', content: (
-          <th key="dietaES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("DietaES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Dieta ES <SortIcon column="DietaES" />
-            </button>
-          </th>
-        )},
-        { key: 'dietaEN', content: (
-          <th key="dietaEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("DietaEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Dieta EN <SortIcon column="DietaEN" />
-            </button>
-          </th>
-        )},
-        { key: 'cuidadoES', content: (
-          <th key="cuidadoES" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("CuidadoES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Cuidado ES <SortIcon column="CuidadoES" />
-            </button>
-          </th>
-        )},
-        { key: 'cuidadoEN', content: (
-          <th key="cuidadoEN" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("CuidadoEN")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Cuidado EN <SortIcon column="CuidadoEN" />
-            </button>
-          </th>
-        )},
-        { key: 'grupo', content: (
-          <th key="grupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Grupo <SortIcon column="GRUPO" />
-            </button>
-          </th>
-        )},
-        { key: 'subGrupo', content: (
-          <th key="subGrupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("SUB_GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Sub Grupo <SortIcon column="SUB_GRUPO" />
-            </button>
-          </th>
-        )},
-        { key: 'order', content: (
-          <th key="order" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Order")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Order <SortIcon column="Order" />
-            </button>
-          </th>
-        )},
-        { key: 'print', content: (
-          <th key="print" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("PRINT")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Print <SortIcon column="PRINT" />
-            </button>
-          </th>
-        )},
-        { key: 'estado', content: (
-          <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Estado <SortIcon column="Estado" />
-            </button>
-          </th>
-        )},
-        { key: 'foto', content: (
-          <th key="foto" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            Foto
-          </th>
-        )},
-        { key: 'composicionAlmuerzo', content: (
-          <th key="composicionAlmuerzo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            Comp. Almuerzo
-          </th>
-        )},
-        { key: 'acciones', content: (
-          <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-        )}
-      ];
-
-      return menuHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
-    }
-
-    // Headers para inventario (ItemsAlmacen y ProduccionInterna)
-    const inventoryHeaders = [
-      { key: 'nombre', content: (
-        <th key="nombre" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Nombre_del_producto")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Nombre <SortIcon column="Nombre_del_producto" />
-          </button>
-        </th>
-      )},
-      { key: 'cantidad', content: (
-        <th key="cantidad" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("CANTIDAD")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Cantidad <SortIcon column="CANTIDAD" />
-          </button>
-        </th>
-      )},
-      { key: 'unidades', content: (
-        <th key="unidades" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("UNIDADES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Unidades <SortIcon column="UNIDADES" />
-          </button>
-        </th>
-      )},
-      { key: 'costo', content: (
-        <th key="costo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("COSTO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Costo <SortIcon column="COSTO" />
-          </button>
-        </th>
-      )},
-      { key: 'precioUnitario', content: (
-        <th key="precioUnitario" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("precioUnitario")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Precio Unit. <SortIcon column="precioUnitario" />
-          </button>
-        </th>
-      )},
-      { key: 'stock', content: (
-        <th key="stock" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("STOCK")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Stock <SortIcon column="STOCK" />
-          </button>
-        </th>
-      )},
-      { key: 'almacenamiento', content: (
-        <th key="almacenamiento" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          Almacenamiento
-        </th>
-      )},
-      { key: 'grupo', content: (
-        <th key="grupo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("GRUPO")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Grupo <SortIcon column="GRUPO" />
-          </button>
-        </th>
-      )},
-      { key: 'merma', content: (
-        <th key="merma" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Merma")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Merma % <SortIcon column="Merma" />
-          </button>
-        </th>
-      )}
-    ];
-
-    // Agregar proveedor solo para ItemsAlmacen
-    if (currentType === ItemsAlmacen) {
-      inventoryHeaders.push({
-        key: 'proveedor', content: (
-          <th key="proveedor" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-            <button onClick={() => handleSort("Proveedor")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-              Proveedor <SortIcon column="Proveedor" />
-            </button>
-          </th>
-        )
-      });
-    }
-
-    // Agregar estado y fecha actualización
-    inventoryHeaders.push(
-      { key: 'estado', content: (
-        <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Estado <SortIcon column="Estado" />
-          </button>
-        </th>
-      )},
-      { key: 'fechaActualizacion', content: (
-        <th key="fechaActualizacion" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-          <button onClick={() => handleSort("FECHA_ACT")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-            Última Act. <SortIcon column="FECHA_ACT" />
-          </button>
-        </th>
-      )},
-      { key: 'acciones', content: (
-        <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
-      )}
-    );
-
-    return inventoryHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
-  };
-
-  // Función para renderizar filas de la tabla
+  // Renderiza los encabezados de la tabla dinámicamente
+  const renderTableHeaders = () => Object.entries(availableColumns)
+    .filter(([key]) => visibleColumns[key])
+    .map(([key, col]) => (
+      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-700">
+        <button onClick={() => handleSort(col.key)} className="flex items-center gap-1 hover:text-blue-600">
+          {col.label} <SortIcon column={col.key} />
+        </button>
+      </th>
+    ));
+  
+  // Renderiza las filas de la tabla con su contenido
   const renderTableRows = () => {
+    if (!sortedProducts) return null;
+
     const rows = [];
-
     sortedProducts.forEach((item, index) => {
-      const isEditing = editingRows[item._id];
-      const isRecipeOpen = openRecipeRows[item._id];
+      const originalIndex = editableProducts.findIndex(p => p._id === item._id);
+      if (originalIndex === -1) return;
 
-      if (currentType === MenuItems) {
-        // Renderizar filas para MenuItems
-        const lunchData = parseCompLunch(item.Comp_Lunch);
+      const renderCellContent = (key) => {
+        const col = availableColumns[key];
+        switch (key) {
+          case 'nombre':
+          case 'nombreES':
+          case 'nombreEN':
+          case 'descripcionES':
+          case 'descripcionEN':
+          case 'tipoES':
+          case 'tipoEN':
+          case 'subTipoES':
+          case 'subTipoEN':
+          case 'dietaES':
+          case 'dietaEN':
+            return showEdit ? renderEditableCell(originalIndex, col.key) : <span className={key.includes('nombre') ? "font-medium text-blue-800" : ""}>{item[col.key]}</span>;
+          
+          case 'precio':
+          case 'costo':
+          case 'cantidad':
+          case 'precioUnitario':
+          case 'merma':
+          case 'order':
+            return showEdit ? renderEditableCell(originalIndex, col.key, "number") : <span>{item[col.key]}</span>;
 
-        const menuCells = [
-          { key: 'nombreES', content: (
-            <td key="nombreES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "NombreES") : 
-                <span className="font-medium text-blue-800">{item.NombreES || "Sin nombre"}</span>
-              }
-            </td>
-          )},
-          { key: 'nombreEN', content: (
-            <td key="nombreEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "NombreEN") : 
-                <span className="text-gray-600">{item.NombreEN || "Sin nombre EN"}</span>
-              }
-            </td>
-          )},
-          { key: 'precio', content: (
-            <td key="precio" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "Precio", "number") : 
-                <span className="font-mono font-bold text-green-600">${parseFloat(item.Precio || 0).toFixed(2)}</span>
-              }
-            </td>
-          )},
-          { key: 'descripcionES', content: (
-            <td key="descripcionES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "DescripcionMenuES") : 
-                <div className="text-gray-600 max-w-xs truncate" title={item.DescripcionMenuES}>
-                  {item.DescripcionMenuES || "Sin descripción"}
+          case 'cuidadoES':
+          case 'cuidadoEN':
+                return showEdit ? <CuidadoVariations isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} /> : <span>{item[col.key]}</span>
+            
+          case 'grupo':
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", CATEGORIES.map(c => ({value: c, label: c}))) : <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO}</span>;
+
+          case 'subGrupo':
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", SUB_CATEGORIES.map(c => ({value: c, label: c}))) : <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.SUB_GRUPO}</span>;
+
+          case 'proveedor':
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", Proveedores.map(p => ({value: p._id, label: p.Nombre_Proveedor}))) : <span>{Proveedores.find(p => p._id === item.Proveedor)?.Nombre_Proveedor || 'N/A'}</span>;
+          
+          case 'unidades':
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", unidades.map(u => ({value: u, label: u}))) : <span>{item[col.key]}</span>
+
+          case 'estado':
+            return showEdit ? <StatusButtonGroup item={item} /> : <span className={`px-2 py-1  rounded-full text-xs ${item.Estado === 'OK' || item.Estado === 'PC' || item.Estado === 'PP' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{item.Estado}</span>;
+          
+          case 'stock':
+            return (
+                <div className="space-y-1">
+                    <div>Min: {showEdit ? renderEditableCell(originalIndex, "STOCK.minimo", "number") : <span>{item.STOCK?.minimo || 0}</span>}</div>
+                    <div>Max: {showEdit ? renderEditableCell(originalIndex, "STOCK.maximo", "number") : <span>{item.STOCK?.maximo || 0}</span>}</div>
+                    <div>Act: {showEdit ? renderEditableCell(originalIndex, "STOCK.actual", "number") : <span className="font-bold">{item.STOCK?.actual || 0}</span>}</div>
                 </div>
-              }
-            </td>
-          )},
-          { key: 'descripcionEN', content: (
-            <td key="descripcionEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "DescripcionMenuEN") : 
-                <div className="text-gray-600 max-w-xs truncate" title={item.DescripcionMenuEN}>
-                  {item.DescripcionMenuEN || "Sin descripción EN"}
+            );
+          
+          case 'almacenamiento':
+            return (
+                <div className="space-y-1">
+                    <div>Alm: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.ALMACENAMIENTO", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.ALMACENAMIENTO}</span>}</div>
+                    <div>Bod: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.BODEGA", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.BODEGA}</span>}</div>
                 </div>
-              }
-            </td>
-          )},
-          { key: 'tipoES', content: (
-            <td key="tipoES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "TipoES") : 
-                <span className="text-gray-600">{item.TipoES || "Sin tipo ES"}</span>
-              }
-            </td>
-          )},
-          { key: 'tipoEN', content: (
-            <td key="tipoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "TipoEN") : 
-                <span className="text-gray-600">{item.TipoEN || "Sin tipo EN"}</span>
-              }
-            </td>
-          )},
-          { key: 'subTipoES', content: (
-            <td key="subTipoES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "SubTipoES") : 
-                <span className="text-gray-600">{item.SubTipoES || "Sin subtipo ES"}</span>
-              }
-            </td>
-          )},
-          { key: 'subTipoEN', content: (
-            <td key="subTipoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "SubTipoEN") : 
-                <span className="text-gray-600">{item.SubTipoEN || "Sin subtipo EN"}</span>
-              }
-            </td>
-          )},
-          { key: 'dietaES', content: (
-            <td key="dietaES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "DietaES") : 
-                <span className="text-green-600">{item.DietaES || "Sin dieta ES"}</span>
-              }
-            </td>
-          )},
-          { key: 'dietaEN', content: (
-            <td key="dietaEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "DietaEN") : 
-                <span className="text-green-600">{item.DietaEN || "Sin dieta EN"}</span>
-              }
-            </td>
-          )},
-          { key: 'cuidadoES', content: (
-            <td key="cuidadoES" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {!showEdit ? 
-                renderEditableCell(item, "CuidadoES") : 
-                // <span className="text-orange-600">{item.CuidadoES || "Sin cuidado ES"}</span>
-                  <CuidadoVariations isEnglish={false} viewName={"Inventario"} product={item} />
-              }
+            );
 
+          case 'print':
+            return showEdit ? renderEditableCell(originalIndex, col.key, 'checkbox') : <span>{item.PRINT ? 'Sí' : 'No'}</span>;
 
-            </td>
-          )},
-          { key: 'cuidadoEN', content: (
-            <td key="cuidadoEN" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {!showEdit ? 
-                renderEditableCell(item, "CuidadoEN") : 
-                // <span className="text-orange-600">{item.CuidadoEN || "Sin cuidado EN"}</span>
-                   <CuidadoVariations isEnglish={true} viewName={"Inventario"} product={item} />
-              }
-
-
-            </td>
-          )},
-          { key: 'grupo', content: (
-            <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "GRUPO", "select", CATEGORIES) :
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>
-              }
-            </td>
-          )},
-          { key: 'subGrupo', content: (
-            <td key="subGrupo" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "SUB_GRUPO", "select", SUB_CATEGORIES) : 
-                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.SUB_GRUPO || "Sin subgrupo"}</span>
-              }
-            </td>
-          )},
-          { key: 'order', content: (
-            <td key="order" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                renderEditableCell(item, "Order", "number") : 
-                <span className="font-mono text-gray-700">{item.Order || "0"}</span>
-              }
-            </td>
-          )},
-          { key: 'print', content: (
-            <td key="print" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? (
-                <button
-                  onClick={() => {
-                    const newValue = !item.PRINT;
-                    handleCellEdit(item._id, "PRINT", newValue);
-                    handleSaveRow(item); // Auto-guardar al cambiar
-                  }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all hover:scale-105 ${
-                    item.PRINT === true 
-                      ? "bg-green-100 text-green-800 hover:bg-green-200" 
-                      : "bg-red-100 text-red-800 hover:bg-red-200"
-                  }`}
-                >
-                  {item.PRINT === true ? "✓ SÍ" : "✗ NO"}
-                </button>
-              ) : (
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  item.PRINT === true 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-red-100 text-red-800"
-                }`}>
-                  {item.PRINT === true ? "SÍ" : "NO"}
-                </span>
-              )}
-            </td>
-          )},
-          { key: 'estado', content: (
-            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? (
-                // <CyclicStatusSelector
-                //   initialStatus={editingRows[item._id]?.Estado || item.Estado}
-                //   options={statusCycleOptions}
-                //   onStatusChange={(newStatus) => {
-                //     handleCellEdit(item._id, "Estado", newStatus);
-                //     handleSaveRow(item, { ...editingRows[item._id], Estado: newStatus });
-                //   }}
-                // />
-<TableViewInventarioCycle
-  id={item._id}
-  currentType={currentType}
-  currentEstado={item.Estado}
-/>
-
-              ) : (
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  item.Estado === "Activo" || item.Estado === "PC" || item.Estado === "PP" || item.Estado === "OK"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}>
-                  {item.Estado || "Sin estado"}
-                </span>
-              )}
-            </td>
-          )},
-          { key: 'foto', content: (
-            <td key="foto" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {item.Foto ? (
-                <a href={item.Foto} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
-                  🖼️ Ver
-                </a>
-              ) : (
-                <span className="text-gray-400">Sin foto</span>
-              )}
-            </td>
-          )},
-          { key: 'composicionAlmuerzo', content: (
-            <td key="composicionAlmuerzo" className="px-3 py-2 border-r border-gray-100 text-xs">
-              <div className="text-xs">
-                {lunchData ? (
-                  <>
-                    <div className="font-medium text-purple-700 mb-1">{lunchData.fecha?.dia || "Sin fecha"}</div>
-                    <div className="space-y-0.5 text-xs">
-                      <div className="text-orange-700">🥗 {lunchData.entrada?.nombre || "N/A"}</div>
-                      <div className="text-red-700">🥩 {lunchData.proteina?.nombre || "N/A"}</div>
-                      <div className="text-yellow-700">🍚 {lunchData.carbohidrato?.nombre || "N/A"}</div>
-                      {lunchData.lista && (
-                        <div className="text-indigo-700 font-medium">
-                          📝 {lunchData.lista.length} pedidos
-                        </div>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <span className="text-gray-400">Sin composición</span>
-                )}
-              </div>
-            </td>
-          )},
-          { key: 'acciones', content: (
-            <td key="acciones" className="px-3 py-2 text-xs">
+          case 'foto':
+            return item.Foto ? <a href={item.Foto} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Ver</a> : <span>No</span>;
+            
+          case 'composicionAlmuerzo':
+            const lunchData = parseCompLunch(item.Comp_Lunch);
+            return lunchData ? (
+                <div>
+                    <div>{lunchData.entrada?.nombre}</div>
+                    <div>{lunchData.proteina?.nombre}</div>
+                    <div>{lunchData.carbohidrato?.nombre}</div>
+                </div>
+            ) : <span>N/A</span>;
+            
+          case 'fechaActualizacion':
+            return <span>{item.FECHA_ACT}</span>;
+            
+          case 'acciones':
+            return (
               <div className="flex gap-1">
-                <Button
-                  onClick={() => handleRecipeToggle(item._id, item.Receta)}
-                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
-                >
-                  {openRecipeRows[item._id] ? '📖' : '📕'}
-                </Button>
-                {isEditing && (
-                  <Button
-                    onClick={() => handleSaveRow(item)}
-                    className="bg-gray-100 hover:bg-green-600 text-green-800 px-2 py-1 text-xs h-6 border border-green-300"
-                  >
-                    💾
-                  </Button>
-                )}
-                {showEdit && (
-                  <Button
-                    onClick={() => handleDelete(item)}
-                    className="bg-gray-100 hover:bg-red-600 text-red-800 px-2 py-1 text-xs h-6 border border-red-300"
-                  >
-                    🗑️
+                <Button onClick={() => handleDelete(item)} className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
+                {(currentType === ProduccionInterna || currentType === MenuItems) && (
+                  <Button onClick={() => handleRecipeToggle(item._id)} className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                    {openRecipeRows[item._id] ? '📖' : '📕'}
                   </Button>
                 )}
               </div>
-            </td>
-          )}
-        ];
-
-        rows.push(
-          <tr 
-            key={item._id} 
-            className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-          >
-            {menuCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content)}
-          </tr>
-        );
-
-        // Agregar fila de receta si está abierta
-        if (isRecipeOpen) {
-          const visibleColumnsCount = Object.values(visibleColumns).filter(Boolean).length;
-          rows.push(
-            <tr key={`${item._id}-recipe`} className="bg-yellow-50">
-              <td colSpan={visibleColumnsCount} className="px-3 py-4 border-b border-gray-200">
-                <div className="bg-white rounded-lg p-4 border border-yellow-200">
-                  <RecepieOptionsMenu 
-                    product={item} 
-                    Receta={recetas[item._id]} 
-                    currentType={currentType}
-                    onSaveReceta={handleSaveReceta}
-                    onCreateReceta={handleCreateReceta}
-                  />
-                </div>
-              </td>
-            </tr>
-          );
+            );
+          default:
+            return showEdit ? renderEditableCell(originalIndex, col.key) : <span>{item[col.key]}</span>
         }
+      };
 
-        return;
-      }
-
-      // Renderizar filas para inventario (ItemsAlmacen y ProduccionInterna)
-      const stockData = parseNestedObject(item.STOCK, { minimo: "", maximo: "", actual: "" });
-      const almacenamientoData = parseNestedObject(item.ALMACENAMIENTO, { ALMACENAMIENTO: "", BODEGA: "" });
-
-      // Obtener nombre del proveedor
-      const proveedor = currentType === ItemsAlmacen ? 
-        Proveedores.find(p => p._id === item.Proveedor) : null;
-
-      const inventoryCells = [
-        { key: 'nombre', content: (
-          <td key="nombre" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "Nombre_del_producto") : 
-              <span className="font-medium text-blue-800">{item.Nombre_del_producto || "Sin nombre"}</span>
-            }
-          </td>
-        )},
-        { key: 'cantidad', content: (
-          <td key="cantidad" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "CANTIDAD", "number") : 
-              <span className="font-mono">{item.CANTIDAD || "0"}</span>
-            }
-          </td>
-        )},
-        { key: 'unidades', content: (
-          <td key="unidades" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "UNIDADES", "select", unidades) : 
-              <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">{item.UNIDADES || "N/A"}</span>
-            }
-          </td>
-        )},
-        { key: 'costo', content: (
-          <td key="costo" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "COSTO", "number") : 
-              <span className="font-mono font-bold text-green-600">${parseFloat(item.COSTO || 0).toFixed(2)}</span>
-            }
-          </td>
-        )},
-        { key: 'precioUnitario', content: (
-          <td key="precioUnitario" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "precioUnitario", "number") : 
-              <span className="font-mono font-bold text-purple-600">${parseFloat(item.precioUnitario || 0).toFixed(2)}</span>
-            }
-          </td>
-        )},
-        { key: 'stock', content: (
-          <td key="stock" className="px-3 py-2 border-r border-gray-100 text-xs">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 w-8">Min:</span>
-                {showEdit ? 
-                  renderEditableCell(item, "STOCK", "number", null, "minimo") :
-                  <span className="text-xs text-red-600">{stockData?.minimo || "0"}</span>
-                }
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 w-8">Max:</span>
-                {showEdit ? 
-                  renderEditableCell(item, "STOCK", "number", null, "maximo") :
-                  <span className="text-xs text-blue-600">{stockData?.maximo || "0"}</span>
-                }
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 w-8">Act:</span>
-                {showEdit ? 
-                  renderEditableCell(item, "STOCK", "number", null, "actual") :
-                  <span className="text-xs font-bold text-green-600">{stockData?.actual || "0"}</span>
-                }
-              </div>
-            </div>
-          </td>
-        )},
-        { key: 'almacenamiento', content: (
-          <td key="almacenamiento" className="px-3 py-2 border-r border-gray-100 text-xs">
-            <div className="space-y-1">
-              <div>
-                <span className="text-xs text-gray-500">Alm:</span>
-                {showEdit ? 
-                  renderEditableCell(item, "ALMACENAMIENTO", "select", BODEGA, "ALMACENAMIENTO") :
-                  <div className="text-xs text-purple-700">{almacenamientoData?.ALMACENAMIENTO || "N/A"}</div>
-                }
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">Bod:</span>
-                {showEdit ? 
-                  renderEditableCell(item, "ALMACENAMIENTO", "select", BODEGA, "BODEGA") :
-                  <div className="text-xs text-orange-700">{almacenamientoData?.BODEGA || "N/A"}</div>
-                }
-              </div>
-            </div>
-          </td>
-        )},
-        { key: 'grupo', content: (
-          <td key="grupo" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "GRUPO", "select", CATEGORIES) :
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO || "Sin grupo"}</span>
-            }
-          </td>
-        )},
-        { key: 'merma', content: (
-          <td key="merma" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? 
-              renderEditableCell(item, "Merma", "number") : 
-              <span className="font-mono text-yellow-600">{parseFloat(item.Merma || 0).toFixed(2)}%</span>
-            }
-          </td>
-        )}
-      ];
-
-      // Agregar proveedor solo para ItemsAlmacen
-      if (currentType === ItemsAlmacen) {
-        inventoryCells.push({
-          key: 'proveedor', content: (
-            <td key="proveedor" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? 
-                <select
-                  value={editingRows[item._id]?.Proveedor || item.Proveedor || ""}
-                  onChange={(e) => handleCellEdit(item._id, "Proveedor", e.target.value)}
-                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
-                >
-                  <option value="">Sin proveedor</option>
-                  {Proveedores.map((prov) => (
-                    <option key={prov._id} value={prov._id}>
-                      {prov.Nombre_Proveedor}
-                    </option>
-                  ))}
-                </select> :
-                <span className="text-xs text-gray-700">{proveedor?.Nombre_Proveedor || "Sin proveedor"}</span>
-              }
-            </td>
-          )
-        });
-      }
-const handleCyclic = (currentState) => { }
-      // Agregar estado y fecha actualización
-      inventoryCells.push(
-        { key: 'estado', content: (
-          <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
-            {showEdit ? (
-              // <CyclicStatusSelector
-              //  currentState={item.Estado}
-              //  onClick={handleCyclic(item.Estado)}
-               
-              // />
-              <TableViewInventarioCycle
-  id={item._id}
-  currentType={currentType}
-  currentEstado={item.Estado}
-/>
-            ) : (
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                item.Estado === "Activo" || item.Estado === "PC" || item.Estado === "PP" || item.Estado === "OK"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {item.Estado || "Sin estado"}
-              </span>
-            )}
-          </td>
-        )},
-        { key: 'fechaActualizacion', content: (
-          <td key="fechaActualizacion" className="px-3 py-2 border-r border-gray-100 text-xs">
-            <span className="text-gray-600">{item.FECHA_ACT || "N/A"}</span>
-          </td>
-        )},
-        { key: 'acciones', content: (
-          <td key="acciones" className="px-3 py-2 text-xs">
-            <div className="flex gap-1">
-              {(currentType === ProduccionInterna || currentType === MenuItems) && (
-                <Button
-                  onClick={() => handleRecipeToggle(item._id, item.Receta)}
-                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
-                >
-                  {openRecipeRows[item._id] ? '📖' : '📕'}
-                </Button>
-              )}
-              {isEditing && (
-                <Button
-                  onClick={() => handleSaveRow(item)}
-                  className="bg-gray-100 hover:bg-green-600 text-green-800 px-2 py-1 text-xs h-6 border border-green-300"
-                >
-                  💾
-                </Button>
-              )}
-              {showEdit && (
-                <Button
-                  onClick={() => handleDelete(item)}
-                  className="bg-gray-100 hover:bg-red-600 text-red-800 px-2 py-1 text-xs h-6 border border-red-300"
-                >
-                  🗑️
-                </Button>
-              )}
-            </div>
-          </td>
-        )}
-      );
-
+      // Añade la fila principal
       rows.push(
-        <tr 
-          key={item._id} 
-          className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-        >
-          {inventoryCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content)}
+        <tr key={item._id} className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+          {Object.keys(availableColumns)
+            .filter(key => visibleColumns[key])
+            .map(key => (
+              <td key={key} className="px-3 py-2 text-xs align-top">
+                {renderCellContent(key)}
+              </td>
+            ))}
         </tr>
       );
 
-      // Agregar fila de receta si está abierta para productos de inventario
-      if (isRecipeOpen && (currentType === ProduccionInterna || currentType === MenuItems)) {
-        const visibleColumnsCount = Object.values(visibleColumns).filter(Boolean).length;
+      // Añade la fila de la receta si está abierta
+      if (openRecipeRows[item._id]) {
+        const visibleColsCount = Object.values(visibleColumns).filter(Boolean).length;
         rows.push(
           <tr key={`${item._id}-recipe`} className="bg-yellow-50">
-            <td colSpan={visibleColumnsCount} className="px-3 py-4 border-b border-gray-200">
-              <div className="bg-white rounded-lg p-4 border border-yellow-200">
-                {currentType === MenuItems ? (
-                  <RecepieOptionsMenu 
-                    product={item} 
-                    Receta={recetas[item._id]} 
-                    currentType={currentType}
-                    onSaveReceta={handleSaveReceta}
-                    onCreateReceta={handleCreateReceta}
-                  />
-                ) : (
-                  <RecepieOptions 
-                    product={item} 
-                    Receta={recetas[item._id]} 
-                    currentType={currentType}
-                    onCreateReceta={handleCreateReceta}
-                  />
-                )}
-              </div>
+            <td colSpan={visibleColsCount} className="p-4">
+              {currentType === MenuItems ? (
+                <RecepieOptionsMenu product={item} Receta={recetas[item._id]} currentType={currentType} />
+              ) : (
+                <RecepieOptions product={item} Receta={recetas[item._id]} currentType={currentType} />
+              )}
             </td>
           </tr>
         );
@@ -1317,244 +538,93 @@ const handleCyclic = (currentState) => { }
 
   return (
     <div className="w-full">
-      {/* Panel de filtros tipo Excel */}
-      <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* Panel de filtros y acciones */}
+        <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
+            <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2">
+                    <Search className="w-4 h-4 text-gray-500" />
+                    <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm" />
+                </div>
+                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                    <option value="">Todos los grupos</option>
+                    {uniqueCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+                <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                    <option value="">Todos los estados</option>
+                    {uniqueEstados.map(est => <option key={est} value={est}>{est}</option>)}
+                </select>
+                {currentType !== MenuItems && (
+                     <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                        <option value="">Todo Almacenamiento</option>
+                        {uniqueAlmacenamiento.map(alm => <option key={alm} value={alm}>{alm}</option>)}
+                    </select>
+                )}
+                 {currentType === ItemsAlmacen && (
+                    <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                        <option value="">Todos los proveedores</option>
+                        {Proveedores.map(prov => <option key={prov._id} value={prov._id}>{prov.Nombre_Proveedor}</option>)}
+                    </select>
+                )}
+                <Button onClick={() => setShowColumnSelector(true)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm">📋 Columnas</Button>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm"
-            >
-              <option value="">Todos los grupos</option>
-              {uniqueCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-green-500" />
-            <select
-              value={filterEstado}
-              onChange={(e) => setFilterEstado(e.target.value)}
-              className="border border-green-300 rounded px-3 py-1 text-sm bg-gray-100 text-gray-900"
-            >
-              <option value="">Todos los estados</option>
-              {uniqueEstados.map(estado => (
-                <option key={estado} value={estado}>{estado}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-purple-500" />
-            <select
-              value={filterAlmacenamiento}
-              onChange={(e) => setFilterAlmacenamiento(e.target.value)}
-              className="border border-purple-300 rounded px-3 py-1 text-sm bg-gray-100 text-gray-900"
-            >
-              <option value="">Todos los almacenamientos</option>
-              {uniqueAlmacenamiento.map(almacen => (
-                <option key={almacen} value={almacen}>{almacen}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Filtro por proveedor - solo para ItemsAlmacen */}
-          {currentType === ItemsAlmacen && (
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-orange-500" />
-              <select
-                value={filterProveedor}
-                onChange={(e) => setFilterProveedor(e.target.value)}
-                className="border border-orange-300 rounded px-3 py-1 text-sm bg-gray-100 text-gray-900"
-              >
-                <option value="">Todos los proveedores</option>
-                {Proveedores.map(proveedor => (
-                  <option key={proveedor._id} value={proveedor._id}>{proveedor.Nombre_Proveedor}</option>
-                ))}
-              </select>
+                <div className="flex-grow"></div>
+                
+                {showEdit && (
+                    <Button onClick={handleSaveAll} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm flex items-center gap-2">
+                        <Save className="w-4 h-4" />
+                        Guardar Cambios
+                    </Button>
+                )}
             </div>
-          )}
-
-          {/* Botón para selector de columnas */}
-          <Button
-            onClick={() => setShowColumnSelector(true)}
-            className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm border border-blue-300 flex items-center gap-2"
-          >
-            📋 Columnas
-          </Button>
-
-          <div className="text-sm text-gray-600">
-            Mostrando {sortedProducts.length} de {products.length} productos
-          </div>
         </div>
-      </div>
 
+        {/* Contenedor de la Tabla */}
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="w-full bg-white">
+            <thead className="bg-gray-100 border-b border-gray-200">
+                <tr>
+                {renderTableHeaders()}
+                </tr>
+            </thead>
+            <tbody>
+                {renderTableRows()}
+            </tbody>
+            </table>
+        </div>
 
-      {/* Tabla estilo Excel */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="w-full bg-white">
-          <thead className="bg-gray-100 border-b border-gray-200">
-            <tr>
-              {renderTableHeaders()}
-            </tr>
-          </thead>
-          <tbody>
-            {renderTableRows()}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal independiente para selector de columnas */}
-      {showColumnSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
-            {/* Header del modal */}
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <span className="text-blue-600 text-lg">📋</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Personalizar Columnas</h3>
-                  <p className="text-sm text-gray-600">Selecciona las columnas que deseas mostrar</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowColumnSelector(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Controles rápidos */}
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={() => toggleAllColumns(true)}
-                className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
-              >
-                ✅ Mostrar Todas
-              </button>
-              <button
-                onClick={() => toggleAllColumns(false)}
-                className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
-              >
-                ❌ Ocultar Todas
-              </button>
-              <button
-                onClick={resetToDefault}
-                className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-              >
-                🔄 Por Defecto
-              </button>
-            </div>
-
-            {/* Lista de columnas */}
-            <div className="max-h-80 overflow-y-auto space-y-3 border border-gray-200 rounded-lg p-4 bg-gray-50">
-              {Object.entries(availableColumns).map(([key, column]) => (
-                <div key={key} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
-                  <label className="flex items-center space-x-3 cursor-pointer flex-1">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns[key] || false}
-                        onChange={() => !column.fixed && toggleColumn(key)}
-                        disabled={column.fixed}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
-                      />
-                      {column.fixed && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">!</span>
-                        </div>
-                      )}
+        {/* Modal para seleccionar columnas */}
+        {showColumnSelector && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-semibold text-gray-800">Personalizar Columnas</h3>
+                        <button onClick={() => setShowColumnSelector(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
-                    <div className="flex-1">
-                      <span className={`text-sm font-medium ${
-                        column.fixed ? 'text-gray-500' : 'text-gray-700'
-                      }`}>
-                        {column.label}
-                      </span>
-                      {column.fixed && (
-                        <div className="text-xs text-orange-600 mt-0.5">Columna fija - No se puede ocultar</div>
-                      )}
+                    <div className="flex gap-2 mb-4">
+                        <Button onClick={() => toggleAllColumns(true)} variant="outline">Mostrar Todas</Button>
+                        <Button onClick={() => toggleAllColumns(false)} variant="outline">Ocultar Todas</Button>
+                        <Button onClick={resetToDefault} variant="outline">Por Defecto</Button>
                     </div>
-                  </label>
-                  <div className={`w-3 h-3 rounded-full ${
-                    visibleColumns[key] ? 'bg-green-500' : 'bg-red-400'
-                  }`} />
+                    <div className="max-h-80 overflow-y-auto space-y-2 border rounded-lg p-3">
+                        {Object.entries(availableColumns).map(([key, column]) => (
+                            <div key={key} className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id={`col-${key}`}
+                                    checked={visibleColumns[key] || false}
+                                    onChange={() => !column.fixed && toggleColumn(key)}
+                                    disabled={column.fixed}
+                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <label htmlFor={`col-${key}`} className={`ml-2 text-sm ${column.fixed ? 'text-gray-500' : 'text-gray-700'}`}>
+                                    {column.label} {column.fixed && '(fija)'}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-              ))}
             </div>
-
-            {/* Footer con estadísticas */}
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center text-sm">
-                <div className="text-gray-600">
-                  <span className="font-medium text-blue-600">
-                    {Object.values(visibleColumns).filter(Boolean).length}
-                  </span>
-                  <span> de </span>
-                  <span className="font-medium">{Object.keys(availableColumns).length}</span>
-                  <span> columnas visibles</span>
-                </div>
-                <button
-                  onClick={() => setShowColumnSelector(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Aplicar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Resumen tipo Excel */}
-      <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="font-semibold text-gray-700">Total productos:</span>
-            <span className="ml-2 text-gray-900">{sortedProducts.length}</span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">Grupos únicos:</span>
-            <span className="ml-2 text-gray-900">{uniqueCategories.length}</span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">Valor total:</span>
-            <span className="ml-2 text-green-600 font-bold">
-              ${sortedProducts.reduce((sum, p) => {
-                const costo = parseFloat(p.COSTO || 0);
-                const cantidad = parseFloat(p.CANTIDAD || 0);
-                return sum + (costo * cantidad);
-              }, 0).toFixed(2)}
-            </span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">Productos activos:</span>
-            <span className="ml-2 text-green-600 font-bold">
-              {sortedProducts.filter(p => p.Estado === "PC" || p.Estado === "PP" || p.Estado === "Activo").length}
-            </span>
-          </div>
-        </div>
-      </div>
+        )}
     </div>
   );
 }
