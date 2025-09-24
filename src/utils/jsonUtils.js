@@ -80,3 +80,46 @@ export function safeJsonStringify(obj, prettyFormat = true) {
     return '{}';
   }
 }
+
+
+// src/utils/jsonUtils.js
+
+// export const parseCompLunch = (compLunchString) => {
+//   if (!compLunchString || typeof compLunchString !== 'string') {
+//     return null;
+//   }
+//   try {
+//     const data = JSON.parse(compLunchString);
+//     return data;
+//   } catch (error) {
+//     console.error("Error parsing Comp_Lunch JSON:", error);
+//     return null;
+//   }
+// };
+
+/**
+ * Parsea de forma segura un string que puede contener JSON.
+ * Si el string no es un JSON válido, lo devuelve como un valor dentro de un objeto.
+ * @param {string | object} obj - El objeto o string a parsear.
+ * @param {object} fallback - El valor por defecto si el parseo falla.
+ * @returns {object} El objeto parseado.
+ */
+export const parseNestedObject = (obj, fallback = {}) => {
+  try {
+    if (typeof obj === "string") {
+      if (obj === "NaN" || obj === "null" || obj === "undefined" || !obj) {
+        return fallback;
+      }
+      // Si no parece un objeto o array JSON, lo tratamos como un valor simple.
+      if (!obj.trim().startsWith("{") && !obj.trim().startsWith("[")) {
+        return { ...fallback, valor: obj };
+      }
+      return JSON.parse(obj);
+    }
+    return obj || fallback;
+  } catch (e) {
+    // Silenciamos el warning para no llenar la consola, pero puedes activarlo para depurar.
+    // console.warn("Invalid nested object JSON, returning fallback:", obj);
+    return fallback;
+  }
+};

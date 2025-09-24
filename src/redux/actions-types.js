@@ -17,6 +17,7 @@ export const AGENDA = "Agenda";
 export const NOSOTROS = "NOSOTROS";
 export const MENUVIEW = "MENUVIEW";
 export const LUNCH = "LUNCH";
+export const UPDATE_ITEM = "UPDATE_ITEM";
 
 export const RECETAS_MENU = "Recetas";
 export const RECETAS = "RECETAS";

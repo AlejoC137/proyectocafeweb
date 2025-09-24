@@ -25,7 +25,8 @@ import {
   AGENDA,
   ESP,
   ENG,
-  SET_LANGUAGE
+  SET_LANGUAGE,
+  UPDATE_ITEM, // <--- Añade este import
 } from './actions-types';
 
 const initialState = {
@@ -236,6 +237,18 @@ const reducer = (state = initialState, action) => {
         ...state,
         orderItems: [...state.orderItems, action.payload], // Agregar ítem pedido al estado
       };
+    case UPDATE_ITEM: {
+      // Actualiza el array allItems con el item modificado
+      const updatedItems = state.allItems.map(item =>
+        item._id === action.payload._id
+          ? { ...item, ...action.payload }
+          : item
+      );
+      return {
+        ...state,
+        allItems: updatedItems,
+      };
+    }
 
     default:
       return state;

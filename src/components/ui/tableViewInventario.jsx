@@ -542,25 +542,25 @@ export function TableViewInventario({ products, currentType }) {
         <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
             <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-gray-500" />
-                    <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm" />
+                    <Search className="w-4 h-4 text-gray-500 bg-gray-50" />
+                    <input type="text" placeholder="Buscar... " value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm" />
                 </div>
-                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border  bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
                     <option value="">Todos los grupos</option>
                     {uniqueCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
-                <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
-                    <option value="">Todos los estados</option>
+                <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
+                    <option  className="bg-gray-50" value="">Todos los estados</option>
                     {uniqueEstados.map(est => <option key={est} value={est}>{est}</option>)}
                 </select>
                 {currentType !== MenuItems && (
-                     <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                     <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
                         <option value="">Todo Almacenamiento</option>
                         {uniqueAlmacenamiento.map(alm => <option key={alm} value={alm}>{alm}</option>)}
                     </select>
                 )}
                  {currentType === ItemsAlmacen && (
-                    <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className="border border-gray-300 rounded px-3 py-1 text-sm">
+                    <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
                         <option value="">Todos los proveedores</option>
                         {Proveedores.map(prov => <option key={prov._id} value={prov._id}>{prov.Nombre_Proveedor}</option>)}
                     </select>
@@ -579,7 +579,7 @@ export function TableViewInventario({ products, currentType }) {
         </div>
 
         {/* Contenedor de la Tabla */}
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <div className="overflow-x-auto border bg-gray-50 border-gray-200 rounded-lg">
             <table className="w-full bg-white">
             <thead className="bg-gray-100 border-b border-gray-200">
                 <tr>
