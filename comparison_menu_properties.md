@@ -1,4 +1,4 @@
-# Comparación de Propiedades: Cards vs Tabla - MenuItems
+# Comparación de Propiedades: Cards vs Tabla - Menu
 
 ## 🎯 Propiedades Reales en Menu_Rows (según tu lista):
 ```
@@ -76,8 +76,8 @@ Faltan **14 columnas importantes** que sí están siendo utilizadas en las cards
 ## 📝 **ACCIÓN REQUERIDA:**
 
 Necesitamos actualizar tanto:
-1. **getAvailableColumns()** para MenuItems
-2. **renderTableHeaders()** para MenuItems  
-3. **renderTableRows()** para MenuItems
+1. **getAvailableColumns()** para Menu
+2. **renderTableHeaders()** para Menu  
+3. **renderTableRows()** para Menu
 
 Para incluir TODAS las propiedades que están siendo utilizadas en las cards.

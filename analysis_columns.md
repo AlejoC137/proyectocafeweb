@@ -1,6 +1,6 @@
 # Análisis de Correspondencia entre Headers y Rows - tableViewInventario.jsx
 
-## ✅ MenuItems
+## ✅ Menu
 
 ### Headers (líneas 413-464):
 ```
@@ -130,7 +130,7 @@ Base array (728-832):
 
 ## 📋 Verificación con Definiciones de Columnas Disponibles
 
-### MenuItems (líneas 34-43):
+### Menu (líneas 34-43):
 ```
 nombreES, nombreEN, precio, grupo, tipo, estado, composicionAlmuerzo, acciones
 ```
@@ -155,7 +155,7 @@ nombre, cantidad, unidades, costo, precioUnitario, stock, almacenamiento, grupo,
 **✅ TODAS LAS CORRESPONDENCIAS SON CORRECTAS**
 
 No hay problemas de desbalance entre headers y rows. La estructura está perfectamente alineada para los tres tipos:
-- MenuItems: 8 columnas
+- Menu: 8 columnas
 - ItemsAlmacen: 13 columnas  
 - ProduccionInterna: 12 columnas
 

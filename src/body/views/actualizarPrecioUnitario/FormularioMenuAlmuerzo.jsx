@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-// **CORRECCIÓN APLICADA AQUÍ** (Error tipográfico en "Opción")
 const categorias = [
   { key: "entrada", label: "Entrada" },
   { key: "proteina", label: "Proteína" },
@@ -9,7 +8,7 @@ const categorias = [
   { key: "acompanante", label: "Acompañante" },
   { key: "ensalada", label: "Ensalada" },
   { key: "bebida", label: "Bebida" },
-];
+];  
 
 const initialState = {
   fecha: { dia: "", fecha: "" },
@@ -20,16 +19,25 @@ const initialState = {
   acompanante: { nombre: "", descripcion: "" },
   ensalada: { nombre: "", descripcion: "" },
   bebida: { nombre: "", descripcion: "" },
+  lista: []
 };
 
 function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
-  const [form, setForm] = useState(initialData || initialState);
+  const [form, setForm] = useState(initialState);
+
+  // --- CORRECCIÓN APLICADA AQUÍ ---
+  useEffect(() => {
+    // Este efecto se ejecutará cada vez que 'initialData' cambie.
+    if (initialData) {
+      // Fusionamos el estado inicial base con los datos que llegan (initialData).
+      // Esto asegura que si a initialData le falta alguna propiedad (ej. 'ensalada'),
+      // el formulario no se rompa y tome la propiedad vacía de 'initialState'.
+      setForm({ ...initialState, ...initialData });
+    }
+  }, []); // <-- CAMBIO CLAVE: Reaccionamos a los cambios en initialData.
 
   useEffect(() => {
-    setForm(initialData || initialState);
-  }, [initialData]);
-
-  useEffect(() => {
+    // Notificamos al componente padre (el Modal) cada vez que el formulario cambia.
     if (onMenuChange) {
       onMenuChange(form);
     }
@@ -45,39 +53,31 @@ function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
     }));
   };
 
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value; 
-
-    if (!selectedDate) {
-      setForm((prev) => ({ ...prev, fecha: { dia: "", fecha: "" } }));
-      return;
-    }
-    
-    const dateObj = new Date(`${selectedDate}T00:00:00`);
-    const dayOfWeek = dateObj.toLocaleDateString('es-CO', { weekday: 'long' });
-
-    setForm((prev) => ({
+  const handleFechaChange = (e) => {
+    const nuevaFecha = e.target.value;
+    const diaSemana = new Date(nuevaFecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' });
+    setForm(prev => ({
       ...prev,
       fecha: {
-        dia: dayOfWeek,
-        fecha: selectedDate,
-      },
+        fecha: nuevaFecha,
+        dia: diaSemana
+      }
     }));
   };
 
+  const fechaMenu = form.fecha?.fecha || '';
+  
   return (
-    <div className="bg-white p-6 rounded-lg mt-6 border">
-      <h2 className="text-xl font-bold mb-6 text-gray-700">Componentes del Menú del Día</h2>
+    <div className="bg-white p-6">
       <div className="space-y-6">
         
         <div className="bg-gray-50 rounded-md p-4 border">
             <h3 className="text-lg font-semibold mb-3 text-gray-600">Fecha del Menú</h3>
             <input
               type="date"
-              name="fecha"
               className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white w-full md:w-1/2"
-              value={form.fecha?.fecha || ''} 
-              onChange={handleDateChange}
+              value={fechaMenu} 
+              onChange={handleFechaChange} // Permitimos cambiar la fecha si es necesario
             />
         </div>
 

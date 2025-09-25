@@ -29,7 +29,7 @@ import {
 function Manager() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [currentType, setCurrentType] = useState(Staff);
+  const [currentType, setCurrentType] = useState(MENU);
   const [showAccionesRapidasActividades, setShowAccionesRapidasActividades] = useState(false);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' por defecto, como Inventario
 

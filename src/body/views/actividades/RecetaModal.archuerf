@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getAllFromTable, getRecepie } from "../../../redux/actions";
 import { Button } from "@/components/ui/button";
-import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, MenuItems } from "../../../redux/actions-types";
+import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, Menu } from "../../../redux/actions-types";
 
 function RecetaModal() {
   const { id } = useParams();

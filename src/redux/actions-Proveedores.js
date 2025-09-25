@@ -11,7 +11,10 @@ import {
   SCRAP,
   TOGGLE_SHOW_EDIT,
   RESET_EXPANDED_GROUPS,
-  SET_SELECTED_PROVIDER_ID, // Importar la acción
+  SET_SELECTED_PROVIDER_ID,
+  MenuItems,
+  MENU,
+  MENUVIEW, // Importar la acción
   
 } from "./actions-types";
 
@@ -616,11 +619,12 @@ export function updateItem(itemId, updatedFields, type) {
 }
 
 export function deleteItem(itemId , type) {
+  const table = type === MenuItems ? MENU : type 
   return async (dispatch) => {
     try {
       // Llamada a Supabase para eliminar el registro
       const { error } = await supabase
-        .from(type)
+        .from(table)
         .delete()
         .eq("_id", itemId); // Filtrar por el ID del ítem
 

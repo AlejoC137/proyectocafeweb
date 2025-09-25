@@ -96,7 +96,7 @@ export const useInstanceActions = (itemId, entityType, options = {}) => {
     // Algunos tipos usan actions diferentes
     switch(type) {
       case 'Menu':
-      case 'MenuItems':
+      case 'Menu':
         return updateMenuItem;
       case 'Staff':
       case 'ItemsAlmacen':

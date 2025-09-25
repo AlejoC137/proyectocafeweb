@@ -111,7 +111,7 @@ function App() {
      <Route path="/WorkIsueExcelView" element={<WorkIsueExcelView />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
-     <Route path="/Predict/:menuItem" element={<Predict />} />
+     <Route path="/Predict/:MenuItem" element={<Predict />} />
      <Route path="/CalculoNomina" element={<CalculoNomina />} />
      {/* Renderiza el componente que corresponde a la vista actual */}
      {/* Renderiza el BottomNav debajo del componente actual */}

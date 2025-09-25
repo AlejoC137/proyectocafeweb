@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem, crearProveedor } from "../../../redux/actions-Proveedores";
-import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU, MenuItems } from "../../../redux/actions-types";
+import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU,  } from "../../../redux/actions-types";
 import ProcedimientosCreator from "../actividades/ProcedimientosCreator";
 import WorkIsueCreator from "../actividades/WorkIsueCreator";
 import StaffCreator from "../actividades/StaffCreator";

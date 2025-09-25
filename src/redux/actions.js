@@ -19,7 +19,8 @@ import {
   ITEMS,
   SET_LANGUAGE,
   ESP,
-  ENG
+  ENG,
+  MenuItems
   
 } from "./actions-types";
 
@@ -467,7 +468,7 @@ export function crearItem(itemData, type, forId) {
       }
 
       // Si el tipo NO es 'Recetas', agregar FECHA_ACT
-      if (type !== 'RecetasProduccion') {
+      if (type !== 'RecetasProduccion' ) {
         nuevoItem = {
           ...nuevoItem,
           actualizacion: new Date().toISOString().split("T")[0], // Fecha actual
@@ -523,11 +524,12 @@ export function updateItem(itemId, updatedFields, type) {
 }
 
 export function deleteItem(itemId , type) {
+  const table = type === MenuItems ? MENU : type 
   return async (dispatch) => {
     try {
       // Llamada a Supabase para eliminar el registro
       const { error } = await supabase
-        .from(type)
+        .from(table)
         .delete()
         .eq("_id", itemId); // Filtrar por el ID del ítem
 
@@ -715,3 +717,4 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
     }
   };
 };
+
