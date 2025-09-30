@@ -6,327 +6,185 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+// Componentes locales
 import FormTask from './FormTask.jsx';
 import TaskActions from './TaskActions.jsx';
 import InlineActionsTask from './InlineActionsTask.jsx';
-//import {
-//    getAllFromTable,
-//    updateTask,
-//    addTask,
-//    deleteTask
-//} from '../store/actions/actions';
-
-
-
-import { getAllFromTable } from "../../../../redux/actions";
-import { addTask, deleteTask, updateTask } from "../../../../redux/standaloneTaskActions";
 import TaskLog from './TaskLog.jsx';
 import DatesManager from './DatesManager.jsx';
 
+// Acciones de Redux y Tipos
+import { getAllFromTable } from "../../../../redux/actions";
+import { addTask, deleteTask, updateTask } from "../../../../redux/standaloneTaskActions";
+import { AREAS } from '../../../../redux/actions-types.js';
+
+// --- Constantes y Helpers ---
 const ESTADOS = {
-    PENDIENTE: 'Pendiente', EN_PROCESO: 'En Progreso', COMPLETADO: 'Completado',
-    CANCELADO: 'Cancelado', EN_REVISION: 'En Revisión', BLOQUEADO: 'Bloqueado',
-    APROBACION_REQUERIDA: 'Aprobación Requerida', EN_DISENO: 'En Diseño', EN_DISCUSION: 'En Discusión'
+    PENDIENTE: 'Pendiente',
+    EN_PROGRESO: 'En Progreso',
+    EN_REVISION: 'En Revisión',
+    EN_DISCUSION: 'En Discusión',
+    COMPLETADO: 'Completado',
+    EN_DISENO: 'En Diseño',
 };
+const PRIORIDADES = ['Baja', 'Media-Baja', 'Media', 'Media-Alta', 'Alta'];
 
 const getEstadoColor = (estado) => {
     const colors = {
         'Pendiente': 'bg-yellow-100 text-yellow-800', 'En Progreso': 'bg-blue-100 text-blue-800',
-        'Completado': 'bg-green-100 text-green-800', 'Cancelado': 'bg-red-100 text-red-800',
-        'En Revisión': 'bg-purple-100 text-purple-800', 'Bloqueado': 'bg-gray-400 text-white',
-        'Aprobación Requerida': 'bg-orange-100 text-orange-800', 'En Diseño': 'bg-pink-100 text-pink-800',
-        'En Discusión': 'bg-indigo-100 text-indigo-800'
+        'Completado': 'bg-green-100 text-green-800', 'En Revisión': 'bg-purple-100 text-purple-800',
+        'En Discusión': 'bg-indigo-100 text-indigo-800', 'En Diseño': 'bg-pink-100 text-pink-800',
     };
     return colors[estado] || 'bg-gray-100 text-gray-800';
 };
 
 const getPriorityColor = (priority) => {
     const colors = {
-        'Baja': 'bg-blue-100 text-blue-800',
-        'Media-Baja': 'bg-green-100 text-green-800',
-        'Media': 'bg-yellow-100 text-yellow-800',
-        'Media-Alta': 'bg-orange-200 text-orange-900',
-        'Alta': 'bg-red-500 text-white font-bold',
+        'Baja': 'bg-blue-100', 'Media-Baja': 'bg-green-100',
+        'Media': 'bg-yellow-100', 'Media-Alta': 'bg-orange-200',
+        'Alta': 'bg-red-500 font-bold',
     };
     return colors[priority] || 'bg-gray-100 text-gray-800';
 };
 
-// --- NUEVO: Definición centralizada de las columnas ---
 const initialColumns = [
-    { key: 'Priority', label: 'Prioridad', width: 75, sortable: true },
-    { key: 'stage_id', label: 'Etapa', width: 75, sortable: true },
+    { key: 'Priority', label: 'Prioridad', width: 100, sortable: true },
+    { key: 'entregableType', label: 'Área', width: 150, sortable: true },
     { key: 'task_description', label: 'Tarea / Espacio', width: 350, sortable: true },
-    { key: 'inline_actions', label: 'Acciones de Tarea', width: 500, sortable: false },
-    { key: 'status', label: 'Estado', width: 75, sortable: true },
-    { key: 'Progress', label: 'Progreso', width: 100, sortable: true },
-    { key: 'staff_id', label: 'Responsable', width: 90, sortable: true },
-    { key: 'entregable_id', label: 'Entregable', width: 120, sortable: true },
+    { key: 'acciones', label: 'Acciones de Tarea', width: 400, sortable: false },
+    { key: 'status', label: 'Estado', width: 120, sortable: true },
+    { key: 'Progress', label: 'Progreso', width: 150, sortable: true },
+    { key: 'Responsable', label: 'Responsable', width: 150, sortable: true },
     { key: 'dates', label: 'Fechas', width: 250, sortable: true },
     { key: 'notes', label: 'Notas', width: 300, sortable: true },
 ];
 
+// --- Componente Principal ---
 const ProjectExcelView = () => {
     const dispatch = useDispatch();
-
-    // --- ESTADOS ---
-    const [data, setData] = useState([]);
-    const [proyectos, setProyectos] = useState([]);
+    const [rawData, setRawData] = useState([]);
     const [staff, setStaff] = useState([]);
-    const [stages, setStages] = useState([]);
-    const [entregables, setEntregables] = useState([]);
-
-    const [Priorities, setPriorities] = useState([
-        { id: "Baja", name: "Baja" }, { id: "Media-Baja", name: "Media-Baja" },
-        { id: "Media", name: "Media" }, { id: "Media-Alta", name: "Media-Alta" },
-        { id: "Alta", name: "Alta" },
-    ]);
-
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [filters, setFilters] = useState({ project_id: '', stage_id: '', staff_id: '', status: '', search: '' });
+    const [filters, setFilters] = useState({ status: '', search: '', Priority: '' });
     const [selectedRows, setSelectedRows] = useState(new Set());
-    const [sortConfig, setSortConfig] = useState({ key: 'task_description', direction: 'ascending' });
+    const [sortConfig, setSortConfig] = useState({ key: 'Priority', direction: 'descending' });
     const [collapsedGroups, setCollapsedGroups] = useState(new Set());
-
-    // --- NUEVO: Estados y Refs para el redimensionamiento de columnas ---
     const [columnWidths, setColumnWidths] = useState(
         initialColumns.reduce((acc, col) => ({ ...acc, [col.key]: col.width }), {})
     );
     const resizingColumnRef = useRef(null);
 
-    // --- FETCHING DE DATOS ---
-    const fetchTasks = async () => {
-        const tareasAction = await dispatch(getAllFromTable("WorkIsue"));
-        if (tareasAction?.payload) setData(tareasAction.payload);
-        console.log(data)
-    };
-
-    useEffect(() => {
-        const fetchAllData = async () => {
-            const [proyectosAction, staffAction, stagesAction, entregablesAction] = await Promise.all([
-                dispatch(getAllFromTable("Proyectos")),
-                dispatch(getAllFromTable("Staff")),
-                dispatch(getAllFromTable("Stage")),
-                dispatch(getAllFromTable("Entregables_template"))
-            ]);
-            if (proyectosAction?.payload) setProyectos(proyectosAction.payload);
-            if (staffAction?.payload) setStaff(staffAction.payload);
-            if (stagesAction?.payload) setStages(stagesAction.payload);
-            if (entregablesAction?.payload) setEntregables(entregablesAction.payload);
-        };
-        fetchAllData();
-        fetchTasks();
-
-        console.log()
+    const fetchAllData = useCallback(async () => {
+        const [tareasAction, staffAction] = await Promise.all([
+            dispatch(getAllFromTable("WorkIsue")),
+            dispatch(getAllFromTable("Staff"))
+        ]);
+        if (tareasAction?.payload) setRawData(tareasAction.payload);
+        if (staffAction?.payload) setStaff(staffAction.payload);
     }, [dispatch]);
 
-    // --- MEMOS PARA FILTRADO, ORDENACIÓN Y AGRUPACIÓN ---
+    useEffect(() => {
+        fetchAllData();
+    }, [fetchAllData]);
+
+    const processedData = useMemo(() => {
+        return rawData.map(task => ({
+            ...task,
+            // CORRECCIÓN: Cambiar .name por .Nombre
+            assigneeName: staff.find(s => s.id === task.Responsable)?.Nombre || 'Sin asignar',
+        }));
+    }, [rawData, staff]);
+
     const filteredData = useMemo(() => {
-        let filtered = [...data];
+        let filtered = [...processedData];
         if (filters.search) {
             const searchLower = filters.search.toLowerCase();
             filtered = filtered.filter(item =>
                 Object.values(item).some(val => String(val).toLowerCase().includes(searchLower))
             );
         }
-        if (filters.project_id) filtered = filtered.filter(item => item.project_id === filters.project_id);
-        if (filters.stage_id) filtered = filtered.filter(item => item.stage_id === filters.stage_id);
-        if (filters.staff_id) filtered = filtered.filter(item => item.staff_id === filters.staff_id);
         if (filters.status) filtered = filtered.filter(item => item.status === filters.status);
+        if (filters.Priority) filtered = filtered.filter(item => item.Priority === filters.Priority);
         return filtered;
-    }, [data, filters]);
+    }, [processedData, filters]);
 
     const groupedAndSortedItems = useMemo(() => {
         let sortableItems = [...filteredData];
-        if (sortConfig.key !== null) {
+        if (sortConfig.key) {
             sortableItems.sort((a, b) => {
-                const getValue = (item, key) => {
-                    let value = item[key] || '';
-                    switch (key) {
-                        case 'project_id': return proyectos.find(p => p.id === value)?.name || value;
-                        case 'staff_id': return staff.find(s => s.id === value)?.name || value;
-                        case 'stage_id': return stages.find(s => s.id === value)?.name || value;
-                        case 'entregable_id': return entregables.find(e => e.id === value)?.entregable_nombre || value;
-                        case 'dates': return item.dates ? JSON.parse(item.dates).dueDate || '' : '';
-                        case 'Progress': return Number(value || 0);
-                        default: return value;
-                    }
-                };
-                const aValue = getValue(a, sortConfig.key);
-                const bValue = getValue(b, sortConfig.key);
+                const aValue = a[sortConfig.key] || '';
+                const bValue = b[sortConfig.key] || '';
                 if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
                 if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
                 return 0;
             });
         }
         return sortableItems.reduce((acc, item) => {
-            const projectName = proyectos.find(p => p.id === item.project_id)?.name || 'Tareas sin Proyecto';
-            if (!acc[projectName]) acc[projectName] = [];
-            acc[projectName].push(item);
+            const groupName = item.entregableType || 'Tareas Generales';
+            if (!acc[groupName]) acc[groupName] = [];
+            acc[groupName].push(item);
             return acc;
         }, {});
-    }, [filteredData, sortConfig, proyectos, staff, stages, entregables]);
-
-    // --- LÓGICA DE LA UI (GRUPOS, ORDENACIÓN, SELECCIÓN) ---
-    const toggleGroup = (groupName) => {
-        setCollapsedGroups(prev => {
-            const newSet = new Set(prev);
-            newSet.has(groupName) ? newSet.delete(groupName) : newSet.add(groupName);
-            return newSet;
-        });
-    };
-
-    const requestSort = (key) => {
-        let direction = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
-        }
-        setSortConfig({ key, direction });
-    };
-
-    const handleSelectRow = (rowId) => {
-        setSelectedRows(prev => {
-            const newSelected = new Set(prev);
-            newSelected.has(rowId) ? newSelected.delete(rowId) : newSelected.add(rowId);
-            return newSelected;
-        });
-    };
-
-    // --- ACCIONES CRUD ---
-    const handleAddTask = (taskData) => {
-        const sanitizedTaskData = { ...taskData };
-        ['project_id', 'staff_id', 'stage_id', 'entregable_id'].forEach(field => {
-            if (sanitizedTaskData[field] === '') sanitizedTaskData[field] = null;
-        });
-        dispatch(addTask(sanitizedTaskData)).then(fetchTasks);
-        setIsFormOpen(false);
-    };
-
-    const handleDeleteTask = (taskId, taskDescription) => {
-        if (window.confirm(`¿Estás seguro de que deseas eliminar la tarea?\n\n"${taskDescription}"`)) {
-            dispatch(deleteTask(taskId)).then(fetchTasks);
-        }
-    };
+    }, [filteredData, sortConfig]);
 
     const updateCell = (rowId, fieldsToUpdate) => {
-        dispatch(updateTask(rowId, fieldsToUpdate)).then(() => {
-            setData(prevData => prevData.map(item => item.id === rowId ? { ...item, ...fieldsToUpdate } : item));
+        const dataToUpdate = { ...fieldsToUpdate };
+        ['acciones', 'dates'].forEach(field => {
+            if (dataToUpdate[field] && typeof dataToUpdate[field] !== 'string') {
+                dataToUpdate[field] = JSON.stringify(dataToUpdate[field]);
+            }
         });
+        dispatch(updateTask(rowId, dataToUpdate)).then(fetchAllData);
     };
 
-    const updateMultipleTasks = (fieldsToUpdate) => {
-        const promises = Array.from(selectedRows).map(taskId => dispatch(updateTask(taskId, fieldsToUpdate)));
-        Promise.all(promises).then(() => {
-            fetchTasks();
-            deselectAll();
-        });
+    const handleAddTask = (taskData) => {
+        dispatch(addTask(taskData)).then(fetchAllData);
+        setIsFormOpen(false);
     };
 
     const handleBulkDelete = () => {
         if (window.confirm(`¿Estás seguro de que quieres eliminar ${selectedRows.size} tarea(s)?`)) {
             const promises = Array.from(selectedRows).map(taskId => dispatch(deleteTask(taskId)));
-            Promise.all(promises).then(() => {
-                fetchTasks();
-                deselectAll();
-            });
+            Promise.all(promises).then(fetchAllData).then(() => setSelectedRows(new Set()));
         }
     };
 
     const handleDuplicateTasks = () => {
-        const tasksToDuplicate = data.filter(task => selectedRows.has(task.id));
+        const tasksToDuplicate = rawData.filter(task => selectedRows.has(task.id));
         const promises = tasksToDuplicate.map(task => {
             const { id, created_at, ...newTaskData } = task;
-            return dispatch(addTask({
-                ...newTaskData,
-                task_description: `${task.task_description} (Copia)`,
-                status: ESTADOS.PENDIENTE,
-                Progress: 0
-            }));
+            return dispatch(addTask({ ...newTaskData, task_description: `${task.task_description} (Copia)`, status: 'Pendiente', Progress: 0 }));
         });
-        Promise.all(promises).then(() => {
-            fetchTasks();
-            deselectAll();
-        });
+        Promise.all(promises).then(fetchAllData).then(() => setSelectedRows(new Set()));
     };
 
+    const updateMultipleTasks = (fieldsToUpdate) => {
+        const promises = Array.from(selectedRows).map(taskId => dispatch(updateTask(taskId, fieldsToUpdate)));
+        Promise.all(promises).then(fetchAllData).then(() => setSelectedRows(new Set()));
+    };
+    
     const deselectAll = () => setSelectedRows(new Set());
+    
+    const toggleGroup = (groupName) => setCollapsedGroups(prev => {
+        const newSet = new Set(prev);
+        newSet.has(groupName) ? newSet.delete(groupName) : newSet.add(groupName);
+        return newSet;
+    });
 
-    // --- COMPONENTE DE CELDA EDITABLE (SIN CAMBIOS) ---
-    const EditableCell = ({ rowId, field, value, type = 'text', options = [] }) => {
-        const [isEditing, setIsEditing] = useState(false);
-        const [editValue, setEditValue] = useState(value);
-
-        const handleSave = () => {
-            let finalValue = editValue;
-            if (type === 'progress') {
-                finalValue = Math.max(0, Math.min(100, Number(finalValue) || 0));
-            }
-            if (finalValue !== value) {
-                let fieldsToUpdate = { [field]: finalValue };
-                if (field === 'Progress' && finalValue === 100) {
-                    fieldsToUpdate.status = 'Completado';
-                }
-                updateCell(rowId, fieldsToUpdate);
-            }
-            setIsEditing(false);
-        };
-
-        const handleKeyPress = (e) => {
-            if (e.key === 'Enter' && type !== 'textarea') handleSave();
-            else if (e.key === 'Escape') { setEditValue(value); setIsEditing(false); }
-        };
-
-        if (isEditing) {
-            switch (type) {
-                case 'progress':
-                    return <input type="number" min="0" max="100" value={editValue || 0} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyPress} className="w-full p-1 border rounded focus:outline-none bg-transparent" autoFocus />;
-                case 'select': case 'status-select': case 'priority-select':
-                    return <select value={editValue || ''} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyPress} className="w-full p-1 border rounded focus:outline-none bg-white" autoFocus><option value="">-- Seleccionar --</option>{options.map(option => (<option key={option.id} value={option.id}>{option.name}</option>))}</select>;
-                case 'entregable-select':
-                    return <select value={editValue || ''} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyPress} className="w-full p-1 border rounded focus:outline-none" autoFocus><option value="">-- Seleccionar --</option>{options.map(option => (<option key={option.id} value={option.id}>{option.entregable_nombre}</option>))}</select>;
-                default:
-                    return <textarea value={editValue || ''} onChange={(e) => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyPress} className="w-full p-1 border rounded focus:outline-none" rows="3" autoFocus />;
-            }
-        }
-
-        const displayValue = (field, val) => {
-            switch (field) {
-                case 'project_id': return proyectos.find(p => p.id === val)?.name || val || '-';
-                case 'staff_id': return staff.find(s => s.id === val)?.name || val || '-';
-                case 'stage_id': return stages.find(s => s.id === val)?.name || val || '-';
-                case 'entregable_id': return entregables.find(e => e.id === val)?.entregable_nombre || val || '-';
-                default: return val || '-';
-            }
-        };
-
-        if (field === 'Progress') {
-            const progress = Math.max(0, Math.min(100, Number(value) || 0));
-            return (
-                <div className="w-full p-1 cursor-pointer" onClick={() => setIsEditing(true)}>
-                    <div className="flex items-center">
-                        <span className="text-xs font-semibold mr-2 w-8">{progress}%</span>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div></div>
-                    </div>
-                </div>
-            );
-        }
-        if (field === 'status') {
-            return <span className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${getEstadoColor(value)}`} onClick={() => setIsEditing(true)}>{value || '-'}</span>;
-        }
-        if (field === 'Priority') {
-            return <div className="cursor-pointer p-1 min-h-[28px]" onClick={() => setIsEditing(true)}>{value || '-'}</div>;
-        }
-
-        return <div className="cursor-pointer p-1 min-h-[28px]" onClick={() => setIsEditing(true)}>{displayValue(field, value)}</div>;
+    const requestSort = (key) => {
+        const direction = (sortConfig.key === key && sortConfig.direction === 'ascending') ? 'descending' : 'ascending';
+        setSortConfig({ key, direction });
     };
 
-    // --- NUEVO: Lógica para redimensionar columnas ---
+    const handleSelectRow = (rowId) => setSelectedRows(prev => {
+        const newSelected = new Set(prev);
+        newSelected.has(rowId) ? newSelected.delete(rowId) : newSelected.add(rowId);
+        return newSelected;
+    });
+
     const handleMouseDown = useCallback((e, columnKey) => {
         e.preventDefault();
-        resizingColumnRef.current = {
-            key: columnKey,
-            startX: e.clientX,
-            startWidth: columnWidths[columnKey],
-        };
+        resizingColumnRef.current = { key: columnKey, startX: e.clientX, startWidth: columnWidths[columnKey] };
     }, [columnWidths]);
 
     useEffect(() => {
@@ -334,18 +192,11 @@ const ProjectExcelView = () => {
             if (!resizingColumnRef.current) return;
             const { key, startX, startWidth } = resizingColumnRef.current;
             const newWidth = startWidth + (e.clientX - startX);
-            if (newWidth > 50) { // Ancho mínimo de 50px
-                setColumnWidths(prev => ({ ...prev, [key]: newWidth }));
-            }
+            if (newWidth > 50) setColumnWidths(prev => ({ ...prev, [key]: newWidth }));
         };
-
-        const handleMouseUp = () => {
-            resizingColumnRef.current = null;
-        };
-
+        const handleMouseUp = () => resizingColumnRef.current = null;
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
-
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
@@ -354,35 +205,30 @@ const ProjectExcelView = () => {
 
     const exportToExcel = () => {
         const dataToExport = Object.values(groupedAndSortedItems).flat().map(item => {
-            const dates = item.dates ? JSON.parse(item.dates) : {};
+            let dates = {};
+            if(item.dates && typeof item.dates === 'string') {
+                try { dates = JSON.parse(item.dates); } catch(e) {}
+            }
             return {
-                'Proyecto': proyectos.find(p => p.id === item.project_id)?.name || 'N/A',
-                'Prioridad': item.Priority || '-',
-                'Etapa': stages.find(s => s.id === item.stage_id)?.name || '-',
-                'Tarea': item.task_description,
-                'Estado': item.status,
-                'Progreso (%)': item.Progress || 0,
-                'Responsable': staff.find(s => s.id === item.staff_id)?.name || 'Sin Asignar',
-                'Entregable': entregables.find(e => e.id === item.entregable_id)?.entregable_nombre || '-',
-                'Fecha Asignación': dates.assignDate || '-',
-                'Fecha Límite': dates.dueDate || '-',
+                'Prioridad': item.Priority || '-', 'Área': item.entregableType || 'N/A',
+                'Tarea': item.task_description, 'Estado': item.status,
+                'Progreso (%)': item.Progress || 0, 'Responsable': item.assigneeName || 'Sin Asignar',
+                'Fecha Asignación': dates.assignDate || '-', 'Fecha Límite': dates.dueDate || '-',
                 'Notas': item.notes || ''
             };
         });
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "WorkIsue");
-        const colWidths = Object.keys(dataToExport[0] || {}).map(key => ({
-            wch: Math.max(...dataToExport.map(row => row[key]?.toString().length || 10), key.length)
+        worksheet["!cols"] = Object.keys(dataToExport[0] || {}).map(key => ({
+            wch: Math.max(...dataToExport.map(row => (row[key] || "").toString().length), key.length)
         }));
-        worksheet["!cols"] = colWidths;
         XLSX.writeFile(workbook, "Gestion_de_Tareas.xlsx");
     };
 
-    // --- RENDERIZADO DEL COMPONENTE ---
     return (
         <>
-            <FormTask isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSubmit={handleAddTask} proyectos={proyectos} staff={staff} stages={stages} entregables={entregables} estados={ESTADOS} />
+            <FormTask isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSubmit={handleAddTask} staff={staff} areas={AREAS} prioridades={PRIORIDADES} estados={ESTADOS}/>
             <div className="flex flex-col h-screen bg-gray-50">
                 <div className="bg-white shadow-sm border-b p-4">
                     <div className="flex items-center justify-between mb-4">
@@ -392,12 +238,11 @@ const ProjectExcelView = () => {
                             <button onClick={() => setIsFormOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Plus size={16} /> Nueva Tarea</button>
                         </div>
                     </div>
-                    <div className="grid grid-cols-6 gap-4 p-2 bg-gray-50 rounded-lg border">
+                    <div className="grid grid-cols-5 gap-4 p-2 bg-gray-50 rounded-lg border">
                         <div className="col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">Búsqueda General</label><div className="relative"><Search size={16} className="absolute left-3 top-3 text-gray-400" /><input type="text" placeholder="Buscar en toda la tabla..." value={filters.search} onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))} className="pl-10 w-full p-2 border border-gray-300 rounded-lg" /></div></div>
-                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Etapa</label><select value={filters.stage_id} onChange={(e) => setFilters(prev => ({ ...prev, stage_id: e.target.value }))} className="w-full p-2 border border-gray-300 rounded-lg"><option value="">Todas</option>{stages.map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}</select></div>
-                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Responsable</label><select value={filters.staff_id} onChange={(e) => setFilters(prev => ({ ...prev, staff_id: e.target.value }))} className="w-full p-2 border border-gray-300 rounded-lg"><option value="">Todos</option>{staff.map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}</select></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label><select value={filters.Priority} onChange={(e) => setFilters(prev => ({ ...prev, Priority: e.target.value }))} className="w-full p-2 border border-gray-300 rounded-lg"><option value="">Todas</option>{PRIORIDADES.map(p => (<option key={p} value={p}>{p}</option>))}</select></div>
                         <div><label className="block text-sm font-medium text-gray-700 mb-1">Estado</label><select value={filters.status} onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))} className="w-full p-2 border border-gray-300 rounded-lg"><option value="">Todos</option>{Object.values(ESTADOS).map(estado => (<option key={estado} value={estado}>{estado}</option>))}</select></div>
-                        <div className="flex items-end"><button onClick={() => setFilters({ project_id: '', stage_id: '', staff_id: '', status: '', search: '' })} className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 w-full"><XCircle size={16} /> Limpiar</button></div>
+                        <div className="flex items-end"><button onClick={() => setFilters({ status: '', search: '', Priority: '' })} className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 w-full"><XCircle size={16} /> Limpiar</button></div>
                     </div>
                 </div>
 
@@ -405,10 +250,8 @@ const ProjectExcelView = () => {
                     <div className="min-w-full">
                         <table className="w-full bg-white text-sm" style={{ tableLayout: 'fixed' }}>
                             <colgroup>
-                                <col style={{ width: '48px' }} /> {/* Checkbox */}
-                                {initialColumns.map(col => (
-                                    <col key={col.key} style={{ width: `${columnWidths[col.key]}px` }} />
-                                ))}
+                                <col style={{ width: '48px' }} />
+                                {initialColumns.map(col => (<col key={col.key} style={{ width: `${columnWidths[col.key]}px` }} />))}
                             </colgroup>
                             <thead className="bg-gray-100 sticky top-0 z-10">
                                 <tr>
@@ -418,49 +261,39 @@ const ProjectExcelView = () => {
                                     {initialColumns.map(col => (
                                         <th key={col.key} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b relative group">
                                             <div className="flex items-center justify-between">
-                                                {col.sortable ? (
-                                                    <button onClick={() => requestSort(col.key)} className="flex items-center gap-1 hover:text-gray-800">
-                                                        {col.label} <ArrowUpDown size={12} />
-                                                    </button>
-                                                ) : (
-                                                    <span>{col.label}</span>
-                                                )}
+                                                {col.sortable ? (<button onClick={() => requestSort(col.key)} className="flex items-center gap-1 hover:text-gray-800">{col.label} <ArrowUpDown size={12} /></button>) : (<span>{col.label}</span>)}
                                             </div>
-                                            <div
-                                                onMouseDown={(e) => handleMouseDown(e, col.key)}
-                                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize bg-blue-300 opacity-0 group-hover:opacity-100"
-                                            />
+                                            <div onMouseDown={(e) => handleMouseDown(e, col.key)} className="absolute top-0 right-0 h-full w-2 cursor-col-resize bg-blue-300 opacity-0 group-hover:opacity-100" />
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {Object.keys(groupedAndSortedItems).sort().map(projectName => (
-                                    <React.Fragment key={projectName}>
-                                        <tr className="bg-gray-200 sticky top-12 z-10 cursor-pointer" onClick={() => toggleGroup(projectName)}>
+                                {Object.keys(groupedAndSortedItems).sort().map(groupName => (
+                                    <React.Fragment key={groupName}>
+                                        <tr className="bg-gray-200 sticky top-12 z-10 cursor-pointer" onClick={() => toggleGroup(groupName)}>
                                             <td colSpan={initialColumns.length + 1} className="py-2 px-4 font-bold text-gray-700">
                                                 <div className="flex items-center gap-2">
-                                                    {collapsedGroups.has(projectName) ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-                                                    {projectName} ({groupedAndSortedItems[projectName].length})
+                                                    {collapsedGroups.has(groupName) ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                                                    {groupName} ({groupedAndSortedItems[groupName].length})
                                                 </div>
                                             </td>
                                         </tr>
-                                        {!collapsedGroups.has(projectName) && groupedAndSortedItems[projectName].map((item) => (
+                                        {!collapsedGroups.has(groupName) && groupedAndSortedItems[groupName].map((item) => (
                                             <tr key={item.id} className={`hover:bg-gray-50 ${selectedRows.has(item.id) ? 'bg-blue-50' : ''}`}>
                                                 <td className="px-4 py-2 border-r align-top"><input type="checkbox" checked={selectedRows.has(item.id)} onChange={() => handleSelectRow(item.id)} /></td>
-                                                <td className={`px-4 py-2 border-r text-center align-top ${getPriorityColor(item.Priority)}`}><EditableCell rowId={item.id} field="Priority" value={item.Priority} type="priority-select" options={Priorities} /></td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="stage_id" value={item.stage_id} type="select" options={stages} /></td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="task_description" value={item.task_description} type="textarea" /></td>
-                                                <td className="p-0 border-r align-top"><InlineActionsTask task={item} /></td>
-                                                <td className="px-4 py-2 border-r text-center align-top"><EditableCell rowId={item.id} field="status" value={item.status} type="status-select" options={Object.keys(ESTADOS).map(k => ({ id: ESTADOS[k], name: ESTADOS[k] }))} /></td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="Progress" value={item.Progress} type="progress" /></td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="staff_id" value={item.staff_id} type="select" options={staff} /></td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="entregable_id" value={item.entregable_id} type="entregable-select" options={entregables} /></td>
+                                                <td className={`px-4 py-2 border-r text-center align-top font-semibold ${getPriorityColor(item.Priority)}`}><EditableCell rowId={item.id} field="Priority" value={item.Priority} type="select" options={PRIORIDADES} onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="entregableType" value={item.entregableType} type="select" options={AREAS} onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="task_description" value={item.task_description} type="textarea" onSave={updateCell} /></td>
+                                                <td className="p-0 border-r align-top"><InlineActionsTask task={item} onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r text-center align-top"><EditableCell rowId={item.id} field="status" value={item.status} type="select" options={Object.values(ESTADOS)} onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="Progress" value={item.Progress} type="progress" onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="Responsable" value={item.Responsable} type="select-staff" options={staff} onSave={updateCell} /></td>
                                                 <td className="px-4 py-2 border-r align-top">
                                                     <DatesManager task={item} onSave={updateCell} />
-                                                    <TaskLog task={item} proyectos={proyectos} staff={staff} stages={stages} entregables={entregables} updateCell={updateCell} />
+                                                    <TaskLog task={item} updateCell={updateCell} />
                                                 </td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="notes" value={item.notes} type="textarea" /></td>
+                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="notes" value={item.notes} type="textarea" onSave={updateCell} /></td>
                                             </tr>
                                         ))}
                                     </React.Fragment>
@@ -469,15 +302,67 @@ const ProjectExcelView = () => {
                         </table>
                     </div>
                 </div>
-
-                <TaskActions
-                    selectedRows={selectedRows} data={filteredData} staff={staff}
-                    updateMultipleTasks={updateMultipleTasks} handleBulkDelete={handleBulkDelete}
-                    handleDuplicateTasks={handleDuplicateTasks} deselectAll={deselectAll}
-                />
+                <TaskActions selectedRows={selectedRows} data={processedData} deselectAll={deselectAll} handleBulkDelete={handleBulkDelete} handleDuplicateTasks={handleDuplicateTasks} updateMultipleTasks={updateMultipleTasks}/>
             </div>
         </>
     );
+};
+
+// --- Componente de Celda Editable ---
+const EditableCell = ({ rowId, field, value, type = 'text', options = [], onSave }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState(value);
+
+    const handleSave = () => {
+        let finalValue = editValue;
+        if (type === 'progress') finalValue = Math.max(0, Math.min(100, Number(finalValue) || 0));
+        if (finalValue !== value) {
+            let fieldsToUpdate = { [field]: finalValue };
+            if (field === 'Progress' && finalValue === 100) fieldsToUpdate.status = 'Completado';
+            onSave(rowId, fieldsToUpdate);
+        }
+        setIsEditing(false);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && type !== 'textarea') handleSave();
+        else if (e.key === 'Escape') {
+            setEditValue(value);
+            setIsEditing(false);
+        }
+    };
+
+    if (isEditing) {
+        switch (type) {
+            case 'progress':
+                return <input type="number" min="0" max="100" value={editValue || 0} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none bg-transparent" autoFocus />;
+            case 'select':
+                return <select value={editValue || ''} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none bg-white" autoFocus><option value="">-- Seleccionar --</option>{options.map(o => (<option key={o} value={o}>{o}</option>))}</select>;
+            case 'select-staff':
+                // CORRECCIÓN: Cambiar m.name por m.Nombre
+                return <select value={editValue || ''} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none bg-white" autoFocus><option value="">Sin asignar</option>{options.map(m => (<option key={m.id} value={m.id}>{m.Nombre}</option>))}</select>;
+            default:
+                return <textarea value={editValue || ''} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none" rows="3" autoFocus />;
+        }
+    }
+    
+    let displayValue = value || '-';
+    if (type === 'select-staff') {
+        const staffMember = options.find(s => s.id === value);
+        // CORRECCIÓN: Cambiar staffMember.name por staffMember.Nombre
+        displayValue = staffMember ? staffMember.Nombre : 'Sin asignar';
+    }
+    
+    if (field === 'Progress') {
+        const progress = Math.max(0, Math.min(100, Number(value) || 0));
+        return <div className="w-full p-1 cursor-pointer" onClick={() => setIsEditing(true)}><div className="flex items-center"><span className="text-xs font-semibold mr-2 w-8">{progress}%</span><div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div></div></div></div>;
+    }
+
+    if (field === 'status') {
+        return <span className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${getEstadoColor(value)}`} onClick={() => setIsEditing(true)}>{value || '-'}</span>;
+    }
+
+    return <div className="cursor-pointer p-1 min-h-[28px] whitespace-pre-wrap" onClick={() => setIsEditing(true)}>{displayValue}</div>;
 };
 
 export default ProjectExcelView;

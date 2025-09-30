@@ -6,7 +6,6 @@ import { createClient } from "@supabase/supabase-js";
 
 // ========================================
 // 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE
-// (Copiado desde src/config/supabaseClient.js)
 // ========================================
 
 // Reemplaza estas variables con tus propias claves de Supabase o cárgalas desde un .env
@@ -35,63 +34,135 @@ const actionTypes = {
 
 // ========================================
 // 3. TRANSFORMADORES Y HELPERS DE TAREAS
-// (Copiado desde src/store/actions/taskActions.js)
+// (Adaptado desde WorkIsue_rows.csv)
 // ========================================
 
+/**
+ * Devuelve un color según el estado de la tarea.
+ * @param {string} status - El estado de la tarea (ej. 'Pendiente', 'En Progreso').
+ */
 const getTaskStatusColor = (status) => {
   const colors = {
     'Pendiente': 'gray',
     'En Progreso': 'blue',
+    'En Revisión': 'yellow',
+    'En Discusión': 'orange',
+    'Completado': 'green',
     'En Diseño': 'purple',
-    'Aprobación Requerida': 'orange',
     'Bloqueado': 'red',
-    'Completo': 'green',
   };
   return colors[status] || 'gray';
 };
 
+/**
+ * Devuelve un color según la prioridad de la tarea.
+ * @param {string} priority - La prioridad de la tarea (ej. 'Baja', 'Media', 'Alta').
+ */
 const getPriorityColor = (priority) => {
   const colors = {
     'Baja': 'green',
+    'Media-Baja': 'teal',
     'Media': 'yellow',
-    'Alta': 'orange',
-    'Crítica': 'red',
+    'Media-Alta': 'orange',
+    'Alta': 'red',
+    'Crítica': 'darkred', // Se añade por si se usa en el futuro
   };
   return colors[priority] || 'gray';
 };
 
-const isTaskOverdue = (dueDate) => {
-  if (!dueDate) return false;
-  return new Date(dueDate) < new Date();
+/**
+ * Parsea una fecha en formato DD/MM/YYYY a un objeto Date.
+ * @param {string} dateString - La fecha como string.
+ * @returns {Date|null}
+ */
+const parseDate = (dateString) => {
+    if (!dateString) return null;
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      // Formato: DD, MM, YYYY
+      return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateString); // Intento de parseo nativo como fallback
 };
 
+
+/**
+ * Verifica si una tarea está vencida.
+ * @param {string} dueDate - La fecha de vencimiento.
+ */
+const isTaskOverdue = (dueDate) => {
+  if (!dueDate) return false;
+  const due = parseDate(dueDate);
+  return due < new Date();
+};
+
+/**
+ * Transforma los datos de una tarea desde el formato de Supabase al formato de la aplicación.
+ * @param {object|object[]} data - El objeto o array de objetos de la tarea.
+ */
 const taskTransformer = (data) => {
-  const transformItem = (item) => ({
-    // Transformaciones genéricas
-    ...item,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-    displayName: item.name || item.title || `${item.id}`,
-    // Transformaciones específicas de tareas
-    statusColor: getTaskStatusColor(item.status),
-    priorityColor: getPriorityColor(item.priority),
-    isOverdue: isTaskOverdue(item.due_date),
-    projectName: item.projects?.name || 'Sin proyecto',
-    assigneeName: item.staff?.name || 'Sin asignar',
-    stageName: item.stages?.name || 'Sin etapa',
-    taskDescription: item.task_description || item.description || '',
-  });
+  const transformItem = (item) => {
+    // **FIX: Parsear campos JSON de forma segura, verificando si no están vacíos**
+    let acciones = [];
+    if (item.acciones && typeof item.acciones === 'string') {
+        try {
+            acciones = JSON.parse(item.acciones);
+        } catch (e) {
+            console.error(`Error parsing 'acciones' for item ID ${item.id}:`, e);
+            acciones = []; // Fallback a array vacío si hay error
+        }
+    } else {
+        acciones = item.acciones || [];
+    }
+
+    let dates = {};
+    if (item.dates && typeof item.dates === 'string') {
+        try {
+            dates = JSON.parse(item.dates);
+        } catch (e) {
+            console.error(`Error parsing 'dates' for item ID ${item.id}:`, e);
+            dates = {}; // Fallback a objeto vacío si hay error
+        }
+    } else {
+        dates = item.dates || {};
+    }
+
+    const assignees = Array.isArray(acciones) ? acciones.map(a => a.executer).join(', ') : '';
+
+    return {
+      ...item,
+      // Renombrar campos para consistencia
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      entregableType: item.entregableType || '',
+      taskDescription: item.task_description || '',
+      progress: item.Progress || 0,
+      
+      // Campos derivados y transformados
+      displayName: item.entregableType ? `${item.entregableType}: ${item.task_description}` : item.task_description || `${item.id}`,
+      statusColor: getTaskStatusColor(item.status),
+      priorityColor: getPriorityColor(item.Priority),
+      
+      // Manejo de fechas
+      assignDate: dates.assignDate || null,
+      dueDate: dates.dueDate || null,
+      isOverdue: isTaskOverdue(dates.dueDate),
+      
+      // Manejo de 'acciones' como asignados
+      assigneeName: assignees || 'Sin asignar',
+      actions: acciones, // Mantener el array de acciones completo
+    };
+  };
 
   return Array.isArray(data) ? data.map(transformItem) : transformItem(data);
 };
 
 // ========================================
 // 4. LÓGICA DE LAS ACCIONES CRUD
-// (Adaptado desde src/store/actions/crudActions.js)
 // ========================================
 
-// Query de selección con relaciones para obtener datos completos
-const SELECT_QUERY = '*, projects(id,name), staff(_id,name), stages(id,name)';
+// Query de selección simple
+const SELECT_QUERY = '*';
 
 // --- ACCIÓN DE CREAR ---
 
@@ -126,7 +197,7 @@ const create = (taskData) => {
       if (error) throw error;
 
       dispatch(createSuccess(result));
-      return { success: true, data: result };
+      return { success: true, data: taskTransformer(result) };
     } catch (error) {
       console.error(`Error creando en ${TABLE_NAME}:`, error);
       dispatch(createFailure(error.message));
@@ -171,7 +242,7 @@ const update = (taskId, taskData) => {
       if (error) throw error;
 
       dispatch(updateSuccess(result));
-      return { success: true, data: result };
+      return { success: true, data: taskTransformer(result) };
     } catch (error) {
       console.error(`Error actualizando en ${TABLE_NAME}:`, error);
       dispatch(updateFailure(error.message));

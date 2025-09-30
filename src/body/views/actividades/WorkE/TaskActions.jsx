@@ -2,42 +2,45 @@
 
 import React from 'react';
 import { 
-  CheckCircle2, Play, Eye, Flag, Copy, Trash2, X, Users
+  CheckCircle2, Play, Eye, Flag, Copy, Trash2, X
 } from 'lucide-react';
 
-// Traemos los mismos estados para consistencia
+// Estados y Prioridades consistentes con la vista principal
 const ESTADOS = {
-  PENDIENTE: 'Pendiente', EN_PROCESO: 'En Progreso', COMPLETADO: 'Completado',
-  EN_REVISION: 'En Revisión'
+    PENDIENTE: 'Pendiente',
+    EN_PROGRESO: 'En Progreso',
+    EN_REVISION: 'En Revisión',
+    EN_DISCUSION: 'En Discusión',
+    COMPLETADO: 'Completado',
 };
 
-const PRIORITIES = {
-  ALTA: 'Alta',
-  MEDIA: 'Media',
-  BAJA: 'Baja'
+const PRIORIDADES = {
+    ALTA: 'Alta',
+    MEDIA_ALTA: 'Media-Alta',
+    MEDIA: 'Media',
+    MEDIA_BAJA: 'Media-Baja',
+    BAJA: 'Baja'
 };
 
 const TaskActions = ({ 
   selectedRows, 
-  data, 
-  staff, 
+  data = [], // **FIX: Se añade un valor por defecto para evitar el error si 'data' es undefined**
   updateMultipleTasks, 
   handleBulkDelete,
   handleDuplicateTasks,
   deselectAll 
 }) => {
-  // No renderizar nada si no hay filas seleccionadas
-  if (selectedRows.size === 0) return null;
+  // No renderizar nada si no hay filas seleccionadas o si los datos aún no están listos
+  if (selectedRows.size === 0 || !data) return null;
 
   const selectedTasks = data.filter(task => selectedRows.has(task.id));
 
-  // Función para obtener estadísticas de los estados de las tareas seleccionadas
+  // Función para obtener estadísticas de los estados
   const getStatusStats = () => {
-    const stats = selectedTasks.reduce((acc, task) => {
+    return selectedTasks.reduce((acc, task) => {
       acc[task.status] = (acc[task.status] || 0) + 1;
       return acc;
     }, {});
-    return stats;
   };
 
   const statusStats = getStatusStats();
@@ -74,7 +77,7 @@ const TaskActions = ({
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-gray-800">Cambiar Estado</h4>
             <div className="flex flex-col space-y-1">
-              <button onClick={() => updateMultipleTasks({ status: ESTADOS.EN_PROCESO })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
+              <button onClick={() => updateMultipleTasks({ status: ESTADOS.EN_PROGRESO })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
                 <Play size={14} /> <span>Marcar como En Progreso</span>
               </button>
               <button onClick={() => updateMultipleTasks({ status: ESTADOS.COMPLETADO, Progress: 100 })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100">
@@ -86,17 +89,17 @@ const TaskActions = ({
             </div>
           </div>
 
-          {/* Cambios de Prioridad y Acciones */}
+          {/* Cambios de Prioridad */}
           <div className="space-y-2">
              <h4 className="text-sm font-medium text-gray-800">Cambiar Prioridad</h4>
             <div className="flex flex-col space-y-1">
-              <button onClick={() => updateMultipleTasks({ Priority: PRIORITIES.ALTA })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100">
+              <button onClick={() => updateMultipleTasks({ Priority: PRIORIDADES.ALTA })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100">
                 <Flag size={14} /> <span>Prioridad Alta</span>
               </button>
-              <button onClick={() => updateMultipleTasks({ Priority: PRIORITIES.MEDIA })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100">
+              <button onClick={() => updateMultipleTasks({ Priority: PRIORIDADES.MEDIA })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100">
                 <Flag size={14} /> <span>Prioridad Media</span>
               </button>
-              <button onClick={() => updateMultipleTasks({ Priority: PRIORITIES.BAJA })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+              <button onClick={() => updateMultipleTasks({ Priority: PRIORIDADES.BAJA })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
                 <Flag size={14} /> <span>Prioridad Baja</span>
               </button>
             </div>
@@ -115,25 +118,6 @@ const TaskActions = ({
             </div>
           </div>
         </div>
-        
-        {/* Asignación rápida de responsables */}
-        {staff && staff.length > 0 && (
-          <div className="mt-4 pt-3 border-t">
-            <h4 className="text-sm font-medium text-gray-800 mb-2">Asignar a:</h4>
-            <div className="flex flex-wrap gap-2">
-              {staff.map(member => (
-                <button
-                  key={member.id}
-                  onClick={() => updateMultipleTasks({ staff_id: member.id })}
-                  className="flex items-center space-x-2 px-2.5 py-1.5 text-xs bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200"
-                >
-                  <Users size={12} />
-                  <span>{member.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
