@@ -5,8 +5,6 @@ import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedo
 import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search, Save } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
-import RecepieOptions from "../../body/components/recepieOptions/RecepieOptions";
-import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 import CuidadoVariations from "./CuidadoVariations";
 
 export function TableViewInventario({ products, currentType }) {
@@ -24,7 +22,6 @@ export function TableViewInventario({ products, currentType }) {
   const [filterProveedor, setFilterProveedor] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
-  const [openRecipeRows, setOpenRecipeRows] = useState({});
   const [recetas, setRecetas] = useState({});
   const [visibleColumns, setVisibleColumns] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -198,7 +195,6 @@ export function TableViewInventario({ products, currentType }) {
 
   const availableColumns = useMemo(() => getAvailableColumns(), [currentType]);
 
-  // Inicializa las columnas visibles por defecto cuando cambia el tipo de inventario
   useEffect(() => {
     const defaultVisibleColumns = {};
     Object.entries(availableColumns).forEach(([key, column]) => {
@@ -207,7 +203,6 @@ export function TableViewInventario({ products, currentType }) {
     setVisibleColumns(defaultVisibleColumns);
   }, [availableColumns]);
 
-  // Lógica para el selector de columnas
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showColumnSelector && !event.target.closest('.column-selector-container')) {
@@ -232,12 +227,10 @@ export function TableViewInventario({ products, currentType }) {
     setVisibleColumns(defaultVisibleColumns);
   };
 
-  // Obtiene valores únicos para los menús desplegables de los filtros
   const uniqueCategories = useMemo(() => [...new Set(products.map(p => p.GRUPO).filter(Boolean))], [products]);
   const uniqueEstados = useMemo(() => [...new Set(products.map(p => p.Estado).filter(Boolean))], [products]);
   const uniqueAlmacenamiento = useMemo(() => [...new Set(products.map(p => parseNestedObject(p.ALMACENAMIENTO)?.ALMACENAMIENTO).filter(Boolean))], [products]);
 
-  // Filtra los productos basándose en los criterios de búsqueda y filtros seleccionados
   const filteredProducts = useMemo(() => {
     return (editableProducts || []).filter(product => {
       const searchField = currentType === MenuItems
@@ -263,7 +256,6 @@ export function TableViewInventario({ products, currentType }) {
     });
   }, [editableProducts, searchTerm, filterCategory, filterEstado, filterAlmacenamiento, filterProveedor, currentType]);
 
-  // Ordena los productos filtrados
   const sortedProducts = useMemo(() => {
     const sortable = [...filteredProducts];
     sortable.sort((a, b) => {
@@ -282,7 +274,6 @@ export function TableViewInventario({ products, currentType }) {
             bValue = provB;
         }
 
-        // Conversión a número para campos numéricos para un ordenamiento correcto
         if (typeof aValue === 'string' && !isNaN(parseFloat(aValue)) && typeof bValue === 'string' && !isNaN(parseFloat(bValue))) {
             aValue = parseFloat(aValue);
             bValue = parseFloat(bValue);
@@ -298,29 +289,22 @@ export function TableViewInventario({ products, currentType }) {
     return sortable;
   }, [filteredProducts, sortColumn, sortDirection, Proveedores]);
 
-  // Maneja el clic en los encabezados para ordenar
   const handleSort = (column) => {
     setSortDirection(prev => (sortColumn === column && prev === 'asc' ? 'desc' : 'asc'));
     setSortColumn(column);
   };
 
-  // Componente de ícono para el ordenamiento
   const SortIcon = ({ column }) => {
     if (sortColumn !== column) return <ChevronDown className="w-4 h-4 opacity-50" />;
     return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
   };
 
-  // Maneja la eliminación de un ítem
   const handleDelete = async (item) => {
     if (window.confirm(`¿Seguro que quieres eliminar "${item.Nombre_del_producto || item.NombreES}"?`)) {
       await dispatch(deleteItem(item._id, currentType));
     }
   };
-  
-  // Muestra u oculta la sección de recetas de un producto
-  const handleRecipeToggle = (productId) => setOpenRecipeRows(prev => ({ ...prev, [productId]: !prev[productId] }));
 
-  // Componente para los botones de cambio de estado
   const StatusButtonGroup = ({ item }) => {
     const statuses = ESTATUS.filter(s => {
       if (currentType === "ProduccionInterna" && s === "PC") return false;
@@ -351,7 +335,6 @@ export function TableViewInventario({ products, currentType }) {
     );
   };
 
-  // Renderiza una celda editable (input, select, etc.)
   const renderEditableCell = (index, name, type = "text", options = []) => {
     const item = editableProducts[index];
     if (!item) return null;
@@ -388,7 +371,6 @@ export function TableViewInventario({ products, currentType }) {
     return <input type={type} {...props} step={type === "number" ? "0.01" : undefined} />;
   };
 
-  // Renderiza los encabezados de la tabla dinámicamente
   const renderTableHeaders = () => Object.entries(availableColumns)
     .filter(([key]) => visibleColumns[key])
     .map(([key, col]) => (
@@ -399,14 +381,12 @@ export function TableViewInventario({ products, currentType }) {
       </th>
     ));
   
-  // Renderiza las filas de la tabla con su contenido
   const renderTableRows = () => {
     if (!sortedProducts) return null;
 
-    const rows = [];
-    sortedProducts.forEach((item, index) => {
+    return sortedProducts.map((item, index) => {
       const originalIndex = editableProducts.findIndex(p => p._id === item._id);
-      if (originalIndex === -1) return;
+      if (originalIndex === -1) return null;
 
       const renderCellContent = (key) => {
         const col = availableColumns[key];
@@ -434,7 +414,7 @@ export function TableViewInventario({ products, currentType }) {
 
           case 'cuidadoES':
           case 'cuidadoEN':
-                return showEdit ? <CuidadoVariations isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} /> : <span>{item[col.key]}</span>
+            return showEdit ? <CuidadoVariations isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} /> : <span>{item[col.key]}</span>;
             
           case 'grupo':
             return showEdit ? renderEditableCell(originalIndex, col.key, "select", CATEGORIES.map(c => ({value: c, label: c}))) : <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO}</span>;
@@ -446,26 +426,26 @@ export function TableViewInventario({ products, currentType }) {
             return showEdit ? renderEditableCell(originalIndex, col.key, "select", Proveedores.map(p => ({value: p._id, label: p.Nombre_Proveedor}))) : <span>{Proveedores.find(p => p._id === item.Proveedor)?.Nombre_Proveedor || 'N/A'}</span>;
           
           case 'unidades':
-            return showEdit ? renderEditableCell(originalIndex, col.key, "select", unidades.map(u => ({value: u, label: u}))) : <span>{item[col.key]}</span>
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", unidades.map(u => ({value: u, label: u}))) : <span>{item[col.key]}</span>;
 
           case 'estado':
-            return showEdit ? <StatusButtonGroup item={item} /> : <span className={`px-2 py-1  rounded-full text-xs ${item.Estado === 'OK' || item.Estado === 'PC' || item.Estado === 'PP' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{item.Estado}</span>;
+            return showEdit ? <StatusButtonGroup item={item} /> : <span className={`px-2 py-1 rounded-full text-xs ${item.Estado === 'OK' || item.Estado === 'PC' || item.Estado === 'PP' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{item.Estado}</span>;
           
           case 'stock':
             return (
-                <div className="space-y-1">
-                    <div>Min: {showEdit ? renderEditableCell(originalIndex, "STOCK.minimo", "number") : <span>{item.STOCK?.minimo || 0}</span>}</div>
-                    <div>Max: {showEdit ? renderEditableCell(originalIndex, "STOCK.maximo", "number") : <span>{item.STOCK?.maximo || 0}</span>}</div>
-                    <div>Act: {showEdit ? renderEditableCell(originalIndex, "STOCK.actual", "number") : <span className="font-bold">{item.STOCK?.actual || 0}</span>}</div>
-                </div>
+              <div className="space-y-1">
+                <div>Min: {showEdit ? renderEditableCell(originalIndex, "STOCK.minimo", "number") : <span>{item.STOCK?.minimo || 0}</span>}</div>
+                <div>Max: {showEdit ? renderEditableCell(originalIndex, "STOCK.maximo", "number") : <span>{item.STOCK?.maximo || 0}</span>}</div>
+                <div>Act: {showEdit ? renderEditableCell(originalIndex, "STOCK.actual", "number") : <span className="font-bold">{item.STOCK?.actual || 0}</span>}</div>
+              </div>
             );
           
           case 'almacenamiento':
             return (
-                <div className="space-y-1">
-                    <div>Alm: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.ALMACENAMIENTO", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.ALMACENAMIENTO}</span>}</div>
-                    <div>Bod: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.BODEGA", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.BODEGA}</span>}</div>
-                </div>
+              <div className="space-y-1">
+                <div>Alm: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.ALMACENAMIENTO", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.ALMACENAMIENTO}</span>}</div>
+                <div>Bod: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.BODEGA", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.BODEGA}</span>}</div>
+              </div>
             );
 
           case 'print':
@@ -477,11 +457,11 @@ export function TableViewInventario({ products, currentType }) {
           case 'composicionAlmuerzo':
             const lunchData = parseCompLunch(item.Comp_Lunch);
             return lunchData ? (
-                <div>
-                    <div>{lunchData.entrada?.nombre}</div>
-                    <div>{lunchData.proteina?.nombre}</div>
-                    <div>{lunchData.carbohidrato?.nombre}</div>
-                </div>
+              <div>
+                <div>{lunchData.entrada?.nombre}</div>
+                <div>{lunchData.proteina?.nombre}</div>
+                <div>{lunchData.carbohidrato?.nombre}</div>
+              </div>
             ) : <span>N/A</span>;
             
           case 'fechaActualizacion':
@@ -491,20 +471,27 @@ export function TableViewInventario({ products, currentType }) {
             return (
               <div className="flex gap-1">
                 <Button onClick={() => handleDelete(item)} className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
-                {(currentType === ProduccionInterna || currentType === MenuItems) && (
-                  <Button onClick={() => handleRecipeToggle(item._id)} className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
-                    {openRecipeRows[item._id] ? '📖' : '📕'}
+                {(currentType === ProduccionInterna || currentType === MenuItems) && item.Receta && (
+                  <Button asChild className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                    <a 
+                      href={`/receta/${item.Receta}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      // APLICANDO LAS CLASES DIRECTAMENTE AL ENLACE PARA ELIMINAR CUALQUIER BORDE DE FOCO
+                      className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0" 
+                    >
+                      📕
+                    </a>
                   </Button>
                 )}
               </div>
             );
           default:
-            return showEdit ? renderEditableCell(originalIndex, col.key) : <span>{item[col.key]}</span>
+            return showEdit ? renderEditableCell(originalIndex, col.key) : <span>{item[col.key]}</span>;
         }
       };
 
-      // Añade la fila principal
-      rows.push(
+      return (
         <tr key={item._id} className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
           {Object.keys(availableColumns)
             .filter(key => visibleColumns[key])
@@ -515,25 +502,7 @@ export function TableViewInventario({ products, currentType }) {
             ))}
         </tr>
       );
-
-      // Añade la fila de la receta si está abierta
-      if (openRecipeRows[item._id]) {
-        const visibleColsCount = Object.values(visibleColumns).filter(Boolean).length;
-        rows.push(
-          <tr key={`${item._id}-recipe`} className="bg-yellow-50">
-            <td colSpan={visibleColsCount} className="p-4">
-              {currentType === MenuItems ? (
-                <RecepieOptionsMenu product={item} Receta={recetas[item._id]} currentType={currentType} />
-              ) : (
-                <RecepieOptions product={item} Receta={recetas[item._id]} currentType={currentType} />
-              )}
-            </td>
-          </tr>
-        );
-      }
     });
-
-    return rows;
   };
 
   return (

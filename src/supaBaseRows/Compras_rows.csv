@@ -73,6 +73,7 @@ Date,Valor,MedioDeCompra,MedioDePago,Comprador,Pagado,Categoria,linkDocSoporte,P
 1/7/2025,4200,COMPRA,EFECTIVO,,"{""pagadoFull"":true,""adelanto"":""NoAplica""}",COCINA,,3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b,293e1f2a-de3c-482c-a925-5654f96c97f5,INSUMOS
 12/5/2024,13950,COMPRA,EFECTIVO,,"{""pagadoFull"":true,""adelanto"":""NoAplica""}",COCINA,,10764f6e-7040-4e85-8a29-e3553150c934,2aa04984-a7f2-42dc-98d1-63fb882352c5,INSUMOS
 4/19/2025,371000,COMPRA,EFECTIVO,,"{""pagadoFull"":false,""adelanto"":""NoAplica""}",COCINA,,1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318,2af1bbce-fe72-4ce4-a429-8c285ebce69f,INSUMOS
+9/4/2025,50500,COMPRA,TARJETA,a,"{""pagadoFull"":true,""adelanto"":""NoAplica""}",COCINA,,3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b,2b95dd68-4cb2-43fa-98df-462b725c0b6b,INSUMOS
 4/7/2025,25080,COMPRA,EFECTIVO,,"{""pagadoFull"":false,""adelanto"":""NoAplica""}",COCINA,,6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d,2dd67182-327d-4050-99e1-21a6b55ca5d8,INSUMOS
 4/19/2025,35850,PEDIDO,TARJETA,,"{""pagadoFull"":false,""adelanto"":""NoAplica""}",COCINA,,3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b,2e0197f4-ab3b-45ea-8d38-752c888393a9,NOMINA
 4/22/2025,51720,COMPRA,EFECTIVO,,"{""pagadoFull"":false,""adelanto"":""NoAplica""}",COCINA,,15d9dd3f-ce5b-4d73-ae68-2067725abdd2,2e3aa294-42d7-4bb1-97dd-ed289332eef5,INSUMOS

@@ -20,7 +20,12 @@ import {
   SET_LANGUAGE,
   ESP,
   ENG,
-  MenuItems
+  MenuItems,
+  // --- AÑADIR ESTAS CONSTANTES ---
+  MENU,
+  PRODUCCION,
+  RECETAS_MENU,
+  RECETAS_PRODUCCION,
   
 } from "./actions-types";
 
@@ -357,6 +362,7 @@ export function preProcess(jsonCompleto) {
 }
 
 function validarUUID(uuid) {
+  if (!uuid) return false;
   const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   return uuidRegex.test(uuid);
 }
@@ -552,6 +558,85 @@ export function deleteItem(itemId , type) {
   };
 }
 
+// --- NUEVA FUNCIÓN DE SINCRONIZACIÓN ---
+export function sincronizarRecetasYProductos() {
+  return async (dispatch, getState) => {
+    try {
+      console.log("Iniciando sincronización de recetas y productos...");
+      const state = getState();
+      const {
+        allRecetasMenu,
+        allRecetasProduccion,
+        allMenu,
+        allProduccion,
+      } = state;
+
+      const allRecipes = [...allRecetasMenu, ...allRecetasProduccion];
+      const allProducts = [...allMenu, ...allProduccion];
+      let updatesCounter = 0;
+
+      // --- PASO 1: Asegurar que los productos referencien de vuelta a su receta ---
+      for (const recipe of allRecipes) {
+        if (recipe.forId) {
+          const product = allProducts.find(p => p._id === recipe.forId);
+          if (product && product.Receta !== recipe._id) {
+            const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
+            console.log(`SINCRONIZANDO: El producto "${product.NombreES || product.Nombre_del_producto}" ahora apuntará a la receta "${recipe.legacyName}".`);
+            await dispatch(updateItem(product._id, { Receta: recipe._id }, productTable));
+            updatesCounter++;
+          }
+        }
+      }
+
+      // --- PASO 2: Enlazar recetas huérfanas a productos por coincidencia de nombre ---
+      for (const recipe of allRecipes) {
+        if (!recipe.forId) {
+          const product = allProducts.find(p => (p.NombreES === recipe.legacyName || p.Nombre_del_producto === recipe.legacyName));
+          if (product) {
+            const recipeTable = allRecetasMenu.some(r => r._id === recipe._id) ? RECETAS_MENU : RECETAS_PRODUCCION;
+            const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
+            
+            console.log(`SINCRONIZANDO: La receta huérfana "${recipe.legacyName}" se enlazará con el producto "${product.NombreES || product.Nombre_del_producto}".`);
+            
+            // Actualizar receta con forId y producto con Receta ID
+            await dispatch(updateItem(recipe._id, { forId: product._id }, recipeTable));
+            if (product.Receta !== recipe._id) {
+              await dispatch(updateItem(product._id, { Receta: recipe._id }, productTable));
+            }
+            updatesCounter++;
+          }
+        }
+      }
+
+      // --- PASO 3: Limpiar enlaces de productos a recetas que ya no existen ---
+      for (const product of allProducts) {
+        if (product.Receta && validarUUID(product.Receta)) {
+          const recipeExists = allRecipes.some(r => r._id === product.Receta);
+          if (!recipeExists) {
+             const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
+             console.log(`LIMPIANDO: El producto "${product.NombreES || product.Nombre_del_producto}" apuntaba a una receta eliminada. Se limpiará el enlace.`);
+             await dispatch(updateItem(product._id, { Receta: null }, productTable));
+             updatesCounter++;
+          }
+        }
+      }
+
+      alert(`Sincronización completada. Se realizaron ${updatesCounter} actualizaciones. Los datos se recargarán.`);
+      
+      // Recargar todos los datos para reflejar los cambios en la UI
+      dispatch(getAllFromTable(RECETAS_MENU));
+      dispatch(getAllFromTable(RECETAS_PRODUCCION));
+      dispatch(getAllFromTable(MENU));
+      dispatch(getAllFromTable(PRODUCCION));
+
+    } catch (error) {
+      console.error("Error durante la sincronización:", error);
+      alert("Ocurrió un error durante la sincronización. Revisa la consola para más detalles.");
+    }
+  };
+}
+
+
 export const getRecepie = async (uuid, type) => {
   // console.log(uuid, type);
   
@@ -717,4 +802,3 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
     }
   };
 };
-

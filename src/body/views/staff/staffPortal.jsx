@@ -102,7 +102,7 @@ function StaffPortal() {
     {
       label: "Work Issues",
       icon: "🔧",
-      onClick: () => setActiveView("workissues"),
+      onClick: () => navigate("/WorkIsue"),
       variant: "secondary"
     },
     {
@@ -115,6 +115,12 @@ function StaffPortal() {
       label: "Inventario",
       icon: "📦",
       onClick: () => navigate("/Inventario"),
+      variant: "secondary"
+    },
+    {
+      label: "Recetas",
+      icon: "📚",
+      onClick: () => navigate("/Recetas"),
       variant: "secondary"
     },
     {
@@ -272,11 +278,11 @@ function StaffPortal() {
           </ContentCard>
         )}
 
-        {activeView === "workissues" && (
+        {/* {activeView === "workissues" && (
           <ContentCard title="Work Issues">
             <StaffWorkIssues staffId={staffFound ? staffFound._id : null} />
           </ContentCard>
-        )}
+        )} */}
       </div>
     </PageLayout>
   );

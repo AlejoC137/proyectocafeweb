@@ -1,2 +1,2 @@
-_id,Dates,Terminado,Pagado,Categoria,Ejecutor,Procedimientos,Tittle,Notas
-f55e0dc7-a5b7-4db7-a233-fba3d0ae751b,"{""isued"":""2025-08-09T03:43:08.887Z"",""finished"":"""",""date_asigmente"":[]}",false,"{""pagadoFull"":false,""adelanto"":""NoAplica"",""susceptible"":false}",DESPACHO,9a4901fe-c07b-43bc-9401-2fb832482bda,"[{""_id"":""cfaf879f-dfae-4902-86af-367954cd0850"",""_tipo"":""procedimiento""}]",Lavado,Test
+id,entregableType,task_description,status,notes,Progress,Priority,acciones,dates,Alejo_Pass,Responsable
+,COCINA,Limpiar Neveras,Pendiente,Sin Notas,0,Media,,"{""assignDate"":""29/09/2025"",""dueDate"":""05/08/2025"",""logs"":[]}",,Isabela Maria
