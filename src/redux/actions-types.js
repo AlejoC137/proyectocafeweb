@@ -181,6 +181,7 @@ export const ESTATUS = [
   export const ml = 'ml'
   export const li = 'li'
   export const un = 'un'
+  export const srv = 'srv'
   export const SET_LANGUAGE = 'SET_LANGUAGE'
 
   
@@ -193,6 +194,7 @@ export const unidades = [
   ml,
   li,
   un,
+  srv,
   ];
 
 export const ItemsAlmacen = "ItemsAlmacen"
