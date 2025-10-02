@@ -24,7 +24,7 @@ export function crearItem(itemData, type, forId) {
       if (type !== 'RecetasProduccion') {
         nuevoItem = {
           ...nuevoItem,
-          actualizacion: new Date().toISOString().split("T")[0], // Fecha actual
+          // actualizacion: new Date().toISOString().split("T")[0], // Fecha actual
         };
       }
 

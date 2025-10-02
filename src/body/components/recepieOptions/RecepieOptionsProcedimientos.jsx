@@ -127,7 +127,7 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
           forId: product._id,
           autor,
           revisor,
-          actualizacion: new Date().toISOString(),
+          // actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),
           ...mapItemsToPayload(productoInternoItems),
           ...mapProcesToPayload(proces),

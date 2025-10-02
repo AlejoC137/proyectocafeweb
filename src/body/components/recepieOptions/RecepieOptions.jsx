@@ -119,7 +119,7 @@ function RecepieOptions({ product, Receta }) {
           UNIDADES: rendimiento.unidades,
           revisor,
           precioUnitario: totalIngredientes / rendimiento,
-          actualizacion: new Date().toISOString(),
+          // actualizacion: new Date().toISOString(),
           ProcessTime: processTime,
           ...mapItemsToPayload(recetaItems),
           ...mapItemsToPayload(productoInternoItems),

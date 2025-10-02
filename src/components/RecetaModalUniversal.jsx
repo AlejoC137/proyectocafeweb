@@ -399,7 +399,7 @@ function RecetaModalUniversal({
       // Crear el objeto de actualización
       const updatedFields = {
         [cuantityKey]: JSON.stringify(updatedCuantityUnits),
-        actualizacion: new Date().toISOString()
+        // actualizacion: new Date().toISOString()
       };
       
       // Actualizar en la base de datos
@@ -435,7 +435,7 @@ function RecetaModalUniversal({
       
       const updatedFields = {
         [fieldKey]: newValue,
-        actualizacion: new Date().toISOString()
+        // actualizacion: new Date().toISOString()
       };
       
       const result = await dispatch(updateItem(receta._id, updatedFields, recetaSource));

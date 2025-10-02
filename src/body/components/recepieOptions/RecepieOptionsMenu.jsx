@@ -132,7 +132,7 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
           autor,
           legacyName:product.NombreES,
           revisor,
-          actualizacion: new Date().toISOString(),
+          // actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),
           ...mapItemsToPayload(productoInternoItems),
           ...mapProcesToPayload(proces),
