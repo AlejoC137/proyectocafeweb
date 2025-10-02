@@ -27,6 +27,7 @@ export const MENU = "Menu";
 export const WORKISUE = "WorkIsue";
 export const PRODUCCION = "ProduccionInterna";
 export const STAFF = "Staff";
+export const RECETAS_PRODUCCION = "RecetasProduccion";
 export const PROCEDE = "Procedimientos";
 export const RECETAS_PROCEDIMIENTOS = "RecetasProcedimientos";
 export const PROVEE = "Proveedores";

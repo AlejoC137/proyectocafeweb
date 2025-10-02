@@ -13,20 +13,15 @@ const MesResumenStats = ({
 }) => {
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
 
-  // 1. MEJORA: Se elimina useEffect y useState. El cálculo se hace con useMemo.
-  // Es más eficiente y el código es más limpio y predecible.
   const totalCostoDirecto = useMemo(() => {
-    // Para optimizar, creamos un mapa de recetas para una búsqueda más rápida.
     const recetasMap = new Map(allRecetasMenu.map(receta => [receta._id, receta]));
 
-    // Se calcula el costo total reduciendo directamente el array de ventas.
     return ventasRecepies.reduce((acc, element) => {
       const recetaObj = recetasMap.get(element.recetaId);
 
       if (recetaObj?.costo) {
         try {
           const data = JSON.parse(recetaObj.costo);
-          // Se suma el costo del producto (costo unitario * cantidad) al acumulador.
           return acc + (data.vCMP * element.cantidad);
         } catch (error) {
           console.error("Error al parsear costo de receta:", error);
@@ -34,13 +29,11 @@ const MesResumenStats = ({
         }
       }
       return acc;
-    }, 0); // El valor inicial del acumulador es 0.
+    }, 0);
 
   }, [ventasRecepies, allRecetasMenu]);
 
-  // 2. MEJORA: Se unifica el formato de número a 'es-CO' (Colombia) por consistencia.
   const formatNumber = (number) => {
-    // Se añade un fallback por si el número es inválido.
     if (isNaN(number)) return "0";
     return number.toLocaleString('es-CO');
   };
@@ -48,7 +41,6 @@ const MesResumenStats = ({
   return (
     <div className="p-6 bg-white rounded-lg shadow-md mb-6 flex justify-between">
       <div>
-        {/* 3. MEJORA: Se corrige el texto para reflejar que es un resumen del mes. */}
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
           Resumen del Mes
         </h2>

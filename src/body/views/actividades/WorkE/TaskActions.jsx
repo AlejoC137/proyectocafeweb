@@ -7,11 +7,12 @@ import {
 
 // Estados y Prioridades consistentes con la vista principal
 const ESTADOS = {
-    PENDIENTE: 'Pendiente',
-    EN_PROGRESO: 'En Progreso',
-    EN_REVISION: 'En Revisión',
-    EN_DISCUSION: 'En Discusión',
-    COMPLETADO: 'Completado',
+    ASIGNADO: 'Asignado',
+    ACEPTADO: 'Aceptado',
+    EN_PROCESO: 'En proceso',
+    PAUSADO: 'Pausado',
+    POR_REVISION: 'Por revisión',
+    TERMINADO: 'Terminado',
 };
 
 const PRIORIDADES = {
@@ -24,7 +25,7 @@ const PRIORIDADES = {
 
 const TaskActions = ({ 
   selectedRows, 
-  data = [], // **FIX: Se añade un valor por defecto para evitar el error si 'data' es undefined**
+  data = [],
   updateMultipleTasks, 
   handleBulkDelete,
   handleDuplicateTasks,
@@ -77,13 +78,16 @@ const TaskActions = ({
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-gray-800">Cambiar Estado</h4>
             <div className="flex flex-col space-y-1">
-              <button onClick={() => updateMultipleTasks({ status: ESTADOS.EN_PROGRESO })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
-                <Play size={14} /> <span>Marcar como En Progreso</span>
+              {/* CORRECCIÓN: Se usó 'EN_PROCESO' en lugar de 'EN_PROGRESO' */}
+              <button onClick={() => updateMultipleTasks({ status: ESTADOS.EN_PROCESO })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
+                <Play size={14} /> <span>Marcar como En Proceso</span>
               </button>
-              <button onClick={() => updateMultipleTasks({ status: ESTADOS.COMPLETADO, Progress: 100 })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100">
-                <CheckCircle2 size={14} /> <span>Marcar como Completado</span>
+              {/* CORRECCIÓN: Se usó 'TERMINADO' en lugar de 'COMPLETADO' */}
+              <button onClick={() => updateMultipleTasks({ status: ESTADOS.TERMINADO, Progress: 100 })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100">
+                <CheckCircle2 size={14} /> <span>Marcar como Terminado</span>
               </button>
-              <button onClick={() => updateMultipleTasks({ status: ESTADOS.EN_REVISION })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100">
+              {/* CORRECCIÓN: Se usó 'POR_REVISION' en lugar de 'EN_REVISION' */}
+              <button onClick={() => updateMultipleTasks({ status: ESTADOS.POR_REVISION })} className="flex items-center space-x-2 px-3 py-2 text-sm bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100">
                 <Eye size={14} /> <span>Marcar para Revisión</span>
               </button>
             </div>

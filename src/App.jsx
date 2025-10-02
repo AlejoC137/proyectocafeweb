@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'; // Para acceder al estado global de R
 import fondoImage from './assets/fondo.png';
 // import './App.css';
 
-import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH } from './redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , RECETAS} from './redux/actions-types'; // Importa las acciones y vistas
 // BuscarPreciosInternet
 // import About from './components/About';
 // import Contact from './components/Contact';
@@ -24,6 +24,7 @@ import Inventario from './body/views/inventario/Inventario';
 import Manager from './body/views/inventario/Manager';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import Actividades from './body/views/actividades/Actividades';
+import Recetas from './body/views/ventaCompra/Recetas.jsx';
 import MesResumen from './body/views/ventaCompra/MesResumen.jsx';
 import DiaResumen from './body/views/ventaCompra/DiaResumen.jsx';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
@@ -53,6 +54,8 @@ function App() {
       break;
     case AGENDA:
       componentToRender = <Agenda/>;
+    case RECETAS:
+      componentToRender = <Recetas/>;
       break;
     case NOSOTROS:
       componentToRender = <SobreNosotros/>;
@@ -96,6 +99,7 @@ function App() {
      <Route path="/Home" element={<Home />} />
      <Route path="/Agenda" element={<Agenda />} />
      <Route path="/Manager" element={<Manager />} />
+     <Route path="/Recetas" element={<Recetas />} />
      <Route path="/SobreNosotros" element={<SobreNosotros />} />
      <Route path="/Scraper" element={<Scraper />} />
      <Route path="/" element={<StaffPortal />} />
@@ -108,7 +112,7 @@ function App() {
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/MesResumen" element={<MesResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
-     <Route path="/WorkIsueExcelView" element={<WorkIsueExcelView />} />
+     <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
      <Route path="/Predict/:MenuItem" element={<Predict />} />

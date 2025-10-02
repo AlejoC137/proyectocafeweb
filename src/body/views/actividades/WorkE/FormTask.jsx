@@ -7,7 +7,7 @@ const initialState = {
   task_description: '',
   Responsable: '',
   entregableType: '',
-  status: 'Pendiente',
+  status: 'Asignado', // Un estado inicial más lógico
   notes: '',
   Progress: 0,
   Priority: 'Media',
@@ -20,26 +20,24 @@ const initialState = {
 
 const FormTask = ({ isOpen, onClose, onSubmit, staff, areas, prioridades, estados }) => {
   
-  // =======================================================================
-  // ======================= PASO DE DEPURACIÓN ============================
-
-
-  // =======================================================================
-  // =======================================================================
-
   const [formData, setFormData] = useState(initialState);
 
   useEffect(() => {
-
-               const staffers =     staff && staff.map(s => (s.Nombre))
-console.log(staffers);
     if (isOpen) {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      
+      // Reiniciar el formulario cada vez que se abre
       setFormData({
         ...initialState,
         dates: JSON.stringify({
-          assignDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          assignDate: formattedDate,
           dueDate: '',
-          logs: []
+          logs: [{
+              date: today.toISOString(),
+              user: 'Sistema',
+              action: `Tarea creada con fecha de asignación ${formattedDate}`
+          }]
         })
       });
     }
@@ -54,9 +52,16 @@ console.log(staffers);
 
   const handleDateChange = (e) => {
     const { name, value } = e.target;
+    // Formatear la fecha a DD/MM/YYYY si es un input de tipo 'date'
+    let finalValue = value;
+    if (e.target.type === 'date' && value) {
+        const [year, month, day] = value.split('-');
+        finalValue = `${day}/${month}/${year}`;
+    }
+
     setFormData(prev => {
         const currentDates = JSON.parse(prev.dates);
-        const updatedDates = { ...currentDates, [name]: value };
+        const updatedDates = { ...currentDates, [name]: finalValue };
         return { ...prev, dates: JSON.stringify(updatedDates) };
     });
   };
@@ -69,6 +74,14 @@ console.log(staffers);
     }
     onSubmit(formData);
     onClose();
+  };
+
+  // Convertir fechas DD/MM/YYYY a YYYY-MM-DD para el input tipo 'date'
+  const toInputDate = (dateString) => {
+      if (!dateString || typeof dateString !== 'string') return '';
+      const parts = dateString.split('/');
+      if (parts.length !== 3) return '';
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
   return (
@@ -96,8 +109,9 @@ console.log(staffers);
             <div>
               <label htmlFor="Responsable" className="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
               <select id="Responsable" name="Responsable" value={formData.Responsable} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none">
-                {/* El código aquí puede estar bien o mal, pero el console.log nos dirá la verdad */}
-                {staffers.map(s => (<option key={s} value={s}>{s}</option>))}
+                {/* **CORRECCIÓN: Mapear el array de objetos 'staff', usando el ID como valor.** */}
+                <option value="">-- Seleccionar Responsable --</option>
+                {staff.map(s => (<option key={s.id} value={s.id}>{s.Nombre}</option>))}
               </select>
             </div>
 
@@ -117,12 +131,12 @@ console.log(staffers);
             
             <div>
                <label htmlFor="assignDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha Asignación</label>
-               <input id="assignDate" name="assignDate" type="text" value={JSON.parse(formData.dates).assignDate} onChange={handleDateChange} className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="DD/MM/YYYY" />
+               <input id="assignDate" name="assignDate" type="date" value={toInputDate(JSON.parse(formData.dates).assignDate)} onChange={handleDateChange} className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none" />
             </div>
 
             <div>
                <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha Límite</label>
-               <input id="dueDate" name="dueDate" type="text" value={JSON.parse(formData.dates).dueDate} onChange={handleDateChange} className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none" placeholder="DD/MM/YYYY" />
+               <input id="dueDate" name="dueDate" type="date" value={toInputDate(JSON.parse(formData.dates).dueDate)} onChange={handleDateChange} className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none" />
             </div>
 
             <div className="md:col-span-2">

@@ -43,14 +43,18 @@ const actionTypes = {
  */
 const getTaskStatusColor = (status) => {
   const colors = {
-    'Pendiente': 'gray',
-    'En Progreso': 'blue',
-    'En Revisión': 'yellow',
-    'En Discusión': 'orange',
+    'Asignado': 'gray',
+    'Aceptado': 'bluepurple',
+    'En proceso': 'yellow',
+    'Pausado': 'orange',
     'Completado': 'green',
-    'En Diseño': 'purple',
-    'Bloqueado': 'red',
+    'Por revisión': 'blue',
+    'Terminado': 'red',
   };
+
+
+
+
   return colors[status] || 'gray';
 };
 

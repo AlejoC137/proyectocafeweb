@@ -18,6 +18,7 @@ import {
   TODAYS_MENU,
   SCRAP,
   RECETAS_MENU,
+  RECETAS_PRODUCCION,
   TOGGLE_SHOW_EDIT,
   RESET_EXPANDED_GROUPS,       // Nueva acción importada
   ADD_ORDER_ITEM   ,
@@ -83,6 +84,7 @@ const initialState = {
   allItems: [],
   allProcedimientos: [],
   allRecetasMenu: [],
+  allRecetasProduccion: [],
   allRecetasProcedimientos: [],
   allWorkIsue: [],
   currentLeng: ESP,
@@ -149,6 +151,11 @@ const reducer = (state = initialState, action) => {
           return {
             ...state,
             allRecetasMenu: action.payload,
+          };
+        case RECETAS_PRODUCCION:
+          return {
+            ...state,
+            allRecetasProduccion: action.payload,
           };
         case RECETAS_PROCEDIMIENTOS:
           return {

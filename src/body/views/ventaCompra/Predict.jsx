@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import supabase from "../../../config/supabaseClient"; // Asegúrate que la ruta sea correcta
 
+
 /**
  * Componente Predict
  * Muestra una vista modal con análisis financiero, de ventas y los detalles de una receta.
@@ -9,9 +10,11 @@ import supabase from "../../../config/supabaseClient"; // Asegúrate que la ruta
  * @param {object} props - Propiedades del componente.
  * @param {object} props.item - El producto seleccionado. Debe contener 'nombre' y 'recetaId'.
  * @param {function} props.onClose - Función para cerrar el modal.
+ * @param {number|string} props.selectedMonth - El mes seleccionado para el análisis (esperado en formato 0-11).
+ * @param {number|string} props.selectedYear - El año seleccionado para el análisis.
  */
-function Predict({ item, onClose }) {
-  
+function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
+
   // --- Estados del Componente ---
   const [loading, setLoading] = useState(true);
   const [ventasGroupedByDate, setVentasGroupedByDate] = useState([]);
@@ -40,7 +43,7 @@ function Predict({ item, onClose }) {
     if (!item?.recetaId || !allRecetasMenu?.length) {
       return { ingredients: [], processes: [], emplatado: "", notas: [], unitCost: 0 };
     }
-    const recipe = allRecetasMenu.find(r => r._id === item.recetaId);
+    const recipe = allRecetasMenu.find(r => r._id === item  .recetaId);
     if (!recipe) {
       return { ingredients: [], processes: [], emplatado: "", notas: [], unitCost: 0 };
     }
@@ -99,7 +102,8 @@ function Predict({ item, onClose }) {
 
   // --- 3. OBTENCIÓN Y ANÁLISIS DE DATOS DE VENTAS ---
   useEffect(() => {
-    if (!item?.nombre) return;
+    
+    if (!item?.nombre || selectedMonth === undefined || selectedYear === undefined) return;
 
     const calculateAverageByDay = (dailySales) => {
         const dayOfWeekTotals = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
@@ -139,16 +143,33 @@ function Predict({ item, onClose }) {
       try {
         const { data, error } = await supabase.from('Ventas').select('Date, Productos').order('Date', { ascending: false });
         if (error) throw error;
+// console.log(data); 
 
-        const groupedByDate = data.reduce((acc, venta) => {
+        const monthAsNumber = parseInt(selectedMonth, 10);
+        const yearAsNumber = parseInt(selectedYear, 10);
+
+        const filteredSales = ventas.filter(venta => {
+            if (!venta.Date) return false;
+            const saleDate = new Date(venta.Date);
+            
+            // --- INICIO DE LA CORRECCIÓN ---
+            // Se elimina el "+ 1" para que la comparación funcione con los meses 0-11
+            // que probablemente envía el componente padre (ej: 8 para Septiembre).
+            return saleDate.getMonth() === monthAsNumber && saleDate.getFullYear() === yearAsNumber;
+            // --- FIN DE LA CORRECCIÓN ---
+        });
+        
+        const groupedByDate = filteredSales.reduce((acc, venta) => {
             try {
                 const productos = JSON.parse(venta.Productos);
                 const productoTarget = productos.find(p => p.NombreES === item.nombre);
                 if (productoTarget) {
-                    const date = new Date(venta.Date).toLocaleDateString('en-CA');
+                    const dateKey = new Date(venta.Date).toLocaleDateString('en-CA'); // YYYY-MM-DD
                     const quantity = parseFloat(productoTarget.quantity || 0);
-                    if (!acc[date]) acc[date] = { date, totalCantidad: 0 };
-                    acc[date].totalCantidad += quantity;
+                    if (!acc[dateKey]) {
+                        acc[dateKey] = { date: dateKey, totalCantidad: 0 };
+                    }
+                    acc[dateKey].totalCantidad += quantity;
                 }
             } catch (e) { /* Ignorar errores */ }
             return acc;
@@ -177,7 +198,7 @@ function Predict({ item, onClose }) {
     };
 
     fetchSalesData();
-  }, [item]);
+  }, [item, selectedMonth, selectedYear , ventas , onClose]); 
 
   // --- 4. CÁLCULO DE DATOS FINANCIEROS ---
   useEffect(() => {
@@ -200,7 +221,7 @@ function Predict({ item, onClose }) {
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
         </div>
         
-        {loading ? <p className="text-center text-gray-600 py-8">Cargando análisis...</p> : (
+        {loading ? <p className="text-center text-gray-600 py-8">Cargando análisis para el mes seleccionado...</p> : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             {totalItemsSold > 0 && analysisPeriod.start && (
@@ -237,7 +258,7 @@ function Predict({ item, onClose }) {
                 <h2 className="text-xl font-bold mb-2 text-gray-700">Historial de Ventas Diarias</h2>
                 <div className="overflow-x-auto border rounded-lg max-h-80">{ventasGroupedByDate.length > 0 ? (
                   <table className="min-w-full text-sm text-left"><thead className="bg-gray-100"><tr className="border-b"><th className="p-2">Fecha</th><th className="p-2">Cantidad Vendida</th></tr></thead><tbody>{ventasGroupedByDate.map((group) => (<tr key={group.date} className="border-t"><td className="p-2">{group.date}</td><td className="p-2 font-bold text-green-600">{group.totalCantidad}</td></tr>))}</tbody><tfoot><tr className="border-t bg-gray-200 font-bold"><td className="p-2">Total Vendido</td><td className="p-2 text-blue-600">{totalItemsSold.toFixed(2)}</td></tr></tfoot></table>
-                ) : <p className="text-gray-500 p-4">No se encontraron ventas para este producto.</p>}</div>
+                ) : <p className="text-gray-500 p-4">No se encontraron ventas para este producto en el mes y año seleccionados.</p>}</div>
               </div>
             </div>
 
@@ -250,7 +271,6 @@ function Predict({ item, onClose }) {
                     <li key={i}>
                       <span>{ing.name}: </span>
                       <span className="text-xs bg-gray-200 text-gray-600 px-1 py-0.5 rounded-md">
-                        {/* CORRECCIÓN: Se elimina .toFixed(2) para mostrar la precisión completa */}
                         ({ing.baseQuantity} {ing.units} x {totalItemsSold.toFixed(0)} unds)
                       </span>
                       <strong className="ml-2 text-blue-600">

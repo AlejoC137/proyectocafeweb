@@ -34,7 +34,13 @@ function MesResumen() {
     };
   }, [hoy]);
 
+
+
+
 useEffect(() => {
+
+
+  
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -131,6 +137,7 @@ useEffect(() => {
         try {
           const productos = JSON.parse(venta.Productos);
           productos.forEach((producto) => {
+            
             if (!producto.NombreES) return;
             
             const cantidad = parseFloat(producto.quantity || 0);
@@ -183,13 +190,17 @@ useEffect(() => {
     }
 
     const calculateRecipeValues = async () => {
+      // console.log(allMenu);
+      
       const updatedProductos = await Promise.all(
         datosCalculadosDelMes.productosVendidos.map(async (producto) => {
+          // console.log(producto);
+          
           if (producto.recetaId !== "N/A") {
             try {
-              const menuItem = allMenu.find((item) => item.uuid_receta === producto.recetaId);
+              const menuItem = allMenu.find((item) => item.Receta === producto.recetaId);
               if (menuItem) {
-                const recetaData = await getRecepie(menuItem.uuid_receta, "Recetas");
+                const recetaData = await getRecepie(menuItem.Receta, "Recetas");
                 const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
                 const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
                 return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
@@ -328,7 +339,13 @@ useEffect(() => {
       </div>
       
       {showPredict && selectedItem && (
-        <Predict item={selectedItem} onClose={handleClosePredict} />
+                 <Predict 
+          item={selectedItem} 
+          onClose={handleClosePredict}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          ventas={ventas}
+        />
       )}
 
       <button

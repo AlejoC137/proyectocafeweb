@@ -1,3 +1,5 @@
+// ARCHIVO: WorkIsueExcelView.jsx
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -20,20 +22,24 @@ import { AREAS } from '../../../../redux/actions-types.js';
 
 // --- Constantes y Helpers ---
 const ESTADOS = {
-    PENDIENTE: 'Pendiente',
-    EN_PROGRESO: 'En Progreso',
-    EN_REVISION: 'En Revisión',
-    EN_DISCUSION: 'En Discusión',
-    COMPLETADO: 'Completado',
-    EN_DISENO: 'En Diseño',
+    ASIGNADO: 'Asignado',
+    ACEPTADO: 'Aceptado',
+    EN_PROCESO: 'En proceso',
+    PAUSADO: 'Pausado',
+    POR_REVISION: 'Por revisión',
+    TERMINADO: 'Terminado',
 };
 const PRIORIDADES = ['Baja', 'Media-Baja', 'Media', 'Media-Alta', 'Alta'];
+           
 
 const getEstadoColor = (estado) => {
     const colors = {
         'Pendiente': 'bg-yellow-100 text-yellow-800', 'En Progreso': 'bg-blue-100 text-blue-800',
         'Completado': 'bg-green-100 text-green-800', 'En Revisión': 'bg-purple-100 text-purple-800',
         'En Discusión': 'bg-indigo-100 text-indigo-800', 'En Diseño': 'bg-pink-100 text-pink-800',
+        'Asignado': 'bg-gray-200 text-gray-800', 'Aceptado': 'bg-blue-200 text-blue-900',
+        'En proceso': 'bg-yellow-200 text-yellow-900', 'Pausado': 'bg-orange-200 text-orange-900',
+        'Por revisión': 'bg-indigo-200 text-indigo-900', 'Terminado': 'bg-red-200 text-red-900',
     };
     return colors[estado] || 'bg-gray-100 text-gray-800';
 };
@@ -80,6 +86,7 @@ const ProjectExcelView = () => {
             dispatch(getAllFromTable("Staff"))
         ]);
         if (tareasAction?.payload) setRawData(tareasAction.payload);
+        // **CORRECCIÓN 1: Guardar el array completo de objetos de personal, no solo los nombres.**
         if (staffAction?.payload) setStaff(staffAction.payload);
     }, [dispatch]);
 
@@ -90,7 +97,7 @@ const ProjectExcelView = () => {
     const processedData = useMemo(() => {
         return rawData.map(task => ({
             ...task,
-            // CORRECCIÓN: Cambiar .name por .Nombre
+            // La lógica para encontrar el nombre ahora funcionará porque `staff` es un array de objetos.
             assigneeName: staff.find(s => s.id === task.Responsable)?.Nombre || 'Sin asignar',
         }));
     }, [rawData, staff]);
@@ -282,13 +289,20 @@ const ProjectExcelView = () => {
                                         {!collapsedGroups.has(groupName) && groupedAndSortedItems[groupName].map((item) => (
                                             <tr key={item.id} className={`hover:bg-gray-50 ${selectedRows.has(item.id) ? 'bg-blue-50' : ''}`}>
                                                 <td className="px-4 py-2 border-r align-top"><input type="checkbox" checked={selectedRows.has(item.id)} onChange={() => handleSelectRow(item.id)} /></td>
-                                                <td className={`px-4 py-2 border-r text-center align-top font-semibold ${getPriorityColor(item.Priority)}`}><EditableCell rowId={item.id} field="Priority" value={item.Priority} type="select" options={PRIORIDADES} onSave={updateCell} /></td>
+                                                <td className={`px-4 py-2 border-r text-center align-top font-semibold ${getPriorityColor(item.Priority)}`}>
+                                                    <EditableCell rowId={item.id} field="Priority" value={item.Priority} type="select" options={PRIORIDADES} onSave={updateCell} />
+                                                </td>
                                                 <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="entregableType" value={item.entregableType} type="select" options={AREAS} onSave={updateCell} /></td>
                                                 <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="task_description" value={item.task_description} type="textarea" onSave={updateCell} /></td>
                                                 <td className="p-0 border-r align-top"><InlineActionsTask task={item} onSave={updateCell} /></td>
-                                                <td className="px-4 py-2 border-r text-center align-top"><EditableCell rowId={item.id} field="status" value={item.status} type="select" options={Object.values(ESTADOS)} onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r text-center align-top">
+                                                    <EditableCell rowId={item.id} field="status" value={item.status} type="select" options={Object.values(ESTADOS)} onSave={updateCell} />
+                                                </td>
                                                 <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="Progress" value={item.Progress} type="progress" onSave={updateCell} /></td>
-                                                <td className="px-4 py-2 border-r align-top"><EditableCell rowId={item.id} field="Responsable" value={item.Responsable} type="select-staff" options={staff} onSave={updateCell} /></td>
+                                                <td className="px-4 py-2 border-r text-center align-top  font-semibold">
+                                                   {/* **CORRECCIÓN 2: Cambiar el tipo a 'select-staff' para usar la lógica correcta.** */}
+                                                    <EditableCell rowId={item.id} field="Responsable" value={item.Responsable} type="select-staff" options={staff} onSave={updateCell} />
+                                                </td>
                                                 <td className="px-4 py-2 border-r align-top">
                                                     <DatesManager task={item} onSave={updateCell} />
                                                     <TaskLog task={item} updateCell={updateCell} />
@@ -319,14 +333,17 @@ const EditableCell = ({ rowId, field, value, type = 'text', options = [], onSave
         if (finalValue !== value) {
             let fieldsToUpdate = { [field]: finalValue };
             if (field === 'Progress' && finalValue === 100) fieldsToUpdate.status = 'Completado';
+            if (field === 'Progress' && finalValue < 100 && value === 100) fieldsToUpdate.status = 'En proceso'; // Opcional: regresar estado
             onSave(rowId, fieldsToUpdate);
         }
         setIsEditing(false);
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && type !== 'textarea') handleSave();
-        else if (e.key === 'Escape') {
+        if (e.key === 'Enter' && type !== 'textarea') {
+            e.preventDefault();
+            handleSave();
+        } else if (e.key === 'Escape') {
             setEditValue(value);
             setIsEditing(false);
         }
@@ -338,18 +355,18 @@ const EditableCell = ({ rowId, field, value, type = 'text', options = [], onSave
                 return <input type="number" min="0" max="100" value={editValue || 0} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none bg-transparent" autoFocus />;
             case 'select':
                 return <select value={editValue || ''} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none bg-white" autoFocus><option value="">-- Seleccionar --</option>{options.map(o => (<option key={o} value={o}>{o}</option>))}</select>;
+            // **CORRECCIÓN 3: Asegurarse que el 'select-staff' maneja objetos {id, Nombre}.**
             case 'select-staff':
-                // CORRECCIÓN: Cambiar m.name por m.Nombre
                 return <select value={editValue || ''} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none bg-white" autoFocus><option value="">Sin asignar</option>{options.map(m => (<option key={m.id} value={m.id}>{m.Nombre}</option>))}</select>;
             default:
                 return <textarea value={editValue || ''} onChange={e => setEditValue(e.target.value)} onBlur={handleSave} onKeyDown={handleKeyDown} className="w-full p-1 border rounded focus:outline-none" rows="3" autoFocus />;
         }
     }
     
+    // Lógica de visualización
     let displayValue = value || '-';
     if (type === 'select-staff') {
         const staffMember = options.find(s => s.id === value);
-        // CORRECCIÓN: Cambiar staffMember.name por staffMember.Nombre
         displayValue = staffMember ? staffMember.Nombre : 'Sin asignar';
     }
     

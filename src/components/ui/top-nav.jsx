@@ -27,6 +27,7 @@ const pageTitles = {
   "ACCIONESRAPIDAS": { [ESP]: "Acciones Rápidas", [ENG]: "Quick Actions" },
   "PROVEEDORES": { [ESP]: "Proveedores", [ENG]: "Suppliers" },
   "CALCULONOMINA": { [ESP]: "Cálculo de Nómina", [ENG]: "Payroll Calculation" },
+  "WORKISUE": { [ESP]: "Tareas", [ENG]: "Tasks" },
 };
 
 // Componente reutilizable para los botones de íconos
