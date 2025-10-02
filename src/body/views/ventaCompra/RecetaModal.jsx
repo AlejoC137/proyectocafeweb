@@ -9,9 +9,8 @@ import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
 import EditableText from "../../../components/ui/EditableText";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
-// --- Componente para la fila de edición de un ingrediente (CORREGIDO) ---
+// --- Componente para la fila de edición de un ingrediente ---
 const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove }) => {
-    // CORRECCIÓN: Nos aseguramos de tratar los valores como números para el cálculo
     const subtotal = (Number(item.originalQuantity) || 0) * (Number(item.precioUnitario) || 0);
     return (
         <div className="flex flex-col mb-3 p-2 border rounded-md bg-white shadow-sm">
@@ -57,7 +56,6 @@ const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, on
                 <Input
                     type="text"
                     placeholder="P. Unit."
-                    // CORRECCIÓN: Convertimos a número antes de llamar a toFixed()
                     value={Number(item.precioUnitario || 0).toFixed(2)}
                     readOnly
                     className="p-2 border rounded bg-gray-100 text-sm h-9 text-right"
@@ -73,7 +71,6 @@ const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, on
         </div>
     );
 };
-
 
 // --- Componente para la fila de ingrediente en modo VISTA SIMPLE ---
 const RecipeItemRow = ({ item, isEditing, onCheck, onSave }) => {
@@ -153,11 +150,12 @@ function RecetaModal({ item, onClose }) {
     const [precioVentaFinal, setPrecioVentaFinal] = useState(0);
     const [costoManualCMP, setCostoManualCMP] = useState('');
     const [tiempoProceso, setTiempoProceso] = useState(0);
-
-    const [showJsonInput, setShowJsonInput] = useState(false);
-    const [jsonText, setJsonText] = useState("");
+    
+    // Nuevo estado para mostrar el costo de producción calculado en tiempo real
+    const [costoProduccion, setCostoProduccion] = useState(0);
 
     const buscarPorId = (itemId) => allOptions.find((i) => i._id === itemId) || null;
+const handleCancelEdir = () => {setPermanentEditMode(false)}
 
     useEffect(() => {
         const fetchRecetaData = async () => {
@@ -188,58 +186,84 @@ function RecetaModal({ item, onClose }) {
     
     const parseItemsFromRecetaObject = (recetaData) => {
         const parseItems = (prefix, count) => {
-          const parsedList = [];
-          for (let i = 1; i <= count; i++) {
-            const itemId = recetaData[`${prefix}${i}_Id`];
-            const cuantityUnitsRaw = recetaData[`${prefix}${i}_Cuantity_Units`];
-            if (itemId && cuantityUnitsRaw) {
-              const itemData = buscarPorId(itemId);
-              if (itemData) {
-                try {
-                    const cuantityUnits = JSON.parse(cuantityUnitsRaw);
-                    parsedList.push({
-                      key: `${prefix}-${i}`,
-                      originalIndex: i,
-                      item_Id: itemId,
-                      nombre: itemData.Nombre_del_producto,
-                      originalQuantity: cuantityUnits.metric.cuantity,
-                      unidades: cuantityUnits.metric.units,
-                      // CORRECCIÓN: Aseguramos que sea un número al parsear
-                      precioUnitario: Number(itemData.precioUnitario) || 0,
-                      isChecked: false,
-                    });
-                } catch (e) { console.warn(`Error parseando JSON: `, cuantityUnitsRaw); }
-              }
-            }
-          }
-          return parsedList;
+         const parsedList = [];
+         for (let i = 1; i <= count; i++) {
+           const itemId = recetaData[`${prefix}${i}_Id`];
+           const cuantityUnitsRaw = recetaData[`${prefix}${i}_Cuantity_Units`];
+           if (itemId && cuantityUnitsRaw) {
+             const itemData = buscarPorId(itemId);
+             if (itemData) {
+               try {
+                 const cuantityUnits = JSON.parse(cuantityUnitsRaw);
+                 parsedList.push({
+                   key: `${prefix}-${i}`,
+                   originalIndex: i,
+                   item_Id: itemId,
+                   nombre: itemData.Nombre_del_producto,
+                   originalQuantity: cuantityUnits.metric.cuantity,
+                   unidades: cuantityUnits.metric.units,
+                   precioUnitario: Number(itemData.precioUnitario) || 0,
+                   isChecked: false,
+                 });
+               } catch (e) { console.warn(`Error parseando JSON: `, cuantityUnitsRaw); }
+             }
+           }
+         }
+         return parsedList;
         };
         return {
-          ingredientes: parseItems("item", 30),
-          produccion: parseItems("producto_interno", 20),
+         ingredientes: parseItems("item", 30),
+         produccion: parseItems("producto_interno", 20),
         };
     };
     
     useEffect(() => {
-        if (!receta || allItems.length === 0) return;
+        if (!receta || allOptions.length === 0) return;
         const { ingredientes: parsedIng, produccion: parsedProd } = parseItemsFromRecetaObject(receta);
         setIngredientes(parsedIng); setProduccion(parsedProd);
         setEditableIngredientes(parsedIng); setEditableProduccion(parsedProd);
-    }, [receta, allItems, allProduccion]);
+    }, [receta, allOptions]);
 
     useEffect(() => {
         if (permanentEditMode && receta) {
-          if (receta.rendimiento) { try { const d = JSON.parse(receta.rendimiento); setRendimientoCantidad(d.cantidad?.toString()||''); setRendimientoUnidades(d.unidades||'');} catch (e) {console.warn(e);} }
-          if (foto) setImagenUrl(foto);
+         if (receta.rendimiento) { try { const d = JSON.parse(receta.rendimiento); setRendimientoCantidad(d.cantidad?.toString()||''); setRendimientoUnidades(d.unidades||'');} catch (e) {console.warn(e);} }
+         if (foto) setImagenUrl(foto);
         }
     }, [permanentEditMode, receta, foto]);
 
+    // useEffect para calcular el PRECIO DE VENTA (Recetas normales)
     useEffect(() => {
-        if (!menuItem || (!editableIngredientes.length && !editableProduccion.length)) { setCalculoDetalles(null); setPrecioVentaFinal(0); return; };
+        if (recetaSource !== "Recetas" || !menuItem || (!editableIngredientes.length && !editableProduccion.length)) { 
+            setCalculoDetalles(null); 
+            setPrecioVentaFinal(0); 
+            return; 
+        };
         const itemsParaCalcular = [...editableIngredientes, ...editableProduccion].filter(i => i.item_Id && i.originalQuantity > 0).map(i => ({ ...i, cuantity: i.originalQuantity, precioUnitario: buscarPorId(i.item_Id)?.precioUnitario || 0 }));
         const resultado = recetaMariaPaula(itemsParaCalcular, menuItem.GRUPO, costoManualCMP ? `.${costoManualCMP}` : null, tiempoProceso);
-        setCalculoDetalles(resultado.detalles); setPrecioVentaFinal(resultado.consolidado);
-    }, [editableIngredientes, editableProduccion, costoManualCMP, tiempoProceso, menuItem]);
+        setCalculoDetalles(resultado.detalles); 
+        setPrecioVentaFinal(resultado.consolidado);
+    }, [editableIngredientes, editableProduccion, costoManualCMP, tiempoProceso, menuItem, recetaSource, allOptions]);
+
+    // useEffect para calcular el COSTO DE PRODUCCIÓN (Recetas de producción)
+    useEffect(() => {
+        if (recetaSource !== "RecetasProduccion") {
+            setCostoProduccion(0);
+            return;
+        }
+        const itemsParaCalcular = [...editableIngredientes, ...editableProduccion]
+            .filter(i => i.item_Id && i.originalQuantity > 0)
+            .map(i => ({
+                cuantity: i.originalQuantity,
+                precioUnitario: buscarPorId(i.item_Id)?.precioUnitario || 0
+            }));
+        
+        const resultado = recetaMariaPaula(itemsParaCalcular, null, null, tiempoProceso, null, null, 1, 0, 0, 0, true);
+        
+        if (resultado && typeof resultado.COSTO === 'number') {
+            setCostoProduccion(resultado.COSTO);
+        }
+    }, [editableIngredientes, editableProduccion, tiempoProceso, recetaSource, allOptions]);
+
 
     const ingredientesAjustados = useMemo(() => ingredientes.map(ing => ({ ...ing, cantidad: (ing.originalQuantity * porcentaje) / 100 })), [ingredientes, porcentaje]);
     const produccionAjustada = useMemo(() => produccion.map(prod => ({ ...prod, cantidad: (prod.originalQuantity * porcentaje) / 100 })), [produccion, porcentaje]);
@@ -248,7 +272,6 @@ function RecetaModal({ item, onClose }) {
     const handlePinVerification = () => { if (pinCode === '1234') { setPermanentEditMode(true); setShowPinInput(false); setPinCode(''); setEditShow(true); } else { setPinCode(''); } };
     const handleCheck = (setState, index) => setState(prevItems => prevItems.map(item => item.originalIndex === index ? { ...item, isChecked: !item.isChecked } : item));
     const handleSave = (setState, index, newValue) => { const numValue = Number(newValue); if (isNaN(numValue) || numValue <= 0) return; const itemToUpdate = (setState === setIngredientes ? ingredientes : produccion).find(item => item.originalIndex === index); if (itemToUpdate && !permanentEditMode) { const newPercentage = (numValue / itemToUpdate.originalQuantity) * 100; setPorcentaje(newPercentage); } };
-                        const handleClose = () => { setPermanentEditMode(false)};
     const formatCurrency = (value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value || 0);
 
     const updateField = async (fieldsToUpdate) => { if (!permanentEditMode || !receta || !recetaSource) return; setIsUpdating(true); try { const payload = { ...fieldsToUpdate, actualizacion: new Date().toISOString() }; const result = await dispatch(updateItem(receta._id, payload, recetaSource)); if (result) setReceta(prev => ({ ...prev, ...payload })); else throw new Error('DB Error'); } catch (error) { alert('Error: ' + error.message); } finally { setIsUpdating(false); } };
@@ -257,9 +280,16 @@ function RecetaModal({ item, onClose }) {
     const updateRendimiento = async () => { const rendimientoData = { porcion: receta.rendimiento ? JSON.parse(receta.rendimiento).porcion : 1, cantidad: Number(rendimientoCantidad), unidades: rendimientoUnidades }; await updateField({ rendimiento: JSON.stringify(rendimientoData) }); };
     const updateImagenUrl = async () => { if (!receta.forId) return; setIsUpdating(true); try { const result = await dispatch(updateItem(receta.forId, { Foto: imagenUrl }, "Menu")); if(result) setFoto(imagenUrl); } catch (error) { alert('Error: ' + error.message); } finally { setIsUpdating(false); } };
     const addIngredient = (source) => { const newItem = { key: `new-${Date.now()}`, item_Id: "", nombre: "", originalQuantity: "", unidades: "", precioUnitario: 0, source, matches: [] }; if (source === 'Items') setEditableIngredientes(prev => [...prev, newItem]); else setEditableProduccion(prev => [...prev, newItem]); };
-    const handleIngredientNameChange = (index, value, source) => { const list = source === 'Items' ? editableIngredientes : editableProduccion; const setList = source === 'Items' ? setEditableIngredientes : setEditableProduccion; const updatedItems = [...list]; updatedItems[index].nombre = value; updatedItems[index].matches = value ? allOptions.filter(opt => opt.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())) : []; setList(updatedItems); };
     
-    // CORRECCIÓN: Aseguramos que sea un número al seleccionar
+    const handleIngredientNameChange = (index, value, source) => { 
+        const list = source === 'Items' ? editableIngredientes : editableProduccion; 
+        const setList = source === 'Items' ? setEditableIngredientes : setEditableProduccion; 
+        const updatedItems = [...list]; 
+        updatedItems[index].nombre = value; 
+        updatedItems[index].matches = value ? allOptions.filter(opt => opt.Nombre_del_producto.toLowerCase().includes(value.toLowerCase())) : []; 
+        setList(updatedItems); 
+    };
+    
     const handleIngredientSelect = (index, selectedOption, source) => {
         const list = source === 'Items' ? editableIngredientes : editableProduccion;
         const setList = source === 'Items' ? setEditableIngredientes : setEditableProduccion;
@@ -277,10 +307,12 @@ function RecetaModal({ item, onClose }) {
     
     const handleSaveFullRecipe = async () => {
         if (!permanentEditMode || !receta || !recetaSource) return;
+        
         const mapItemsToPayload = (items) => {
             const payload = {}; let iCounter = 1; let pCounter = 1;
             for (let i = 1; i <= 30; i++) { payload[`item${i}_Id`] = null; payload[`item${i}_Cuantity_Units`] = null; }
             for (let i = 1; i <= 20; i++) { payload[`producto_interno${i}_Id`] = null; payload[`producto_interno${i}_Cuantity_Units`] = null; }
+            
             items.forEach((item) => {
                 const isProd = allProduccion.some(p => p._id === item.item_Id);
                 const prefix = isProd ? 'producto_interno' : 'item';
@@ -290,13 +322,43 @@ function RecetaModal({ item, onClose }) {
             });
             return payload;
         };
+        
         setIsUpdating(true);
+        
         try {
-            const fullPayload = { ...receta, ...mapItemsToPayload([...editableIngredientes, ...editableProduccion]), costo: JSON.stringify(calculoDetalles), ProcessTime: tiempoProceso, actualizacion: new Date().toISOString() };
+            const fullPayload = {
+                ...receta,
+                ...mapItemsToPayload([...editableIngredientes, ...editableProduccion]),
+                costo: JSON.stringify(calculoDetalles),
+                ProcessTime: tiempoProceso,
+                actualizacion: new Date().toISOString()
+            };
+
+            if (recetaSource === "RecetasProduccion") {
+                // El costo ya está calculado y actualizado en el estado 'costoProduccion'
+                // Lo usamos directamente para asegurar consistencia con lo que ve el usuario
+                fullPayload.costo = costoProduccion;
+                console.log(receta.forId);
+               const result = await dispatch(updateItem(receta.forId,{"COSTO" : costoProduccion}, "ProduccionInterna"));
+               console.log(result);
+               
+            }
+            
             const result = await dispatch(updateItem(receta._id, fullPayload, recetaSource));
-            if (result) { setReceta(fullPayload); alert("Cambios guardados."); } 
-            else { throw new Error('Falló la actualización.'); }
-        } catch (error) { console.error("Error:", error); alert("Error al guardar."); } finally { setIsUpdating(false); }
+      
+           
+            if (result) {
+                setReceta(fullPayload);
+                alert("Cambios guardados.");
+            } else {
+                throw new Error('Falló la actualización.');
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error al guardar.");
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     if (loading) return <div className="p-8 text-center">Cargando receta...</div>;
@@ -308,10 +370,7 @@ function RecetaModal({ item, onClose }) {
             <div className="bg-white rounded-lg shadow-2xl w-screen h-screen flex flex-col overflow-auto">
                 <div className="p-4 border-b bg-gray-50 flex justify-between items-center sticky top-0 z-10">
                     <h2 className="text-2xl font-bold text-gray-800">{receta.legacyName || "Receta"}</h2>
-                    <div className="flex items-center gap-2">
-                        {permanentEditMode && <Button onClick={handleSaveFullRecipe} disabled={isUpdating} className="bg-green-600 hover:bg-green-700 text-white">{isUpdating ? "..." : "✓ Guardar Ingredientes"}</Button>}
-                        <Button onClick={handleClose} variant="ghost" className="h-9 w-9 p-0 text-xl">❌</Button>
-                    </div>
+             
                 </div>
                 <div className="p-6 overflow-y-auto">
                     <div className="mb-6 flex items-center gap-4 p-3 bg-gray-100 rounded-md">
@@ -330,11 +389,11 @@ function RecetaModal({ item, onClose }) {
                             {permanentEditMode ? (
                                 <>
                                     <div>
-                                                                            <div className="flex items-center gap-2">
-                        {permanentEditMode && <Button onClick={handleSaveFullRecipe} disabled={isUpdating} className="bg-green-600 hover:bg-green-700 text-white">{isUpdating ? "..." : "✓ Guardar Ingredientes"}</Button>}
-                        <Button onClick={handleClose} variant="ghost" className="h-9 w-9 p-0 text-xl">❌</Button>
-                    </div>
                                         <h3 className="text-lg font-semibold border-b pb-2 mb-3">Editar Ingredientes</h3>
+                                               <div className="flex items-center gap-2">
+                        {permanentEditMode && <Button onClick={handleSaveFullRecipe} disabled={isUpdating} className="bg-green-600 hover:bg-green-700 text-white">{isUpdating ? "..." : "✓ Guardar Ingredientes"}</Button>}
+                        <Button onClick={handleCancelEdir} variant="ghost" className="h-9 w-9 p-0 text-xl">❌</Button>
+                    </div>
                                         {editableIngredientes.map((item, index) => <EditableIngredientRow key={item.key || index} item={item} index={index} source="Items" onNameChange={handleIngredientNameChange} onSelect={handleIngredientSelect} onQuantityChange={handleQuantityChange} onRemove={handleRemoveIngredient} />)}
                                         <Button onClick={() => addIngredient('Items')} size="sm" className="mt-2 w-full">+ Añadir Ingrediente</Button>
                                     </div>
@@ -352,8 +411,40 @@ function RecetaModal({ item, onClose }) {
                             )}
                             <div className="mt-6 p-3 border rounded-md bg-gray-50">
                                 <h3 className="text-lg font-semibold mb-3">Cálculo de Costos</h3>
-                                {permanentEditMode && <div className="grid grid-cols-2 gap-2 mb-4"><div><label className="text-xs font-medium">Tiempo (min)</label><Input type="number" value={tiempoProceso} onChange={e => setTiempoProceso(Number(e.target.value))} className="h-8"/></div><div><label className="text-xs font-medium">%CMP Manual</label><Input type="number" value={costoManualCMP} onChange={e => setCostoManualCMP(e.target.value)} className="h-8" placeholder="Ej: 35"/></div></div>}
-                                {calculoDetalles ? <div className="space-y-2 text-sm"><div className="flex justify-between p-1 bg-blue-50 rounded"><span>%CMP Estab.</span><span className="font-bold">{calculoDetalles.pCMPInicial}%</span></div><div className="flex justify-between p-1 bg-blue-50 rounded"><span>%CMP Real</span><span className="font-bold">{calculoDetalles.pCMPReal}%</span></div><div className="flex justify-between p-1 bg-green-50 rounded"><span>Valor CMP</span><span className="font-bold">{formatCurrency(calculoDetalles.vCMP)}</span></div><div className="flex justify-between p-1 bg-green-50 rounded"><span>Utilidad Bruta</span><span className="font-bold">{formatCurrency(calculoDetalles.vIB)}</span></div><div className="flex justify-between p-1 bg-green-50 rounded"><span>% Utilidad Bruta</span><span className="font-bold">{calculoDetalles.pIB}%</span></div><div className="flex justify-between p-2 mt-2 bg-yellow-100 rounded border"><span className="font-bold">Precio Venta Final</span><span className="font-bold text-lg">{formatCurrency(precioVentaFinal)}</span></div></div> : <p className="text-xs text-gray-500">Modifica ingredientes para ver resultados.</p>}
+                                {permanentEditMode && (
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
+                                        <div>
+                                            <label className="text-xs font-medium">Tiempo (min)</label>
+                                            <Input type="number" value={tiempoProceso} onChange={e => setTiempoProceso(Number(e.target.value))} className="h-8"/>
+                                        </div>
+                                        {recetaSource !== "RecetasProduccion" && (
+                                            <div>
+                                                <label className="text-xs font-medium">%CMP Manual</label>
+                                                <Input type="number" value={costoManualCMP} onChange={e => setCostoManualCMP(e.target.value)} className="h-8" placeholder="Ej: 35"/>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {recetaSource === "RecetasProduccion" ? (
+                                    <div className="flex justify-between p-2 mt-2 bg-blue-100 rounded border">
+                                        <span className="font-bold">Costo de Producción</span>
+                                        <span className="font-bold text-lg">{formatCurrency(costoProduccion)}</span>
+                                    </div>
+                                ) : (
+                                    calculoDetalles ? (
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between p-1 bg-blue-50 rounded"><span>%CMP Estab.</span><span className="font-bold">{calculoDetalles.pCMPInicial}%</span></div>
+                                            <div className="flex justify-between p-1 bg-blue-50 rounded"><span>%CMP Real</span><span className="font-bold">{calculoDetalles.pCMPReal}%</span></div>
+                                            <div className="flex justify-between p-1 bg-green-50 rounded"><span>Valor CMP</span><span className="font-bold">{formatCurrency(calculoDetalles.vCMP)}</span></div>
+                                            <div className="flex justify-between p-1 bg-green-50 rounded"><span>Utilidad Bruta</span><span className="font-bold">{formatCurrency(calculoDetalles.vIB)}</span></div>
+                                            <div className="flex justify-between p-1 bg-green-50 rounded"><span>% Utilidad Bruta</span><span className="font-bold">{calculoDetalles.pIB}%</span></div>
+                                            <div className="flex justify-between p-2 mt-2 bg-yellow-100 rounded border">
+                                                <span className="font-bold">Precio Venta Final</span>
+                                                <span className="font-bold text-lg">{formatCurrency(precioVentaFinal)}</span>
+                                            </div>
+                                        </div>
+                                    ) : <p className="text-xs text-gray-500">Modifica ingredientes para ver resultados.</p>
+                                )}
                             </div>
                         </div>
                         <div className="lg:col-span-1 space-y-4 text-sm">

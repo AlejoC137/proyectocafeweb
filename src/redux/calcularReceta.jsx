@@ -1,4 +1,5 @@
-import { CARNICO,
+import {
+  CARNICO,
   LACTEO,
   CAFE,
   PANADERIA,
@@ -18,13 +19,9 @@ import { CARNICO,
 } from "./actions-types";
 
 // Valor fijo por unidad de tiempo
-
-
-const COSTO_POR_TIEMPO_MANODEOBRA = (SMMV_COL_2025_MINU*2); 
+const COSTO_POR_TIEMPO_MANODEOBRA = (SMMV_COL_2025_MINU * 2);
 const COSTO_POR_TIEMPO_SERVICIOS = SMMV_COL_2025_MINU;
 const COSTO_POR_TIEMPO = COSTO_POR_TIEMPO_SERVICIOS + COSTO_POR_TIEMPO_MANODEOBRA;
-
-
 
 export function recetaMariaPaula(
   ingredientes,
@@ -37,6 +34,7 @@ export function recetaMariaPaula(
   indiceInflacionario = 0.08,
   impoconsumo = 0.08,
   aplicarIVA = 0.05,
+  produccion = false // Nuevo parámetro para el cálculo de costo de producción
 ) {
   let porcentajeCostoDirecto;
 
@@ -65,7 +63,7 @@ export function recetaMariaPaula(
   }
 
   try {
-    let total = 0;
+    let totalIngredientes = 0;
 
     // Calcular el costo total de los ingredientes
     for (const ingrediente of ingredientes) {
@@ -79,12 +77,24 @@ export function recetaMariaPaula(
       }
 
       const subtotal = parseFloat(precioUnitario) * parseFloat(cuantity);
-      total += subtotal;
+      totalIngredientes += subtotal;
     }
 
-    // Agregar costo del tiempo
+    // Calcular costo del tiempo
     const costoTiempo = tiempo * COSTO_POR_TIEMPO;
-    // total += costoTiempo;
+
+    // --- NUEVA LÓGICA CONDICIONAL ---
+    // Si 'produccion' es true, retorna solo el costo de producción y termina la ejecución.
+    if (produccion === true) {
+      const costoProduccion = totalIngredientes + costoTiempo;
+      return {
+        COSTO: Math.round(costoProduccion),
+      };
+    }
+
+    // --- LÓGICA ORIGINAL (si produccion es false) ---
+    // Se usa una nueva variable 'total' para no afectar el 'totalIngredientes'
+    let total = totalIngredientes;
 
     // Agregar 5% de condimentos
     const condimentos = total * 0.05;
@@ -124,7 +134,7 @@ export function recetaMariaPaula(
         pCMPInicial: Number(porcentajeCostoDirecto),
         pCMPReal: Number(pCostoReal.toFixed(2)),
         PPVii: Number(PPVii.toFixed(0)),
-        costoTiempo:costoTiempo// Detalle del costo del tiempo
+        costoTiempo: costoTiempo // Detalle del costo del tiempo
       },
     };
   } catch (error) {

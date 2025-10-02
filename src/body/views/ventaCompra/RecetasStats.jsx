@@ -69,7 +69,7 @@ function RecetasStats() {
             let productInfo = 'N/A';
             if (associatedProduct) {
                 const name = associatedProduct.NombreES || associatedProduct.Nombre_del_producto || 'Nombre no disponible';
-                const value = associatedProduct.Precio || associatedProduct.COSTO || 0;
+                const value =  associatedProduct.COSTO || 0;
                 const formattedValue = value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
                 productInfo = `${name} (${formattedValue})`;
             }
@@ -82,7 +82,7 @@ function RecetasStats() {
                 cantidad: Number(rendimientoData.cantidad) || null, 
                 unidades: rendimientoData.unidades,
                 emplatado: receta.emplatado, 
-                vIB: costoData.vIB, 
+                vIB: costoData.COSTO ? costoData.COSTO : costoData.vIB , 
                 pIB: costoData.pIB, 
                 vCMP: costoData.vCMP,
                 pCMPInicial: costoData.pCMPInicial, 
@@ -90,6 +90,7 @@ function RecetasStats() {
                 PPVii: costoData.PPVii, 
                 costoTiempo: costoData.costoTiempo,
                 type: receta.type,
+                
             };
         });
     }, [allRecetasMenu, allRecetasProduccion, allMenu, allProduccion]);
@@ -165,7 +166,7 @@ function RecetasStats() {
         { key: 'costoTiempo', label: 'Costo Tiempo', subtitle: 'Costo asociado al tiempo de preparación', sufix: "$" }, 
     ];
 
-    const costColumnKeys = ['vIB', 'pIB', 'vCMP', 'pCMPInicial', 'pCMPReal', 'PPVii', 'costoTiempo'];
+    const costColumnKeys = ['', 'pIB', 'vCMP', 'pCMPInicial', 'pCMPReal', 'PPVii', 'costoTiempo'];
     const yieldColumnKeys = ['porcion', 'cantidad', 'unidades'];
 
     const visibleColumns = useMemo(() => {
