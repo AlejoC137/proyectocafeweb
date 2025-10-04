@@ -266,6 +266,7 @@ useEffect(() => {
         totalEfectivo={datosCalculadosDelMes.totalEfectivo}
         totalTransferencia={datosCalculadosDelMes.totalTransferencia}
         totalCompras={datosCalculadosDelMes.totalCompras}
+        cantidadDeDias={ventas}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">

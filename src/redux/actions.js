@@ -26,7 +26,13 @@ import {
   PRODUCCION,
   RECETAS_MENU,
   RECETAS_PRODUCCION,
-  // --- NUEVA CONSTANTE ---
+
+GET_MODELS_SUCCESS ,
+GET_MODELS_FAILURE ,
+UPDATE_MODEL_SUCCESS ,
+CREATE_MODEL_SUCCESS ,
+DELETE_MODEL_SUCCESS ,
+  // --- NUEVA CONSTA
   CREATE_RECIPE_FOR_PRODUCT_SUCCESS,
 } from "./actions-types";
 
@@ -855,3 +861,116 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
     }
   };
 };
+
+
+// =================================================================================
+// --- INICIO: ACCIONES PARA MODELOS DE NEGOCIO ---
+// =================================================================================
+
+// Suponiendo que tienes estos action-types definidos
+
+
+/**
+ * Obtiene todos los modelos de negocio desde Supabase.
+ */
+export const fetchModelsAction = () => async (dispatch) => {
+    try {
+        const { data, error } = await supabase.from('Model').select('*');
+        if (error) throw error;
+
+        // Parsea el campo 'costs' si es un string JSON
+        const parsedData = data.map(model => {
+            if (model.costs && typeof model.costs === 'string') {
+                try {
+                    return { ...model, costs: JSON.parse(model.costs) };
+                } catch (e) {
+                    console.error("Error parsing costs for model:", model._id, e);
+                    return { ...model, costs: {} };
+                }
+            }
+            return model;
+        });
+
+        dispatch({ type: GET_MODELS_SUCCESS, payload: parsedData });
+    } catch (error) {
+        console.error("Error fetching models:", error);
+        dispatch({ type: GET_MODELS_FAILURE, payload: error.message });
+    }
+};
+
+/**
+ * Crea un nuevo modelo de negocio.
+ * @param {object} newModelData - Los datos para el nuevo modelo.
+ */
+export const createModelAction = (newModelData) => async (dispatch) => {
+    try {
+        const { data, error } = await supabase
+            .from('Model')
+            .insert([newModelData])
+            .select()
+            .single(); // Devuelve un solo objeto
+
+        if (error) throw error;
+        
+        // Asegurarse de que los costos estén parseados si es necesario
+         if (data.costs && typeof data.costs === 'string') {
+            data.costs = JSON.parse(data.costs);
+        }
+
+        dispatch({ type: CREATE_MODEL_SUCCESS, payload: data });
+        return data; // Devuelve el modelo creado
+    } catch (error) {
+        console.error("Error creating model:", error);
+        // Aquí podrías despachar una acción de error si lo necesitas
+        return null;
+    }
+};
+
+/**
+ * Actualiza un modelo de negocio existente.
+ * @param {string} modelId - El ID del modelo a actualizar.
+ * @param {object} updatedData - Los campos a actualizar.
+ */
+export const updateModelAction = (modelId, updatedData) => async (dispatch) => {
+    try {
+        const { data, error } = await supabase
+            .from('Model')
+            .update(updatedData)
+            .eq('_id', modelId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        
+         if (data.costs && typeof data.costs === 'string') {
+            data.costs = JSON.parse(data.costs);
+        }
+
+        dispatch({ type: UPDATE_MODEL_SUCCESS, payload: data });
+    } catch (error) {
+        console.error("Error updating model:", error);
+    }
+};
+
+/**
+ * Elimina un modelo de negocio.
+ * @param {string} modelId - El ID del modelo a eliminar.
+ */
+export const deleteModelAction = (modelId) => async (dispatch) => {
+    try {
+        const { error } = await supabase
+            .from('Model')
+            .delete()
+            .eq('_id', modelId);
+
+        if (error) throw error;
+
+        dispatch({ type: DELETE_MODEL_SUCCESS, payload: modelId });
+    } catch (error) {
+        console.error("Error deleting model:", error);
+    }
+};
+
+// =================================================================================
+// --- FIN: ACCIONES PARA MODELOS DE NEGOCIO ---
+// =================================================================================

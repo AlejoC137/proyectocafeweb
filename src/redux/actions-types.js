@@ -21,6 +21,7 @@ export const UPDATE_ITEM = "UPDATE_ITEM";
 
 export const RECETAS_MENU = "Recetas";
 export const RECETAS = "RECETAS";
+export const MODEL = "Model";
 // Tablas en Supabase
 export const ITEMS = "ItemsAlmacen";
 export const MENU = "Menu";
@@ -36,7 +37,11 @@ export const COMPRAS = "Compras";
 export const FUENTES = []
 
 // Categorieas 
-
+export const GET_MODELS_SUCCESS = 'GET_MODELS_SUCCESS';
+export const GET_MODELS_FAILURE = 'GET_MODELS_FAILURE';
+export const UPDATE_MODEL_SUCCESS = 'UPDATE_MODEL_SUCCESS';
+export const CREATE_MODEL_SUCCESS = 'CREATE_MODEL_SUCCESS';
+export const DELETE_MODEL_SUCCESS = 'DELETE_MODEL_SUCCESS';
 // Areas
 
 export const COCINA = 'COCINA'

@@ -9,9 +9,21 @@ const MesResumenStats = ({
   totalTarjeta,
   totalEfectivo,
   totalTransferencia,
-  totalCompras
+  totalCompras,
+  cantidadDeDias // Esta prop ahora espera el array completo de ventas del mes
 }) => {
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
+
+  // --- CÁLCULO AGREGADO DENTRO DEL COMPONENTE ---
+  // Se asegura de que la prop sea un array antes de procesarla.
+  const ventas = Array.isArray(cantidadDeDias) ? cantidadDeDias : [];
+  
+  // 1. Extrae las fechas únicas del array de ventas.
+  const fechasUnicas = new Set(ventas.map(venta => venta.Date));
+  
+  // 2. Cuenta cuántos días únicos hay.
+  const numeroDeDias = fechasUnicas.size;
+  // --- FIN DEL CÁLCULO ---
 
   const totalCostoDirecto = useMemo(() => {
     const recetasMap = new Map(allRecetasMenu.map(receta => [receta._id, receta]));
@@ -33,6 +45,9 @@ const MesResumenStats = ({
 
   }, [ventasRecepies, allRecetasMenu]);
 
+  // 3. Calcula el promedio usando el número de días que acabamos de obtener.
+  const promedioDiario = numeroDeDias > 0 ? totalIngreso / numeroDeDias : 0;
+
   const formatNumber = (number) => {
     if (isNaN(number)) return "0";
     return number.toLocaleString('es-CO');
@@ -47,6 +62,10 @@ const MesResumenStats = ({
         <p className="text-lg text-gray-700">
           <span className="font-medium">Total Ingreso del Mes (Pagado): </span>
           <span className="text-green-600 font-bold">{formatNumber(totalIngreso)}$</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          <span className="font-medium">Promedio de Ingreso por Día: </span>
+          <span className="text-green-500 font-bold">{formatNumber(promedioDiario)}$</span>
         </p>
         <p className="text-lg text-gray-700">
           <span className="font-medium">Total Tip del Mes (Pagado): </span>

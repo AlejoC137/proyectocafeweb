@@ -69,8 +69,8 @@ function RecetasStats() {
             let productInfo = 'N/A';
             if (associatedProduct) {
                 const name = associatedProduct.NombreES || associatedProduct.Nombre_del_producto || 'Nombre no disponible';
-                const value =  associatedProduct.COSTO || 0;
-                const formattedValue = value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+                const value =  associatedProduct.COSTO ? associatedProduct.COSTO : associatedProduct.Precio ;
+                const formattedValue = value && value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
                 productInfo = `${name} (${formattedValue})`;
             }
 

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'; // Para acceder al estado global de R
 import fondoImage from './assets/fondo.png';
 // import './App.css';
 
-import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , RECETAS} from './redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , MODEL ,RECETAS} from './redux/actions-types'; // Importa las acciones y vistas
 // BuscarPreciosInternet
 // import About from './components/About';
 // import Contact from './components/Contact';
@@ -26,6 +26,7 @@ import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import Actividades from './body/views/actividades/Actividades';
 import Recetas from './body/views/ventaCompra/Recetas.jsx';
 import MesResumen from './body/views/ventaCompra/MesResumen.jsx';
+import Model from './body/views/ventaCompra/Model.jsx';
 import DiaResumen from './body/views/ventaCompra/DiaResumen.jsx';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
 import Predict from './body/views/ventaCompra/Predict';
@@ -54,6 +55,8 @@ function App() {
       break;
     case AGENDA:
       componentToRender = <Agenda/>;
+    case MODEL:
+      componentToRender = <Model/>;
     case RECETAS:
       componentToRender = <Recetas/>;
       break;
@@ -117,6 +120,7 @@ function App() {
      <Route path="/receta/:id" element={<RecetaModal />} />
      <Route path="/Predict/:MenuItem" element={<Predict />} />
      <Route path="/CalculoNomina" element={<CalculoNomina />} />
+     <Route path="/Model" element={<Model />} />
      {/* Renderiza el componente que corresponde a la vista actual */}
      {/* Renderiza el BottomNav debajo del componente actual */}
      </Routes>
