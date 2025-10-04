@@ -130,6 +130,12 @@ function StaffPortal() {
       variant: "secondary"
     },
     {
+      label: "Modelos",
+      icon: "🚩",
+      onClick: () => navigate("/Model"),
+      variant: "default"
+    },
+    {
       label: "Venta / Compra",
       icon: "💵",
       onClick: () => navigate("/VentaCompra"),
