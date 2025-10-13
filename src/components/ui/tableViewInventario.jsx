@@ -231,7 +231,7 @@ export function TableViewInventario({ products, currentType }) {
           cuidadoES: { label: "Cuidado ES", key: "CuidadoES", default: true },
           cuidadoEN: { label: "Cuidado EN", key: "CuidadoEN", default: true },
           grupo: { label: "Grupo", key: "GRUPO", default: true },
-          subGrupo: { label: "Sub Grupo", key: "SUB_GRUPO", default: false },
+          subGrupo: { label: "Sub Grupo", key: "SUB_GRUPO", default: true },
           order: { label: "Order", key: "Order", default: false },
           print: { label: "Print", key: "PRINT", default: true },
           estado: { label: "Estado", key: "Estado", default: true },
@@ -250,7 +250,7 @@ export function TableViewInventario({ products, currentType }) {
           almacenamiento: { label: "Almacenamiento", key: "ALMACENAMIENTO", default: false },
           grupo: { label: "Grupo", key: "GRUPO", default: false },
           merma: { label: "Merma %", key: "Merma", default: false },
-          proveedor: { label: "Proveedor", key: "Proveedor", default: false },
+          proveedor: { label: "Proveedor", key: "Proveedor", default: true },
           estado: { label: "Estado", key: "Estado", default: true },
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
           acciones: { label: "Acciones", key: "acciones", default: false, fixed: false }
@@ -268,7 +268,7 @@ export function TableViewInventario({ products, currentType }) {
           merma: { label: "Merma %", key: "Merma", default: false },
           estado: { label: "Estado", key: "Estado", default: true },
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
-          acciones: { label: "Acciones", key: "acciones", default: false, fixed: true }
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
       default:
         return {};
@@ -425,8 +425,8 @@ export function TableViewInventario({ products, currentType }) {
   const renderTableHeaders = () => Object.entries(availableColumns)
     .filter(([key]) => visibleColumns[key])
     .map(([key, col]) => (
-      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-700">
-        <button onClick={() => handleSort(col.key)} className="flex items-center gap-1 hover:text-blue-600">
+      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-900">
+        <button onClick={() => handleSort(col.key)} className="flex items-center gap-1 text-gray-900 bg-white hover:text-blue-600">
           {col.label} <SortIcon column={col.key} />
         </button>
       </th>
