@@ -17,7 +17,7 @@ Esta versión optimizada del proyecto implementa un sistema de diseño unificado
 - ✅ Estados de carga estandarizados
 - ✅ Tamaños configurables (sm, md, lg)
 - ✅ Modo pantalla completa o embebido
-- ✅ Soporte para dark mode
+- ✅ Soporte para   mode
 
 ### 3. **ContentCard** (`src/components/ui/content-card.jsx`)
 - ✅ Contenedores de contenido consistentes

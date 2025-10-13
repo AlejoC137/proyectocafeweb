@@ -6,11 +6,11 @@ const ThemeToggleExample = () => {
   const [selectedStatus, setSelectedStatus] = useState('ok');
 
   useEffect(() => {
-    // Aplicar o remover la clase 'dark' al elemento html
+    // Aplicar o remover la clase ' ' al elemento html
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add(' ');
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove(' ');
     }
   }, [isDarkMode]);
 

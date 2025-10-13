@@ -27,7 +27,7 @@ function DiaResumen() {
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const allProduccion = useSelector((state) => state.allProduccion);
-  const allCompras = useSelector((state) => state.Compras); // Fetch Compras from Redux
+  const allCompras = useSelector((state) =>  state.allCompras); // Fetch Compras from Redux
   
   // console.log(allCompras);
   const handleDateChange = (e) => {

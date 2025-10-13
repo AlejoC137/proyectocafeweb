@@ -28,7 +28,7 @@ function DiaResumen() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date().toISOString().split('T')[0]);
   
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
-  const allCompras = useSelector((state) => state.Compras);
+  const allCompras = useSelector((state) =>  state.allCompras);
 
   const handleDateChange = (e) => {
     setFechaSeleccionada(e.target.value);

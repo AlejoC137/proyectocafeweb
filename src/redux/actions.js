@@ -974,3 +974,44 @@ export const deleteModelAction = (modelId) => async (dispatch) => {
 // =================================================================================
 // --- FIN: ACCIONES PARA MODELOS DE NEGOCIO ---
 // =================================================================================
+
+
+// ruta/a/tu/proyecto/utils/getOtherExpenses.js
+
+/**
+ * Devuelve un array de objetos de gastos adicionales basado en el SUB_GRUPO del producto.
+ * Cada objeto tiene una estructura similar a un ingrediente para facilitar su integración.
+ * @param {string} subGrupo - El valor del campo SUB_GRUPO del item del menú.
+ * @returns {Array<Object>} - Un array de objetos de gastos.
+ */
+export const getOtherExpenses = (subGrupo) => {
+    switch (subGrupo) {
+        case 'CAFE_ESPRESSO':
+            return [
+                
+                    'f9bc7971-3120-46d6-b966-866bfb4f6b41', 
+                    'f9bc7971-3120-46d6-b966-866bfb4f6b41', 
+
+   
+            ];
+            
+        case 'POSTRES_INDIVIDUALES':
+            return [
+                {
+                    item_Id: 'gasto_empaque_postre',
+                    nombre: 'Empaque para llevar',
+                    originalQuantity: 1,
+                    unidades: 'Unidad',
+                    precioUnitario: 800,
+                    isChecked: true,
+                }
+            ];
+
+        // Agrega más 'case' para otros SUB_GRUPOs según necesites
+        // ...
+
+        default:
+            // Si el SUB_GRUPO no tiene gastos asociados, devuelve un array vacío.
+            return [];
+    }
+};

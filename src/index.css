@@ -9,7 +9,7 @@
   font-weight: 700; /* Bold como peso principal */
   padding: 0;
 
-  color-scheme: light dark;
+  color-scheme: light  ;
   color: #374151; /* text-gray-700 for better contrast on cream */
   background-color: #F5F0E1; /* cream-bg */
 
@@ -106,7 +106,7 @@ button:focus-visible {
     --radius: 0.5rem;
     --padding: 0;
   }
-  .dark {
+  .  {
     /* Mantener el mismo fondo claro que el tema light */
     --background: 32 24% 94%; /* cream-bg equivalent in HSL */
     --foreground: 0 0% 15%; /* Dark text for better contrast on light bg */
@@ -153,9 +153,9 @@ button:focus-visible {
   }
   
   /* Asegurar que los elementos principales mantengan el fondo cream */
-  .dark body,
-  .dark #root,
-  .dark html {
+  .  body,
+  .  #root,
+  .  html {
     background-color: #F5F0E1 !important;
   }
 }
@@ -192,7 +192,7 @@ button:focus-visible {
   }
   
   /* Utilidad para texto que se ajusta al fondo claro */
-  .text-dark-on-cream {
+  .text- -on-cream {
     color: #374151 !important;
   }
   

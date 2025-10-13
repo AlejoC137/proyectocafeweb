@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class"],
+  // darkMode: ["class"],
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
@@ -60,11 +60,11 @@ module.exports = {
         
         // Tonos adicionales de la paleta base
         'sage-green-light': '#b8c5b5',
-        'sage-green-dark': '#8fa68b',
+        'sage-green- ': '#8fa68b',
         'terracotta-light': '#e8b5a6',
-        'terracotta-dark': '#d49886',
+        'terracotta- ': '#d49886',
         'cobalt-light': '#5a6bff',
-        'cobalt-dark': '#2938de',
+        'cobalt- ': '#2938de',
         
         // --- Sistema Unificado shadcn/ui ---
         border: "hsl(var(--border))",
@@ -106,6 +106,7 @@ module.exports = {
         'custom-width1200px': '1200px',
         'custom-width350px': '350px', // CORREGIDO: Antes era '400px'
         'custom-width400px': '400px',
+        'custom-width1200px': '1200px',
         'custom-widthSillax': '600px',
       },
       height: {

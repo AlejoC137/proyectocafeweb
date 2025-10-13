@@ -97,7 +97,7 @@ const initialState = {
     currentLeng: ESP,
     allProduccion: [],
     Proveedores: [],
-    Compras: [],
+    allCompras: [],
     currentView: 'MENU',
     userRegState: 'notAuth',
     selectedValue: null,
@@ -169,7 +169,7 @@ const reducer = (state = initialState, action) => {
                 case WORKISUE:
                     return { ...state, allWorkIsue: action.payload };
                 case COMPRAS:
-                    return { ...state, Compras: action.payload };
+                    return { ...state, allCompras: action.payload };
                 case MENU:
                     return { ...state, allMenu: action.payload };
                 case ITEMS:

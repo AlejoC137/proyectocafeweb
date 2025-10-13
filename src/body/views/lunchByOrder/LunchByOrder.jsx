@@ -39,9 +39,18 @@ export default function LunchByOrder() {
     }))
   }
 
+  // Función para manejar el envío final del formulario
+  const handleSubmit = () => {
+    console.log("Paquete de datos listo para enviar a Supabase:", formData)
+    // Aquí iría la lógica para enviar los datos a Supabase
+    // Ejemplo: const { data, error } = await supabase.from('pedidos').insert([formData]);
+    alert("¡Pedido registrado! Revisa la consola para ver los datos.")
+  }
+
+
   const components = [
     <GeneralInfo
-    className=" w-screen items-center justify-center"
+      className=" w-screen items-center justify-center"
       formData={formData}
       handleChange={handleChange}
       setFormData={setFormData}
@@ -66,6 +75,7 @@ export default function LunchByOrder() {
       formData={formData}
       handlePreferenceChange={handlePreferenceChange}
       onBack={() => setStep(2)}
+      onSubmit={handleSubmit} // Pasamos la función de envío al último paso
     />,
   ]
 
@@ -73,8 +83,7 @@ export default function LunchByOrder() {
     <div className="flex items-center justify-center w-screen bg-gray-100">
       <div className="max-w-md mx-auto  bg-white rounded-xl shadow-md">
         {components[step]}
-      </div> 
+      </div>
     </div>
   )
 }
-

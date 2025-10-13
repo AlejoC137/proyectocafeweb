@@ -160,7 +160,7 @@ Para casos especiales, puedes usar estas clases:
 
 ## 🌙 Comportamiento en Dark Mode
 
-Al activar el dark mode (agregando clase `dark` al HTML):
+Al activar el   mode (agregando clase ` ` al HTML):
 
 1. **Los fondos de botones se mantienen claros**
 2. **Los textos pueden volverse más oscuros para mejor contraste**
@@ -169,11 +169,11 @@ Al activar el dark mode (agregando clase `dark` al HTML):
 
 ### Activar Dark Mode
 ```javascript
-// Activar dark mode
-document.documentElement.classList.add('dark');
+// Activar   mode
+document.documentElement.classList.add(' ');
 
-// Desactivar dark mode
-document.documentElement.classList.remove('dark');
+// Desactivar   mode
+document.documentElement.classList.remove(' ');
 ```
 
 ## 🎨 Paleta de Colores Utilizada

@@ -3,7 +3,8 @@
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 
-export default function PicanteNotas({ formData, handlePreferenceChange, onBack }) {
+// Recibimos la nueva prop 'onSubmit'
+export default function PicanteNotas({ formData, handlePreferenceChange, onBack, onSubmit }) {
   return (
     <div className="flex flex-col items-center justify-center bg-gray-100">
       <div className="p-6 max-w-md bg-white rounded shadow-md">
@@ -28,7 +29,10 @@ export default function PicanteNotas({ formData, handlePreferenceChange, onBack 
           <button onClick={onBack} className="bg-gray-300 text-black py-2 px-4 rounded">
             ⬅️ Atrás
           </button>
-          <button className="bg-primary text-white py-2 px-4 rounded">Finalizar ✅</button>
+          {/* Asignamos la función onSubmit al evento onClick */}
+          <button onClick={onSubmit} className="bg-primary text-white py-2 px-4 rounded">
+            Finalizar ✅
+          </button>
         </div>
       </div>
     </div>

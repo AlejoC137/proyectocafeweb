@@ -23,7 +23,7 @@ function MesResumen() {
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const allProduccion = useSelector((state) => state.allProduccion);
-  const allCompras = useSelector((state) => state.Compras);
+  const allCompras = useSelector((state) =>  state.allCompras);
 
   const { selectedMonth, selectedYear } = useMemo(() => {
     const selectedDate = new Date(hoy);

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'; // Para acceder al estado global de R
 import fondoImage from './assets/fondo.png';
 // import './App.css';
 
-import { UPDATE_CURRENT_VIEW, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , MODEL ,RECETAS} from './redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , MODEL ,RECETAS, COMPRAS} from './redux/actions-types'; // Importa las acciones y vistas
 // BuscarPreciosInternet
 // import About from './components/About';
 // import Contact from './components/Contact';
@@ -16,13 +16,14 @@ import MenuLunch from './body/views/menuView/MenuLunch';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
 import AccionesRapidas from './body/views/actualizarPrecioUnitario/AccionesRapidas';
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
-import LandingHome from './body/views/home/LandingHome';
+import LandingHome from './body/views/home/LandingHome';  
 import Agenda from './body/views/agenda/Agenda';
 import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 import Scraper from '../scraper/scraper';
 import Inventario from './body/views/inventario/Inventario';
 import Manager from './body/views/inventario/Manager';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
+import Compras from './body/views/ventaCompra/Compras';
 import Actividades from './body/views/actividades/Actividades';
 import Recetas from './body/views/ventaCompra/Recetas.jsx';
 import MesResumen from './body/views/ventaCompra/MesResumen.jsx';
@@ -33,6 +34,7 @@ import Predict from './body/views/ventaCompra/Predict';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
+import MenuHead  from './body/components/Menu/MenuHead';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
 import CalculoNomina from './body/views/staff/CalculoNomina';
 import WorkIsueExcelView from './body/views/actividades/WorkE/WorkIsueExcelView.jsx';
@@ -55,6 +57,8 @@ function App() {
       break;
     case AGENDA:
       componentToRender = <Agenda/>;
+    case MENUHEAD:
+      componentToRender = <MenuHead/>;
     case MODEL:
       componentToRender = <Model/>;
     case RECETAS:
@@ -62,6 +66,8 @@ function App() {
       break;
     case NOSOTROS:
       componentToRender = <SobreNosotros/>;
+    case COMPRAS:
+      componentToRender = <Compras/>;
       break;
     case LUNCH:
       componentToRender = <MenuLunch />;
@@ -111,7 +117,9 @@ function App() {
      <Route path="/VentaCompra" element={<VentaCompra />} />
      <Route path="/Actividades" element={<Actividades />} />
      <Route path="/Gastos" element={<Gastos />} />
+     <Route path="/Compras" element={<Compras />} />
      <Route path="/MenuPrint" element={<MenuPrint />} />
+     <Route path="/MenuHead" element={<MenuHead />} />
      <Route path="/DiaResumen" element={<DiaResumen />} />
      <Route path="/MesResumen" element={<MesResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />

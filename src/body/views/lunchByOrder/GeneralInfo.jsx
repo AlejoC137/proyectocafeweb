@@ -1,7 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { Checkbox } from "@/components/ui/checkbox" // Importamos Checkbox
 import { Label } from "@/components/ui/label"
 
 export default function GeneralInfo({ formData, handleChange, setFormData, onNext }) {
@@ -20,7 +20,8 @@ export default function GeneralInfo({ formData, handleChange, setFormData, onNex
           className="mt-2"
         />
         <div className="flex items-center gap-2 mt-2">
-          <Switch
+          <Checkbox
+            id="servidoEnProyecto"
             checked={formData.servidoEnProyecto}
             onCheckedChange={(checked) => {
               setFormData((prev) => ({
@@ -29,7 +30,7 @@ export default function GeneralInfo({ formData, handleChange, setFormData, onNex
               }))
             }}
           />
-          <Label>Servido en proyecto 🏢</Label>
+          <Label htmlFor="servidoEnProyecto">Servido en proyecto 🏢</Label>
         </div>
         <button onClick={onNext} className="mt-4 w-full bg-primary text-white py-2 rounded">
           Siguiente ➡️

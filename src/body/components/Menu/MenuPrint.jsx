@@ -54,7 +54,7 @@ function MenuPrint() {
   }
 
   return (
-    <div className="flex w-screen flex-col items-center justify-center " ref={printRef}>
+    <div className="flex w-screen flex-col items-center justify-center  " ref={printRef}>
       <div className="flex gap-4 mt-12 mb-5 print:hidden">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium">
           🖨️
@@ -69,7 +69,7 @@ function MenuPrint() {
 
       {showForm && <MenuPrintFormInfo />}
 
-      <div className="flex justify-center ">
+      <div className="flex justify-center bg-white">
         <div id="print-area" className="print:h-auto">
           
           {/* --- INICIO PÁGINA 1 --- */}

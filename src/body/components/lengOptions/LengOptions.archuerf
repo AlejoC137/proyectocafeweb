@@ -110,7 +110,7 @@ Dom/Sun: 9:00am - 2:00 pm
 
 
                 {/* {showBanner && (
-    <div className={`${styles.popup} max-w-sm p-3 bg-white border border-gray-200 shadow dark:bg-gray-800 dark:border-gray-700`}>
+    <div className={`${styles.popup} max-w-sm p-3 bg-white border border-gray-200 shadow  :bg-gray-800  :border-gray-700`}>
         <div>
             <h2>¡Bienvenid@ a Proyecto Café!</h2>
             <button 
