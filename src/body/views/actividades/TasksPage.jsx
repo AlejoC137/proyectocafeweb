@@ -1,478 +1,828 @@
-import React, { useEffect, useState } from 'react';
-import { CheckSquare, Plus, AlertCircle, Edit, Trash2, Search, X } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from "react-router-dom";
+import {
+  User, Calendar, Tag, Plus, Search, ArrowUp, ArrowDown,
+  ChevronDown, ChevronRight, Settings
+} from 'lucide-react';
 
-// --- SIMULACIÓN DE REDUX Y DATOS ---
-// En una aplicación real, esto vendría de `react-redux`.
-const useDispatch = () => (action) => {
-  console.log("Dispatching:", action.type);
-  if (action.type === 'DELETE_TASK') {
-    // Simulamos una respuesta exitosa para la eliminación
-    return Promise.resolve({ success: true });
-  }
-  return Promise.resolve({ success: true, data: { id: new Date().toISOString(), ...action.payload } });
+// --- Redux actions ---
+import {
+  getAllFromTable,
+  updateTask,
+  addTask,
+  deleteTask
+} from '../store/actions/actions';
+
+// --- Componentes externos ---
+import TaskActions from './TaskActions';
+import TaskLog from './TaskLog';
+import InlineActionsTask from './InlineActionsTask';
+import FormTask from './FormTask';
+
+// --- Estados / Helpers ---
+const ESTADOS = {
+  PENDIENTE: 'Pendiente',
+  EN_PROCESO: 'En Progreso',
+  COMPLETADO: 'Completado',
+  CANCELADO: 'Cancelado',
+  EN_REVISION: 'En Revisión',
+  BLOQUEADO: 'Bloqueado',
+  APROBACION_REQUERIDA: 'Aprobación Requerida',
+  EN_DISENO: 'En Diseño',
+  EN_DISCUSION: 'En Discusión'
 };
 
-const useSelector = (selector) => {
-  const mockState = {
-    tasks: {
-      tasks: [
-        { id: 1, task_description: 'Diseñar el plano principal del lobby', category: 'Diseño Arquitectónico', status: 'En Progreso', projects: { name: 'Torre Corporativa' }, staff: { name: 'Ana Vélez' }, stages: { name: 'Diseño' }, project_id: 'p1', staff_id: 's1', stage_id: 'st1' },
-        { id: 2, task_description: 'Calcular la carga estructural de las vigas', category: 'Ingeniería Estructural', status: 'Completo', projects: { name: 'Puente Centenario' }, staff: { name: 'Carlos Rojas' }, stages: { name: 'Cálculo' }, project_id: 'p2', staff_id: 's2', stage_id: 'st2' },
-        { id: 3, task_description: 'Revisar normativa de sismoresistencia', category: 'Normativa', status: 'Pendiente', projects: { name: 'Torre Corporativa' }, staff: { name: 'Luisa Parra' }, stages: { name: 'Investigación' }, project_id: 'p1', staff_id: 's3', stage_id: 'st3' },
-      ],
-      loading: false,
-      error: null,
-    },
-    projects: {
-      projects: [{ id: 'p1', name: 'Torre Corporativa' }, { id: 'p2', name: 'Puente Centenario' }],
-    },
-    staff: {
-      members: [{ id: 's1', name: 'Ana Vélez' }, { id: 's2', name: 'Carlos Rojas' }, { id: 's3', name: 'Luisa Parra' }],
-    },
-    stages: {
-      stages: [{ id: 'st1', name: 'Diseño' }, { id: 'st2', name: 'Cálculo' }, { id: 'st3', name: 'Investigación' }],
-    },
+const getEstadoColor = (estado) => {
+  const colors = {
+    'Pendiente': 'bg-yellow-100 text-yellow-800',
+    'En Progreso': 'bg-blue-100 text-blue-800',
+    'Completado': 'bg-green-100 text-green-800',
+    'Cancelado': 'bg-red-100 text-red-800',
+    'En Revisión': 'bg-purple-100 text-purple-800',
+    'Bloqueado': 'bg-gray-400 text-white',
+    'Aprobación Requerida': 'bg-orange-100 text-orange-800',
+    'En Diseño': 'bg-pink-100 text-pink-800',
+    'En Discusión': 'bg-indigo-100 text-indigo-800'
   };
-  return selector(mockState);
+  return colors[estado] || 'bg-gray-100 text-gray-800';
 };
 
-// Simulación de acciones (en un proyecto real, estarían en sus propios archivos)
-const fetchTasks = () => ({ type: 'FETCH_TASKS' });
-const createTask = (payload) => ({ type: 'CREATE_TASK', payload });
-const updateTaskData = (id, payload) => ({ type: 'UPDATE_TASK', payload: { id, ...payload } });
-const deleteTaskData = (id) => ({ type: 'DELETE_TASK', payload: { id } });
-const fetchProjects = () => ({ type: 'FETCH_PROJECTS' });
-const fetchStaff = () => ({ type: 'FETCH_STAFF' });
-const fetchStages = () => ({ type: 'FETCH_STAGES' });
+const ProjectTaskModal = () => {
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-// Simulación de tipos de datos
-const TaskStatusOptions = ['Pendiente', 'En Diseño', 'En Progreso', 'Aprobación Requerida', 'Bloqueado', 'En Discusión', 'Completo'];
-const TaskCategories = ['Diseño Arquitectónico', 'Ingeniería Estructural', 'Normativa', 'Presupuesto', 'Cliente'];
+  const [data, setData] = useState([]);
+  const { projects, loading, error } = useSelector((state) => state.projects);
+  const [projectTasks, setProjectTasks] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [stages, setStages] = useState([]);
+  const [entregables, setEntregables] = useState([]);
+  const [Priorities] = useState([
+    { id: "Baja", name: "Baja" },
+    { id: "Media-Baja", name: "Media-Baja" },
+    { id: "Media", name: "Media" },
+    { id: "Media-Alta", name: "Media-Alta" },
+    { id: "Alta", name: "Alta" },
+  ]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [sortConfig, setSortConfig] = useState({ key: 'Priority', direction: 'descending' });
+  const [searchTerm, setSearchTerm] = useState('');
 
-// --- COMPONENTES UI (Versiones simplificadas) ---
+  // --- CRUD helpers ---
+  const updateCell = (rowId, fieldsToUpdate) =>
+    dispatch(updateTask(rowId, fieldsToUpdate))
+      .then(() => setProjectTasks(p => p.map(i => i.id === rowId ? { ...i, ...fieldsToUpdate } : i)));
 
-const Badge = ({ variant, children, className }) => {
-  const baseClasses = 'px-2.5 py-0.5 text-xs font-semibold rounded-full inline-block';
-  const variants = {
-    default: 'bg-gray-100 text-gray-800',
-    secondary: 'bg-yellow-100 text-yellow-800',
-    info: 'bg-cyan-100 text-cyan-800',
-    warning: 'bg-orange-100 text-orange-800',
-    success: 'bg-green-100 text-green-800',
-    destructive: 'bg-red-100 text-red-800',
-    outline: 'border border-gray-300 text-gray-600',
-  };
-  return <span className={`${baseClasses} ${variants[variant] || variants.default} ${className}`}>{children}</span>;
-};
+  const handleSelectRow = (rowId) =>
+    setSelectedRows(p => {
+      const n = new Set(p);
+      n.has(rowId) ? n.delete(rowId) : n.add(rowId);
+      return n;
+    });
 
-const Modal = ({ isOpen, onClose, title, size = 'md', children }) => {
-  if (!isOpen) return null;
-  const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-  };
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]}`}>
-        <div className="flex justify-between items-center p-4 border-b">
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-        </div>
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
-  );
-};
+  const deselectAll = () => setSelectedRows(new Set());
 
-const CrudForm = ({ fields, initialData, onSubmit, onCancel, loading, submitText }) => {
-  const [formData, setFormData] = useState(initialData || {});
+  const updateMultipleTasks = (fieldsToUpdate) =>
+    Promise.all(Array.from(selectedRows).map(tid => dispatch(updateTask(tid, fieldsToUpdate))))
+      .then(() => { fetchData(); deselectAll(); });
 
-  useEffect(() => {
-    setFormData(initialData || {});
-  }, [initialData]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleBulkDelete = () => {
+    if (window.confirm(`¿Eliminar ${selectedRows.size} tarea(s)?`)) {
+      Promise.all(Array.from(selectedRows).map(tid => dispatch(deleteTask(tid))))
+        .then(() => { fetchData(); deselectAll(); });
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
+  const handleDuplicateTasks = () =>
+    Promise.all(projectTasks.filter(t => selectedRows.has(t.id)).map(t => {
+      const { id: _omit, created_at, ...n } = t;
+      return dispatch(addTask({
+        ...n,
+        task_description: `${t.task_description} (Copia)`,
+        status: 'Pendiente',
+        Progress: 0
+      }));
+    }))
+      .then(() => { fetchData(); deselectAll(); });
+
+  // --- Data ---
+  const fetchData = useCallback(async () => {
+    dispatch(getAllFromTable("Proyectos"));
+    const [tareasAction, staffAction, stagesAction, entregablesAction] = await Promise.all([
+      dispatch(getAllFromTable("Tareas")),
+      dispatch(getAllFromTable("Staff")),
+      dispatch(getAllFromTable("Stage")),
+      dispatch(getAllFromTable("Entregables_template"))
+    ]);
+    if (staffAction?.payload) setStaff(staffAction.payload);
+    if (stagesAction?.payload) setStages(stagesAction.payload);
+    if (entregablesAction?.payload) setEntregables(entregablesAction.payload);
+    if (tareasAction?.payload) setProjectTasks(tareasAction.payload.filter(p => p.project_id === id));
+  }, [dispatch, id, isFormOpen]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const projectProgress = useMemo(() => {
+    if (!projectTasks || projectTasks.length === 0) return 0;
+    return Math.round(
+      projectTasks.reduce((sum, task) => sum + (Number(task.Progress) || 0), 0) / projectTasks.length
+    );
+  }, [projectTasks, isFormOpen]);
+
+  const filteredAndSortedTasks = useMemo(() => {
+    let items = [...projectTasks];
+    if (searchTerm)
+      items = items.filter(task =>
+        task.task_description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    const priorityOrder = { 'Alta': 5, 'Media-Alta': 4, 'Media': 3, 'Media-Baja': 2, 'Baja': 1, 'undefined': 0 };
+    items.sort((a, b) => {
+      let aValue, bValue;
+      if (sortConfig.key === 'Priority') {
+        aValue = priorityOrder[a.Priority] || 0;
+        bValue = priorityOrder[b.Priority] || 0;
+      } else {
+        aValue = a[sortConfig.key] || '';
+        bValue = b[sortConfig.key] || '';
+      }
+      if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
+    return items;
+  }, [projectTasks, sortConfig, searchTerm]);
+
+  const selectedProject = projects.find(p => p.id === id);
+
+  if (loading && !selectedProject) return <div className="p-8 text-center">Cargando...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Error: {error}</div>;
+  if (!selectedProject) return <div className="p-8 text-center">Proyecto no encontrado.</div>;
+
+  const fetchTasks = async () => {
+    const tareasAction = await dispatch(getAllFromTable("Tareas"));
+    if (tareasAction?.payload) setData(tareasAction.payload);
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {fields.map(field => (
-        <div key={field.name}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-          {field.type === 'textarea' ? (
-            <textarea
-              name={field.name}
-              value={formData[field.name] || ''}
-              onChange={handleChange}
-              required={field.required}
-              rows={field.rows}
-              placeholder={field.placeholder}
-              className="w-full p-2 border border-gray-300 rounded-md"
+  const handleAddTask = (taskData) => {
+    const sanitizedTaskData = { ...taskData };
+    ['project_id', 'staff_id', 'stage_id', 'entregable_id'].forEach(field => {
+      if (sanitizedTaskData[field] === '') sanitizedTaskData[field] = null;
+    });
+    dispatch(addTask(sanitizedTaskData)).then(fetchTasks);
+    setIsFormOpen(false);
+  };
+
+  // --- Celda editable ---
+  const EditableCell = ({ rowId, field, value, type = 'text', options = [], onExitEditing = () => {} }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState(value);
+
+    const endEditing = () => {
+      setIsEditing(false);
+      onExitEditing();
+    };
+
+    const handleSave = () => {
+      let finalValue = editValue;
+      if (type === 'progress') {
+        finalValue = Math.max(0, Math.min(100, Number(finalValue) || 0));
+      }
+      if (finalValue !== value) {
+        const fieldsToUpdate = { [field]: finalValue };
+        if (field === 'Progress' && finalValue === 100) fieldsToUpdate.status = 'Completado';
+        updateCell(rowId, fieldsToUpdate);
+      }
+      endEditing();
+    };
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && type !== 'textarea') handleSave();
+      else if (e.key === 'Escape') { setEditValue(value); endEditing(); }
+    };
+
+    if (isEditing) {
+      switch (type) {
+        case 'progress':
+          return (
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={editValue || 0}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyPress}
+              className="w-full p-1 border rounded focus:outline-none bg-transparent"
+              autoFocus
             />
-          ) : field.type === 'select' ? (
+          );
+        case 'select':
+        case 'status-select':
+        case 'priority-select':
+          return (
             <select
-              name={field.name}
-              value={formData[field.name] || ''}
-              onChange={handleChange}
-              required={field.required}
-              className="w-full p-2 border border-gray-300 rounded-md bg-white"
+              value={editValue || ''}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyPress}
+              className="w-full p-1 border rounded focus:outline-none bg-white"
+              autoFocus
             >
-              <option value="">{field.placeholder}</option>
-              {field.options.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option value="">-- Seleccionar --</option>
+              {options.map(option => (
+                <option key={option.id} value={option.id}>{option.name}</option>
               ))}
             </select>
-          ) : null}
-        </div>
-      ))}
-      <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-        <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button>
-        <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600   rounded-md disabled:bg-blue-300">
-          {loading ? 'Guardando...' : submitText}
-        </button>
-      </div>
-    </form>
-  );
-};
+          );
+        case 'entregable-select':
+          return (
+            <select
+              value={editValue || ''}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyPress}
+              className="w-full p-1 border rounded focus:outline-none"
+              autoFocus
+            >
+              <option value="">-- Seleccionar --</option>
+              {options.map(option => (
+                <option key={option.id} value={option.id}>{option.entregable_nombre}</option>
+              ))}
+            </select>
+          );
+        default:
+          return (
+            <textarea
+              value={editValue || ''}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyPress}
+              className="w-full p-1 border rounded focus:outline-none"
+              rows="3"
+              autoFocus
+            />
+          );
+      }
+    }
 
-const DataTable = ({ title, description, data, columns, loading, onAdd, onEdit, onDelete, searchPlaceholder, emptyMessage }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const filteredData = data.filter(item => 
-        Object.values(item).some(val => 
-            String(val).toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
+    const displayValue = (field, val) => {
+      switch (field) {
+        case 'staff_id': return staff.find(s => s.id === val)?.name || val || '-';
+        case 'stage_id': return stages.find(s => s.id === val)?.name || val || '-';
+        case 'entregable_id': return entregables.find(e => e.id === val)?.entregable_nombre || val || '-';
+        default: return val || '-';
+      }
+    };
+
+    if (field === 'Progress') {
+      const progress = Math.max(0, Math.min(100, Number(value) || 0));
+      return (
+        <div className="w-full p-1 cursor-pointer" onClick={() => setIsEditing(true)}>
+          <div className="flex items-center">
+            <span className="text-xs font-semibold mr-2 w-8">{progress}%</span>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${progress}%` }}></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (field === 'status') {
+      return (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${getEstadoColor(value)}`}
+          onClick={() => setIsEditing(true)}
+        >
+          {value || '-'}
+        </span>
+      );
+    }
 
     return (
-        <div className="bg-white border rounded-lg shadow-sm">
-            <div className="p-4 border-b">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h3 className="text-lg font-semibold">{title}</h3>
-                        <p className="text-sm text-gray-500">{description}</p>
-                    </div>
-                    <button onClick={onAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600   rounded-md">
-                        <Plus size={16} /> Agregar
-                    </button>
-                </div>
-                <div className="mt-4 relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input 
-                        type="text" 
-                        placeholder={searchPlaceholder}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border rounded-md"
-                    />
-                </div>
-            </div>
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            {columns.map(col => <th key={col.key} className="p-3 text-left font-medium text-gray-600">{col.title}</th>)}
-                            <th className="p-3 text-right font-medium text-gray-600">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {loading ? (
-                            <tr><td colSpan={columns.length + 1} className="p-4 text-center">Cargando...</td></tr>
-                        ) : filteredData.length === 0 ? (
-                            <tr><td colSpan={columns.length + 1} className="p-4 text-center">{emptyMessage}</td></tr>
-                        ) : (
-                            filteredData.map(item => (
-                                <tr key={item.id} className="hover:bg-gray-50">
-                                    {columns.map(col => (
-                                        <td key={col.key} className={`p-3 align-top ${col.className || ''}`}>
-                                            {col.render ? col.render(item[col.key] || item, item) : item[col.key]}
-                                        </td>
-                                    ))}
-                                    <td className="p-3 text-right">
-                                        <div className="inline-flex gap-2">
-                                            <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800"><Edit size={16}/></button>
-                                            <button onClick={() => onDelete(item)} className="text-red-600 hover:text-red-800"><Trash2 size={16}/></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-// --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
-
-const TasksPage = () => {
-  const dispatch = useDispatch();
-  const { tasks, loading, error } = useSelector(state => state.tasks);
-  const { projects } = useSelector(state => state.projects);
-  const { members: staff } = useSelector(state => state.staff);
-  const { stages } = useSelector(state => state.stages);
-  
-  const [showModal, setShowModal] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    dispatch(fetchTasks());
-    dispatch(fetchProjects());
-    dispatch(fetchStaff());
-    dispatch(fetchStages());
-  }, [dispatch]);
-
-  const getStatusBadgeVariant = (status) => {
-    const variants = {
-      'Pendiente': 'secondary',
-      'En Diseño': 'info',
-      'En Progreso': 'default',
-      'Aprobación Requerida': 'warning',
-      'Bloqueado': 'destructive',
-      'En Discusión': 'warning',
-      'Completo': 'success',
-    };
-    return variants[status] || 'default';
-  };
-
-  const taskColumns = [
-    {
-      key: 'task_description',
-      title: 'Descripción de la Tarea',
-      className: 'max-w-md',
-      render: (value) => (
-        <div className="font-medium">{value}</div>
-      )
-    },
-    {
-      key: 'category',
-      title: 'Categoría',
-      render: (value) => (
-        <Badge variant="outline">{value}</Badge>
-      )
-    },
-    {
-      key: 'status',
-      title: 'Estado',
-      render: (value) => (
-        <Badge variant={getStatusBadgeVariant(value)}>
-          {value}
-        </Badge>
-      )
-    },
-    {
-      key: 'projects',
-      title: 'Proyecto',
-      render: (value) => (
-        value?.name || 'No asignado'
-      )
-    },
-    {
-      key: 'staff',
-      title: 'Responsable',
-      render: (value) => (
-        value?.name || 'No asignado'
-      )
-    },
-    {
-      key: 'stages',
-      title: 'Etapa',
-      render: (value) => (
-        value?.name || 'Sin etapa'
-      )
-    }
-  ];
-
-  const taskFormFields = [
-    {
-      name: 'task_description',
-      label: 'Descripción de la Tarea',
-      type: 'textarea',
-      required: true,
-      rows: 3,
-      placeholder: 'Describe la tarea a realizar...'
-    },
-    {
-      name: 'category',
-      label: 'Categoría',
-      type: 'select',
-      required: true,
-      placeholder: 'Selecciona una categoría',
-      options: TaskCategories.map(category => ({
-        value: category,
-        label: category
-      }))
-    },
-    {
-      name: 'status',
-      label: 'Estado',
-      type: 'select',
-      required: true,
-      placeholder: 'Selecciona el estado',
-      options: TaskStatusOptions.map(status => ({
-        value: status,
-        label: status
-      }))
-    },
-    {
-      name: 'project_id',
-      label: 'Proyecto',
-      type: 'select',
-      placeholder: 'Selecciona un proyecto (opcional)',
-      options: projects.map(project => ({
-        value: project.id,
-        label: project.name
-      }))
-    },
-    {
-      name: 'staff_id',
-      label: 'Responsable',
-      type: 'select',
-      placeholder: 'Asignar responsable (opcional)',
-      options: staff.map(member => ({
-        value: member.id,
-        label: member.name
-      }))
-    },
-    {
-      name: 'stage_id',
-      label: 'Etapa del Proyecto',
-      type: 'select',
-      placeholder: 'Selecciona una etapa (opcional)',
-      options: stages.map(stage => ({
-        value: stage.id,
-        label: stage.name
-      }))
-    },
-    {
-      name: 'notes',
-      label: 'Notas Adicionales',
-      type: 'textarea',
-      rows: 2,
-      placeholder: 'Información adicional, dependencias, observaciones...'
-    }
-  ];
-
-  const handleAdd = () => {
-    setEditingTask(null);
-    setShowModal(true);
-  };
-
-  const handleEdit = (task) => {
-    const taskForEdit = {
-      ...task,
-      project_id: task.project_id || '',
-      staff_id: task.staff_id || '',
-      stage_id: task.stage_id || ''
-    };
-    setEditingTask(taskForEdit);
-    setShowModal(true);
-  };
-
-  const handleDelete = async (task) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar la tarea "${task.task_description}"?`)) {
-      const result = await dispatch(deleteTaskData(task.id));
-      if (!result.success) {
-        alert('Error al eliminar: ' + result.error);
-      } else {
-         alert('Tarea eliminada (simulado). En una app real, la lista se actualizaría.');
-      }
-    }
-  };
-
-  const handleSubmit = async (formData) => {
-    setSubmitting(true);
-    try {
-      const processedData = {
-        ...formData,
-        project_id: formData.project_id || null,
-        staff_id: formData.staff_id || null,
-        stage_id: formData.stage_id || null
-      };
-
-      let result;
-      if (editingTask) {
-        result = await dispatch(updateTaskData(editingTask.id, processedData));
-      } else {
-        result = await dispatch(createTask(processedData));
-      }
-      
-      if (result.success) {
-        alert('Operación exitosa (simulado). La lista se actualizaría.');
-        setShowModal(false);
-        setEditingTask(null);
-      } else {
-        alert('Error: ' + (result.error || 'Ocurrió un error.'));
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setShowModal(false);
-    setEditingTask(null);
-  };
-
-  return (
-    <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <CheckSquare className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-800">Gestión de Tareas</h1>
-        </div>
-        <p className="text-gray-600">
-          Administra todas las tareas del proyecto y su estado de avance.
-        </p>
+      <div className="cursor-pointer p-1 min-h-[28px]" onClick={() => setIsEditing(true)}>
+        {displayValue(field, value)}
       </div>
+    );
+  };
 
-      {error && (
-        <div className="bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-6 flex items-center gap-3">
-          <AlertCircle size={20} />
-          <p>Error: {error}</p>
+  // --- Tarea / fila ---
+  const TaskItem = React.memo(({ task, isSelected, onSelectRow }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isEditingDesc, setIsEditingDesc] = useState(false);
+
+    // Para imprimir
+    const taskRef = useRef(null);
+
+    // Fechas
+    const initialDates = useMemo(
+      () => task.dates ? JSON.parse(task.dates) : { assignDate: '', dueDate: '' },
+      [task.dates]
+    );
+    const [assignDate, setAssignDate] = useState(initialDates.assignDate);
+    const [dueDate, setDueDate] = useState(initialDates.dueDate);
+
+    useEffect(() => {
+      const newDates = task.dates ? JSON.parse(task.dates) : { assignDate: '', dueDate: '' };
+      setAssignDate(newDates.assignDate);
+      setDueDate(newDates.dueDate);
+    }, [task.dates, data, isFormOpen]);
+
+    const handleDateChange = (field, value) => {
+      const updatedDates = {
+        assignDate: field === 'assignDate' ? value : assignDate,
+        dueDate: field === 'dueDate' ? value : dueDate,
+      };
+      updateCell(task.id, { dates: JSON.stringify(updatedDates) });
+    };
+
+    const getPriorityClasses = (priority) => {
+      const base = 'w-1.5 h-full absolute top-0 left-0';
+      switch (priority) {
+        case 'Alta': return `${base} bg-red-500`;
+        case 'Media-Alta': return `${base} bg-orange-500`;
+        case 'Media': return `${base} bg-yellow-400`;
+        case 'Media-Baja': return `${base} bg-green-400`;
+        case 'Baja': return `${base} bg-blue-400`;
+        default: return `${base} bg-gray-300`;
+      }
+    };
+
+    const responsible = staff.find(s => s.id === task.staff_id);
+
+    // ======================= IMPRESIÓN CON CLONADO LIMPIO =======================
+    const handlePrintInPlace = () => {
+      if (!taskRef.current) return;
+
+      const prevExpanded = isExpanded;
+      if (!prevExpanded) setIsExpanded(true);
+
+      setTimeout(() => {
+        const node = taskRef.current;
+        const expandedPanel = node.querySelector('.bg-gray-50\\/50') || node; // panel expandido
+
+        // 1) Clonar el panel y limpiar/convertir controles a texto
+        const clone = expandedPanel.cloneNode(true);
+
+        // a) Quitar botones innecesarios (trash, +, engranaje, etc.)
+        clone.querySelectorAll('button,a,[data-print-hide="true"]').forEach((el) => {
+          const txt = (el.textContent || '').toLowerCase();
+          const ttl = (el.title || '').toLowerCase();
+          const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+          const hasPlus = txt.trim() === '+' || /\b\+\b/.test(txt);
+          const isDelete = txt.includes('eliminar') || ttl.includes('eliminar') || aria.includes('eliminar')
+                        || txt.includes('borrar')   || ttl.includes('borrar')   || aria.includes('borrar')
+                        || /trash|delete/.test(el.innerHTML);
+          if (hasPlus || isDelete) el.remove();
+        });
+        clone.querySelectorAll('svg').forEach(svg => {
+          if (/trash|delete|\+|plus/i.test(svg.outerHTML)) svg.remove();
+        });
+
+        // b) Sustituir <select> por su opción seleccionada
+        clone.querySelectorAll('select').forEach(sel => {
+          const span = document.createElement('span');
+          span.textContent = sel.options[sel.selectedIndex]?.text || sel.value || '-';
+          span.className = 'print-value';
+          sel.replaceWith(span);
+        });
+
+        // c) Sustituir inputs/textarea por su valor
+        clone.querySelectorAll('textarea, input[type="text"], input:not([type])').forEach(inp => {
+          const span = document.createElement('span');
+          span.textContent = inp.value || inp.textContent || inp.placeholder || '-';
+          span.className = 'print-value';
+          inp.replaceWith(span);
+        });
+
+        // d) Sustituir todo [contenteditable] por su texto visible
+        clone.querySelectorAll('[contenteditable="true"]').forEach(ed => {
+          const span = document.createElement('span');
+          span.textContent = ed.innerText || ed.textContent || '-';
+          span.className = 'print-value';
+          ed.replaceWith(span);
+        });
+
+        // e) Fila "Nueva acción…" fuera
+        clone.querySelectorAll('*').forEach(n => {
+          const t = (n.getAttribute && (n.getAttribute('placeholder') || '')).toLowerCase();
+          if (t.includes('nueva acción') || t.includes('nueva accion')) {
+            const row = n.closest('div,li,tr') || n;
+            row.remove();
+          }
+        });
+
+        // 2) Construir cabecera arriba (título + chips)
+        const header = document.createElement('div');
+        header.className = 'print-header';
+        const due = dueDate || 'Sin fecha';
+        const estado = task.status || 'Pendiente';
+        const responsable = responsible?.name || 'Sin asignar';
+
+        header.innerHTML = `
+          <div class="hdr">
+            <div class="title">${task.task_description || '-'}</div>
+            <div class="chips">
+              <span class="chip">${responsable}</span>
+              <span class="chip">${due}</span>
+              <span class="chip estado ${estado.toLowerCase().replace(/\s+/g,'-')}">${estado}</span>
+            </div>
+          </div>
+          <hr class="sep"/>
+        `;
+
+        // 3) Contenedor temporal de impresión
+        const container = document.createElement('div');
+        container.className = '__task_print_container__';
+        container.appendChild(header);
+        container.appendChild(clone);
+        document.body.appendChild(container);
+
+        // 4) Estilos de impresión
+        const style = document.createElement('style');
+        style.innerHTML = `
+          @page { size: A4; margin: 12mm; }
+          @media print {
+            html, body { padding:0; margin:0; }
+            body * { visibility: hidden !important; }
+            .__task_print_container__, .__task_print_container__ * { visibility: visible !important; }
+          }
+          .__task_print_container__ {
+            position:absolute; inset:0; background:#fff;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+            font-size:12.5px; line-height:1.35; color:#0f172a;
+          }
+          .hdr { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+          .title { font-size:16px; font-weight:700; color:#111827; }
+          .chips { display:flex; gap:8px; flex-wrap:wrap; }
+          .chip { padding:3px 8px; border-radius:9999px; border:1px solid #e5e7eb; background:#f8fafc; font-weight:600; font-size:11px; }
+          .chip.estado.pendiente { background:#fef3c7; border-color:#fde68a; color:#92400e; }
+          .sep { border:0; border-top:1px solid #e5e7eb; margin:8px 0 10px; }
+
+          /* una sola columna limpia */
+          .__task_print_container__ .grid { display:block !important; }
+          .__task_print_container__ .pl-16 { padding-left:0 !important; }
+          .__task_print_container__ .pr-8 { padding-right:0 !important; }
+          .__task_print_container__ .bg-gray-50\\/50 { background:transparent !important; }
+
+          /* NO cortar textos */
+          .__task_print_container__ * {
+            white-space: pre-wrap !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+            text-overflow: initial !important;
+            -webkit-line-clamp: initial !important;
+            max-height: none !important;
+          }
+          .truncate, [class*="line-clamp"] { white-space: normal !important; display:block !important; }
+
+          /* Checkboxes cuadrados */
+          input[type="checkbox"]{
+            appearance:none; -webkit-appearance:none; width:14px; height:14px;
+            border:1.5px solid #9ca3af; border-radius:3px; margin-right:8px; vertical-align:middle; position:relative; top:-1px; background:#fff;
+          }
+          input[type="checkbox"]:checked::after{
+            content:""; position:absolute; left:3px; top:0px; width:5px; height:9px; border: solid #2563eb;
+            border-width:0 2px 2px 0; transform: rotate(45deg);
+          }
+
+          /* ocultar barras de progreso */
+          .bg-blue-600.h-2, .w-full.bg-gray-200.rounded-full.h-2 { display:none !important; }
+
+          /* Evitar cortes por bloque */
+          [data-section="acciones"], [data-print-block="true"] { break-inside: avoid; page-break-inside: avoid; }
+        `;
+        document.head.appendChild(style);
+
+        const originalTitle = document.title;
+        document.title = (task.task_description || 'Tarea').slice(0,120);
+
+        window.print();
+
+        // Limpieza
+        document.title = originalTitle;
+        if (style.parentNode) style.parentNode.removeChild(style);
+        if (container.parentNode) container.parentNode.removeChild(container);
+        if (!prevExpanded) setIsExpanded(false);
+      }, 0);
+    };
+    // ===================== FIN IMPRESIÓN =====================
+
+    // Último evento
+    const datesForLatest = task.dates ? JSON.parse(task.dates) : {};
+    const latestLog = (datesForLatest.logs && datesForLatest.logs.length > 0)
+      ? datesForLatest.logs[datesForLatest.logs.length - 1]
+      : null;
+
+    return (
+      <div ref={taskRef} className={`relative ${isSelected ? 'bg-blue-50' : 'bg-white'}`} data-print-block="true">
+        <div className={getPriorityClasses(task.Priority)} title={`Prioridad: ${task.Priority}`}></div>
+        <div className="flex items-center w-full pl-6 pr-4 py-2">
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 rounded-full hover:bg-gray-200 mr-2"
+              data-print-hide="true"
+            >
+              {isExpanded ? (
+                <ChevronDown size={20} className="text-gray-600" />
+              ) : (
+                <ChevronRight size={20} className="text-gray-500" />
+              )}
+            </button>
+            <input type="checkbox" checked={isSelected} onChange={onSelectRow} className="w-5 h-5" data-print-hide="true" />
+          </div>
+
+          <div
+            className="flex-grow font-medium text-gray-800 ml-4 print-avoid-break"
+            onClick={() => { if (!isEditingDesc) setIsExpanded(!isExpanded); }}
+          >
+            {isEditingDesc ? (
+              <EditableCell
+                rowId={task.id}
+                field="task_description"
+                value={task.task_description}
+                type="textarea"
+                onExitEditing={() => setIsEditingDesc(false)}
+              />
+            ) : (
+              <div className="p-1 min-h-[28px] cursor-pointer select-text">
+                {task.task_description || '-'}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 md:gap-6 mx-4 md:mx-6 text-sm text-gray-600 flex-shrink-0">
+            <div className="flex items-center gap-2" title="Responsable">
+              <User size={16} className="text-gray-400" />
+              <span>{responsible?.name || 'Sin asignar'}</span>
+            </div>
+            <div className="flex items-center gap-2" title="Fecha Límite">
+              <Calendar size={16} className="text-gray-400" />
+              <span>{dueDate || 'Sin fecha'}</span>
+            </div>
+            <div title="Estado">
+              <EditableCell
+                rowId={task.id}
+                field="status"
+                value={task.status}
+                type="status-select"
+                options={Object.keys(ESTADOS).map(k => ({ id: ESTADOS[k], name: ESTADOS[k] }))}
+              />
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsEditingDesc(true); }}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-700"
+              title="Editar descripción"
+              data-print-hide="true"
+            >
+              <Settings size={16} />
+            </button>
+
+            <button
+              data-print-btn="true"
+              onClick={(e) => { e.stopPropagation(); handlePrintInPlace(); }}
+              className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-700 font-medium"
+              title="Imprimir esta tarea"
+            >
+              Imprimir
+            </button>
+          </div>
         </div>
-      )}
 
-      <DataTable
-        title="Lista de Tareas"
-        description="Todas las tareas del proyecto organizadas por estado y responsable"
-        data={tasks}
-        columns={taskColumns}
-        loading={loading}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        searchPlaceholder="Buscar tareas por descripción, categoría..."
-        emptyMessage="No hay tareas registradas"
+        {isExpanded && (
+          <div className="pl-16 pr-8 pb-4 pt-2 bg-gray-50/50 border-t border-gray-200">
+            <div
+              className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-4 text-sm mb-4"
+              data-print-block="true"
+              data-print-fields="true"
+            >
+              <div className="print-row">
+                <label className="font-medium text-gray-500">Prioridad</label>
+                <EditableCell rowId={task.id} field="Priority" value={task.Priority} type="priority-select" options={Priorities} />
+              </div>
+              <div className="print-row">
+                <label className="font-medium text-gray-500">Etapa</label>
+                <EditableCell rowId={task.id} field="stage_id" value={task.stage_id} type="select" options={stages} />
+              </div>
+              <div className="print-row">
+                <label className="font-medium text-gray-500">Entregable</label>
+                <EditableCell rowId={task.id} field="entregable_id" value={task.entregable_id} type="entregable-select" options={entregables} />
+              </div>
+              <div className="print-row">
+                <label className="font-medium text-gray-500">Progreso</label>
+                <EditableCell rowId={task.id} field="Progress" value={task.Progress} type="progress" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-y-4 text-sm">
+              <div data-print-block="true" data-print-dates="true">
+                <label className="font-medium text-gray-500">Fechas y Actividad</label>
+                <div className="flex items-end gap-x-4 gap-y-2 p-1 flex-wrap">
+                  <div>
+                    <label htmlFor={`assign-date-${task.id}`} className="block text-xs text-gray-500 mb-1">Asignación</label>
+                    <input
+                      id={`assign-date-${task.id}`}
+                      type="date"
+                      value={assignDate || ''}
+                      onChange={(e) => setAssignDate(e.target.value)}
+                      onBlur={(e) => handleDateChange('assignDate', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`due-date-${task.id}`} className="block text-xs text-gray-500 mb-1">Límite</label>
+                    <input
+                      id={`due-date-${task.id}`}
+                      type="date"
+                      value={dueDate || ''}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      onBlur={(e) => handleDateChange('dueDate', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="pt-2" data-print-hide="true">
+                    <TaskLog task={task} onSave={updateCell} />
+                  </div>
+                  <div className="flex-grow pt-2">
+                    <div
+                      className="w-full p-2 border border-gray-200 bg-gray-50 rounded-md text-sm text-gray-600 truncate min-h-[42px] flex items-center"
+                      title={
+                        (task.dates && JSON.parse(task.dates)?.logs?.length)
+                          ? `${JSON.parse(task.dates).logs.slice(-1)[0].date}: ${JSON.parse(task.dates).logs.slice(-1)[0].event}`
+                          : 'No hay eventos.'
+                      }
+                    >
+                      {(() => {
+                        const datesForLatest = task.dates ? JSON.parse(task.dates) : {};
+                        const latestLog = (datesForLatest.logs && datesForLatest.logs.length > 0)
+                          ? datesForLatest.logs[datesForLatest.logs.length - 1]
+                          : null;
+                        return latestLog ? (
+                          <>
+                            <span className="font-semibold mr-2">{latestLog.date}:</span>
+                            <span>{latestLog.event}</span>
+                          </>
+                        ) : <span className="text-gray-400">No hay eventos registrados.</span>;
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div data-print-block="true">
+                <label className="font-medium text-gray-500">Notas</label>
+                <EditableCell rowId={task.id} field="notes" value={task.notes} type="textarea" />
+              </div>
+
+              <div data-print-block="true" data-section="acciones">
+                <label className="font-medium text-gray-500">Acciones y Actividad</label>
+                <InlineActionsTask task={task} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  });
+
+  // --- UI principal ---
+  return (
+    <div className="h-screen bg-gray-50 flex flex-col p-4 md:p-8 gap-6">
+      <FormTask
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleAddTask}
+        proyecto={id}
+        staff={staff}
+        stages={stages}
+        entregables={entregables}
+        estados={ESTADOS}
       />
 
-      <Modal
-        isOpen={showModal}
-        onClose={handleCancel}
-        title={editingTask ? 'Editar Tarea' : 'Crear Nueva Tarea'}
-        size="xl"
-      >
-        <CrudForm
-          fields={taskFormFields}
-          initialData={editingTask || { status: 'Pendiente', category: TaskCategories[0] }}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          loading={submitting}
-          submitText={editingTask ? 'Actualizar' : 'Crear'}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex-shrink-0">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">{selectedProject.name}</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+          <div className="flex items-start gap-3">
+            <User className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="font-semibold text-gray-600">Cliente</p>
+              <p className="text-gray-800">{selectedProject.client_name || 'No especificado'}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="font-semibold text-gray-600">Fechas</p>
+              <p className="text-gray-800">{`Inicio: ${selectedProject.start_date || 'N/A'} | Fin: ${selectedProject.end_date || 'N/A'}`}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Tag className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="font-semibold text-gray-600">Estado Actual</p>
+              <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                {selectedProject.status || 'No definido'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm font-medium text-gray-600">Progreso General</span>
+            <span className="text-sm font-bold text-blue-600">{projectProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${projectProgress}%` }}></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-grow min-h-0">
+        <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar tareas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort-select" className="text-sm font-medium text-gray-600">Ordenar por:</label>
+              <select
+                id="sort-select"
+                value={sortConfig.key}
+                onChange={(e) => setSortConfig({ ...sortConfig, key: e.target.value })}
+                className="border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Priority">Prioridad</option>
+                <option value="task_description">Nombre Tarea</option>
+                <option value="status">Estado</option>
+              </select>
+              <button
+                onClick={() =>
+                  setSortConfig({
+                    ...sortConfig,
+                    direction: sortConfig.direction === 'ascending' ? 'descending' : 'ascending'
+                  })
+                }
+                className="p-2 border rounded-lg hover:bg-gray-100"
+              >
+                {sortConfig.direction === 'ascending' ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+          >
+            <Plus size={18} /> Nueva Tarea
+          </button>
+        </div>
+
+        <div className="divide-y divide-gray-200 overflow-y-auto">
+          {filteredAndSortedTasks.map(task => (
+            <TaskItem
+              key={task.id}
+              task={task}
+              isSelected={selectedRows.has(task.id)}
+              onSelectRow={() => handleSelectRow(task.id)}
+            />
+          ))}
+          {filteredAndSortedTasks.length === 0 && (
+            <div className="p-12 text-center text-gray-500">
+              <p className="font-semibold">No se encontraron tareas</p>
+              <p className="text-sm mt-1">
+                {searchTerm ? "Intenta con otra búsqueda." : "Crea una nueva tarea para empezar."}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-shrink-0">
+        <TaskActions
+          selectedRows={selectedRows}
+          data={projectTasks}
+          staff={staff}
+          updateMultipleTasks={updateMultipleTasks}
+          handleBulkDelete={handleBulkDelete}
+          handleDuplicateTasks={handleDuplicateTasks}
+          deselectAll={deselectAll}
         />
-      </Modal>
+      </div>
     </div>
   );
 };
 
-export default TasksPage;
+export default ProjectTaskModal;
