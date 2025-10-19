@@ -30,6 +30,7 @@ import MesResumen from './body/views/ventaCompra/MesResumen.jsx';
 import Model from './body/views/ventaCompra/Model.jsx';
 import DiaResumen from './body/views/ventaCompra/DiaResumen.jsx';
 import RecetaModal from './body/views/ventaCompra/RecetaModal';
+import ProcedimientoModal from './body/views/ventaCompra/ProcedimientoModal';
 import Predict from './body/views/ventaCompra/Predict';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
@@ -126,6 +127,7 @@ function App() {
      <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
+     <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
      <Route path="/Predict/:MenuItem" element={<Predict />} />
      <Route path="/CalculoNomina" element={<CalculoNomina />} />
      <Route path="/Model" element={<Model />} />

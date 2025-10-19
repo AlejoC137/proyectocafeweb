@@ -213,7 +213,12 @@ const SimulationRow = ({ product, quantity, onQuantityChange, onRemove }) => {
                     className="p-1 border rounded-md w-20 text-center"
                     placeholder="Cant."
                 />
-                <a href={`/receta/${product.recipeId}`} target="_blank" rel="noopener noreferrer" className="p-2 font-medium text-blue-600 hover:text-blue-800" title="Ver Receta">
+                <a 
+                href={`/receta/${product.recipeId}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2 font-medium text-blue-600 hover:text-blue-800" 
+                title="Ver Receta">
                     📕
                 </a>
                 <button onClick={() => onRemove(product._id)} className="bg-white rounded-md text-red-500 hover:text-red-700 font-bold px-2 ml-2">X</button>

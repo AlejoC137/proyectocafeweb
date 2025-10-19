@@ -7,15 +7,15 @@ import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapi
 import { CardGridWorkIsue } from "./gridInstance/CardGridWorkIsue";
 import { CardGridStaff } from "./gridInstance/CardGridStaff";
 import { CardGridProcedimientos } from "./gridInstance/CardGridProcedimientos";
-import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
 import { CardGridInventarioMenuLunch } from "@/components/ui/CardGridInventarioMenuLunch";
 // Vista tipo Excel (tabla)
+
+
 import { TableViewManager } from "@/components/ui/tableViewManager";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { ViewToggle } from "@/components/ui/viewToggle";
-import { Button } from "@/components/ui/button";
 import { 
   UtensilsCrossed, 
   FileText, 
@@ -25,6 +25,7 @@ import {
   Zap,
   BarChart3
 } from "lucide-react";
+import WorkIsueExcelView from "../actividades/WorkE/WorkIsueExcelView";
 
 function Manager() {
   const dispatch = useDispatch();
@@ -119,6 +120,8 @@ function Manager() {
   const renderGrid = () => {
     if (viewMode === 'table') {
       // Vista tipo Excel (Tabla)
+
+
       return (
         <TableViewManager
           products={filteredItems}

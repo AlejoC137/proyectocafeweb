@@ -58,6 +58,8 @@ export function crearWorkIsue(workIsueData) {
   console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
   
   return async (dispatch) => {
+    console.log(workIsueData);
+    
     try {
       // Generar un objeto base con UUID
       const nuevoWorkIsue = {
@@ -66,27 +68,56 @@ export function crearWorkIsue(workIsueData) {
         Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] }, // Fecha y hora actual
       };
 
-      // Insertar el nuevo WorkIsue en Supabase
+      // Insertar el nuevo  en Supabase
       const { data, error } = await supabase
         .from("WorkIsue")
         .insert([nuevoWorkIsue])
         .select();
 
       if (error) {
-        console.error("Error al crear el WorkIsue:", error);
-        throw new Error("No se pudo crear el WorkIsue");
+        console.error("Error al crear el :", error);
+        throw new Error("No se pudo crear el ");
       }
 
       // Despachar la acción para actualizar el estado global
       dispatch({
         type: "CREAR_WORKISUE_SUCCESS",
-        payload: data[0], // El nuevo WorkIsue creado
+        payload: data[0], // El nuevo  creado
       });
 
-      console.log("WorkIsue creado correctamente:", data[0]);
+      console.log(" creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearWorkIsue:", error);
+      throw error;
+    }
+  };
+}
+
+export function deleteWorkIsue(itemId , type) {
+  const table = type === MenuItems ? MENU : type 
+  return async (dispatch) => {
+    try {
+      // Llamada a Supabase para eliminar el registro
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq("id", itemId); // Filtrar por el ID del ítem
+
+      if (error) {
+        console.error("Error al eliminar el ítem:", error);
+        throw new Error("No se pudo eliminar el ítem");
+      }
+
+      // Si es necesario, despacha una acción para actualizar el estado global
+      dispatch({
+        type: "DELETE_ITEM_SUCCESS",
+        payload: itemId, // Enviar el ID del ítem eliminado
+      });
+
+      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
+    } catch (error) {
+      console.error("Error en la acción deleteItem:", error);
       throw error;
     }
   };
@@ -135,17 +166,17 @@ export function actualizarWorkIsue(workIsueId, updatedFields) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue")
+        .from("")
         .update(updatedFields)
         .eq("_id", workIsueId)
         .select();
 
       if (error) {
-        console.error('Error al actualizar el WorkIsue:', error);
+        console.error('Error al actualizar el :', error);
         return null;
       }
 
-      console.log('WorkIsue actualizado correctamente:', data);
+      console.log(' actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción actualizarWorkIsue:', error);
@@ -157,17 +188,17 @@ export function eliminarWorkIsue(workIsueId) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue")
+        .from("")
         .delete()
         .eq("_id", workIsueId)
         .select();
 
       if (error) {
-        console.error('Error al eliminar el WorkIsue:', error);
+        console.error('Error al eliminar el :', error);
         return null;
       }
 
-      console.log('WorkIsue eliminado correctamente:', data);
+      console.log(' eliminado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción eliminarWorkIsue:', error);
@@ -179,7 +210,7 @@ export function actualizarPago(workIsueId, pagoInfo) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue")
+        .from("")
         .update({
           Pagado: true,
           Pago_Info: pagoInfo,

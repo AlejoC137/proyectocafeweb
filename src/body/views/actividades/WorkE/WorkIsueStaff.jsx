@@ -12,6 +12,7 @@ import FormTask from './FormTask.jsx';
 import { getAllFromTable } from "../../../../redux/actions";
 import { addTask, deleteTask, updateTask } from "../../../../redux/standaloneTaskActions";
 import { AREAS } from '../../../../redux/actions-types.js';
+import ProcedimientoModal from '../../ventaCompra/ProcedimientoModal.jsx';
 
 // --- Constantes y Helpers (sin cambios) ---
 const getEstadoColor = (estado) => {
@@ -24,9 +25,9 @@ const getPriorityColor = (priority) => {
 
 // Ya no necesitamos initialColumns para definir anchos de tabla
 const columnHeaders = [
-    { key: 'task_description', label: 'Tarea / Espacio', sortable: true },
-    { key: 'Responsable', label: 'Responsable', sortable: true },
-    { key: 'notes', label: 'Notas', sortable: true },
+    { key: 'Procedimientos', label: 'Procedimientos', sortable: true },
+    { key: 'Ejecutor', label: 'Ejecutor', sortable: true },
+    { key: 'Notas', label: 'Notas', sortable: true },
 ];
 
 // --- Componente Principal ---
@@ -34,18 +35,24 @@ const WorkIsueStaff = () => {
     const dispatch = useDispatch();
     const [rawData, setRawData] = useState([]);
     const [staff, setStaff] = useState([]);
+    const [procedimientos, setProcedimientos] = useState([]);
+    const [recetasProduccion, setRecetasProduccion] = useState([]);
     const [filters, setFilters] = useState({ search: '', Priority: '' });
     const [sortConfig, setSortConfig] = useState({ key: 'Priority', direction: 'descending' });
     const [collapsedGroups, setCollapsedGroups] = useState(new Set());
 
     // --- Lógica de datos (sin cambios) ---
     const fetchAllData = useCallback(async () => {
-        const [tareasAction, staffAction] = await Promise.all([
+        const [tareasAction, staffAction , ProcedimientoAction, RecetasProduccionAction] = await Promise.all([
             dispatch(getAllFromTable("WorkIsue")),
-            dispatch(getAllFromTable("Staff"))
+            dispatch(getAllFromTable("Staff")),
+            dispatch(getAllFromTable("RecetasProcedimientos")),
+            dispatch(getAllFromTable("RecetasProduccion"))
         ]);
         if (tareasAction?.payload) setRawData(tareasAction.payload);
         if (staffAction?.payload) setStaff(staffAction.payload);
+        if (ProcedimientoAction?.payload) setProcedimientos(ProcedimientoAction.payload);
+        if (RecetasProduccionAction?.payload) setRecetasProduccion(RecetasProduccionAction.payload);
     }, [dispatch]);
 
     useEffect(() => {
@@ -54,7 +61,7 @@ const WorkIsueStaff = () => {
     
     const processedData = useMemo(() => rawData.map(task => ({
         ...task,
-        assigneeName: staff.find(s => s._id === task.Responsable)?.Nombre || 'Sin asignar',
+        assigneeName: staff.find(s => s._id === task.Ejecutor)?.Nombre || 'Sin asignar',
     })), [rawData, staff]);
 
     const filteredData = useMemo(() => {
@@ -99,6 +106,7 @@ const WorkIsueStaff = () => {
         setSortConfig({ key, direction });
     };
     // --- FIN Lógica de datos ---
+console.log(groupedAndSortedItems);
 
     return (
         <div className="flex flex-col h-full font-sans">
@@ -108,18 +116,18 @@ const WorkIsueStaff = () => {
                     {/* --- INICIO: NUEVO HEADER CON FLEXBOX --- */}
                     <div className="flex bg-slate-100 border-b-2 border-slate-300 font-semibold text-xs text-slate-600 uppercase sticky top-0 z-20">
                         <div className="px-4 py-3 w-[120px] shrink-0"> {/* Ancho Mínimo Fijo */}
-                            <button onClick={() => requestSort('task_description')} className="flex items-center gap-1.5 hover:text-slate-900">
+                            <button onClick={() => requestSort('Procedimientos')} className="flex items-center gap-1.5 hover:text-slate-900">
                                 Tarea <ArrowUpDown size={14} />
                             </button>
                         </div>
                         <div className="px-4 py-3 w-[120px] shrink-0"> {/* Ancho Mínimo Fijo */}
-                            <button onClick={() => requestSort('Responsable')} className="flex items-center gap-1.5 hover:text-slate-900">
-                                Responsable <ArrowUpDown size={14} />
+                            <button onClick={() => requestSort('Ejecutor')} className="flex items-center gap-1.5 hover:text-slate-900">
+                                Ejecutor <ArrowUpDown size={14} />
                             </button>
                         </div>
                         <div className="px-4 py-3 flex-1"> {/* Espacio Flexible */}
-                            <button onClick={() => requestSort('notes')} className="flex items-center gap-1.5 hover:text-slate-900">
-                                Notas <ArrowUpDown size={14} />
+                            <button onClick={() => requestSort('Notas')} className="flex items-center gap-1.5 hover:text-slate-900">
+                                Título / Notas <ArrowUpDown size={14} />
                             </button>
                         </div>
                     </div>
@@ -140,15 +148,83 @@ const WorkIsueStaff = () => {
                                 {/* Filas de Tareas */}
                                 {!collapsedGroups.has(groupName) && groupedAndSortedItems[groupName].map((item) => (
                                     <div key={item._id} className='flex hover:bg-slate-50 border-b'>
+                                        
+                                        {/* === INICIO: CELDA DE PROCEDIMIENTO (SIN TÍTULO) === */}
+                                        <div className="p-2 w-[120px] shrink-0 break-words align-top flex flex-col gap-1">
+                                            {(() => {
+                                                let parsedProcedimientos = [];
+                                                try {
+                                                    parsedProcedimientos = JSON.parse(item.Procedimientos);
+                                                } catch (error) {
+                                                    return <span className="text-slate-400 italic">N/A</span>;
+                                                }
+
+                                                if (!Array.isArray(parsedProcedimientos) || parsedProcedimientos.length === 0) {
+                                                    return <span className="text-slate-400 italic">Sin Proc.</span>;
+                                                }
+
+                                                return parsedProcedimientos.map(procRef => {
+                                                    const procedimientoId = procRef._id;
+                                                    const tipo = procRef._tipo;
+                                                    
+                                                    if (!procedimientoId) return null; 
+
+                                                    let dataItem = null;
+                                                    let href = '';
+                                                    let icon = '';
+
+                                                    if (tipo === 'procedimiento') {
+                                                        dataItem = procedimientos.find(p => p._id === procedimientoId);
+                                                        href = `/ProcedimientoModal/${procedimientoId}`;
+                                                        icon = '📕'; 
+                                                    } else {
+                                                        dataItem = recetasProduccion.find(r => r._id === procedimientoId);
+                                                        href = `/RecetaModal/${procedimientoId}`;
+                                                        icon = '📜'; 
+                                                    }
+
+                                                    if (!dataItem) {
+                                                        return (
+                                                            <span key={procedimientoId} className="text-red-500 italic text-xs">
+                                                                ID no encontrado
+                                                            </span>
+                                                        );
+                                                    }
+
+                                                    // ===== CORRECCIÓN: Usar _name o el nombre del dataItem como fallback =====
+                                                    const procedureName = procRef._name || dataItem.tittle || dataItem.Nombre || dataItem.Nombre_del_producto || "Sin Nombre";
+
+                                                    return (
+                                                        <a
+                                                            key={procedimientoId} 
+                                                            href={href}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 p-1 px-1.5 rounded-md font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 text-xs"
+                                                            title={procedureName} 
+                                                        >
+                                                            {icon} {`${procedureName}`}
+                                                        </a>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+                                        {/* === FIN: CELDA DE PROCEDIMIENTO === */}
+
                                         <div className="p-2 w-[120px] shrink-0 break-words align-top">
-                                            <StaticCell field="task_description" value={item.task_description} />
+                                            <StaticCell field="Ejecutor" value={item.Ejecutor} options={staff} type="select-staff" />
                                         </div>
-                                        <div className="p-2 w-[120px] shrink-0 break-words align-top">
-                                            <StaticCell field="Responsable" value={item.Responsable} options={staff} type="select-staff" />
+
+                                        {/* === INICIO: CELDA DE TÍTULO Y NOTAS === */}
+                                        <div className="p-2 flex-1 break-words align-top flex flex-col gap-1">
+                                            {/* ===== TÍTULO DEL WORKISUE ===== */}
+                                            <span className="font-semibold text-slate-800 break-words">
+                                                {item.Tittle || "Sin Título"}
+                                            </span>
+                                            {/* ===== NOTAS DEL WORKISUE ===== */}
+                                            <StaticCell field="Notas" value={item.Notas} />
                                         </div>
-                                        <div className="p-2 flex-1 break-words align-top">
-                                            <StaticCell field="notes" value={item.notes} />
-                                        </div>
+                                        {/* === FIN: CELDA DE TÍTULO Y NOTAS === */}
                                     </div>
                                 ))}
                             </div>
@@ -162,16 +238,18 @@ const WorkIsueStaff = () => {
     );
 };
 
+
 // --- Componente de Celda Estática (Solo Lectura) ---
 const StaticCell = ({ field, value, type = 'text', options = [] }) => {
-    let displayValue = value || (field === 'notes' ? <span className="text-slate-400 italic">Sin Notas</span> : '-');
+    let displayValue = value || (field === 'Notas' ? <span className="text-slate-400 italic">Sin Notas</span> : '-');
     
     if (type === 'select-staff') {
         const staffMember = options.find(s => s._id === value);
         displayValue = staffMember ? staffMember.Nombre : <span className="text-slate-400 italic">Sin asignar</span>;
     }
     
+    // El 'displayValue' para las notas ya está manejado arriba
+    // (si el valor es nulo, muestra "Sin Notas")
     return <div>{displayValue}</div>;
 };
-
 export default WorkIsueStaff;

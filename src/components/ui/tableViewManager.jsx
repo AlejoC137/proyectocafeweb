@@ -2,14 +2,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
-import { 
-  ESTATUS, 
-  CATEGORIES, 
-  SUB_CATEGORIES, 
-  Staff, 
-  WorkIsue, 
-  Procedimientos, 
-  MenuItems 
+import {
+  ESTATUS,
+  CATEGORIES,
+  SUB_CATEGORIES,
+  Staff,
+  WorkIsue,
+  Procedimientos,
+  MenuItems
 } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch, safeJsonStringify } from "../../utils/jsonUtils";
@@ -19,12 +19,12 @@ import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOpti
 export function TableViewManager({ products, currentType }) {
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
-  
+
   // Estados para filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGrupo, setFilterGrupo] = useState(
     currentType === MenuItems ? "TARDEO" : ""
-  ); 
+  );
   const [filterSubGrupo, setFilterSubGrupo] = useState(
     currentType === MenuItems ? "TARDEO_ALMUERZO" : ""
   );
@@ -37,6 +37,30 @@ export function TableViewManager({ products, currentType }) {
   const [recetas, setRecetas] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({});
+
+  // Función para manejar objetos anidados de forma segura (usada en WorkIsue)
+  const parseNestedObject = (obj, fallback = {}) => {
+    try {
+      if (typeof obj === "string") {
+        if (obj === "NaN" || obj === "null" || obj === "undefined" || !obj) {
+          return fallback;
+        }
+        // Si no empieza con { o [, no es un JSON válido
+        if (!obj.startsWith("{") && !obj.startsWith("[")) {
+           // Devolver el fallback, pero quizás registrar el valor
+           console.warn("Valor no JSON en campo anidado:", obj);
+           return fallback;
+        }
+        return JSON.parse(obj);
+      }
+      return obj || fallback;
+    } catch (e) {
+      console.warn("Invalid nested object JSON:", obj, e);
+      // Si falla el parseo, devolver el string original en un campo para no perderlo
+      return { ...fallback, _raw: obj };
+    }
+  };
+
 
   // Definir todas las columnas disponibles según el tipo
   const getAvailableColumns = () => {
@@ -89,21 +113,28 @@ export function TableViewManager({ products, currentType }) {
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
       
+      // --- MODIFICACIÓN WORKISUE ---
       case WorkIsue:
         return {
           titulo: { label: "Título", key: "Tittle", default: true },
           categoria: { label: "Categoría", key: "Categoria", default: true },
-          prioridad: { label: "Prioridad", key: "Prioridad", default: true },
-          fechas: { label: "Fechas", key: "Dates", default: true },
-          estado: { label: "Estado", key: "Estado", default: true },
+          ejecutor: { label: "Ejecutor", key: "Ejecutor", default: true },
+          fechaCreacion: { label: "Creado", key: "Dates.isued", default: true },
+          fechaFin: { label: "Finalizado", key: "Dates.finished", default: false },
+          dateAsigmente: { label: "Asignado", key: "Dates.date_asigmente", default: false }, 
+          procedimientos: { label: "Procedimientos", key: "Procedimientos", default: false },
+          pagado: { label: "Pagado", key: "Pagado.pagadoFull", default: true },
+          notas: { label: "Notas", key: "Notas", default: false },
+          estado: { label: "Estado", key: "Terminado", default: true }, // Usamos 'Terminado' (boolean) para el estado
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
-      
+      // --- FIN MODIFICACIÓN ---
+        
       case Procedimientos:
         return {
           titulo: { label: "Título", key: "tittle", default: true },
           categoria: { label: "Categoría", key: "Categoria", default: true },
-          descripcion: { label: "Descripción", key: "Descripción", default: false },
+          DescripcionGeneral: { label: "DescripcionGeneral", key: "DescripcionGeneral", default: false },
           estado: { label: "Estado", key: "Estado", default: true },
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
@@ -208,7 +239,7 @@ export function TableViewManager({ products, currentType }) {
       case Staff:
         return `${product.Nombre || ""} ${product.Apellido || ""}`;
       case WorkIsue:
-        return product.Tittle;
+        return `${product.Tittle || ""} ${product.Categoria || ""} ${product.Notas || ""}`; // Incluimos Categoria y Notas en búsqueda
       case Procedimientos:
         return product.tittle;
       case MenuItems:
@@ -234,10 +265,26 @@ export function TableViewManager({ products, currentType }) {
     }
   };
 
+  // Función para obtener el campo de estado
+  const getStatusField = (product) => {
+    switch(currentType) {
+        case WorkIsue:
+            // Convertir boolean 'Terminado' a string "Terminado" / "Pendiente"
+            return product.Terminado ? "Terminado" : "Pendiente";
+        default:
+            return product.Estado;
+    }
+  };
+
+
   const uniqueGrupos = getUniqueCategories();
   const uniqueSubGrupos = getUniqueSubGroups();
   const uniqueTipos = getUniqueTipos();
-  const uniqueEstados = [...new Set(products.map(p => p.Estado).filter(Boolean))];
+  // Modificado para que los estados de WorkIsue sean "Terminado" y "Pendiente"
+  const uniqueEstados = currentType === WorkIsue 
+    ? ["Terminado", "Pendiente"]
+    : [...new Set(products.map(p => p.Estado).filter(Boolean))];
+
   
   // Filtrar productos
   const filteredProducts = products.filter(product => {
@@ -247,7 +294,10 @@ export function TableViewManager({ products, currentType }) {
     
     const grupoField = getCategoryField(product);
     const matchesGrupo = !filterGrupo || grupoField === filterGrupo;
-    const matchesStatus = !filterStatus || product.Estado === filterStatus;
+
+    // Usar la nueva función de estado
+    const statusField = getStatusField(product);
+    const matchesStatus = !filterStatus || statusField === filterStatus;
     
     // Filtros específicos para MenuItems
     let matchesSubGrupo = true;
@@ -266,14 +316,30 @@ export function TableViewManager({ products, currentType }) {
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (!sortColumn) return 0;
     
-    let aValue = a[sortColumn] || "";
-    let bValue = b[sortColumn] || "";
-    
+    let aValue;
+    let bValue;
+
+    // --- MODIFICACIÓN SORTING WORKISUE ---
+    // Manejar ordenamiento de campos anidados de WorkIsue
+    if (currentType === WorkIsue && (sortColumn === "Dates.isued" || sortColumn === "Pagado.pagadoFull")) {
+        if (sortColumn === "Dates.isued") {
+            aValue = new Date(parseNestedObject(a.Dates, {isued: null}).isued || 0);
+            bValue = new Date(parseNestedObject(b.Dates, {isued: null}).isued || 0);
+        } else if (sortColumn === "Pagado.pagadoFull") {
+            aValue = parseNestedObject(a.Pagado, {pagadoFull: false}).pagadoFull;
+            bValue = parseNestedObject(b.Pagado, {pagadoFull: false}).pagadoFull;
+        }
+    } else {
+         aValue = a[sortColumn] || "";
+         bValue = b[sortColumn] || "";
+    }
+    // --- FIN MODIFICACIÓN ---
+
     // Manejar casos especiales para fechas y números
     if (sortColumn === "Rate" || sortColumn === "CC" || sortColumn === "Precio") {
       aValue = parseFloat(aValue) || 0;
       bValue = parseFloat(bValue) || 0;
-    } else if (sortColumn.includes("Date") || sortColumn === "Dates") {
+    } else if (sortColumn === "Dates" && currentType !== WorkIsue) { // Evitar doble manejo
       aValue = new Date(aValue);
       bValue = new Date(bValue);
     }
@@ -308,7 +374,7 @@ export function TableViewManager({ products, currentType }) {
       [itemId]: {
         ...prev[itemId],
         [field]: subField ? {
-          ...(prev[itemId]?.[field] || {}),
+          ...(prev[itemId]?.[field] || {}), // Mantener otros sub-campos si existen
           [subField]: value
         } : value
       }
@@ -404,15 +470,79 @@ export function TableViewManager({ products, currentType }) {
         if (editedData.Rate !== undefined && editedData.Rate !== '') {
           updatedFields.Rate = parseFloat(editedData.Rate) || 0;
         }
-      } else if (currentType === WorkIsue) {
-        // Para WorkIsue, manejar fechas y objetos
+      } 
+      
+      // --- MODIFICACIÓN GUARDADO WORKISUE ---
+      else if (currentType === WorkIsue) {
+        // Para WorkIsue, manejar objetos JSON anidados
+        const originalItem = products.find(p => p._id === item._id);
+
+        // 1. Manejar 'Dates'
         if (editedData.Dates) {
-          updatedFields.Dates = editedData.Dates;
+          // Parsear el string original
+          const originalDates = parseNestedObject(originalItem.Dates, { isued: "", finished: "", date_asigmente: [] });
+          
+          // Manejar el string JSON de bitácora
+          if (editedData.Dates.date_asigmente_str) {
+            try {
+              // Intenta parsear el string que vino del textarea
+              editedData.Dates.date_asigmente = JSON.parse(editedData.Dates.date_asigmente_str);
+            } catch (e) {
+              console.warn("Invalid JSON for bitacora", editedData.Dates.date_asigmente_str);
+              alert("El formato JSON de la bitácora es inválido. No se guardará ese campo.");
+              delete editedData.Dates.date_asigmente_str;
+            }
+            delete editedData.Dates.date_asigmente_str; // Limpiar el campo temporal
+          }
+          
+          // Mergear los cambios (que están en editedData.Dates)
+          const newDates = { ...originalDates, ...editedData.Dates };
+          
+          // Stringify para la API
+          updatedFields.Dates = JSON.stringify(newDates);
         }
+
+        // 2. Manejar 'Pagado'
         if (editedData.Pagado) {
-          updatedFields.Pagado = editedData.Pagado;
+          // Parsear el string original
+          const originalPagado = parseNestedObject(originalItem.Pagado, { pagadoFull: false });
+          
+          // Convertir 'pagadoFull' (que viene como string "true" o "false") a boolean
+          if (editedData.Pagado.pagadoFull !== undefined) {
+             editedData.Pagado.pagadoFull = editedData.Pagado.pagadoFull === "true";
+          }
+
+          // Mergear
+          const newPagado = { ...originalPagado, ...editedData.Pagado };
+          
+          // Stringify
+          updatedFields.Pagado = JSON.stringify(newPagado);
         }
-      } else if (currentType === MenuItems) {
+
+        // 3. Manejar 'Terminado' (Estado)
+        if (editedData.Terminado !== undefined) {
+            updatedFields.Terminado = editedData.Terminado === "true"; // Convertir string a boolean
+        }
+
+        // 4. AÑADIDO: Manejar 'Procedimientos' (desde el campo temporal _str)
+        if (editedData.Procedimientos_str !== undefined) {
+          try {
+              // Validar que es un JSON válido
+              JSON.parse(editedData.Procedimientos_str);
+              updatedFields.Procedimientos = editedData.Procedimientos_str; // Asignar al campo real
+          } catch (e) {
+              console.warn("Invalid JSON for Procedimientos", editedData.Procedimientos_str);
+              alert("El formato JSON de Procedimientos es inválido. No se guardará ese campo.");
+          }
+          // Limpiar el campo temporal del objeto final
+          delete updatedFields.Procedimientos_str; 
+          delete editedData.Procedimientos_str; // También del original por si acaso
+        }
+
+      } 
+      // --- FIN MODIFICACIÓN ---
+
+      else if (currentType === MenuItems) {
         // Para MenuItems, convertir precio a número
         if (editedData.Precio !== undefined && editedData.Precio !== '') {
           updatedFields.Precio = parseFloat(editedData.Precio) || 0;
@@ -421,13 +551,18 @@ export function TableViewManager({ products, currentType }) {
       
       // Limpiar campos vacíos
       Object.keys(updatedFields).forEach(key => {
+        // No limpiar campos booleanos o numéricos
         if (typeof updatedFields[key] === 'string' && updatedFields[key].trim() === '') {
-          updatedFields[key] = null;
+           // Excepción para campos JSON que pueden ser string vacíos pero significar algo
+           if (key !== 'Dates' && key !== 'Pagado' && key !== 'Comp_Lunch' && key !== 'Procedimientos') {
+             updatedFields[key] = null;
+           }
         }
       });
       
       // Llamar a updateItem según el tipo
       const tableType = currentType === MenuItems ? "Menu" : currentType;
+      console.log("Saving item...", { id: item._id, fields: updatedFields, table: tableType });
       const result = await dispatch(updateItem(item._id, updatedFields, tableType));
       
       if (result) {
@@ -482,31 +617,39 @@ export function TableViewManager({ products, currentType }) {
     }
   };
 
-  // Función para manejar objetos anidados de forma segura
-  const parseNestedObject = (obj, fallback = {}) => {
-    try {
-      if (typeof obj === "string") {
-        if (obj === "NaN" || obj === "null" || obj === "undefined" || !obj) {
-          return fallback;
-        }
-        // Si no empieza con { o [, crear un objeto simple
-        if (!obj.startsWith("{") && !obj.startsWith("[")) {
-          return { ...fallback, valor: obj };
-        }
-        return JSON.parse(obj);
-      }
-      return obj || fallback;
-    } catch (e) {
-      console.warn("Invalid nested object JSON:", obj, e);
-      return fallback;
-    }
-  };
+  // (parseNestedObject se movió arriba para ser usada por getAvailableColumns)
 
   // Función para renderizar celdas editables
   const renderEditableCell = (item, field, type = "text", options = null, subField = null) => {
-    const currentValue = subField ? 
-      (editingRows[item._id]?.[field]?.[subField] || item[field]?.[subField] || "") :
-      (editingRows[item._id]?.[field] || item[field] || "");
+    
+    let currentValue;
+    if (subField) {
+        // Para campos anidados (ej: Dates.isued)
+        // 1. Mirar si hay un valor editado en 'editingRows'
+        let parentInEditing = editingRows[item._id]?.[field];
+        // 2. Si no, parsear el valor original
+        let parentOriginal = parseNestedObject(item[field], {});
+
+        currentValue = (parentInEditing && parentInEditing[subField] !== undefined) 
+            ? parentInEditing[subField] 
+            : parentOriginal[subField];
+
+    } else {
+        // Para campos simples (ej: Tittle)
+        currentValue = (editingRows[item._id]?.[field] !== undefined) 
+            ? editingRows[item._id][field] 
+            : item[field];
+    }
+
+    // Normalizar valor para el input
+    currentValue = currentValue === null || currentValue === undefined ? "" : currentValue;
+
+    // --- MODIFICACIÓN: Manejar booleanos para select
+    // Si el tipo es select y las opciones son ["true", "false"], convertir el valor booleano a string
+    if (type === "select" && Array.isArray(options) && options.includes("true") && options.includes("false")) {
+        currentValue = String(currentValue);
+    }
+    // --- FIN MODIFICACIÓN ---
 
     if (type === "select") {
       return (
@@ -518,11 +661,19 @@ export function TableViewManager({ products, currentType }) {
           <option  value="">Seleccionar...</option>
           {options.map((option) => (
             <option key={option} value={option}>
-              {option}
+              {/* Para 'true'/'false', mostrar etiquetas amigables */}
+              {option === "true" ? (field === "Terminado" ? "Terminado" : "Pagado") : 
+               option === "false" ? "Pendiente" : 
+               option}
             </option>
           ))}
         </select>
       );
+    }
+
+    // Formatear valor de fecha
+    if (type === "date") {
+         currentValue = (currentValue || "").split('T')[0]; // Formato YYYY-MM-DD
     }
 
     return (
@@ -541,7 +692,7 @@ export function TableViewManager({ products, currentType }) {
     
     switch(currentType) {
       case MenuItems:
-        // Determinar si estamos mostrando solo almuerzos
+        // (Sin cambios)
         const isLunchOnly = filterSubGrupo === "ALMUERZO" || filterSubGrupo === "TARDEO_ALMUERZO";
         
         if (isLunchOnly) {
@@ -685,6 +836,7 @@ export function TableViewManager({ products, currentType }) {
         return menuHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
       case Staff:
+        // (Sin cambios)
         const staffHeaders = [
           { key: 'nombre', content: (
             <th key="nombre" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
@@ -735,6 +887,7 @@ export function TableViewManager({ products, currentType }) {
         
         return staffHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
+      // --- MODIFICACIÓN WORKISUE HEADERS ---
       case WorkIsue:
         const workIssueHeaders = [
           { key: 'titulo', content: (
@@ -751,24 +904,46 @@ export function TableViewManager({ products, currentType }) {
               </button>
             </th>
           )},
-          { key: 'prioridad', content: (
-            <th key="prioridad" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Prioridad")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-                Prioridad <SortIcon column="Prioridad" />
+ 
+          { key: 'ejecutor', content: (
+            <th key="ejecutor" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Ejecutor")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Ejecutor <SortIcon column="Ejecutor" />
               </button>
             </th>
           )},
-          { key: 'fechas', content: (
-            <th key="fechas" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Dates")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-                Fechas <SortIcon column="Dates" />
+          { key: 'fechaCreacion', content: (
+            <th key="fechaCreacion" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("Dates.isued")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Creado <SortIcon column="Dates.isued" />
               </button>
             </th>
+          )},
+          { key: 'fechaFin', content: (
+            <th key="fechaFin" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Finalizado</th>
+          )},
+          // CORREGIDO: key 'dateAsigmente'
+          { key: 'dateAsigmente', content: (
+            <th key="dateAsigmente" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Bitácora</th>
+          )},
+          // AÑADIDO: header 'procedimientos'
+          { key: 'procedimientos', content: (
+            <th key="procedimientos" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Procedimientos</th>
+          )},
+          { key: 'pagado', content: (
+            <th key="pagado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+                <button onClick={() => handleSort("Pagado.pagadoFull")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Pagado <SortIcon column="Pagado.pagadoFull" />
+              </button>
+            </th>
+          )},
+           { key: 'notas', content: (
+            <th key="notas" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Notas</th>
           )},
           { key: 'estado', content: (
             <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-                Estado <SortIcon column="Estado" />
+              <button onClick={() => handleSort("Terminado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Estado <SortIcon column="Terminado" />
               </button>
             </th>
           )},
@@ -778,8 +953,10 @@ export function TableViewManager({ products, currentType }) {
         ];
         
         return workIssueHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
-      
+      // --- FIN MODIFICACIÓN ---
+        
       case Procedimientos:
+        // (Sin cambios)
         const procedimientosHeaders = [
           { key: 'titulo', content: (
             <th key="titulo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
@@ -795,10 +972,10 @@ export function TableViewManager({ products, currentType }) {
               </button>
             </th>
           )},
-          { key: 'descripcion', content: (
-            <th key="descripcion" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
-              <button onClick={() => handleSort("Descripción")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
-                Descripción <SortIcon column="Descripción" />
+          { key: 'DescripcionGeneral', content: (
+            <th key="DescripcionGeneral" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("DescripcionGeneral")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                DescripcionGeneral <SortIcon column="DescripcionGeneral" />
               </button>
             </th>
           )},
@@ -843,7 +1020,7 @@ export function TableViewManager({ products, currentType }) {
     
     switch(currentType) {
       case MenuItems:
-        // Determinar si estamos mostrando solo almuerzos
+        // (Sin cambios)
         const isLunchOnly = filterSubGrupo === "ALMUERZO" || filterSubGrupo === "TARDEO_ALMUERZO";
         
         if (isLunchOnly) {
@@ -1291,6 +1468,7 @@ export function TableViewManager({ products, currentType }) {
         return menuCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
       case Staff:
+        // (Sin cambios)
         const cuentaData = parseNestedObject(item.Cuenta, {});
         const contactoData = parseNestedObject(item.infoContacto, {});
         
@@ -1345,7 +1523,15 @@ export function TableViewManager({ products, currentType }) {
         
         return staffCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
-      case WorkIsue:
+      // --- MODIFICACIÓN WORKISUE CELDAS ---
+      case WorkIsue: { 
+        // Parsear objetos JSON anidados
+        const datesData = parseNestedObject(item.Dates, { isued: "", finished: "", date_asigmente: [] });
+        const pagadoData = parseNestedObject(item.Pagado, { pagadoFull: false });
+        // AÑADIDO: Parsear 'Procedimientos' (que es un string JSON de un array)
+        const procedimientosData = parseNestedObject(item.Procedimientos, []);
+
+
         const workIssueCells = [
           { key: 'titulo', content: (
             <td key="titulo" className="px-3 py-2 border-r border-gray-100 text-xs">
@@ -1355,39 +1541,104 @@ export function TableViewManager({ products, currentType }) {
           )},
           { key: 'categoria', content: (
             <td key="categoria" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? renderEditableCell(item, "Categoria") :
+              {showEdit ? renderEditableCell(item, "Categoria", "select", ["COCINA", "BAR", "ADMIN", "GENERAL", "MANTENIMIENTO"]) :
                 <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">{item.Categoria || "Sin categoría"}</span>}
             </td>
           )},
-          { key: 'prioridad', content: (
-            <td key="prioridad" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? renderEditableCell(item, "Prioridad", "select", ["Alta", "Media", "Baja"]) :
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  item.Prioridad === "Alta" ? "bg-red-100 text-red-800" :
-                  item.Prioridad === "Media" ? "bg-yellow-100 text-yellow-800" :
-                  "bg-green-100 text-green-800"
-                }`}>
-                  {item.Prioridad || "Sin prioridad"}
+         
+          { key: 'ejecutor', content: (
+            <td key="ejecutor" className="px-3 py-2 border-r border-gray-100 text-xs">
+               {/* Asumimos que 'staff' es una lista de strings o se edita como texto */
+                 /* Si 'staff' se carga en el estado global, se puede pasar a 'options' */
+               }
+              {showEdit ? renderEditableCell(item, "Ejecutor") : 
+                <span className="text-gray-700">{item.Ejecutor || "N/A"}</span>}
+            </td>
+          )},
+          { key: 'fechaCreacion', content: (
+            <td key="fechaCreacion" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Dates", "date", null, "isued") : 
+                <span className="text-gray-600">
+                  {datesData.isued ? new Date(datesData.isued).toLocaleDateString() : "Sin fecha"}
                 </span>}
             </td>
           )},
-          { key: 'fechas', content: (
-            <td key="fechas" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? renderEditableCell(item, "Dates", "date") : 
+          { key: 'fechaFin', content: (
+            <td key="fechaFin" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Dates", "date", null, "finished") : 
                 <span className="text-gray-600">
-                  {item.Dates ? new Date(item.Dates).toLocaleDateString() : "Sin fecha"}
+                  {datesData.finished ? new Date(datesData.finished).toLocaleDateString() : "Pendiente"}
                 </span>}
+            </td>
+          )},
+          { key: 'dateAsigmente', content: (
+            <td key="dateAsigmente" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Dates", "date", null, "finished") : 
+                <span className="text-gray-600">
+                  {datesData.finished ? new Date(datesData.finished).toLocaleDateString() : "Pendiente"}
+                </span>}
+            </td>
+          )},
+          // CORREGIDO: key 'dateAsigmente'
+   
+          // AÑADIDO: Celda 'procedimientos'
+          { key: 'procedimientos', content: (
+            <td key="procedimientos" className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
+              {/* Editar array/objeto JSON como string */}
+              {showEdit ? (
+                <textarea
+                  value={
+                    editingRows[item._id]?.Procedimientos_str !== undefined
+                      ? editingRows[item._id].Procedimientos_str
+                      // El original es un string, así que lo usamos directamente
+                      : (item.Procedimientos || "[]") 
+                  }
+                  onChange={(e) => {
+                    handleCellEdit(item._id, "Procedimientos_str", e.target.value); // Usar un campo temporal
+                  }}
+                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100 font-mono"
+                  rows={2}
+                />
+              ) : (
+                <span className="text-gray-600 font-mono text-xs truncate" title={item.Procedimientos}>
+                  {item.Procedimientos || "[]"}
+                </span>
+              )}
+            </td>
+          )},
+          { key: 'pagado', content: (
+            <td key="pagado" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "Pagado", "select", ["true", "false"], "pagadoFull") : 
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  pagadoData.pagadoFull ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                }`}>
+                  {pagadoData.pagadoFull ? "Pagado" : "Pendiente"}
+                </span>}
+            </td>
+          )},
+          { key: 'notas', content: (
+            <td key="notas" className="px-3 py-2 border-r border-gray-100 text-xs max-w-32">
+              {showEdit ? (
+                <textarea
+                  value={editingRows[item._id]?.Notas !== undefined ? editingRows[item._id].Notas : (item.Notas || "")}
+                  onChange={(e) => handleCellEdit(item._id, "Notas", e.target.value)}
+                  className="w-full p-1 border border-gray-300 rounded text-xs bg-gray-100"
+                  rows={2}
+                />
+              ) : (
+                <span className="text-gray-600 truncate" title={item.Notas}>{item.Notas || "Sin notas"}</span>
+              )}
             </td>
           )},
           { key: 'estado', content: (
             <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                item.Estado === "Activo" || item.Estado === "Completado"
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {item.Estado || "Sin estado"}
-              </span>
+               {/* Usamos 'Terminado' (boolean) como campo de estado */}
+              {showEdit ? renderEditableCell(item, "Terminado", "select", ["true", "false"]) :
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  item.Terminado ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                }`}>
+                  {item.Terminado ? "Terminado" : "Pendiente"}
+                </span>}
             </td>
           )},
           { key: 'acciones', content: (
@@ -1396,8 +1647,11 @@ export function TableViewManager({ products, currentType }) {
         ];
         
         return workIssueCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
-      
+      } // Cerrar el case
+      // --- FIN MODIFICACIÓN ---
+        
       case Procedimientos:
+        // (Sin cambios)
         const procedimientosCells = [
           { key: 'titulo', content: (
             <td key="titulo" className="px-3 py-2 border-r border-gray-100 text-xs">
@@ -1411,11 +1665,11 @@ export function TableViewManager({ products, currentType }) {
                 <span className="px-2 py-1 bg-cyan-100 text-cyan-800 rounded-full text-xs">{item.Categoria || "Sin categoría"}</span>}
             </td>
           )},
-          { key: 'descripcion', content: (
-            <td key="descripcion" className="px-3 py-2 border-r border-gray-100 text-xs">
-              {showEdit ? renderEditableCell(item, "Descripción") : 
-                <div className="max-w-48 truncate" title={item.Descripción}>
-                  <span className="text-gray-600">{item.Descripción || "Sin descripción"}</span>
+          { key: 'DescripcionGeneral', content: (
+            <td key="DescripcionGeneral" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "DescripcionGeneral") : 
+                <div className="max-w-48 truncate" title={item.DescripcionGeneral}>
+                  <span className="text-gray-600">{item.DescripcionGeneral || "Sin descripción"}</span>
                 </div>}
             </td>
           )},
@@ -1445,7 +1699,8 @@ export function TableViewManager({ products, currentType }) {
   // Función para renderizar botones de acción
   const renderActionButtons = (item, isEditing) => (
     <div className="flex gap-1">
-      {currentType === MenuItems && (
+      {/* Botón de Receta: visible para MenuItems y Procedimientos (o WorkIsue si tiene receta) */}
+      {(currentType === MenuItems || currentType === Procedimientos) && (
         <Button
           onClick={() => handleRecipeModal(item._id, item.Receta)}
           className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6 border border-yellow-300"
@@ -1495,7 +1750,7 @@ export function TableViewManager({ products, currentType }) {
               onChange={(e) => setFilterGrupo(e.target.value)}
               className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Todos los grupos</option>
+              <option value="">{currentType === WorkIsue ? "Todas las Categorías" : "Todos los Grupos"}</option>
               {uniqueGrupos.map(grupo => (
                 <option key={grupo} value={grupo}>{grupo}</option>
               ))}

@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { deleteItem, updateItem } from "../../../../redux/actions-Proveedores";
+import { updateItem } from "../../../../redux/actions-Proveedores";
 import { ESTATUS } from "../../../../redux/actions-types";
+import { deleteWorkIsue } from "../../../../redux/actions-WorkIsue";
 
 export function CardGridWorkIsue_Instance({ item, currentType }) {
   const dispatch = useDispatch();
@@ -62,7 +63,7 @@ export function CardGridWorkIsue_Instance({ item, currentType }) {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ítem?")) {
       try {
         setButtonState("syncing");
-        await dispatch(deleteItem(item._id, currentType));
+        await dispatch(deleteWorkIsue(item._id, currentType));
         setButtonState("done");
         alert("Ítem eliminado correctamente.");
       } catch (error) {
