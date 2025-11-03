@@ -205,7 +205,7 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nombreEN">Nombre del Evento (EN)</Label>
+                <Label htmlFor="nombreEN">Nombre Idioma Alternativo</Label>
                 <input
                   id="nombreEN"
                   name="nombreEN"
@@ -454,12 +454,12 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
 
           {/* Botones */}
           <div className="flex gap-4 pt-4">
-            <Button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-            >
-              {eventoToEdit ? "Actualizar Evento" : "Crear Evento"}
-            </Button>
+                <Button
+                  type="submit"
+                     className="text-white flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700  hover:to-blue-700 hover:text-yellow-200 disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  {eventoToEdit ? "Actualizar Evento" : "Crear Evento"}
+                </Button>
             {onClose && (
               <Button
                 type="button"

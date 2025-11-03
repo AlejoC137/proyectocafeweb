@@ -144,6 +144,12 @@ function StaffPortal() {
       variant: "default"
     },
     {
+      label: "Eventos",
+      icon: "🎟️",
+      onClick: () => navigate("/Agenda"),
+      variant: "default"
+    },
+    {
       label: "Proveedores",
       icon: "💁‍♀️",
       onClick: () => navigate("/Proveedores"),
