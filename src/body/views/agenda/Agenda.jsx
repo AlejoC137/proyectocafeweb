@@ -253,8 +253,8 @@ function Agenda() {
           </Button>
           <Button
             onClick={handleCreateEvento}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 gap-2"
-          >
+                className="text-white flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700  hover:to-blue-700 hover:text-yellow-200 disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors duration-200"
+                >
             <Plus size={18} />
             Nuevo Evento
           </Button>
