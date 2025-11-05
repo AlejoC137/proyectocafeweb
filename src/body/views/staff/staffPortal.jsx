@@ -105,31 +105,37 @@ function StaffPortal() {
       label: "Work Issues",
       icon: "🔧",
       onClick: () => navigate("/WorkIsue"),
-      variant: "secondary"
+      variant: "default"
     },
     {
       label: "Manager",
       icon: "🧠",
       onClick: () => navigate("/Manager"),
-      variant: "secondary"
+      variant: "default"
     },
     {
       label: "Inventario",
       icon: "📦",
       onClick: () => navigate("/Inventario"),
-      variant: "secondary"
+      variant: "default"
     },
     {
       label: "Recetas",
       icon: "📚",
       onClick: () => navigate("/Recetas"),
-      variant: "secondary"
+      variant: "default"
+    },
+    {
+      label: "Agenda Pruduccion",
+      icon: "📅",
+      onClick: () => navigate("/CalendarioProduccio"),
+      variant: "default"
     },
     {
       label: "Menu Print",
       icon: "🖨️",
       onClick: () => navigate("/MenuPrint"),
-      variant: "secondary"
+      variant: "default"
     },
     {
       label: "Modelos",
@@ -153,7 +159,7 @@ function StaffPortal() {
       label: "Proveedores",
       icon: "💁‍♀️",
       onClick: () => navigate("/Proveedores"),
-      variant: "secondary"
+      variant: "default"
     }
   ];
 

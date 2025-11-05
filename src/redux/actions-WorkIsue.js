@@ -58,34 +58,37 @@ export function crearWorkIsue(workIsueData) {
   console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
   
   return async (dispatch) => {
-    console.log(workIsueData);
+    console.log("Datos recibidos para crear:", workIsueData);
     
     try {
       // Generar un objeto base con UUID
       const nuevoWorkIsue = {
         _id: uuidv4(),
         ...workIsueData,
-        Dates: { isued: new Date().toISOString(), finished: "", date_asigmente: [] }, // Fecha y hora actual
+        // --- CORRECCIÓN ---
+        // Se elimina la línea 'Dates: ...'
+        // 'workIsueData' ya contiene el objeto 'Dates' completo 
+        // enviado desde WorkIsueCreator (incluyendo 'date_repiting').
       };
 
-      // Insertar el nuevo  en Supabase
+      // Insertar el nuevo WorkIsue en Supabase
       const { data, error } = await supabase
         .from("WorkIsue")
         .insert([nuevoWorkIsue])
         .select();
 
       if (error) {
-        console.error("Error al crear el :", error);
-        throw new Error("No se pudo crear el ");
+        console.error("Error al crear el WorkIsue:", error);
+        throw new Error("No se pudo crear el WorkIsue");
       }
 
       // Despachar la acción para actualizar el estado global
       dispatch({
         type: "CREAR_WORKISUE_SUCCESS",
-        payload: data[0], // El nuevo  creado
+        payload: data[0], // El nuevo WorkIsue creado
       });
 
-      console.log(" creado correctamente:", data[0]);
+      console.log("WorkIsue creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearWorkIsue:", error);
@@ -94,15 +97,19 @@ export function crearWorkIsue(workIsueData) {
   };
 }
 
-export function deleteWorkIsue(itemId , type) {
-  const table = type === MenuItems ? MENU : type 
+// --- FUNCIÓN CORREGIDA (la que causa el error) ---
+export function deleteWorkIsue(itemId) {
+  // 1. Se elimina el parámetro 'type'
+  // 2. Se define la tabla ('WorkIsue') directamente
+  const table = "WorkIsue"; 
+  
   return async (dispatch) => {
     try {
       // Llamada a Supabase para eliminar el registro
       const { error } = await supabase
-        .from(table)
+        .from(table) // Usa la tabla correcta
         .delete()
-        .eq("id", itemId); // Filtrar por el ID del ítem
+        .eq("_id", itemId); // 3. Se usa '_id' para coincidir con tu base de datos
 
       if (error) {
         console.error("Error al eliminar el ítem:", error);
@@ -166,17 +173,17 @@ export function actualizarWorkIsue(workIsueId, updatedFields) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("")
+        .from("WorkIsue") // <-- CORREGIDO: Se añadió la tabla
         .update(updatedFields)
         .eq("_id", workIsueId)
         .select();
 
       if (error) {
-        console.error('Error al actualizar el :', error);
+        console.error('Error al actualizar el WorkIsue:', error);
         return null;
       }
 
-      console.log(' actualizado correctamente:', data);
+      console.log('WorkIsue actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción actualizarWorkIsue:', error);
@@ -184,21 +191,22 @@ export function actualizarWorkIsue(workIsueId, updatedFields) {
   };
 }
 
+// --- FUNCIÓN CORREGIDA (la duplicada) ---
 export function eliminarWorkIsue(workIsueId) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("")
+        .from("WorkIsue") // <-- CORREGIDO: Se añadió la tabla
         .delete()
         .eq("_id", workIsueId)
         .select();
 
       if (error) {
-        console.error('Error al eliminar el :', error);
+        console.error('Error al eliminar el WorkIsue:', error);
         return null;
       }
 
-      console.log(' eliminado correctamente:', data);
+      console.log('WorkIsue eliminado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción eliminarWorkIsue:', error);
@@ -210,7 +218,7 @@ export function actualizarPago(workIsueId, pagoInfo) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("")
+        .from("WorkIsue") // <-- CORREGIDO: Se añadió la tabla
         .update({
           Pagado: true,
           Pago_Info: pagoInfo,

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
-  Search, Download,
+  Search, Download, Plus,
   XCircle, ArrowUpDown, Trash2, ChevronUp, ChevronDown
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import PageLayout from '../../../../components/ui/page-layout';
 
 // Acciones y tipos
 import { getAllFromTable, actualizarWorkIsue, deleteWorkIsue } from '../../../../redux/actions-WorkIsue.js';
@@ -76,7 +77,9 @@ const COLUMNS_CONFIG = [
   // --- MODIFICACIÓN: Columnas de 'Dates' separadas ---
   { key: 'Dates.isued', label: 'Fecha Creación', width: 180, sortable: true, type: 'date' },
   { key: 'Dates.finished', label: 'Fecha Finalizado', width: 180, sortable: true, type: 'date' },
-  { key: 'Dates.date_asigmente', label: 'Bitácora', width: 250, sortable: false, type: 'textarea' }, // Usar textarea para editar el JSON del array
+  
+  // --- CAMBIO 1: Apuntar a 'date_repiting' en lugar de 'date_asigmente' ---
+  { key: 'Dates.date_repiting', label: 'Bitácora (Repeticiones)', width: 250, sortable: false, type: 'textarea' }, // Usar textarea para editar el JSON del array
   // --- Fin Modificación ---
 
   { key: 'Ejecutor', label: 'Ejecutor', width: 180, sortable: true, type: 'select', optionsKey: 'staff' }, // 'optionsKey' buscará en el estado
@@ -97,7 +100,7 @@ const COLUMNS_CONFIG = [
 const EditableCell = ({ value, taskId, fieldKey, onSave, type = 'text', options = [] }) => {
   const [isEditing, setIsEditing] = useState(false);
   
-  // MODIFICACIÓN 1: Stringify arrays (como 'date_asigmente') para el estado local
+  // MODIFICACIÓN 1: Stringify arrays (como 'date_repiting') para el estado local
   const [currentValue, setCurrentValue] = useState(
     Array.isArray(value) ? JSON.stringify(value) : value
   );
@@ -330,7 +333,8 @@ const WorkIsueExcelView = () => {
     return rawData.map(item => ({
       ...item,
       // Parsea los campos JSON string a objetos
-      Dates: safeJsonParse(item.Dates, { isued: null, finished: null, date_asigmente: [] }),
+      // --- CAMBIO 2: Usar 'date_repiting' y añadir 'Ejecution' (de WorkIsueCreator) al valor por defecto ---
+      Dates: safeJsonParse(item.Dates, { isued: null, finished: null, Ejecution: "", date_repiting: [] }),
       Pagado: safeJsonParse(item.Pagado, { pagadoFull: false, adelanto: "NoAplica", susceptible: false }),
       Procedimientos: safeJsonParse(item.Procedimientos, []), // Espera un array
     }));
@@ -416,8 +420,8 @@ const WorkIsueExcelView = () => {
             parentObject[childIndex][realChildKey] = newValue;
          }
       } else if (!isArray) {
-        // Es un objeto: "Dates.isued" o "Dates.date_asigmente"
-        // 'newValue' para 'date_asigmente' ya es un array (parseado por EditableCell)
+        // Es un objeto: "Dates.isued" o "Dates.date_repiting"
+        // 'newValue' para 'date_repiting' ya es un array (parseado por EditableCell)
         parentObject[realChildKey] = newValue;
       }
       
@@ -503,9 +507,13 @@ const WorkIsueExcelView = () => {
     return [];
   };
 
+  // Manejador para crear nuevo WorkIssue
+  const handleCreateWorkIssue = () => {
+    window.open("/WorkIsueCreator", "_blank");
+  };
+
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
-      
+    <PageLayout title="Work Issues - Vista Excel">
       {/* --- Toolbar --- */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
@@ -526,17 +534,26 @@ const WorkIsueExcelView = () => {
             )}
           </div>
         </div>
-        <button
-          onClick={handleExport}
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Exportar a Excel
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCreateWorkIssue}
+            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-md shadow-sm hover:bg-purple-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo WorkIssue
+          </button>
+          <button
+            onClick={handleExport}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar a Excel
+          </button>
+        </div>
       </div>
 
       {/* --- Vista de Tabla / Excel --- */}
-      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg max-w-full">
         <table className="min-w-full divide-y divide-gray-200 border-collapse">
           {/* --- Encabezado --- */}
           <thead className="bg-gray-100 sticky top-0 z-10">
@@ -623,7 +640,7 @@ const WorkIsueExcelView = () => {
           </tbody>
         </table>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

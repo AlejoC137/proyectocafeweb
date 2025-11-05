@@ -60,8 +60,8 @@ export const AREAS = [
   JARDINERIA,
   LIBROS_TIENDA,
   BAÑO,
-DESPACHO
-
+DESPACHO,
+"PRODUCCION"
 ]
 
 

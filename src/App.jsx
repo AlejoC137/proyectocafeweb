@@ -41,6 +41,8 @@ import MenuHead  from './body/components/Menu/MenuHead';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
 import CalculoNomina from './body/views/staff/CalculoNomina';
 import WorkIsueExcelView from './body/views/actividades/WorkE/WorkIsueExcelView.jsx';
+import CalendarioProduccion from './body/views/actividades/CalendarioProduccion.jsx';
+import WorkIsueCreator from './body/views/actividades/WorkIsueCreator.jsx';
 
 // import Manager from './body/views/actividades/Manager';
 
@@ -127,6 +129,9 @@ function App() {
      <Route path="/MesResumen" element={<MesResumen />} />
      <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
      <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
+     <Route path="/CalendarioProduccion" element={<CalendarioProduccion />} />
+     <Route path="/CalendarioProduccio" element={<CalendarioProduccion />} />
+     <Route path="/WorkIsueCreator" element={<WorkIsueCreator />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
      <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
