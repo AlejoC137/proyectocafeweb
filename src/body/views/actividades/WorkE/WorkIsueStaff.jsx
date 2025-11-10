@@ -179,7 +179,7 @@ console.log(groupedAndSortedItems);
                                                         icon = '📕'; 
                                                     } else {
                                                         dataItem = recetasProduccion.find(r => r._id === procedimientoId);
-                                                        href = `/RecetaModal/${procedimientoId}`;
+                                                        href = `/receta/${procedimientoId}`;
                                                         icon = '📜'; 
                                                     }
 
