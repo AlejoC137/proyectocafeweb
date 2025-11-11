@@ -43,6 +43,7 @@ import CalculoNomina from './body/views/staff/CalculoNomina';
 import WorkIsueExcelView from './body/views/actividades/WorkE/WorkIsueExcelView.jsx';
 import CalendarioProduccion from './body/views/actividades/CalendarioProduccion.jsx';
 import WorkIsueCreator from './body/views/actividades/WorkIsueCreator.jsx';
+import ItemsModal from './body/components/Items/ItemsModal.jsx';
 
 // import Manager from './body/views/actividades/Manager';
 
@@ -134,6 +135,7 @@ function App() {
      <Route path="/WorkIsueCreator" element={<WorkIsueCreator />} />
      <Route path="/Proveedores" element={<Proveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
+     <Route path="/item/:id" element={<ItemsModal />} />
      <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
      <Route path="/evento/:id" element={<AgendaModal />} />
      <Route path="/agendaForm/:id" element={<AgendaFormPage />} />

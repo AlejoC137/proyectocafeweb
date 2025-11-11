@@ -8,6 +8,7 @@ import { parseCompLunch } from "../../utils/jsonUtils";
 import CuidadoVariations from "./CuidadoVariations";
 
 export function TableViewInventario({ products, currentType }) {
+  
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
   const Proveedores = useSelector((state) => state.Proveedores || []);
@@ -253,7 +254,7 @@ export function TableViewInventario({ products, currentType }) {
           proveedor: { label: "Proveedor", key: "Proveedor", default: true },
           estado: { label: "Estado", key: "Estado", default: true },
           fechaActualizacion: { label: "Última Act.", key: "FECHA_ACT", default: false },
-          acciones: { label: "Acciones", key: "acciones", default: false, fixed: false }
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
       case ProduccionInterna:
         return {
@@ -465,7 +466,7 @@ export function TableViewInventario({ products, currentType }) {
 
           case 'cuidadoES':
           case 'cuidadoEN':
-            return showEdit ? <CuidadoVariations isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} /> : <span>{item[col.key]}</span>;
+            return  <CuidadoVariations showEdit={showEdit} isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} /> 
 
           case 'grupo':
             return showEdit ? renderEditableCell(originalIndex, col.key, "select", CATEGORIES.map(c => ({value: c, label: c}))) : <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO}</span>;
@@ -521,9 +522,29 @@ export function TableViewInventario({ products, currentType }) {
           case 'acciones':
             return (
               <div className="flex gap-1">
-                <Button onClick={() => handleDelete(item)} className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
+                <Button onClick={() => handleDelete(item)} 
+                className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
+                {
+                currentType === ItemsAlmacen  && 
+                (
+                  <Button asChild 
+                  
+                className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                       <a
+                      href={`/item/${item._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0" 
+                      title="Ver Detalles del Item"
+                    >
+                      📦
+                    </a>
+                  </Button>
+                )}
+
                 {(currentType === ProduccionInterna || currentType === MenuItems) && item.Receta && (
-                  <Button asChild className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                  <Button asChild 
+                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
                     <a 
                       href={`/receta/${item.Receta}`} 
                       target="_blank" 
@@ -534,6 +555,7 @@ export function TableViewInventario({ products, currentType }) {
                     </a>
                   </Button>
                 )}
+
               </div>
             );
           default:

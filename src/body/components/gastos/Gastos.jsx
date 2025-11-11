@@ -1,28 +1,28 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 // Asegúrate que la ruta a tus acciones sea correcta y que el archivo exista
-import { crearCompra } from "../../../redux/actions-VentasCompras.js"; 
-import { Input } from "@/components/ui/input"; 
-import { Button } from "@/components/ui/button"; 
-import { PlusCircle, XCircle } from 'lucide-react'; 
+import { crearCompra } from "../../../redux/actions-VentasCompras.js";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, XCircle } from 'lucide-react';
 
 function Gastos() {
   // --- Redux State ---
-  const allItems = useSelector((state) => state.allItems || []); 
-  const Proveedores = useSelector((state) => state.Proveedores || []); 
+  const allItems = useSelector((state) => state.allItems || []);
+  const Proveedores = useSelector((state) => state.Proveedores || []);
   const dispatch = useDispatch();
 
   // --- Component State ---
-  const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]); 
+  const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]);
   const [formattedHoy, setFormattedHoy] = useState(
     new Date().toLocaleDateString("en-US", { timeZone: "America/Bogota" })
-  ); 
+  );
 
   // Estados generales del Gasto
   const [MedioDeCompra, setMedioDeCompra] = useState("");
   const [MedioDePago, setMedioDePago] = useState("");
   const [Comprador, setComprador] = useState("");
-  const [Pagado, setPagado] = useState({ pagadoFull: false, adelanto: "" }); 
+  const [Pagado, setPagado] = useState({ pagadoFull: false, adelanto: "" });
   const [Categoria, setCategoria] = useState("");
   const [linkDocSoporte, setLinkDocSoporte] = useState("");
   const [Proveedor_Id, setProveedorId] = useState("");
@@ -30,29 +30,26 @@ function Gastos() {
   const [transporteData, setTransporteData] = useState({ tipo: '', pasaje_flete: '', tiempo: '' });
 
   // Estado para los items (productos) del Gasto
-  // MODIFICADO: Cambiado costoUnitario por costoTotalItemPagado
-  const [Items, setItems] = useState([]); // Array de objetos { id: '', Nombre_del_producto: '', cantidadCompra: '', unidadesCompra: '', costoTotalItemPagado: '', matches: [] }
+  // MODIFICADO: Se añade recipeId al estado inicial de los items
+  const [Items, setItems] = useState([]); // Array de objetos { id: '', recipeId: '', Nombre_del_producto: '', cantidadCompra: '', unidadesCompra: '', costoTotalItemPagado: '', matches: [] }
 
   // --- Derived State (Calculated Values) ---
-  // MODIFICADO: Suma costoTotalItemPagado de cada item + flete
   const ValorTotalCalculado = useMemo(() => {
     const totalItems = Items.reduce((total, item) => {
-      // Suma el costo total pagado por cada item
       const costoItem = Number(item.costoTotalItemPagado) || 0;
       return total + costoItem;
     }, 0);
-    // Sumamos el flete al valor total calculado si existe
     const flete = Number(transporteData.pasaje_flete) || 0;
     return totalItems + flete;
-  }, [Items, transporteData.pasaje_flete]); 
+  }, [Items, transporteData.pasaje_flete]);
 
   // --- Event Handlers ---
 
   const handleDateChange = (e) => {
-    const dateValue = e.target.value; 
+    const dateValue = e.target.value;
     setHoy(dateValue);
     if (dateValue) {
-      const dateParts = dateValue.split("-"); 
+      const dateParts = dateValue.split("-");
       const month = parseInt(dateParts[1], 10);
       const day = parseInt(dateParts[2], 10);
       const year = dateParts[0];
@@ -76,7 +73,7 @@ function Gastos() {
     }
   };
 
-   const handlePagadoChange = (e) => {
+  const handlePagadoChange = (e) => {
     const { name, value, checked } = e.target;
     if (name === 'pagadoFull') {
       setPagado(prev => ({ ...prev, pagadoFull: checked, adelanto: checked ? "" : prev.adelanto }));
@@ -88,36 +85,32 @@ function Gastos() {
   };
 
   const handleTransporteChange = (e) => {
-      const { name, value } = e.target;
-      setTransporteData(prev => ({ ...prev, [name]: value }));
+    const { name, value } = e.target;
+    setTransporteData(prev => ({ ...prev, [name]: value }));
   };
 
   // --- Handlers para Items ---
 
   const handleAddNewItemRow = () => {
-    // MODIFICADO: Estructura del nuevo item vacío
-    setItems(prev => [...prev, { id: '', Nombre_del_producto: '', cantidadCompra: '', unidadesCompra: '', costoTotalItemPagado: '', matches: [] }]);
+    // MODIFICADO: Estructura del nuevo item incluye recipeId
+    setItems(prev => [...prev, { id: '', recipeId: '', Nombre_del_producto: '', cantidadCompra: '', unidadesCompra: '', costoTotalItemPagado: '', matches: [] }]);
   };
 
   const handleRemoveItemRow = (indexToRemove) => {
     setItems(prev => prev.filter((_, i) => i !== indexToRemove));
   };
 
-  // MODIFICADO: Handler genérico para cambios en inputs de items (cantidad, unidad, costo TOTAL)
   const handleItemInputChange = (index, fieldName, value) => {
-     setItems(prevItems => prevItems.map((item, i) => {
+    setItems(prevItems => prevItems.map((item, i) => {
       if (i === index) {
-        // Validación básica para campos numéricos (cantidad y costo TOTAL)
         if (fieldName === 'cantidadCompra' || fieldName === 'costoTotalItemPagado') {
-           const numValue = value === '' ? '' : Number(value);
-           // Permite vacío o número >= 0
-           if (value === '' || (!isNaN(numValue) && numValue >= 0)) {
-               return { ...item, [fieldName]: value };
-           }
-           return item; // No actualiza si no es válido
-        } else {
-            // Para unidadesCompra (texto)
+          const numValue = value === '' ? '' : Number(value);
+          if (value === '' || (!isNaN(numValue) && numValue >= 0)) {
             return { ...item, [fieldName]: value };
+          }
+          return item;
+        } else {
+          return { ...item, [fieldName]: value };
         }
       }
       return item;
@@ -126,11 +119,10 @@ function Gastos() {
 
   const handleItemSearchChange = (index, searchValue) => {
     const updatedItems = [...Items];
-    
-    updatedItems[index].Nombre_del_producto = searchValue; 
-    updatedItems[index].id = ''; 
-    // MODIFICADO: Resetea también cantidad, unidad y costo TOTAL al buscar de nuevo
-    updatedItems[index].costoTotalItemPagado = ''; 
+    updatedItems[index].Nombre_del_producto = searchValue;
+    updatedItems[index].id = '';
+    updatedItems[index].recipeId = ''; // Reseteamos recipeId al buscar de nuevo
+    updatedItems[index].costoTotalItemPagado = '';
     updatedItems[index].cantidadCompra = '';
     updatedItems[index].unidadesCompra = '';
 
@@ -140,23 +132,22 @@ function Gastos() {
         )
       : [];
 
-    updatedItems[index].matches = matches; 
+    updatedItems[index].matches = matches;
     setItems(updatedItems);
   };
 
-  // MODIFICADO: Pre-rellena cantidad y unidad, costo total se deja vacío
   const handleItemSelect = (index, selectedOption) => {
     const updatedItems = [...Items];
     updatedItems[index] = {
-      ...updatedItems[index], 
-      id: selectedOption._id || selectedOption.Nombre_del_producto, 
-      Nombre_del_producto: selectedOption.Nombre_del_producto, 
-      // Pre-rellena cantidad y unidad del item original
-      cantidadCompra: selectedOption.CANTIDAD || '', 
-      unidadesCompra: selectedOption.UNIDADES || '', 
-      // El costo total pagado se ingresa manualmente, se deja vacío
-      costoTotalItemPagado: '', 
-      matches: [], 
+      ...updatedItems[index],
+      id: selectedOption._id || selectedOption.Nombre_del_producto,
+      // MODIFICADO: Guardamos el recipeId si existe en el item seleccionado
+      recipeId: selectedOption.recipeId || selectedOption._id, // Ajusta esto según tu estructura de datos real
+      Nombre_del_producto: selectedOption.Nombre_del_producto,
+      cantidadCompra: selectedOption.CANTIDAD || '',
+      unidadesCompra: selectedOption.UNIDADES || '',
+      costoTotalItemPagado: '',
+      matches: [],
     };
     setItems(updatedItems);
   };
@@ -165,37 +156,35 @@ function Gastos() {
   // --- Submit Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-     if (!formattedHoy || !Comprador || !Proveedor_Id || !MedioDeCompra || !MedioDePago || !Categoria || !Concepto) {
-        alert("Por favor, completa todos los campos generales requeridos.");
-        return;
-      }
-     if (transporteData.tipo || transporteData.pasaje_flete || transporteData.tiempo) {
-        if (!transporteData.tipo) { alert("Si ingresas datos de transporte, debes seleccionar el Tipo."); return; }
-        if (isNaN(Number(transporteData.pasaje_flete)) || Number(transporteData.pasaje_flete) < 0) { alert("El valor de Pasaje/Flete debe ser un número válido (0 o mayor)."); return; }
-         if (isNaN(Number(transporteData.tiempo)) || Number(transporteData.tiempo) < 0) { alert("El valor de Tiempo debe ser un número válido (0 o mayor)."); return; }
-     }
+    if (!formattedHoy || !Comprador || !Proveedor_Id || !MedioDeCompra || !MedioDePago || !Categoria || !Concepto) {
+      alert("Por favor, completa todos los campos generales requeridos.");
+      return;
+    }
+    if (transporteData.tipo || transporteData.pasaje_flete || transporteData.tiempo) {
+      if (!transporteData.tipo) { alert("Si ingresas datos de transporte, debes seleccionar el Tipo."); return; }
+      if (isNaN(Number(transporteData.pasaje_flete)) || Number(transporteData.pasaje_flete) < 0) { alert("El valor de Pasaje/Flete debe ser un número válido (0 o mayor)."); return; }
+      if (isNaN(Number(transporteData.tiempo)) || Number(transporteData.tiempo) < 0) { alert("El valor de Tiempo debe ser un número válido (0 o mayor)."); return; }
+    }
     if (Items.length === 0) { alert("Debes agregar al menos un producto/item al gasto."); return; }
 
-    // MODIFICADO: Validación incluye costoTotalItemPagado
     const invalidItems = Items.filter(item =>
-        !item.id ||
-        item.Nombre_del_producto.trim() === '' || 
-        isNaN(Number(item.cantidadCompra)) || Number(item.cantidadCompra) <= 0 || 
-        !item.unidadesCompra || item.unidadesCompra.trim() === '' || 
-        isNaN(Number(item.costoTotalItemPagado)) || Number(item.costoTotalItemPagado) < 0 // Costo total pagado >= 0
-      );
+      !item.id ||
+      item.Nombre_del_producto.trim() === '' ||
+      isNaN(Number(item.cantidadCompra)) || Number(item.cantidadCompra) <= 0 ||
+      !item.unidadesCompra || item.unidadesCompra.trim() === '' ||
+      isNaN(Number(item.costoTotalItemPagado)) || Number(item.costoTotalItemPagado) < 0
+    );
 
     if (invalidItems.length > 0) {
       alert("Revisa los items: Selecciona un producto, ingresa Cantidad (>0), Unidad (no vacía) y Costo Total Pagado (>=0) válidos.");
       return;
     }
 
-     if (!window.confirm(`Confirmar y registrar gasto por ${formatCurrency(ValorTotalCalculado)}?`)) return;
+    if (!window.confirm(`Confirmar y registrar gasto por ${formatCurrency(ValorTotalCalculado)}?`)) return;
 
-    // MODIFICADO: Prepara datos incluyendo Transporte y costoTotalItemPagado
     const gastoData = {
-      Date: formattedHoy, 
-      Valor: ValorTotalCalculado, // Valor total (suma de costos de items + flete)
+      Date: formattedHoy,
+      Valor: ValorTotalCalculado,
       MedioDeCompra,
       MedioDePago,
       Comprador,
@@ -204,21 +193,20 @@ function Gastos() {
         adelanto: Pagado.pagadoFull ? "N/A" : String(Number(Pagado.adelanto) || 0)
       },
       Categoria,
-      linkDocSoporte: linkDocSoporte || null, 
+      linkDocSoporte: linkDocSoporte || null,
       Proveedor_Id,
       Concepto,
       Transporte: JSON.stringify({
-          tipo: transporteData.tipo || null, 
-          pasaje_flete: Number(transporteData.pasaje_flete) || 0, 
-          tiempo: Number(transporteData.tiempo) || 0 
+        tipo: transporteData.tipo || null,
+        pasaje_flete: Number(transporteData.pasaje_flete) || 0,
+        tiempo: Number(transporteData.tiempo) || 0
       }),
-      // MODIFICADO: Guarda costoTotalItemPagado en lugar de costoUnitario
       Items: JSON.stringify(Items.map(item => ({
-        id: item.id, 
+        id: item.id,
         Nombre_del_producto: item.Nombre_del_producto,
-        cantidadCompra: Number(item.cantidadCompra), 
+        cantidadCompra: Number(item.cantidadCompra),
         unidadesCompra: item.unidadesCompra,
-        costoTotalItemPagado: Number(item.costoTotalItemPagado) // Costo total pagado por esta cantidad
+        costoTotalItemPagado: Number(item.costoTotalItemPagado)
       }))),
     };
 
@@ -227,10 +215,9 @@ function Gastos() {
     try {
       const result = await dispatch(crearCompra(gastoData));
 
-      if (result) { 
+      if (result) {
         console.log("Gasto registrado con éxito:", result);
         alert("Gasto registrado exitosamente!");
-        // Resetear formulario
         setHoy(new Date().toISOString().split('T')[0]);
         setFormattedHoy(new Date().toLocaleDateString("en-US", { timeZone: "America/Bogota" }));
         setMedioDeCompra("");
@@ -241,11 +228,11 @@ function Gastos() {
         setLinkDocSoporte("");
         setProveedorId("");
         setConcepto("");
-        setTransporteData({ tipo: '', pasaje_flete: '', tiempo: '' }); 
-        setItems([]); 
+        setTransporteData({ tipo: '', pasaje_flete: '', tiempo: '' });
+        setItems([]);
       } else {
-         console.warn("La acción crearCompra se completó pero no retornó un indicador de éxito claro.", result);
-         alert("El gasto podría no haberse registrado correctamente. Revisa la consola.");
+        console.warn("La acción crearCompra se completó pero no retornó un indicador de éxito claro.", result);
+        alert("El gasto podría no haberse registrado correctamente. Revisa la consola.");
       }
     } catch (error) {
       console.error("Error al registrar el gasto:", error);
@@ -253,19 +240,18 @@ function Gastos() {
     }
   };
 
-  // Formatear moneda local
   const formatCurrency = (value) => {
-      const number = Number(value) || 0;
-      return `$ ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(number)}`;
+    const number = Number(value) || 0;
+    return `$ ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(number)}`;
   };
 
   return (
-    <div className="p-4 max-w-5xl mx-auto"> 
+    <div className="p-4 max-w-5xl mx-auto">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Registrar Gasto</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
 
         {/* Sección de Datos Generales y Transporte */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border p-4 rounded-md shadow-sm bg-gray-50"> 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border p-4 rounded-md shadow-sm bg-gray-50">
           {/* Fecha */}
           <div>
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Fecha:</label>
@@ -319,17 +305,17 @@ function Gastos() {
             </select>
           </div>
 
-           {/* Pagado */}
-           <div className="flex flex-col">
+          {/* Pagado */}
+          <div className="flex flex-col">
             <label className="block text-sm font-medium text-gray-700 mb-1">Estado Pago:</label>
             <div className="flex items-center space-x-4 mt-2">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" name="pagadoFull" checked={Pagado.pagadoFull} onChange={handlePagadoChange} className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"/>
-                    <span className="text-sm">Pagado Full</span>
-                </label>
-                {!Pagado.pagadoFull && ( <Input type="number" name="adelanto" value={Pagado.adelanto} onChange={handlePagadoChange} placeholder="Adelanto $" className="w-28 h-10 text-sm" min="0" disabled={Pagado.pagadoFull} /> )}
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" name="pagadoFull" checked={Pagado.pagadoFull} onChange={handlePagadoChange} className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500" />
+                <span className="text-sm">Pagado Full</span>
+              </label>
+              {!Pagado.pagadoFull && (<Input type="number" name="adelanto" value={Pagado.adelanto} onChange={handlePagadoChange} placeholder="Adelanto $" className="w-28 h-10 text-sm" min="0" disabled={Pagado.pagadoFull} />)}
             </div>
-           </div>
+          </div>
 
           {/* Categoría */}
           <div>
@@ -359,7 +345,7 @@ function Gastos() {
           </div>
 
           {/* --- SECCIÓN TRANSPORTE --- */}
-           <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo Transporte:</label>
             <select name="tipo" value={transporteData.tipo} onChange={handleTransporteChange} className="w-full p-2 border bg-white rounded h-10 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" >
               <option value="">N/A</option>
@@ -375,12 +361,12 @@ function Gastos() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tiempo (min):</label>
-            <Input type="number" name="tiempo" value={transporteData.tiempo} onChange={handleTransporteChange} placeholder="0" className="w-full h-10" min="0" disabled={!transporteData.tipo}/>
+            <Input type="number" name="tiempo" value={transporteData.tiempo} onChange={handleTransporteChange} placeholder="0" className="w-full h-10" min="0" disabled={!transporteData.tipo} />
           </div>
           {/* --- FIN SECCIÓN TRANSPORTE --- */}
 
-           {/* Link Documento Soporte */}
-           <div>
+          {/* Link Documento Soporte */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Link Doc. Soporte:</label>
             <Input type="url" name="linkDocSoporte" value={linkDocSoporte} onChange={handleGeneralInputChange} placeholder="https://..." className="w-full h-10" />
           </div>
@@ -391,90 +377,106 @@ function Gastos() {
         <div className="border p-4 rounded-md shadow-sm bg-white">
           <h3 className="text-lg font-semibold mb-4 text-gray-700">Productos / Items Comprados</h3>
           {/* Encabezados de la tabla de items */}
-           <div className="hidden md:grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 px-2 pb-2 mb-2 border-b text-xs font-medium text-gray-500">
-               <span>Producto</span>
-               <span className="w-20 text-center">Cant. Compra</span>
-               <span className="w-24 text-center">Unidad Compra</span>
-               <span className="w-28 text-center">Costo Total Pagado ($)</span>
-               {/* Columna vacía para alinear con el botón X */}
-               <span className="w-9"></span> 
-           </div>
+          <div className="hidden md:grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 px-2 pb-2 mb-2 border-b text-xs font-medium text-gray-500">
+            <span>Producto</span>
+            <span className="w-20 text-center">Cant. Compra</span>
+            <span className="w-24 text-center">Unidad Compra</span>
+            <span className="w-28 text-center">Costo Total Pagado ($)</span>
+            {/* Columna vacía para alinear con el botón X */}
+            <span className="w-9"></span>
+          </div>
           <div className="space-y-3">
             {Items.map((item, index) => (
-              // MODIFICADO: Grid ajustado para layout de tabla
+              // Grid ajustado para layout de tabla
               <div key={index} className="grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 items-center p-2 border md:border-0 md:p-0 rounded-md md:rounded-none relative bg-gray-50 hover:bg-gray-100 md:bg-transparent md:hover:bg-transparent transition-colors duration-150">
-                 
-                 {/* Input de Búsqueda y Dropdown (Col 1) */}
-                 <div className="relative col-span-5 md:col-span-1"> {/* Ocupa todo en móvil */}
+
+                {/* Input de Búsqueda y Dropdown (Col 1) - AHORA INCLUYE EL LINK */}
+                <div className="col-span-5 md:col-span-1 flex items-center gap-2">
+                  {/* Link al Item/Receta - Solo visible si hay recipeId */}
+                  {item.recipeId && (
+                    <a
+                      href={`/item/${item.recipeId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
+                      title="Ver Detalles del Item"
+                    >
+                      📦
+                    </a>
+                  )}
+
+                  {/* Contenedor relativo para el input y el dropdown */}
+                  <div className="relative w-full">
                     <Input
                       type="text"
                       placeholder="Buscar producto..."
-                      value={item.Nombre_del_producto} 
-                      onChange={(e) => handleItemSearchChange(index, e.target.value)} 
+                      value={item.Nombre_del_producto}
+                      onChange={(e) => handleItemSearchChange(index, e.target.value)}
                       className="text-sm h-10 w-full"
                     />
                     {item.matches && item.matches.length > 0 && (
-                      <ul className="absolute bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto z-20 w-full mt-1">
+                      <ul className="absolute bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto z-20 w-full mt-1 left-0">
                         {item.matches.map((match) => (
                           <li
                             key={match._id || match.Nombre_del_producto}
                             onClick={() => handleItemSelect(index, match)}
                             className="p-2 hover:bg-blue-100 cursor-pointer text-xs"
                           >
-                            {match.Nombre_del_producto} 
-                             {/* Muestra Unidad de referencia */}
-                             {match.UNIDADES && ` (Ref: ${match.CANTIDAD || '?'} ${match.UNIDADES})`} 
+                            {match.Nombre_del_producto}
+                            {/* Muestra Unidad de referencia */}
+                            {match.UNIDADES && ` (Ref: ${match.CANTIDAD || '?'} ${match.UNIDADES})`}
                           </li>
                         ))}
                       </ul>
                     )}
-                 </div>
+                  </div>
+                </div>
 
-                 {/* Cantidad Compra (Col 2) */}
-                 <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
-                    <Input
-                        type="number"
-                        min="0"
-                        step="any" 
-                        value={item.cantidadCompra}
-                        onChange={(e) => handleItemInputChange(index, 'cantidadCompra', e.target.value)}
-                        placeholder="Cant."
-                        className="w-full md:w-20 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                 </div>
-                 
-                 {/* Unidad Compra (Col 3) */}
-                 <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
-                      <Input
-                        type="text"
-                        value={item.unidadesCompra}
-                        onChange={(e) => handleItemInputChange(index, 'unidadesCompra', e.target.value)}
-                        placeholder="Unidad"
-                        className="w-full md:w-24 text-center text-sm h-10"
-                    />
-                 </div>
+                {/* Cantidad Compra (Col 2) */}
+                <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
+                  <Input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={item.cantidadCompra}
+                    onChange={(e) => handleItemInputChange(index, 'cantidadCompra', e.target.value)}
+                    placeholder="Cant."
+                    className="w-full md:w-20 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+
+                {/* Unidad Compra (Col 3) */}
+                <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
+                  <Input
+                    type="text"
+                    value={item.unidadesCompra}
+                    onChange={(e) => handleItemInputChange(index, 'unidadesCompra', e.target.value)}
+                    placeholder="Unidad"
+                    className="w-full md:w-24 text-center text-sm h-10"
+                  />
+                </div>
 
                 {/* Costo Total Pagado (Col 4) */}
                 <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
-                     <Input
-                        type="number"
-                        min="0"
-                        step="1" 
-                        value={item.costoTotalItemPagado}
-                        onChange={(e) => handleItemInputChange(index, 'costoTotalItemPagado', e.target.value)}
-                        placeholder="Costo Total $"
-                        className="w-full md:w-28 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={item.costoTotalItemPagado}
+                    onChange={(e) => handleItemInputChange(index, 'costoTotalItemPagado', e.target.value)}
+                    placeholder="Costo Total $"
+                    className="w-full md:w-28 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                 </div>
 
                 {/* Botón Eliminar Fila (Col 5) */}
                 {/* Posicionamiento absoluto en móvil, relativo en desktop */}
-                <Button 
-                    type="button" 
-                    onClick={() => handleRemoveItemRow(index)} 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-red-500 hover:text-red-700 h-9 w-9 absolute top-1 right-1 md:relative md:top-auto md:right-auto md:justify-self-end"
+                <Button
+                  type="button"
+                  onClick={() => handleRemoveItemRow(index)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:text-red-700 h-9 w-9 absolute top-1 right-1 md:relative md:top-auto md:right-auto md:justify-self-end"
                 >
                   <XCircle size={18} />
                 </Button>
@@ -489,10 +491,10 @@ function Gastos() {
 
         {/* Sección de Resumen y Acciones */}
         <div className="flex flex-col md:flex-row justify-between items-center mt-6 p-4 border-t bg-gray-50 rounded-b-md">
-           <div className="text-left mb-4 md:mb-0">
-                <p className="text-sm text-gray-500 font-medium">VALOR TOTAL GASTO (Items + Flete)</p>
-                <p className="text-3xl font-bold text-gray-900">{formatCurrency(ValorTotalCalculado)}</p>
-           </div>
+          <div className="text-left mb-4 md:mb-0">
+            <p className="text-sm text-gray-500 font-medium">VALOR TOTAL GASTO (Items + Flete)</p>
+            <p className="text-3xl font-bold text-gray-900">{formatCurrency(ValorTotalCalculado)}</p>
+          </div>
           <Button type="submit" className="w-full md:w-auto h-12 px-6 text-base bg-blue-600 hover:bg-blue-700 text-white">
             Registrar Gasto
           </Button>
