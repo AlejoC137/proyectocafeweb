@@ -51,7 +51,7 @@ export default function TopNav() {
   };
 
   const handleGoHome = () => {
-    navigate('/');
+    navigate('/MenuView');
   };
 
   const getDisplayText = () => {

@@ -132,7 +132,7 @@ function MenuDelDiaPrint() {
               />
               <h1 className="font-LilitaOne text-5xl text-notBlack header-title">Menú Almuerzo</h1>
               <h2 className="text-xl text-gray-500 mb-8 header-subtitle">
-          Hora: 12:30 PM | Valor: ${price}
+          Hora: 12:00 PM | Valor: ${price}
               </h2>
               <div className="grid grid-cols-2 gap-x-4 gap-y-6 mt-6 details-grid">
           {lunchDetails}
