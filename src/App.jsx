@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useSelector } from 'react-redux'; // Para acceder al estado global de Redux
 import fondoImage from './assets/fondo.png';
+
+
 // import './App.css';
 
 import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , MODEL ,RECETAS, COMPRAS} from './redux/actions-types'; // Importa las acciones y vistas
@@ -10,6 +12,7 @@ import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH 
 // import NotFound from './components/NotFound'; // Componente de fallback si no coincide una ruta
 import BottomNav from './components/ui/bottom-nav'; // Importa BottomNav
 import TopNav from './components/ui/top-nav'; // Importa BottomNav
+import ModeloProyecto from "./body/views/ventaCompra/ModeloProyecto";
 import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
 import MenuLunch from './body/views/menuView/MenuLunch';
@@ -142,6 +145,7 @@ function App() {
      <Route path="/Predict/:MenuItem" element={<Predict />} />
      <Route path="/CalculoNomina" element={<CalculoNomina />} />
      <Route path="/Model" element={<Model />} />
+     <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
      {/* Renderiza el componente que corresponde a la vista actual */}
      {/* Renderiza el BottomNav debajo del componente actual */}
      </Routes>

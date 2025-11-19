@@ -281,6 +281,7 @@ export const BODEGA = [
   NO_APLICA,
 ];
 
+export const VENTAS = 'Ventas'
 
 export const SMMV_COL_2025_HORA = 6189
 export const SMMV_COL_2025_MINU = SMMV_COL_2025_HORA/60

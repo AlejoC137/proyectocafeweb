@@ -17,6 +17,7 @@ import {
     SET_PREPROCESS_DATA,
     TODAYS_MENU,
     SCRAP,
+    VENTAS,
     RECETAS_MENU,
     RECETAS_PRODUCCION,
     TOGGLE_SHOW_EDIT,
@@ -89,6 +90,7 @@ const initialState = {
     showEdit: false,
     allMenu: [],
     allItems: [],
+    allVentas: [],
     allProcedimientos: [],
     allRecetasMenu: [],
     allRecetasProduccion: [],
@@ -168,6 +170,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, Proveedores: action.payload };
                 case WORKISUE:
                     return { ...state, allWorkIsue: action.payload };
+                case VENTAS:
+                    return { ...state, allVentas: action.payload };
                 case COMPRAS:
                     return { ...state, allCompras: action.payload };
                 case MENU:
