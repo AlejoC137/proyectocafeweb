@@ -6,6 +6,57 @@ import { updateModelAction, createModelAction } from '../../../redux/actions';
 const formatNumber = (num) => (num === null || num === undefined || isNaN(parseFloat(num))) ? '' : Number(num).toLocaleString('es-ES');
 const parseFormattedNumber = (str) => typeof str !== 'string' ? 0 : parseFloat(str.replace(/\./g, '')) || 0;
 
+// Acepta fechas en formato "M/D/YYYY" tanto si el mes es base 0 como base 1.
+const parseMonthIndex = (dateStr) => {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
+    const rawMonth = parseInt(parts[0], 10);
+    if (isNaN(rawMonth)) return null;
+    // Si el mes viene 0-11 (getMonth()) lo dejamos igual; si viene 1-12 restamos 1.
+    return rawMonth > 11 ? rawMonth - 1 : rawMonth;
+};
+
+// Normaliza la forma en que guardamos los costos para soportar modelos viejos
+const normalizeCosts = (rawCosts = {}) => {
+    const costs = JSON.parse(JSON.stringify(rawCosts));
+
+    let impuestos = [];
+    if (typeof costs.impuesto === 'string') {
+        try {
+            const parsed = JSON.parse(costs.impuesto);
+            if (Array.isArray(parsed.impuestos)) impuestos = parsed.impuestos;
+        } catch (err) {
+            console.error('Error al parsear impuesto:', err);
+        }
+    }
+    if (Array.isArray(costs.impuestos)) impuestos = costs.impuestos;
+    costs.impuestos = impuestos;
+
+    const oldFixedMap = {
+        'Servicios Públicos': 'serviciosPublicos',
+        'Arriendo': 'arriendo',
+        'Servicios Externos': 'serviciosExternos',
+        'Mantenimiento': 'mantenimiento'
+    };
+    const hasLegacy = Object.values(oldFixedMap).some(key => costs[key] !== undefined);
+    if (!Array.isArray(costs.fijos) && hasLegacy) costs.fijos = [];
+    if (Array.isArray(costs.fijos)) {
+        Object.entries(oldFixedMap).forEach(([name, key], index) => {
+            if (costs[key] !== undefined) {
+                costs.fijos.push({ id: Date.now() + index, name, value: costs[key] });
+                delete costs[key];
+            }
+        });
+    }
+
+    costs.personal = costs.personal || [];
+    costs.fijos = costs.fijos || [];
+    costs.otros = costs.otros || [];
+
+    return costs;
+};
+
 // --- UI COMPONENTS ---
 const RowContainer = ({ children, onRemove }) => (
     <div className="flex items-center gap-0 border-b border-gray-100 bg-white hover:bg-blue-50 transition-colors group w-full py-1">
@@ -55,8 +106,6 @@ const SimpleCostRow = ({ cost, onUpdate, onRemove, label }) => (
 
 // --- COMPONENTE PRINCIPAL ---
 function ModeloContent({ targetMonth, targetYear }) {
-    console.log( targetMonth, targetYear);
-    
     const dispatch = useDispatch();
     
     const allVentas = useSelector(state => state.allVentas);
@@ -68,28 +117,22 @@ function ModeloContent({ targetMonth, targetYear }) {
     
     const monthsNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-    // 1. FILTRAR Y CALCULAR INGRESOS REALES (MM/DD/AAAA)
+    // 1. FILTRAR Y CALCULAR INGRESOS REALES (acepta MM/DD/AAAA con mes base 0 o 1)
     const { realIncome, countVentas } = useMemo(() => {
         if (!allVentas || !Array.isArray(allVentas)) return { realIncome: 0, countVentas: 0 };
-        
+
         let total = 0;
         let count = 0;
 
         allVentas.forEach(venta => {
-            if (!venta.Date) return;
-            
-            // Parseo estricto MM/DD/AAAA
-            const parts = venta.Date.split('/');
-            if (parts.length === 3) {
-                const monthIndex = parseInt(parts[0]) - 1; // EL MES ES EL PRIMERO (1-12)
-                const year = parseInt(parts[2]);           // EL AÑO ES EL TERCERO
+            const monthIndex = parseMonthIndex(venta?.Date);
+            const year = venta?.Date ? parseInt(venta.Date.split('/')[2], 10) : null;
+            if (monthIndex === null || year === null) return;
 
-                if (monthIndex === targetMonth && year === targetYear) {
-                    const ingreso = parseFloat(venta.Total_Ingreso) || 0;
-                    total += ingreso;
-                    count++;
-                }
-                console.log( parts);
+            if (monthIndex === targetMonth && year === targetYear) {
+                const ingreso = parseFloat(venta.Total_Ingreso) || 0;
+                total += ingreso;
+                count++;
             }
         });
 
@@ -98,18 +141,16 @@ function ModeloContent({ targetMonth, targetYear }) {
 
     // 2. CARGAR O INICIALIZAR
     useEffect(() => {
-        const existingModel = models.find(m => 
-            parseInt(m.costs?.linkedYear) === targetYear && 
+        const existingModel = models.find(m =>
+            parseInt(m.costs?.linkedYear) === targetYear &&
             parseInt(m.costs?.linkedMonth) === targetMonth
         );
 
         if (existingModel) {
             setModelId(existingModel._id);
-            let costs = JSON.parse(JSON.stringify(existingModel.costs));
-            if(costs.impuesto && typeof costs.impuesto === 'string') { 
-                try { costs.impuestos = JSON.parse(costs.impuesto).impuestos || []; } catch {} 
-            }
-            if(!costs.fijos) costs.fijos = [];
+            const costs = normalizeCosts(existingModel.costs);
+            costs.linkedMonth = targetMonth;
+            costs.linkedYear = targetYear;
             setCurrentCosts(costs);
         } else {
             setModelId(null);
@@ -122,6 +163,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                 impuestos: [],
                 impuesto: JSON.stringify({ impuestos: [] }),
                 otros: [],
+                desiredProfitMargin: 0,
                 linkedMonth: targetMonth,
                 linkedYear: targetYear
             });
