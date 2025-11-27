@@ -39,6 +39,7 @@ import AgendaFormPage from './body/views/agenda/AgendaFormPage';
 import Predict from './body/views/ventaCompra/Predict';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
+import PagosProveedores from './body/views/proveedores/PagosProveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
 import MenuHead  from './body/components/Menu/MenuHead';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
@@ -137,6 +138,7 @@ function App() {
      <Route path="/CalendarioProduccio" element={<CalendarioProduccion />} />
      <Route path="/WorkIsueCreator" element={<WorkIsueCreator />} />
      <Route path="/Proveedores" element={<Proveedores />} />
+     <Route path="/PagosProveedores" element={<PagosProveedores />} />
      <Route path="/receta/:id" element={<RecetaModal />} />
      <Route path="/item/:id" element={<ItemsModal />} />
      <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
