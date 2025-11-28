@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 // --- COMPONENTE REUTILIZABLE PARA CADA FILA DE INGREDIENTE/PRODUCCIÓN ---
 const RecipeItemRow = ({ item, isEditing, onCheck, onSave, showCheckboxes = false, showEdit = false }) => {
-  const [editValue, setEditValue] = useState(item.cantidad.toString());
+  const [editValue, setEditValue] = useState((item.cantidad ?? 0).toString());
   const [isInputActive, setIsInputActive] = useState(false);
 
   const handleSave = () => {
@@ -21,13 +21,14 @@ const RecipeItemRow = ({ item, isEditing, onCheck, onSave, showCheckboxes = fals
   };
 
   const handleEditClick = () => {
-    setEditValue(item.cantidad.toFixed(2));
+    const val = Number(item.cantidad ?? 0);
+    setEditValue(Number.isFinite(val) ? val.toFixed(2) : '0.00');
     setIsInputActive(true);
   };
 
   const handleCancel = () => {
     setIsInputActive(false);
-    setEditValue(item.cantidad.toString());
+    setEditValue((item.cantidad ?? 0).toString());
   };
 
   return (
@@ -480,11 +481,15 @@ function RecetaModalUniversal({
           if (itemData) {
             try {
               const cuantityUnits = JSON.parse(cuantityUnitsRaw);
+              const numericQuantity = Number(cuantityUnits.metric.cuantity) || 0;
               parsedList.push({
                 key: `${prefix}-${i}`,
                 originalIndex: i,
                 nombre: itemData.Nombre_del_producto,
-                originalQuantity: cuantityUnits.metric.cuantity,
+                // Asegurar que originalQuantity sea numérico
+                originalQuantity: numericQuantity,
+                // Asegurar que siempre haya `cantidad` para evitar errores en RecipeItemRow
+                cantidad: numericQuantity,
                 unidades: cuantityUnits.metric.units,
                 isChecked: false,
               });
@@ -967,7 +972,7 @@ function RecetaModalUniversal({
                   <Textarea
                     value={jsonInput}
                     onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder="{ \"ingredients\": [ { \"legacyName\": \"Jugo de naranja\", \"cantidad\": 20, \"unidades\": \"ml\" } ] }"
+                    placeholder='{"ingredients":[{"legacyName":"Jugo de naranja","cantidad":20,"unidades":"ml"}]}'
                     className="w-full min-h-[220px]"
                     style={{
                       backgroundColor: 'rgb(255, 255, 255)',
