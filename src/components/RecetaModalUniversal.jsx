@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE } from "../redux/actions-types";
 import PinCodeModal from "./ui/PinCodeModal";
 import EditableText from "./ui/EditableText";
+import { Textarea } from "@/components/ui/textarea";
 
 // --- COMPONENTE REUTILIZABLE PARA CADA FILA DE INGREDIENTE/PRODUCCIÓN ---
 const RecipeItemRow = ({ item, isEditing, onCheck, onSave, showCheckboxes = false, showEdit = false }) => {
@@ -186,6 +187,16 @@ function RecetaModalUniversal({
   const [error, setError] = useState(null);
   const [porcentaje, setPorcentaje] = useState(100);
   const [editShow, setEditShow] = useState(false);
+
+  // Estados para importación vía JSON
+  const [showJsonImporter, setShowJsonImporter] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState(null);
+  const [legacyIngredients, setLegacyIngredients] = useState([]);
+  const [ingredientSelections, setIngredientSelections] = useState({});
+  const [ingredientSearchTerms, setIngredientSearchTerms] = useState({});
+  const [isSavingImport, setIsSavingImport] = useState(false);
+  const [importedRecipeName, setImportedRecipeName] = useState("");
   
   // Estados para modificación permanente
   const [showPinModal, setShowPinModal] = useState(false);
@@ -242,6 +253,159 @@ function RecetaModalUniversal({
         };
     }
   }, [context]);
+
+  const searchableProducts = useMemo(
+    () => [
+      ...allItems.map(item => ({ ...item, __type: "item" })),
+      ...allProduccion.map(prod => ({ ...prod, __type: "producto_interno" })),
+    ],
+    [allItems, allProduccion]
+  );
+
+  const getProductName = (product) =>
+    product?.Nombre_del_producto || product?.NombreES || product?.name || "(Sin nombre)";
+
+  const shortenLegacyTerm = (term) => {
+    const words = term.trim().split(/\s+/);
+    if (words.length <= 1) {
+      return term.trim().slice(0, Math.ceil(term.length / 2));
+    }
+    const half = Math.ceil(words.length / 2);
+    return words.slice(0, half).join(" ");
+  };
+
+  const findMatchesForIngredient = (term) => {
+    const normalizedTerm = term.trim().toLowerCase();
+    if (!normalizedTerm) return { matches: [], usedFallback: false, fallbackTerm: "" };
+
+    const matches = searchableProducts.filter((product) =>
+      getProductName(product).toLowerCase().includes(normalizedTerm)
+    );
+
+    if (matches.length > 0) {
+      return { matches, usedFallback: false, fallbackTerm: normalizedTerm };
+    }
+
+    const shortened = shortenLegacyTerm(normalizedTerm);
+    if (!shortened || shortened === normalizedTerm) {
+      return { matches: [], usedFallback: false, fallbackTerm: normalizedTerm };
+    }
+
+    const fallbackMatches = searchableProducts.filter((product) =>
+      getProductName(product).toLowerCase().includes(shortened)
+    );
+
+    return { matches: fallbackMatches, usedFallback: true, fallbackTerm: shortened };
+  };
+
+  const parseRecipeJson = () => {
+    setJsonError(null);
+    try {
+      const parsed = JSON.parse(jsonInput);
+      const ingredients = parsed.ingredients || parsed.ingredientes || parsed.items || [];
+      const normalized = ingredients.map((ing, index) => {
+        const legacyName = ing.legacyName || ing.nombre || ing.name || `Ingrediente ${index + 1}`;
+        const quantity = Number(ing.cantidad || ing.quantity || ing.qty || ing.metric?.cuantity || 0);
+        const units = ing.unidades || ing.units || ing.unit || ing.metric?.units || "";
+
+        return {
+          index,
+          legacyName,
+          quantity,
+          units,
+          raw: ing,
+        };
+      });
+
+      setLegacyIngredients(normalized);
+      setIngredientSelections({});
+      setIngredientSearchTerms(
+        Object.fromEntries(normalized.map((ing) => [ing.index, ing.legacyName || ""]))
+      );
+      setImportedRecipeName(parsed.name || parsed.nombre || parsed.legacyName || "");
+    } catch (err) {
+      setLegacyIngredients([]);
+      setIngredientSelections({});
+      setIngredientSearchTerms({});
+      setImportedRecipeName("");
+      setJsonError("No se pudo leer el JSON: " + err.message);
+    }
+  };
+
+  const handleSelection = (ingredientIndex, product) => {
+    setIngredientSelections((prev) => ({
+      ...prev,
+      [ingredientIndex]: product,
+    }));
+  };
+
+  const allIngredientsMapped = legacyIngredients.length > 0 &&
+    legacyIngredients.every((ing) => ingredientSelections[ing.index]);
+
+  const buildPayloadFromImport = () => {
+    const payload = {};
+    for (let i = 1; i <= 30; i++) {
+      payload[`item${i}_Id`] = null;
+      payload[`item${i}_Cuantity_Units`] = null;
+    }
+    for (let i = 1; i <= 20; i++) {
+      payload[`producto_interno${i}_Id`] = null;
+      payload[`producto_interno${i}_Cuantity_Units`] = null;
+    }
+
+    let ingredientCounter = 1;
+    let productionCounter = 1;
+
+    legacyIngredients.forEach((legacy) => {
+      const selection = ingredientSelections[legacy.index];
+      if (!selection?._id) return;
+
+      const prefix = selection.__type === "producto_interno" ? "producto_interno" : "item";
+      const counter = prefix === "item" ? ingredientCounter++ : productionCounter++;
+
+      payload[`${prefix}${counter}_Id`] = selection._id;
+      payload[`${prefix}${counter}_Cuantity_Units`] = JSON.stringify({
+        metric: {
+          cuantity: Number(legacy.quantity) || null,
+          units: legacy.units || null,
+        },
+        legacyName: legacy.legacyName,
+        raw: legacy.raw,
+      });
+    });
+
+    return payload;
+  };
+
+  const handleSaveImportedRecipe = async () => {
+    if (!receta || !recetaSource || legacyIngredients.length === 0) return;
+
+    const payload = buildPayloadFromImport();
+    const legacyName = importedRecipeName || receta.legacyName;
+
+    setIsSavingImport(true);
+    try {
+      const result = await dispatch(updateItem(receta._id, {
+        ...payload,
+        legacyName,
+        actualizacion: new Date().toISOString(),
+      }, recetaSource));
+
+      if (!result) throw new Error("No se pudo guardar la receta importada");
+
+      setReceta((prev) => ({
+        ...prev,
+        ...payload,
+        legacyName,
+      }));
+      alert("Receta actualizada con los ingredientes importados");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Error al guardar la receta importada");
+    } finally {
+      setIsSavingImport(false);
+    }
+  };
 
   // Hook para buscar datos en los stores de Redux
   const buscarPorId = (itemId) => allItems.find((i) => i._id === itemId) || allProduccion.find((p) => p._id === itemId) || null;
@@ -685,7 +849,7 @@ function RecetaModalUniversal({
         >
           {/* Control de porcentaje (solo para contextos que lo necesiten) */}
           {contextConfig.showPercentage && (
-            <div 
+            <div
               className="mb-6 flex items-center gap-4 p-3 rounded-md"
               style={{
                 backgroundColor: 'rgb(243, 244, 246)',
@@ -746,12 +910,216 @@ function RecetaModalUniversal({
                     }}
                   >
                     {isUpdating ? "Actualizando..." : permanentEditMode ? "✓ Modo Permanente Activo" : "🔒 Modificación Permanente"}
-                  </Button>
-                </>
-              )}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+          {/* Importador de receta vía JSON */}
+          <div
+            className="mb-6 flex flex-col gap-3 p-3 rounded-md border"
+            style={{
+              backgroundColor: 'rgb(249, 250, 251)',
+              borderColor: 'rgb(209, 213, 219)'
+            }}
+          >
+            <div className="flex flex-wrap gap-3 items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: 'rgb(31, 41, 55)' }}>
+                  Importar receta desde JSON
+                </h3>
+                <p className="text-sm" style={{ color: 'rgb(75, 85, 99)' }}>
+                  Pega el JSON de la receta, revisa los ingredientes y reemplaza los nombres legacy por productos existentes.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowJsonImporter((prev) => !prev)}
+                  style={{
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    borderColor: 'rgb(209, 213, 219)',
+                    color: 'rgb(0, 0, 0)'
+                  }}
+                >
+                  {showJsonImporter ? "Ocultar importador" : "Abrir importador"}
+                </Button>
+                <Button
+                  onClick={handleSaveImportedRecipe}
+                  disabled={!allIngredientsMapped || legacyIngredients.length === 0 || isSavingImport}
+                  style={{
+                    backgroundColor: allIngredientsMapped ? 'rgb(34, 197, 94)' : 'rgb(229, 231, 235)',
+                    color: allIngredientsMapped ? 'rgb(255, 255, 255)' : 'rgb(107, 114, 128)'
+                  }}
+                >
+                  {isSavingImport ? "Guardando..." : "Guardar receta importada"}
+                </Button>
+              </div>
             </div>
-          )}
-          
+
+            {showJsonImporter && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium" style={{ color: 'rgb(55, 65, 81)' }}>
+                    Pega aquí el JSON de la receta
+                  </label>
+                  <Textarea
+                    value={jsonInput}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                    placeholder="{ \"ingredients\": [ { \"legacyName\": \"Jugo de naranja\", \"cantidad\": 20, \"unidades\": \"ml\" } ] }"
+                    className="w-full min-h-[220px]"
+                    style={{
+                      backgroundColor: 'rgb(255, 255, 255)',
+                      borderColor: 'rgb(209, 213, 219)',
+                      color: 'rgb(0, 0, 0)'
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={parseRecipeJson} style={{ backgroundColor: 'rgb(37, 99, 235)', color: 'rgb(255, 255, 255)' }}>
+                      Leer JSON
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setJsonInput("");
+                        setLegacyIngredients([]);
+                        setIngredientSelections({});
+                        setIngredientSearchTerms({});
+                        setJsonError(null);
+                        setImportedRecipeName("");
+                      }}
+                    >
+                      Limpiar
+                    </Button>
+                  </div>
+                  {jsonError && (
+                    <p className="text-sm" style={{ color: 'rgb(239, 68, 68)' }}>
+                      {jsonError}
+                    </p>
+                  )}
+                </div>
+
+                <div
+                  className="space-y-3 p-3 rounded-md border"
+                  style={{
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    borderColor: 'rgb(229, 231, 235)'
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <h4 className="font-semibold" style={{ color: 'rgb(31, 41, 55)' }}>
+                        Vista previa de ingredientes
+                      </h4>
+                      <p className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                        Reemplaza cada nombre legacy por un producto existente. Si no hay coincidencias, se acorta la búsqueda a la mitad.
+                      </p>
+                    </div>
+                    {importedRecipeName && (
+                      <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgb(226, 232, 240)', color: 'rgb(30, 64, 175)' }}>
+                        Nombre detectado: {importedRecipeName}
+                      </span>
+                    )}
+                  </div>
+
+                  {legacyIngredients.length === 0 ? (
+                    <p className="text-sm" style={{ color: 'rgb(107, 114, 128)' }}>
+                      Aún no hay ingredientes cargados desde el JSON.
+                    </p>
+                  ) : (
+                    <div className="space-y-4 max-h-[420px] overflow-auto pr-1">
+                      {legacyIngredients.map((ing) => {
+                        const searchValue = ingredientSearchTerms[ing.index] ?? ing.legacyName;
+                        const { matches, usedFallback, fallbackTerm } = findMatchesForIngredient(searchValue || ing.legacyName);
+                        const selection = ingredientSelections[ing.index];
+
+                        return (
+                          <div
+                            key={`legacy-${ing.index}`}
+                            className="p-3 rounded-md border"
+                            style={{ borderColor: 'rgb(229, 231, 235)', backgroundColor: 'rgb(248, 250, 252)' }}
+                          >
+                            <div className="flex flex-wrap justify-between gap-2 items-start">
+                              <div>
+                                <p className="text-sm font-semibold" style={{ color: 'rgb(30, 41, 59)' }}>
+                                  {ing.legacyName}
+                                </p>
+                                <p className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                                  {ing.quantity || 0} {ing.units || ''} • Nombre legacy a reemplazar
+                                </p>
+                              </div>
+                              {selection ? (
+                                <span className="text-xs px-2 py-1 rounded-md" style={{ backgroundColor: 'rgb(220, 252, 231)', color: 'rgb(22, 163, 74)' }}>
+                                  Seleccionado: {getProductName(selection)}
+                                </span>
+                              ) : (
+                                <span className="text-xs px-2 py-1 rounded-md" style={{ backgroundColor: 'rgb(254, 242, 242)', color: 'rgb(239, 68, 68)' }}>
+                                  Falta reemplazar
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-3 space-y-2">
+                              <label className="text-xs font-medium" style={{ color: 'rgb(75, 85, 99)' }}>
+                                Ajusta el texto de búsqueda si es necesario
+                              </label>
+                              <Input
+                                value={searchValue}
+                                onChange={(e) =>
+                                  setIngredientSearchTerms((prev) => ({ ...prev, [ing.index]: e.target.value }))
+                                }
+                                className="w-full h-8"
+                                style={{
+                                  backgroundColor: 'rgb(255, 255, 255)',
+                                  borderColor: 'rgb(209, 213, 219)',
+                                  color: 'rgb(0, 0, 0)'
+                                }}
+                              />
+
+                              {usedFallback && (
+                                <p className="text-xs" style={{ color: 'rgb(59, 130, 246)' }}>
+                                  Sin resultados exactos. Buscando con: "{fallbackTerm}"
+                                </p>
+                              )}
+
+                              <div className="flex flex-wrap gap-2">
+                                {matches.length > 0 ? (
+                                  matches.map((match) => (
+                                    <Button
+                                      key={`${ing.index}-${match._id}`}
+                                      size="sm"
+                                      variant={selection?._id === match._id ? "default" : "outline"}
+                                      onClick={() => handleSelection(ing.index, match)}
+                                      style={{
+                                        backgroundColor: selection?._id === match._id ? 'rgb(34, 197, 94)' : 'rgb(255, 255, 255)',
+                                        borderColor: 'rgb(209, 213, 219)',
+                                        color: selection?._id === match._id ? 'rgb(255, 255, 255)' : 'rgb(31, 41, 55)'
+                                      }}
+                                    >
+                                      {getProductName(match)}
+                                      <span className="ml-2 text-[10px]" style={{ color: selection?._id === match._id ? 'rgb(226, 232, 240)' : 'rgb(107, 114, 128)' }}>
+                                        {match.__type === "producto_interno" ? "Prod. interna" : "Inventario"}
+                                      </span>
+                                    </Button>
+                                  ))
+                                ) : (
+                                  <span className="text-xs" style={{ color: 'rgb(239, 68, 68)' }}>
+                                    Sin coincidencias para este texto.
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Layout responsive del contenido */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Ingredientes y Producción */}
