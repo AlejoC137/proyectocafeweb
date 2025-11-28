@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getAllFromTable, getOtherExpenses, getRecepie, updateItem } from "../../../redux/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
 import EditableText from "../../../components/ui/EditableText";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
@@ -118,17 +119,71 @@ function RecetaModal({ item, onClose }) {
     const id = item?.Receta || paramId;
     
     const dispatch = useDispatch();
-    const allItems = useSelector((state) => state.allItems || []);
-    const allProduccion = useSelector((state) => state.allProduccion || []);
-    const allOptions = useMemo(() => [...allItems, ...allProduccion], [allItems, allProduccion]);
+    const allItems = useSelector((state) => state.allItems || []);
+    const allProduccion = useSelector((state) => state.allProduccion || []);
+    const allOptions = useMemo(() => [...allItems, ...allProduccion], [allItems, allProduccion]);
+
+    const searchableProducts = useMemo(
+        () => [
+            ...allItems.map(item => ({ ...item, __type: "item" })),
+            ...allProduccion.map(prod => ({ ...prod, __type: "producto_interno" })),
+        ],
+        [allItems, allProduccion]
+    );
+
+    const getProductName = (product) =>
+        product?.Nombre_del_producto || product?.NombreES || product?.name || "(Sin nombre)";
+
+    const shortenLegacyTerm = (term) => {
+        const words = term.trim().split(/\s+/);
+        if (words.length <= 1) {
+            return term.trim().slice(0, Math.ceil(term.length / 2));
+        }
+        const half = Math.ceil(words.length / 2);
+        return words.slice(0, half).join(" ");
+    };
+
+    const findMatchesForIngredient = (term) => {
+        const normalizedTerm = term.trim().toLowerCase();
+        if (!normalizedTerm) return { matches: [], usedFallback: false, fallbackTerm: "" };
+
+        const matches = searchableProducts.filter((product) =>
+            getProductName(product).toLowerCase().includes(normalizedTerm)
+        );
+
+        if (matches.length > 0) {
+            return { matches, usedFallback: false, fallbackTerm: normalizedTerm };
+        }
+
+        const shortened = shortenLegacyTerm(normalizedTerm);
+        if (!shortened || shortened === normalizedTerm) {
+            return { matches: [], usedFallback: false, fallbackTerm: normalizedTerm };
+        }
+
+        const fallbackMatches = searchableProducts.filter((product) =>
+            getProductName(product).toLowerCase().includes(shortened)
+        );
+
+        return { matches: fallbackMatches, usedFallback: true, fallbackTerm: shortened };
+    };
     
     const [receta, setReceta] = useState(null);
     const [menuItem, setMenuItem] = useState(null);
     const [foto, setFoto] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [porcentaje, setPorcentaje] = useState(100);
-    const [editShow, setEditShow] = useState(false);
+    const [porcentaje, setPorcentaje] = useState(100);
+    const [editShow, setEditShow] = useState(false);
+
+    // Estados para importación vía JSON
+    const [showJsonImporter, setShowJsonImporter] = useState(false);
+    const [jsonInput, setJsonInput] = useState("");
+    const [jsonError, setJsonError] = useState(null);
+    const [legacyIngredients, setLegacyIngredients] = useState([]);
+    const [ingredientSelections, setIngredientSelections] = useState({});
+    const [ingredientSearchTerms, setIngredientSearchTerms] = useState({});
+    const [isSavingImport, setIsSavingImport] = useState(false);
+    const [importedRecipeName, setImportedRecipeName] = useState("");
     
     const [permanentEditMode, setPermanentEditMode] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -157,9 +212,9 @@ function RecetaModal({ item, onClose }) {
     const buscarPorId = (itemId) => allOptions.find((i) => i._id === itemId) || null;
 const handleCancelEdir = () => {setPermanentEditMode(false)}
 
-    useEffect(() => {
-        const fetchRecetaData = async () => {
-            if (!id) { setError("El ítem no tiene una receta asociada."); setLoading(false); return; }
+    useEffect(() => {
+        const fetchRecetaData = async () => {
+            if (!id) { setError("El ítem no tiene una receta asociada."); setLoading(false); return; }
             setLoading(true);
             try {
                 await Promise.all([ dispatch(getAllFromTable(ITEMS)), dispatch(getAllFromTable(PRODUCCION)), dispatch(getAllFromTable(MENU)), ]);
@@ -182,13 +237,47 @@ const handleCancelEdir = () => {setPermanentEditMode(false)}
                     }
                 }
             } catch (err) { setError("Error al obtener la receta."); console.error(err); } finally { setLoading(false); }
-        };
-        fetchRecetaData();
-    }, [id, dispatch]);
+        };
+        fetchRecetaData();
+    }, [id, dispatch]);
+
+    const parseRecipeJson = () => {
+        setJsonError(null);
+        try {
+            const parsed = JSON.parse(jsonInput);
+            const ingredients = parsed.ingredients || parsed.ingredientes || parsed.items || [];
+            const normalized = ingredients.map((ing, index) => {
+                const legacyName = ing.legacyName || ing.nombre || ing.name || `Ingrediente ${index + 1}`;
+                const quantity = Number(ing.cantidad || ing.quantity || ing.qty || ing.metric?.cuantity || 0);
+                const units = ing.unidades || ing.units || ing.unit || ing.metric?.units || "";
+
+                return {
+                    index,
+                    legacyName,
+                    quantity,
+                    units,
+                    raw: ing,
+                };
+            });
+
+            setLegacyIngredients(normalized);
+            setIngredientSelections({});
+            setIngredientSearchTerms(
+                Object.fromEntries(normalized.map((ing) => [ing.index, ing.legacyName || ""]))
+            );
+            setImportedRecipeName(parsed.name || parsed.nombre || parsed.legacyName || "");
+        } catch (err) {
+            setLegacyIngredients([]);
+            setIngredientSelections({});
+            setIngredientSearchTerms({});
+            setImportedRecipeName("");
+            setJsonError("No se pudo leer el JSON: " + err.message);
+        }
+    };
     
-    const parseItemsFromRecetaObject = (recetaData) => {
-        const parseItems = (prefix, count) => {
-         const parsedList = [];
+    const parseItemsFromRecetaObject = (recetaData) => {
+        const parseItems = (prefix, count) => {
+         const parsedList = [];
          for (let i = 1; i <= count; i++) {
            const itemId = recetaData[`${prefix}${i}_Id`];
            const cuantityUnitsRaw = recetaData[`${prefix}${i}_Cuantity_Units`];
@@ -213,14 +302,82 @@ const handleCancelEdir = () => {setPermanentEditMode(false)}
          }
          return parsedList;
         };
-        return {
-         ingredientes: parseItems("item", 30),
-         produccion: parseItems("producto_interno", 20),
-        };
-    };
-    
-    useEffect(() => {
-        if (!receta || allOptions.length === 0) return;
+        return {
+         ingredientes: parseItems("item", 30),
+         produccion: parseItems("producto_interno", 20),
+        };
+    };
+
+    const allIngredientsMapped = legacyIngredients.length > 0 &&
+        legacyIngredients.every((ing) => ingredientSelections[ing.index]);
+
+    const buildPayloadFromImport = () => {
+        const payload = {};
+        for (let i = 1; i <= 30; i++) {
+            payload[`item${i}_Id`] = null;
+            payload[`item${i}_Cuantity_Units`] = null;
+        }
+        for (let i = 1; i <= 20; i++) {
+            payload[`producto_interno${i}_Id`] = null;
+            payload[`producto_interno${i}_Cuantity_Units`] = null;
+        }
+
+        let ingredientCounter = 1;
+        let productionCounter = 1;
+
+        legacyIngredients.forEach((legacy) => {
+            const selection = ingredientSelections[legacy.index];
+            if (!selection?._id) return;
+
+            const prefix = selection.__type === "producto_interno" ? "producto_interno" : "item";
+            const counter = prefix === "item" ? ingredientCounter++ : productionCounter++;
+
+            payload[`${prefix}${counter}_Id`] = selection._id;
+            payload[`${prefix}${counter}_Cuantity_Units`] = JSON.stringify({
+                metric: {
+                    cuantity: Number(legacy.quantity) || null,
+                    units: legacy.units || null,
+                },
+                legacyName: legacy.legacyName,
+                raw: legacy.raw,
+            });
+        });
+
+        return payload;
+    };
+
+    const handleSaveImportedRecipe = async () => {
+        if (!receta || !recetaSource || legacyIngredients.length === 0) return;
+
+        const payload = buildPayloadFromImport();
+        const legacyName = importedRecipeName || receta.legacyName;
+
+        setIsSavingImport(true);
+        try {
+            const result = await dispatch(updateItem(receta._id, {
+                ...payload,
+                legacyName,
+                actualizacion: new Date().toISOString(),
+            }, recetaSource));
+
+            if (!result) throw new Error("No se pudo guardar la receta importada");
+
+            setReceta((prev) => ({
+                ...prev,
+                ...payload,
+                legacyName,
+            }));
+            alert("Receta actualizada con los ingredientes importados");
+        } catch (err) {
+            console.error(err);
+            alert(err.message || "Error al guardar la receta importada");
+        } finally {
+            setIsSavingImport(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!receta || allOptions.length === 0) return;
         const { ingredientes: parsedIng, produccion: parsedProd } = parseItemsFromRecetaObject(receta);
         setIngredientes(parsedIng); setProduccion(parsedProd);
         setEditableIngredientes(parsedIng); setEditableProduccion(parsedProd);
@@ -382,11 +539,126 @@ const handleCancelEdir = () => {setPermanentEditMode(false)}
                         </div>
                         <Button variant="outline" onClick={() => setEditShow(p => !p)} disabled={permanentEditMode} className={permanentEditMode ? "opacity-50" : ""}>{editShow ? "Ocultar Edición Simple" : "Edición Simple"}</Button>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" onClick={handleEnablePermanentEdit} disabled={permanentEditMode || isUpdating || showPinInput} className={`${permanentEditMode ? "bg-green-500 text-white" : "border-orange-400 text-orange-600"} ${isUpdating ? "opacity-50" : ""}`}>{isUpdating ? "..." : permanentEditMode ? "✓ Edición Avanzada" : "🔒 Edición Avanzada"}</Button>
-                            {showPinInput && !permanentEditMode && ( <div className="flex items-center gap-2"><Input type="password" placeholder="PIN" value={pinCode} onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').substring(0, 4))} maxLength={4} className="w-20 h-9" onKeyDown={e => { if (e.key === 'Enter') handlePinVerification(); }} autoFocus/><Button size="sm" onClick={handlePinVerification} disabled={pinCode.length !== 4} className="h-9">OK</Button></div> )}
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Button variant="outline" onClick={handleEnablePermanentEdit} disabled={permanentEditMode || isUpdating || showPinInput} className={`${permanentEditMode ? "bg-green-500 text-white" : "border-orange-400 text-orange-600"} ${isUpdating ? "opacity-50" : ""}`}>{isUpdating ? "..." : permanentEditMode ? "✓ Edición Avanzada" : "🔒 Edición Avanzada"}</Button>
+                    {showPinInput && !permanentEditMode && ( <div className="flex items-center gap-2"><Input type="password" placeholder="PIN" value={pinCode} onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').substring(0, 4))} maxLength={4} className="w-20 h-9" onKeyDown={e => { if (e.key === 'Enter') handlePinVerification(); }} autoFocus/><Button size="sm" onClick={handlePinVerification} disabled={pinCode.length !== 4} className="h-9">OK</Button></div> )}
+                </div>
+            </div>
+            <div className="mb-6 flex flex-col gap-3 p-3 rounded-md border bg-gray-50">
+                <div className="flex flex-wrap gap-3 items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Importar receta desde JSON</h3>
+                        <p className="text-sm text-gray-600">Pega el JSON, reemplaza los nombres legacy y guarda la receta.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setShowJsonImporter((prev) => !prev)}>
+                            {showJsonImporter ? "Ocultar importador" : "Abrir importador"}
+                        </Button>
+                        <Button
+                            onClick={handleSaveImportedRecipe}
+                            disabled={!allIngredientsMapped || legacyIngredients.length === 0 || isSavingImport}
+                            className={`${allIngredientsMapped ? "bg-green-600" : "bg-gray-200"}`}
+                        >
+                            {isSavingImport ? "Guardando..." : "Guardar receta importada"}
+                        </Button>
+                    </div>
+                </div>
+
+                {showJsonImporter && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <label className="block text-sm font-medium text-gray-700">Pega aquí el JSON de la receta</label>
+                            <Textarea
+                                value={jsonInput}
+                                onChange={(e) => setJsonInput(e.target.value)}
+                                placeholder="{ \"ingredients\": [ { \"legacyName\": \"Jugo de naranja\", \"cantidad\": 20, \"unidades\": \"ml\" } ] }"
+                                className="w-full min-h-[220px]"
+                            />
+                            <div className="flex gap-2">
+                                <Button onClick={parseRecipeJson} className="bg-blue-600 text-white">Leer JSON</Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setJsonInput("");
+                                        setLegacyIngredients([]);
+                                        setIngredientSelections({});
+                                        setIngredientSearchTerms({});
+                                        setJsonError(null);
+                                        setImportedRecipeName("");
+                                    }}
+                                >
+                                    Limpiar
+                                </Button>
+                            </div>
+                            {jsonError && <p className="text-sm text-red-500">{jsonError}</p>}
+                        </div>
+
+                        <div className="space-y-3 p-3 rounded-md border bg-white">
+                            <div className="flex items-center justify-between gap-2">
+                                <div>
+                                    <h4 className="font-semibold text-gray-800">Vista previa de ingredientes</h4>
+                                    <p className="text-xs text-gray-500">Reemplaza cada nombre legacy por un producto existente. Si no hay coincidencias, se acorta la búsqueda.</p>
+                                </div>
+                                {importedRecipeName && (
+                                    <span className="text-xs px-2 py-1 rounded bg-slate-200 text-blue-800">Nombre detectado: {importedRecipeName}</span>
+                                )}
+                            </div>
+
+                            {legacyIngredients.length === 0 ? (
+                                <p className="text-sm text-gray-500">Aún no hay ingredientes cargados desde el JSON.</p>
+                            ) : (
+                                <div className="space-y-4 max-h-[420px] overflow-auto pr-1">
+                                    {legacyIngredients.map((ing) => {
+                                        const searchValue = ingredientSearchTerms[ing.index] ?? ing.legacyName;
+                                        const { matches, usedFallback, fallbackTerm } = findMatchesForIngredient(searchValue || ing.legacyName);
+                                        const selection = ingredientSelections[ing.index];
+
+                                        return (
+                                            <div key={`legacy-${ing.index}`} className="p-3 rounded-md border" style={{ borderColor: '#e5e7eb', backgroundColor: '#f8fafc' }}>
+                                                <div className="flex flex-wrap justify-between gap-2 items-start">
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-slate-900">{ing.legacyName}</p>
+                                                        <p className="text-xs text-gray-500">{ing.quantity || 0} {ing.units || ''} • Nombre legacy a reemplazar</p>
+                                                    </div>
+                                                    {selection ? (
+                                                        <span className="text-xs px-2 py-1 rounded-md bg-emerald-100 text-green-600">Seleccionado: {getProductName(selection)}</span>
+                                                    ) : (
+                                                        <span className="text-xs px-2 py-1 rounded-md bg-red-50 text-red-500">Falta reemplazar</span>
+                                                    )}
+                                                </div>
+
+                                                <div className="mt-3 space-y-2">
+                                                    <label className="text-xs font-medium text-gray-600">Ajusta el texto de búsqueda si es necesario</label>
+                                                    <Input
+                                                        value={searchValue}
+                                                        onChange={(e) => setIngredientSearchTerms((prev) => ({ ...prev, [ing.index]: e.target.value }))}
+                                                        className="w-full h-8"
+                                                    />
+
+                                                    {usedFallback && <p className="text-xs text-blue-500">Sin resultados exactos. Buscando con: "{fallbackTerm}"</p>}
+
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {matches.map((match) => (
+                                                            <button
+                                                                key={match._id}
+                                                                onClick={() => setIngredientSelections((prev) => ({ ...prev, [ing.index]: match }))}
+                                                                className={`px-2 py-1 text-xs rounded border ${selection?._id === match._id ? "bg-blue-600 text-white" : "bg-white"}`}
+                                                            >
+                                                                {getProductName(match)}
+                                                            </button>
+                                                        ))}
+                                                        {matches.length === 0 && <span className="text-xs text-gray-500">Sin coincidencias.</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="lg:col-span-1 space-y-6">
                             {permanentEditMode ? (
                                 <>
