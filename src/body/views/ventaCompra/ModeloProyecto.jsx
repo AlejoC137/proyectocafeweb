@@ -31,15 +31,13 @@ const ModeloProyecto = () => {
 
         // 1. Buscar años en las VENTAS (Formato MM/DD/AAAA)
         if (allVentas && Array.isArray(allVentas)) {
-
             allVentas.forEach(v => {
                 if (v.Date) {
-                    const parts = v.Date.split('/'); 
+                    const parts = v.Date.split('/');
                     if (parts.length === 3) {
                         // parts[0] = Mes, parts[1] = Día, parts[2] = Año
                         const y = parseInt(parts[2]);
                         if (!isNaN(y)) uniqueYears.add(y);
-                        
                     }
                 }
             });
@@ -92,8 +90,12 @@ const ModeloProyecto = () => {
                                     const hasSales = allVentas && allVentas.some(v => {
                                         if (!v.Date) return false;
                                         const parts = v.Date.split('/');
-                                        // parts[0] es el MES (1-12)
-                                        return parts.length === 3 && (parseInt(parts[0]) - 1) === monthIndex && parseInt(parts[2]) === year;
+                                        if (parts.length !== 3) return false;
+                                        const rawMonth = parseInt(parts[0], 10);
+                                        const parsedYear = parseInt(parts[2], 10);
+                                        if (isNaN(rawMonth) || isNaN(parsedYear)) return false;
+                                        const normalizedMonth = rawMonth > 11 ? rawMonth - 1 : rawMonth;
+                                        return normalizedMonth === monthIndex && parsedYear === year;
                                     });
 
                                     const isSelected = selectedDate.month === monthIndex && selectedDate.year === year;
