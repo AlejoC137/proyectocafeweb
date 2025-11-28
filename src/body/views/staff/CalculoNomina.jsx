@@ -182,7 +182,7 @@ const CalculoNomina = () => {
   };
 
   return (
-    <div className="flex-col w-full font-SpaceGrotesk text-notBlack min-h-screen flex items-center justify-center p-4">
+    <div className="flex-col w-screen font-SpaceGrotesk text-notBlack min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-7xl"> {/* Aumentado el ancho máximo para más columnas */}
         <h2 className="text-2xl font-semibold mb-4 text-center">Cálculo de Nómina y Propinas</h2>
         <div className="flex justify-center gap-4 mb-4">

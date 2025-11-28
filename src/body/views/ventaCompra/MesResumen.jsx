@@ -239,7 +239,7 @@ useEffect(() => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Cargando...</div>;
+    return <div className="flex items-center justify-center min-h-screen w-screen">Cargando...</div>;
   }
 
   return (

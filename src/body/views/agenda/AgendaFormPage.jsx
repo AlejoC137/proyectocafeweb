@@ -266,7 +266,7 @@ function AgendaFormPage() {
   if (loading) {
     return (
       <PageLayout title="Cargando...">
-        <div className="flex items-center justify-center p-12">
+        <div className="flex items-center justify-center p-12 w-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         </div>
       </PageLayout>

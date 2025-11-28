@@ -55,7 +55,6 @@ const SimpleCostRow = ({ cost, onUpdate, onRemove, label }) => (
 
 // --- COMPONENTE PRINCIPAL ---
 function ModeloContent({ targetMonth, targetYear }) {
-    console.log( targetMonth, targetYear);
     
     const dispatch = useDispatch();
     
@@ -89,7 +88,6 @@ function ModeloContent({ targetMonth, targetYear }) {
                     total += ingreso;
                     count++;
                 }
-                console.log( parts);
             }
         });
 
@@ -158,7 +156,7 @@ function ModeloContent({ targetMonth, targetYear }) {
         setHasChanges(false);
     };
 
-    if (!currentCosts) return <div className="p-10">Cargando...</div>;
+    if (!currentCosts) return <div className="p-10 w-screen">Cargando...</div>;
     const utilidadNeta = realIncome - totals.grand;
     const margen = realIncome > 0 ? (utilidadNeta / realIncome) * 100 : 0;
 

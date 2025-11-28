@@ -157,7 +157,7 @@ const ProjectTaskModal = () => {
 
   const selectedProject = projects.find(p => p.id === id);
 
-  if (loading && !selectedProject) return <div className="p-8 text-center">Cargando...</div>;
+  if (loading && !selectedProject) return <div className="p-8 text-center w-screen">Cargando...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Error: {error}</div>;
   if (!selectedProject) return <div className="p-8 text-center">Proyecto no encontrado.</div>;
 
