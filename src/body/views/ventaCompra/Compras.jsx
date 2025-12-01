@@ -1,34 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
-// CORRECCIÓN: Asegúrate de que la acción `getAllProveedores` esté creada y
-// exportada desde tu archivo `actions-VentasCompras.js`. Si la tienes en otro
-// archivo, simplemente corrige la ruta de importación.
-import {  } from "../../../redux/actions-VentasCompras.js";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import { Button } from "@/components/ui/button";
-getAllFromTable
 import { TableViewCompras } from "./TableViewCompras";
-
 import { getAllFromTable, toggleShowEdit } from "../../../redux/actions";
-import { COMPRAS, PROVEE } from "../../../redux/actions-types.js";
+import { COMPRAS, PROVEE, STAFF } from "../../../redux/actions-types.js";
 
 function Compras() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
   const compras = useSelector((state) => state.allCompras || []);
-  const proveedores = useSelector((state) => state.allProveedores || []);
+  const proveedores = useSelector((state) => state.Proveedores || []);
+  const staff = useSelector((state) => state.allStaff || []);
   const showEdit = useSelector((state) => state.showEdit);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         await Promise.all([
           dispatch(getAllFromTable(PROVEE)),
-          dispatch(getAllFromTable(COMPRAS)) 
+          dispatch(getAllFromTable(COMPRAS)),
+          dispatch(getAllFromTable(STAFF))
         ]);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -57,6 +52,7 @@ function Compras() {
         <TableViewCompras
           products={compras}
           proveedores={proveedores}
+          staff={staff}
           currentType="Compras"
         />
       </ContentCard>

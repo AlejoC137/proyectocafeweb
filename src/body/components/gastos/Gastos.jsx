@@ -1,15 +1,21 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 // Asegúrate que la ruta a tus acciones sea correcta y que el archivo exista
 import { crearCompra } from "../../../redux/actions-VentasCompras.js";
+import { getAllFromTable } from "../../../redux/actions";
+import { ITEMS, PRODUCCION, PROVEE, STAFF } from "../../../redux/actions-types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, XCircle } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import NominaCalculator from "./NominaCalculator";
 
 function Gastos() {
   // --- Redux State ---
   const allItems = useSelector((state) => state.allItems || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
   const Proveedores = useSelector((state) => state.Proveedores || []);
+  const Staff = useSelector((state) => state.allStaff || []);
   const dispatch = useDispatch();
 
   // --- Component State ---
@@ -26,8 +32,20 @@ function Gastos() {
   const [Categoria, setCategoria] = useState("");
   const [linkDocSoporte, setLinkDocSoporte] = useState("");
   const [Proveedor_Id, setProveedorId] = useState("");
+  const [staff_id, setStaffId] = useState("");
+  const [isStaff, setIsStaff] = useState(false);
   const [Concepto, setConcepto] = useState("");
   const [transporteData, setTransporteData] = useState({ tipo: '', pasaje_flete: '', tiempo: '' });
+  const [nominaTotal, setNominaTotal] = useState(0);
+  const [ajuste, setAjuste] = useState("");
+
+  // --- Data Fetching (Autonomous) ---
+  useEffect(() => {
+    if (!allItems || allItems.length === 0) dispatch(getAllFromTable(ITEMS));
+    if (!allProduccion || allProduccion.length === 0) dispatch(getAllFromTable(PRODUCCION));
+    if (!Proveedores || Proveedores.length === 0) dispatch(getAllFromTable(PROVEE));
+    if (!Staff || Staff.length === 0) dispatch(getAllFromTable(STAFF));
+  }, [dispatch, allItems, allProduccion, Proveedores, Staff]);
 
   // Estado para los items (productos) del Gasto
   // MODIFICADO: Se añade recipeId al estado inicial de los items
@@ -35,16 +53,22 @@ function Gastos() {
 
   // --- Derived State (Calculated Values) ---
   const ValorTotalCalculado = useMemo(() => {
-    const totalItems = Items.reduce((total, item) => {
-      const costoItem = Number(item.costoTotalItemPagado) || 0;
-      return total + costoItem;
-    }, 0);
+    let baseTotal = 0;
+    if (isStaff && staff_id) {
+      baseTotal = nominaTotal;
+    } else {
+      baseTotal = Items.reduce((total, item) => {
+        const costoItem = Number(item.costoTotalItemPagado) || 0;
+        return total + costoItem;
+      }, 0);
+    }
+
     const flete = Number(transporteData.pasaje_flete) || 0;
-    return totalItems + flete;
-  }, [Items, transporteData.pasaje_flete]);
+    const valorAjuste = Number(ajuste) || 0;
+    return baseTotal + flete + valorAjuste;
+  }, [Items, transporteData.pasaje_flete, isStaff, staff_id, nominaTotal, ajuste]);
 
   // --- Event Handlers ---
-
   const handleDateChange = (e) => {
     const dateValue = e.target.value;
     setHoy(dateValue);
@@ -68,6 +92,7 @@ function Gastos() {
       case 'Categoria': setCategoria(value); break;
       case 'linkDocSoporte': setLinkDocSoporte(value); break;
       case 'Proveedor_Id': setProveedorId(value); break;
+      case 'staff_id': setStaffId(value); break;
       case 'Concepto': setConcepto(value); break;
       default: break;
     }
@@ -126,10 +151,12 @@ function Gastos() {
     updatedItems[index].cantidadCompra = '';
     updatedItems[index].unidadesCompra = '';
 
+    const combinedOptions = [...(allItems || []), ...(allProduccion || [])];
+
     const matches = searchValue
-      ? (allItems || []).filter((option) =>
-          option.Nombre_del_producto && option.Nombre_del_producto.toLowerCase().includes(searchValue.toLowerCase())
-        )
+      ? combinedOptions.filter((option) =>
+        option.Nombre_del_producto && option.Nombre_del_producto.toLowerCase().includes(searchValue.toLowerCase())
+      )
       : [];
 
     updatedItems[index].matches = matches;
@@ -156,7 +183,7 @@ function Gastos() {
   // --- Submit Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formattedHoy || !Comprador || !Proveedor_Id || !MedioDeCompra || !MedioDePago || !Categoria || !Concepto) {
+    if (!formattedHoy || !Comprador || (!Proveedor_Id && !staff_id) || !MedioDeCompra || !MedioDePago || !Categoria || !Concepto) {
       alert("Por favor, completa todos los campos generales requeridos.");
       return;
     }
@@ -165,7 +192,7 @@ function Gastos() {
       if (isNaN(Number(transporteData.pasaje_flete)) || Number(transporteData.pasaje_flete) < 0) { alert("El valor de Pasaje/Flete debe ser un número válido (0 o mayor)."); return; }
       if (isNaN(Number(transporteData.tiempo)) || Number(transporteData.tiempo) < 0) { alert("El valor de Tiempo debe ser un número válido (0 o mayor)."); return; }
     }
-    if (Items.length === 0) { alert("Debes agregar al menos un producto/item al gasto."); return; }
+    if (Items.length === 0 && !isStaff) { alert("Debes agregar al menos un producto/item al gasto."); return; }
 
     const invalidItems = Items.filter(item =>
       !item.id ||
@@ -175,7 +202,7 @@ function Gastos() {
       isNaN(Number(item.costoTotalItemPagado)) || Number(item.costoTotalItemPagado) < 0
     );
 
-    if (invalidItems.length > 0) {
+    if (invalidItems.length > 0 && !isStaff) {
       alert("Revisa los items: Selecciona un producto, ingresa Cantidad (>0), Unidad (no vacía) y Costo Total Pagado (>=0) válidos.");
       return;
     }
@@ -194,14 +221,21 @@ function Gastos() {
       },
       Categoria,
       linkDocSoporte: linkDocSoporte || null,
-      Proveedor_Id,
+      Proveedor_Id: isStaff ? null : Proveedor_Id,
+      staff_id: isStaff ? staff_id : null,
       Concepto,
       Transporte: JSON.stringify({
         tipo: transporteData.tipo || null,
         pasaje_flete: Number(transporteData.pasaje_flete) || 0,
         tiempo: Number(transporteData.tiempo) || 0
       }),
-      Items: JSON.stringify(Items.map(item => ({
+      Items: JSON.stringify(isStaff ? [{
+        id: "NOMINA",
+        Nombre_del_producto: "PAGO NOMINA",
+        cantidadCompra: 1,
+        unidadesCompra: "UNIDAD",
+        costoTotalItemPagado: ValorTotalCalculado
+      }] : Items.map(item => ({
         id: item.id,
         Nombre_del_producto: item.Nombre_del_producto,
         cantidadCompra: Number(item.cantidadCompra),
@@ -227,9 +261,12 @@ function Gastos() {
         setCategoria("");
         setLinkDocSoporte("");
         setProveedorId("");
+        setStaffId("");
         setConcepto("");
         setTransporteData({ tipo: '', pasaje_flete: '', tiempo: '' });
         setItems([]);
+        setNominaTotal(0);
+        setAjuste("");
       } else {
         console.warn("La acción crearCompra se completó pero no retornó un indicador de éxito claro.", result);
         alert("El gasto podría no haberse registrado correctamente. Revisa la consola.");
@@ -262,20 +299,50 @@ function Gastos() {
           {/* Comprador */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Comprador:</label>
-            <Input type="text" name="Comprador" value={Comprador} onChange={handleGeneralInputChange} placeholder="Nombre del comprador" className="w-full h-10" required />
-          </div>
 
-          {/* Proveedor */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Proveedor:</label>
-            <select name="Proveedor_Id" value={Proveedor_Id} onChange={handleGeneralInputChange} className="w-full p-2 border bg-white rounded h-10 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-              <option value="">Seleccione proveedor...</option>
-              {(Proveedores || []).map((proveedor) => (
-                <option key={proveedor._id || proveedor.Nombre_Proveedor} value={proveedor._id}>
-                  {proveedor.Nombre_Proveedor}
+
+
+
+            <select name="Comprador" value={Comprador} onChange={handleGeneralInputChange} className="w-full p-2 border bg-white rounded h-10 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+              <option value="">Seleccione staff...</option>
+              {(Staff || []).map((s) => (
+                <option key={s._id} value={s.Nombre}>
+                  {s.Nombre} {s.Apellido}
                 </option>
               ))}
             </select>
+
+          </div>
+
+          {/* Proveedor / Staff */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">{isStaff ? "Staff:" : "Proveedor:"}</label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">{isStaff ? "Staff" : "Prov"}</span>
+                <Switch checked={isStaff} onCheckedChange={setIsStaff} />
+              </div>
+            </div>
+
+            {isStaff ? (
+              <select name="staff_id" value={staff_id} onChange={handleGeneralInputChange} className="w-full p-2 border bg-white rounded h-10 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                <option value="">Seleccione staff...</option>
+                {(Staff || []).map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.Nombre} {s.Apellido}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select name="Proveedor_Id" value={Proveedor_Id} onChange={handleGeneralInputChange} className="w-full p-2 border bg-white rounded h-10 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                <option value="">Seleccione proveedor...</option>
+                {(Proveedores || []).map((proveedor) => (
+                  <option key={proveedor._id || proveedor.Nombre_Proveedor} value={proveedor._id}>
+                    {proveedor.Nombre_Proveedor}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Medio de Compra */}
@@ -361,7 +428,7 @@ function Gastos() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tiempo (min):</label>
-            <Input type="number" name="tiempo" value={transporteData.tiempo} onChange={handleTransporteChange} placeholder="0" className="w-full h-10" min="0" disabled={!transporteData.tipo} />
+            <Input type="number" name="tiempo" value={transporteData.tiempo} onChange={handleTransporteChange} placeholder="0" className="w-full h-10" min="0" />
           </div>
           {/* --- FIN SECCIÓN TRANSPORTE --- */}
 
@@ -373,127 +440,151 @@ function Gastos() {
 
         </div>
 
-        {/* Sección de Items */}
+        {/* Sección de Items o Nómina */}
         <div className="border p-4 rounded-md shadow-sm bg-white">
-          <h3 className="text-lg font-semibold mb-4 text-gray-700">Productos / Items Comprados</h3>
-          {/* Encabezados de la tabla de items */}
-          <div className="hidden md:grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 px-2 pb-2 mb-2 border-b text-xs font-medium text-gray-500">
-            <span>Producto</span>
-            <span className="w-20 text-center">Cant. Compra</span>
-            <span className="w-24 text-center">Unidad Compra</span>
-            <span className="w-28 text-center">Costo Total Pagado ($)</span>
-            {/* Columna vacía para alinear con el botón X */}
-            <span className="w-9"></span>
-          </div>
-          <div className="space-y-3">
-            {Items.map((item, index) => (
-              // Grid ajustado para layout de tabla
-              <div key={index} className="grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 items-center p-2 border md:border-0 md:p-0 rounded-md md:rounded-none relative bg-gray-50 hover:bg-gray-100 md:bg-transparent md:hover:bg-transparent transition-colors duration-150">
+          <h3 className="text-lg font-semibold mb-4 text-gray-700">
+            {isStaff ? "Detalle de Nómina" : "Productos / Items Comprados"}
+          </h3>
 
-                {/* Input de Búsqueda y Dropdown (Col 1) - AHORA INCLUYE EL LINK */}
-                <div className="col-span-5 md:col-span-1 flex items-center gap-2">
-                  {/* Link al Item/Receta - Solo visible si hay recipeId */}
-                  {item.recipeId && (
-                    <a
-                      href={`/item/${item.recipeId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                      title="Ver Detalles del Item"
-                    >
-                      📦
-                    </a>
-                  )}
-
-                  {/* Contenedor relativo para el input y el dropdown */}
-                  <div className="relative w-full">
-                    <Input
-                      type="text"
-                      placeholder="Buscar producto..."
-                      value={item.Nombre_del_producto}
-                      onChange={(e) => handleItemSearchChange(index, e.target.value)}
-                      className="text-sm h-10 w-full"
-                    />
-                    {item.matches && item.matches.length > 0 && (
-                      <ul className="absolute bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto z-20 w-full mt-1 left-0">
-                        {item.matches.map((match) => (
-                          <li
-                            key={match._id || match.Nombre_del_producto}
-                            onClick={() => handleItemSelect(index, match)}
-                            className="p-2 hover:bg-blue-100 cursor-pointer text-xs"
-                          >
-                            {match.Nombre_del_producto}
-                            {/* Muestra Unidad de referencia */}
-                            {match.UNIDADES && ` (Ref: ${match.CANTIDAD || '?'} ${match.UNIDADES})`}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-
-                {/* Cantidad Compra (Col 2) */}
-                <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
-                  <Input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={item.cantidadCompra}
-                    onChange={(e) => handleItemInputChange(index, 'cantidadCompra', e.target.value)}
-                    placeholder="Cant."
-                    className="w-full md:w-20 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-
-                {/* Unidad Compra (Col 3) */}
-                <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
-                  <Input
-                    type="text"
-                    value={item.unidadesCompra}
-                    onChange={(e) => handleItemInputChange(index, 'unidadesCompra', e.target.value)}
-                    placeholder="Unidad"
-                    className="w-full md:w-24 text-center text-sm h-10"
-                  />
-                </div>
-
-                {/* Costo Total Pagado (Col 4) */}
-                <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={item.costoTotalItemPagado}
-                    onChange={(e) => handleItemInputChange(index, 'costoTotalItemPagado', e.target.value)}
-                    placeholder="Costo Total $"
-                    className="w-full md:w-28 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-
-                {/* Botón Eliminar Fila (Col 5) */}
-                {/* Posicionamiento absoluto en móvil, relativo en desktop */}
-                <Button
-                  type="button"
-                  onClick={() => handleRemoveItemRow(index)}
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:text-red-700 h-9 w-9 absolute top-1 right-1 md:relative md:top-auto md:right-auto md:justify-self-end"
-                >
-                  <XCircle size={18} />
-                </Button>
+          {isStaff ? (
+            <NominaCalculator
+              staffId={staff_id}
+              onTotalCalculated={setNominaTotal}
+            />
+          ) : (
+            <>
+              {/* Encabezados de la tabla de items */}
+              <div className="hidden md:grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 px-2 pb-2 mb-2 border-b text-xs font-medium text-gray-500">
+                <span>Producto</span>
+                <span className="w-20 text-center">Cant. Compra</span>
+                <span className="w-24 text-center">Unidad Compra</span>
+                <span className="w-28 text-center">Costo Total Pagado ($)</span>
+                {/* Columna vacía para alinear con el botón X */}
+                <span className="w-9"></span>
               </div>
-            ))}
-          </div>
-          {/* Botón para Añadir Nueva Fila */}
-          <Button type="button" onClick={handleAddNewItemRow} variant="outline" className="w-full mt-4 border-dashed h-10 text-sm hover:bg-gray-100">
-            <PlusCircle size={16} className="mr-2" /> Añadir Producto
-          </Button>
+              <div className="space-y-3">
+                {Items.map((item, index) => (
+                  // Grid ajustado para layout de tabla
+                  <div key={index} className="grid grid-cols-[1fr,auto,auto,auto,auto] gap-2 items-center p-2 border md:border-0 md:p-0 rounded-md md:rounded-none relative bg-gray-50 hover:bg-gray-100 md:bg-transparent md:hover:bg-transparent transition-colors duration-150">
+
+                    {/* Input de Búsqueda y Dropdown (Col 1) - AHORA INCLUYE EL LINK */}
+                    <div className="col-span-5 md:col-span-1 flex items-center gap-2">
+                      {/* Link al Item/Receta - Solo visible si hay recipeId */}
+                      {item.recipeId && (
+                        <a
+                          href={`/item/${item.recipeId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
+                          title="Ver Detalles del Item"
+                        >
+                          📦
+                        </a>
+                      )}
+
+                      {/* Contenedor relativo para el input y el dropdown */}
+                      <div className="relative w-full">
+                        <Input
+                          type="text"
+                          placeholder="Buscar producto..."
+                          value={item.Nombre_del_producto}
+                          onChange={(e) => handleItemSearchChange(index, e.target.value)}
+                          className="text-sm h-10 w-full"
+                        />
+                        {item.matches && item.matches.length > 0 && (
+                          <ul className="absolute bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto z-20 w-full mt-1 left-0">
+                            {item.matches.map((match) => (
+                              <li
+                                key={match._id || match.Nombre_del_producto}
+                                onClick={() => handleItemSelect(index, match)}
+                                className="p-2 hover:bg-blue-100 cursor-pointer text-xs"
+                              >
+                                {match.Nombre_del_producto}
+                                {/* Muestra Unidad de referencia */}
+                                {match.UNIDADES && ` (Ref: ${match.CANTIDAD || '?'} ${match.UNIDADES})`}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cantidad Compra (Col 2) */}
+                    <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
+                      <Input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={item.cantidadCompra}
+                        onChange={(e) => handleItemInputChange(index, 'cantidadCompra', e.target.value)}
+                        placeholder="Cant."
+                        className="w-full md:w-20 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+
+                    {/* Unidad Compra (Col 3) */}
+                    <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
+                      <Input
+                        type="text"
+                        value={item.unidadesCompra}
+                        onChange={(e) => handleItemInputChange(index, 'unidadesCompra', e.target.value)}
+                        placeholder="Unidad"
+                        className="w-full md:w-24 text-center text-sm h-10"
+                      />
+                    </div>
+
+                    {/* Costo Total Pagado (Col 4) */}
+                    <div className="w-full md:w-auto"> {/* Ajuste responsivo */}
+                      <Input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={item.costoTotalItemPagado}
+                        onChange={(e) => handleItemInputChange(index, 'costoTotalItemPagado', e.target.value)}
+                        placeholder="Costo Total $"
+                        className="w-full md:w-28 text-center text-sm h-10 appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+
+                    {/* Botón Eliminar Fila (Col 5) */}
+                    {/* Posicionamiento absoluto en móvil, relativo en desktop */}
+                    <Button
+                      type="button"
+                      onClick={() => handleRemoveItemRow(index)}
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 hover:text-red-700 h-9 w-9 absolute top-1 right-1 md:relative md:top-auto md:right-auto md:justify-self-end"
+                    >
+                      <XCircle size={18} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {/* Botón para Añadir Nueva Fila */}
+              <Button type="button" onClick={handleAddNewItemRow} variant="outline" className="w-full mt-4 border-dashed h-10 text-sm hover:bg-gray-100">
+                <PlusCircle size={16} className="mr-2" /> Añadir Producto
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Sección de Resumen y Acciones */}
         <div className="flex flex-col md:flex-row justify-between items-center mt-6 p-4 border-t bg-gray-50 rounded-b-md">
-          <div className="text-left mb-4 md:mb-0">
-            <p className="text-sm text-gray-500 font-medium">VALOR TOTAL GASTO (Items + Flete)</p>
-            <p className="text-3xl font-bold text-gray-900">{formatCurrency(ValorTotalCalculado)}</p>
+          <div className="text-left mb-4 md:mb-0 flex flex-col gap-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ajuste / Adicional ($):</label>
+              <Input
+                type="number"
+                value={ajuste}
+                onChange={(e) => setAjuste(e.target.value)}
+                placeholder="0"
+                className="w-32 h-10"
+              />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">VALOR TOTAL GASTO</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(ValorTotalCalculado)}</p>
+            </div>
           </div>
           <Button type="submit" className="w-full md:w-auto h-12 px-6 text-base bg-blue-600 hover:bg-blue-700 text-white">
             Registrar Gasto

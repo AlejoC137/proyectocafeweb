@@ -3,7 +3,7 @@
 
 // export function crearItem(itemData, type, forId) {
 //   console.log(itemData);
-  
+
 //   return async (dispatch) => {
 //     try {
 //       // Generar un objeto base con UUID
@@ -97,7 +97,7 @@
 
 // export function crearCompra(compraData) {
 //   console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
-  
+
 //   return async (dispatch) => {
 //     try {
 //       // Generar un objeto base con UUID
@@ -206,11 +206,11 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import supabase from "../config/supabaseClient";
-import { GET_ALL_FROM_TABLE } from './actions-types';
+import { GET_ALL_FROM_TABLE, UPDATE_COMPRA_SUCCESS } from './actions-types';
 
 export function crearItem(itemData, type, forId) {
   console.log(itemData);
-  
+
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
@@ -219,7 +219,7 @@ export function crearItem(itemData, type, forId) {
         ...itemData,
       };
 
-      if (type === "RecetasProduccion") { 
+      if (type === "RecetasProduccion") {
         nuevoItem = {
           ...nuevoItem,
           forId: forId
@@ -304,7 +304,7 @@ export function crearVenta(ventaData) {
 
 export function crearCompra(compraData) {
   console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
-  
+
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
@@ -444,6 +444,12 @@ export function updateCompra(compraId, updatedFields) {
       }
 
       console.log('Compra actualizada correctamente:', data);
+
+      dispatch({
+        type: UPDATE_COMPRA_SUCCESS,
+        payload: data[0],
+      });
+
       return data;
     } catch (error) {
       console.error('Error en la acción updateCompra:', error);

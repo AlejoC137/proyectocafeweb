@@ -53,15 +53,15 @@ export const JARDINERIA = 'JARDINERIA'
 export const BAÑO = 'BAÑO'
 export const DESPACHO = 'DESPACHO'
 
-export const AREAS = [ 
+export const AREAS = [
   COCINA,
   BARRA,
   MESAS,
   JARDINERIA,
   LIBROS_TIENDA,
   BAÑO,
-DESPACHO,
-"PRODUCCION"
+  DESPACHO,
+  "PRODUCCION"
 ]
 
 
@@ -114,26 +114,26 @@ export const CATEGORIES = [ //GRUPO
 
 
 export const CATEGORIES_t = {
-  CAFE: { es: "Café", en: "Coffee" , icon:"☕"},
-  DESAYUNO: { es: "Desayuno", en: "Breakfast" , icon:"🥞"},
-  BEBIDAS: { es: "Bebidas", en: "Drinks" , icon:"🍹" },
-  PANADERIA: { es: "Panadería", en: "Bakery" , icon:"🥐"},
-  REPOSTERIA: { es: "Repostería", en: "Pastry" , icon:"🍰"},
-  TARDEO: { es: "Tardeo", en: "Afternoon Snack" , icon:"🥪"},
-  ADICIONES: { es: "Adiciones", en: "Add-ons" , icon:"🥚"},
-  CARNICO: { es: "Cárnico", en: "Meat", icon:"☕" },
-  LACTEO: { es: "Lácteo", en: "Dairy" , icon:"🐄"},
-  VERDURAS_FRUTAS: { es: "Verduras y Frutas", en: "Fruits and Vegetables", icon:"🐄" },
-  CONDIMENTOS_ESPECIAS_ADITIVOS: { es: "Condimentos, Especias y Aditivos", en: "Condiments, Spices and Additives" , icon:"🧂"},
-  GRANOS_CEREALES: { es: "Granos y Cereales", en: "Grains and Cereals", icon:"🌰" },
-  LIMPIEZA: { es: "Limpieza", en: "Cleaning", icon:"🧼" },
-  DOTACION: { es: "Dotación", en: "Equipment" , icon:"📇"},
-  CONCERVAS_FERMENTOS_PRECOCIDOS: { es: "Conservas, Fermentos y Precocidos", en: "Preserves, Ferments and Precooked", icon:"🍯" },
-  GUARNICION: { es: "Guarnición", en: "Side Dish" , icon:"🍟"},
-  DESECHABLES: { es: "Desechables", en: "Disposables" , icon:"🥡"},
-  ENLATADOS: { es: "Enlatados", en: "Canned Goods", icon:"🥫" },
-  GRANOS: { es: "Granos", en: "Grains", icon:"🥜" },
-  HARINAS: { es: "Harinas", en: "Flours", icon:"🌾" }
+  CAFE: { es: "Café", en: "Coffee", icon: "☕" },
+  DESAYUNO: { es: "Desayuno", en: "Breakfast", icon: "🥞" },
+  BEBIDAS: { es: "Bebidas", en: "Drinks", icon: "🍹" },
+  PANADERIA: { es: "Panadería", en: "Bakery", icon: "🥐" },
+  REPOSTERIA: { es: "Repostería", en: "Pastry", icon: "🍰" },
+  TARDEO: { es: "Tardeo", en: "Afternoon Snack", icon: "🥪" },
+  ADICIONES: { es: "Adiciones", en: "Add-ons", icon: "🥚" },
+  CARNICO: { es: "Cárnico", en: "Meat", icon: "☕" },
+  LACTEO: { es: "Lácteo", en: "Dairy", icon: "🐄" },
+  VERDURAS_FRUTAS: { es: "Verduras y Frutas", en: "Fruits and Vegetables", icon: "🐄" },
+  CONDIMENTOS_ESPECIAS_ADITIVOS: { es: "Condimentos, Especias y Aditivos", en: "Condiments, Spices and Additives", icon: "🧂" },
+  GRANOS_CEREALES: { es: "Granos y Cereales", en: "Grains and Cereals", icon: "🌰" },
+  LIMPIEZA: { es: "Limpieza", en: "Cleaning", icon: "🧼" },
+  DOTACION: { es: "Dotación", en: "Equipment", icon: "📇" },
+  CONCERVAS_FERMENTOS_PRECOCIDOS: { es: "Conservas, Fermentos y Precocidos", en: "Preserves, Ferments and Precooked", icon: "🍯" },
+  GUARNICION: { es: "Guarnición", en: "Side Dish", icon: "🍟" },
+  DESECHABLES: { es: "Desechables", en: "Disposables", icon: "🥡" },
+  ENLATADOS: { es: "Enlatados", en: "Canned Goods", icon: "🥫" },
+  GRANOS: { es: "Granos", en: "Grains", icon: "🥜" },
+  HARINAS: { es: "Harinas", en: "Flours", icon: "🌾" }
 };
 
 export const CAFE_ESPRESSO = 'CAFE_ESPRESSO'
@@ -170,7 +170,7 @@ export const PP = 'PP'
 export const OK = 'OK'
 export const NA = 'NA'
 
-export const ESTATUS = [ 
+export const ESTATUS = [
   PC,
   PP,
   OK,
@@ -182,15 +182,15 @@ export const ESTATUS = [
 
 
 
-  export const gr = 'gr'
-  export const kl = 'kl'
-  export const ml = 'ml'
-  export const li = 'li'
-  export const un = 'un'
-  export const srv = 'srv'
-  export const SET_LANGUAGE = 'SET_LANGUAGE'
+export const gr = 'gr'
+export const kl = 'kl'
+export const ml = 'ml'
+export const li = 'li'
+export const un = 'un'
+export const srv = 'srv'
+export const SET_LANGUAGE = 'SET_LANGUAGE'
 
-  
+
 
 
 
@@ -201,7 +201,7 @@ export const unidades = [
   li,
   un,
   srv,
-  ];
+];
 
 export const ItemsAlmacen = "ItemsAlmacen"
 export const ProduccionInterna = "ProduccionInterna"
@@ -215,11 +215,11 @@ export const WorkIsue = "WorkIsue"
 export const INSERT_RECETAS_SUCCESS = "INSERT_RECETAS_SUCCESS";  // Nueva acción para éxito al insertar recetas
 export const INSERT_RECETAS_FAILURE = "INSERT_RECETAS_FAILURE";  // Nueva acción para error al insertar recetas
 export const SET_PREPROCESS_DATA = "SET_PREPROCESS_DATA";  // Nueva acción para error al insertar recetas
-export const INSERT_ITEM_FAILURE  = "INSERT_ITEM_FAILURE ";  // Nueva acción para error al insertar recetas
+export const INSERT_ITEM_FAILURE = "INSERT_ITEM_FAILURE ";  // Nueva acción para error al insertar recetas
 
-export const TOGGLE_SHOW_EDIT =  'TOGGLE_SHOW_EDIT'; 
+export const TOGGLE_SHOW_EDIT = 'TOGGLE_SHOW_EDIT';
 
-export const SCRAP  = "SCRAP ";  // Nueva acción para error al insertar recetas
+export const SCRAP = "SCRAP ";  // Nueva acción para error al insertar recetas
 
 export const RESET_EXPANDED_GROUPS = "RESET_EXPANDED_GROUPS"; // Nueva acción para restablecer la visibilidad de los grupos
 
@@ -284,25 +284,25 @@ export const BODEGA = [
 export const VENTAS = 'Ventas'
 
 export const SMMV_COL_2025_HORA = 6189
-export const SMMV_COL_2025_MINU = SMMV_COL_2025_HORA/60
+export const SMMV_COL_2025_MINU = SMMV_COL_2025_HORA / 60
 export const CREATE_RECIPE_FOR_PRODUCT_SUCCESS = "CREATE_RECIPE_FOR_PRODUCT_SUCCESS"; // <-- AÑADIR ESTA LÍNEA
 
 export const BARISTA = 'BARISTA'
 export const DESPACHADOR = 'DESPACHADOR'
 export const AUX_PRODUCCION = 'AUX_PRODUCCION'
 export const COCINERO = 'COCINERO'
-export const EVENTOS  = 'EVENTOS'
-export const REDES  = 'REDES'
-export const MANAGER  = 'MANAGER'
+export const EVENTOS = 'EVENTOS'
+export const REDES = 'REDES'
+export const MANAGER = 'MANAGER'
 
 export const ROLES = [
-BARISTA,
-DESPACHADOR,
-AUX_PRODUCCION,
-COCINERO,
-EVENTOS,
-REDES,
-MANAGER
+  BARISTA,
+  DESPACHADOR,
+  AUX_PRODUCCION,
+  COCINERO,
+  EVENTOS,
+  REDES,
+  MANAGER
 ]
 
 
@@ -314,3 +314,4 @@ export const UPDATE_NOTA_FAILURE = "UPDATE_NOTA_FAILURE";
 export const DELETE_NOTA_SUCCESS = "DELETE_NOTA_SUCCESS";
 export const DELETE_NOTA_FAILURE = "DELETE_NOTA_FAILURE";
 // --- FIN: ACCIONES CRUD PARA NOTAS ---
+export const UPDATE_COMPRA_SUCCESS = "UPDATE_COMPRA_SUCCESS";

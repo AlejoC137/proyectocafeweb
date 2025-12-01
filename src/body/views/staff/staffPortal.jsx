@@ -137,6 +137,12 @@ function StaffPortal() {
       onClick: () => navigate("/MenuPrint"),
       variant: "default"
     },
+      {
+      label: "Gastos",
+      icon: "💸",
+      onClick: () => navigate("/Gastos"),
+      variant: "default"
+    },
     {
       label: "Modelos",
       icon: "🚩",
@@ -178,9 +184,9 @@ function StaffPortal() {
       variant: "outline"
     },
     {
-      label: "Gastos",
-      icon: "💸",
-      onClick: () => navigate("/Gastos"),
+      label: "Compras",
+      icon: "💱",
+      onClick: () => navigate("/Compras"),
       variant: "outline"
     },
     // Botones de administrador
@@ -189,6 +195,12 @@ function StaffPortal() {
         label: "Nómina",
         icon: "📊",
         onClick: handleGoToNomina,
+        variant: "destructive"
+      },
+      {
+        label: "Pagos",
+        icon: "💸",
+        onClick: () => navigate("/PagosProveedores"),
         variant: "destructive"
       },
       {

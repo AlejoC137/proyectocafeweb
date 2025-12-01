@@ -37,6 +37,7 @@ import {
     UPDATE_MODEL_SUCCESS,
     DELETE_MODEL_SUCCESS,
     // --- FIN: ADICIONES ---
+    UPDATE_COMPRA_SUCCESS,
 } from './actions-types';
 
 const initialState = {
@@ -273,6 +274,14 @@ const reducer = (state = initialState, action) => {
                 models: state.models.filter(model => model._id !== action.payload),
             };
         // --- FIN: ADICIONES DE CASES PARA MODELOS ---
+
+        case UPDATE_COMPRA_SUCCESS:
+            return {
+                ...state,
+                allCompras: state.allCompras.map((compra) =>
+                    compra._id === action.payload._id ? action.payload : compra
+                ),
+            };
 
         default:
             return state;
