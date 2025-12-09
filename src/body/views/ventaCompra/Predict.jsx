@@ -13,7 +13,7 @@ import supabase from "../../../config/supabaseClient"; // Asegúrate que la ruta
  * @param {number|string} props.selectedMonth - El mes seleccionado para el análisis (esperado en formato 0-11).
  * @param {number|string} props.selectedYear - El año seleccionado para el análisis.
  */
-function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
+function Predict({ item, onClose, selectedMonth, selectedYear, ventas }) {
 
   // --- Estados del Componente ---
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,7 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
     allProduccion: state.allProduccion,
     allMenu: state.allMenu,
   }));
-  
+
   // --- 2. CÁLCULO DE PRECIO Y DETALLES DE RECETA ---
   const unitPrice = useMemo(() => {
     if (!item?.nombre || !allMenu?.length) return 0;
@@ -43,7 +43,7 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
     if (!item?.recetaId || !allRecetasMenu?.length) {
       return { ingredients: [], processes: [], emplatado: "", notas: [], unitCost: 0 };
     }
-    const recipe = allRecetasMenu.find(r => r._id === item  .recetaId);
+    const recipe = allRecetasMenu.find(r => r._id === item.recetaId);
     if (!recipe) {
       return { ingredients: [], processes: [], emplatado: "", notas: [], unitCost: 0 };
     }
@@ -55,87 +55,94 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
     let unitCost = 0;
 
     if (recipe.costo) {
-        try {
-            const costData = JSON.parse(recipe.costo);
-            unitCost = parseFloat(costData.vCMP) || 0;
-        } catch (e) {
-            console.error("Error al parsear el costo de la receta:", e);
-        }
-    }
-
-    for (let i = 1; i <= 30; i++) {
-      const itemId = recipe[`item${i}_Id`] || recipe[`producto_interno${i}_Id`];
-      const itemCuantityStr = recipe[`item${i}_Cuantity_Units`];
-      if (itemId) {
-        const inventoryItem = combinedInventory.find(inv => inv._id === itemId);
-        const name = inventoryItem?.Nombre_del_producto || `ID: ${itemId} (No encontrado)`;
-        let baseQuantity = 0;
-        let units = "";
-        if (itemCuantityStr) {
-          try {
-            const parsed = JSON.parse(itemCuantityStr);
-            baseQuantity = parseFloat(parsed.metric?.cuantity) || 0;
-            units = parsed.metric?.units ?? "";
-          } catch (e) { /* Ignorar JSON inválido */ }
-        }
-        
-        const totalQuantity = baseQuantity * totalItemsSold;
-        
-        const ingredientUnitCost = parseFloat(inventoryItem?.precioUnitario) || 0;
-        const ingredientTotalCost = totalQuantity * ingredientUnitCost;
-
-        ingredients.push({ 
-            name, 
-            baseQuantity, 
-            totalQuantity, 
-            units, 
-            ingredientTotalCost
-        });
+      try {
+        const costData = JSON.parse(recipe.costo);
+        unitCost = parseFloat(costData.vCMP) || 0;
+      } catch (e) {
+        console.error("Error al parsear el costo de la receta:", e);
       }
     }
 
+    const addIngredientsFromSource = (prefix, limit) => {
+      for (let i = 1; i <= limit; i++) {
+        const itemId = recipe[`${prefix}${i}_Id`];
+        const itemCuantityStr = recipe[`${prefix}${i}_Cuantity_Units`];
+
+        if (itemId) {
+          const inventoryItem = combinedInventory.find(inv => inv._id === itemId);
+          const name = inventoryItem?.Nombre_del_producto || `ID: ${itemId} (No encontrado)`;
+          let baseQuantity = 0;
+          let units = "";
+
+          if (itemCuantityStr) {
+            try {
+              const parsed = JSON.parse(itemCuantityStr);
+              baseQuantity = parseFloat(parsed.metric?.cuantity) || 0;
+              units = parsed.metric?.units ?? "";
+            } catch (e) { /* Ignorar JSON inválido */ }
+          }
+
+          const totalQuantity = baseQuantity * totalItemsSold;
+
+          const ingredientUnitCost = parseFloat(inventoryItem?.precioUnitario) || 0;
+          const ingredientTotalCost = totalQuantity * ingredientUnitCost;
+
+          ingredients.push({
+            name,
+            baseQuantity,
+            totalQuantity,
+            units,
+            ingredientTotalCost
+          });
+        }
+      }
+    };
+
+    addIngredientsFromSource('item', 30);
+    addIngredientsFromSource('producto_interno', 20);
+
     for (let i = 1; i <= 20; i++) if (recipe[`proces${i}`]) processes.push(recipe[`proces${i}`]);
     for (let i = 1; i <= 10; i++) if (recipe[`nota${i}`]) notas.push(recipe[`nota${i}`]);
-    
+
     return { ingredients, processes, emplatado: recipe.emplatado, notas, unitCost };
   }, [item, allRecetasMenu, allItems, allProduccion, totalItemsSold]);
 
   // --- 3. OBTENCIÓN Y ANÁLISIS DE DATOS DE VENTAS ---
   useEffect(() => {
-    
+
     if (!item?.nombre || selectedMonth === undefined || selectedYear === undefined) return;
 
     const calculateAverageByDay = (dailySales) => {
-        const dayOfWeekTotals = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-        const dayOfWeekOccurrences = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-        const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      const dayOfWeekTotals = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+      const dayOfWeekOccurrences = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+      const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-        dailySales.forEach(dailySale => {
-            const dateParts = dailySale.date.split('-');
-            const safeDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-            const dayOfWeek = safeDate.getUTCDay();
-            dayOfWeekTotals[dayOfWeek] += dailySale.totalCantidad;
-            dayOfWeekOccurrences[dayOfWeek] += 1;
-        });
+      dailySales.forEach(dailySale => {
+        const dateParts = dailySale.date.split('-');
+        const safeDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        const dayOfWeek = safeDate.getUTCDay();
+        dayOfWeekTotals[dayOfWeek] += dailySale.totalCantidad;
+        dayOfWeekOccurrences[dayOfWeek] += 1;
+      });
 
-        const averages = {};
-        for (const dayIndex in dayOfWeekTotals) {
-            if (dayOfWeekOccurrences[dayIndex] > 0) {
-                const dayName = dayNames[dayIndex];
-                averages[dayName] = dayOfWeekTotals[dayIndex] / dayOfWeekOccurrences[dayIndex];
-            }
+      const averages = {};
+      for (const dayIndex in dayOfWeekTotals) {
+        if (dayOfWeekOccurrences[dayIndex] > 0) {
+          const dayName = dayNames[dayIndex];
+          averages[dayName] = dayOfWeekTotals[dayIndex] / dayOfWeekOccurrences[dayIndex];
         }
-        setAverageByDay(averages);
+      }
+      setAverageByDay(averages);
     };
 
     const calculateTrend = (groupedData) => {
-        if (groupedData.length < 2) { setTrend("No suficiente información"); return; }
-        const last = groupedData[groupedData.length - 1].totalCantidad;
-        const first = groupedData[0].totalCantidad;
-        const avgChange = (last - first) / groupedData.length;
-        if (avgChange > 0.1) setTrend("📈 Creciente");
-        else if (avgChange < -0.1) setTrend("📉 Decreciente");
-        else setTrend("📊 Estable");
+      if (groupedData.length < 2) { setTrend("No suficiente información"); return; }
+      const last = groupedData[groupedData.length - 1].totalCantidad;
+      const first = groupedData[0].totalCantidad;
+      const avgChange = (last - first) / groupedData.length;
+      if (avgChange > 0.1) setTrend("📈 Creciente");
+      else if (avgChange < -0.1) setTrend("📉 Decreciente");
+      else setTrend("📊 Estable");
     };
 
     const fetchSalesData = async () => {
@@ -143,36 +150,36 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
       try {
         const { data, error } = await supabase.from('Ventas').select('Date, Productos').order('Date', { ascending: false });
         if (error) throw error;
-// console.log(data); 
+        // console.log(data); 
 
         const monthAsNumber = parseInt(selectedMonth, 10);
         const yearAsNumber = parseInt(selectedYear, 10);
 
         const filteredSales = ventas.filter(venta => {
-            if (!venta.Date) return false;
-            const saleDate = new Date(venta.Date);
-            
-            // --- INICIO DE LA CORRECCIÓN ---
-            // Se elimina el "+ 1" para que la comparación funcione con los meses 0-11
-            // que probablemente envía el componente padre (ej: 8 para Septiembre).
-            return saleDate.getMonth() === monthAsNumber && saleDate.getFullYear() === yearAsNumber;
-            // --- FIN DE LA CORRECCIÓN ---
+          if (!venta.Date) return false;
+          const saleDate = new Date(venta.Date);
+
+          // --- INICIO DE LA CORRECCIÓN ---
+          // Se elimina el "+ 1" para que la comparación funcione con los meses 0-11
+          // que probablemente envía el componente padre (ej: 8 para Septiembre).
+          return saleDate.getMonth() === monthAsNumber && saleDate.getFullYear() === yearAsNumber;
+          // --- FIN DE LA CORRECCIÓN ---
         });
-        
+
         const groupedByDate = filteredSales.reduce((acc, venta) => {
-            try {
-                const productos = JSON.parse(venta.Productos);
-                const productoTarget = productos.find(p => p.NombreES === item.nombre);
-                if (productoTarget) {
-                    const dateKey = new Date(venta.Date).toLocaleDateString('en-CA'); // YYYY-MM-DD
-                    const quantity = parseFloat(productoTarget.quantity || 0);
-                    if (!acc[dateKey]) {
-                        acc[dateKey] = { date: dateKey, totalCantidad: 0 };
-                    }
-                    acc[dateKey].totalCantidad += quantity;
-                }
-            } catch (e) { /* Ignorar errores */ }
-            return acc;
+          try {
+            const productos = JSON.parse(venta.Productos);
+            const productoTarget = productos.find(p => p.NombreES === item.nombre);
+            if (productoTarget) {
+              const dateKey = new Date(venta.Date).toLocaleDateString('en-CA'); // YYYY-MM-DD
+              const quantity = parseFloat(productoTarget.quantity || 0);
+              if (!acc[dateKey]) {
+                acc[dateKey] = { date: dateKey, totalCantidad: 0 };
+              }
+              acc[dateKey].totalCantidad += quantity;
+            }
+          } catch (e) { /* Ignorar errores */ }
+          return acc;
         }, {});
 
         const groupedArray = Object.values(groupedByDate).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -180,11 +187,11 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
 
         const grandTotal = groupedArray.reduce((sum, group) => sum + group.totalCantidad, 0);
         setTotalItemsSold(grandTotal);
-        
+
         if (groupedArray.length > 0) {
-            setAnalysisPeriod({ start: groupedArray[0].date, end: groupedArray[groupedArray.length - 1].date });
+          setAnalysisPeriod({ start: groupedArray[0].date, end: groupedArray[groupedArray.length - 1].date });
         } else {
-            setAnalysisPeriod({ start: null, end: null });
+          setAnalysisPeriod({ start: null, end: null });
         }
 
         calculateAverageByDay(groupedArray);
@@ -198,17 +205,17 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
     };
 
     fetchSalesData();
-  }, [item, selectedMonth, selectedYear , ventas , onClose]); 
+  }, [item, selectedMonth, selectedYear, ventas, onClose]);
 
   // --- 4. CÁLCULO DE DATOS FINANCIEROS ---
   useEffect(() => {
     if (totalItemsSold > 0 && recipeDetails.unitCost) {
-        const totalRevenue = unitPrice * totalItemsSold;
-        const totalCost = recipeDetails.unitCost * totalItemsSold;
-        const totalProfit = totalRevenue - totalCost;
-        setFinancials({ unitCost: recipeDetails.unitCost, totalCost, totalRevenue, totalProfit });
+      const totalRevenue = unitPrice * totalItemsSold;
+      const totalCost = recipeDetails.unitCost * totalItemsSold;
+      const totalProfit = totalRevenue - totalCost;
+      setFinancials({ unitCost: recipeDetails.unitCost, totalCost, totalRevenue, totalProfit });
     } else {
-        setFinancials({ unitCost: recipeDetails.unitCost, totalCost: 0, totalRevenue: 0, totalProfit: 0 });
+      setFinancials({ unitCost: recipeDetails.unitCost, totalCost: 0, totalRevenue: 0, totalProfit: 0 });
     }
   }, [totalItemsSold, recipeDetails.unitCost, unitPrice]);
 
@@ -220,31 +227,31 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
           <h1 className="text-2xl font-bold text-gray-800">Análisis y Receta de: {item?.nombre}</h1>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
         </div>
-        
+
         {loading ? <p className="text-center text-gray-600 py-8">Cargando análisis para el mes seleccionado...</p> : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
+
             {totalItemsSold > 0 && analysisPeriod.start && (
               <div className="lg:col-span-2 bg-indigo-50 border-l-4 border-indigo-500 text-indigo-800 p-4 rounded-md -mt-2 mb-4" role="alert">
                 <p className="font-bold text-lg">Resumen del Periodo</p>
                 <p>
-                  Total de <strong className="text-xl">{totalItemsSold.toFixed(2)}</strong> unidades vendidas 
+                  Total de <strong className="text-xl">{totalItemsSold.toFixed(2)}</strong> unidades vendidas
                   {analysisPeriod.start === analysisPeriod.end
-                      ? ` durante el día ${new Date(analysisPeriod.start + 'T00:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}.`
-                      : ` entre el ${new Date(analysisPeriod.start + 'T00:00:00').toLocaleDateString('es-CO')} y el ${new Date(analysisPeriod.end + 'T00:00:00').toLocaleDateString('es-CO')}.`
+                    ? ` durante el día ${new Date(analysisPeriod.start + 'T00:00:00').toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}.`
+                    : ` entre el ${new Date(analysisPeriod.start + 'T00:00:00').toLocaleDateString('es-CO')} y el ${new Date(analysisPeriod.end + 'T00:00:00').toLocaleDateString('es-CO')}.`
                   }
                 </p>
               </div>
             )}
-            
+
             {/* Columna Izquierda: Análisis Financiero y de Ventas */}
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-bold mb-2 text-gray-700">Análisis Financiero</h2>
                 <div className="bg-blue-50 p-4 rounded-lg grid grid-cols-2 gap-4 text-center">
-                    <div><h3 className="text-sm font-semibold text-gray-600">Ingresos Totales</h3><p className="text-2xl font-bold text-green-600">{financials.totalRevenue.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</p></div>
-                    <div><h3 className="text-sm font-semibold text-gray-600">Costo Total</h3><p className="text-2xl font-bold text-red-500">{financials.totalCost.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</p></div>
-                    <div className="col-span-2 bg-white p-3 rounded-lg"><h3 className="text-md font-semibold text-gray-600">Ganancia Total</h3><p className="text-3xl font-bold text-blue-600">{financials.totalProfit.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</p></div>
+                  <div><h3 className="text-sm font-semibold text-gray-600">Ingresos Totales</h3><p className="text-2xl font-bold text-green-600">{financials.totalRevenue.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</p></div>
+                  <div><h3 className="text-sm font-semibold text-gray-600">Costo Total</h3><p className="text-2xl font-bold text-red-500">{financials.totalCost.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</p></div>
+                  <div className="col-span-2 bg-white p-3 rounded-lg"><h3 className="text-md font-semibold text-gray-600">Ganancia Total</h3><p className="text-3xl font-bold text-blue-600">{financials.totalProfit.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</p></div>
                 </div>
               </div>
               <div>
@@ -293,7 +300,7 @@ function Predict({ item, onClose, selectedMonth, selectedYear ,ventas  }) {
                 <ol className="list-decimal list-inside mt-2 space-y-1 text-gray-700">{recipeDetails.processes.length > 0 ? recipeDetails.processes.map((step, i) => <li key={i}>{step}</li>) : <li>No se encontraron pasos de preparación.</li>}</ol>
               </div>
             </div>
-            
+
           </div>
         )}
       </div>

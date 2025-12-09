@@ -6,7 +6,7 @@ import {
   UPDATE_SELECTED_VALUE,
   INSERT_RECETAS_SUCCESS,
   INSERT_RECETAS_FAILURE,
-  INSERT_ITEM_FAILURE ,
+  INSERT_ITEM_FAILURE,
   SET_PREPROCESS_DATA,
   SCRAP,
   ItemsAlmacen,
@@ -253,7 +253,7 @@ export function procesarRecetaYEnviarASupabase() {
         recetaParaSupabase.legacyName = receta.nombre;
 
         recetaParaSupabase.rendimiento = {
-          porcion:  receta.rendimiento_porcion || null,
+          porcion: receta.rendimiento_porcion || null,
           cantidad: receta.rendimiento_cantidad || null,
           unidades: receta.rendimiento_unidades || null,
         };
@@ -302,8 +302,8 @@ export function procesarRecetaYEnviarASupabase() {
                   imperial: {
                     cuantity: null, // Puedes calcular las unidades imperiales si es necesario
                     units: null,
-                  }, 
-                  legacyName:ingrediente.nombre
+                  },
+                  legacyName: ingrediente.nombre
                 };
               } else if (ingredienteEnProduccion) {
                 recetaParaSupabase[productoInternoIdKey] = validarUUID(ingredienteEnProduccion._id) ? ingredienteEnProduccion._id : null;
@@ -316,7 +316,7 @@ export function procesarRecetaYEnviarASupabase() {
                     cuantity: null, // Puedes calcular las unidades imperiales si es necesario
                     units: null,
                   },
-                  legacyName:ingrediente.nombre
+                  legacyName: ingrediente.nombre
                 };
               }
               recetaParaSupabase.legacyName = receta.nombre;
@@ -331,8 +331,8 @@ export function procesarRecetaYEnviarASupabase() {
 
         // Llamar a la acción insertarRecetas para insertar los datos en Supabase
         dispatch(insertarRecetas([recetaParaSupabase]));
-  //  console.log(recetaParaSupabase);
-    
+        //  console.log(recetaParaSupabase);
+
       }
     } catch (error) {
       console.error('Error al procesar la receta y enviar a Supabase:', error);
@@ -377,7 +377,7 @@ function validarUUID(uuid) {
   return uuidRegex.test(uuid);
 }
 
-export function actualizarPrecioUnitario(items,type) {
+export function actualizarPrecioUnitario(items, type) {
   return async (dispatch) => {
     try {
       for (let item of items) {
@@ -419,23 +419,30 @@ function calcularPrecioUnitario(item) {
   let precioUnitario;
   const ajusteInflacionario = 1.04;
 
-  // Validar si alguno de los valores necesarios es "NaN"
-  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN" || item.COOR === "NaN") {
+  // Validar si alguno de los valores necesarios es "NaN" (literal string "NaN" check is legacy, but keeping it)
+  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN") {
     console.error("No se puede calcular el valor porque uno de los parámetros es NaN:", item);
-    return "No se puede calcular el valor porque uno de los parámetros es NaN";
+    return 0; // Better safe return than string error message potentially
   }
 
   // Calcular el precio unitario si todos los valores son válidos
   const costo = parseFloat(item.COSTO);
   const cantidad = parseFloat(item.CANTIDAD);
-  const coor = parseFloat(item.COOR);
+  let coor = parseFloat(item.COOR);
 
-  precioUnitario = (costo / cantidad) * ajusteInflacionario * ( coor ? coor : 0);
+  // Si coor no es un número válido (ej. falta en Producción), usar 1
+  if (isNaN(coor)) {
+    coor = 1;
+  }
+
+  if (!cantidad || cantidad === 0) return 0;
+
+  precioUnitario = (costo / cantidad) * ajusteInflacionario * coor;
 
   return parseFloat(precioUnitario.toFixed(2));
 }
 
-export function copiarAlPortapapeles(items, estado , ) {
+export function copiarAlPortapapeles(items, estado,) {
   return async () => {
     try {
       // Filtrar los elementos que coincidan con el estado
@@ -471,7 +478,7 @@ export function crearItem(itemData, type, forId) {
         ...itemData,
       };
 
-      if (type === "RecetasProduccion") { 
+      if (type === "RecetasProduccion") {
         nuevoItem = {
           ...nuevoItem,
           forId: forId
@@ -479,7 +486,7 @@ export function crearItem(itemData, type, forId) {
       }
 
       // Si el tipo NO es 'Recetas', agregar FECHA_ACT
-      if (type !== 'RecetasProduccion' ) {
+      if (type !== 'RecetasProduccion') {
         nuevoItem = {
           ...nuevoItem,
           // actualizacion: new Date().toISOString().split("T")[0], // Fecha actual
@@ -534,8 +541,8 @@ export function updateItem(itemId, updatedFields, type) {
   };
 }
 
-export function deleteItem(itemId , type) {
-  const table = type === MenuItems ? MENU : type 
+export function deleteItem(itemId, type) {
+  const table = type === MenuItems ? MENU : type
   return async (dispatch) => {
     try {
       // Llamada a Supabase para eliminar el registro
@@ -572,23 +579,23 @@ export function deleteItem(itemId , type) {
  * @param {object} notaData - Los datos para la nueva nota.
  */
 export const addNota = (notaData) => async (dispatch) => {
-    try {
-        const { data, error } = await supabase
-            .from('Notas')
-            .insert({ ...notaData, _id: uuidv4() })
-            .select()
-            .single();
+  try {
+    const { data, error } = await supabase
+      .from('Notas')
+      .insert({ ...notaData, _id: uuidv4() })
+      .select()
+      .single();
 
-        if (error) throw error;
+    if (error) throw error;
 
-        dispatch({ type: ADD_NOTA_SUCCESS, payload: data });
-        console.log("Nota creada exitosamente:", data);
-        return data;
-    } catch (error) {
-        console.error("Error al crear la nota:", error);
-        dispatch({ type: ADD_NOTA_FAILURE, payload: error.message });
-        return null;
-    }
+    dispatch({ type: ADD_NOTA_SUCCESS, payload: data });
+    console.log("Nota creada exitosamente:", data);
+    return data;
+  } catch (error) {
+    console.error("Error al crear la nota:", error);
+    dispatch({ type: ADD_NOTA_FAILURE, payload: error.message });
+    return null;
+  }
 };
 
 /**
@@ -597,24 +604,24 @@ export const addNota = (notaData) => async (dispatch) => {
  * @param {object} updatedFields - Los campos a actualizar.
  */
 export const updateNota = (notaId, updatedFields) => async (dispatch) => {
-    try {
-        const { data, error } = await supabase
-            .from('Notas')
-            .update(updatedFields)
-            .eq('_id', notaId)
-            .select()
-            .single();
+  try {
+    const { data, error } = await supabase
+      .from('Notas')
+      .update(updatedFields)
+      .eq('_id', notaId)
+      .select()
+      .single();
 
-        if (error) throw error;
+    if (error) throw error;
 
-        dispatch({ type: UPDATE_NOTA_SUCCESS, payload: data });
-        console.log("Nota actualizada exitosamente:", data);
-        return data;
-    } catch (error) {
-        console.error("Error al actualizar la nota:", error);
-        dispatch({ type: UPDATE_NOTA_FAILURE, payload: error.message });
-        return null;
-    }
+    dispatch({ type: UPDATE_NOTA_SUCCESS, payload: data });
+    console.log("Nota actualizada exitosamente:", data);
+    return data;
+  } catch (error) {
+    console.error("Error al actualizar la nota:", error);
+    dispatch({ type: UPDATE_NOTA_FAILURE, payload: error.message });
+    return null;
+  }
 };
 
 /**
@@ -622,22 +629,22 @@ export const updateNota = (notaId, updatedFields) => async (dispatch) => {
  * @param {string} notaId - El ID de la nota a eliminar.
  */
 export const deleteNota = (notaId) => async (dispatch) => {
-    try {
-        const { error } = await supabase
-            .from('Notas')
-            .delete()
-            .eq('_id', notaId);
+  try {
+    const { error } = await supabase
+      .from('Notas')
+      .delete()
+      .eq('_id', notaId);
 
-        if (error) throw error;
+    if (error) throw error;
 
-        dispatch({ type: DELETE_NOTA_SUCCESS, payload: notaId });
-        console.log(`Nota con ID ${notaId} eliminada correctamente.`);
-        return notaId;
-    } catch (error) {
-        console.error("Error al eliminar la nota:", error);
-        dispatch({ type: DELETE_NOTA_FAILURE, payload: error.message });
-        return null;
-    }
+    dispatch({ type: DELETE_NOTA_SUCCESS, payload: notaId });
+    console.log(`Nota con ID ${notaId} eliminada correctamente.`);
+    return notaId;
+  } catch (error) {
+    console.error("Error al eliminar la nota:", error);
+    dispatch({ type: DELETE_NOTA_FAILURE, payload: error.message });
+    return null;
+  }
 };
 
 // =================================================================================
@@ -682,9 +689,9 @@ export function sincronizarRecetasYProductos() {
           if (product) {
             const recipeTable = allRecetasMenu.some(r => r._id === recipe._id) ? RECETAS_MENU : RECETAS_PRODUCCION;
             const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
-            
+
             console.log(`SINCRONIZANDO: La receta huérfana "${recipe.legacyName}" se enlazará con el producto "${product.NombreES || product.Nombre_del_producto}".`);
-            
+
             // Actualizar receta con forId y producto con Receta ID
             await dispatch(updateItem(recipe._id, { forId: product._id }, recipeTable));
             if (product.Receta !== recipe._id) {
@@ -700,16 +707,16 @@ export function sincronizarRecetasYProductos() {
         if (product.Receta && validarUUID(product.Receta)) {
           const recipeExists = allRecipes.some(r => r._id === product.Receta);
           if (!recipeExists) {
-             const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
-             console.log(`LIMPIANDO: El producto "${product.NombreES || product.Nombre_del_producto}" apuntaba a una receta eliminada. Se limpiará el enlace.`);
-             await dispatch(updateItem(product._id, { Receta: null }, productTable));
-             updatesCounter++;
+            const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
+            console.log(`LIMPIANDO: El producto "${product.NombreES || product.Nombre_del_producto}" apuntaba a una receta eliminada. Se limpiará el enlace.`);
+            await dispatch(updateItem(product._id, { Receta: null }, productTable));
+            updatesCounter++;
           }
         }
       }
 
       alert(`Sincronización completada. Se realizaron ${updatesCounter} actualizaciones. Los datos se recargarán.`);
-      
+
       // Recargar todos los datos para reflejar los cambios en la UI
       dispatch(getAllFromTable(RECETAS_MENU));
       dispatch(getAllFromTable(RECETAS_PRODUCCION));
@@ -767,12 +774,12 @@ export function createRecipeForProduct(baseRecipeData, productId, productTable, 
         // pero por ahora solo lanzamos un error para notificar el problema.
         throw new Error("La receta se creó, pero no se pudo actualizar el producto asociado.");
       }
-      
+
       console.log(`Producto ${productId} actualizado para enlazar a la nueva receta ${newRecipeId}`);
-      
+
       // 4. Notificar y recargar los datos para mantener la UI sincronizada
       alert(`Receta "${newRecipe.legacyName || 'Nueva Receta'}" creada y enlazada correctamente.`);
-      
+
       dispatch(getAllFromTable(recipeTable));
       dispatch(getAllFromTable(productTable));
 
@@ -835,23 +842,24 @@ export const trimRecepie = (items, recepie) => {
       (validarUUID(recepie[key]) || (typeof recepie[key] === 'object' && recepie[key] !== null && Object.values(recepie[key]).some(value => value !== "")))
   );
   const resultado = clavesFiltradas.map((key) => {
-    
+
     const idValor = recepie[key];
     const cuantityKey = key.replace("_Id", "_Cuantity_Units");
     const cuantityValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.cuantity
       : null;
-      const unitsValor = recepie[cuantityKey]
+    const unitsValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.units
       : null;
-      const resultadoBusqueda = buscarPorId(idValor);
-      const precioUnitario1 = resultadoBusqueda.precioUnitario
-    
+    const resultadoBusqueda = buscarPorId(idValor);
+    const precioUnitario1 = resultadoBusqueda ? (Number(resultadoBusqueda.precioUnitario) || 0) : 0;
+
     return {
       name: resultadoBusqueda ? resultadoBusqueda.Nombre_del_producto : "",
-      key:key,
+      key: key,
+      field: key,
       item_Id: idValor,
-      precioUnitario :precioUnitario1,
+      precioUnitario: precioUnitario1,
       cuantity: cuantityValor || "",
       units: unitsValor || "",
       source: resultadoBusqueda ? (items.some(item => item._id === idValor) ? 'Items' : 'Produccion') : null
@@ -936,11 +944,11 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
         type: UPDATE_LOG_STAFF,
         payload: { personaId, updatedTurnoPasados },
       });
-    
-    
-    // Importar utilidades de toast centralizadas
-    const { showSuccessToast } = await import('../utils/toast');
-    showSuccessToast('💾 Turno actualizado correctamente');
+
+
+      // Importar utilidades de toast centralizadas
+      const { showSuccessToast } = await import('../utils/toast');
+      showSuccessToast('💾 Turno actualizado correctamente');
 
       return true; // Éxito
     } catch (error) {
@@ -962,28 +970,28 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
  * Obtiene todos los modelos de negocio desde Supabase.
  */
 export const fetchModelsAction = () => async (dispatch) => {
-    try {
-        const { data, error } = await supabase.from('Model').select('*');
-        if (error) throw error;
+  try {
+    const { data, error } = await supabase.from('Model').select('*');
+    if (error) throw error;
 
-        // Parsea el campo 'costs' si es un string JSON
-        const parsedData = data.map(model => {
-            if (model.costs && typeof model.costs === 'string') {
-                try {
-                    return { ...model, costs: JSON.parse(model.costs) };
-                } catch (e) {
-                    console.error("Error parsing costs for model:", model._id, e);
-                    return { ...model, costs: {} };
-                }
-            }
-            return model;
-        });
+    // Parsea el campo 'costs' si es un string JSON
+    const parsedData = data.map(model => {
+      if (model.costs && typeof model.costs === 'string') {
+        try {
+          return { ...model, costs: JSON.parse(model.costs) };
+        } catch (e) {
+          console.error("Error parsing costs for model:", model._id, e);
+          return { ...model, costs: {} };
+        }
+      }
+      return model;
+    });
 
-        dispatch({ type: GET_MODELS_SUCCESS, payload: parsedData });
-    } catch (error) {
-        console.error("Error fetching models:", error);
-        dispatch({ type: GET_MODELS_FAILURE, payload: error.message });
-    }
+    dispatch({ type: GET_MODELS_SUCCESS, payload: parsedData });
+  } catch (error) {
+    console.error("Error fetching models:", error);
+    dispatch({ type: GET_MODELS_FAILURE, payload: error.message });
+  }
 };
 
 /**
@@ -991,27 +999,27 @@ export const fetchModelsAction = () => async (dispatch) => {
  * @param {object} newModelData - Los datos para el nuevo modelo.
  */
 export const createModelAction = (newModelData) => async (dispatch) => {
-    try {
-        const { data, error } = await supabase
-            .from('Model')
-            .insert([newModelData])
-            .select()
-            .single(); // Devuelve un solo objeto
+  try {
+    const { data, error } = await supabase
+      .from('Model')
+      .insert([newModelData])
+      .select()
+      .single(); // Devuelve un solo objeto
 
-        if (error) throw error;
-        
-        // Asegurarse de que los costos estén parseados si es necesario
-         if (data.costs && typeof data.costs === 'string') {
-            data.costs = JSON.parse(data.costs);
-        }
+    if (error) throw error;
 
-        dispatch({ type: CREATE_MODEL_SUCCESS, payload: data });
-        return data; // Devuelve el modelo creado
-    } catch (error) {
-        console.error("Error creating model:", error);
-        // Aquí podrías despachar una acción de error si lo necesitas
-        return null;
+    // Asegurarse de que los costos estén parseados si es necesario
+    if (data.costs && typeof data.costs === 'string') {
+      data.costs = JSON.parse(data.costs);
     }
+
+    dispatch({ type: CREATE_MODEL_SUCCESS, payload: data });
+    return data; // Devuelve el modelo creado
+  } catch (error) {
+    console.error("Error creating model:", error);
+    // Aquí podrías despachar una acción de error si lo necesitas
+    return null;
+  }
 };
 
 /**
@@ -1020,24 +1028,24 @@ export const createModelAction = (newModelData) => async (dispatch) => {
  * @param {object} updatedData - Los campos a actualizar.
  */
 export const updateModelAction = (modelId, updatedData) => async (dispatch) => {
-    try {
-        const { data, error } = await supabase
-            .from('Model')
-            .update(updatedData)
-            .eq('_id', modelId)
-            .select()
-            .single();
+  try {
+    const { data, error } = await supabase
+      .from('Model')
+      .update(updatedData)
+      .eq('_id', modelId)
+      .select()
+      .single();
 
-        if (error) throw error;
-        
-         if (data.costs && typeof data.costs === 'string') {
-            data.costs = JSON.parse(data.costs);
-        }
+    if (error) throw error;
 
-        dispatch({ type: UPDATE_MODEL_SUCCESS, payload: data });
-    } catch (error) {
-        console.error("Error updating model:", error);
+    if (data.costs && typeof data.costs === 'string') {
+      data.costs = JSON.parse(data.costs);
     }
+
+    dispatch({ type: UPDATE_MODEL_SUCCESS, payload: data });
+  } catch (error) {
+    console.error("Error updating model:", error);
+  }
 };
 
 /**
@@ -1045,18 +1053,18 @@ export const updateModelAction = (modelId, updatedData) => async (dispatch) => {
  * @param {string} modelId - El ID del modelo a eliminar.
  */
 export const deleteModelAction = (modelId) => async (dispatch) => {
-    try {
-        const { error } = await supabase
-            .from('Model')
-            .delete()
-            .eq('_id', modelId);
+  try {
+    const { error } = await supabase
+      .from('Model')
+      .delete()
+      .eq('_id', modelId);
 
-        if (error) throw error;
+    if (error) throw error;
 
-        dispatch({ type: DELETE_MODEL_SUCCESS, payload: modelId });
-    } catch (error) {
-        console.error("Error deleting model:", error);
-    }
+    dispatch({ type: DELETE_MODEL_SUCCESS, payload: modelId });
+  } catch (error) {
+    console.error("Error deleting model:", error);
+  }
 };
 
 // =================================================================================
@@ -1064,6 +1072,119 @@ export const deleteModelAction = (modelId) => async (dispatch) => {
 // =================================================================================
 
 
+
+// --- NUEVA FUNCIÓN DE SINCRONIZACIÓN DE COSTOS DE PRODUCCIÓN ---
+export function sincronizarCostosProduccion() {
+  return async (dispatch, getState) => {
+    try {
+      console.log("Iniciando sincronización de COSTOS de producción con recetas...");
+
+      // Asegurar datos frescos
+      await dispatch(getAllFromTable(RECETAS_PRODUCCION));
+      await dispatch(getAllFromTable(PRODUCCION));
+
+      const state = getState();
+      const {
+        allRecetasProduccion,
+        allProduccion,
+      } = state;
+
+      let updatesCounter = 0;
+
+      for (const item of allProduccion) {
+        // Verificar si el item tiene una receta asignada
+        if (item.Receta) {
+          const receta = allRecetasProduccion.find(r => r._id === item.Receta);
+
+          if (receta) {
+            let updates = {};
+            let hasChanges = false;
+
+            // 1. SINCRONIZAR COSTO
+            if (receta.costo !== undefined && receta.costo !== null) {
+              let nuevoCosto = receta.costo;
+              if (typeof nuevoCosto === 'string') nuevoCosto = parseFloat(nuevoCosto);
+
+              const costoActual = parseFloat(item.COSTO) || 0;
+              // Tolerancia pequeña para flotantes
+              if (Math.abs(costoActual - nuevoCosto) > 0.01) {
+                updates.COSTO = nuevoCosto;
+                hasChanges = true;
+              }
+            }
+
+            // 2. SINCRONIZAR CANTIDAD Y UNIDADES (RENDIMIENTO)
+            if (receta.rendimiento) {
+              try {
+                const rend = JSON.parse(receta.rendimiento);
+                // Cantidad
+                if (rend.cantidad) {
+                  const nuevaCantidad = parseFloat(rend.cantidad);
+                  const cantidadActual = parseFloat(item.CANTIDAD) || 0;
+                  if (Math.abs(cantidadActual - nuevaCantidad) > 0.01) {
+                    updates.CANTIDAD = nuevaCantidad;
+                    hasChanges = true;
+                  }
+                }
+                // Unidades
+                if (rend.unidades) {
+                  if (item.UNIDADES !== rend.unidades) {
+                    updates.UNIDADES = rend.unidades;
+                    hasChanges = true;
+                  }
+                }
+              } catch (e) {
+                console.warn(`Error parseando rendimiento para receta ${receta._id}`, e);
+              }
+            }
+
+            // 3. RECALCULAR PRECIO UNITARIO
+            // Usamos los valores nuevos si existen, o los actuales del item
+            const finalCosto = updates.COSTO !== undefined ? updates.COSTO : (parseFloat(item.COSTO) || 0);
+            const finalCantidad = updates.CANTIDAD !== undefined ? updates.CANTIDAD : (parseFloat(item.CANTIDAD) || 0);
+
+            if (finalCantidad > 0) {
+              // Usamos la misma lógica que calcularPrecioUnitario: (costo / cantidad) * 1.04 * (coor || 1)
+              // En producción interna no solemos tener COOR, así que asumimos 1. 
+              // NOTA: Si el usuario quiere STRICTLY costo/cantidad, debemos quitar el 1.04. 
+              // Pero para consistencia con "Recalcular Precios" (botón rojo), dejaremos el 1.04.
+              const ajusteInflacionario = 1.04;
+              let coor = parseFloat(item.COOR);
+              if (isNaN(coor)) coor = 1;
+
+              const nuevoPrecioUnitario = (finalCosto / finalCantidad) * ajusteInflacionario * coor;
+              const precioUnitarioActual = parseFloat(item.precioUnitario) || 0;
+
+              if (Math.abs(precioUnitarioActual - nuevoPrecioUnitario) > 0.0001) {
+                updates.precioUnitario = parseFloat(nuevoPrecioUnitario.toFixed(2));
+                hasChanges = true;
+              }
+            }
+
+            // APLICAR ACTUALIZACIONES
+            if (hasChanges) {
+              console.log(`SINCRONIZANDO: Item "${item.Nombre_del_producto}" actualizaciones:`, updates);
+              await dispatch(updateItem(item._id, updates, PRODUCCION));
+              updatesCounter++;
+            }
+          }
+        }
+      }
+
+      if (updatesCounter > 0) {
+        alert(`Sincronización completada. Se actualizaron ${updatesCounter} ítems.`);
+        // Recargar datos
+        dispatch(getAllFromTable(PRODUCCION));
+      } else {
+        alert("Sincronización completada. No se encontraron ítems desactualizados.");
+      }
+
+    } catch (error) {
+      console.error("Error durante la sincronización de costos:", error);
+      alert("Ocurrió un error al sincronizar costos.");
+    }
+  };
+}
 // ruta/a/tu/proyecto/utils/getOtherExpenses.js
 
 /**
@@ -1073,33 +1194,33 @@ export const deleteModelAction = (modelId) => async (dispatch) => {
  * @returns {Array<Object>} - Un array de objetos de gastos.
  */
 export const getOtherExpenses = (subGrupo) => {
-    switch (subGrupo) {
-        case 'CAFE_ESPRESSO':
-            return [
-                
-                    'f9bc7971-3120-46d6-b966-866bfb4f6b41', 
-                    'f9bc7971-3120-46d6-b966-866bfb4f6b41', 
+  switch (subGrupo) {
+    case 'CAFE_ESPRESSO':
+      return [
 
-    
-            ];
-            
-        case 'POSTRES_INDIVIDUALES':
-            return [
-                {
-                    item_Id: 'gasto_empaque_postre',
-                    nombre: 'Empaque para llevar',
-                    originalQuantity: 1,
-                    unidades: 'Unidad',
-                    precioUnitario: 800,
-                    isChecked: true,
-                }
-            ];
+        'f9bc7971-3120-46d6-b966-866bfb4f6b41',
+        'f9bc7971-3120-46d6-b966-866bfb4f6b41',
 
-        // Agrega más 'case' para otros SUB_GRUPOs según necesites
-        // ...
 
-        default:
-            // Si el SUB_GRUPO no tiene gastos asociados, devuelve un array vacío.
-            return [];
-    }
+      ];
+
+    case 'POSTRES_INDIVIDUALES':
+      return [
+        {
+          item_Id: 'gasto_empaque_postre',
+          nombre: 'Empaque para llevar',
+          originalQuantity: 1,
+          unidades: 'Unidad',
+          precioUnitario: 800,
+          isChecked: true,
+        }
+      ];
+
+    // Agrega más 'case' para otros SUB_GRUPOs según necesites
+    // ...
+
+    default:
+      // Si el SUB_GRUPO no tiene gastos asociados, devuelve un array vacío.
+      return [];
+  }
 };
