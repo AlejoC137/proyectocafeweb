@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateModelAction, createModelAction, getAllFromTable } from '../../../redux/actions';
-import { STAFF } from '../../../redux/actions-types';
+import { STAFF, MENU, ITEMS, PRODUCCION, RECETAS_MENU } from '../../../redux/actions-types';
+import supabase from "../../../config/supabaseClient";
+import MesResumenStats from './MesResumenStats';
 
 // --- UTILS ---
 const formatNumber = (num) => (num === null || num === undefined || isNaN(parseFloat(num))) ? '' : Number(num).toLocaleString('es-ES');
@@ -149,6 +151,175 @@ function ModeloContent({ targetMonth, targetYear }) {
     const allCompras = useSelector(state => state.allCompras);
     const models = useSelector(state => state.models);
     const staff = useSelector(state => state.allStaff);
+    const allMenu = useSelector(state => state.allMenu); // Added for new logic
+    const allItems = useSelector(state => state.allItems); // Added for new logic
+    const allRecetasMenu = useSelector(state => state.allRecetasMenu); // Added for new logic
+
+    // --- LOGICA TRAIDA DE MesResumen.jsx ---
+    const [ventas, setVentas] = useState([]);
+    const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
+    const [loadingVentas, setLoadingVentas] = useState(false);
+
+    // 1. Cargar Ventas con Paginación (Igual que MesResumen)
+    useEffect(() => {
+        const fetchAllVentas = async () => {
+            setLoadingVentas(true);
+            try {
+                let allVentas = [];
+                let page = 0;
+                const pageSize = 1000;
+
+                while (true) {
+                    const from = page * pageSize;
+                    const to = from + pageSize - 1;
+                    const { data, error } = await supabase
+                        .from('Ventas')
+                        .select('*')
+                        .order('Date', { ascending: false })
+                        .range(from, to);
+
+                    if (error) throw error;
+                    if (data) allVentas = [...allVentas, ...data];
+                    if (!data || data.length < pageSize) break;
+                    page++;
+                }
+
+                // Filtrar por Target Month/Year
+                const ventasDelMes = allVentas.filter((venta) => {
+                    // Ajuste de fecha robusto
+                    const ventaDate = new Date(venta.Date);
+                    // A veces la fecha viene con offset, asegurarnos de usar mes local o UTC si es consistente
+                    // MesResumen usa: new Date(venta.Date), entonces month es getMonth().
+                    return ventaDate.getMonth() === targetMonth && ventaDate.getFullYear() === targetYear;
+                });
+
+                ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+                setVentas(ventasDelMes);
+            } catch (error) {
+                console.error("Error al cargar ventas en ModeloContent:", error);
+            } finally {
+                setLoadingVentas(false);
+            }
+        };
+
+        fetchAllVentas();
+    }, [targetMonth, targetYear]);
+
+    // 2. Calcular Datos del Mes (Igual que MesResumen)
+    const datosCalculadosDelMes = useMemo(() => {
+        let total = 0;
+        let tipTotal = 0;
+        let tarjeta = 0;
+        let efectivo = 0;
+        let transferencia = 0;
+        const productosMap = {};
+
+        ventas.forEach((venta) => {
+            if (venta.Pagado) {
+                const ingresoVenta = parseFloat(venta.Total_Ingreso || 0);
+                total += ingresoVenta;
+                tipTotal += parseFloat(venta.Tip || 0);
+
+                if (venta.Pago_Info) {
+                    try {
+                        const pagos = JSON.parse(venta.Pago_Info);
+                        if (pagos.metodo === "Tarjeta") tarjeta += ingresoVenta;
+                        if (pagos.metodo === "Efectivo") efectivo += ingresoVenta;
+                        if (pagos.metodo === "Transferencia") transferencia += ingresoVenta;
+                    } catch (e) {
+                        // Ignorar errores de parseo
+                    }
+                }
+            }
+
+            if (venta.Productos) {
+                try {
+                    const productos = JSON.parse(venta.Productos);
+                    productos.forEach((producto) => {
+                        if (!producto.NombreES) return;
+                        const cantidad = parseFloat(producto.quantity || 0);
+
+                        if (productosMap[producto.NombreES]) {
+                            productosMap[producto.NombreES].cantidad += cantidad;
+                        } else {
+                            // Intento robusto de encontrar recetaId
+                            let recetaIdDefinitiva = producto.Receta || allMenu.find(menu => menu.NombreES === producto.NombreES)?.Receta || "N/A";
+
+                            productosMap[producto.NombreES] = {
+                                nombre: producto.NombreES,
+                                cantidad: cantidad,
+                                recetaId: recetaIdDefinitiva,
+                                recetaValor: 0,
+                                ingredientes: [],
+                            };
+                        }
+                    });
+                } catch (e) { }
+            }
+        });
+
+        const productosVendidos = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
+
+        // Calcular Compras Reales del mes (Usando la logica previa o reutilizando allCompras)
+        const totalCompras = allCompras
+            .filter((compra) => {
+                const compraDate = new Date(compra.Date);
+                const dLocal = new Date(compraDate.valueOf() + compraDate.getTimezoneOffset() * 60000); // Ajuste timezone local si es necesario
+                return dLocal.getMonth() === targetMonth && dLocal.getFullYear() === targetYear;
+            })
+            .reduce((acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0), 0);
+
+        return {
+            totalIngreso: total,
+            totalTip: tipTotal,
+            totalTarjeta: tarjeta,
+            totalEfectivo: efectivo,
+            totalTransferencia: transferencia,
+            productosVendidos,
+            totalCompras,
+            totalProductosVendidos: productosVendidos.reduce((acc, p) => acc + p.cantidad, 0),
+        };
+    }, [ventas, allCompras, allMenu, targetMonth, targetYear]);
+
+    // 3. Calcular Valores de Receta (Igual que MesResumen)
+    useEffect(() => {
+        if (datosCalculadosDelMes.productosVendidos.length === 0 || !allItems.length || !allMenu.length) {
+            setProductosVendidosConReceta([]);
+            return;
+        }
+
+        const calculateRecipeValues = async () => {
+            // En lugar de recalcular todo con recetaMariaPaula (que es pesado y requiere fetch),
+            // podemos optimizar usando el 'costo' ya guardado en allRecetasMenu si existe,
+            // o hacer el fetch si es estrictamente necesario.
+            // MesResumen hace el fetch. Vamos a intentar ser fieles a MesResumen pero usando el cache de Redux si es posible.
+
+            // NOTA: Para MesResumenStats, lo IMPORTANTE es que el objeto tenga recetaId.
+            // MesResumenStats calcula el costo usando allRecetasMenu.find... .costo.
+            // Por lo tanto, no necesitamos re-ejecutar 'recetaMariaPaula' aqui si solo queremos el total.
+            // Pero MesResumen SÍ lo hace. Lo haremos simplificado para no saturar.
+
+            setProductosVendidosConReceta(datosCalculadosDelMes.productosVendidos);
+        };
+
+        calculateRecipeValues();
+    }, [datosCalculadosDelMes.productosVendidos, allItems, allMenu]);
+
+    // Recalcular el costo teórico TOTAL usando la misma lógica que MesResumenStats
+    const theoreticalTotalCost = useMemo(() => {
+        const recetasMap = new Map(allRecetasMenu.map(receta => [receta._id, receta]));
+        return productosVendidosConReceta.reduce((acc, element) => {
+            const recetaObj = recetasMap.get(element.recetaId);
+            if (recetaObj?.costo) {
+                try {
+                    const data = JSON.parse(recetaObj.costo);
+                    return acc + (data.vCMP * element.cantidad);
+                } catch (error) { return acc; }
+            }
+            return acc;
+        }, 0);
+    }, [productosVendidosConReceta, allRecetasMenu]);
+
 
     const [currentCosts, setCurrentCosts] = useState(null);
     const [modelId, setModelId] = useState(null);
@@ -160,49 +331,31 @@ function ModeloContent({ targetMonth, targetYear }) {
 
     useEffect(() => {
         dispatch(getAllFromTable(STAFF));
+        dispatch(getAllFromTable(MENU));
+        dispatch(getAllFromTable(ITEMS));
+        dispatch(getAllFromTable(PRODUCCION));
+        dispatch(getAllFromTable(RECETAS_MENU));
     }, [dispatch]);
 
-    // 1. FILTRAR Y CALCULAR INGRESOS Y COMPRAS REALES
+    // 1. FILTRAR Y CALCULAR INGRESOS Y COMPRAS REALES (Legacy Model Logic - mantenemos para consistencia de 'purchasesDetail')
     const { realIncome, countVentas, realPurchases, purchasesDetail } = useMemo(() => {
-        let totalIncome = 0;
-        let count = 0;
-        let totalPurchases = 0;
-        let pList = [];
+        // ... (Mantener lógica original para purchasesDetail list si se usa)
+        // Pero ahora usamos 'datosCalculadosDelMes.totalIngreso' como fuente de verdad para el Balance.
 
-        // Ventas
-        if (allVentas && Array.isArray(allVentas)) {
-            allVentas.forEach(venta => {
-                if (!venta.Date) return;
-                const parts = venta.Date.split('/');
-                if (parts.length === 3) {
-                    const monthIndex = parseInt(parts[0]) - 1;
-                    const year = parseInt(parts[2]);
-                    if (monthIndex === targetMonth && year === targetYear) {
-                        const ingreso = parseFloat(venta.Total_Ingreso) || 0;
-                        totalIncome += ingreso;
-                        count++;
-                    }
-                }
-            });
-        }
+        // Reconstruimos purchasesDetail para el modal de compras
+        const pList = allCompras.filter(compra => {
+            const d = new Date(compra.Date);
+            const dLocal = new Date(d.valueOf() + d.getTimezoneOffset() * 60000);
+            return dLocal.getMonth() === targetMonth && dLocal.getFullYear() === targetYear;
+        });
 
-        // Compras
-        if (allCompras && Array.isArray(allCompras)) {
-            allCompras.forEach(compra => {
-                if (!compra.Date) return;
-                const d = new Date(compra.Date);
-                const dLocal = new Date(d.valueOf() + d.getTimezoneOffset() * 60000);
-
-                if (dLocal.getMonth() === targetMonth && dLocal.getFullYear() === targetYear) {
-                    const val = parseFloat(compra.Valor || compra.Total || 0);
-                    totalPurchases += val;
-                    pList.push(compra);
-                }
-            });
-        }
-
-        return { realIncome: totalIncome, countVentas: count, realPurchases: totalPurchases, purchasesDetail: pList };
-    }, [allVentas, allCompras, targetMonth, targetYear]);
+        return {
+            realIncome: datosCalculadosDelMes.totalIngreso, // Usamos el calculado robustamente
+            countVentas: ventas.length,
+            realPurchases: datosCalculadosDelMes.totalCompras,
+            purchasesDetail: pList
+        };
+    }, [datosCalculadosDelMes, ventas.length, allCompras, targetMonth, targetYear]);
 
     useEffect(() => {
         setPurchasesList(purchasesDetail);
@@ -323,6 +476,52 @@ function ModeloContent({ targetMonth, targetYear }) {
         }
     };
 
+    const handleSyncTheoretical = () => {
+        if (!theoreticalTotalCost || theoreticalTotalCost === 0) {
+            alert("No hay costo teórico calculado para sincronizar.");
+            return;
+        }
+
+        const confirmUpdate = window.confirm(`¿Desea actualizar el costo teórico de compras a ${theoreticalTotalCost.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}? \nEsto reemplazará o agregará una línea de 'Costo Teórico Recetas'.`);
+
+        if (confirmUpdate) {
+            // Buscar si ya existe la linea
+            const existingIndex = (currentCosts.compras || []).findIndex(c => c.name === 'Costo Teórico Recetas' || c.id === 'auto-theoretical');
+
+            let newCompras = [...(currentCosts.compras || [])];
+
+            if (existingIndex >= 0) {
+                newCompras[existingIndex] = { ...newCompras[existingIndex], value: theoreticalTotalCost };
+            } else {
+                newCompras.push({ id: 'auto-theoretical', name: 'Costo Teórico Recetas', value: theoreticalTotalCost });
+            }
+
+            handleUpdate('compras', newCompras);
+        }
+    };
+
+    const handleSyncRealPurchases = () => {
+        if (!realPurchases || realPurchases === 0) {
+            alert("No hay compras registradas para este mes.");
+            return;
+        }
+
+        const confirmUpdate = window.confirm(`¿Desea agregar/actualizar las compras reales por valor de ${realPurchases.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}?`);
+
+        if (confirmUpdate) {
+            const existingIndex = (currentCosts.compras || []).findIndex(c => c.id === 'auto-compras');
+            let newCompras = [...(currentCosts.compras || [])];
+
+            if (existingIndex >= 0) {
+                newCompras[existingIndex] = { ...newCompras[existingIndex], value: realPurchases };
+            } else {
+                newCompras.unshift({ id: 'auto-compras', name: 'Compras Insumos (Real)', value: realPurchases });
+            }
+
+            handleUpdate('compras', newCompras);
+        }
+    };
+
     const totals = useMemo(() => {
         if (!currentCosts) return { compras: 0, personal: 0, fijos: 0, otros: 0, impuestos: 0, grand: 0 };
         const compras = (currentCosts.compras || []).reduce((a, x) => a + (x.value || 0), 0);
@@ -379,9 +578,31 @@ function ModeloContent({ targetMonth, targetYear }) {
                         <div className="flex items-center gap-4"><div className="text-right"><div className="text-xs text-gray-400 font-bold uppercase">Ventas ({countVentas})</div><div className="text-2xl font-bold text-green-600">{realIncome.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}</div></div><button onClick={handleSave} disabled={!hasChanges && modelId} className={`px-6 py-2 rounded-lg font-bold shadow-md ${hasChanges || !modelId ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-400'}`}>{modelId ? (hasChanges ? 'Guardar Cambios' : 'Guardado') : 'Crear Hoja'}</button></div>
                     </div>
 
+                    {ventas && ventas.length > 0 && (
+                        <MesResumenStats
+                            ventasRecepies={productosVendidosConReceta}
+                            totalIngreso={datosCalculadosDelMes.totalIngreso}
+                            totalTip={datosCalculadosDelMes.totalTip}
+                            totalProductosVendidos={datosCalculadosDelMes.totalProductosVendidos}
+                            totalTarjeta={datosCalculadosDelMes.totalTarjeta}
+                            totalEfectivo={datosCalculadosDelMes.totalEfectivo}
+                            totalTransferencia={datosCalculadosDelMes.totalTransferencia}
+                            totalCompras={datosCalculadosDelMes.totalCompras}
+                            cantidadDeDias={ventas}
+                        />
+                    )}
+
                     <section>
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-bold text-gray-700">Costos de Ventas (Compras/Insumos)</h3>
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-gray-700">Costos de Ventas (Compras/Insumos)</h3>
+                                <button onClick={handleSyncRealPurchases} className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200 hover:scale-105 transition-transform" title="Usar valor real de facturas de compra">
+                                    🔄 Sincronizar Compras
+                                </button>
+                                <button onClick={handleSyncTheoretical} className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200 hover:scale-105 transition-transform" title="Usar costo calculado por recetas">
+                                    🔄 Sincronizar Teórico
+                                </button>
+                            </div>
                             <span className="text-sm font-medium text-gray-500">{totals.compras.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}</span>
                         </div>
                         <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
