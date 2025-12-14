@@ -14,7 +14,7 @@ function MesResumen() {
   const [ventas, setVentas] = useState([]);
   const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
   const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]);
-  
+
   // --- Estados para el modal Predict ---
   const [showPredict, setShowPredict] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -23,7 +23,7 @@ function MesResumen() {
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
   const allProduccion = useSelector((state) => state.allProduccion);
-  const allCompras = useSelector((state) =>  state.allCompras);
+  const allCompras = useSelector((state) => state.allCompras);
 
   const { selectedMonth, selectedYear } = useMemo(() => {
     const selectedDate = new Date(hoy);
@@ -37,75 +37,77 @@ function MesResumen() {
 
 
 
-useEffect(() => {
+  useEffect(() => {
 
 
-  
-  const fetchAllData = async () => {
-    setLoading(true);
-    try {
-      // Carga los datos de Redux en paralelo
-      await Promise.all([
-        dispatch(getAllFromTable(MENU)),
-        dispatch(getAllFromTable(ITEMS)),
-        dispatch(getAllFromTable(PRODUCCION)),
-        dispatch(getAllFromTable(RECETAS_MENU)),
-        dispatch(getAllFromTable(COMPRAS)),
-      ]);
 
-      let allVentas = [];
-      let page = 0;
-      const pageSize = 1000; // El tamaño de cada lote que pedimos
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        // Carga los datos de Redux en paralelo
+        await Promise.all([
+          dispatch(getAllFromTable(MENU)),
+          dispatch(getAllFromTable(ITEMS)),
+          dispatch(getAllFromTable(PRODUCCION)),
+          dispatch(getAllFromTable(RECETAS_MENU)),
+          dispatch(getAllFromTable(COMPRAS)),
+        ]);
 
-      // Bucle para pedir datos en lotes hasta que no haya más
-      while (true) {
-        const from = page * pageSize;
-        const to = from + pageSize - 1;
+        let allVentas = [];
+        let page = 0;
+        const pageSize = 1000; // El tamaño de cada lote que pedimos
 
-        // Pedimos un lote de registros usando .range()
-        const { data, error } = await supabase
-          .from('Ventas')
-          .select('*')
-          .order('Date', { ascending: false })
-          .range(from, to);
-// console.log(data);
+        // Bucle para pedir datos en lotes hasta que no haya más
+        while (true) {
+          const from = page * pageSize;
+          const to = from + pageSize - 1;
 
-        if (error) throw error;
+          // Pedimos un lote de registros usando .range()
+          const { data, error } = await supabase
+            .from('Ventas')
+            .select('*')
+            .order('Date', { ascending: false })
+            .range(from, to);
+          // console.log(data);
 
-        // Añadimos el lote de datos al array principal
-        if (data) {
-          allVentas = [...allVentas, ...data];
+          if (error) throw error;
+
+          // Añadimos el lote de datos al array principal
+          if (data) {
+            allVentas = [...allVentas, ...data];
+          }
+
+          // Si el lote devuelto tiene menos de 1000, significa que es la última página.
+          if (!data || data.length < pageSize) {
+            break; // Salimos del bucle
+          }
+
+          // Si no, pasamos a la siguiente página para la próxima iteración
+          page++;
         }
 
-        // Si el lote devuelto tiene menos de 1000, significa que es la última página.
-        if (!data || data.length < pageSize) {
-          break; // Salimos del bucle
-        }
+        // Ahora 'allVentas' contiene absolutamente todos los registros de la tabla.
+        // Procedemos a filtrar el mes seleccionado en el navegador.
+        const ventasDelMes = allVentas.filter((venta) => {
+          const ventaDate = new Date(venta.Date);
+          return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
+        });
 
-        // Si no, pasamos a la siguiente página para la próxima iteración
-        page++;
+        // Ordenamos y actualizamos el estado
+        ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        setVentas(ventasDelMes);
+
+      } catch (error) {
+        console.error("Error al cargar todos los datos:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Ahora 'allVentas' contiene absolutamente todos los registros de la tabla.
-      // Procedemos a filtrar el mes seleccionado en el navegador.
-      const ventasDelMes = allVentas.filter((venta) => {
-        const ventaDate = new Date(venta.Date);
-        return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
-      });
+    fetchAllData();
+  }, [dispatch, selectedMonth, selectedYear]);
 
-      // Ordenamos y actualizamos el estado
-      ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-      setVentas(ventasDelMes);
-
-    } catch (error) {
-      console.error("Error al cargar todos los datos:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchAllData();
-}, [dispatch, selectedMonth, selectedYear]);
+  const [showFinancials, setShowFinancials] = useState(false);
 
   const datosCalculadosDelMes = useMemo(() => {
     let total = 0;
@@ -137,19 +139,33 @@ useEffect(() => {
         try {
           const productos = JSON.parse(venta.Productos);
           productos.forEach((producto) => {
-            
+
             if (!producto.NombreES) return;
-            
+
             const cantidad = parseFloat(producto.quantity || 0);
+
+
+            // Attempt to get price from the record
+            let price = parseFloat(producto.price || producto.valor || producto.precio || 0);
+
+            // If price is 0 (missing in historical record), fallback to current menu price
+            if (price === 0) {
+              const menuProduct = allMenu.find(m => m.NombreES === producto.NombreES);
+              if (menuProduct) {
+                price = parseFloat(menuProduct.Precio || 0);
+              }
+            }
 
             if (productosMap[producto.NombreES]) {
               productosMap[producto.NombreES].cantidad += cantidad;
+              productosMap[producto.NombreES].totalIngreso += (price * cantidad);
             } else {
               let recetaIdDefinitiva = producto.Receta || allMenu.find(menu => menu.NombreES === producto.NombreES)?.Receta || null;
 
               productosMap[producto.NombreES] = {
                 nombre: producto.NombreES,
                 cantidad: cantidad,
+                totalIngreso: (price * cantidad),
                 recetaId: recetaIdDefinitiva || "N/A",
                 recetaValor: 0,
                 ingredientes: [],
@@ -163,7 +179,7 @@ useEffect(() => {
     });
 
     const productosVendidos = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
-    
+
     const totalCompras = allCompras
       .filter((compra) => {
         const compraDate = new Date(compra.Date);
@@ -191,25 +207,50 @@ useEffect(() => {
 
     const calculateRecipeValues = async () => {
       // console.log(allMenu);
-      
+
       const updatedProductos = await Promise.all(
         datosCalculadosDelMes.productosVendidos.map(async (producto) => {
-          // console.log(producto);
-          
+
+          let recetaData = null;
+          let consolidatedCost = 0;
+          let ingredients = [];
+
           if (producto.recetaId !== "N/A") {
             try {
               const menuItem = allMenu.find((item) => item.Receta === producto.recetaId);
               if (menuItem) {
-                const recetaData = await getRecepie(menuItem.Receta, "Recetas");
-                const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
-                const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
-                return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
+                // Determine source table based on what we find
+                recetaData = await getRecepie(menuItem.Receta, "Recetas");
+                let source = "Recetas";
+                if (!recetaData) {
+                  recetaData = await getRecepie(menuItem.Receta, "RecetasProduccion");
+                  source = "RecetasProduccion";
+                }
+
+                if (recetaData) {
+                  const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
+                  // Note: We use 1 portion for unit cost calculation
+                  const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, source);
+                  consolidatedCost = receta.consolidado || 0;
+                  if (receta.detalles && receta.detalles.vCMP) consolidatedCost = receta.detalles.vCMP; // Use Material Cost if available, otherwise consolidated
+                  ingredients = trimmedRecepie;
+                }
               }
             } catch (error) {
               console.error(`Error procesando receta para ${producto.nombre}:`, error);
             }
           }
-          return producto;
+
+          const totalCosto = consolidatedCost * producto.cantidad;
+          const totalUtilidad = producto.totalIngreso - totalCosto;
+
+          return {
+            ...producto,
+            recetaValor: consolidatedCost,
+            ingredientes: ingredients,
+            totalCosto: totalCosto,
+            totalUtilidad: totalUtilidad
+          };
         })
       );
       setProductosVendidosConReceta(updatedProductos);
@@ -223,7 +264,7 @@ useEffect(() => {
     setSelectedItem(item);
     setShowPredict(true);
   };
-  
+
   const handleClosePredict = () => {
     setShowPredict(false);
     setSelectedItem(null);
@@ -256,7 +297,7 @@ useEffect(() => {
         />
         <p>Mostrando resumen para el mes de: {new Date(hoy).toLocaleDateString('es-CO', { timeZone: 'UTC', month: 'long', year: 'numeric' })}</p>
       </div>
-      
+
       <MesResumenStats
         ventasRecepies={productosVendidosConReceta}
         totalIngreso={datosCalculadosDelMes.totalIngreso}
@@ -307,30 +348,76 @@ useEffect(() => {
         </div>
 
         <div className="p-6 bg-white rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Productos Vendidos en el Mes</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-800">Productos Vendidos en el Mes</h3>
+            <button
+              onClick={() => setShowFinancials(!showFinancials)}
+              className={`px-3 py-1 rounded text-xs font-bold transition-colors ${showFinancials ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              {showFinancials ? 'Ocultar Rentabilidad' : 'Ver Rentabilidad'}
+            </button>
+          </div>
           <div className="overflow-x-auto max-h-96">
             <table className="min-w-full border-collapse border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Producto</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Cantidad Vendida</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Acción</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Cant.</th>
+
+                  {showFinancials ? (
+                    <>
+                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Ingresos Tot.</th>
+                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Costo Tot.</th>
+                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Ganancia</th>
+                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Costo Unit.</th>
+                    </>
+                  ) : (
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Acción</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
+                {showFinancials && (
+                  <tr className="bg-blue-50 font-bold border-b-2 border-blue-200">
+                    <td className="py-3 px-4 text-sm text-blue-800">TOTALES</td>
+                    <td className="py-3 px-4 text-center text-sm text-blue-800">
+                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.cantidad || 0), 0)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-sm text-green-700">
+                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.totalIngreso || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="py-3 px-4 text-right text-sm text-red-600">
+                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.totalCosto || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="py-3 px-4 text-right text-sm text-blue-700">
+                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.totalUtilidad || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="py-3 px-4"></td>
+                  </tr>
+                )}
                 {productosVendidosConReceta.map((producto, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">{producto.nombre}</td>
-                    <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">{producto.cantidad}</td>
-                    <td className="py-3 px-4 border-b text-sm">
-                      <button
-                        onClick={() => handleRecetaClick(producto)}
-                        className="bg-yellow-500 text-white text-sm w-[30px] rounded"
-                        title="Ver predicción y receta"
-                      >
-                        📕
-                      </button>
-                    </td>
+                    <td className="py-3 px-4 border-b text-sm text-gray-700 max-w-[150px] truncate" title={producto.nombre}>{producto.nombre}</td>
+                    <td className="py-3 px-4 border-b text-sm text-center font-bold">{producto.cantidad}</td>
+
+                    {showFinancials ? (
+                      <>
+                        <td className="py-3 px-4 border-b text-sm text-green-600 font-semibold text-right">{producto.totalIngreso?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                        <td className="py-3 px-4 border-b text-sm text-red-500 text-right">{producto.totalCosto?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                        <td className={`py-3 px-4 border-b text-sm text-right font-bold ${(producto.totalUtilidad || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>{producto.totalUtilidad?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                        <td className="py-3 px-4 border-b text-xs text-gray-500 text-right">{producto.recetaValor?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                      </>
+                    ) : (
+                      <td className="py-3 px-4 border-b text-sm">
+                        <button
+                          onClick={() => handleRecetaClick(producto)}
+                          className="bg-yellow-500 text-white text-sm w-[30px] rounded"
+                          title="Ver predicción y receta"
+                        >
+                          📕
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -338,10 +425,10 @@ useEffect(() => {
           </div>
         </div>
       </div>
-      
+
       {showPredict && selectedItem && (
-                 <Predict 
-          item={selectedItem} 
+        <Predict
+          item={selectedItem}
           onClose={handleClosePredict}
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}

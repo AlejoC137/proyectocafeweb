@@ -11,12 +11,29 @@ import EditableText from "../../../components/ui/EditableText";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
 // --- Componente auxiliar: Fila de edición de ingrediente ---
-// --- Componente auxiliar: Fila de edición de ingrediente ---
-const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove, onSync }) => {
+const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove, onSync, onMove, isFirst, isLast }) => {
     const subtotal = (Number(item.originalQuantity) || 0) * (Number(item.precioUnitario) || 0);
     return (
         <div className="flex flex-col mb-3 p-2 border rounded-md bg-white shadow-sm">
             <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-0.5 mr-1">
+                    <button
+                        onClick={() => onMove(index, -1, source)}
+                        disabled={isFirst}
+                        className="px-1 hover:bg-gray-200 rounded disabled:opacity-30 text-xs leading-none font-bold text-gray-600"
+                        title="Mover Arriba"
+                    >
+                        ▲
+                    </button>
+                    <button
+                        onClick={() => onMove(index, 1, source)}
+                        disabled={isLast}
+                        className="px-1 hover:bg-gray-200 rounded disabled:opacity-30 text-xs leading-none font-bold text-gray-600"
+                        title="Mover Abajo"
+                    >
+                        ▼
+                    </button>
+                </div>
                 <input
                     type="text"
                     placeholder="Buscar ingrediente..."
@@ -345,6 +362,21 @@ function RecetaModal({ item, onClose }) {
         }
     };
 
+    const handleMoveItem = (index, direction, source) => {
+        const list = source === 'Items' ? editableIngredientes : editableProduccion;
+        const setList = source === 'Items' ? setEditableIngredientes : setEditableProduccion;
+
+        if ((direction === -1 && index === 0) || (direction === 1 && index === list.length - 1)) return;
+
+        const newList = [...list];
+        // Swap
+        const temp = newList[index];
+        newList[index] = newList[index + direction];
+        newList[index + direction] = temp;
+
+        setList(newList);
+    };
+
     const handleSaveFullRecipe = async () => {
         if (!permanentEditMode || !receta || !recetaSource) return;
 
@@ -417,12 +449,12 @@ function RecetaModal({ item, onClose }) {
                                                 <Button onClick={handleCancelEdit} variant="ghost" className="h-8 w-8 p-0 text-sm">❌</Button>
                                             </div>
                                         </div>
-                                        {editableIngredientes.map((item, index) => <EditableIngredientRow key={item.key || index} item={item} index={index} source="Items" onNameChange={handleIngredientNameChange} onSelect={handleIngredientSelect} onQuantityChange={handleQuantityChange} onRemove={handleRemoveIngredient} onSync={handleSyncIngredient} />)}
+                                        {editableIngredientes.map((item, index) => <EditableIngredientRow key={item.key || index} item={item} index={index} source="Items" onNameChange={handleIngredientNameChange} onSelect={handleIngredientSelect} onQuantityChange={handleQuantityChange} onRemove={handleRemoveIngredient} onSync={handleSyncIngredient} onMove={handleMoveItem} isFirst={index === 0} isLast={index === editableIngredientes.length - 1} />)}
                                         <Button onClick={() => addIngredient('Items')} size="sm" className="mt-2 w-full">+ Añadir Ingrediente</Button>
                                     </div>
                                     <div>
                                         <h3 className="text-lg font-semibold border-b pb-2 mb-3">Editar Producción Interna</h3>
-                                        {editableProduccion.map((item, index) => <EditableIngredientRow key={item.key || index} item={item} index={index} source="Produccion" onNameChange={handleIngredientNameChange} onSelect={handleIngredientSelect} onQuantityChange={handleQuantityChange} onRemove={handleRemoveIngredient} onSync={handleSyncIngredient} />)}
+                                        {editableProduccion.map((item, index) => <EditableIngredientRow key={item.key || index} item={item} index={index} source="Produccion" onNameChange={handleIngredientNameChange} onSelect={handleIngredientSelect} onQuantityChange={handleQuantityChange} onRemove={handleRemoveIngredient} onSync={handleSyncIngredient} onMove={handleMoveItem} isFirst={index === 0} isLast={index === editableProduccion.length - 1} />)}
                                         <Button onClick={() => addIngredient('Produccion')} size="sm" className="mt-2 w-full">+ Añadir Prod. Interna</Button>
                                     </div>
                                 </>
