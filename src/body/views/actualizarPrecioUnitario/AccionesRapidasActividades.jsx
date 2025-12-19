@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem, crearProveedor } from "../../../redux/actions-Proveedores";
-import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU,  } from "../../../redux/actions-types";
+import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU, } from "../../../redux/actions-types";
 import ProcedimientosCreator from "../actividades/ProcedimientosCreator";
 import WorkIsueCreator from "../actividades/WorkIsueCreator";
 import StaffCreator from "../actividades/StaffCreator";
@@ -36,7 +36,7 @@ function AccionesRapidasActividades({ currentType }) {
   };
 
   const handleCopiarPendientes = (type) => {
-    dispatch(copiarAlPortapapeles( type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP" , "Proveedor" , allProveedores ));
+    dispatch(copiarAlPortapapeles(type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP", "Proveedor", allProveedores));
   };
 
   const handleCopiarInfoItems = () => {
@@ -182,10 +182,9 @@ function AccionesRapidasActividades({ currentType }) {
       </button>
       {workIsueFormVisible && <WorkIsueCreator />}
 
-      <button onClick={() => setStaffFormVisible(!staffFormVisible)} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
-        {staffFormVisible ? "Ocultar Formulario de Staff" : "Mostrar Formulario de Staff"}
-      </button>
-      {staffFormVisible && <StaffCreator />}
+      <a href="/StaffCreator" target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white px-4 py-2 rounded mt-4 inline-block text-center hover:bg-blue-600">
+        Crear Nuevo Staff (Pestaña Nueva)
+      </a>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import fondoImage from './assets/fondo.png';
 
 // import './App.css';
 
-import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH , MODEL ,RECETAS, COMPRAS} from './redux/actions-types'; // Importa las acciones y vistas
+import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH, MODEL, RECETAS, COMPRAS } from './redux/actions-types'; // Importa las acciones y vistas
 // BuscarPreciosInternet
 // import About from './components/About';
 // import Contact from './components/Contact';
@@ -19,7 +19,7 @@ import MenuLunch from './body/views/menuView/MenuLunch';
 import LunchByOrder from './body/views/lunchByOrder/LunchByOrder';
 import AccionesRapidas from './body/views/actualizarPrecioUnitario/AccionesRapidas';
 import BuscarPreciosInternet from './body/views/buscarPreciosInternet/BuscarPreciosInternet';
-import LandingHome from './body/views/home/LandingHome';  
+import LandingHome from './body/views/home/LandingHome';
 import Agenda from './body/views/agenda/Agenda';
 import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 import Scraper from '../scraper/scraper';
@@ -41,12 +41,13 @@ import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
 import PagosProveedores from './body/views/proveedores/PagosProveedores';
 import MenuPrint from './body/components/Menu/MenuPrint';
-import MenuHead  from './body/components/Menu/MenuHead';
+import MenuHead from './body/components/Menu/MenuHead';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
 import CalculoNomina from './body/views/staff/CalculoNomina';
 import WorkIsueExcelView from './body/views/actividades/WorkE/WorkIsueExcelView.jsx';
 import CalendarioProduccion from './body/views/actividades/CalendarioProduccion.jsx';
 import WorkIsueCreator from './body/views/actividades/WorkIsueCreator.jsx';
+import StaffCreator from './body/views/actividades/StaffCreator.jsx';
 import ItemsModal from './body/components/Items/ItemsModal.jsx';
 
 // import Manager from './body/views/actividades/Manager';
@@ -63,35 +64,35 @@ function App() {
 
   switch (currentView) {
     case HOME:
-      componentToRender = <LandingHome/>;
+      componentToRender = <LandingHome />;
       break;
     case AGENDA:
-      componentToRender = <Agenda/>;
+      componentToRender = <Agenda />;
     case MENUHEAD:
-      componentToRender = <MenuHead/>;
+      componentToRender = <MenuHead />;
     case MODEL:
-      componentToRender = <Model/>;
+      componentToRender = <Model />;
     case RECETAS:
-      componentToRender = <Recetas/>;
+      componentToRender = <Recetas />;
       break;
     case NOSOTROS:
-      componentToRender = <SobreNosotros/>;
+      componentToRender = <SobreNosotros />;
     case COMPRAS:
-      componentToRender = <Compras/>;
+      componentToRender = <Compras />;
       break;
     case LUNCH:
       componentToRender = <MenuLunch />;
       break;
     case MENUVIEW:
       componentToRender = <MenuView />;
-  
+
       break;
     default:
       componentToRender = <div>Page Not Found</div>; // Fallback para rutas no encontradas
       break;
   }
   return (
-    <div 
+    <div
       className='flex w-full min-h-screen relative'
       style={{
         backgroundImage: `url(${fondoImage})`,
@@ -103,58 +104,59 @@ function App() {
     >
       {/* Overlay para transparencia del 50% */}
       <div className="absolute inset-0 bg-cream-bg/60 pointer-events-none z-0"></div>
-      
+
       {/* Contenido de la aplicación */}
       <div className="relative z-10 w-full">
         <TopNav />
         <br></br>
         <br></br>
         <Routes>
-     {/* <Route path="/" element={componentToRender} /> */}
-     <Route path="/MenuView" element={<MenuView />} />
-     <Route path="/MenuLunch" element={<MenuLunch />} />
-     <Route path="/LunchByOrder" element={<LunchByOrder />} />
-     <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
-     <Route path="/Home" element={<Home />} />
-     <Route path="/Agenda" element={<Agenda />} />
-     <Route path="/Manager" element={<Manager />} />
-     <Route path="/Recetas" element={<Recetas />} />
-     <Route path="/SobreNosotros" element={<SobreNosotros />} />
-     <Route path="/Scraper" element={<Scraper />} />
-     <Route path="/" element={<StaffPortal />} />
-     {/* <Route path="/StaffPortal" element={<StaffPortal />} /> */}
-     <Route path="/Inventario" element={<Inventario />} />
-     <Route path="/VentaCompra" element={<VentaCompra />} />
-     <Route path="/Actividades" element={<Actividades />} />
-     <Route path="/Gastos" element={<Gastos />} />
-     <Route path="/Compras" element={<Compras />} />
-     <Route path="/MenuPrint" element={<MenuPrint />} />
-     <Route path="/MenuHead" element={<MenuHead />} />
-     <Route path="/DiaResumen" element={<DiaResumen />} />
-     <Route path="/MesResumen" element={<MesResumen />} />
-     <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
-     <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
-     <Route path="/CalendarioProduccion" element={<CalendarioProduccion />} />
-     <Route path="/CalendarioProduccio" element={<CalendarioProduccion />} />
-     <Route path="/WorkIsueCreator" element={<WorkIsueCreator />} />
-     <Route path="/Proveedores" element={<Proveedores />} />
-     <Route path="/PagosProveedores" element={<PagosProveedores />} />
-     <Route path="/receta/:id" element={<RecetaModal />} />
-     <Route path="/item/:id" element={<ItemsModal />} />
-     <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
-     <Route path="/evento/:id" element={<AgendaModal />} />
-     <Route path="/agendaForm/:id" element={<AgendaFormPage />} />
-     <Route path="/Predict/:MenuItem" element={<Predict />} />
-     <Route path="/CalculoNomina" element={<CalculoNomina />} />
-     <Route path="/Model" element={<Model />} />
-     <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
-     {/* Renderiza el componente que corresponde a la vista actual */}
-     {/* Renderiza el BottomNav debajo del componente actual */}
-     </Routes>
-     {/* <BottomNav /> */}
-     <br></br>
-     <br></br>
-     <br></br>
+          {/* <Route path="/" element={componentToRender} /> */}
+          <Route path="/MenuView" element={<MenuView />} />
+          <Route path="/MenuLunch" element={<MenuLunch />} />
+          <Route path="/LunchByOrder" element={<LunchByOrder />} />
+          <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
+          <Route path="/Home" element={<Home />} />
+          <Route path="/Agenda" element={<Agenda />} />
+          <Route path="/Manager" element={<Manager />} />
+          <Route path="/Recetas" element={<Recetas />} />
+          <Route path="/SobreNosotros" element={<SobreNosotros />} />
+          <Route path="/Scraper" element={<Scraper />} />
+          <Route path="/" element={<StaffPortal />} />
+          {/* <Route path="/StaffPortal" element={<StaffPortal />} /> */}
+          <Route path="/Inventario" element={<Inventario />} />
+          <Route path="/VentaCompra" element={<VentaCompra />} />
+          <Route path="/Actividades" element={<Actividades />} />
+          <Route path="/Gastos" element={<Gastos />} />
+          <Route path="/Compras" element={<Compras />} />
+          <Route path="/MenuPrint" element={<MenuPrint />} />
+          <Route path="/MenuHead" element={<MenuHead />} />
+          <Route path="/DiaResumen" element={<DiaResumen />} />
+          <Route path="/MesResumen" element={<MesResumen />} />
+          <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
+          <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
+          <Route path="/CalendarioProduccion" element={<CalendarioProduccion />} />
+          <Route path="/CalendarioProduccio" element={<CalendarioProduccion />} />
+          <Route path="/WorkIsueCreator" element={<WorkIsueCreator />} />
+          <Route path="/Proveedores" element={<Proveedores />} />
+          <Route path="/PagosProveedores" element={<PagosProveedores />} />
+          <Route path="/StaffCreator" element={<StaffCreator />} />
+          <Route path="/receta/:id" element={<RecetaModal />} />
+          <Route path="/item/:id" element={<ItemsModal />} />
+          <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
+          <Route path="/evento/:id" element={<AgendaModal />} />
+          <Route path="/agendaForm/:id" element={<AgendaFormPage />} />
+          <Route path="/Predict/:MenuItem" element={<Predict />} />
+          <Route path="/CalculoNomina" element={<CalculoNomina />} />
+          <Route path="/Model" element={<Model />} />
+          <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
+          {/* Renderiza el componente que corresponde a la vista actual */}
+          {/* Renderiza el BottomNav debajo del componente actual */}
+        </Routes>
+        {/* <BottomNav /> */}
+        <br></br>
+        <br></br>
+        <br></br>
       </div>
     </div>
   );
