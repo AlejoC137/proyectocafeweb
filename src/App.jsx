@@ -49,6 +49,9 @@ import CalendarioProduccion from './body/views/actividades/CalendarioProduccion.
 import WorkIsueCreator from './body/views/actividades/WorkIsueCreator.jsx';
 import StaffCreator from './body/views/actividades/StaffCreator.jsx';
 import ItemsModal from './body/components/Items/ItemsModal.jsx';
+import StaffDetailView from './body/views/staff/StaffDetailView.jsx';
+import StaffManager from './body/views/staff/StaffManager.jsx';
+import EditarTurnosView from './body/views/staff/EditarTurnosView.jsx';
 
 // import Manager from './body/views/actividades/Manager';
 
@@ -148,6 +151,11 @@ function App() {
           <Route path="/agendaForm/:id" element={<AgendaFormPage />} />
           <Route path="/Predict/:MenuItem" element={<Predict />} />
           <Route path="/CalculoNomina" element={<CalculoNomina />} />
+          <Route path="/staff-detail" element={<StaffDetailView />} />
+          <Route path="/staff-manager" element={<StaffManager />} />
+          <Route path="/staff-details/:cc" element={<StaffDetailView />} />
+          <Route path="/staff-manager/:cc" element={<StaffDetailView />} />
+          <Route path="/staff-manager/:cc/editar-turnos" element={<EditarTurnosView />} />
           <Route path="/Model" element={<Model />} />
           <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
           {/* Renderiza el componente que corresponde a la vista actual */}

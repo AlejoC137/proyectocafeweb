@@ -28,6 +28,7 @@ const pageTitles = {
   "PROVEEDORES": { [ESP]: "Proveedores", [ENG]: "Suppliers" },
   "CALCULONOMINA": { [ESP]: "Cálculo de Nómina", [ENG]: "Payroll Calculation" },
   "WORKISUE": { [ESP]: "Tareas", [ENG]: "Tasks" },
+  "STAFF-MANAGER": { [ESP]: "Gestión de Empleados", [ENG]: "Employee Management" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -66,11 +67,11 @@ export default function TopNav() {
 
     const viewFromUrl = path.substring(1).toUpperCase();
     const titleEntry = pageTitles[viewFromUrl];
-    
+
     if (titleEntry) {
       return titleEntry[currentLeng];
     }
-    
+
     // Fallback para rutas no definidas en el objeto
     return viewFromUrl.charAt(0) + viewFromUrl.slice(1).toLowerCase();
   };
@@ -78,7 +79,7 @@ export default function TopNav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-md bg-cream-bg border-sage-green text-not-black">
       <div className="container flex items-center justify-between h-14 px-4">
-        
+
         {/* Sección Izquierda: Botón de Menú */}
         <div className="w-1/3 flex justify-start">
           <IconButton className="bg-light-leaf text-sage-green hover:bg-sage-green hover:text-white">
@@ -95,7 +96,7 @@ export default function TopNav() {
             <img src={laTaza} alt="La Taza Logo" className=" w-6 h-6" />
             <span>PC</span>
           </button>
-          
+
           <div className="h-full flex items-center pl-4 border-l border-sage-green/50">
             <h1 className="font-SpaceGrotesk font-bold text-sm truncate text-gray-700">
               {getDisplayText()}
@@ -112,7 +113,7 @@ export default function TopNav() {
             <Languages className="h-3 w-3" />
             {currentLeng === ESP ? 'ENG' : 'ESP'}
           </button>
-          
+
           <IconButton className="bg-cobalt-blue text-white hover:bg-opacity-80">
             <ShoppingCart className="h-4 w-4" />
           </IconButton>

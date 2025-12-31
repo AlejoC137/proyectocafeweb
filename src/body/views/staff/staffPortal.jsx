@@ -11,18 +11,18 @@ import ContentCard from "../../../components/ui/content-card";
 import ActionButtonGroup from "../../../components/ui/action-button-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-  Settings, 
-  Edit, 
-  Clock, 
-  DollarSign, 
-  Brain, 
-  Package, 
-  Printer, 
-  CreditCard, 
-  Users, 
-  Calendar, 
+import {
+  Search,
+  Settings,
+  Edit,
+  Clock,
+  DollarSign,
+  Brain,
+  Package,
+  Printer,
+  CreditCard,
+  Users,
+  Calendar,
   CalendarDays,
   Wrench,
   BarChart3
@@ -45,7 +45,7 @@ function StaffPortal() {
 
   useEffect(() => {
     // console.log("All Staff Data:", allStaff);
-    
+
     const fetchData = async () => {
       try {
         await dispatch(getAllFromTable(STAFF));
@@ -114,6 +114,12 @@ function StaffPortal() {
       variant: "default"
     },
     {
+      label: "Staff Manager",
+      icon: "👥",
+      onClick: () => navigate("/staff-manager"),
+      variant: "default"
+    },
+    {
       label: "Inventario",
       icon: "📦",
       onClick: () => navigate("/Inventario"),
@@ -137,7 +143,7 @@ function StaffPortal() {
       onClick: () => navigate("/MenuPrint"),
       variant: "default"
     },
-      {
+    {
       label: "Gastos",
       icon: "💸",
       onClick: () => navigate("/Gastos"),
@@ -232,8 +238,8 @@ function StaffPortal() {
         <div className="w-1/3 flex flex-col gap-4">
           {/* Botones generales del sistema */}
           <ContentCard title="Acceso al Sistema">
-            <ActionButtonGroup 
-              buttons={systemButtons} 
+            <ActionButtonGroup
+              buttons={systemButtons}
               className="flex"
             />
             <form onSubmit={handlePropinaSubmit} className="flex gap-3 pt-3">
@@ -250,7 +256,7 @@ function StaffPortal() {
                 Actualizar
               </Button>
             </form>
-            
+
             <form className="">
               <div className="flex gap-3 pt-3">
                 <select
@@ -276,20 +282,20 @@ function StaffPortal() {
 
           {/* Panel específico del staff encontrado */}
           {staffFound && (
-            <ContentCard 
+            <ContentCard
               className="border-green-200"
             >
               <div className="space-y-2">
-                 <div className="bg-green-50 rounded-md p-3 mb-2">
-                   <p className="text-sm text-green-700">
-                     ✅ Personal encontrado: <strong>{staffFound.Nombre}</strong>
-                     {staffFound.isAdmin && <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">ADMIN</span>}
-                   </p>
-                 </div>
-                
-                <ActionButtonGroup 
-                  buttons={staffButtons} 
-                  layout="grid" 
+                <div className="bg-green-50 rounded-md p-3 mb-2">
+                  <p className="text-sm text-green-700">
+                    ✅ Personal encontrado: <strong>{staffFound.Nombre}</strong>
+                    {staffFound.isAdmin && <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">ADMIN</span>}
+                  </p>
+                </div>
+
+                <ActionButtonGroup
+                  buttons={staffButtons}
+                  layout="grid"
                   className="flex"
                 />
               </div>
@@ -302,14 +308,14 @@ function StaffPortal() {
               <StaffInstance staff={staffFound} editable />
             </ContentCard>
           )}
-          
+
           {activeView === "shift" && staffFound && (
             <ContentCard title="Gestión de Turnos">
               <StaffShift staffId={staffFound._id} estaffid={staffFound._id} />
             </ContentCard>
           )}
         </div>
-        
+
         {/* --- COLUMNA 3 (c) --- */}
         <div className="w-1/3">
           <Notas />

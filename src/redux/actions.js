@@ -541,6 +541,48 @@ export function updateItem(itemId, updatedFields, type) {
   };
 }
 
+
+// --- INICIO: ACCIONES PARA STAFF ---
+export const updateStaff = (staffData) => async (dispatch) => {
+  try {
+    const { _id, ...updates } = staffData;
+    const { data, error } = await supabase
+      .from(STAFF)
+      .update(updates)
+      .eq('_id', _id)
+      .select();
+
+    if (error) throw error;
+
+    console.log("Staff actualizado correctamente:", data);
+    alert("Empleado actualizado correctamente.");
+    dispatch(getAllFromTable(STAFF)); // Recargar la lista
+    return data;
+  } catch (error) {
+    console.error("Error updating staff:", error);
+    alert(`Error al actualizar empleado: ${error.message}`);
+  }
+};
+
+export const deleteStaff = (staffId) => async (dispatch) => {
+  try {
+    const { error } = await supabase
+      .from(STAFF)
+      .delete()
+      .eq('_id', staffId);
+
+    if (error) throw error;
+
+    console.log(`Staff con ID ${staffId} eliminado.`);
+    alert("Empleado eliminado correctamente.");
+    dispatch(getAllFromTable(STAFF)); // Recargar la lista
+  } catch (error) {
+    console.error("Error deleting staff:", error);
+    alert(`Error al eliminar empleado: ${error.message}`);
+  }
+};
+// --- FIN: ACCIONES PARA STAFF ---
+
 export function deleteItem(itemId, type) {
   const table = type === MenuItems ? MENU : type
   return async (dispatch) => {
@@ -927,32 +969,69 @@ export const setLenguage = (language) => {
 
 import { UPDATE_LOG_STAFF } from './actions-types'; // 👈 Import your action type
 
+/**
+ * Actualiza los turnos de un empleado en la base de datos
+ * @param {string} personaId - El _id del empleado
+ * @param {Array|string} updatedTurnoPasados - Array de turnos a guardar o JSON string
+ * @returns {boolean} - true si se guardó correctamente, false si hubo error
+ */
 export const updateLogStaff = (personaId, updatedTurnoPasados) => {
   return async (dispatch) => {
     try {
+      console.log("🔄 [updateLogStaff] Iniciando actualización de turnos...");
+      console.log("📋 [updateLogStaff] Staff ID (personaId):", personaId);
+      console.log("📋 [updateLogStaff] Turnos recibidos:", updatedTurnoPasados);
+      console.log("📋 [updateLogStaff] Tipo de datos:", typeof updatedTurnoPasados);
+
+      // Convertir a JSON si es array
+      const turnosData = typeof updatedTurnoPasados === 'string'
+        ? updatedTurnoPasados
+        : JSON.stringify(updatedTurnoPasados);
+
+      console.log("📋 [updateLogStaff] Turnos en formato JSON:", turnosData);
+      console.log("📋 [updateLogStaff] Longitud del JSON:", turnosData.length);
+
+      console.log("🚀 [updateLogStaff] Ejecutando actualización en Supabase...");
       const { data, error } = await supabase
         .from('Staff')
-        .update({ Turnos: updatedTurnoPasados })
+        .update({ Turnos: turnosData })
         .eq('_id', personaId)
         .select();
 
       if (error) {
+        console.error("❌ [updateLogStaff] Error de Supabase:", error);
+        console.error("❌ [updateLogStaff] Error code:", error.code);
+        console.error("❌ [updateLogStaff] Error message:", error.message);
+        console.error("❌ [updateLogStaff] Error details:", error.details);
         throw error;
       }
+
+      console.log("✅ [updateLogStaff] Turnos actualizados correctamente en la base de datos");
+      console.log("📊 [updateLogStaff] Datos retornados por Supabase:", data);
+      console.log("📊 [updateLogStaff] Número de filas afectadas:", data?.length || 0);
 
       dispatch({
         type: UPDATE_LOG_STAFF,
         payload: { personaId, updatedTurnoPasados },
       });
 
+      console.log("✅ [updateLogStaff] Dispatch ejecutado correctamente");
 
       // Importar utilidades de toast centralizadas
-      const { showSuccessToast } = await import('../utils/toast');
-      showSuccessToast('💾 Turno actualizado correctamente');
+      try {
+        const { showSuccessToast } = await import('../utils/toast');
+        showSuccessToast('💾 Turno actualizado correctamente');
+        console.log("✅ [updateLogStaff] Toast de éxito mostrado");
+      } catch (toastError) {
+        console.warn("⚠️ [updateLogStaff] No se pudo mostrar toast:", toastError);
+      }
 
+      console.log("✅ [updateLogStaff] Operación completada exitosamente");
       return true; // Éxito
     } catch (error) {
-      console.error('Error updating shift log:', error.message);
+      console.error('❌ [updateLogStaff] Error al actualizar turno:', error);
+      console.error('❌ [updateLogStaff] Error message:', error.message);
+      console.error('❌ [updateLogStaff] Error stack:', error.stack);
       return false; // Fallo
     }
   };
