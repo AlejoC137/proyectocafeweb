@@ -104,11 +104,24 @@ const StaffDetailView = () => {
                     }
                 }
 
+                // Parse infoContacto if it comes as JSON string or JS-object-like string
+                let infoContacto = null;
+                if (typeof found.infoContacto === "object" && found.infoContacto !== null) {
+                    infoContacto = found.infoContacto;
+                } else if (typeof found.infoContacto === "string" && found.infoContacto.trim()) {
+                    try {
+                        infoContacto = JSON.parse(found.infoContacto);
+                    } catch {
+                        infoContacto = parseObjectString(found.infoContacto);
+                    }
+                }
+
                 setFormData({
                     ...found,
                     Turnos: turnos,
                     Propinas: propinas,
-                    Cuenta: cuenta,
+                    Cuenta: cuenta || { banco: '', tipo: '', numero: '' },
+                    infoContacto: infoContacto || { nombreDeContacto: '', numeroDeContacto: '' },
                     isAdmin: found.isAdmin || false,
                     Show: found.Show !== false
                 });
@@ -122,15 +135,35 @@ const StaffDetailView = () => {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+
+        // Handle nested object properties (e.g., "Cuenta.banco" or "infoContacto.nombreDeContacto")
+        if (name.includes('.')) {
+            const [parent, child] = name.split('.');
+            setFormData(prev => ({
+                ...prev,
+                [parent]: {
+                    ...prev[parent],
+                    [child]: value
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+        }
     };
 
     const handleSave = () => {
         if (window.confirm("¿Estás seguro de guardar los cambios?")) {
-            dispatch(updateStaff(formData));
+            // Prepare data for database - serialize nested objects
+            const dataToSave = {
+                ...formData,
+                Cuenta: JSON.stringify(formData.Cuenta),
+                infoContacto: JSON.stringify(formData.infoContacto)
+            };
+
+            dispatch(updateStaff(dataToSave));
             setIsEditing(false);
             setEmployee(formData);
         }
@@ -405,17 +438,81 @@ const StaffDetailView = () => {
                                     <div className="grid grid-cols-2 gap-y-6">
                                         <div className="space-y-1">
                                             <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Entidad Bancaria</span>
-                                            <p className="text-xl font-bold text-slate-800">{formData.Cuenta?.banco || 'No especificado'}</p>
+                                            {isEditing ? (
+                                                <Input
+                                                    name="Cuenta.banco"
+                                                    value={formData.Cuenta?.banco || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Ej: Bancolombia"
+                                                    className="mt-1"
+                                                />
+                                            ) : (
+                                                <p className="text-xl font-bold text-slate-800">{formData.Cuenta?.banco || 'No especificado'}</p>
+                                            )}
                                         </div>
                                         <div className="space-y-1">
                                             <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Tipo de Producto</span>
-                                            <p className="text-xl font-bold text-slate-800">{formData.Cuenta?.tipo || 'Cuenta de Ahorros'}</p>
+                                            {isEditing ? (
+                                                <Input
+                                                    name="Cuenta.tipo"
+                                                    value={formData.Cuenta?.tipo || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Ej: Ahorros"
+                                                    className="mt-1"
+                                                />
+                                            ) : (
+                                                <p className="text-xl font-bold text-slate-800">{formData.Cuenta?.tipo || 'Cuenta de Ahorros'}</p>
+                                            )}
                                         </div>
                                         <div className="col-span-2 space-y-1 pt-4 border-t border-slate-200">
                                             <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Número de Cuenta</span>
-                                            <p className="text-4xl font-mono font-bold text-slate-900 tracking-tighter">
-                                                {formData.Cuenta?.numero || '000-0000000-00'}
-                                            </p>
+                                            {isEditing ? (
+                                                <Input
+                                                    name="Cuenta.numero"
+                                                    value={formData.Cuenta?.numero || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="000-0000000-00"
+                                                    className="mt-1 font-mono text-lg"
+                                                />
+                                            ) : (
+                                                <p className="text-4xl font-mono font-bold text-slate-900 tracking-tighter">
+                                                    {formData.Cuenta?.numero || '000-0000000-00'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <SectionTitle>Contacto de Emergencia</SectionTitle>
+                                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-2xl">
+                                    <div className="grid grid-cols-2 gap-y-6">
+                                        <div className="space-y-1">
+                                            <span className="text-xs text-amber-700 font-bold uppercase tracking-widest">Nombre de Contacto</span>
+                                            {isEditing ? (
+                                                <Input
+                                                    name="infoContacto.nombreDeContacto"
+                                                    value={formData.infoContacto?.nombreDeContacto || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Nombre completo"
+                                                    className="mt-1 border-amber-300 focus:ring-amber-500"
+                                                />
+                                            ) : (
+                                                <p className="text-xl font-bold text-slate-800">{formData.infoContacto?.nombreDeContacto || 'No especificado'}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-xs text-amber-700 font-bold uppercase tracking-widest">Número de Contacto</span>
+                                            {isEditing ? (
+                                                <Input
+                                                    name="infoContacto.numeroDeContacto"
+                                                    value={formData.infoContacto?.numeroDeContacto || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Teléfono"
+                                                    className="mt-1 border-amber-300 focus:ring-amber-500"
+                                                />
+                                            ) : (
+                                                <p className="text-xl font-bold text-slate-800">{formData.infoContacto?.numeroDeContacto || 'No especificado'}</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

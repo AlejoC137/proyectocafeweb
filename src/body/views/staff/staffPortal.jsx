@@ -114,12 +114,6 @@ function StaffPortal() {
       variant: "default"
     },
     {
-      label: "Staff Manager",
-      icon: "👥",
-      onClick: () => navigate("/staff-manager"),
-      variant: "default"
-    },
-    {
       label: "Inventario",
       icon: "📦",
       onClick: () => navigate("/Inventario"),
@@ -197,6 +191,12 @@ function StaffPortal() {
     },
     // Botones de administrador
     ...(staffFound.isAdmin ? [
+      {
+        label: "Staff Manager",
+        icon: "👥",
+        onClick: () => navigate("/staff-manager"),
+        variant: "destructive"
+      },
       {
         label: "Nómina",
         icon: "📊",
