@@ -11,6 +11,7 @@ import {
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getCurrentFortnightRange } from '../../../utils/dateUtils';
 
 const StaffDetailView = () => {
     const { cc } = useParams();
@@ -46,17 +47,10 @@ const StaffDetailView = () => {
         }
     };
 
-    // Date range for shifts and payroll
-    const [startDate, setStartDate] = useState(() => {
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        return firstDay.toISOString().split('T')[0];
-    });
-    const [endDate, setEndDate] = useState(() => {
-        const now = new Date();
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        return lastDay.toISOString().split('T')[0];
-    });
+    // Date range for shifts and payroll - defaults to current/last complete fortnight
+    const fortnightRange = getCurrentFortnightRange();
+    const [startDate, setStartDate] = useState(fortnightRange.startDate);
+    const [endDate, setEndDate] = useState(fortnightRange.endDate);
 
     // Initial load and CC search
     useEffect(() => {
