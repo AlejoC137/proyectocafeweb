@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { Input } from "@/components/ui/input";
 
 const NominaCalculator = ({ staffId, onTotalCalculated }) => {
     const staff = useSelector((state) => state.allStaff || []);
     const [calculation, setCalculation] = useState(null);
     const [periodo, setPeriodo] = useState({ start: "", end: "" });
+    const [isEditingPeriod, setIsEditingPeriod] = useState(false);
 
     useEffect(() => {
         if (!staffId) return;
@@ -17,13 +19,13 @@ const NominaCalculator = ({ staffId, onTotalCalculated }) => {
         let startDate, endDate;
 
         if (day <= 15) {
-            // Estamos en la primera quincena, mostrar la segunda quincena del mes ANTERIOR
-            startDate = new Date(year, month - 1, 16);
-            endDate = new Date(year, month, 0); // Último día del mes anterior
-        } else {
-            // Estamos en la segunda quincena, mostrar la primera quincena del mes ACTUAL
+            // Estamos en la primera quincena, mostrar la primera quincena del mes ACTUAL
             startDate = new Date(year, month, 1);
             endDate = new Date(year, month, 15);
+        } else {
+            // Estamos en la segunda quincena, mostrar la segunda quincena del mes ACTUAL
+            startDate = new Date(year, month, 16);
+            endDate = new Date(year, month + 1, 0); // Último día del mes actual
         }
 
         // Format dates for display and comparison
@@ -45,6 +47,37 @@ const NominaCalculator = ({ staffId, onTotalCalculated }) => {
         onTotalCalculated(result.totalNomina);
 
     }, [staffId, staff]);
+
+    // Manual period change handler
+    const handlePeriodChange = (field, value) => {
+        setPeriodo(prev => ({ ...prev, [field]: value }));
+    };
+
+    // Recalculate payroll with custom period
+    const recalculateWithPeriod = () => {
+        if (!staffId || !periodo.start || !periodo.end) return;
+
+        const selectedStaff = staff.find((s) => s._id === staffId);
+        if (!selectedStaff) return;
+
+        // Parse dates from the input strings
+        const [startYear, startMonth, startDay] = periodo.start.split('-').map(Number);
+        const [endYear, endMonth, endDay] = periodo.end.split('-').map(Number);
+
+        const startDate = new Date(startYear, startMonth - 1, startDay);
+        const endDate = new Date(endYear, endMonth - 1, endDay);
+
+        const result = calculatePayroll(selectedStaff, startDate, endDate);
+        setCalculation(result);
+        onTotalCalculated(result.totalNomina);
+    };
+
+    // Recalculate when period changes (only if manually edited)
+    useEffect(() => {
+        if (isEditingPeriod && periodo.start && periodo.end) {
+            recalculateWithPeriod();
+        }
+    }, [periodo, isEditingPeriod]);
 
     const calculatePayroll = (persona, start, end) => {
         let turnos = [];
@@ -123,8 +156,48 @@ const NominaCalculator = ({ staffId, onTotalCalculated }) => {
 
     return (
         <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mt-4">
-            <h4 className="font-semibold text-blue-800 mb-2">Cálculo de Nómina Sugerido</h4>
-            <p className="text-xs text-blue-600 mb-3">Periodo: {periodo.start} al {periodo.end}</p>
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-blue-800">Cálculo de Nómina Sugerido</h4>
+                <button
+                    type="button"
+                    onClick={() => setIsEditingPeriod(!isEditingPeriod)}
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                >
+                    {isEditingPeriod ? "Bloquear" : "Editar Período"}
+                </button>
+            </div>
+
+            <div className="mb-3">
+                <p className="text-xs text-blue-600 mb-2">Período:</p>
+                <div className="grid grid-cols-2 gap-2">
+                    <div>
+                        <label className="text-xs text-gray-600 block mb-1">Inicio:</label>
+                        <Input
+                            type="date"
+                            value={periodo.start}
+                            onChange={(e) => handlePeriodChange('start', e.target.value)}
+                            disabled={!isEditingPeriod}
+                            className={`h-8 text-sm ${isEditingPeriod
+                                    ? 'bg-white border-blue-400'
+                                    : 'bg-blue-100 border-blue-200 cursor-not-allowed'
+                                }`}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-600 block mb-1">Fin:</label>
+                        <Input
+                            type="date"
+                            value={periodo.end}
+                            onChange={(e) => handlePeriodChange('end', e.target.value)}
+                            disabled={!isEditingPeriod}
+                            className={`h-8 text-sm ${isEditingPeriod
+                                    ? 'bg-white border-blue-400'
+                                    : 'bg-blue-100 border-blue-200 cursor-not-allowed'
+                                }`}
+                        />
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>

@@ -35,6 +35,7 @@ const StaffDetailView = () => {
     const handlePasswordSubmit = () => {
         if (passwordInput === ADMIN_PASSWORD) {
             setIsAuthorized(true);
+            setIsEditing(true); // Automatically enter edit mode
         } else {
             alert("Contraseña incorrecta");
         }
@@ -89,10 +90,25 @@ const StaffDetailView = () => {
                     }
                 }
 
+                // Parse Cuenta if it comes as JSON string or JS-object-like string
+                let cuenta = null;
+                if (typeof found.Cuenta === "object" && found.Cuenta !== null) {
+                    cuenta = found.Cuenta;
+                } else if (typeof found.Cuenta === "string" && found.Cuenta.trim()) {
+                    try {
+                        // First try standard JSON.parse
+                        cuenta = JSON.parse(found.Cuenta);
+                    } catch {
+                        // If that fails, try to parse JS object-like string (with unquoted keys)
+                        cuenta = parseObjectString(found.Cuenta);
+                    }
+                }
+
                 setFormData({
                     ...found,
                     Turnos: turnos,
                     Propinas: propinas,
+                    Cuenta: cuenta,
                     isAdmin: found.isAdmin || false,
                     Show: found.Show !== false
                 });
@@ -149,7 +165,7 @@ const StaffDetailView = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-SpaceGrotesk">
+        <div className="min-h-screen w-screen bg-gray-50 p-4 md:p-8 font-SpaceGrotesk">
             <div className="max-w-5xl mx-auto flex flex-col gap-6">
 
                 {/* Top Navigation Bar */}
@@ -438,7 +454,7 @@ const StaffDetailView = () => {
                                 </div>
 
                                 {/* Payroll Summary Section - Always Visible */}
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
                                     {(() => {
                                         const filteredTurnos = (Array.isArray(formData.Turnos) ? formData.Turnos : []).filter(t => {
                                             const tDate = t.fecha || t.turnoDate?.split('T')[0];
@@ -466,6 +482,7 @@ const StaffDetailView = () => {
                                             .reduce((total, propina) => total + parseFloat(propina.tipMonto || 0), 0) / 1000;
 
                                         const totalToPay = basePay + socialSecurity + periodTips;
+                                        const averageHourlyRate = totalHours > 0 ? totalToPay / totalHours : 0;
 
                                         return (
                                             <>
@@ -480,6 +497,10 @@ const StaffDetailView = () => {
                                                 <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Seg. Social (10%)</span>
                                                     <span className="text-2xl font-bold text-slate-800">{formatCurrency(socialSecurity)}</span>
+                                                </div>
+                                                <div className="bg-amber-600 p-4 rounded-xl shadow-lg shadow-amber-100 flex flex-col">
+                                                    <span className="text-[10px] text-amber-100 font-bold uppercase tracking-widest mb-1">Promedio/Hora (Check)</span>
+                                                    <span className="text-2xl font-bold text-white">{formatCurrency(averageHourlyRate)}</span>
                                                 </div>
                                                 <div className="bg-indigo-600 p-4 rounded-xl shadow-lg shadow-indigo-100 flex flex-col">
                                                     <span className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mb-1">Total a Pagar</span>
@@ -611,6 +632,30 @@ const ToggleOption = ({ id, label, description, checked, onChange, disabled }) =
 // --- Global Utils ---
 const formatCurrency = (val) => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+};
+
+// Parse JavaScript object-like strings (e.g., "{banco: 'Bancolombia', tipo: 'Ahorros'}")
+const parseObjectString = (str) => {
+    if (!str || typeof str !== 'string') return null;
+    try {
+        // Remove outer quotes if present
+        let cleaned = str.trim();
+        if ((cleaned.startsWith("'") && cleaned.endsWith("'")) ||
+            (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
+            cleaned = cleaned.slice(1, -1);
+        }
+
+        // Convert JS object notation to valid JSON by adding quotes around keys
+        // This regex finds unquoted keys and wraps them in double quotes
+        const jsonString = cleaned
+            .replace(/(\w+):/g, '"$1":')  // Add quotes around keys
+            .replace(/'/g, '"');           // Replace single quotes with double quotes
+
+        return JSON.parse(jsonString);
+    } catch (e) {
+        console.error('Failed to parse object string:', str, e);
+        return null;
+    }
 };
 
 const calculateDuration = (start, end) => {

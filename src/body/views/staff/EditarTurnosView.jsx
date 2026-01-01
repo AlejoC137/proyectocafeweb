@@ -80,7 +80,7 @@ const EditarTurnosView = () => {
     const handleAddShift = () => {
         setModifiedShifts((prevShifts) => [
             ...prevShifts,
-            { fecha: "", horaInicio: "", horaCierre: "" }
+            { fecha: visibleStartDate, horaInicio: "", horaCierre: "" }
         ]);
     };
 

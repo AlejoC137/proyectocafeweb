@@ -109,7 +109,7 @@ function App() {
       <div className="absolute inset-0 bg-cream-bg/60 pointer-events-none z-0"></div>
 
       {/* Contenido de la aplicación */}
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-screen">
         <TopNav />
         <br></br>
         <br></br>
