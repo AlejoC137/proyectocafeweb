@@ -12,7 +12,7 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff } from "lucide-react";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
 import { compareAndGenerateHistory } from "../../../utils/historyUtils";
 
@@ -173,7 +173,14 @@ function GestionAlmacen() {
   // Prompt Options
   const [forceSelectedProviders, setForceSelectedProviders] = useState(false);
   const [singleProviderReturn, setSingleProviderReturn] = useState(false);
+  const [forceLowestUnitPrice, setForceLowestUnitPrice] = useState(false); // New option
 
+
+
+
+  // UI States for "Action Description"
+  const [showHelp, setShowHelp] = useState(true);
+  const [helpText, setHelpText] = useState("");
 
   // Filter items based on search term AND Group
   const filteredSearchItems = (() => {
@@ -229,8 +236,15 @@ function GestionAlmacen() {
     if (selectedItems.length === 0) return;
     try {
       const selectedProviderObjects = proveedores.filter(p => selectedProviderIds.includes(p._id));
-      const prompt = generateInventoryUpdatePrompt(selectedItems, selectedProviderObjects, forceSelectedProviders, singleProviderReturn);
-      await navigator.clipboard.writeText(prompt);
+      // Generate prompt using the new centralized utility
+      const promptText = generateInventoryUpdatePrompt(
+        selectedItems,
+        selectedProviderObjects,
+        forceSelectedProviders,
+        singleProviderReturn,
+        forceLowestUnitPrice // Pass the new flag
+      );
+      await navigator.clipboard.writeText(promptText);
       alert("Prompt copiado al portapapeles");
     } catch (err) {
       console.error("Failed to copy prompt:", err);
@@ -239,86 +253,36 @@ function GestionAlmacen() {
   };
 
   const handleProcessJson = () => {
+    if (!jsonText) return;
     try {
-      const parsedData = JSON.parse(jsonText);
-      if (!Array.isArray(parsedData)) throw new Error("El JSON debe ser un arreglo []");
+      const updates = JSON.parse(jsonText);
+      if (!Array.isArray(updates)) {
+        alert("El JSON debe ser un array de objetos");
+        return;
+      }
 
-      // We map over SELECTED items to create STAGED items
-      const newStagedItems = selectedItems.map((item) => {
-        const update = parsedData.find((u) => u._id === item._id);
-        if (update) {
-          // NORMALIZATION
-          if (update.STOCK && typeof update.STOCK === 'object') {
-            update.STOCK = JSON.stringify(update.STOCK);
-          }
-          if (update.ALMACENAMIENTO && typeof update.ALMACENAMIENTO === 'object') {
-            update.ALMACENAMIENTO = JSON.stringify(update.ALMACENAMIENTO);
-          }
-
-          // Generate history of changes for UI (simple format)
-          const uiChanges = compareAndGenerateHistory(item, update);
-
-          // Generate history of changes for DB (COMPACT stringified JSON format)
-          const newHistoryEntriesForDb = [];
-
-          if (uiChanges.length > 0) {
-            const timestamp = new Date().toISOString();
-            const cambiosMap = {};
-
-            uiChanges.forEach(change => {
-              cambiosMap[change.campo] = {
-                anterior: change.valor_inicial,
-                nuevo: change.valor_final
-              };
-            });
-
-            const historyEntry = {
-              fecha: timestamp,
-              cambios: cambiosMap
-            };
-
-            // Store as stringified JSON - Single entry per update event
-            newHistoryEntriesForDb.push(JSON.stringify(historyEntry));
-          }
-
-          // Merge existing history with new entries
-          let currentHistory = [];
-          if (Array.isArray(item.historial_update)) {
-            currentHistory = item.historial_update;
-          } else if (typeof item.historial_update === 'string') {
-            try {
-              currentHistory = JSON.parse(item.historial_update);
-            } catch (e) {
-              currentHistory = [];
-            }
-          }
-
-          const updatedHistory = [...currentHistory, ...newHistoryEntriesForDb];
-
-          // Return the STAGED item
-          return {
-            ...item,
-            ...update,
-            historial_update: updatedHistory,
-            _isUpdated: true,
-            _original: item, // KEEP ORIGINAL FOR COMPARISON
-            _excludedFields: [], // Initialize empty excluded fields
-            // We keep a reference to the latest history entry index to allow editing it
-            _latestHistoryIndex: updatedHistory.length - 1
-          };
-        }
-        // If no update found, pass the item as is (not updated)
-        return item;
-      });
+      const newStagedItems = updates.map(update => {
+        const original = selectedItems.find(i => i._id === update._id);
+        if (!original) return null; // Skip if not in selected
+        return {
+          ...original, // Keep original props
+          ...update,   // Overwrite with updates
+          __original: original, // Store ref to original for diffing
+          _isStaged: true, // Marker
+          _includedFields: Object.keys(update).filter(k => k !== "_id" && k !== "COSTO") // Default included fields (COSTO excluded by default per logic if needed, but usually we include everything provided)
+        };
+      }).filter(Boolean);
 
       setStagedItems(newStagedItems);
-      console.log("Control del objeto procesado (Staged Items):", newStagedItems);
-      alert("Datos procesados. Revisa la columna de Confirmación para editar o guardar.");
+      // alert(`Procesados ${newStagedItems.length} items.`);
     } catch (e) {
-      alert("Error al procesar JSON: " + e.message);
+      alert("Error al parsear JSON: " + e.message);
     }
   };
 
+  const handleRemoveStagedItem = (itemId) => {
+    setStagedItems(prev => prev.filter(i => i._id !== itemId));
+  };
   const handleUpdateStagedItem = (itemId, field, newValue) => {
     setStagedItems(prev => prev.map(item => {
       if (item._id === itemId && item._isUpdated) {
@@ -617,11 +581,23 @@ function GestionAlmacen() {
         </div>
 
         {/* Column 2: Actions Options */}
-        <div className="bg-white rounded-lg shadow-sm border p-2 flex flex-col h-full border-t-4 border-t-amber-400/80">
-          <h2 className="text-sm font-bold mb-3 text-slate-800 flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-500" />
-            Acciones
-          </h2>
+        <div className="bg-white rounded-lg shadow-sm border p-2 flex flex-col h-full border-t-4 border-t-amber-400/80 gap-2">
+          <div className="flex justify-between items-center mb-1">
+            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-amber-500" />
+              Acciones
+            </h2>
+            <div className="flex items-center gap-2">
+              {showHelp && (
+                <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${helpText ? 'bg-amber-100 text-amber-700 border-amber-200 animate-pulse' : 'text-slate-300 border-transparent'}`}>
+                  {helpText || "Opciones de Prompt"}
+                </span>
+              )}
+              <button onClick={() => setShowHelp(!showHelp)} className="text-slate-400 hover:text-blue-500">
+                {showHelp ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              </button>
+            </div>
+          </div>
 
           {selectedItems.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-300 space-y-2">
@@ -641,25 +617,27 @@ function GestionAlmacen() {
                 </Button>
 
                 {/* Prompt Options Checkboxes */}
-                <div className="flex items-center gap-1" title="Forzar adición a proveedores seleccionados">
-                  <div
-                    onClick={() => setForceSelectedProviders(!forceSelectedProviders)}
-                    className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${forceSelectedProviders ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}
-                  >
-                    {forceSelectedProviders ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1" onMouseEnter={() => setHelpText("Forzar proveedores seleccionados")} onMouseLeave={() => setHelpText("")}>
+                    <div onClick={() => setForceSelectedProviders(!forceSelectedProviders)} className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${forceSelectedProviders ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}>
+                      {forceSelectedProviders ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1" title="Forzar retorno de un solo proveedor">
-                  <div
-                    onClick={() => setSingleProviderReturn(!singleProviderReturn)}
-                    className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${singleProviderReturn ? 'bg-blue-100 border-blue-300 text-blue-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}
-                  >
-                    {singleProviderReturn ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                  <div className="flex items-center gap-1" onMouseEnter={() => setHelpText("Unificar en UN solo proveedor")} onMouseLeave={() => setHelpText("")}>
+                    <div onClick={() => setSingleProviderReturn(!singleProviderReturn)} className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${singleProviderReturn ? 'bg-blue-100 border-blue-300 text-blue-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}>
+                      {singleProviderReturn ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1" onMouseEnter={() => setHelpText("Buscar precio unitario MÁS BAJO")} onMouseLeave={() => setHelpText("")}>
+                    <div onClick={() => setForceLowestUnitPrice(!forceLowestUnitPrice)} className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${forceLowestUnitPrice ? 'bg-green-100 border-green-300 text-green-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}>
+                      <span className="text-[10px] font-bold">$</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col min-h-0 border-t pt-2">
+              {/* Provider List Filter */}
+              <div className="flex flex-col min-h-0 border-t pt-2">
                 <div className="flex justify-between items-center mb-1 gap-2">
                   <h3 className="text-[10px] font-bold text-slate-500 uppercase whitespace-nowrap">Filtrar Proveedores</h3>
                   <input
@@ -824,52 +802,60 @@ function GestionAlmacen() {
                   const isUpdated = changes.length > 0;
 
                   return (
-                    <div key={`confirm-${item._id}`} className={`p-2 border rounded shadow-sm bg-white relative group overflow-hidden ${!isUpdated ? 'opacity-70' : ''}`}>
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-bold text-slate-700 text-[11px] truncate w-2/3" title={item.Nombre_del_producto}>
+                    <div key={item._id} className="bg-white border rounded shadow-sm overflow-hidden text-xs">
+                      <div className="bg-slate-50 border-b px-2 py-1.5 flex justify-between items-center">
+                        <span className="font-bold text-slate-700 truncate flex-1" title={item.Nombre_del_producto}>
                           {item.Nombre_del_producto}
                         </span>
-                        {isUpdated ? (
-                          <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1 rounded border border-green-200">MODIFICADO</span>
-                        ) : (
-                          <span className="text-[9px] text-slate-400">Sin Cambios</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-100 px-1 rounded flex items-center gap-0.5">
+                            <X className="h-3 w-3" /> MODIFICADO
+                          </span>
+                          <button
+                            onClick={() => handleRemoveStagedItem(item._id)}
+                            className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
+                            title="Descartar este item"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+                      <div className="p-2 space-y-1">
+                        {isUpdated && (
+                          <div className="flex flex-col gap-1 mt-1">
+                            {changes.map((change) => {
+                              const isExcluded = item._excludedFields?.includes(change.campo);
 
-                      {isUpdated && (
-                        <div className="flex flex-col gap-1 mt-1">
-                          {changes.map((change) => {
-                            const isExcluded = item._excludedFields?.includes(change.campo);
+                              return (
+                                <div key={change.campo} className={`text-[10px] flex items-center gap-2 px-1 py-1 rounded border transition-all ${isExcluded ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-blue-50/50 border-blue-100'}`}>
 
-                            return (
-                              <div key={change.campo} className={`text-[10px] flex items-center gap-2 px-1 py-1 rounded border transition-all ${isExcluded ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-blue-50/50 border-blue-100'}`}>
+                                  {/* Toggle Checkbox */}
+                                  <div onClick={() => handleToggleFieldInclusion(item._id, change.campo)} className="cursor-pointer text-blue-600 flex-shrink-0">
+                                    {isExcluded ? <Square className="h-3 w-3 text-slate-400" /> : <CheckSquare className="h-3 w-3" />}
+                                  </div>
 
-                                {/* Toggle Checkbox */}
-                                <div onClick={() => handleToggleFieldInclusion(item._id, change.campo)} className="cursor-pointer text-blue-600 flex-shrink-0">
-                                  {isExcluded ? <Square className="h-3 w-3 text-slate-400" /> : <CheckSquare className="h-3 w-3" />}
-                                </div>
+                                  {/* Change Detail */}
+                                  <div className="flex-1 flex items-center justify-between min-w-0 gap-2">
+                                    <span className="font-semibold text-slate-600 truncate w-[60px] flex-shrink-0" title={change.campo}>{change.campo}</span>
 
-                                {/* Change Detail */}
-                                <div className="flex-1 flex items-center justify-between min-w-0 gap-2">
-                                  <span className="font-semibold text-slate-600 truncate w-[60px] flex-shrink-0" title={change.campo}>{change.campo}</span>
-
-                                  <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
-                                    <span className="text-slate-400 font-mono truncate max-w-[50%] text-[9px] text-right">{change.valor_inicial ?? '-'}</span>
-                                    <span className="text-slate-300 flex-shrink-0">→</span>
-                                    <input
-                                      type="text"
-                                      className={`flex-1 min-w-0 text-[10px] border-b focus:outline-none bg-transparent font-mono font-bold text-right px-0.5 ${isExcluded ? 'text-slate-400 border-slate-300' : 'text-blue-700 border-blue-300 focus:border-blue-500'}`}
-                                      value={change.valor_final}
-                                      onChange={(e) => handleUpdateStagedItem(item._id, change.campo, e.target.value)}
-                                      disabled={isExcluded}
-                                    />
+                                    <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
+                                      <span className="text-slate-400 font-mono truncate max-w-[50%] text-[9px] text-right">{change.valor_inicial ?? '-'}</span>
+                                      <span className="text-slate-300 flex-shrink-0">→</span>
+                                      <input
+                                        type="text"
+                                        className={`flex-1 min-w-0 text-[10px] border-b focus:outline-none bg-transparent font-mono font-bold text-right px-0.5 ${isExcluded ? 'text-slate-400 border-slate-300' : 'text-blue-700 border-blue-300 focus:border-blue-500'}`}
+                                        value={change.valor_final}
+                                        onChange={(e) => handleUpdateStagedItem(item._id, change.campo, e.target.value)}
+                                        disabled={isExcluded}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
