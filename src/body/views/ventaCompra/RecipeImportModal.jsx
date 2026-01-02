@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { createRecipeForProduct, updateItem, getAllFromTable } from "../../../redux/actions";
 import { MENU, PRODUCCION } from "../../../redux/actions-types";
 import AccionesRapidas from '../actualizarPrecioUnitario/AccionesRapidas';
+import { copyPromptToClipboard } from '../../../utils/prompts';
+import { Copy, Check } from 'lucide-react';
 
 const RecipeImportModal = ({ onClose, onSuccess }) => {
     const dispatch = useDispatch();
@@ -36,6 +38,7 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
     // UI States
     const [step, setStep] = useState(1); // 1: JSON Input, 2: Mapping & Confirmation
     const [isSaving, setIsSaving] = useState(false);
+    const [promptCopied, setPromptCopied] = useState(false);
 
     // Helpers
     const getProductName = (product) => product?.Nombre_del_producto || product?.NombreES || product?.name || "(Sin nombre)";
@@ -288,6 +291,12 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
         }
     }, [targetSearchTerm, possibleTargets]);
 
+    // --- COPY PROMPT HANDLER ---
+    const handleCopyPrompt = async () => {
+        // For recipes, always use the Recipe prompt type
+        await copyPromptToClipboard('RECETAS', setPromptCopied);
+    };
+
     // --- FINAL SAVE ---
     const handleSave = async () => {
         if (!targetProduct) {
@@ -446,9 +455,30 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
                 {step === 1 ? (
                     <div className="flex flex-col gap-4">
                         <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
-                            <p className="text-sm text-blue-800">
-                                Pega el objeto JSON de tu receta aquí. El sistema intentará detectar automáticamente el nombre de la receta y relacionar los ingredientes con tu inventario.
-                            </p>
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm text-blue-800 font-medium">
+                                    Pega el objeto JSON de tu receta aquí. El sistema intentará detectar automáticamente el nombre de la receta y relacionar los ingredientes con tu inventario.
+                                </p>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleCopyPrompt}
+                                    className="flex items-center gap-1 text-xs h-7 px-2 border-blue-300 hover:bg-blue-100 hover:border-blue-400 ml-3 flex-shrink-0"
+                                    title="Copia instrucciones para IA que generan JSON de recetas"
+                                >
+                                    {promptCopied ? (
+                                        <>
+                                            <Check className="h-3 w-3 text-green-600" />
+                                            <span className="text-green-600">Copiado</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="h-3 w-3" />
+                                            <span>Copiar Prompt</span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                         <Textarea
                             className="flex-1 font-mono text-sm min-h-[300px]"

@@ -24,6 +24,7 @@ import Agenda from './body/views/agenda/Agenda';
 import SobreNosotros from './body/views/sobreNosotros/SobreNosotros';
 import Scraper from '../scraper/scraper';
 import Inventario from './body/views/inventario/Inventario';
+import GestionAlmacen from './body/views/inventario/GestionAlmacen';
 import Manager from './body/views/inventario/Manager';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import Compras from './body/views/ventaCompra/Compras';
@@ -128,6 +129,7 @@ function App() {
           <Route path="/" element={<StaffPortal />} />
           {/* <Route path="/StaffPortal" element={<StaffPortal />} /> */}
           <Route path="/Inventario" element={<Inventario />} />
+          <Route path="/GestionAlmacen" element={<GestionAlmacen />} />
           <Route path="/VentaCompra" element={<VentaCompra />} />
           <Route path="/Actividades" element={<Actividades />} />
           <Route path="/Gastos" element={<Gastos />} />

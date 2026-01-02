@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllFromTable, updateItem } from "../../../redux/actions";
 import { ITEMS, CATEGORIES, unidades, BODEGA, ESTATUS, PROVEE } from "../../../redux/actions-types";
-import { X, Package, BookOpen, Edit, Save, Loader2, FileJson } from "lucide-react";
+import { X, Package, BookOpen, Edit, Save, Loader2, FileJson, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { copyPromptToClipboard } from "../../../utils/prompts";
 
 /**
  * Componente de "Página Modal" para ver y EDITAR los detalles de un Item.
@@ -22,6 +23,7 @@ const ItemsModal = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showJsonImport, setShowJsonImport] = useState(false);
   const [jsonText, setJsonText] = useState("");
+  const [promptCopied, setPromptCopied] = useState(false);
 
   // Estados de datos
   const items = useSelector((state) => state.allItems || []);
@@ -203,6 +205,10 @@ const ItemsModal = () => {
     } catch (e) {
       alert("Error al leer JSON: " + e.message);
     }
+  };
+
+  const handleCopyPrompt = async () => {
+    await copyPromptToClipboard(ITEMS, setPromptCopied);
   };
 
   const formatCurrency = (value) =>
@@ -396,10 +402,30 @@ const ItemsModal = () => {
               {showJsonImport && (
                 <div className="border-l pl-6 space-y-4 animate-in slide-in-from-right-4 fade-in duration-300">
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 sticky top-0 h-full flex flex-col">
-                    <h4 className="font-bold text-blue-800 flex items-center gap-2 mb-2">
-                      <FileJson className="h-5 w-5" />
-                      Importar desde JSON
-                    </h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-blue-800 flex items-center gap-2">
+                        <FileJson className="h-5 w-5" />
+                        Importar desde JSON
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCopyPrompt}
+                        className="flex items-center gap-1 text-xs h-7 px-2 border-blue-300 hover:bg-blue-100 hover:border-blue-400"
+                      >
+                        {promptCopied ? (
+                          <>
+                            <Check className="h-3 w-3 text-green-600" />
+                            <span className="text-green-600">Copiado</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            <span>Prompt</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
                     <p className="text-xs text-blue-600 mb-3">
                       Pega el JSON para autocompletar campos.
                     </p>

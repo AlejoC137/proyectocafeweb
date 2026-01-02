@@ -19,8 +19,9 @@ import { crearProveedor } from "../../../redux/actions-Proveedores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, RefreshCw, PlusCircle, X, Save, ShoppingCart, Hammer, FileText, UserPlus, FileJson } from "lucide-react";
+import { Copy, RefreshCw, PlusCircle, X, Save, ShoppingCart, Hammer, FileText, UserPlus, FileJson, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { copyPromptToClipboard } from "../../../utils/prompts";
 
 function AccionesRapidas({ currentType: propType }) {
   // Normalize type: "ITEMS" string -> ItemsAlmacen constant
@@ -36,6 +37,7 @@ function AccionesRapidas({ currentType: propType }) {
   const [formProveedorVisible, setFormProveedorVisible] = useState(false);
   const [jsonImportVisible, setJsonImportVisible] = useState(false);
   const [jsonText, setJsonText] = useState("");
+  const [promptCopied, setPromptCopied] = useState(false);
 
   // Initial Data
   const initialItemData = {
@@ -126,6 +128,10 @@ function AccionesRapidas({ currentType: propType }) {
     const headers = Object.keys(items[0]).join("\t");
     const rows = items.map(item => Object.values(item).join("\t")).join("\n");
     navigator.clipboard.writeText(`${headers}\n${rows}`).then(() => alert("Copiado al portapapeles."));
+  };
+
+  const handleCopyPrompt = async () => {
+    await copyPromptToClipboard(currentType, setPromptCopied);
   };
 
   const handleInputChange = (e, setData) => {
@@ -240,9 +246,30 @@ function AccionesRapidas({ currentType: propType }) {
       {/* JSON IMPORT SECTION */}
       {jsonImportVisible && (
         <div className="bg-blue-50 p-4 rounded-md border border-blue-200 animate-in fade-in zoom-in-95 duration-200">
-          <h4 className="font-bold text-sm text-blue-800 mb-3 flex items-center gap-2">
-            <FileJson className="h-4 w-4" /> Importar desde JSON
-          </h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-bold text-sm text-blue-800 flex items-center gap-2">
+              <FileJson className="h-4 w-4" /> Importar desde JSON
+            </h4>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCopyPrompt}
+              className="flex items-center gap-1 text-xs h-7 px-2 border-blue-300 hover:bg-blue-100 hover:border-blue-400"
+              title="Copia instrucciones para IA que generan JSON compatible"
+            >
+              {promptCopied ? (
+                <>
+                  <Check className="h-3 w-3 text-green-600" />
+                  <span className="text-green-600">Copiado</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3" />
+                  <span>Copiar Prompt</span>
+                </>
+              )}
+            </Button>
+          </div>
           <p className="text-xs text-blue-600 mb-2">
             Pega aquí el objeto JSON del producto (ej. desde Claude/GPT). El sistema intentará autocompletar el formulario.
           </p>
