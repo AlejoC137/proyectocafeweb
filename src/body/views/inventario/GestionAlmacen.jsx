@@ -14,7 +14,10 @@ import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff } from "lucide-react";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
+import { generateInventoryUpdatePromptLink } from "../../../utils/inventoryUpdatePrompt";
+
 import { compareAndGenerateHistory } from "../../../utils/historyUtils";
+
 
 function GestionAlmacen() {
   const dispatch = useDispatch();
@@ -232,14 +235,15 @@ function GestionAlmacen() {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleCopyPrompt = async () => {
+  const handleCopyPromptLink = async () => {
     if (selectedItems.length === 0) return;
     try {
       const selectedProviderObjects = proveedores.filter(p => selectedProviderIds.includes(p._id));
       // Generate prompt using the new centralized utility
-      const promptText = generateInventoryUpdatePrompt(
+      const promptText = generateInventoryUpdatePromptLink(
         selectedItems,
         selectedProviderObjects,
+        proveedores, // Pass all providers for lookup
         forceSelectedProviders,
         singleProviderReturn,
         forceLowestUnitPrice // Pass the new flag
@@ -251,6 +255,27 @@ function GestionAlmacen() {
       alert("Error al copiar el prompt");
     }
   };
+  const handleCopyPrompt = async () => {
+    if (selectedItems.length === 0) return;
+    try {
+      const selectedProviderObjects = proveedores.filter(p => selectedProviderIds.includes(p._id));
+      // Generate prompt using the new centralized utility
+      const promptText = generateInventoryUpdatePrompt(
+        selectedItems,
+        selectedProviderObjects,
+        proveedores, // Pass all providers for lookup
+        forceSelectedProviders,
+        singleProviderReturn,
+        forceLowestUnitPrice // Pass the new flag
+      );
+      await navigator.clipboard.writeText(promptText);
+      alert("Prompt copiado al portapapeles");
+    } catch (err) {
+      console.error("Failed to copy prompt:", err);
+      alert("Error al copiar el prompt");
+    }
+  };
+
 
   const handleProcessJson = () => {
     if (!jsonText) return;
@@ -267,12 +292,13 @@ function GestionAlmacen() {
         return {
           ...original, // Keep original props
           ...update,   // Overwrite with updates
-          __original: original, // Store ref to original for diffing
+          _original: original, // Store ref to original for diffing
           _isStaged: true, // Marker
           _includedFields: Object.keys(update).filter(k => k !== "_id" && k !== "COSTO") // Default included fields (COSTO excluded by default per logic if needed, but usually we include everything provided)
         };
       }).filter(Boolean);
 
+      console.log("ITEMS PROCESADOS (STAGED):", newStagedItems);
       setStagedItems(newStagedItems);
       // alert(`Procesados ${newStagedItems.length} items.`);
     } catch (e) {
@@ -285,7 +311,7 @@ function GestionAlmacen() {
   };
   const handleUpdateStagedItem = (itemId, field, newValue) => {
     setStagedItems(prev => prev.map(item => {
-      if (item._id === itemId && item._isUpdated) {
+      if (item._id === itemId) {
         // Deep copy to avoid mutation
         const newItem = { ...item, [field]: newValue };
 
@@ -340,8 +366,8 @@ function GestionAlmacen() {
 
 
   const handleSaveChanges = async () => {
-    // FIX: Use stagedItems instead of selectedItems, as stagedItems contains the updates.
-    const itemsToUpdate = stagedItems.filter(i => i._isUpdated);
+    // FIX: Use stagedItems directly. If it's in the list, it's a pending change.
+    const itemsToUpdate = stagedItems;
 
     if (itemsToUpdate.length === 0) return alert("No hay cambios pendientes para guardar.");
 
@@ -391,11 +417,13 @@ function GestionAlmacen() {
           }
         }
 
-        // 3. Cleanup internal flags
-        delete payload._isUpdated;
-        delete payload._original;
-        delete payload._excludedFields;
-        delete payload._latestHistoryIndex;
+        // 3. Cleanup internal flags (Aggressive cleanup of ALL underscores)
+        Object.keys(payload).forEach(key => {
+          if (key.startsWith('_')) delete payload[key];
+        });
+
+        // Debug log for user validation
+        console.log("ITEM A GUARDAR (PAYLOAD):", payload);
 
         // Ensure numbers are numbers
         if (payload.COSTO) payload.COSTO = Number(payload.COSTO);
@@ -615,6 +643,14 @@ function GestionAlmacen() {
                   <span>Generar Prompt IA</span>
                   <Zap className="h-3 w-3" />
                 </Button>
+                <Button
+                  onClick={handleCopyPromptLink}
+                  variant="outline"
+                  className="flex-1 justify-between items-center border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-xs h-8"
+                >
+                  <span>Prompt por link</span>
+                  <Zap className="h-3 w-3" />
+                </Button>
 
                 {/* Prompt Options Checkboxes */}
                 <div className="flex items-center gap-1">
@@ -809,14 +845,14 @@ function GestionAlmacen() {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-100 px-1 rounded flex items-center gap-0.5">
-                            <X className="h-3 w-3" /> MODIFICADO
+                            {/* <X className="h-3 w-3" /> MODIFICADO */}
                           </span>
                           <button
                             onClick={() => handleRemoveStagedItem(item._id)}
                             className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
                             title="Descartar este item"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
@@ -844,7 +880,7 @@ function GestionAlmacen() {
                                       <input
                                         type="text"
                                         className={`flex-1 min-w-0 text-[10px] border-b focus:outline-none bg-transparent font-mono font-bold text-right px-0.5 ${isExcluded ? 'text-slate-400 border-slate-300' : 'text-blue-700 border-blue-300 focus:border-blue-500'}`}
-                                        value={change.valor_final}
+                                        value={change.valor_final ?? ""}
                                         onChange={(e) => handleUpdateStagedItem(item._id, change.campo, e.target.value)}
                                         disabled={isExcluded}
                                       />

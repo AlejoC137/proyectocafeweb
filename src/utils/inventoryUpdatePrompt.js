@@ -3,14 +3,18 @@
  * Defines the instructions for the AI to search for information and return structured JSON.
  */
 
-export const generateInventoryUpdatePrompt = (items, selectedProviders = [], forceSelectedProviders = false, singleProviderReturn = false, forceLowestUnitPrice = false) => {
-  const itemsList = items.map(i =>
-    `- ID: ${i._id}
+export const generateInventoryUpdatePrompt = (items, selectedProviders = [], allProviders = [], forceSelectedProviders = false, singleProviderReturn = false, forceLowestUnitPrice = false) => {
+  const itemsList = items.map(i => {
+    // Resolve Provider Name from ID
+    const providerName = allProviders.find(p => p._id === i.Proveedor)?.Nombre_Proveedor || 'No asignado';
+    return `- ID: ${i._id}
      - Nombre: ${i.Nombre_del_producto}
      - Categoría: ${i.GRUPO}
-     - Proveedor Actual: ${i.Proveedor?.Nombre_Proveedor || 'No asignado'}
-     - Costo Actual: ${i.COSTO}`
-  ).join('\n\n');
+     - Proveedor Actual: ${providerName}
+     - Marca Actual: ${i.MARCA}
+     - Costo Actual: ${i.COSTO}
+     - Cantidad Actual: ${i.CANTIDAD}`;
+  }).join('\n\n');
 
   const providerNames = selectedProviders.map(p => p.Nombre_Proveedor).join(', ');
 
@@ -28,9 +32,9 @@ Buscar en internet información actualizada(precios de mercado en Medellín, Col
 ## JERARQUÍA DE DECISIÓN (CRÍTICO)
 
 1. **ENLACES (LINKS) DIRECTOS**: 
-   - Si junto con el ítem se proporciona un hipervínculo o URL específica: **ESTE ES EL PRODUCTO ELEGIDO.**
+   - Si junto con el prompt se proporciona un hipervínculo o URL específica: **ESTE ES EL PRODUCTO ELEGIDO.**
    - **TIENE PRIORIDAD ABSOLUTA** sobre cualquier otra regla de "precio más bajo", "forzar proveedor" o "proveedor preferido".
-   - Saca la información (Precio, Presentación, Marca) directamente de ese link.
+   - Saca la información Para ese único ítem (Precio, Presentación, Marca) directamente de ese link.
 
 2. **REGLAS DE FILTRADO (Solo si NO hay link)**:
    - Si no hay link, aplica las reglas activas a continuación (Precio bajo, Proveedor específico, etc.).
@@ -174,11 +178,11 @@ Cada objeto debe contener EXACTAMENTE estas claves(sin extras):
 
   [
     {
-      "Nombre_del_producto": "string",
+      "Nombre_del_producto": "string", // el nombre del producto elegido 
       "CANTIDAD": "string",
       "UNIDADES": "string",
       "COSTO": "string",
-      "MARCA": ["string:nombre_de_la_marca"],
+      "MARCA": ["string:nombre_de_la_marca"], // si no se puede determinar, se pondra el nombre del almacen o proeveedor
       "_id": "uuid-original-del-input",
       "precioUnitario": 0,
     }
@@ -191,3 +195,96 @@ ${itemsList}
   `;
 
 };
+export const generateInventoryUpdatePromptLink = (items, selectedProviders = [], allProviders = [], forceSelectedProviders = false, singleProviderReturn = false, forceLowestUnitPrice = false) => {
+  const itemsList = items.map(i => {
+    // Resolve Provider Name from ID
+    const providerName = allProviders.find(p => p._id === i.Proveedor)?.Nombre_Proveedor || 'No asignado';
+    return `- ID: ${i._id}
+     - Nombre: ${i.Nombre_del_producto}
+     - Categoría: ${i.GRUPO}
+     - Proveedor Actual: ${providerName}
+     - Marca Actual: ${i.MARCA[0]}
+     - Costo Actual: ${i.COSTO}
+     - Cantidad Actual: ${i.CANTIDAD}`;
+  }).join('\n\n');
+
+  const providerNames = selectedProviders.map(p => p.Nombre_Proveedor).join(', ');
+
+  const providersText = selectedProviders.length > 0
+    ? selectedProviders.map(p => `- ${p.Nombre_Proveedor} (${p.PAGINA_WEB || "Sin web"})`).join("\n")
+    : "No se especificaron proveedores preferidos.";
+
+  return `ACTÚA COMO: Experto en Abastecimiento y Normalización de Datos de Inventario.
+
+TU OBJETIVO:
+Extraer información técnica y comercial de los ENLACES (LINKS) proporcionados por el usuario y generar un objeto JSON que respete ESTRICTAMENTE la estructura de la tabla ItemsAlmacen.
+
+---
+
+## FUENTE DE VERDAD
+- La información DEBE salir exclusivamente del contenido del enlace proporcionado.
+- Si el enlace no contiene precio, intenta inferirlo o usa "0".
+- Si el enlace tiene opciones (ej: 500g vs 1kg), selecciona la opción principal o la que mejor coincida con el título del producto si se indica.
+
+---
+
+## REGLAS DE FORMATO Y ESTRUCTURA (CRÍTICO - ItemsAlmacen)
+
+### 1) STOCK y ALMACENAMIENTO (IMPORTANTE)
+Devuélvelos como STRING que contiene JSON serializado (NO como objeto).
+- STOCK default: "{\\"minimo\\":0,\\"maximo\\":0,\\"actual\\":0}"
+- ALMACENAMIENTO default: "{\\"ALMACENAMIENTO\\":\\"\\",\\"BODEGA\\":\\"\\"}"
+
+### 2) Tipos de datos (RESPETAR)
+- CANTIDAD: String (ej: "500", "1000") -> Extraer Numérico del peso/volumen.
+- UNIDADES: String ("gr", "ml", "und", "kg", "lb", "un")
+- COSTO: String (ej: "15000") -> Sin puntos, comas ni símbolos.
+- precioUnitario: Number -> (Costo / Cantidad).
+- _id: Generar un UUID v4 válido (si no se provee uno en el input).
+- Proveedor: UUID o null.
+- MARCA: Array de Strings (ej: ["Colanta"]).
+
+### 3) Integridad
+- NO agregues campos extra.
+- NO inventes IDs si ya vienen dados.
+
+---
+
+
+
+INSTRUCCIONES FINALES:
+• Dame solo el JSON, listo para copiar.
+• No inventes datos que no estén en las reglas.
+
+ITEMS A INVESTIGAR:
+${itemsList}
+
+
+
+## ESTRUCTURA DE SALIDA (OBLIGATORIA)
+
+Devuelve ÚNICAMENTE una lista (Array) de objetos JSON.
+Cada objeto debe contener EXACTAMENTE estas claves:
+
+  [
+    {
+      "Nombre_del_producto": "string", // el nombre del producto elegido 
+      "CANTIDAD": "string",
+      "UNIDADES": "string",
+      "COSTO": "string",
+      "MARCA": ["string:nombre_de_la_marca"],
+      "_id": "uuid-original-del-input",
+      "precioUnitario": 0,
+    }
+  ]
+Devuelve ÚNICAMENTE el array JSON solicitado.
+NO uses markdown.
+NO incluyas citas, referencias, contentReference ni texto adicional.
+
+`;
+
+};
+
+
+
+

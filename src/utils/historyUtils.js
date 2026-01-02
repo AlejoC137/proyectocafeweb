@@ -10,7 +10,7 @@ export const compareAndGenerateHistory = (originalItem, updates) => {
     const ignoredKeys = ["_id", "historial_update", "_isUpdated", "_original", "campos_parseados", "_excludedFields", "_latestHistoryIndex"];
 
     for (const key in updates) {
-        if (ignoredKeys.includes(key)) continue;
+        if (ignoredKeys.includes(key) || key.startsWith('_')) continue;
 
         let oldValue = originalItem[key];
         let newValue = updates[key];

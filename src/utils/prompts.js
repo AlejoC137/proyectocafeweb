@@ -94,7 +94,7 @@ import { ITEMS, PRODUCCION, MENU } from '../redux/actions-types';
 // - NO explicaciones.
 // - NO agregar campos extra.
 // `;
-const PROMPT_ITEMS_ALMACEN = `test`;
+
 
 
 // Prompt for Produccion Interna (Internal Production Items)
