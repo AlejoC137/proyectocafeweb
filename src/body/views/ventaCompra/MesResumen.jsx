@@ -212,6 +212,8 @@ function MesResumen() {
 
         let recetaData = null;
         let consolidatedCost = 0;
+        let vCMP = 0;
+        let vCMO = 0;
         let ingredients = [];
 
         if (producto.recetaId !== "N/A") {
@@ -230,9 +232,18 @@ function MesResumen() {
                     if (typeof costData === 'number') {
                       // Case for pure production recipes sometimes stored as number
                       consolidatedCost = costData;
-                    } else if (costData && (costData.vCMP || costData.vCMO)) {
+                      vCMP = costData; // Assume all is material if simple number
+                    } else if (costData) {
                       // Case for detailed object cost (vCMP + vCMO)
-                      consolidatedCost = (costData.vCMP || 0) + (costData.vCMO || 0);
+                      // Safely parse numbers and ensure 0 if missing
+                      const rawCMP = Number(costData.vCMP) || 0;
+                      const rawCMO = Number(costData.vCMO) || 0;
+
+                      vCMP = Number(rawCMP.toFixed(0));
+                      vCMO = Number(rawCMO.toFixed(0));
+
+                      // If consolidated cost logic needs to be sum:
+                      consolidatedCost = vCMP + vCMO;
                     }
                   } catch (e) {
                     console.warn("Could not parse cost for recipe:", recetaData.legacyName);
@@ -254,6 +265,8 @@ function MesResumen() {
         return {
           ...producto,
           recetaValor: consolidatedCost,
+          vCMP,
+          vCMO,
           ingredientes: ingredients,
           totalCosto: totalCosto,
           totalUtilidad: totalUtilidad

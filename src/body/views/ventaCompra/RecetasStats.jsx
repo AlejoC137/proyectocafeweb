@@ -6,6 +6,7 @@ import { RECETAS_MENU, RECETAS_PRODUCCION, MENU, PRODUCCION, ITEMS } from "../..
 import { Button } from "@/components/ui/button";
 import RecipeImportModal from "./RecipeImportModal";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
+import supabase from "../../../config/supabaseClient";
 
 // --- Componente para el Modal de Confirmación de Borrado ---
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
@@ -104,101 +105,144 @@ function RecetasStats() {
     };
 
     const updateAllCosts = async () => {
-        if (!window.confirm("⚠️ ATENCIÓN: Esto recalculará el costo de TODAS las recetas basándose en los precios actuales de los ingredientes. Esta acción puede tardar unos segundos y sobreescribirá los valores de costo actuales. ¿Deseas continuar?")) {
+        if (!window.confirm("⚠️ ATENCIÓN: Esto recalculará el costo de TODAS las recetas basándose en los precios actuales de los ingredientes (y TIEMPOS de proceso). Esta acción puede tardar unos segundos y sobreescribirá los valores de costo actuales. ¿Deseas continuar?")) {
             return;
         }
 
         setIsGlobalUpdating(true);
         setGlobalUpdateProgress("Iniciando...");
 
-        const allOptions = [...allItems, ...allProduccion];
-        const buscarPorId = (itemId) => allOptions.find((i) => i._id === itemId) || null;
+        try {
+            // 0. Fetch LATEST Data directly from Supabase to ensure ProcessTime is up to date
+            // We cannot rely solely on Redux state if the user just made edits without a full refresh loop
+            setGlobalUpdateProgress("Obteniendo datos más recientes...");
 
-        const processRecipeList = async (list, sourceTable, type) => {
-            let processed = 0;
-            for (const receta of list) {
-                setGlobalUpdateProgress(`Procesando ${type}: ${processed + 1} / ${list.length}`);
+            // Fetch everything we need
+            // Note: RecetasStats already has `allMenu` and `allItems` from Redux. 
+            // We'll trust `allItems` (ingredients) are reasonably fresh or that exact-second precision on ingredients isn't the blocker (Time=0 is the blocker).
+            // But we MUST fetch the recipes themselves to get the latest ProcessTime.
 
-                try {
-                    // 1. Parse Items
-                    const items = [];
-                    // Helper to extract items (similar to RecetaModal)
-                    const extract = (prefix, max) => {
-                        for (let i = 1; i <= max; i++) {
-                            const itemId = receta[`${prefix}${i}_Id`];
-                            const cuantityUnitsRaw = receta[`${prefix}${i}_Cuantity_Units`];
-                            if (itemId && cuantityUnitsRaw) {
-                                const itemData = buscarPorId(itemId);
-                                if (itemData) {
-                                    try {
-                                        const qUnits = JSON.parse(cuantityUnitsRaw);
-                                        items.push({
-                                            item_Id: itemId,
-                                            cuantity: Number(qUnits.metric.cuantity) || 0,
-                                            precioUnitario: Number(itemData.precioUnitario) || 0,
-                                            field: `${prefix}${i}`
-                                        });
-                                    } catch (e) { }
+            // Helper to fetch all rows
+            const fetchTable = async (table) => {
+                let allRows = [];
+                let page = 0;
+                const pageSize = 1000;
+                while (true) {
+                    const { data, error } = await supabase
+                        .from(table)
+                        .select('*')
+                        .range(page * pageSize, (page + 1) * pageSize - 1);
+                    if (error) throw error;
+                    if (data) allRows = [...allRows, ...data];
+                    if (data.length < pageSize) break;
+                    page++;
+                }
+                return allRows;
+            };
+
+            const [freshRecetasMenu, freshRecetasProduccion] = await Promise.all([
+                fetchTable('Recetas'),
+                fetchTable('RecetasProduccion')
+            ]);
+
+            // Normalize types
+            const listMenu = freshRecetasMenu;
+            const listProduccion = freshRecetasProduccion;
+
+            const allOptions = [...allItems, ...allProduccion]; // Ingredients source
+            const buscarPorId = (itemId) => allOptions.find((i) => i._id === itemId) || null;
+
+            const processRecipeList = async (list, sourceTable, type) => {
+                let processed = 0;
+                for (const receta of list) {
+                    setGlobalUpdateProgress(`Procesando ${type}: ${processed + 1} / ${list.length}`);
+
+                    try {
+                        // 1. Parse Items
+                        const items = [];
+                        const extract = (prefix, max) => {
+                            for (let i = 1; i <= max; i++) {
+                                const itemId = receta[`${prefix}${i}_Id`];
+                                const cuantityUnitsRaw = receta[`${prefix}${i}_Cuantity_Units`];
+                                if (itemId && cuantityUnitsRaw) {
+                                    const itemData = buscarPorId(itemId);
+                                    if (itemData) {
+                                        try {
+                                            const qUnits = JSON.parse(cuantityUnitsRaw);
+                                            items.push({
+                                                item_Id: itemId,
+                                                cuantity: Number(qUnits.metric.cuantity) || 0,
+                                                precioUnitario: Number(itemData.precioUnitario) || 0,
+                                                field: `${prefix}${i}`
+                                            });
+                                        } catch (e) { }
+                                    }
                                 }
                             }
                         }
+                        extract('item', 30);
+                        extract('producto_interno', 20);
+
+                        // 2. Get Extra Info (Group, Time)
+                        const parent = allMenu.find(m => m._id === receta.forId) || allProduccion.find(p => p._id === receta.forId);
+                        const group = parent?.GRUPO || null;
+
+                        // CRITICAL: Ensure we use the freshly fetched ProcessTime
+                        const time = Number(receta.ProcessTime) || 0;
+
+                        // 3. Calculate
+                        let newCalculo = {};
+                        let costToSave = null;
+
+                        if (type === 'produccion') {
+                            const resultado = recetaMariaPaula(items, null, null, time, null, null, 1, 0.08, 0.08, 0.05, true);
+                            if (resultado) costToSave = resultado.COSTO;
+                        } else {
+                            const resultado = recetaMariaPaula(items, group, null, time);
+                            if (resultado) newCalculo = resultado.detalles;
+                        }
+
+                        // 4. Update
+                        const payload = {
+                            actualizacion: new Date().toISOString()
+                        };
+
+                        if (type === 'produccion' && costToSave !== null) {
+                            payload.costo = costToSave;
+                            if (receta.forId) { await dispatch(updateItem(receta.forId, { "COSTO": costToSave }, "ProduccionInterna")); }
+                        } else if (newCalculo) {
+                            payload.costo = JSON.stringify(newCalculo);
+                        }
+
+                        await dispatch(updateItem(receta._id, payload, sourceTable));
+
+                    } catch (e) {
+                        console.error("Error updating recipe: ", receta.legacyName, e);
                     }
-                    extract('item', 30);
-                    extract('producto_interno', 20);
-
-                    // 2. Get Extra Info (Group, Time)
-                    const parent = allMenu.find(m => m._id === receta.forId) || allProduccion.find(p => p._id === receta.forId);
-                    const group = parent?.GRUPO || null;
-                    const time = Number(receta.ProcessTime) || 0;
-
-                    // 3. Calculate
-                    let newCalculo = {};
-                    let costToSave = null;
-
-                    if (type === 'produccion') {
-                        const resultado = recetaMariaPaula(items, null, null, time, null, null, 1, 0.08, 0.08, 0.05, true);
-                        if (resultado) costToSave = resultado.COSTO; // Just the number
-                    } else {
-                        const resultado = recetaMariaPaula(items, group, null, time);
-                        if (resultado) newCalculo = resultado.detalles; // The details object
-                    }
-
-                    // 4. Update if different (or always update to be safe)
-                    const payload = {
-                        actualizacion: new Date().toISOString()
-                    };
-
-                    if (type === 'produccion' && costToSave !== null) {
-                        payload.costo = costToSave;
-                        // Also update parent product cost if linked
-                        if (receta.forId) { await dispatch(updateItem(receta.forId, { "COSTO": costToSave }, "ProduccionInterna")); }
-                    } else if (newCalculo) {
-                        payload.costo = JSON.stringify(newCalculo);
-                    }
-
-                    await dispatch(updateItem(receta._id, payload, sourceTable));
-
-                } catch (e) {
-                    console.error("Error updating recipe: ", receta.legacyName, e);
+                    processed++;
                 }
-                processed++;
-            }
-        };
+            };
 
-        await processRecipeList(allRecetasMenu, RECETAS_MENU, 'menu');
-        await processRecipeList(allRecetasProduccion, RECETAS_PRODUCCION, 'produccion');
+            await processRecipeList(listMenu, RECETAS_MENU, 'menu');
+            await processRecipeList(listProduccion, RECETAS_PRODUCCION, 'produccion');
 
-        setIsGlobalUpdating(false);
-        setGlobalUpdateProgress("");
-        alert("Actualización global completada. Las recetas ahora reflejan los costos actuales de los ingredientes.");
+            alert("Actualización global completada. Las recetas ahora reflejan los costos y tiempos actuales.");
 
-        // Reload
-        setTimeout(() => {
-            dispatch(getAllFromTable(RECETAS_MENU));
-            dispatch(getAllFromTable(RECETAS_PRODUCCION));
-            dispatch(getAllFromTable(MENU));
-            dispatch(getAllFromTable(PRODUCCION));
-        }, 1000);
+        } catch (error) {
+            console.error("Critical error in global update:", error);
+            alert("Error durante la actualización global. Revise la consola.");
+        } finally {
+            setIsGlobalUpdating(false);
+            setGlobalUpdateProgress("");
+
+            // Reload Redux
+            setTimeout(() => {
+                dispatch(getAllFromTable(RECETAS_MENU));
+                dispatch(getAllFromTable(RECETAS_PRODUCCION));
+                dispatch(getAllFromTable(MENU));
+                dispatch(getAllFromTable(PRODUCCION));
+            }, 1000);
+        }
     };
 
 

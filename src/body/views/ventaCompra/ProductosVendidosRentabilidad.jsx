@@ -10,6 +10,9 @@ const ProductosVendidosRentabilidad = ({
   targetMonth,
   targetYear
 }) => {
+
+
+  console.log(productos);
   const [showFinancials, setShowFinancials] = useState(true);
   const [showPredict, setShowPredict] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
