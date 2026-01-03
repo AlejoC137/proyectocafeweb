@@ -5,6 +5,8 @@ import { fetchModelsAction, getAllFromTable, deleteModelAction } from '../../../
 import { VENTAS, COMPRAS } from '../../../redux/actions-types';
 import ModeloContent from './ModeloContent';
 
+const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
 const ModeloProyecto = () => {
     const dispatch = useDispatch();
 
@@ -107,10 +109,18 @@ const ModeloProyecto = () => {
                             <div className="flex-grow grid grid-cols-12 gap-px bg-slate-700 rounded-r overflow-hidden">
                                 {monthCols.map((monthName, monthIndex) => {
                                     // Modelo guardado
-                                    const savedModel = models.find(m =>
-                                        parseInt(m.costs?.linkedYear) === year &&
-                                        parseInt(m.costs?.linkedMonth) === monthIndex
-                                    );
+                                    const savedModel = models.find(m => {
+                                        // 1. Check legacy/linked fields inside costs
+                                        if (parseInt(m.costs?.linkedYear) === year && parseInt(m.costs?.linkedMonth) === monthIndex) return true;
+
+                                        // 2. Check top-level properties (Direct database columns)
+                                        if (m.year == year && m.month == monthIndex) return true;
+
+                                        // 3. Fallback: Check by name logic
+                                        if (m.name === `Contabilidad ${monthsNames[monthIndex]} ${year}`) return true;
+
+                                        return false;
+                                    });
 
                                     // Ventas reales (Parseo MM/DD/AAAA)
                                     const hasSales = allVentas && allVentas.some(v => {

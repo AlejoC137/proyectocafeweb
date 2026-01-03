@@ -37,9 +37,7 @@ function ModeloContent({ targetMonth, targetYear }) {
     const allRecetasMenu = useSelector(state => state.allRecetasMenu); // Added for new logic
     const allRecetasProduccion = useSelector(state => state.allRecetasProduccion);
     const allProduccion = useSelector(state => state.allProduccion);
-    console.log(models
 
-    )
     // --- LOGICA TRAIDA DE MesResumen.jsx ---
     const [ventas, setVentas] = useState([]);
     const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
