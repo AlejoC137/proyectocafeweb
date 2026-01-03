@@ -26,7 +26,27 @@ export const generateInventoryUpdatePrompt = (items, selectedProviders = [], all
 
     TU OBJETIVO
 Buscar en internet información actualizada(precios de mercado en Medellín, Colombia, presentaciones comerciales, detalles técnicos) para los ítems suministrados y devolver un ** JSON ** que respete ESTRICTAMENTE la estructura de la tabla ItemsAlmacen.
+## Proceso de búsqueda y lógica 
+Lo principal es lograr actualizar el precio unitario, el costo, la marca y otras propiedades que están en la parte de abajo.
 
+La misión final de este prompt y de este proceso es lograr determinar cuál es el valor actual del producto solicitado. 
+
+Para eso, vamos a escoger entre las búsquedas y dar un dato exacto.
+
+Así que no se vale retomar el mismo valor del mismo objeto a buscar. No sería el punto.
+
+Lo importante sería buscar el producto y actualizar el valor. 
+
+
+Es importante entender el criterio de las músicas. Si un objeto tiene un proveedor que no pudo ser encontrado, no debe averiguarse. Es decir, no adicione los resultados para los resultados que no han sido encontrados.
+
+Necesito que revises si un objeto, si un objeto buscado está en otros proveedores que no sean el que tiene incluido, porque me está devolviendo elementos con plaza minorista de la página web, la cual sé que no tienes página web, o sea, si la entregaste será porque no la buscaste o alucinaste la búsqueda.
+
+A lo que me refiero es solamente dar resultados comprobados y buscados en las páginas. Busca cada uno de los ítems en cada una de las páginas.
+
+Dame resultados con posibilidad de verificación. 
+
+  Los resultados deben estar siempre al máximo posible en gramos. No usar unidades en la medida de lo posible, solo usar gramos en la medida de lo posible. 
 ---
 
 ## JERARQUÍA DE DECISIÓN (CRÍTICO)

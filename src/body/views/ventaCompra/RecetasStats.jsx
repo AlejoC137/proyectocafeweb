@@ -244,6 +244,7 @@ function RecetasStats() {
                 vIB: costoData.COSTO ? costoData.COSTO : costoData.vIB,
                 pIB: costoData.pIB,
                 vCMP: costoData.vCMP,
+                vCMO: costoData.vCMO,
                 pCMPInicial: costoData.pCMPInicial,
                 pCMPReal: costoData.pCMPReal,
                 PPVii: costoData.PPVii,

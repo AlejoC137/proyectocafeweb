@@ -7,8 +7,8 @@ import { ChevronUp, ChevronDown, Filter, Search, Save } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 import CuidadoVariations from "./CuidadoVariations";
 
-export function TableViewInventario({ products, currentType }) {
-  
+export function TableViewInventario({ products, currentType, recetasMenu = [], recetasProduccion = [] }) {
+
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
   const Proveedores = useSelector((state) => state.Proveedores || []);
@@ -47,10 +47,10 @@ export function TableViewInventario({ products, currentType }) {
   // cuando llegan products actualizamos editableProducts y originalRef
   useEffect(() => {
     const clonedProducts = (products || []).map(p => {
-        const product = { ...p };
-        product.STOCK = parseNestedObject(p.STOCK, { minimo: 0, maximo: 0, actual: 0 });
-        product.ALMACENAMIENTO = parseNestedObject(p.ALMACENAMIENTO, { ALMACENAMIENTO: '', BODEGA: '' });
-        return product;
+      const product = { ...p };
+      product.STOCK = parseNestedObject(p.STOCK, { minimo: 0, maximo: 0, actual: 0 });
+      product.ALMACENAMIENTO = parseNestedObject(p.ALMACENAMIENTO, { ALMACENAMIENTO: '', BODEGA: '' });
+      return product;
     });
     setEditableProducts(clonedProducts);
     // guardamos copia profunda simple en originalProductsRef para comparar y revertir
@@ -113,7 +113,7 @@ export function TableViewInventario({ products, currentType }) {
         try {
           // despachamos
           console.log(productId);
-          
+
           await dispatch(updateItem(productId, payloadToSend, currentType));
 
           // si éxito: actualizamos originalProductsRef con la versión actual en editableProducts
@@ -215,7 +215,7 @@ export function TableViewInventario({ products, currentType }) {
 
   // Columnas y filtros (sin cambios importantes)
   const getAvailableColumns = () => {
-    switch(currentType) {
+    switch (currentType) {
       case MenuItems:
         return {
           nombreES: { label: "Nombre ES", key: "NombreES", default: true },
@@ -308,9 +308,9 @@ export function TableViewInventario({ products, currentType }) {
     setVisibleColumns(defaultVisibleColumns);
   };
 
-  const uniqueCategories = useMemo(() => [...new Set((products||[]).map(p => p.GRUPO).filter(Boolean))], [products]);
-  const uniqueEstados = useMemo(() => [...new Set((products||[]).map(p => p.Estado).filter(Boolean))], [products]);
-  const uniqueAlmacenamiento = useMemo(() => [...new Set((products||[]).map(p => parseNestedObject(p.ALMACENAMIENTO)?.ALMACENAMIENTO).filter(Boolean))], [products]);
+  const uniqueCategories = useMemo(() => [...new Set((products || []).map(p => p.GRUPO).filter(Boolean))], [products]);
+  const uniqueEstados = useMemo(() => [...new Set((products || []).map(p => p.Estado).filter(Boolean))], [products]);
+  const uniqueAlmacenamiento = useMemo(() => [...new Set((products || []).map(p => parseNestedObject(p.ALMACENAMIENTO)?.ALMACENAMIENTO).filter(Boolean))], [products]);
 
   const filteredProducts = useMemo(() => {
     return (editableProducts || []).filter(product => {
@@ -340,32 +340,32 @@ export function TableViewInventario({ products, currentType }) {
   const sortedProducts = useMemo(() => {
     const sortable = [...filteredProducts];
     sortable.sort((a, b) => {
-        if (!sortColumn) return 0;
+      if (!sortColumn) return 0;
 
-        let aValue = a[sortColumn];
-        let bValue = b[sortColumn];
+      let aValue = a[sortColumn];
+      let bValue = b[sortColumn];
 
-        if (sortColumn === "STOCK") {
-            aValue = parseNestedObject(a.STOCK, { actual: 0 }).actual;
-            bValue = parseNestedObject(b.STOCK, { actual: 0 }).actual;
-        } else if (sortColumn === "Proveedor") {
-            const provA = Proveedores.find(p => p._id === a.Proveedor)?.Nombre_Proveedor || '';
-            const provB = Proveedores.find(p => p._id === b.Proveedor)?.Nombre_Proveedor || '';
-            aValue = provA;
-            bValue = provB;
-        }
+      if (sortColumn === "STOCK") {
+        aValue = parseNestedObject(a.STOCK, { actual: 0 }).actual;
+        bValue = parseNestedObject(b.STOCK, { actual: 0 }).actual;
+      } else if (sortColumn === "Proveedor") {
+        const provA = Proveedores.find(p => p._id === a.Proveedor)?.Nombre_Proveedor || '';
+        const provB = Proveedores.find(p => p._id === b.Proveedor)?.Nombre_Proveedor || '';
+        aValue = provA;
+        bValue = provB;
+      }
 
-        if (typeof aValue === 'string' && !isNaN(parseFloat(aValue)) && typeof bValue === 'string' && !isNaN(parseFloat(bValue))) {
-            aValue = parseFloat(aValue);
-            bValue = parseFloat(bValue);
-        } else {
-            aValue = String(aValue || '').toLowerCase();
-            bValue = String(bValue || '').toLowerCase();
-        }
+      if (typeof aValue === 'string' && !isNaN(parseFloat(aValue)) && typeof bValue === 'string' && !isNaN(parseFloat(bValue))) {
+        aValue = parseFloat(aValue);
+        bValue = parseFloat(bValue);
+      } else {
+        aValue = String(aValue || '').toLowerCase();
+        bValue = String(bValue || '').toLowerCase();
+      }
 
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
     });
     return sortable;
   }, [filteredProducts, sortColumn, sortDirection, Proveedores]);
@@ -388,9 +388,9 @@ export function TableViewInventario({ products, currentType }) {
     let currentValue = '';
     const keys = name.split('.');
     if (keys.length > 1) {
-        currentValue = item[keys[0]] ? (item[keys[0]][keys[1]] ?? '') : '';
+      currentValue = item[keys[0]] ? (item[keys[0]][keys[1]] ?? '') : '';
     } else {
-        currentValue = item[name] ?? '';
+      currentValue = item[name] ?? '';
     }
 
     const onChangeHandler = (e) => handleChange(index, name, type === 'checkbox' ? e.target.checked : e.target.value);
@@ -406,7 +406,7 @@ export function TableViewInventario({ products, currentType }) {
     };
 
     if (type === 'checkbox') {
-      return <input type="checkbox" checked={!!currentValue} onChange={onChangeHandler} onBlur={onBlurHandler} className="h-4 w-4"/>;
+      return <input type="checkbox" checked={!!currentValue} onChange={onChangeHandler} onBlur={onBlurHandler} className="h-4 w-4" />;
     }
 
     if (type === "select") {
@@ -466,19 +466,42 @@ export function TableViewInventario({ products, currentType }) {
 
           case 'cuidadoES':
           case 'cuidadoEN':
-            return  <CuidadoVariations showEdit={showEdit} isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} /> 
+            return <CuidadoVariations showEdit={showEdit} isEnglish={key.includes('EN')} viewName={"Inventario"} product={item} />
 
           case 'grupo':
-            return showEdit ? renderEditableCell(originalIndex, col.key, "select", CATEGORIES.map(c => ({value: c, label: c}))) : <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO}</span>;
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", CATEGORIES.map(c => ({ value: c, label: c }))) : <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{item.GRUPO}</span>;
 
           case 'subGrupo':
-            return showEdit ? renderEditableCell(originalIndex, col.key, "select", SUB_CATEGORIES.map(c => ({value: c, label: c}))) : <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.SUB_GRUPO}</span>;
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", SUB_CATEGORIES.map(c => ({ value: c, label: c }))) : <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">{item.SUB_GRUPO}</span>;
 
           case 'proveedor':
-            return showEdit ? renderEditableCell(originalIndex, col.key, "select", Proveedores.map(p => ({value: p._id, label: p.Nombre_Proveedor}))) : <span>{Proveedores.find(p => p._id === item.Proveedor)?.Nombre_Proveedor || 'N/A'}</span>;
+            return showEdit ? renderEditableCell(originalIndex, col.key, "select", Proveedores.map(p => ({ value: p._id, label: p.Nombre_Proveedor }))) : <span>{Proveedores.find(p => p._id === item.Proveedor)?.Nombre_Proveedor || 'N/A'}</span>;
 
           case 'unidades':
-            return showEdit ? renderEditableCell(originalIndex, col.key, "select", unidades.map(u => ({value: u, label: u}))) : <span>{item[col.key]}</span>;
+          case 'unidades':
+            if (showEdit) {
+              return renderEditableCell(originalIndex, col.key, "select", unidades.map(u => ({ value: u, label: u })));
+            }
+
+            let displayUnits = item[col.key];
+            const isUnitsInvalid = !displayUnits || displayUnits === 'NaN' || displayUnits === 'null';
+
+            if (isUnitsInvalid && item.Receta) {
+              // Try to find in Menu Recipes
+              let foundRecipe = recetasMenu.find(r => r._id === item.Receta);
+              // If not found, try Production Recipes
+              if (!foundRecipe) {
+                foundRecipe = recetasProduccion.find(r => r._id === item.Receta);
+              }
+
+              if (foundRecipe && foundRecipe.rendimiento) {
+                try {
+                  const rend = JSON.parse(foundRecipe.rendimiento);
+                  if (rend.unidades) displayUnits = rend.unidades;
+                } catch (e) { }
+              }
+            }
+            return <span>{displayUnits || 'N/A'}</span>;
 
           case 'estado':
             return showEdit ? <div className="flex gap-1">{/* usar nuestro handler que hace enqueue */}<StatusButtonGroup item={item} /></div> : <span className={`px-2 py-1 rounded-full text-xs ${item.Estado === 'OK' || item.Estado === 'PC' || item.Estado === 'PP' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{item.Estado}</span>;
@@ -495,8 +518,8 @@ export function TableViewInventario({ products, currentType }) {
           case 'almacenamiento':
             return (
               <div className="space-y-1">
-                <div>Alm: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.ALMACENAMIENTO", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.ALMACENAMIENTO}</span>}</div>
-                <div>Bod: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.BODEGA", "select", BODEGA.map(b => ({value: b, label: b}))) : <span>{item.ALMACENAMIENTO?.BODEGA}</span>}</div>
+                <div>Alm: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.ALMACENAMIENTO", "select", BODEGA.map(b => ({ value: b, label: b }))) : <span>{item.ALMACENAMIENTO?.ALMACENAMIENTO}</span>}</div>
+                <div>Bod: {showEdit ? renderEditableCell(originalIndex, "ALMACENAMIENTO.BODEGA", "select", BODEGA.map(b => ({ value: b, label: b }))) : <span>{item.ALMACENAMIENTO?.BODEGA}</span>}</div>
               </div>
             );
 
@@ -522,34 +545,34 @@ export function TableViewInventario({ products, currentType }) {
           case 'acciones':
             return (
               <div className="flex gap-1">
-                <Button onClick={() => handleDelete(item)} 
-                className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
+                <Button onClick={() => handleDelete(item)}
+                  className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
                 {
-                currentType === ItemsAlmacen  && 
-                (
-                  <Button asChild 
-                  
-                className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
-                       <a
-                      href={`/item/${item._id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0" 
-                      title="Ver Detalles del Item"
-                    >
-                      📦
-                    </a>
-                  </Button>
-                )}
+                  currentType === ItemsAlmacen &&
+                  (
+                    <Button asChild
+
+                      className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                      <a
+                        href={`/item/${item._id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0"
+                        title="Ver Detalles del Item"
+                      >
+                        📦
+                      </a>
+                    </Button>
+                  )}
 
                 {(currentType === ProduccionInterna || currentType === MenuItems) && item.Receta && (
-                  <Button asChild 
-                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
-                    <a 
-                      href={`/receta/${item.Receta}`} 
-                      target="_blank" 
+                  <Button asChild
+                    className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                    <a
+                      href={`/receta/${item.Receta}`}
+                      target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0" 
+                      className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0"
                     >
                       📕
                     </a>
@@ -586,112 +609,112 @@ export function TableViewInventario({ products, currentType }) {
     });
 
     const getStatusClass = (status, isActive) => {
-        if (isActive) {
-            return ((status === 'OK'  ? "bg-green-500 text-white" : "bg-red-500 text-white") ||( (status === 'PC' || status === 'PP')? "bg-red-500 text-white" : "bg-red-500 text-white"))
-        }
-        return "bg-gray-200 text-gray-700 hover:bg-gray-300";
+      if (isActive) {
+        return ((status === 'OK' ? "bg-green-500 text-white" : "bg-red-500 text-white") || ((status === 'PC' || status === 'PP') ? "bg-red-500 text-white" : "bg-red-500 text-white"))
+      }
+      return "bg-gray-200 text-gray-700 hover:bg-gray-300";
     };
 
     return (
-        <div className="flex gap-1">
-            {statuses.map((status) => (
-                <button
-                    key={status}
-                    type="button"
-                    onClick={() => handleStatusChange(item._id, status)}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${getStatusClass(status, item.Estado === status)}`}
-                >
-                    {status}
-                </button>
-            ))}
-        </div>
+      <div className="flex gap-1">
+        {statuses.map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => handleStatusChange(item._id, status)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${getStatusClass(status, item.Estado === status)}`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
     );
   };
 
   return (
     <div className="w-full">
-        {/* Panel de filtros y acciones */}
-        <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
-            <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-gray-500 bg-gray-50" />
-                    <input type="text" placeholder="Buscar... " value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm" />
-                </div>
-                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border  bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
-                    <option value="">Todos los grupos</option>
-                    {uniqueCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-                <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
-                    <option  className="bg-gray-50" value="">Todos los estados</option>
-                    {uniqueEstados.map(est => <option key={est} value={est}>{est}</option>)}
-                </select>
-                {currentType !== MenuItems && (
-                     <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
-                        <option value="">Todo Almacenamiento</option>
-                        {uniqueAlmacenamiento.map(alm => <option key={alm} value={alm}>{alm}</option>)}
-                    </select>
-                )}
-                 {currentType === ItemsAlmacen && (
-                    <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
-                        <option value="">Todos los proveedores</option>
-                        {Proveedores.map(prov => <option key={prov._id} value={prov._id}>{prov.Nombre_Proveedor}</option>)}
-                    </select>
-                )}
-                <Button onClick={() => setShowColumnSelector(true)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm">📋 Columnas</Button>
+      {/* Panel de filtros y acciones */}
+      <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-gray-500 bg-gray-50" />
+            <input type="text" placeholder="Buscar... " value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm" />
+          </div>
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border  bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
+            <option value="">Todos los grupos</option>
+            {uniqueCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+          <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
+            <option className="bg-gray-50" value="">Todos los estados</option>
+            {uniqueEstados.map(est => <option key={est} value={est}>{est}</option>)}
+          </select>
+          {currentType !== MenuItems && (
+            <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
+              <option value="">Todo Almacenamiento</option>
+              {uniqueAlmacenamiento.map(alm => <option key={alm} value={alm}>{alm}</option>)}
+            </select>
+          )}
+          {currentType === ItemsAlmacen && (
+            <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
+              <option value="">Todos los proveedores</option>
+              {Proveedores.map(prov => <option key={prov._id} value={prov._id}>{prov.Nombre_Proveedor}</option>)}
+            </select>
+          )}
+          <Button onClick={() => setShowColumnSelector(true)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm">📋 Columnas</Button>
 
-                <div className="flex-grow"></div>
+          <div className="flex-grow"></div>
 
-                {/* REMOVIDO: Botón de "Guardar Cambios" ya no hace falta: guardamos en onBlur */}
-            </div>
+          {/* REMOVIDO: Botón de "Guardar Cambios" ya no hace falta: guardamos en onBlur */}
         </div>
+      </div>
 
-        {/* Contenedor de la Tabla */}
-        <div className="overflow-x-auto border bg-gray-50 border-gray-200 rounded-lg">
-            <table className="w-full bg-white">
-            <thead className="bg-gray-100 border-b border-gray-200">
-                <tr>
-                {renderTableHeaders()}
-                </tr>
-            </thead>
-            <tbody>
-                {renderTableRows()}
-            </tbody>
-            </table>
-        </div>
+      {/* Contenedor de la Tabla */}
+      <div className="overflow-x-auto border bg-gray-50 border-gray-200 rounded-lg">
+        <table className="w-full bg-white">
+          <thead className="bg-gray-100 border-b border-gray-200">
+            <tr>
+              {renderTableHeaders()}
+            </tr>
+          </thead>
+          <tbody>
+            {renderTableRows()}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Modal para seleccionar columnas */}
-        {showColumnSelector && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800">Personalizar Columnas</h3>
-                        <button onClick={() => setShowColumnSelector(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
-                    </div>
-                    <div className="flex gap-2 mb-4">
-                        <Button onClick={() => toggleAllColumns(true)} variant="outline">Mostrar Todas</Button>
-                        <Button onClick={() => toggleAllColumns(false)} variant="outline">Ocultar Todas</Button>
-                        <Button onClick={resetToDefault} variant="outline">Por Defecto</Button>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto space-y-2 border rounded-lg p-3">
-                        {Object.entries(availableColumns).map(([key, column]) => (
-                            <div key={key} className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id={`col-${key}`}
-                                    checked={visibleColumns[key] || false}
-                                    onChange={() => !column.fixed && toggleColumn(key)}
-                                    disabled={column.fixed}
-                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                <label htmlFor={`col-${key}`} className={`ml-2 text-sm ${column.fixed ? 'text-gray-500' : 'text-gray-700'}`}>
-                                    {column.label} {column.fixed && '(fija)'}
-                                </label>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+      {/* Modal para seleccionar columnas */}
+      {showColumnSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-800">Personalizar Columnas</h3>
+              <button onClick={() => setShowColumnSelector(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-        )}
+            <div className="flex gap-2 mb-4">
+              <Button onClick={() => toggleAllColumns(true)} variant="outline">Mostrar Todas</Button>
+              <Button onClick={() => toggleAllColumns(false)} variant="outline">Ocultar Todas</Button>
+              <Button onClick={resetToDefault} variant="outline">Por Defecto</Button>
+            </div>
+            <div className="max-h-80 overflow-y-auto space-y-2 border rounded-lg p-3">
+              {Object.entries(availableColumns).map(([key, column]) => (
+                <div key={key} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`col-${key}`}
+                    checked={visibleColumns[key] || false}
+                    onChange={() => !column.fixed && toggleColumn(key)}
+                    disabled={column.fixed}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor={`col-${key}`} className={`ml-2 text-sm ${column.fixed ? 'text-gray-500' : 'text-gray-700'}`}>
+                    {column.label} {column.fixed && '(fija)'}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

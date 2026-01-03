@@ -15,12 +15,12 @@ import {
   DESECHABLES,
   ENLATADOS,
   DESAYUNO,
-  SMMV_COL_2025_MINU
+  SMMV_COL_2026_MINU
 } from "./actions-types";
 
 // Valor fijo por unidad de tiempo
-const COSTO_POR_TIEMPO_MANODEOBRA = (SMMV_COL_2025_MINU * 2);
-const COSTO_POR_TIEMPO_SERVICIOS = SMMV_COL_2025_MINU;
+const COSTO_POR_TIEMPO_MANODEOBRA = (SMMV_COL_2026_MINU);
+const COSTO_POR_TIEMPO_SERVICIOS = (1100000 / (31 * 12 * 60));
 const COSTO_POR_TIEMPO = COSTO_POR_TIEMPO_SERVICIOS + COSTO_POR_TIEMPO_MANODEOBRA;
 
 export function recetaMariaPaula(
@@ -106,10 +106,11 @@ export function recetaMariaPaula(
 
     // Calcular el Costo Materia Prima (CMP)
     const CMP = total / porciones;
+    const CMO = costoTiempo / (porciones ? porciones : 1);
 
     const PPV = CMP / (porcentajeCostoDirecto);
-    const PPVii = PPV + PPV * indiceInflacionario;
-    const IB = PPV - CMP - costoTiempo;
+    const PPVii = PPV + (PPV * indiceInflacionario);
+    const IB = PPV - CMP - CMO;
     // const IB = PPV - CMP;
 
     // Agregar impoconsumo
@@ -131,6 +132,7 @@ export function recetaMariaPaula(
         vIB: Number(IB.toFixed(0)),
         pIB: Number((IB / precioFinal).toFixed(2)),
         vCMP: Number(CMP.toFixed(0)),
+        vCMO: Number(CMO.toFixed(0)),
         pCMPInicial: Number(porcentajeCostoDirecto),
         pCMPReal: Number(pCostoReal.toFixed(2)),
         PPVii: Number(PPVii.toFixed(0)),

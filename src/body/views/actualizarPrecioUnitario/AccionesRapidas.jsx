@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Copy, RefreshCw, PlusCircle, X, Save, ShoppingCart, Hammer, FileText, UserPlus, FileJson, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { copyPromptToClipboard } from "../../../utils/prompts";
+import MacroEditorItems from "./MacroEditorItems";
 
 function AccionesRapidas({ currentType: propType }) {
   // Normalize type: "ITEMS" string -> ItemsAlmacen constant
@@ -38,6 +39,7 @@ function AccionesRapidas({ currentType: propType }) {
   const [jsonImportVisible, setJsonImportVisible] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
+  const [macroEditorVisible, setMacroEditorVisible] = useState(false);
 
   // Initial Data
   const initialItemData = {
@@ -229,6 +231,7 @@ function AccionesRapidas({ currentType: propType }) {
             Recalcular Precios
           </Button>
 
+
           {currentType === ProduccionInterna && (
             <Button
               variant="outline"
@@ -240,8 +243,24 @@ function AccionesRapidas({ currentType: propType }) {
             </Button>
           )}
 
+          <Button
+            variant={macroEditorVisible ? "default" : "outline"}
+            className={macroEditorVisible ? "bg-amber-600 text-white" : "border-amber-300 text-amber-700 hover:bg-amber-50"}
+            onClick={() => setMacroEditorVisible(true)}
+          >
+            <Hammer className="h-4 w-4 mr-2" />
+            Macro Editor de armas de inventario
+          </Button>
+
         </div>
       </div>
+
+      {macroEditorVisible && (
+        <MacroEditorItems
+          onClose={() => setMacroEditorVisible(false)}
+          currentType={currentType}
+        />
+      )}
 
       {/* JSON IMPORT SECTION */}
       {jsonImportVisible && (

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { COMPRAS, ITEMS, MENU, RECETAS_MENU, PRODUCCION } from "../../../redux/actions-types";
+import { COMPRAS, ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
+
+import ProductosVendidosRentabilidad from "./ProductosVendidosRentabilidad";
 import MesResumenStats from "./MesResumenStats";
-import { fetchAndProcessSales } from "./slicer";
-import Predict from "./Predict";
 
 function MesResumen() {
   const dispatch = useDispatch();
@@ -15,13 +15,12 @@ function MesResumen() {
   const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
   const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]);
 
-  // --- Estados para el modal Predict ---
-  const [showPredict, setShowPredict] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+
 
   const allMenu = useSelector((state) => state.allMenu);
   const allItems = useSelector((state) => state.allItems);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
+  const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion);
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) => state.allCompras);
 
@@ -50,6 +49,7 @@ function MesResumen() {
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(RECETAS_MENU)),
+          dispatch(getAllFromTable(RECETAS_PRODUCCION)),
           dispatch(getAllFromTable(COMPRAS)),
         ]);
 
@@ -107,7 +107,7 @@ function MesResumen() {
     fetchAllData();
   }, [dispatch, selectedMonth, selectedYear]);
 
-  const [showFinancials, setShowFinancials] = useState(false);
+
 
   const datosCalculadosDelMes = useMemo(() => {
     let total = 0;
@@ -205,70 +205,69 @@ function MesResumen() {
       return;
     }
 
-    const calculateRecipeValues = async () => {
+    const calculateRecipeValues = () => {
       // console.log(allMenu);
 
-      const updatedProductos = await Promise.all(
-        datosCalculadosDelMes.productosVendidos.map(async (producto) => {
+      const updatedProductos = datosCalculadosDelMes.productosVendidos.map((producto) => {
 
-          let recetaData = null;
-          let consolidatedCost = 0;
-          let ingredients = [];
+        let recetaData = null;
+        let consolidatedCost = 0;
+        let ingredients = [];
 
-          if (producto.recetaId !== "N/A") {
-            try {
-              const menuItem = allMenu.find((item) => item.Receta === producto.recetaId);
-              if (menuItem) {
-                // Determine source table based on what we find
-                recetaData = await getRecepie(menuItem.Receta, "Recetas");
-                let source = "Recetas";
-                if (!recetaData) {
-                  recetaData = await getRecepie(menuItem.Receta, "RecetasProduccion");
-                  source = "RecetasProduccion";
+        if (producto.recetaId !== "N/A") {
+          try {
+            const menuItem = allMenu.find((item) => item.Receta === producto.recetaId);
+            if (menuItem) {
+              // Try to find the recipe in the Redux store (Menu or Produccion)
+              recetaData = allRecetasMenu.find(r => r._id === menuItem.Receta) || allRecetasProduccion.find(r => r._id === menuItem.Receta);
+
+              if (recetaData) {
+                // Use stored cost instead of recalculating
+                if (recetaData.costo) {
+                  try {
+                    const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
+
+                    if (typeof costData === 'number') {
+                      // Case for pure production recipes sometimes stored as number
+                      consolidatedCost = costData;
+                    } else if (costData && (costData.vCMP || costData.vCMO)) {
+                      // Case for detailed object cost (vCMP + vCMO)
+                      consolidatedCost = (costData.vCMP || 0) + (costData.vCMO || 0);
+                    }
+                  } catch (e) {
+                    console.warn("Could not parse cost for recipe:", recetaData.legacyName);
+                  }
                 }
 
-                if (recetaData) {
-                  const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
-                  // Note: We use 1 portion for unit cost calculation
-                  const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, source);
-                  consolidatedCost = receta.consolidado || 0;
-                  if (receta.detalles && receta.detalles.vCMP) consolidatedCost = receta.detalles.vCMP; // Use Material Cost if available, otherwise consolidated
-                  ingredients = trimmedRecepie;
-                }
+                // Still trim ingredients for the "Predict" modal usage if needed
+                ingredients = trimRecepie([...allItems, ...allProduccion], recetaData);
               }
-            } catch (error) {
-              console.error(`Error procesando receta para ${producto.nombre}:`, error);
             }
+          } catch (error) {
+            console.error(`Error procesando receta para ${producto.nombre}:`, error);
           }
+        }
 
-          const totalCosto = consolidatedCost * producto.cantidad;
-          const totalUtilidad = producto.totalIngreso - totalCosto;
+        const totalCosto = consolidatedCost * producto.cantidad;
+        const totalUtilidad = producto.totalIngreso - totalCosto;
 
-          return {
-            ...producto,
-            recetaValor: consolidatedCost,
-            ingredientes: ingredients,
-            totalCosto: totalCosto,
-            totalUtilidad: totalUtilidad
-          };
-        })
-      );
+        return {
+          ...producto,
+          recetaValor: consolidatedCost,
+          ingredientes: ingredients,
+          totalCosto: totalCosto,
+          totalUtilidad: totalUtilidad
+        };
+      });
+
       setProductosVendidosConReceta(updatedProductos);
     };
 
     calculateRecipeValues();
-  }, [datosCalculadosDelMes.productosVendidos, allMenu, allItems, allProduccion]);
+  }, [datosCalculadosDelMes.productosVendidos, allMenu, allItems, allProduccion, allRecetasMenu, allRecetasProduccion]);
 
 
-  const handleRecetaClick = (item) => {
-    setSelectedItem(item);
-    setShowPredict(true);
-  };
 
-  const handleClosePredict = () => {
-    setShowPredict(false);
-    setSelectedItem(null);
-  };
 
   const handleDateChange = (e) => {
     setHoy(e.target.value);
@@ -347,94 +346,17 @@ function MesResumen() {
           </div>
         </div>
 
-        <div className="p-6 bg-white rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">Productos Vendidos en el Mes</h3>
-            <button
-              onClick={() => setShowFinancials(!showFinancials)}
-              className={`px-3 py-1 rounded text-xs font-bold transition-colors ${showFinancials ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-            >
-              {showFinancials ? 'Ocultar Rentabilidad' : 'Ver Rentabilidad'}
-            </button>
-          </div>
-          <div className="overflow-x-auto max-h-96">
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Producto</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Cant.</th>
-
-                  {showFinancials ? (
-                    <>
-                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Ingresos Tot.</th>
-                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Costo Tot.</th>
-                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Ganancia</th>
-                      <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Costo Unit.</th>
-                    </>
-                  ) : (
-                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Acción</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {showFinancials && (
-                  <tr className="bg-blue-50 font-bold border-b-2 border-blue-200">
-                    <td className="py-3 px-4 text-sm text-blue-800">TOTALES</td>
-                    <td className="py-3 px-4 text-center text-sm text-blue-800">
-                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.cantidad || 0), 0)}
-                    </td>
-                    <td className="py-3 px-4 text-right text-sm text-green-700">
-                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.totalIngreso || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="py-3 px-4 text-right text-sm text-red-600">
-                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.totalCosto || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="py-3 px-4 text-right text-sm text-blue-700">
-                      {productosVendidosConReceta.reduce((acc, p) => acc + (p.totalUtilidad || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="py-3 px-4"></td>
-                  </tr>
-                )}
-                {productosVendidosConReceta.map((producto, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 border-b text-sm text-gray-700 max-w-[150px] truncate" title={producto.nombre}>{producto.nombre}</td>
-                    <td className="py-3 px-4 border-b text-sm text-center font-bold">{producto.cantidad}</td>
-
-                    {showFinancials ? (
-                      <>
-                        <td className="py-3 px-4 border-b text-sm text-green-600 font-semibold text-right">{producto.totalIngreso?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                        <td className="py-3 px-4 border-b text-sm text-red-500 text-right">{producto.totalCosto?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                        <td className={`py-3 px-4 border-b text-sm text-right font-bold ${(producto.totalUtilidad || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>{producto.totalUtilidad?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                        <td className="py-3 px-4 border-b text-xs text-gray-500 text-right">{producto.recetaValor?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                      </>
-                    ) : (
-                      <td className="py-3 px-4 border-b text-sm">
-                        <button
-                          onClick={() => handleRecetaClick(producto)}
-                          className="bg-yellow-500 text-white text-sm w-[30px] rounded"
-                          title="Ver predicción y receta"
-                        >
-                          📕
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="h-full">
+          <ProductosVendidosRentabilidad
+            productos={productosVendidosConReceta}
+            ventas={ventas}
+            targetMonth={selectedMonth}
+            targetYear={selectedYear}
+          />
         </div>
       </div>
 
-      {showPredict && selectedItem && (
-        <Predict
-          item={selectedItem}
-          onClose={handleClosePredict}
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          ventas={ventas}
-        />
-      )}
+
 
       <button
         onClick={handleFetchSales}

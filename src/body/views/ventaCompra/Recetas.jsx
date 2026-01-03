@@ -4,6 +4,7 @@ import { MENU, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from "../../../red
 import { getAllFromTable, createRecipeForProduct } from "../../../redux/actions";
 import RecetasStats from "./RecetasStats";
 import MacroAgregador from "./MacroAgregador";
+import MacroEditorRecipes from "./MacroEditorRecipes";
 
 function Recetas() {
   const dispatch = useDispatch();
@@ -17,6 +18,7 @@ function Recetas() {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [productType, setProductType] = useState(''); // 'Menu' o 'Produccion'
   const [showMacroAgregador, setShowMacroAgregador] = useState(false);
+  const [showMacroEditorRecipes, setShowMacroEditorRecipes] = useState(false);
 
   // Searchable Dropdown States
   const [searchTerm, setSearchTerm] = useState('');
@@ -176,7 +178,13 @@ function Recetas() {
           </button>
         </div>
       </div>
-      <div className="flex justify-end mb-4 sticky top-4 z-10">
+      <div className="flex justify-end mb-4 sticky top-4 z-10 gap-4">
+        <button
+          onClick={() => setShowMacroEditorRecipes(true)}
+          className="px-6 py-3 bg-amber-600 text-white font-bold rounded-full shadow-lg hover:bg-amber-700 transition transform hover:scale-105"
+        >
+          ⏱️ Macro Editor de Recetas
+        </button>
         <button
           onClick={() => setShowMacroAgregador(true)}
           className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition transform hover:scale-105"
@@ -187,6 +195,7 @@ function Recetas() {
 
       <RecetasStats />
       {showMacroAgregador && <MacroAgregador onClose={() => setShowMacroAgregador(false)} />}
+      {showMacroEditorRecipes && <MacroEditorRecipes onClose={() => setShowMacroEditorRecipes(false)} />}
     </div >
   );
 }

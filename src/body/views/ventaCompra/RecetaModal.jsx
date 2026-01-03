@@ -141,6 +141,159 @@ const RecipeSection = ({ title, items, isEditing, onCheck, onSave }) => (
     </div>
 );
 
+// --- Componente auxiliar: Editor de Emplatado (JSON vs Text) ---
+const EmplatadoEditor = ({ value, onSave, isEditable, placeholder, disabled }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [steps, setSteps] = useState([]);
+    const [isJson, setIsJson] = useState(false);
+    const [rawText, setRawText] = useState("");
+
+    useEffect(() => {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) {
+                setSteps(parsed.sort((a, b) => a.orden - b.orden));
+                setIsJson(true);
+            } else {
+                // Si es un JSON válido pero no es array, o si falla el parseo
+                throw new Error("Formato no compatible con lista de pasos");
+            }
+        } catch (e) {
+            setIsJson(false);
+            setRawText(value || "");
+        }
+    }, [value]);
+
+    const handleSaveSteps = () => {
+        const jsonString = JSON.stringify(steps);
+        onSave(jsonString);
+        setIsEditing(false);
+    };
+
+    const handleSaveRaw = () => {
+        onSave(rawText);
+        setIsEditing(false);
+    };
+
+    const handleAddStep = () => {
+        setSteps([...steps, { orden: steps.length, proceso: "" }]);
+    };
+
+    const handleUpdateStep = (index, newVal) => {
+        const newSteps = [...steps];
+        newSteps[index].proceso = newVal;
+        setSteps(newSteps);
+    };
+
+    const handleRemoveStep = (index) => {
+        const newSteps = steps.filter((_, i) => i !== index).map((s, i) => ({ ...s, orden: i }));
+        setSteps(newSteps);
+    };
+
+    const handleConvertToSteps = () => {
+        if (window.confirm("¿Convertir texto actual a lista de pasos?")) {
+            setSteps([{ orden: 0, proceso: rawText }]);
+            setIsJson(true);
+        }
+    }
+
+    if (!isEditable) {
+        if (isJson) {
+            return (
+                <div className="space-y-1">
+                    {steps.map((step, idx) => (
+                        <div key={idx} className="flex gap-2 text-sm">
+                            <span className="font-bold text-gray-500 min-w-[20px]">{idx + 1}.</span>
+                            <span>{step.proceso}</span>
+                        </div>
+                    ))}
+                    {steps.length === 0 && <span className="text-gray-400 italic">Sin pasos definidos.</span>}
+                </div>
+            );
+        } else {
+            return <div className="text-sm whitespace-pre-wrap">{rawText || <span className="text-gray-400 italic">{placeholder}</span>}</div>;
+        }
+    }
+
+    // Modo Edición activo (general, no específico del componente si no se ha clickeado editar)
+    // Pero espera, RecetaModal pasa 'isEditable={permanentEditMode}'.
+    // Así que si permanentEditMode es true, mostramos la UI de edición.
+
+    if (isEditing) {
+        if (isJson) {
+            return (
+                <div className="space-y-2 border p-2 rounded bg-white">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-500">Editando Pasos</span>
+                        <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-6 w-6 p-0 text-red-500">✕</Button>
+                    </div>
+                    {steps.map((step, idx) => (
+                        <div key={idx} className="flex gap-2 items-start">
+                            <span className="font-bold text-xs mt-2 w-4 text-center">{idx + 1}</span>
+                            <textarea
+                                className="flex-1 p-1 border rounded text-sm min-h-[40px] resize-y"
+                                value={step.proceso}
+                                onChange={(e) => handleUpdateStep(idx, e.target.value)}
+                                placeholder={`Paso ${idx + 1}...`}
+                            />
+                            <Button size="sm" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => handleRemoveStep(idx)}>🗑️</Button>
+                        </div>
+                    ))}
+                    <Button size="sm" variant="outline" className="w-full text-xs dashed border-gray-400 text-gray-500" onClick={handleAddStep}>+ Agregar Paso</Button>
+                    <div className="flex justify-end gap-2 mt-2">
+                        <Button size="sm" onClick={handleSaveSteps} disabled={disabled} className="bg-green-600 text-white hover:bg-green-700">Guardar Cambios</Button>
+                    </div>
+                </div>
+            );
+        } else {
+            return (
+                <div className="space-y-2">
+                    <textarea
+                        className="w-full p-2 border rounded text-sm min-h-[60px]"
+                        value={rawText}
+                        onChange={(e) => setRawText(e.target.value)}
+                        placeholder={placeholder}
+                    />
+                    <div className="flex justify-between items-center">
+                        <Button size="sm" variant="outline" onClick={handleConvertToSteps} className="text-xs">Convertir a Lista</Button>
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>Cancelar</Button>
+                            <Button size="sm" onClick={handleSaveRaw} disabled={disabled} className="bg-green-600 text-white">Guardar</Button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    return (
+        <div className="group relative border border-transparent hover:border-gray-200 rounded p-1 transition-all">
+            {isJson ? (
+                <div className="space-y-1">
+                    {steps.map((step, idx) => (
+                        <div key={idx} className="flex gap-2 text-sm">
+                            <span className="font-bold text-gray-500 min-w-[20px]">{idx + 1}.</span>
+                            <span>{step.proceso}</span>
+                        </div>
+                    ))}
+                    {steps.length === 0 && <span className="text-gray-400 italic">Sin pasos definidos.</span>}
+                </div>
+            ) : (
+                <div className="text-sm whitespace-pre-wrap">{rawText || <span className="text-gray-400 italic">{placeholder}</span>}</div>
+            )}
+            <Button
+                size="sm"
+                variant="ghost"
+                className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white shadow-sm border h-6 w-6 p-0"
+                onClick={() => setIsEditing(true)}
+                title="Editar Emplatado"
+            >
+                ✏️
+            </Button>
+        </div>
+    );
+};
+
 // --- COMPONENTE PRINCIPAL ---
 function RecetaModal({ item, onClose }) {
     const { id: paramId } = useParams();
@@ -311,7 +464,44 @@ function RecetaModal({ item, onClose }) {
     const updateField = async (fieldsToUpdate) => { if (!permanentEditMode || !receta || !recetaSource) return; setIsUpdating(true); try { const payload = { ...fieldsToUpdate, actualizacion: new Date().toISOString() }; const result = await dispatch(updateItem(receta._id, payload, recetaSource)); if (result) setReceta(prev => ({ ...prev, ...payload })); else throw new Error('DB Error'); } catch (error) { alert('Error: ' + error.message); } finally { setIsUpdating(false); } };
     const updateProcessOrNote = (type, index, newValue) => updateField({ [type === 'process' ? `proces${index}` : `nota${index}`]: newValue });
     const updateInfoField = (fieldName, newValue) => updateField({ [fieldName]: newValue });
-    const updateRendimiento = async () => { const rendimientoData = { porcion: Number(rendimientoPorcion) || 1, cantidad: Number(rendimientoCantidad), unidades: rendimientoUnidades }; await updateField({ rendimiento: JSON.stringify(rendimientoData) }); };
+    const updateRendimiento = async () => {
+        const rendimientoData = { porcion: Number(rendimientoPorcion) || 1, cantidad: Number(rendimientoCantidad), unidades: rendimientoUnidades };
+
+        setIsUpdating(true);
+        try {
+            // 1. Update Receta
+            await dispatch(updateItem(receta._id, { rendimiento: JSON.stringify(rendimientoData), actualizacion: new Date().toISOString() }, recetaSource));
+            setReceta(prev => ({ ...prev, rendimiento: JSON.stringify(rendimientoData) }));
+
+            // 2. Update Parent Item (Inventory/Production)
+            if (receta.forId) {
+                // Determine target table based on recetaSource or try to find it
+                // Logic based on RecetaModal initialization: 
+                // if (recetaSource === "RecetasProduccion") -> Parent is likely ProduccionInterna
+                // if (recetaSource === "Recetas") -> Parent might be Menu (less likely to have Cantidad/Unidades) or Items?
+
+                // Assuming "Crema de queso dulce" is ProduccionInterna (which usually has Costo/Cantidad/Unidades)
+                // We update "Cantidad" and "UNIDADES".
+
+                let targetTable = null;
+                if (recetaSource === "RecetasProduccion") targetTable = "ProduccionInterna";
+                // If it's "Recetas", it might differ. But user specifically asked for "Inventory cards" which implies ProduccionInterna or Items.
+
+                if (targetTable) {
+                    await dispatch(updateItem(receta.forId, {
+                        Cantidad: Number(rendimientoCantidad),
+                        UNIDADES: rendimientoUnidades
+                    }, targetTable));
+                }
+            }
+            alert("Rendimiento guardado y sincronizado.");
+        } catch (error) {
+            console.error(error);
+            alert("Error al guardar rendimiento.");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
     const updateImagenUrl = async () => { if (!receta.forId) return; setIsUpdating(true); try { const result = await dispatch(updateItem(receta.forId, { Foto: imagenUrl }, "Menu")); if (result) setFoto(imagenUrl); } catch (error) { alert('Error: ' + error.message); } finally { setIsUpdating(false); } };
     const addIngredient = (source) => { const newItem = { key: `new-${Date.now()}`, item_Id: "", nombre: "", originalQuantity: "", unidades: "", precioUnitario: 0, source, matches: [] }; if (source === 'Items') setEditableIngredientes(prev => [...prev, newItem]); else setEditableProduccion(prev => [...prev, newItem]); };
 
@@ -480,6 +670,7 @@ function RecetaModal({ item, onClose }) {
                                             <div className="flex justify-between p-1 bg-blue-50 rounded"><span>%CMP Estab.</span><span className="font-bold">{calculoDetalles.pCMPInicial}%</span></div>
                                             <div className="flex justify-between p-1 bg-blue-50 rounded"><span>%CMP Real</span><span className="font-bold">{calculoDetalles.pCMPReal}%</span></div>
                                             <div className="flex justify-between p-1 bg-green-50 rounded"><span>Valor CMP</span><span className="font-bold">{formatCurrency(calculoDetalles.vCMP)}</span></div>
+                                            <div className="flex justify-between p-1 bg-green-50 rounded"><span>Valor CMO</span><span className="font-bold">{formatCurrency(calculoDetalles.vCMO)}</span></div>
                                             <div className="flex justify-between p-1 bg-green-50 rounded"><span>Utilidad Bruta</span><span className="font-bold">{formatCurrency(calculoDetalles.vIB)}</span></div>
                                             <div className="flex justify-between p-1 bg-green-50 rounded"><span>% Utilidad Bruta</span><span className="font-bold">{calculoDetalles.pIB}%</span></div>
                                             <div className="flex justify-between p-2 mt-2 bg-yellow-100 rounded border"><span className="font-bold">Precio Venta Final</span><span className="font-bold text-lg">{formatCurrency(precioVentaFinal)}</span></div>
@@ -497,7 +688,7 @@ function RecetaModal({ item, onClose }) {
                         <div className="lg:col-span-1 space-y-4 text-sm">
                             <h3 className="text-lg font-semibold border-b pb-2 mb-3">Información Adicional</h3>
                             <div className="space-y-2"><label className="font-semibold text-sm text-gray-700">Autor:</label><EditableText value={receta.autor || ''} onSave={(value) => updateInfoField('autor', value)} isEditable={permanentEditMode} placeholder="Escribir autor..." multiline={false} disabled={isUpdating} /></div>
-                            <div className="space-y-2"><label className="font-semibold text-sm text-gray-700">Emplatado:</label><EditableText value={receta.emplatado || ''} onSave={(value) => updateInfoField('emplatado', value)} isEditable={permanentEditMode} placeholder="Describir emplatado..." multiline={true} disabled={isUpdating} /></div>
+                            <div className="space-y-2"><label className="font-semibold text-sm text-gray-700">Emplatado:</label><EmplatadoEditor value={receta.emplatado || ''} onSave={(value) => updateInfoField('emplatado', value)} isEditable={permanentEditMode} placeholder="Describir emplatado..." disabled={isUpdating} /></div>
                             <div className="space-y-2">
                                 <label className="font-semibold text-sm text-gray-700">Rendimiento:</label>
                                 {permanentEditMode ? (

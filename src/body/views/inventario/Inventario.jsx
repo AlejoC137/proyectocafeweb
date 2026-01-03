@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, MenuItems } from "../../../redux/actions-types";
+import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, MenuItems, RECETAS_MENU, RECETAS_PRODUCCION } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { CardGridInventarioMenu } from "@/components/ui/cardGridInventarioMenu";
@@ -26,6 +26,7 @@ function Inventario() {
   const Produccion = useSelector((state) => state.allProduccion || []);
   const showEdit = useSelector((state) => state.showEdit);
   const recetas = useSelector((state) => state.allRecetasMenu || []);
+  const recetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
 
   const filteredItems = {
     [ItemsAlmacen]: Items,
@@ -42,6 +43,8 @@ function Inventario() {
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(PROVEE)),
+          dispatch(getAllFromTable(RECETAS_MENU)),
+          dispatch(getAllFromTable(RECETAS_PRODUCCION)),
         ]);
         setLoading(false);
       } catch (error) {
@@ -97,11 +100,11 @@ function Inventario() {
       )}
 
       {/* Contenido principal del inventario */}
-      <ContentCard 
+      <ContentCard
         title={`Listado de ${currentType}`}
         actions={
-          <ViewToggle 
-            viewMode={viewMode} 
+          <ViewToggle
+            viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
         }
@@ -126,6 +129,8 @@ function Inventario() {
           <TableViewInventario
             products={filteredItems}
             currentType={currentType}
+            recetasMenu={recetas}
+            recetasProduccion={recetasProduccion}
           />
         )}
       </ContentCard>

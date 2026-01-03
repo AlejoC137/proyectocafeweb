@@ -160,6 +160,7 @@ function App() {
           <Route path="/staff-manager/:cc/editar-turnos" element={<EditarTurnosView />} />
           <Route path="/Model" element={<Model />} />
           <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
+          <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
           {/* Renderiza el componente que corresponde a la vista actual */}
           {/* Renderiza el BottomNav debajo del componente actual */}
         </Routes>

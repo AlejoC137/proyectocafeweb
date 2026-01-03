@@ -430,6 +430,7 @@ function calcularPrecioUnitario(item) {
   const costo = parseFloat(item.COSTO);
   const cantidad = parseFloat(item.CANTIDAD);
   let coor = parseFloat(item.COOR);
+  let merma = parseFloat(item.Merma);
 
   // Si coor no es un número válido (ej. falta en Producción), usar 1
   if (isNaN(coor)) {
@@ -438,7 +439,7 @@ function calcularPrecioUnitario(item) {
 
   if (!cantidad || cantidad === 0) return 0;
 
-  precioUnitario = (costo / cantidad) * ajusteInflacionario * coor;
+  precioUnitario = (costo / (cantidad - (merma && (cantidad * merma)))) * ajusteInflacionario * coor;
 
   return parseFloat(precioUnitario.toFixed(2));
 }

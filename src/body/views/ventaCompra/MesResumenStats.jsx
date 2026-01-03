@@ -1,6 +1,15 @@
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 
+
+const StatCard = ({ title, value, colorClass, subValue }) => (
+  <div className="bg-gray-50 p-3 rounded border border-gray-100">
+    <p className="text-xs text-gray-500 font-bold uppercase mb-1">{title}</p>
+    <p className={`text-lg font-bold ${colorClass}`}>{value}</p>
+    {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
+  </div>
+);
+
 const MesResumenStats = ({
   ventasRecepies,
   totalIngreso,
@@ -10,96 +19,44 @@ const MesResumenStats = ({
   totalEfectivo,
   totalTransferencia,
   totalCompras,
-  cantidadDeDias // Esta prop ahora espera el array completo de ventas del mes
+  cantidadDeDias
 }) => {
-  const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
-
-  // --- CÁLCULO AGREGADO DENTRO DEL COMPONENTE ---
-  // Se asegura de que la prop sea un array antes de procesarla.
   const ventas = Array.isArray(cantidadDeDias) ? cantidadDeDias : [];
-  
-  // 1. Extrae las fechas únicas del array de ventas.
   const fechasUnicas = new Set(ventas.map(venta => venta.Date));
-  
-  // 2. Cuenta cuántos días únicos hay.
   const numeroDeDias = fechasUnicas.size;
-  // --- FIN DEL CÁLCULO ---
 
   const totalCostoDirecto = useMemo(() => {
-    const recetasMap = new Map(allRecetasMenu.map(receta => [receta._id, receta]));
+    return ventasRecepies.reduce((acc, element) => acc + (element.totalCosto || 0), 0);
+  }, [ventasRecepies]);
 
-    return ventasRecepies.reduce((acc, element) => {
-      const recetaObj = recetasMap.get(element.recetaId);
-
-      if (recetaObj?.costo) {
-        try {
-          const data = JSON.parse(recetaObj.costo);
-          return acc + (data.vCMP * element.cantidad);
-        } catch (error) {
-          console.error("Error al parsear costo de receta:", error);
-          return acc;
-        }
-      }
-      return acc;
-    }, 0);
-
-  }, [ventasRecepies, allRecetasMenu]);
-
-  // 3. Calcula el promedio usando el número de días que acabamos de obtener.
   const promedioDiario = numeroDeDias > 0 ? totalIngreso / numeroDeDias : 0;
 
   const formatNumber = (number) => {
     if (isNaN(number)) return "0";
-    return number.toLocaleString('es-CO');
+    return number.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md mb-6 flex justify-between">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Resumen del Mes
-        </h2>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Ingreso del Mes (Pagado): </span>
-          <span className="text-green-600 font-bold">{formatNumber(totalIngreso)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Promedio de Ingreso por Día: </span>
-          <span className="text-green-500 font-bold">{formatNumber(promedioDiario)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Tip del Mes (Pagado): </span>
-          <span className="text-blue-600 font-bold">{formatNumber(totalTip)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Productos Vendidos: </span>
-          <span className="text-purple-600 font-bold">{totalProductosVendidos}</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Pagado con Tarjeta: </span>
-          <span className="text-yellow-600 font-bold">{formatNumber(totalTarjeta * 0.97)}$</span>
-          <span className="text-yellow-600 font-bold"> {'(-3% RDB)'}</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Pagado en Efectivo: </span>
-          <span className="text-yellow-600 font-bold">{formatNumber(totalEfectivo)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Pagado por Transferencia: </span>
-          <span className="text-yellow-600 font-bold">{formatNumber(totalTransferencia)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Costo directo: </span>
-          <span className="text-red-600 font-bold">{formatNumber(totalCostoDirecto)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Ipo Consumo (8%): </span>
-          <span className="text-red-600 font-bold">{formatNumber(totalIngreso * 0.08)}$</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          <span className="font-medium">Total Compras del Mes: </span>
-          <span className="text-red-600 font-bold">{formatNumber(totalCompras)}$</span>
-        </p>
+    <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+      <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Resumen del Mes</h2>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {/* Ingresos */}
+        <StatCard title="Ingreso Total" value={formatNumber(totalIngreso)} colorClass="text-green-600" subValue="Pagado" />
+        <StatCard title="Promedio Diario" value={formatNumber(promedioDiario)} colorClass="text-green-500" />
+
+        {/* Medios de Pago */}
+        <StatCard title="Tarjeta" value={formatNumber(totalTarjeta * 0.97)} colorClass="text-yellow-600" subValue="-3% Retención incluido" />
+        <StatCard title="Efectivo" value={formatNumber(totalEfectivo)} colorClass="text-yellow-600" />
+        <StatCard title="Transferencia" value={formatNumber(totalTransferencia)} colorClass="text-yellow-600" />
+
+        {/* Costos */}
+        <StatCard title="Costo Directo" value={formatNumber(totalCostoDirecto)} colorClass="text-red-600" />
+        <StatCard title="Compras Reales" value={formatNumber(totalCompras)} colorClass="text-red-600" />
+        <StatCard title="Impoconsumo (8%)" value={formatNumber(totalIngreso * 0.08)} colorClass="text-red-500" />
+
+        {/* Otros */}
+        <StatCard title="Propinas" value={formatNumber(totalTip)} colorClass="text-blue-600" />
       </div>
     </div>
   );

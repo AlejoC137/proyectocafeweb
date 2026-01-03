@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import { fetchModelsAction, getAllFromTable, deleteModelAction } from '../../../redux/actions';
 import { VENTAS, COMPRAS } from '../../../redux/actions-types';
 import ModeloContent from './ModeloContent';
@@ -11,12 +12,36 @@ const ModeloProyecto = () => {
     const models = useSelector(state => state.models);
     const allVentas = useSelector(state => state.allVentas);
     const loading = useSelector(state => state.modelsLoading);
+    console.log(models);
 
     // Estado Local: Fecha seleccionada
-    const [selectedDate, setSelectedDate] = useState({
-        month: new Date().getMonth(),
-        year: new Date().getFullYear()
+    const { year: paramYear, month: paramMonth } = useParams();
+    const navigate = useNavigate();
+    const monthCols = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+    // Estado Local: Fecha seleccionada (inicializada con URL o fecha actual)
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const now = new Date();
+        return {
+            month: now.getMonth(),
+            year: now.getFullYear()
+        };
     });
+
+    // Sincronizar URL con estado
+    useEffect(() => {
+        if (paramYear && paramMonth) {
+            const monthIndex = monthCols.indexOf(paramMonth.toUpperCase());
+            if (monthIndex !== -1) {
+                setSelectedDate({ month: monthIndex, year: parseInt(paramYear) });
+            }
+        }
+    }, [paramYear, paramMonth]);
+
+    const handleNavigate = (y, mIndex) => {
+        const mName = monthCols[mIndex];
+        navigate(`/ModeloProyecto/${y}/${mName}`);
+    };
 
     useEffect(() => {
         dispatch(fetchModelsAction());
@@ -54,7 +79,7 @@ const ModeloProyecto = () => {
         return Array.from(uniqueYears).sort((a, b) => b - a);
     }, [allVentas, models]);
 
-    const monthCols = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
 
     const handleDeleteModel = async (e, modelId, modelName) => {
         e.stopPropagation();
@@ -104,7 +129,7 @@ const ModeloProyecto = () => {
                                     return (
                                         <button
                                             key={monthIndex}
-                                            onClick={() => setSelectedDate({ month: monthIndex, year: year })}
+                                            onClick={() => handleNavigate(year, monthIndex)}
                                             className={`
                                                 relative h-10 flex flex-col items-center justify-center text-[10px] transition-all
                                                 ${isSelected

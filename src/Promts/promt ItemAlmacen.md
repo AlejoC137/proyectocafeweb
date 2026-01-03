@@ -405,8 +405,8 @@ export const BODEGA = [
 
 export const VENTAS = 'Ventas'
 
-export const SMMV_COL_2025_HORA = 6189
-export const SMMV_COL_2025_MINU = SMMV_COL_2025_HORA / 60
+export const SMMV_COL_2026_HORA = 6189
+export const SMMV_COL_2026_MINU = SMMV_COL_2026_HORA / 60
 export const CREATE_RECIPE_FOR_PRODUCT_SUCCESS = "CREATE_RECIPE_FOR_PRODUCT_SUCCESS"; // <-- AÑADIR ESTA LÍNEA
 
 export const BARISTA = 'BARISTA'
