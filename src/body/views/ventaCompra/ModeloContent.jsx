@@ -31,13 +31,15 @@ function ModeloContent({ targetMonth, targetYear }) {
     const allVentas = useSelector(state => state.allVentas);
     const allCompras = useSelector(state => state.allCompras);
     const models = useSelector(state => state.models);
-    const staff = useSelector(state => state.allStaff);
+    const allStaff = useSelector(state => state.allStaff);
     const allMenu = useSelector(state => state.allMenu); // Added for new logic
     const allItems = useSelector(state => state.allItems); // Added for new logic
     const allRecetasMenu = useSelector(state => state.allRecetasMenu); // Added for new logic
     const allRecetasProduccion = useSelector(state => state.allRecetasProduccion);
     const allProduccion = useSelector(state => state.allProduccion);
+    console.log(models
 
+    )
     // --- LOGICA TRAIDA DE MesResumen.jsx ---
     const [ventas, setVentas] = useState([]);
     const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
@@ -274,7 +276,14 @@ function ModeloContent({ targetMonth, targetYear }) {
         const foundModel = models.find(m => {
             const mMonth = m.costs?.linkedMonth !== undefined ? m.costs.linkedMonth : m.month;
             const mYear = m.costs?.linkedYear !== undefined ? m.costs.linkedYear : m.year;
-            return mMonth == targetMonth && mYear == targetYear;
+
+            // Primary check: numeric columns
+            if (mMonth == targetMonth && mYear == targetYear) return true;
+
+            // Fallback check: exact name match
+            if (m.name === `Contabilidad ${monthsNames[targetMonth]} ${targetYear}`) return true;
+
+            return false;
         });
 
         if (foundModel) {
@@ -354,40 +363,118 @@ function ModeloContent({ targetMonth, targetYear }) {
     };
 
     const handleSyncTheoretical = () => {
-        // Placeholder for theoretical sync
-        alert("Sincronización teórica pendiente de implementación detallada.");
+        // Calcular el costo teórico total basado en los productos vendidos y sus recetas
+        const totalTeorico = productosVendidosConReceta.reduce((acc, curr) => acc + (curr.totalCosto || 0), 0);
+
+        const newRow = { id: 'auto-teorico', name: 'Costo Teórico Recetas', value: totalTeorico };
+        updateItem('compras', newRow);
     };
 
     const handleSyncPayroll = () => {
-        // 1. Filtrar turnos del mes
-        // 2. Calcular valores
-        // 3. Actualizar
-        // Placeholder logic based on previous context:
-        // We iterate 'staff'
-        // For each, calculate shift hours in targetMonth/Year
-        // We add them as 'Sincronizado' rows.
+        if (!allStaff || allStaff.length === 0) {
+            alert("No hay datos de allStaff disponibles.");
+            return;
+        }
 
-        const newPersonalRows = staff.map(persona => {
-            // Simplified logic: get hours from Shifts? We don't have Shifts in this file context easily without fetching. 
-            // Assuming this function triggers a fetch or calculation elsewhere?
-            // For now, let's just alert or add dummy synced rows if strictly needed
-            // But based on previous conversations, there was complex logic here.
-            // I will restore the original logic if I had it. 
-            // Since I am overwriting, I should be careful not to lose the logic.
-            // I'll assume the USER executes 'handleSyncPayroll' which was visible in previous snippets.
-            // Let's try to preserve it if possible or write a standard one.
+        // Calcular rango del mes
+        const startOfMonth = new Date(targetYear, targetMonth, 1);
+        const endOfMonth = new Date(targetYear, targetMonth + 1, 0);
+
+        const newPersonalRows = allStaff.map(persona => {
+            // Lógica similar a CalculoNomina
+            let turnos = [];
+            if (Array.isArray(persona.Turnos)) {
+                turnos = persona.Turnos;
+            } else if (typeof persona.Turnos === "string" && persona.Turnos.trim()) {
+                try {
+                    const parsed = JSON.parse(persona.Turnos);
+                    turnos = Array.isArray(parsed) ? parsed : [parsed];
+                } catch { turnos = []; }
+            }
+
+            // Filtrar turnos del mes (Timezone & Format Safe)
+            const turnosMes = turnos.filter(t => {
+                const rawDate = t.turnoDate || t.date || t.fecha;
+                if (!rawDate) return false;
+
+                let tYear, tMonth;
+
+                if (typeof rawDate === 'string') {
+                    // Soporta YYYY-MM-DD
+                    if (rawDate.includes('-')) {
+                        const parts = rawDate.split('T')[0].split('-');
+                        if (parts.length >= 2) {
+                            tYear = parseInt(parts[0], 10);
+                            tMonth = parseInt(parts[1], 10) - 1;
+                        }
+                    }
+                    // Soporta DD/MM/YYYY (Formato LatAm)
+                    else if (rawDate.includes('/')) {
+                        const parts = rawDate.split('/');
+                        if (parts.length === 3) {
+                            // Asumimos DD/MM/YYYY
+                            tYear = parseInt(parts[2], 10);
+                            tMonth = parseInt(parts[1], 10) - 1;
+                        }
+                    }
+                }
+
+                if (tYear !== undefined && tMonth !== undefined && !isNaN(tYear) && !isNaN(tMonth)) {
+                    return tYear === targetYear && tMonth === targetMonth;
+                }
+
+                // Fallback fecha objeto estándar
+                const f = new Date(rawDate);
+                // Validate if date is valid
+                if (isNaN(f.getTime())) return false;
+
+                return f.getFullYear() === targetYear && f.getMonth() === targetMonth;
+            });
+
+            // Calcular horas
+            const totalHoras = turnosMes.reduce((acc, t) => {
+                const horaSalida = t.horaSalida || t.horaCierre;
+                // Basic validation: ensure strings exist and are not "false"
+                if (!t.horaInicio || !horaSalida || horaSalida === 'false' || t.horaInicio === 'false') return acc;
+
+                const [h1, m1] = t.horaInicio.split(':').map(Number);
+                const [h2, m2] = horaSalida.split(':').map(Number);
+
+                if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) return acc;
+
+                const horas = (h2 - h1) + (m2 - m1) / 60;
+                return acc + (horas > 0 ? horas : 0);
+            }, 0);
+
+            if (totalHoras === 0) return null;
+
+            const rate = Number(persona.Rate) || 0;
+            const base = totalHoras * rate;
+            const seguridadSocial = base * 0.10; // 10% Seguridad estimada
+            const totalValue = base + seguridadSocial;
+
+            // Retornar objeto compatible con EmployeeRow
             return {
                 id: persona._id,
-                role: `${persona.Nombre} ${persona.Apellido} (${persona.Cargo})`,
+                role: `${persona.Nombre || persona.nombre} ${persona.Apellido || persona.apellido || ''} (${persona.Cargo || persona.cargo || 'Staff'})`,
                 weeklyHours: 0,
                 hourlyRate: 0,
-                totalValue: 0, // Needs calculation
+                totalValue: totalValue,
                 isSynced: true
             };
-        });
-        // handleUpdate('personal', newPersonalRows); 
-        alert("Sincronización de nómina require lógica de turnos (preservada si no se borró).");
+        }).filter(Boolean);
+
+        if (newPersonalRows.length === 0) {
+            alert("No hay allStaff para importar.");
+            return;
+        }
+
+        if (window.confirm(`Se importarán ${newPersonalRows.length} empleados activos. ¿Desea reemplazar la lista actual de personal?`)) {
+            setCurrentCosts(prev => ({ ...prev, personal: newPersonalRows }));
+            setHasChanges(true);
+        }
     };
+
 
 
     // CRUD
@@ -418,10 +505,19 @@ function ModeloContent({ targetMonth, targetYear }) {
 
     const handleSave = () => {
         const dataStr = JSON.stringify(currentCosts);
+
         if (modelId) {
-            dispatch(updateModelAction(modelId, { data: dataStr }));
+            dispatch(updateModelAction(modelId, { costs: dataStr }));
+            console.log("Updating model:", dataStr);
+
         } else {
-            dispatch(createModelAction({ month: targetMonth, year: targetYear, data: dataStr }));
+            const modelName = `Contabilidad ${monthsNames[targetMonth]} ${targetYear}`;
+            dispatch(createModelAction({
+                month: targetMonth,
+                year: targetYear,
+                name: modelName,
+                costs: dataStr
+            }));
         }
         setHasChanges(false);
     };
@@ -433,7 +529,7 @@ function ModeloContent({ targetMonth, targetYear }) {
     const countVentas = ventas.length;
 
     return (
-        <div className="w-full h-full flex flex-col overflow-hidden relative bg-gray-50">
+        <div className="w-full h-full flex flex-col overflow-hidden relative bg-gray-50 max-w-full">
             {loadingVentas && <LoadingOverlay />}
 
             {/* HEADER COMPACTO Y UNIFICADO */}
@@ -480,7 +576,7 @@ function ModeloContent({ targetMonth, targetYear }) {
             </header>
 
             {/* CONTENIDO PRINCIPAL FULL WIDTH */}
-            <div className="flex-grow overflow-y-auto custom-scrollbar p-6">
+            <div className="flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar p-6">
                 <div className="w-full max-w-[1920px] mx-auto space-y-6">
 
                     {ventas && ventas.length > 0 && (

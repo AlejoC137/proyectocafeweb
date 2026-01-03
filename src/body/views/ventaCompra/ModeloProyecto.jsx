@@ -91,11 +91,11 @@ const ModeloProyecto = () => {
     if (loading) return <div className="flex items-center justify-center h-screen w-screen text-gray-500">Cargando datos...</div>;
 
     return (
-        <div className="flex flex-col h-screen w-screen bg-gray-100 overflow-hidden m-0 p-0">
+        <div className="flex flex-col h-screen w-full bg-gray-100 overflow-hidden m-0 p-0">
 
             {/* --- HEADER & GRID DE NAVEGACIÓN --- */}
-            <div className="bg-slate-900 text-white shadow-xl z-50 flex-shrink-0 w-screen p-2">
-                <div className="w-full px-2 overflow-x-auto">
+            <div className="bg-slate-900 text-white shadow-xl z-50 flex-shrink-0 w-full p-2">
+                <div className="w-full overflow-x-auto">
                     <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Navegador Contable</h2>
 
                     {years.map(year => (
@@ -165,7 +165,7 @@ const ModeloProyecto = () => {
             </div>
 
             {/* --- VISTA DE CONTENIDO --- */}
-            <div className="flex-grow overflow-hidden w-screen h-full bg-gray-50">
+            <div className="flex-grow overflow-hidden w-screen h-screen bg-gray-50">
                 <ModeloContent
                     targetMonth={selectedDate.month}
                     targetYear={selectedDate.year}
