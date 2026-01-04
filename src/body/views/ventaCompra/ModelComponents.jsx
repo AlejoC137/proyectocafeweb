@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 
 // --- UTILS ---
-export const formatNumber = (num) => (num === null || num === undefined || isNaN(parseFloat(num))) ? '' : Number(num).toLocaleString('es-ES');
+export const formatNumber = (num) => (num === null || num === undefined || isNaN(parseFloat(num))) ? '' : Number(num).toLocaleString('es-CO');
+export const formatCurrency = (num) => (num === null || num === undefined || isNaN(parseFloat(num))) ? '$ 0' : Number(num).toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 export const parseFormattedNumber = (str) => typeof str !== 'string' ? 0 : parseFloat(str.replace(/\./g, '')) || 0;
 export const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -54,7 +55,7 @@ export const PurchasesModal = ({ isOpen, onClose, purchases, total }) => {
                                         <div className="text-xs text-gray-400">{p.Proveedor_Id || p.Comprador}</div>
                                     </td>
                                     <td className="p-2 text-right font-medium text-gray-700">
-                                        {(parseFloat(p.Valor || p.Total || 0)).toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}
+                                        {formatCurrency(p.Valor || p.Total || 0)}
                                     </td>
                                 </tr>
                             ))}
@@ -62,7 +63,7 @@ export const PurchasesModal = ({ isOpen, onClose, purchases, total }) => {
                         <tfoot className="bg-gray-50 font-bold text-gray-800 sticky bottom-0">
                             <tr>
                                 <td colSpan="2" className="p-2 text-right">Total:</td>
-                                <td className="p-2 text-right">{total.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}</td>
+                                <td className="p-2 text-right">{formatCurrency(total)}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -127,7 +128,7 @@ export const ImpuestoRow = ({ impuesto, onUpdate, onRemove, totalRevenue, readOn
             </div>
 
             <div className="w-20 text-right font-bold text-gray-800 text-xs flex-shrink-0">
-                {calculatedVal.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                {formatCurrency(calculatedVal)}
             </div>
         </RowContainer>
     );
@@ -182,7 +183,7 @@ export const EmployeeRow = ({ employee, onUpdate, onRemove, readOnly = false }) 
             )}
 
             <div className={`w-20 text-right font-bold text-xs flex-shrink-0 ${isManual ? 'text-blue-600' : 'text-gray-800'}`}>
-                {totalCost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                {formatCurrency(totalCost)}
             </div>
         </RowContainer>
     );

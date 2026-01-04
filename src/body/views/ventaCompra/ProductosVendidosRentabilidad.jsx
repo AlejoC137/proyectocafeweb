@@ -58,7 +58,7 @@ const ProductosVendidosRentabilidad = ({
 
       <div className="overflow-auto flex-1 custom-scrollbar">
         <table className="min-w-full border-collapse relative">
-          <thead className="sticky top-0 bg-white z-10 shadow-sm ring-1 ring-black/5">
+          <thead className="sticky top-0 bg-white z-20 shadow-sm ring-1 ring-black/5">
             <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] tracking-wider">
               <th className="py-2 px-2 border-b text-center w-20">Acciones</th>
               <th className="py-2 px-2 border-b text-left">Producto</th>
@@ -67,11 +67,12 @@ const ProductosVendidosRentabilidad = ({
               {showFinancials && <th className="py-2 px-2 border-b text-right">Ingresos Tot.</th>}
               {showFinancials && <th className="py-2 px-2 border-b text-right">Costo Tot.</th>}
               {showFinancials && <th className="py-2 px-2 border-b text-right">Ganancia</th>}
+              {showFinancials && <th className="py-2 px-2 border-b text-right">%</th>}
             </tr>
           </thead>
           <tbody className="text-xs divide-y divide-gray-50">
             {showFinancials && (
-              <tr className="bg-blue-50/50 font-bold">
+              <tr className="sticky top-[31px] z-10 bg-blue-50 font-bold border-b-2 border-red-200 shadow-sm">
                 <td className="py-2 px-2"></td>
                 <td className="py-2 px-2 text-blue-800">TOTALES</td>
                 <td className="py-2 px-2 text-center text-blue-800">
@@ -87,45 +88,56 @@ const ProductosVendidosRentabilidad = ({
                 <td className="py-2 px-2 text-right text-blue-700">
                   {productos.reduce((acc, p) => acc + (p.totalUtilidad || 0), 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
                 </td>
+                <td className="py-2 px-2 text-right text-blue-700">
+                  {(() => {
+                    const totalIngreso = productos.reduce((acc, p) => acc + (p.totalIngreso || 0), 0);
+                    const totalUtilidad = productos.reduce((acc, p) => acc + (p.totalUtilidad || 0), 0);
+                    return totalIngreso > 0 ? ((totalUtilidad / totalIngreso) * 100).toFixed(1) + '%' : '0%';
+                  })()}
+                </td>
               </tr>
             )}
-            {productos.map((producto, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                <td className="py-1.5 px-2 text-center flex justify-center gap-2">
-                  <button
-                    onClick={() => handlePredictClick(producto)}
-                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded transition-colors"
-                    title="Análisis de Tendencias"
-                  >
-                    <LineChart size={16} />
-                  </button>
-                  {producto.recetaId && producto.recetaId !== "N/A" && (
-                    <Button asChild
-                      className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
-                      <a
-                        href={`/receta/${producto.recetaId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0"
-                      >
-                        📕
-                      </a>
-                    </Button>
-                  )}
-                </td>
-                <td className="py-1.5 px-2 font-medium text-gray-700 truncate max-w-[150px]" title={producto.nombre}>{producto.nombre}</td>
-                <td className="py-1.5 px-2 text-center font-bold text-gray-600">{producto.cantidad}</td>
+            {productos.map((producto, index) => {
+              const margin = producto.totalIngreso > 0 ? ((producto.totalUtilidad / producto.totalIngreso) * 100) : 0;
+              return (
+                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-1.5 px-2 text-center flex justify-center gap-2">
+                    <button
+                      onClick={() => handlePredictClick(producto)}
+                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded transition-colors"
+                      title="Análisis de Tendencias"
+                    >
+                      <LineChart size={16} />
+                    </button>
+                    {producto.recetaId && producto.recetaId !== "N/A" && (
+                      <Button asChild
+                        className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                        <a
+                          href={`/receta/${producto.recetaId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0"
+                        >
+                          📕
+                        </a>
+                      </Button>
+                    )}
+                  </td>
+                  <td className="py-1.5 px-2 font-medium text-gray-700 truncate max-w-[150px]" title={producto.nombre}>{producto.nombre}</td>
+                  <td className="py-1.5 px-2 text-center font-bold text-gray-600">{producto.cantidad}</td>
 
-                {showFinancials && (
-                  <>
-                    <td className="py-1.5 px-2 text-gray-500 text-right">{producto.recetaValor?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                    <td className="py-1.5 px-2 text-green-600 font-medium text-right">{producto.totalIngreso?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                    <td className="py-1.5 px-2 text-red-500 text-right">{producto.totalCosto?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                    <td className={`py-1.5 px-2 text-right font-bold ${(producto.totalUtilidad || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>{producto.totalUtilidad?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
-                  </>
-                )}
-              </tr>
-            ))}
+                  {showFinancials && (
+                    <>
+                      <td className="py-1.5 px-2 text-gray-500 text-right">{producto.recetaValor?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                      <td className="py-1.5 px-2 text-green-600 font-medium text-right">{producto.totalIngreso?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                      <td className="py-1.5 px-2 text-red-500 text-right">{producto.totalCosto?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                      <td className={`py-1.5 px-2 text-right font-bold ${(producto.totalUtilidad || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>{producto.totalUtilidad?.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</td>
+                      <td className={`py-1.5 px-2 text-right font-bold ${margin >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{margin.toFixed(1)}%</td>
+                    </>
+                  )}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

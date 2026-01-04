@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     formatNumber,
+    formatCurrency,
     parseFormattedNumber,
     formatDate,
     LoadingOverlay,
@@ -561,13 +562,13 @@ function ModeloContent({ targetMonth, targetYear }) {
                 <div className="flex items-center gap-6 divide-x divide-gray-200">
                     <div className="px-4 text-center">
                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Ventas ({countVentas})</div>
-                        <div className="text-xl font-bold text-gray-800">{realIncome.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                        <div className="text-xl font-bold text-gray-800">{formatCurrency(realIncome)}</div>
                     </div>
 
                     <div className="px-4 text-center">
                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Utilidad Neta</div>
                         <div className={`text-xl font-bold ${utilidadNeta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {utilidadNeta.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            {formatCurrency(utilidadNeta)}
                         </div>
                     </div>
 
@@ -633,7 +634,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                 </div>
                             </div>
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{totals.compras.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.compras)}</div>
                                 <button onClick={() => addItem('compras', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Item">+</button>
                             </div>
                             <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
@@ -654,7 +655,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                 <button onClick={handleSyncPayroll} className="p-1 hover:bg-green-50 text-green-600 rounded" title="Sincronizar Nómina">🔄</button>
                             </div>
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{totals.personal.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.personal)}</div>
                                 <button onClick={() => addItem('personal', { id: Date.now(), role: '', weeklyHours: 48, hourlyRate: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Empleado">+</button>
 
                             </div>
@@ -668,7 +669,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                 <h3 className="font-bold text-gray-700 text-xs">Costos Fijos</h3>
                             </div>
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{totals.fijos.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.fijos)}</div>
                                 <button onClick={() => addItem('fijos', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Fijo">+</button>
                             </div>
                             <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
@@ -681,7 +682,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                 <h3 className="font-bold text-gray-700 text-xs">Impuestos</h3>
                             </div>
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{totals.impuestos.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.impuestos)}</div>
                                 <button onClick={() => addItem('impuestos', { id: Date.now(), name: '', value: 0, type: 'percentage', rate: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Impuesto">+</button>
                             </div>
                             <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
@@ -694,7 +695,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                 <h3 className="font-bold text-gray-700 text-xs">Otros Gastos</h3>
                             </div>
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{totals.otros.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.otros)}</div>
                                 <button onClick={() => addItem('otros', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Otro">+</button>
                             </div>
                             <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">

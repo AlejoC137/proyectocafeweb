@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, ChefHat } from 'lucide-react';
+import { formatCurrency } from './ModelComponents';
 
 const GastosCalculadosMateriales = () => {
     const location = useLocation();
@@ -114,7 +115,7 @@ const GastosCalculadosMateriales = () => {
                             <div className="text-center">
                                 <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Costo Estimado Global</p>
                                 <p className="text-2xl font-bold text-blue-800">
-                                    {totalEstimatedCost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                    {formatCurrency(totalEstimatedCost)}
                                 </p>
                             </div>
                         </div>
@@ -150,7 +151,7 @@ const GastosCalculadosMateriales = () => {
                                         <div className="text-right hidden sm:block">
                                             <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Costo Estimado</p>
                                             <p className="text-xl font-bold text-orange-600">
-                                                {ingrediente.totalCost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                                {formatCurrency(ingrediente.totalCost)}
                                             </p>
                                         </div>
                                     )}
