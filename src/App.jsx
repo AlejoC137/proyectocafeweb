@@ -12,6 +12,7 @@ import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH,
 // import NotFound from './components/NotFound'; // Componente de fallback si no coincide una ruta
 import BottomNav from './components/ui/bottom-nav'; // Importa BottomNav
 import TopNav from './components/ui/top-nav'; // Importa BottomNav
+import GastosCalculadosMateriales from './body/views/ventaCompra/GastosCalculadosMateriales';
 import ModeloProyecto from "./body/views/ventaCompra/ModeloProyecto";
 import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
@@ -53,7 +54,6 @@ import ItemsModal from './body/components/Items/ItemsModal.jsx';
 import StaffDetailView from './body/views/staff/StaffDetailView.jsx';
 import StaffManager from './body/views/staff/StaffManager.jsx';
 import EditarTurnosView from './body/views/staff/EditarTurnosView.jsx';
-
 // import Manager from './body/views/actividades/Manager';
 
 
@@ -161,6 +161,7 @@ function App() {
           <Route path="/Model" element={<Model />} />
           <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
           <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
+          <Route path="/gastos-calculados" element={<GastosCalculadosMateriales />} />
           {/* Renderiza el componente que corresponde a la vista actual */}
           {/* Renderiza el BottomNav debajo del componente actual */}
         </Routes>

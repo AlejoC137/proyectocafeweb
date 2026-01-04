@@ -27,6 +27,7 @@ import {
 function ModeloContent({ targetMonth, targetYear }) {
 
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const allVentas = useSelector(state => state.allVentas);
     const allCompras = useSelector(state => state.allCompras);
@@ -206,6 +207,8 @@ function ModeloContent({ targetMonth, targetYear }) {
                 let recetaData = null;
                 let consolidatedCost = 0;
                 let ingredients = [];
+                let vCMP = 0;
+                let vCMO = 0;
 
                 if (producto.recetaId !== "N/A") {
                     try {
@@ -225,7 +228,9 @@ function ModeloContent({ targetMonth, targetYear }) {
                                             consolidatedCost = costData;
                                         } else if (costData && (costData.vCMP || costData.vCMO)) {
                                             // Case for detailed object cost (vCMP + vCMO)
-                                            consolidatedCost = (costData.vCMP || 0) + (costData.vCMO || 0);
+                                            vCMP = costData.vCMP || 0;
+                                            vCMO = costData.vCMO || 0;
+                                            consolidatedCost = vCMP + vCMO;
                                         }
                                     } catch (e) {
                                         console.warn("Could not parse cost for recipe:", recetaData.legacyName);
@@ -247,6 +252,8 @@ function ModeloContent({ targetMonth, targetYear }) {
                 return {
                     ...producto,
                     recetaValor: consolidatedCost,
+                    vCMP,
+                    vCMO,
                     ingredientes: ingredients,
                     totalCosto: totalCosto,
                     totalUtilidad: totalUtilidad
@@ -526,6 +533,16 @@ function ModeloContent({ targetMonth, targetYear }) {
     const margen = realIncome > 0 ? (utilidadNeta / realIncome) * 100 : 0;
     const countVentas = ventas.length;
 
+    const handleOpenGastos = () => {
+        const dataToSave = {
+            productos: productosVendidosConReceta,
+            monthName: monthsNames[targetMonth],
+            year: targetYear
+        };
+        localStorage.setItem('tempGastosData', JSON.stringify(dataToSave));
+        window.open('/gastos-calculados', '_blank');
+    };
+
     return (
         <div className="w-full h-full flex flex-col overflow-hidden relative bg-gray-50 max-w-full">
             {loadingVentas && <LoadingOverlay />}
@@ -600,6 +617,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                     ventas={ventas}
                                     targetMonth={targetMonth}
                                     targetYear={targetYear}
+                                    onOpenGastos={handleOpenGastos}
                                 />
                             </div>
                         </div>

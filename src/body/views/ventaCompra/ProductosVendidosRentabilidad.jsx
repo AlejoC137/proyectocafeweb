@@ -8,7 +8,8 @@ const ProductosVendidosRentabilidad = ({
   productos,
   ventas,
   targetMonth,
-  targetYear
+  targetYear,
+  onOpenGastos
 }) => {
 
 
@@ -37,6 +38,15 @@ const ProductosVendidosRentabilidad = ({
           <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-full border border-blue-200">
             {totalProductos}
           </span>
+          {onOpenGastos && (
+            <button
+              onClick={onOpenGastos}
+              className="ml-2 w-7 h-7 flex items-center justify-center rounded-md border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+              title="Ver Explosión de Materiales"
+            >
+              📦
+            </button>
+          )}
         </div>
         <button
           onClick={() => setShowFinancials(!showFinancials)}
