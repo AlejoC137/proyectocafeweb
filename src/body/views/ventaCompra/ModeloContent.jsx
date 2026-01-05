@@ -544,6 +544,49 @@ function ModeloContent({ targetMonth, targetYear }) {
         window.open('/gastos-calculados', '_blank');
     };
 
+    const handleOpenMenuAudit = () => {
+        if (!allMenu || allMenu.length === 0) {
+            alert("No hay datos de menú disponibles.");
+            return;
+        }
+
+        const menuAuditData = allMenu.map(menuItem => {
+            let consolidatedCost = 0;
+            let recetaData = null;
+
+            if (menuItem.Receta) {
+                try {
+                    recetaData = allRecetasMenu.find(r => r._id === menuItem.Receta) || allRecetasProduccion.find(r => r._id === menuItem.Receta);
+
+                    if (recetaData && recetaData.costo) {
+                        const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
+                        if (typeof costData === 'number') {
+                            consolidatedCost = costData;
+                        } else if (costData && (costData.vCMP || costData.vCMO)) {
+                            consolidatedCost = (costData.vCMP || 0) + (costData.vCMO || 0);
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            const precioVenta = parseFloat(menuItem.Precio || 0);
+
+            return {
+                nombre: menuItem.NombreES,
+                costo: consolidatedCost,
+                precioVenta: precioVenta,
+                utilidad: precioVenta - consolidatedCost
+            };
+        });
+
+        const dataToSave = {
+            menuItems: menuAuditData,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('tempMenuAuditData', JSON.stringify(dataToSave));
+        window.open('/productos-financiero', '_blank');
+    };
+
     return (
         <div className="w-full h-full flex flex-col overflow-hidden relative bg-gray-50 max-w-full">
             {loadingVentas && <LoadingOverlay />}
@@ -579,7 +622,15 @@ function ModeloContent({ targetMonth, targetYear }) {
                         </div>
                     </div>
 
-                    <div className="pl-4">
+                    <div className="pl-4 flex items-center gap-2">
+                        <button
+                            onClick={handleOpenMenuAudit}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 transition-all"
+                            title="Ver Costos Teóricos de todo el Menú"
+                        >
+                            📊 Auditoría Menú
+                        </button>
+
                         <button
                             onClick={handleSave}
                             disabled={!hasChanges && modelId}

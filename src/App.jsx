@@ -13,6 +13,7 @@ import { UPDATE_CURRENT_VIEW, MENUHEAD, HOME, MENUVIEW, AGENDA, NOSOTROS, LUNCH,
 import BottomNav from './components/ui/bottom-nav'; // Importa BottomNav
 import TopNav from './components/ui/top-nav'; // Importa BottomNav
 import GastosCalculadosMateriales from './body/views/ventaCompra/GastosCalculadosMateriales';
+import ProductosFinanciero from './body/views/ventaCompra/ProductosFinanciero';
 import ModeloProyecto from "./body/views/ventaCompra/ModeloProyecto";
 import Home from './body/views/home/Home';
 import MenuView from './body/views/menuView/MenuView';
@@ -161,7 +162,10 @@ function App() {
           <Route path="/Model" element={<Model />} />
           <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
           <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
+
+          <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
           <Route path="/gastos-calculados" element={<GastosCalculadosMateriales />} />
+          <Route path="/productos-financiero" element={<ProductosFinanciero />} />
           {/* Renderiza el componente que corresponde a la vista actual */}
           {/* Renderiza el BottomNav debajo del componente actual */}
         </Routes>
