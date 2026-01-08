@@ -14,10 +14,10 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <Provider store={store}>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
 
       {/* <React.StrictMode> */}
-        <App />
+      <App />
       {/* </React.StrictMode> */}
     </BrowserRouter>
   </Provider>

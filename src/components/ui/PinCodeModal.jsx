@@ -10,7 +10,7 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
   const inputRefs = useRef([]);
 
   // Código PIN predeterminado (puedes cambiarlo por uno más seguro)
-  const ADMIN_PIN = "1234";
+  const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN;
   const MAX_ATTEMPTS = 3;
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
 
   const handleSubmit = () => {
     const enteredPin = pin.join('');
-    
+
     if (enteredPin.length !== 4) {
       setError('Por favor ingrese los 4 dígitos');
       return;
@@ -59,7 +59,7 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
     } else {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
-      
+
       if (newAttempts >= MAX_ATTEMPTS) {
         setError(`Código incorrecto. Máximo de intentos alcanzado.`);
         setTimeout(() => {
@@ -86,11 +86,11 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
   if (!isOpen) return null;
 
   const modalContent = (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-2xl p-6 w-96"
         style={{
           backgroundColor: 'rgb(255, 255, 255)',
@@ -99,15 +99,15 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 
+          <h2
             className="text-xl font-bold"
             style={{ color: 'rgb(31, 41, 55)' }}
           >
             {title}
           </h2>
-          <Button 
-            onClick={handleClose} 
-            variant="ghost" 
+          <Button
+            onClick={handleClose}
+            variant="ghost"
             className="h-8 w-8 p-0"
             style={{
               backgroundColor: 'transparent',
@@ -119,7 +119,7 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
         </div>
 
         {/* Descripción */}
-        <p 
+        <p
           className="text-sm text-gray-600 mb-6 text-center"
           style={{ color: 'rgb(75, 85, 99)' }}
         >
@@ -149,9 +149,9 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
 
         {/* Mensaje de error */}
         {error && (
-          <div 
+          <div
             className="text-sm text-center mb-4 p-2 rounded"
-            style={{ 
+            style={{
               color: 'rgb(239, 68, 68)',
               backgroundColor: 'rgb(254, 242, 242)',
               border: '1px solid rgb(252, 165, 165)'
@@ -163,8 +163,8 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
 
         {/* Botones */}
         <div className="flex gap-3 justify-end">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleClose}
             style={{
               backgroundColor: 'rgb(255, 255, 255)',
@@ -174,7 +174,7 @@ const PinCodeModal = ({ isOpen, onClose, onSuccess, title = "Código de Autoriza
           >
             Cancelar
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={attempts >= MAX_ATTEMPTS}
             style={{

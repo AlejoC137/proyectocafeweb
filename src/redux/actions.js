@@ -847,6 +847,10 @@ export const getRecepie = async (uuid, type) => {
       .single();
 
     if (error) {
+      // PGRST116: JSON object requested, multiple (or no) rows returned
+      if (error.code === 'PGRST116' || error.message.includes('JSON object requested, multiple (or no) rows returned')) {
+        return null;
+      }
       console.error("Error al obtener la receta:", error);
       throw new Error(error.message);
     }

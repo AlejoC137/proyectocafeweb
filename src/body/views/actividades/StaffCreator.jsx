@@ -161,7 +161,7 @@ function StaffCreator() {
     const { checked } = e.target;
     if (checked) {
       const password = window.prompt("Ingrese la contraseña de administrador:");
-      if (password === "123456") {
+      if (password === import.meta.env.VITE_ADMIN_PIN) {
         setFormData(prev => ({ ...prev, isAdmin: true }));
       } else {
         alert("Contraseña incorrecta");

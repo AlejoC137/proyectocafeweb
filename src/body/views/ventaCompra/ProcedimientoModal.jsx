@@ -95,15 +95,13 @@ const RecipeItemRow = ({ item, isEditing, onCheck, onSave }) => {
 
   return (
     <div
-      className={`group mb-2 flex items-center gap-2 p-2 rounded-md transition-colors duration-200 ${
-        item.isChecked ? "bg-green-100 hover:bg-green-200" : "bg-gray-50 hover:bg-gray-100"
-      }`}
+      className={`group mb-2 flex items-center gap-2 p-2 rounded-md transition-colors duration-200 ${item.isChecked ? "bg-green-100 hover:bg-green-200" : "bg-gray-50 hover:bg-gray-100"
+        }`}
     >
       <button
         onClick={() => onCheck(item.originalIndex)}
-        className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-lg border-2 transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-          item.isChecked ? "bg-gradient-to-br from-green-400 to-green-600 border-green-500 text-white shadow-lg" : "bg-white border-gray-300 text-gray-400 hover:border-green-400"
-        }`}
+        className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-lg border-2 transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 ${item.isChecked ? "bg-gradient-to-br from-green-400 to-green-600 border-green-500 text-white shadow-lg" : "bg-white border-gray-300 text-gray-400 hover:border-green-400"
+          }`}
         type="button"
       >
         {item.isChecked && (
@@ -156,7 +154,7 @@ const RecipeSection = ({ title, items, isEditing, onCheck, onSave }) => (
 
 // --- COMPONENTE PRINCIPAL UNIFICADO ---
 function ProcedimientoModal({ item, onClose }) {
-    
+
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const id = item?.Receta || paramId;
@@ -225,8 +223,8 @@ function ProcedimientoModal({ item, onClose }) {
 
         if (result.forId) {
           const plato = await getRecepie(result.forId, "Procedimientos");
-          console.log( "Procedimientos" , plato.tittle);
-          
+          console.log("Procedimientos", plato.tittle);
+
           if (plato) {
             setFoto(plato.Foto);
             setMenuItem(plato);
@@ -351,7 +349,7 @@ function ProcedimientoModal({ item, onClose }) {
 
   const handleEnablePermanentEdit = () => setShowPinInput(true);
   const handlePinVerification = () => {
-    if (pinCode === "1234") {
+    if (pinCode === import.meta.env.VITE_ADMIN_PIN) {
       setPermanentEditMode(true);
       setShowPinInput(false);
       setPinCode("");

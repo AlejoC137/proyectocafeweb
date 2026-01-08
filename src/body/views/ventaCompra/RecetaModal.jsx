@@ -464,7 +464,18 @@ function RecetaModal({ item, onClose }) {
     const produccionAjustada = useMemo(() => produccion.map(prod => ({ ...prod, cantidad: (prod.originalQuantity * porcentaje) / 100 })), [produccion, porcentaje]);
 
     const handleEnablePermanentEdit = () => setShowPinInput(true);
-    const handlePinVerification = () => { if (pinCode === '1234') { setPermanentEditMode(true); setShowPinInput(false); setPinCode(''); setEditShow(true); } else { setPinCode(''); } };
+    const handlePinVerification = () => {
+
+        if (pinCode === import.meta.env.VITE_ADMIN_PIN) {
+            setPermanentEditMode(true);
+            setShowPinInput(false);
+            setPinCode('');
+            setEditShow(true);
+        } else {
+            console.warn("PIN Incorrecto");
+            setPinCode('');
+        }
+    };
     const handleCheck = (setState, index) => setState(prevItems => prevItems.map(item => item.originalIndex === index ? { ...item, isChecked: !item.isChecked } : item));
     const handleSave = (setState, index, newValue) => { const numValue = Number(newValue); if (isNaN(numValue) || numValue <= 0) return; const itemToUpdate = (setState === setIngredientes ? ingredientes : produccion).find(item => item.originalIndex === index); if (itemToUpdate && !permanentEditMode) { const newPercentage = (numValue / itemToUpdate.originalQuantity) * 100; setPorcentaje(newPercentage); } };
     const formatCurrency = (value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value || 0);
