@@ -73,6 +73,7 @@ const ProductosFinanciero = () => {
                     costo: consolidatedCost,
                     precioVenta: precioVenta,
                     utilidad: utilidad,
+                    recetaId: menuItem.Receta,
                     margin: precioVenta > 0 ? ((utilidad / precioVenta) * 100) : 0
                 };
             });
@@ -248,7 +249,18 @@ const ProductosFinanciero = () => {
                                     return (
                                         <tr key={producto.id} className={`hover:bg-gray-50 transition-colors ${isEditing ? 'bg-blue-50' : ''}`}>
                                             <td className="py-3 px-4 font-medium text-gray-800">
-                                                {producto.nombre}
+                                                <div className="flex items-center gap-2">
+                                                    {producto.recetaId && (
+                                                        <button
+                                                            onClick={() => window.open(`/receta/${producto.recetaId}`, '_blank')}
+                                                            className="text-lg hover:scale-110 transition-transform"
+                                                            title="Ver Receta"
+                                                        >
+                                                            📕
+                                                        </button>
+                                                    )}
+                                                    {producto.nombre}
+                                                </div>
                                                 <div className="text-xs text-gray-400 font-normal md:hidden">{producto.grupo} - {producto.subGrupo}</div>
                                             </td>
                                             <td className="py-3 px-4 text-gray-500 hidden md:table-cell">

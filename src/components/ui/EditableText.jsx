@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const EditableText = ({ 
-  value, 
-  onSave, 
-  isEditable = false, 
+const EditableText = ({
+  value,
+  onSave,
+  isEditable = false,
   placeholder = "Haga clic para editar...",
   multiline = false,
   disabled = false
@@ -26,7 +26,7 @@ const EditableText = ({
         inputRef.current.setSelectionRange(editValue.length, editValue.length);
       }
     }
-  }, [isEditing, multiline, editValue.length]);
+  }, [isEditing, multiline]);
 
   const handleEdit = () => {
     if (!isEditable || disabled) return;
@@ -35,7 +35,7 @@ const EditableText = ({
 
   const handleSave = async () => {
     if (editValue.trim() === '') return;
-    
+
     setIsSaving(true);
     try {
       await onSave(editValue.trim());
@@ -108,7 +108,7 @@ const EditableText = ({
             disabled={isSaving}
           />
         )}
-        
+
         <Button
           size="sm"
           onClick={handleSave}
@@ -120,7 +120,7 @@ const EditableText = ({
         >
           {isSaving ? "..." : "✓"}
         </Button>
-        
+
         <Button
           size="sm"
           variant="ghost"
@@ -139,9 +139,8 @@ const EditableText = ({
 
   return (
     <div
-      className={`cursor-pointer p-1 rounded transition-colors hover:bg-gray-100 ${
-        !value ? 'text-gray-400 italic' : ''
-      }`}
+      className={`cursor-pointer p-1 rounded transition-colors hover:bg-gray-100 ${!value ? 'text-gray-400 italic' : ''
+        }`}
       onClick={handleEdit}
       style={{
         color: !value ? 'rgb(156, 163, 175)' : 'rgb(0, 0, 0)',

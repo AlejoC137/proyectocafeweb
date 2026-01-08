@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import ReactDOM from "react-dom";
+import { ArrowLeft, Save, Trash2, Printer, Plus, MoreVertical, X, Settings2, FileJson, Copy, Check } from "lucide-react";
+import RecipeImportModal from './RecipeImportModal';
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllFromTable, getOtherExpenses, getRecepie, updateItem } from "../../../redux/actions";
@@ -338,6 +340,12 @@ function RecetaModal({ item, onClose }) {
     const [rendimientoUnidades, setRendimientoUnidades] = useState('');
     const [rendimientoPorcion, setRendimientoPorcion] = useState('');
     const [imagenUrl, setImagenUrl] = useState('');
+    const [showImportModal, setShowImportModal] = useState(false);
+
+    const implementationInstances = useMemo(() => {
+        if (!receta) return [];
+        return allOptions.filter(item => item.Receta === receta._id);
+    }, [receta, allOptions]);
 
     const [ingredientes, setIngredientes] = useState([]);
     const [produccion, setProduccion] = useState([]);
@@ -610,7 +618,17 @@ function RecetaModal({ item, onClose }) {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-2xl w-screen h-screen flex flex-col overflow-auto">
                 <div className="p-4 border-b bg-gray-50 flex justify-between items-center sticky top-0 z-10">
-                    <h2 className="text-2xl font-bold text-gray-800">{receta.legacyName || "Receta"}</h2>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            className="text-gray-600 hover:text-blue-600"
+                            onClick={() => setShowImportModal(true)}
+                            title="Importar Receta desde JSON"
+                        >
+                            <FileJson size={24} />
+                        </Button>
+                        <h2 className="text-2xl font-bold text-gray-800">{receta.legacyName || "Receta"}</h2>
+                    </div>
                     <Button variant="ghost" className="text-gray-500 hover:text-red-500 text-xl font-bold" onClick={onClose}>✕</Button>
                 </div>
                 <div className="p-6 overflow-y-auto">
@@ -726,6 +744,22 @@ function RecetaModal({ item, onClose }) {
                     </div>
                 </div>
             </div>
+            {showImportModal && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="w-[90%] max-h-[90%] overflow-auto">
+                        <RecipeImportModal
+                            onClose={() => setShowImportModal(false)}
+                            initialTargetProduct={implementationInstances.length > 0 ? implementationInstances[0] : null}
+                            forcedRecipeId={receta._id}
+                            forcedRecipeSource={recetaSource}
+                            onSuccess={() => {
+                                // Potentially reload recipe or notify user
+                                alert("Receta importada correctamente. Por favor recarga si es necesario.");
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 

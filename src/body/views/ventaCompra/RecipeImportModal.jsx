@@ -10,7 +10,7 @@ import AccionesRapidas from '../actualizarPrecioUnitario/AccionesRapidas';
 import { copyPromptToClipboard } from '../../../utils/prompts';
 import { Copy, Check } from 'lucide-react';
 
-const RecipeImportModal = ({ onClose, onSuccess }) => {
+const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRecipeId, forcedRecipeSource }) => {
     const dispatch = useDispatch();
     const allItems = useSelector((state) => state.allItems || []);
     const allProduccion = useSelector((state) => state.allProduccion || []);
@@ -52,6 +52,13 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
         ...allMenu.map(m => ({ ...m, __type: "menu", _table: MENU })),
         ...allProduccion.map(p => ({ ...p, __type: "produccion", _table: PRODUCCION })),
     ], [allMenu, allProduccion]);
+
+    useEffect(() => {
+        if (initialTargetProduct && !targetProduct) {
+            setTargetProduct(initialTargetProduct);
+            setTargetSearchTerm(getProductName(initialTargetProduct));
+        }
+    }, [initialTargetProduct]);
 
     // --- STEP 1: PARSE JSON ---
     const handleParse = () => {
@@ -278,6 +285,16 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
         });
     };
 
+    const handleProcessChange = (key, value) => {
+        setParsedData(prev => ({
+            ...prev,
+            processSteps: {
+                ...prev.processSteps,
+                [key]: value
+            }
+        }));
+    };
+
     // --- TARGET PRODUCT LOGIC ---
     useEffect(() => {
         if (targetSearchTerm) {
@@ -352,48 +369,41 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
             let existingRecipeId = null;
             let targetTable = "Recetas"; // Default
 
-            // If linked to a product, chek if it has a recipe
-            if (targetProduct) {
-                if (targetProduct.Receta) {
-                    existingRecipeId = targetProduct.Receta;
-                    // Determine table based on where the recipe usually lives? 
-                    // Verify where the existing recipe is... likely we need to search for it.
-                    const existingInMenu = allRecetasMenu.find(r => r._id === existingRecipeId);
-                    if (existingInMenu) targetTable = "Recetas";
-                    else targetTable = "RecetasProduccion";
-                } else {
-                    // New recipe for this product
-                    targetTable = targetProduct._table === MENU ? "Recetas" : "RecetasProduccion";
-                }
-            }
-
-            if (existingRecipeId) {
-                // Update Existing
-                await dispatch(updateItem(existingRecipeId, {
+            // FORCED UPDATE MODE
+            if (forcedRecipeId) {
+                await dispatch(updateItem(forcedRecipeId, {
                     ...payload,
                     legacyName,
                     actualizacion: new Date().toISOString()
-                }, targetTable));
-                alert("Receta existente actualizada exitosamente.");
+                }, forcedRecipeSource));
+                alert("Receta actual actualizada exitosamente.");
             } else {
-                // Create New
+                // NORMAL MODE: Link to Product or Create New
                 if (targetProduct) {
-                    // Use the helper action to create and link
-                    await dispatch(createRecipeForProduct({
-                        legacyName,
-                        ...payload
-                    }, targetProduct._id, targetProduct._table, targetTable));
-                } else {
-                    // Orphan creation (fallback)
-                    // We need a custom insert if not linked
-                    // For now, let's force linking or just fail if logic is complex, but user requested 'assign'.
-                    // Let's assume user WANTS validation.
+                    if (targetProduct.Receta) {
+                        existingRecipeId = targetProduct.Receta;
+                        const existingInMenu = allRecetasMenu.find(r => r._id === existingRecipeId);
+                        if (existingInMenu) targetTable = "Recetas";
+                        else targetTable = "RecetasProduccion";
+                    } else {
+                        targetTable = targetProduct._table === MENU ? "Recetas" : "RecetasProduccion";
+                    }
+                }
 
-                    // If really orphan, we put it in RecetasProduccion as safe default? Or Recetas? 
-                    // Let's put in 'Recetas' by default if no parent. 
-                    // BEWARE: createItem needs a type. 
-                    // We'll skip orphan creation for now to ensure data integrity unless strictly needed.
-                    // The user *should* pick a target.
+                if (existingRecipeId) {
+                    await dispatch(updateItem(existingRecipeId, {
+                        ...payload,
+                        legacyName,
+                        actualizacion: new Date().toISOString()
+                    }, targetTable));
+                    alert("Receta existente actualizada exitosamente.");
+                } else {
+                    if (targetProduct) {
+                        await dispatch(createRecipeForProduct({
+                            legacyName,
+                            ...payload
+                        }, targetProduct._id, targetProduct._table, targetTable));
+                    }
                 }
             }
 
@@ -496,44 +506,58 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
                         {/* LEFT: TARGET PRODUCT SELECTION */}
                         <div className="lg:col-span-1 border-r pr-6 flex flex-col gap-4">
                             <h3 className="font-bold text-lg border-b pb-2">1. Validar Producto Destino</h3>
-                            <p className="text-xs text-gray-500">¿A qué producto del sistema pertenece esta receta?</p>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold">Buscar Producto:</label>
-                                <Input
-                                    value={targetSearchTerm}
-                                    onChange={(e) => { setTargetSearchTerm(e.target.value); setTargetProduct(null); }}
-                                    placeholder="Ej: Hamburguesa Clásica"
-                                    className={targetProduct ? "border-green-500 bg-green-50" : ""}
-                                />
-                                {targetProduct && (
-                                    <div className="p-2 bg-green-100 text-green-800 rounded text-sm border border-green-300 flex justify-between items-center">
-                                        <span>✓ {getProductName(targetProduct)}</span>
-                                        <button onClick={() => { setTargetProduct(null); setTargetSearchTerm(""); }} className="text-xs text-red-500 hover:underline">Cambiar</button>
-                                    </div>
-                                )}
-
-                                {!targetProduct && targetSearchMatches.length > 0 && (
-                                    <ul className="border rounded-md shadow-sm max-h-40 overflow-y-auto bg-white divide-y">
-                                        {targetSearchMatches.map(match => (
-                                            <li
-                                                key={match._id}
-                                                className="p-2 hover:bg-blue-50 cursor-pointer text-sm flex flex-col"
-                                                onClick={() => { setTargetProduct(match); setTargetSearchTerm(getProductName(match)); }}
-                                            >
-                                                <span className="font-semibold">{getProductName(match)}</span>
-                                                <span className="text-xs text-gray-400">{match._table}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-
-                            {parsedData?.name && (
-                                <div className="mt-4 p-3 bg-gray-100 rounded border">
-                                    <span className="text-xs text-gray-500 uppercase font-bold">Nombre en JSON:</span>
-                                    <p className="font-mono text-sm">{parsedData.name}</p>
+                            {forcedRecipeId ? (
+                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-md">
+                                    <p className="text-orange-800 font-bold mb-2">Modo Edición Directa</p>
+                                    <p className="text-sm text-orange-700">Has abierto el importador desde una receta existente. Los cambios se guardarán directamente en la receta actual.</p>
+                                    <p className="mt-2 text-xs font-mono text-gray-500">ID: {forcedRecipeId}</p>
                                 </div>
+                            ) : (
+                                <>
+                                    <p className="text-xs text-gray-500">¿A qué producto del sistema pertenece esta receta?</p>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold">Buscar Producto:</label>
+                                        <Input
+                                            value={targetSearchTerm}
+                                            onChange={(e) => { setTargetSearchTerm(e.target.value); setTargetProduct(null); }}
+                                            placeholder="Ej: Hamburguesa Clásica"
+                                            className={targetProduct ? "border-green-500 bg-green-50" : ""}
+                                        />
+                                        {targetProduct && (
+                                            <div className="p-2 bg-green-100 text-green-800 rounded text-sm border border-green-300 flex justify-between items-center">
+                                                <span>✓ {getProductName(targetProduct)}</span>
+                                                <button onClick={() => { setTargetProduct(null); setTargetSearchTerm(""); }} className="text-xs text-red-500 hover:underline">Cambiar</button>
+                                            </div>
+                                        )}
+
+                                        {!targetProduct && targetSearchMatches.length > 0 && (
+                                            <ul className="border rounded-md shadow-sm max-h-40 overflow-y-auto bg-white divide-y">
+                                                {targetSearchMatches.map(match => (
+                                                    <li
+                                                        key={match._id}
+                                                        className="p-2 hover:bg-blue-50 cursor-pointer text-sm flex flex-col"
+                                                        onClick={() => { setTargetProduct(match); setTargetSearchTerm(getProductName(match)); }}
+                                                    >
+                                                        <span className="font-semibold">{getProductName(match)}</span>
+                                                        <span className="text-xs text-gray-400">{match._table}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+
+                                    {parsedData?.name !== undefined && (
+                                        <div className="mt-4 p-3 bg-gray-100 rounded border">
+                                            <span className="text-xs text-gray-500 uppercase font-bold">Nombre en JSON (Editable):</span>
+                                            <Input
+                                                value={parsedData.name}
+                                                onChange={(e) => setParsedData(prev => ({ ...prev, name: e.target.value }))}
+                                                className="mt-1 font-mono text-sm bg-white border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
 
@@ -650,7 +674,11 @@ const RecipeImportModal = ({ onClose, onSuccess }) => {
                                     }).map(([key, value]) => (
                                         <div key={key} className="p-3 rounded-md border bg-slate-50 border-slate-200">
                                             <span className="text-xs font-bold text-slate-500 uppercase mb-1 block">{key}</span>
-                                            <p className="text-sm text-slate-800 whitespace-pre-wrap">{value}</p>
+                                            <Textarea
+                                                value={value}
+                                                onChange={(e) => handleProcessChange(key, e.target.value)}
+                                                className="text-sm text-slate-800 font-sans min-h-[80px] bg-white border-slate-300 focus:border-blue-500"
+                                            />
                                         </div>
                                     ))
                                 ) : (

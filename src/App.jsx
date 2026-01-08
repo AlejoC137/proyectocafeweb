@@ -165,7 +165,7 @@ function App() {
 
           <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
           <Route path="/gastos-calculados" element={<GastosCalculadosMateriales />} />
-          <Route path="/productos-financiero" element={<ProductosFinanciero />} />
+          <Route path="/productosFinanciero" element={<ProductosFinanciero />} />
           {/* Renderiza el componente que corresponde a la vista actual */}
           {/* Renderiza el BottomNav debajo del componente actual */}
         </Routes>
