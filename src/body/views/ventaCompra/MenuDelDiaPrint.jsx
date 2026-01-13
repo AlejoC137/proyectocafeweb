@@ -101,7 +101,7 @@ function MenuDelDiaPrint() {
     if (!mainMenuItem) {
       return <p className="text-center p-4 text-gray-500">No hay menú para la fecha seleccionada.</p>;
     }
-    const price = new Intl.NumberFormat('es-CO').format(mainMenuItem.Precio);
+    const price = new Intl.NumberFormat('es-CO').format("24.000");
     try {
         const lunchData = JSON.parse(mainMenuItem.Comp_Lunch);
         const opcion2Data = lunchData.proteina_opcion_2 || lunchData["Opción 2"];
