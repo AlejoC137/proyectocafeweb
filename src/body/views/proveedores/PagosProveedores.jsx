@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Search, SlidersHorizontal, Columns3, ChevronDown, ChevronUp, History } from "lucide-react";
+import { Search, SlidersHorizontal, Columns3, ChevronDown, ChevronUp, History, Trash2 } from "lucide-react";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { getAllFromTable, toggleShowEdit } from "../../../redux/actions";
 import { COMPRAS, PROVEE, STAFF } from "../../../redux/actions-types";
 
-import { updateCompra } from "../../../redux/actions-VentasCompras.js";
+import { updateCompra, deleteCompra } from "../../../redux/actions-VentasCompras.js";
 import Gastos from "../../components/gastos/Gastos.jsx";
 import { Eye, UtensilsCrossed } from "lucide-react"; // Iconos para los botones
 
@@ -246,6 +246,18 @@ export function PagosProveedores() {
       setEditingRows({});
     } catch (error) {
       console.error("Error al guardar todo:", error);
+    }
+  };
+
+  const handleDeleteRow = async (itemId) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.")) {
+      try {
+        await dispatch(deleteCompra(itemId));
+        // Recargar datos para reflejar cambios
+        dispatch(getAllFromTable(COMPRAS));
+      } catch (error) {
+        console.error("Error al eliminar la compra:", error);
+      }
     }
   };
 
@@ -814,6 +826,16 @@ export function PagosProveedores() {
                                       </Button>
                                     </>
                                   )}
+
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleDeleteRow(item._id)}
+                                    title="Eliminar pago"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               ) : showEdit ? (
                                 renderEditableCell(item, key)
@@ -832,64 +854,66 @@ export function PagosProveedores() {
         )}
       </ContentCard>
 
-      {showColumnSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Columns3 className="w-5 h-5 text-blue-600" />
+      {
+        showColumnSelector && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 column-selector-container">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Columns3 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Personalizar columnas</h3>
+                    <p className="text-sm text-gray-600">Activa o desactiva columnas de la tabla.</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Personalizar columnas</h3>
-                  <p className="text-sm text-gray-600">Activa o desactiva columnas de la tabla.</p>
-                </div>
+                <button
+                  onClick={() => setShowColumnSelector(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
+                >
+                  &times;
+                </button>
               </div>
-              <button
-                onClick={() => setShowColumnSelector(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
-              >
-                &times;
-              </button>
-            </div>
 
-            <div className="flex gap-2 mb-4">
-              <Button onClick={() => toggleAllColumns(true)} variant="outline">
-                Mostrar todas
-              </Button>
-              <Button onClick={() => toggleAllColumns(false)} variant="outline">
-                Ocultar todas
-              </Button>
-              <Button onClick={resetColumns} variant="outline">
-                Por defecto
-              </Button>
-            </div>
+              <div className="flex gap-2 mb-4">
+                <Button onClick={() => toggleAllColumns(true)} variant="outline">
+                  Mostrar todas
+                </Button>
+                <Button onClick={() => toggleAllColumns(false)} variant="outline">
+                  Ocultar todas
+                </Button>
+                <Button onClick={resetColumns} variant="outline">
+                  Por defecto
+                </Button>
+              </div>
 
-            <div className="max-h-80 overflow-y-auto space-y-2 border rounded-lg p-3">
-              {Object.entries(availableColumns).map(([key, column]) => (
-                <div key={key} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`col-${key}`}
-                    checked={visibleColumns[key] || false}
-                    onChange={() => toggleColumn(key)}
-                    disabled={column.fixed}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label
-                    htmlFor={`col-${key}`}
-                    className={`ml-2 text-sm ${column.fixed ? "text-gray-500" : "text-gray-700"
-                      }`}
-                  >
-                    {column.label} {column.fixed && "(fija)"}
-                  </label>
-                </div>
-              ))}
+              <div className="max-h-80 overflow-y-auto space-y-2 border rounded-lg p-3">
+                {Object.entries(availableColumns).map(([key, column]) => (
+                  <div key={key} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`col-${key}`}
+                      checked={visibleColumns[key] || false}
+                      onChange={() => toggleColumn(key)}
+                      disabled={column.fixed}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor={`col-${key}`}
+                      className={`ml-2 text-sm ${column.fixed ? "text-gray-500" : "text-gray-700"
+                        }`}
+                    >
+                      {column.label} {column.fixed && "(fija)"}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </PageLayout>
+        )
+      }
+    </PageLayout >
   );
 }
 
