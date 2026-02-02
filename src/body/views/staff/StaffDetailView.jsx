@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import * as Tabs from '@radix-ui/react-tabs';
 import { getAllFromTable, updateStaff, deleteStaff } from "../../../redux/actions";
@@ -48,10 +48,28 @@ const StaffDetailView = () => {
         }
     };
 
-    // Date range for shifts and payroll - defaults to current/last complete fortnight
+    // Date range from URL or default
+    const [searchParams, setSearchParams] = useSearchParams();
     const fortnightRange = getCurrentFortnightRange();
-    const [startDate, setStartDate] = useState(fortnightRange.startDate);
-    const [endDate, setEndDate] = useState(fortnightRange.endDate);
+
+    // Initialize state from URL if present, otherwise default
+    const [startDate, setStartDate] = useState(searchParams.get("desde") || fortnightRange.startDate);
+    const [endDate, setEndDate] = useState(searchParams.get("hasta") || fortnightRange.endDate);
+
+    // Update URL when dates change
+    useEffect(() => {
+        const currentDesde = searchParams.get("desde");
+        const currentHasta = searchParams.get("hasta");
+
+        if (startDate !== currentDesde || endDate !== currentHasta) {
+            setSearchParams((prev) => {
+                const newParams = new URLSearchParams(prev);
+                newParams.set("desde", startDate);
+                newParams.set("hasta", endDate);
+                return newParams;
+            }, { replace: true });
+        }
+    }, [startDate, endDate, setSearchParams, searchParams]);
 
     // Initial load and CC search
     useEffect(() => {
@@ -656,7 +674,7 @@ const StaffDetailView = () => {
                                 {/* Shift Editing Button */}
                                 <div className="mt-6 flex justify-center">
                                     <Button
-                                        onClick={() => navigate(`/staff-manager/${cc}/editar-turnos`)}
+                                        onClick={() => navigate(`/staff-manager/${cc}/editar-turnos?desde=${startDate}&hasta=${endDate}`)}
                                         className="bg-amber-600 hover:bg-amber-700 gap-2"
                                     >
                                         <Edit2 className="w-4 h-4" /> Editar Turnos

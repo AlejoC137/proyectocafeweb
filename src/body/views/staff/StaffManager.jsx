@@ -27,46 +27,49 @@ const StaffManager = () => {
     }, [dispatch, legacyStaff]);
 
     return (
-        <div className="min-h-screen w-screen bg-gray-50 p-8 font-SpaceGrotesk">
-            <div className="max-w-7xl mx-auto space-y-6">
+        <div className="h-screen w-full bg-gray-50 flex flex-col font-SpaceGrotesk overflow-hidden">
+            <div className="flex-none p-6 space-y-4 bg-white border-b shadow-sm z-10">
 
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                            <Users className="w-8 h-8 text-blue-600" />
+                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                            <Users className="w-6 h-6 text-blue-600" />
                             Gestión de Empleados
                         </h1>
-                        <p className="text-gray-500 mt-1">
+                        <p className="text-gray-500 text-sm mt-1">
                             Administra el personal, turnos y nómina desde un solo lugar.
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-white text-gray-600 hover:bg-gray-50 shadow-sm transition">
+                        <button className="flex items-center gap-2 px-3 py-1.5 border rounded-lg bg-white text-gray-600 hover:bg-gray-50 shadow-sm transition text-sm">
                             <Filter className="w-4 h-4" />
                             Filtros
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-medium">
+                        <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-medium text-sm">
                             <Plus className="w-4 h-4" />
                             Nuevo Empleado
                         </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Content */}
+            {/* Content */}
+            <div className="flex-1 w-full overflow-hidden p-6">
                 {loading && employees.length === 0 ? (
-                    <div className="flex justify-center  w-screen items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <div className="flex justify-center h-full items-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
                     </div>
                 ) : error ? (
-                    <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-                        Error cargando empleados: {error}
+                    <div className="h-full flex items-center justify-center">
+                        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+                            Error cargando empleados: {error}
+                        </div>
                     </div>
                 ) : (
                     <StaffTable employees={employees.length > 0 ? employees : legacyStaff} />
                 )}
-
             </div>
         </div>
     );

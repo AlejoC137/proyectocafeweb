@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, updateLogStaff } from "../../../redux/actions";
 import { STAFF } from "../../../redux/actions-types";
@@ -20,10 +20,27 @@ const EditarTurnosView = () => {
     const [modifiedShifts, setModifiedShifts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Date range for filtering visible shifts - defaults to current/last complete fortnight
+    // Date range for filtering visible shifts - defaults to current/last complete fortnight or URL params
+    const [searchParams, setSearchParams] = useSearchParams();
     const fortnightRange = getCurrentFortnightRange();
-    const [visibleStartDate, setVisibleStartDate] = useState(fortnightRange.startDate);
-    const [visibleEndDate, setVisibleEndDate] = useState(fortnightRange.endDate);
+
+    const [visibleStartDate, setVisibleStartDate] = useState(searchParams.get("desde") || fortnightRange.startDate);
+    const [visibleEndDate, setVisibleEndDate] = useState(searchParams.get("hasta") || fortnightRange.endDate);
+
+    // Update URL when visible dates change
+    useEffect(() => {
+        const currentDesde = searchParams.get("desde");
+        const currentHasta = searchParams.get("hasta");
+
+        if (visibleStartDate !== currentDesde || visibleEndDate !== currentHasta) {
+            setSearchParams((prev) => {
+                const newParams = new URLSearchParams(prev);
+                newParams.set("desde", visibleStartDate);
+                newParams.set("hasta", visibleEndDate);
+                return newParams;
+            }, { replace: true });
+        }
+    }, [visibleStartDate, visibleEndDate, setSearchParams, searchParams]);
 
     useEffect(() => {
         const staffList = employees.length > 0 ? employees : legacyStaff;
@@ -127,7 +144,7 @@ const EditarTurnosView = () => {
 
     const handleCancel = () => {
         if (window.confirm("¿Descartar los cambios?")) {
-            navigate(`/staff-manager/${cc}`);
+            navigate(`/staff-manager/${cc}?desde=${visibleStartDate}&hasta=${visibleEndDate}`);
         }
     };
 
@@ -167,7 +184,7 @@ const EditarTurnosView = () => {
                 <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <button
-                            onClick={() => navigate(`/staff-manager/${cc}`)}
+                            onClick={() => navigate(`/staff-manager/${cc}?desde=${visibleStartDate}&hasta=${visibleEndDate}`)}
                             className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition font-medium"
                         >
                             <ArrowLeft className="w-5 h-5" />
