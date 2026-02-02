@@ -197,7 +197,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
             totalCost: ing.totalQuantity * ing.unitPrice
         })).sort((a, b) => b.totalCost - a.totalCost);
 
-        return { totalCost, ingredientsList, count: selectedRecipesList.length };
+        return { totalCost, ingredientsList, count: selectedRecipesList.length, selectedRecipes: selectedRecipesList };
     }, [selectedItems, allRecipes, ingredientMap]);
 
 
@@ -219,9 +219,10 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                     <title>Lista de Ingredientes - ${today}</title>
                     <style>
                         body { font-family: sans-serif; padding: 20px; }
-                        h1 { text-align: center; color: #333; }
+                        h1, h2 { text-align: center; color: #333; }
+                        h2 { font-size: 18px; margin-top: 30px; margin-bottom: 10px; text-align: left; border-bottom: 2px solid #eee; padding-bottom: 5px; }
                         .info { margin-bottom: 20px; font-size: 14px; text-align: center; color: #666; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
                         th { background-color: #f2f2f2; font-weight: bold; }
                         .text-right { text-align: right; }
@@ -233,12 +234,39 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                     </style>
                 </head>
                 <body>
-                    <h1>Lista Consolidad de Ingredientes</h1>
+                    <h1>Reporte Costos y Materiales</h1>
                     <div class="info">
-                        <strong>Recetas seleccionadas:</strong> ${calculationResult.count}<br>
-                        <strong>Fecha de impresión:</strong> ${today}
+                        <strong>Fecha de impresión:</strong> ${today}<br>
+                        <strong>Total Recetas:</strong> ${calculationResult.count}
                     </div>
-                    
+
+                    <h2>1. Resumen de Recetas Seleccionadas</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Receta</th>
+                                <th>Origen</th>
+                                <th class="text-right">Costo Calc.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             ${calculationResult.selectedRecipes.map(r => `
+                                <tr>
+                                    <td>${r.name}</td>
+                                    <td>${r.sourceType === 'menu' ? 'Menú' : 'Producción'}</td>
+                                    <td class="text-right">$${r.calculatedCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" class="text-right">Total Costo Recetas</th>
+                                <th class="text-right">$${calculationResult.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <h2>2. Lista Consolidad de Ingredientes</h2>
                     <table>
                         <thead>
                             <tr>
@@ -260,7 +288,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                         </tbody>
                         <tfoot>
                             <tr>
-                                <th colspan="3" class="text-right">Total General</th>
+                                <th colspan="3" class="text-right">Total Materiales</th>
                                 <th class="text-right">$${calculationResult.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</th>
                             </tr>
                         </tfoot>
