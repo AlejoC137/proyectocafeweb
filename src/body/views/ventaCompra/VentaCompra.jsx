@@ -83,7 +83,7 @@ function VentaCompra() {
 
   // Renderizado del componente principal
   return (
-    <div className="h-[calc(100vh-5rem)] w-full bg-slate-100 overflow-hidden p-2 flex flex-col">
+    <div className="h-[calc(100vh-5rem)] w-full bg-slate-100 overflow-y-auto p-2 flex flex-col">
       {/* --- Cabecera con Controles --- */}
       <div className="flex flex-wrap items-center gap-4 mb-2 mt-4 shrink-0">
         <h1 className="text-2xl font-bold text-slate-800 mr-auto">Gestión de Ventas</h1>
@@ -129,7 +129,7 @@ function VentaCompra() {
       </div>
 
       {/* --- Contenido Principal (Grid de Mesas) --- */}
-      <div className="flex-grow min-h-0">
+      <div className="flex-grow min-h-[600px]">
         <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full"
           style={{ gridAutoRows: 'minmax(0, 1fr)' }}
