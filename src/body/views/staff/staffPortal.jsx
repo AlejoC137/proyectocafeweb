@@ -227,15 +227,15 @@ function StaffPortal() {
   return (
     <PageLayout loading={loading}>
       {/* Contenedor principal FLEX que organiza las 3 columnas */}
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 pb-20 lg:pb-0">
 
         {/* --- COLUMNA 1 (a) --- */}
-        <div className="w-1/3">
+        <div className="w-full lg:w-1/3">
           <WorkIsueStaff />
         </div>
 
         {/* --- COLUMNA 2 (b) --- */}
-        <div className="w-1/3 flex flex-col gap-4">
+        <div className="w-full lg:w-1/3 flex flex-col gap-4">
           {/* Botones generales del sistema */}
           <ContentCard title="Acceso al Sistema">
             <ActionButtonGroup
@@ -262,7 +262,7 @@ function StaffPortal() {
                 <select
                   value={selectedStaffId}
                   onChange={handleSelectStaff}
-                  className="flex border rounded px-2 py-2 bg-gray-100 "
+                  className="flex border rounded px-2 py-2 bg-gray-100 w-full"
                 >
                   <option value="">Seleccione Staff</option>
                   {allStaff.map((staff) => (
@@ -317,7 +317,7 @@ function StaffPortal() {
         </div>
 
         {/* --- COLUMNA 3 (c) --- */}
-        <div className="w-1/3">
+        <div className="w-full lg:w-1/3">
           <Notas />
         </div>
 

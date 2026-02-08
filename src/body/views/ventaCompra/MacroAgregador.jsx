@@ -232,9 +232,9 @@ const MacroAgregador = ({ onClose }) => {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                     {/* Left Column: Ingredient Selection */}
-                    <div className="w-1/3 border-r p-4 flex flex-col gap-4 bg-gray-50">
+                    <div className="w-full md:w-1/3 border-r-0 md:border-r border-b md:border-b-0 p-4 flex flex-col gap-4 bg-gray-50 h-1/2 md:h-auto overflow-y-auto">
                         <h3 className="font-semibold text-lg border-b pb-2">1. Seleccionar Ingrediente</h3>
 
                         <div className="relative">
@@ -287,7 +287,7 @@ const MacroAgregador = ({ onClose }) => {
                     </div>
 
                     {/* Right Column: Recipe Selection */}
-                    <div className="w-2/3 p-4 flex flex-col gap-4">
+                    <div className="w-full md:w-2/3 p-4 flex flex-col gap-4 h-1/2 md:h-auto overflow-hidden">
                         <div className="flex justify-between items-center border-b pb-2">
                             <h3 className="font-semibold text-lg">2. Seleccionar Recetas Destino</h3>
                             <span className="text-sm text-gray-500">Seleccionadas: {selectedRecipes.size}</span>

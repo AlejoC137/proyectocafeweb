@@ -83,16 +83,18 @@ function VentaCompra() {
 
   // Renderizado del componente principal
   return (
-    <div className="h-[calc(100vh-5rem)] w-full bg-slate-100 overflow-y-auto p-2 flex flex-col">
+    <div className="h-[calc(100dvh-5rem)] w-full bg-slate-100 overflow-y-auto p-2 flex flex-col">
       {/* --- Cabecera con Controles --- */}
-      <div className="flex flex-wrap items-center gap-4 mb-2 mt-4 shrink-0">
-        <h1 className="text-2xl font-bold text-slate-800 mr-auto">Gestión de Ventas</h1>
+      <div className="flex flex-wrap items-center gap-2 mb-2 mt-4 shrink-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 mr-auto w-full sm:w-auto">Gestión de Ventas</h1>
 
-        <Propina />
+        <div className="w-full sm:w-auto">
+          <Propina />
+        </div>
 
         <Button
           onClick={() => setShowGastos(!showGastos)}
-          className={`gap-2 h-10 border-2 font-bold ${showGastos ? 'bg-amber-100 border-amber-400 text-amber-800' : 'bg-white border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-800'}`}
+          className={`gap-2 h-10 border-2 font-bold w-full sm:w-auto ${showGastos ? 'bg-amber-100 border-amber-400 text-amber-800' : 'bg-white border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-800'}`}
         >
           <Eye size={18} />
           {showGastos ? "Ocultar Gastos" : "Mostrar Gastos"}
@@ -100,7 +102,7 @@ function VentaCompra() {
 
         <Button
           onClick={() => setShowMenu(!showMenu)}
-          className={`gap-2 h-10 border-2 font-bold ${showMenu ? 'bg-emerald-100 border-emerald-400 text-emerald-800' : 'bg-white border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-800'}`}
+          className={`gap-2 h-10 border-2 font-bold w-full sm:w-auto ${showMenu ? 'bg-emerald-100 border-emerald-400 text-emerald-800' : 'bg-white border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-800'}`}
         >
           <UtensilsCrossed size={18} />
           {showMenu ? "Ocultar Almuerzo" : "Mostrar Almuerzo"}

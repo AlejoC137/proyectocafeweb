@@ -168,7 +168,7 @@ const Notas = () => {
                                 <p className={`w-full text-base whitespace-pre-wrap ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
                                     {item.content}
                                 </p>
-                                <button onClick={() => handleDelete(item._id)} className="text-slate-400 hover:text-red-600 shrink-0">
+                                <button onClick={() => handleDelete(item._id)} className="bg-white text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 p-1.5 rounded-md shadow-sm transition-colors shrink-0">
                                     <Trash2 size={18} />
                                 </button>
                             </div>

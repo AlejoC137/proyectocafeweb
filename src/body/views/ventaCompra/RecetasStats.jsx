@@ -359,8 +359,8 @@ function RecetasStats() {
 
     const visibleColumns = useMemo(() => {
         let cols = [
-            { key: 'legacyName', label: 'Nombre Receta', subtitle: 'Nombre legado de la receta', width: 'w-1/4' },
-            { key: 'productInfo', label: 'Producto Asociado', subtitle: 'Producto del inventario/menú enlazado', width: 'w-1/4' },
+            { key: 'legacyName', label: 'Nombre Receta', subtitle: 'Nombre legado de la receta' },
+            { key: 'productInfo', label: 'Producto Asociado', subtitle: 'Producto del inventario/menú enlazado' },
             { key: 'recipeCost', label: 'Valor Receta', sufix: '$', subtitle: 'Costo calculado de la receta (Materia Prima)', width: 'w-32' }, // New Column
             { key: 'porcion', label: 'Porción', sufix: '', subtitle: 'Tamaño de la porción', width: 'w-24' },
             { key: 'cantidad', label: 'Cant.', sufix: '', subtitle: 'Cantidad producida', width: 'w-20' },
@@ -387,58 +387,65 @@ function RecetasStats() {
 
     return (
         <>
-            <div className="p-4 md:p-8 bg-gray-100 min-h-screen w-full flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Análisis de Recetas</h1>
-                    {isGlobalUpdating && <span className="text-blue-600 font-bold animate-pulse">{globalUpdateProgress}</span>}
+            <div className="w-full flex flex-col mt-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
+                    <h1 className="text-xl md:text-3xl font-bold text-gray-800">Análisis de Recetas</h1>
+                    {isGlobalUpdating && <span className="text-blue-600 font-bold animate-pulse text-sm">{globalUpdateProgress}</span>}
                 </div>
 
 
-                <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-4 mb-4 items-center">
                     <input
                         type="text"
                         placeholder="Buscar por nombre de receta o producto..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="p-2 border rounded-md shadow-sm w-full md:w-1/3"
+                        className="p-2 border rounded-md shadow-sm w-full md:flex-grow"
                     />
-                    <select
-                        className="p-2 border rounded-md shadow-sm text-sm"
-                        value={selectedGroup}
-                        onChange={(e) => { setSelectedGroup(e.target.value); setSelectedSubGroup(''); }}
-                    >
-                        <option value="">Todos los Grupos</option>
-                        {availableGroups.map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
-                    <select
-                        className="p-2 border rounded-md shadow-sm text-sm"
-                        value={selectedSubGroup}
-                        onChange={(e) => setSelectedSubGroup(e.target.value)}
-                        disabled={!selectedGroup}
-                    >
-                        <option value="">Todos los Subgrupos</option>
-                        {availableSubGroups.map(sg => <option key={sg} value={sg}>{sg}</option>)}
-                    </select>
-                    <Button onClick={() => setAreRecetasVisible(!areRecetasVisible)} variant="secondary">
-                        {areRecetasVisible ? 'Ocultar Lista' : 'Mostrar Todas Las Recetas'}
-                    </Button>
-                    <Button onClick={() => setAreCostColumnsVisible(!areCostColumnsVisible)} variant="outline">
-                        {areCostColumnsVisible ? 'Ocultar Costos' : 'Mostrar Costos'}
-                    </Button>
-                    <Button onClick={() => setAreYieldColumnsVisible(!areYieldColumnsVisible)} variant="outline">
-                        {areYieldColumnsVisible ? 'Ocultar Rendimiento' : 'Mostrar Rendimiento'}
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full md:w-auto">
+                        <select
+                            className="p-2 border rounded-md shadow-sm text-sm w-full md:w-48"
+                            value={selectedGroup}
+                            onChange={(e) => { setSelectedGroup(e.target.value); setSelectedSubGroup(''); }}
+                        >
+                            <option value="">Todos los Grupos</option>
+                            {availableGroups.map(g => <option key={g} value={g}>{g}</option>)}
+                        </select>
+                        <select
+                            className="p-2 border rounded-md shadow-sm text-sm w-full md:w-48"
+                            value={selectedSubGroup}
+                            onChange={(e) => setSelectedSubGroup(e.target.value)}
+                            disabled={!selectedGroup}
+                        >
+                            <option value="">Todos los Subgrupos</option>
+                            {availableSubGroups.map(sg => <option key={sg} value={sg}>{sg}</option>)}
+                        </select>
+                    </div>
 
-                    <Button onClick={updateAllCosts} disabled={isGlobalUpdating} className="bg-orange-500 hover:bg-orange-600 text-white">
-                        {isGlobalUpdating ? "Actualizando..." : "Actualizar Costos Recetas"}
-                    </Button>
+                    <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                        <Button onClick={() => setAreRecetasVisible(!areRecetasVisible)} variant="secondary" className="flex-1 md:flex-none">
+                            {areRecetasVisible ? 'Ocultar Lista' : 'Mostrar Todas'}
+                        </Button>
+                        <Button onClick={() => setAreCostColumnsVisible(!areCostColumnsVisible)} variant="outline" className="flex-1 md:flex-none">
+                            {areCostColumnsVisible ? 'Ocultar Costos' : 'Mostrar Costos'}
+                        </Button>
+                        <Button onClick={() => setAreYieldColumnsVisible(!areYieldColumnsVisible)} variant="outline" className="flex-1 md:flex-none">
+                            {areYieldColumnsVisible ? 'Ocultar Rendimiento' : 'Mostrar Rendimiento'}
+                        </Button>
+                    </div>
 
-                    <Button onClick={handleSync} variant="outline">
-                        Sincronizar Relaciones
-                    </Button>
-                    <Button onClick={() => setShowImportSection(!showImportSection)} className={showImportSection ? "bg-gray-600" : "bg-blue-600 hover:bg-blue-700 text-white"}>
-                        {showImportSection ? "Ocultar Importador" : "Importar JSON"}
-                    </Button>
+                    <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                        <Button onClick={updateAllCosts} disabled={isGlobalUpdating} className="bg-orange-500 hover:bg-orange-600 text-white flex-1 md:flex-none">
+                            {isGlobalUpdating ? "Actualizando..." : "Actualizar Costos"}
+                        </Button>
+
+                        <Button onClick={handleSync} variant="outline" className="flex-1 md:flex-none">
+                            Sincronizar
+                        </Button>
+                        <Button onClick={() => setShowImportSection(!showImportSection)} className={`flex-1 md:flex-none ${showImportSection ? "bg-gray-600" : "bg-blue-600 hover:bg-blue-700 text-white"}`}>
+                            {showImportSection ? "Ocultar Importador" : "Importar JSON"}
+                        </Button>
+                    </div>
                 </div>
 
                 {showImportSection && (

@@ -43,7 +43,7 @@ const WorkIsueStaff = () => {
 
     // --- Lógica de datos (sin cambios) ---
     const fetchAllData = useCallback(async () => {
-        const [tareasAction, staffAction , ProcedimientoAction, RecetasProduccionAction] = await Promise.all([
+        const [tareasAction, staffAction, ProcedimientoAction, RecetasProduccionAction] = await Promise.all([
             dispatch(getAllFromTable("WorkIsue")),
             dispatch(getAllFromTable("Staff")),
             dispatch(getAllFromTable("RecetasProcedimientos")),
@@ -58,7 +58,7 @@ const WorkIsueStaff = () => {
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
-    
+
     const processedData = useMemo(() => rawData.map(task => ({
         ...task,
         assigneeName: staff.find(s => s._id === task.Ejecutor)?.Nombre || 'Sin asignar',
@@ -106,27 +106,27 @@ const WorkIsueStaff = () => {
         setSortConfig({ key, direction });
     };
     // --- FIN Lógica de datos ---
-console.log(groupedAndSortedItems);
+    console.log(groupedAndSortedItems);
 
     return (
         <div className="flex flex-col h-full font-sans">
             <main className="flex-1 overflow-auto p-2">
                 <div className="border border-slate-200 rounded-lg overflow-hidden shadow-md bg-white text-sm">
-                    
+
                     {/* --- INICIO: NUEVO HEADER CON FLEXBOX --- */}
                     <div className="flex bg-slate-100 border-b-2 border-slate-300 font-semibold text-xs text-slate-600 uppercase sticky top-0 z-20">
                         <div className="px-4 py-3 w-[120px] shrink-0"> {/* Ancho Mínimo Fijo */}
-                            <button onClick={() => requestSort('Procedimientos')} className="flex items-center gap-1.5 hover:text-slate-900">
+                            <button onClick={() => requestSort('Procedimientos')} className="flex items-center justify-center w-full gap-1.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-2 py-1.5 rounded shadow-sm text-xs transition-colors font-bold">
                                 Tarea <ArrowUpDown size={14} />
                             </button>
                         </div>
                         <div className="px-4 py-3 w-[120px] shrink-0"> {/* Ancho Mínimo Fijo */}
-                            <button onClick={() => requestSort('Ejecutor')} className="flex items-center gap-1.5 hover:text-slate-900">
+                            <button onClick={() => requestSort('Ejecutor')} className="flex items-center justify-center w-full gap-1.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-2 py-1.5 rounded shadow-sm text-xs transition-colors font-bold">
                                 Ejecutor <ArrowUpDown size={14} />
                             </button>
                         </div>
                         <div className="px-4 py-3 flex-1"> {/* Espacio Flexible */}
-                            <button onClick={() => requestSort('Notas')} className="flex items-center gap-1.5 hover:text-slate-900">
+                            <button onClick={() => requestSort('Notas')} className="flex items-center gap-1.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-3 py-1.5 rounded shadow-sm text-xs transition-colors font-bold">
                                 Título / Notas <ArrowUpDown size={14} />
                             </button>
                         </div>
@@ -144,11 +144,11 @@ console.log(groupedAndSortedItems);
                                         {groupName} <span className='font-normal text-slate-600'>({groupedAndSortedItems[groupName].length})</span>
                                     </div>
                                 </div>
-                                
+
                                 {/* Filas de Tareas */}
                                 {!collapsedGroups.has(groupName) && groupedAndSortedItems[groupName].map((item) => (
                                     <div key={item._id} className='flex hover:bg-slate-50 border-b'>
-                                        
+
                                         {/* === INICIO: CELDA DE PROCEDIMIENTO (SIN TÍTULO) === */}
                                         <div className="p-2 w-[120px] shrink-0 break-words align-top flex flex-col gap-1">
                                             {(() => {
@@ -166,8 +166,8 @@ console.log(groupedAndSortedItems);
                                                 return parsedProcedimientos.map(procRef => {
                                                     const procedimientoId = procRef._id;
                                                     const tipo = procRef._tipo;
-                                                    
-                                                    if (!procedimientoId) return null; 
+
+                                                    if (!procedimientoId) return null;
 
                                                     let dataItem = null;
                                                     let href = '';
@@ -176,11 +176,11 @@ console.log(groupedAndSortedItems);
                                                     if (tipo === 'procedimiento') {
                                                         dataItem = procedimientos.find(p => p._id === procedimientoId);
                                                         href = `/ProcedimientoModal/${procedimientoId}`;
-                                                        icon = '📕'; 
+                                                        icon = '📕';
                                                     } else {
                                                         dataItem = recetasProduccion.find(r => r._id === procedimientoId);
                                                         href = `/receta/${procedimientoId}`;
-                                                        icon = '📜'; 
+                                                        icon = '📜';
                                                     }
 
                                                     if (!dataItem) {
@@ -196,12 +196,12 @@ console.log(groupedAndSortedItems);
 
                                                     return (
                                                         <a
-                                                            key={procedimientoId} 
+                                                            key={procedimientoId}
                                                             href={href}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="inline-flex items-center gap-1 p-1 px-1.5 rounded-md font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 text-xs"
-                                                            title={procedureName} 
+                                                            title={procedureName}
                                                         >
                                                             {icon} {`${procedureName}`}
                                                         </a>
@@ -242,12 +242,12 @@ console.log(groupedAndSortedItems);
 // --- Componente de Celda Estática (Solo Lectura) ---
 const StaticCell = ({ field, value, type = 'text', options = [] }) => {
     let displayValue = value || (field === 'Notas' ? <span className="text-slate-400 italic">Sin Notas</span> : '-');
-    
+
     if (type === 'select-staff') {
         const staffMember = options.find(s => s._id === value);
         displayValue = staffMember ? staffMember.Nombre : <span className="text-slate-400 italic">Sin asignar</span>;
     }
-    
+
     // El 'displayValue' para las notas ya está manejado arriba
     // (si el valor es nulo, muestra "Sin Notas")
     return <div>{displayValue}</div>;

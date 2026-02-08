@@ -6,12 +6,15 @@
 :root {
   font-family: 'Playwrite DE Grund', 'Montserrat', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.6;
-  font-weight: 700; /* Bold como peso principal */
+  font-weight: 700;
+  /* Bold como peso principal */
   padding: 0;
 
-  color-scheme: light  ;
-  color: #374151; /* text-gray-700 for better contrast on cream */
-  background-color: #F5F0E1; /* cream-bg */
+  color-scheme: light;
+  color: #374151;
+  /* text-gray-700 for better contrast on cream */
+  background-color: #F5F0E1;
+  /* cream-bg */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,6 +27,7 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -49,13 +53,16 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #ffffff;
+  color: #000000;
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -67,13 +74,16 @@ button:focus-visible {
     background-color: #ffffff;
     padding: 0%
   }
+
   a:hover {
     color: #747bff;
     padding: 0%;
   }
+
   button {
     padding: 0%;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
+    color: #000000;
   }
 }
 
@@ -106,27 +116,47 @@ button:focus-visible {
     --radius: 0.5rem;
     --padding: 0;
   }
-  .  {
+
+  . {
     /* Mantener el mismo fondo claro que el tema light */
-    --background: 32 24% 94%; /* cream-bg equivalent in HSL */
-    --foreground: 0 0% 15%; /* Dark text for better contrast on light bg */
-    --card: 32 24% 94%; /* Same cream background for cards */
-    --card-foreground: 0 0% 15%; /* Dark text on cards */
-    --popover: 32 24% 94%; /* Same cream background for popovers */
-    --popover-foreground: 0 0% 15%; /* Dark text on popovers */
-    --primary: 220 85% 25%; /* Dark primary color for contrast */
-    --primary-foreground: 0 0% 98%; /* Light text on primary */
-    --secondary: 25 15% 85%; /* Light secondary with slight warmth */
-    --secondary-foreground: 0 0% 20%; /* Dark text on secondary */
-    --muted: 25 15% 85%; /* Light muted areas */
-    --muted-foreground: 0 0% 35%; /* Darker muted text */
-    --accent: 25 20% 80%; /* Light accent with cream tint */
-    --accent-foreground: 0 0% 20%; /* Dark text on accent */
-    --destructive: 0 84.2% 45%; /* Darker red for contrast */
-    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
-    --border: 0 0% 75%; /* Darker borders for visibility */
-    --input: 25 15% 88%; /* Light input backgrounds */
-    --ring: 220 85% 25%; /* Dark ring color */
+    --background: 32 24% 94%;
+    /* cream-bg equivalent in HSL */
+    --foreground: 0 0% 15%;
+    /* Dark text for better contrast on light bg */
+    --card: 32 24% 94%;
+    /* Same cream background for cards */
+    --card-foreground: 0 0% 15%;
+    /* Dark text on cards */
+    --popover: 32 24% 94%;
+    /* Same cream background for popovers */
+    --popover-foreground: 0 0% 15%;
+    /* Dark text on popovers */
+    --primary: 220 85% 25%;
+    /* Dark primary color for contrast */
+    --primary-foreground: 0 0% 98%;
+    /* Light text on primary */
+    --secondary: 25 15% 85%;
+    /* Light secondary with slight warmth */
+    --secondary-foreground: 0 0% 20%;
+    /* Dark text on secondary */
+    --muted: 25 15% 85%;
+    /* Light muted areas */
+    --muted-foreground: 0 0% 35%;
+    /* Darker muted text */
+    --accent: 25 20% 80%;
+    /* Light accent with cream tint */
+    --accent-foreground: 0 0% 20%;
+    /* Dark text on accent */
+    --destructive: 0 84.2% 45%;
+    /* Darker red for contrast */
+    --destructive-foreground: 0 0% 98%;
+    /* Light text on destructive */
+    --border: 0 0% 75%;
+    /* Darker borders for visibility */
+    --input: 25 15% 88%;
+    /* Light input backgrounds */
+    --ring: 220 85% 25%;
+    /* Dark ring color */
     --chart-1: 220 70% 40%;
     --chart-2: 160 60% 35%;
     --chart-3: 30 80% 45%;
@@ -138,24 +168,32 @@ button:focus-visible {
 
 @layer base {
   * {
-    @apply border-border; /* Aplica bordes */
-    @apply px-0; /* Elimina padding horizontal */
+    @apply border-border;
+    /* Aplica bordes */
+    @apply px-0;
+    /* Elimina padding horizontal */
   }
+
   body {
-    @apply text-foreground; /* Solo aplica el texto, no el fondo */
-    @apply px-0; /* Asegura que el body no tenga padding horizontal */
-    background-color: #F5F0E1 !important; /* Fuerza el fondo cream siempre */
+    @apply text-foreground;
+    /* Solo aplica el texto, no el fondo */
+    @apply px-0;
+    /* Asegura que el body no tenga padding horizontal */
+    background-color: #F5F0E1 !important;
+    /* Fuerza el fondo cream siempre */
   }
-  
+
   /* Forzar fondo cream en elementos principales */
-  html, body, #root {
+  html,
+  body,
+  #root {
     background-color: #F5F0E1 !important;
   }
-  
+
   /* Asegurar que los elementos principales mantengan el fondo cream */
-  .  body,
-  .  #root,
-  .  html {
+  . body,
+  . #root,
+  . html {
     background-color: #F5F0E1 !important;
   }
 }
@@ -166,12 +204,12 @@ button:focus-visible {
     font-family: 'Playwrite DE Grund', cursive;
     font-weight: 700;
   }
-  
+
   .font-playwrite-semibold {
     font-family: 'Playwrite DE Grund', cursive;
     font-weight: 600;
   }
-  
+
   .font-playwrite-medium {
     font-family: 'Playwrite DE Grund', cursive;
     font-weight: 500;
@@ -181,56 +219,56 @@ button:focus-visible {
   .bg-cream-consistent {
     background-color: #F5F0E1 !important;
   }
-  
+
   .bg-cream-force {
     background-color: #F5F0E1 !important;
   }
-  
+
   /* Fuerza el fondo cream en elementos específicos */
   .theme-consistent-bg {
     background-color: #F5F0E1 !important;
   }
-  
+
   /* Utilidad para texto que se ajusta al fondo claro */
   .text- -on-cream {
     color: #374151 !important;
   }
-  
+
   .text-darker-on-cream {
     color: #1f2937 !important;
   }
-  
+
   /* Clases de utilidad para botones con tema consistente */
   .btn-cream-theme {
-    background-color: #F5F0E1 !important;
+    background-color: #FFFFFF !important;
     color: #374151 !important;
     border: 1px solid #A5B8A1 !important;
     transition: all 0.2s ease-in-out !important;
   }
-  
+
   .btn-cream-theme:hover {
     background-color: #D9E4D7 !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   }
-  
+
   .btn-cream-primary {
-    background-color: #F5F0E1 !important;
+    background-color: #FFFFFF !important;
     color: #3A4FDE !important;
     border: 1px solid #3A4FDE !important;
   }
-  
+
   .btn-cream-primary:hover {
     background-color: #D9E4D7 !important;
     border-color: #2938b8 !important;
   }
-  
+
   .btn-cream-danger {
-    background-color: #F5F0E1 !important;
+    background-color: #FFFFFF !important;
     color: #dc2626 !important;
     border: 1px solid #ef4444 !important;
   }
-  
+
   .btn-cream-danger:hover {
     background-color: #fef2f2 !important;
     border-color: #dc2626 !important;
@@ -239,106 +277,117 @@ button:focus-visible {
 
 /* Clases globales para textos bold */
 @layer components {
-  p, span, label, li {
+
+  p,
+  span,
+  label,
+  li {
     @apply font-bold;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-SpaceGrotesk font-bold;
   }
-  
+
   /* Estilos globales limpios para todos los botones HTML */
   button {
     @apply font-PlaywriteDE font-medium;
-    background-color: #F5F0E1; /* cream-bg */
-    color: #A5B8A1; /* sage-green */
+    background-color: #FFFFFF;
+    /* white-bg enforced */
+    color: #A5B8A1;
+    /* sage-green */
     border: 1px solid #A5B8A1;
     border-radius: 6px;
     padding: 8px 16px;
     transition: all 0.15s ease;
     cursor: pointer;
   }
-  
+
   button:hover {
     background-color: #A5B8A1;
     color: white;
   }
-  
+
   button:active {
     transform: translateY(1px);
   }
-  
+
   /* Estados específicos para botones con clases */
   button.status-ok {
     color: #10b981;
     border-color: #10b981;
   }
-  
+
   button.status-ok:hover {
     background-color: #10b981;
     color: white;
   }
-  
+
   button.status-na {
     color: #64748b;
     border-color: #64748b;
   }
-  
+
   button.status-na:hover {
     background-color: #64748b;
     color: white;
   }
-  
+
   /* Botones de acción */
   button.action-edit {
     color: #3b82f6;
     border-color: #3b82f6;
   }
-  
+
   button.action-edit:hover {
     background-color: #3b82f6;
     color: white;
   }
-  
+
   button.action-delete,
   button.danger {
     color: #ef4444;
     border-color: #ef4444;
   }
-  
+
   button.action-delete:hover,
   button.danger:hover {
     background-color: #ef4444;
     color: white;
   }
-  
+
   /* Botones de exportación */
   button.excel-export {
     color: #16a34a;
     border-color: #16a34a;
   }
-  
+
   button.excel-export:hover {
     background-color: #16a34a;
     color: white;
   }
-  
+
   /* Módulos específicos */
   button.almacen {
     color: #a3a3a3;
     border-color: #a3a3a3;
   }
-  
+
   button.almacen:hover {
     background-color: #a3a3a3;
     color: white;
   }
-  
+
   button.produccion {
     color: #f97316;
     border-color: #f97316;
   }
-  
+
   button.produccion:hover {
     background-color: #f97316;
     color: white;
@@ -350,27 +399,35 @@ button:focus-visible {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -380,6 +437,7 @@ button:focus-visible {
   0% {
     background-position: -200px 0;
   }
+
   100% {
     background-position: calc(200px + 100%) 0;
   }
@@ -390,24 +448,22 @@ button:focus-visible {
   .animate-gradient {
     animation: gradientShift 3s ease infinite;
   }
-  
+
   .animate-pulse-slow {
     animation: pulse 2s ease-in-out infinite;
   }
-  
+
   .animate-bounce-slow {
     animation: bounce 2s ease-in-out infinite;
   }
-  
+
   .animate-shimmer {
     animation: shimmer 2s infinite;
-    background-image: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.2) 20%,
-      rgba(255, 255, 255, 0.5) 60%,
-      rgba(255, 255, 255, 0)
-    );
+    background-image: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 20%,
+        rgba(255, 255, 255, 0.5) 60%,
+        rgba(255, 255, 255, 0));
     background-repeat: no-repeat;
     background-size: 200px 100%;
   }

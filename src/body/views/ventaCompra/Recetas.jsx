@@ -132,13 +132,13 @@ function Recetas() {
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen w-screen">
+
+    <div className="p-2 md:p-8 bg-gray-50 min-h-screen w-full">
       <div className="mb-8 p-4 border rounded-lg bg-white shadow-md">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Crear y Asignar Nueva Receta</h2>
-        <div className="flex items-end space-x-4">
-          <div className="flex-grow">
+        <h2 className="text-lg md:text-xl font-bold mb-4 text-gray-800">Crear y Asignar Nueva Receta</h2>
+        <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex-grow w-full">
             <label htmlFor="product-select" className="block text-sm font-medium text-gray-700">
-              Seleccione un Producto (sin receta asignada)
               Seleccione un Producto (sin receta asignada)
             </label>
             <div className="relative mt-1">
@@ -174,29 +174,29 @@ function Recetas() {
           <button
             onClick={handleCreateRecipe}
             disabled={!selectedProductId || loading}
-            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Crear y Asignar Receta
           </button>
         </div>
       </div>
-      <div className="flex justify-end flex-wrap mb-4 sticky top-4 z-10 gap-4">
+      <div className="flex flex-col sm:flex-row justify-end flex-wrap mb-4 sticky top-4 z-10 gap-2 sm:gap-4">
         <button
           onClick={() => setShowMacroEditorRecipes(true)}
-          className="px-6 py-3 bg-amber-600 text-white font-bold rounded-full shadow-lg hover:bg-amber-700 transition transform hover:scale-105"
+          className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 bg-amber-600 text-white font-bold rounded-full shadow-lg hover:bg-amber-700 transition transform hover:scale-105 text-sm sm:text-base"
         >
           ⏱️ Macro Editor de Recetas
         </button>
 
         <button
           onClick={() => setShowMacroAgregador(true)}
-          className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition transform hover:scale-105"
+          className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition transform hover:scale-105 text-sm sm:text-base"
         >
           🔍 Macroagregador de Ingredientes
         </button>
         <button
           onClick={() => setShowMacroCalculador(true)}
-          className="px-6 py-3 bg-purple-600 text-white font-bold rounded-full shadow-lg hover:bg-purple-700 transition transform hover:scale-105"
+          className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 bg-purple-600 text-white font-bold rounded-full shadow-lg hover:bg-purple-700 transition transform hover:scale-105 text-sm sm:text-base"
         >
           🧮 Macro Calculador
         </button>

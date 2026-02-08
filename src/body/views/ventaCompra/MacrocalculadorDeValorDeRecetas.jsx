@@ -317,9 +317,9 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                     {/* Left Panel: Recipe Selection */}
-                    <div className="w-1/2 md:w-5/12 border-r flex flex-col bg-gray-50">
+                    <div className="w-full md:w-5/12 border-r-0 md:border-r border-b md:border-b-0 flex flex-col bg-gray-50 h-1/2 md:h-auto">
                         <div className="p-3 border-b bg-white">
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-3">
                                 <TabsList className="grid w-full grid-cols-2">
@@ -398,7 +398,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                     </div>
 
                     {/* Right Panel: Results */}
-                    <div className="w-1/2 md:w-7/12 flex flex-col bg-white">
+                    <div className="w-full md:w-7/12 flex flex-col bg-white h-1/2 md:h-auto">
                         <div className="p-6 bg-indigo-50 border-b border-indigo-100">
                             <h3 className="text-lg font-bold text-indigo-900 mb-4">Resumen de {calculationResult.count} Recetas Seleccionadas</h3>
 

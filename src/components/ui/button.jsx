@@ -10,31 +10,31 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Botones básicos
-        default: "bg-cream-bg text-cobalt-blue border border-cobalt-blue hover:bg-cobalt-blue hover:text-white",
-        secondary: "bg-cream-bg text-sage-green border border-sage-green hover:bg-sage-green hover:text-white",
-        destructive: "bg-cream-bg text-action-delete border border-action-delete hover:bg-action-delete hover:text-white",
-        outline: "border border-input bg-cream-bg hover:bg-accent hover:text-accent-foreground",
+        default: "bg-white text-cobalt-blue border border-cobalt-blue hover:bg-cobalt-blue hover:text-white",
+        secondary: "bg-white text-sage-green border border-sage-green hover:bg-sage-green hover:text-white",
+        destructive: "bg-white text-action-delete border border-action-delete hover:bg-action-delete hover:text-white",
+        outline: "border border-input bg-white hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        
+
         // Estados OK/NA
-        "status-ok": "bg-cream-bg text-status-ok border border-status-ok hover:bg-status-ok hover:text-white",
-        "status-na": "bg-cream-bg text-status-na border border-status-na hover:bg-status-na hover:text-white",
-        "status-pending": "bg-cream-bg text-status-pending border border-status-pending hover:bg-status-pending hover:text-white",
-        
+        "status-ok": "bg-white text-status-ok border border-status-ok hover:bg-status-ok hover:text-white",
+        "status-na": "bg-white text-status-na border border-status-na hover:bg-status-na hover:text-white",
+        "status-pending": "bg-white text-status-pending border border-status-pending hover:bg-status-pending hover:text-white",
+
         // Acciones de edición
-        "action-edit": "bg-cream-bg text-action-edit border border-action-edit hover:bg-action-edit hover:text-white",
-        "action-save": "bg-cream-bg text-action-save border border-action-save hover:bg-action-save hover:text-white",
-        "action-cancel": "bg-cream-bg text-action-cancel border border-action-cancel hover:bg-action-cancel hover:text-white",
-        
+        "action-edit": "bg-white text-action-edit border border-action-edit hover:bg-action-edit hover:text-white",
+        "action-save": "bg-white text-action-save border border-action-save hover:bg-action-save hover:text-white",
+        "action-cancel": "bg-white text-action-cancel border border-action-cancel hover:bg-action-cancel hover:text-white",
+
         // Funciones de tarjetas y exportación
-        "card-primary": "bg-cream-bg text-card-primary border border-card-primary hover:bg-card-primary hover:text-white",
-        "excel-export": "bg-cream-bg text-excel-export border border-excel-export hover:bg-excel-export hover:text-white",
-        "pdf-export": "bg-cream-bg text-pdf-export border border-pdf-export hover:bg-pdf-export hover:text-white",
-        
+        "card-primary": "bg-white text-card-primary border border-card-primary hover:bg-card-primary hover:text-white",
+        "excel-export": "bg-white text-excel-export border border-excel-export hover:bg-excel-export hover:text-white",
+        "pdf-export": "bg-white text-pdf-export border border-pdf-export hover:bg-pdf-export hover:text-white",
+
         // Módulos específicos
-        "almacen": "bg-cream-bg text-almacen-primary border border-almacen-primary hover:bg-almacen-primary hover:text-white",
-        "produccion": "bg-cream-bg text-produccion-primary border border-produccion-primary hover:bg-produccion-primary hover:text-white",
+        "almacen": "bg-white text-almacen-primary border border-almacen-primary hover:bg-almacen-primary hover:text-white",
+        "produccion": "bg-white text-produccion-primary border border-produccion-primary hover:bg-produccion-primary hover:text-white",
       },
       size: {
         default: "h-9 px-4 py-2",
