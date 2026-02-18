@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Bobby Jones Regular';
+  src: url('./assets/Bobby Jones Soft.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lilita One';
+  src: url('./assets/Lilita One.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('./assets/Space_Grotesk/SpaceGrotesk-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AlteHaasGrotesk';
+  src: url('./assets/alte_haas_grotesk/AlteHaasGroteskRegular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AlteHaasGrotesk';
+  src: url('./assets/alte_haas_grotesk/AlteHaasGroteskBold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 
 :root {
   font-family: 'Playwrite DE Grund', 'Montserrat', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

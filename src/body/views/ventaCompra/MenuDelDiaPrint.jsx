@@ -5,8 +5,7 @@ import html2canvas from 'html2canvas';
 import MenuDelDiaList from './MenuDelDiaList'; 
 import { updateItem } from "../../../redux/actions"; 
 import { MENU } from "../../../redux/actions-types";
-import proyecto_cafe_logo_wide from "@/assets/proyecto_cafe_logo_wide.png";
-import proyecto_cafe_foter_wide from "@/assets/proyecto_cafe_foter_wide.png";
+import almuerzoBg from "@/assets/ALMUERZO 2 P.C.png";
 
 const categoryEmojis = {
   "Entrada": "🍜", "Proteína": "🥩", "Opción 2": "🍗", "Carbohidrato": "🍚",
@@ -70,83 +69,98 @@ function MenuDelDiaPrint() {
     }
   };
 
-  const handlePrint = () => {
-    const contentToPrint = printRef.current.innerHTML;
-    if (!contentToPrint) { alert("No hay contenido para imprimir."); return; }
-
-    let printHtml = `
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;700&display=swap');
-        body { font-family: 'Space Grotesk', sans-serif; }
-        .print-container { margin: 0 auto; max-width: 800px; padding: 2rem; text-align: center; display: flex; flex-direction: column; justify-content: space-between; min-height: 90vh; }
-        .logo-print { max-width: 200px; margin: 0 auto 1.5rem auto; }
-        .footer-print { max-width: 250px; margin: 2rem auto 0 auto; }
-        .header-title { font-family: 'Lilita One', cursive; font-size: 2.5rem; color: #2d2823; margin: 0; }
-        .header-subtitle { font-size: 1.2rem; color: #6b7280; margin-top: 0.5rem; margin-bottom: 2rem; }
-        .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
-      </style>
-      <div class="print-container">
-        ${contentToPrint}
-      </div>
-    `;
-
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = printHtml;
-    window.print();
-    document.body.innerHTML = originalContent;
-    window.location.reload();
-  };
-
   const renderMenuDetails = () => {
     if (!mainMenuItem) {
       return <p className="text-center p-4 text-gray-500">No hay menú para la fecha seleccionada.</p>;
     }
-    const price = new Intl.NumberFormat('es-CO').format("24.000");
+  
+    // Formatear día de la semana
+    const dateObj = new Date(selectedDate + 'T00:00:00'); // Asegurar fecha correcta sin timezone offsets
+    const days = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+    const dayName = days[dateObj.getDay()];
+    
+    // Configuración de items
+    const price = "24k"; // Valor fijo según imagen de referencia o sacarlo de props si existe
+    
     try {
         const lunchData = JSON.parse(mainMenuItem.Comp_Lunch);
         const opcion2Data = lunchData.proteina_opcion_2 || lunchData["Opción 2"];
-        const components = { "Entrada": lunchData.entrada, "Proteína": lunchData.proteina, "Opción 2": opcion2Data, "Carbohidrato": lunchData.carbohidrato, "Acompañante": lunchData.acompanante, "Ensalada": lunchData.ensalada, "Bebida": lunchData.bebida };
         
-        const lunchDetails = Object.entries(components).map(([title, component]) => {
-            if (component && component.nombre) {
-                return (
-                    <div key={title} className="flex flex-col items-center text-center">
-                        <span className="text-4xl">{categoryEmojis[title] || categoryEmojis.Default}</span>
-                        <p className="text-sm text-gray-500 mt-1">{title}</p>
-                        <p className="mt-2 font-semibold leading-tight">{component.nombre}</p>
-                        {component.descripcion && ( <p className="text-xs text-gray-600 italic mt-1 px-2">{component.descripcion}</p> )}
-                    </div>
-                );
-            }
-            return null;
-        });
+        // Función auxiliar para renderizar items
+        const renderSection = (items, top, left = "250px", width = "600px") => {
+           if (!items || items.length === 0) return null;
+           return (
+             <div className="absolute flex flex-col items-start z-10" 
+                  style={{ top, left, width }}>
+               {items.map((item, idx) => (
+                  item?.nombre ? (
+                   <div key={idx} className="leading-tight mb-1">
+                     <p className="font-AlteHaasGrotesk font-bold text-3xl text-[#ec947e]">
+                       {items.length > 1 ? `${idx + 1}. ` : ''}{item.nombre}
+                     </p>
+                     {item.descripcion && ( 
+                       <p className="font-AlteHaasGrotesk text-lg text-[#374151] leading-none ml-1">{item.descripcion}</p> 
+                     )}
+                   </div>
+                  ) : null
+               ))}
+             </div>
+           );
+        };
 
         return (
-          <div className="flex flex-col justify-between min-h-[80vh]">
-            <div>
-              <img 
-          src={proyecto_cafe_logo_wide} 
-          alt="Proyecto Café Logo" 
-          className="w-full mx-auto mb-2 logo-print p-2"
-          style={{ backgroundColor: "#fdedd7" }}
-              />
-              <h1 className="font-LilitaOne text-5xl text-notBlack header-title">Menú Almuerzo</h1>
-              <h2 className="text-xl text-gray-500 mb-8 header-subtitle">
-          Hora: 12:00 PM | Valor: ${price}
-              </h2>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-6 mt-6 details-grid">
-          {lunchDetails}
-              </div>
-            </div>
+          <div className="relative w-full h-[1150px] bg-white overflow-hidden text-left"
+               style={{ 
+                 backgroundImage: `url('${almuerzoBg}')`, 
+                 backgroundSize: 'cover', 
+                 backgroundPosition: 'center' 
+               }}>
             
-            <img 
-              src={proyecto_cafe_foter_wide}
-              alt="Proyecto Café Footer"
-              className="w-full  mt-2 footer-print"
-            />
+            {/* Header: DÍA y Info */}
+            <div className="absolute top-[30px] right-[40px] text-right">
+              <h1 className="font-LilitaOne text-[100px] text-[#1f2937] leading-none mb-4">{dayName}</h1>
+              <p className="font-AlteHaasGrotesk text-2xl text-[#374151]">Hora: 12 pm - Valor:{price}</p>
+            </div>
+
+            {/* SECCIONES INDIVIDUALES - Coordenadas estimadas basadas en la imagen */}
+            
+            {/* Entrada */}
+            {renderSection([lunchData.entrada], "260px")}
+
+            {/* Proteína */}
+            <div className="absolute flex flex-col items-start z-10" 
+                 style={{ top: "370px", left: "250px", width: "600px" }}>
+              {lunchData.proteina?.nombre && (
+                <div className="leading-tight mb-2">
+                   <p className="font-AlteHaasGrotesk font-bold text-3xl text-[#ec947e]">1. {lunchData.proteina.nombre}</p>
+                   {lunchData.proteina.descripcion && <p className="font-AlteHaasGrotesk text-lg text-[#374151] leading-none ml-1">{lunchData.proteina.descripcion}</p>}
+                </div>
+              )}
+              {opcion2Data?.nombre && (
+                <div className="leading-tight">
+                   <p className="font-AlteHaasGrotesk font-bold text-3xl text-[#ec947e]">2. {opcion2Data.nombre}</p>
+                   {opcion2Data.descripcion && <p className="font-AlteHaasGrotesk text-lg text-[#374151] leading-none ml-1">{opcion2Data.descripcion}</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Carbohidrato */}
+            {renderSection([lunchData.carbohidrato], "550px")}
+
+            {/* Acompañante */}
+            {renderSection([lunchData.acompanante], "660px")}
+
+            {/* Ensalada */}
+            {renderSection([lunchData.ensalada], "770px")}
+
+            {/* Bebida */}
+            {renderSection([lunchData.bebida], "880px")}
+
           </div>
         );
+
     } catch(e) {
+      console.error(e);
       return <p>Error al mostrar el menú.</p>;
     }
   };

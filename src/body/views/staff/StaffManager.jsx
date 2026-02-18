@@ -5,7 +5,7 @@ import { fetchEmployees, setEmployees } from '../../../redux/slices/employeeSlic
 import { getAllFromTable } from '../../../redux/actions';
 import { STAFF } from '../../../redux/actions-types';
 import StaffTable from '../../components/staff/StaffTable';
-import { Users, Filter, Plus } from 'lucide-react';
+import { Users, Filter, Plus, DollarSign } from 'lucide-react';
 
 const StaffManager = () => {
     const dispatch = useDispatch();
@@ -50,6 +50,13 @@ const StaffManager = () => {
                         <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-medium text-sm">
                             <Plus className="w-4 h-4" />
                             Nuevo Empleado
+                        </button>
+                        <button
+                            onClick={() => navigate('/staff-manager/tips')}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md transition font-medium text-sm"
+                        >
+                            <DollarSign className="w-4 h-4" />
+                            Distribución Propinas
                         </button>
                     </div>
                 </div>

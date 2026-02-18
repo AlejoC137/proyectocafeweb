@@ -118,6 +118,7 @@ module.exports = {
         BobbyJones: ['Bobby Jones Regular', 'sans-serif'],
         LilitaOne: ['Lilita One', 'sans-serif'], 
         SpaceGrotesk: ['Space Grotesk', 'sans-serif'],
+        AlteHaasGrotesk: ['AlteHaasGrotesk', 'sans-serif'],
         Montserrat: ['Montserrat', 'sans-serif'],
         PlaywriteDE: ['Playwrite DE Grund', 'cursive'],
         'sans': ['Playwrite DE Grund', 'Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'], // Playwrite DE como fuente principal

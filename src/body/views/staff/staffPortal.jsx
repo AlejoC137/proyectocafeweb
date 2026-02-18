@@ -166,6 +166,12 @@ function StaffPortal() {
       icon: "💁‍♀️",
       onClick: () => navigate("/Proveedores"),
       variant: "default"
+    },
+    {
+      label: "Codigos de Barra",
+      icon: "🏷️",
+      onClick: () => navigate("/Inventario/BarcodeManager"),
+      variant: "default"
     }
   ];
 

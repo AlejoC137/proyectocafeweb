@@ -28,6 +28,7 @@ import Scraper from '../scraper/scraper';
 import Inventario from './body/views/inventario/Inventario';
 import GestionAlmacen from './body/views/inventario/GestionAlmacen';
 import Manager from './body/views/inventario/Manager';
+import BarcodeManager from './body/views/inventario/BarcodeManager';
 import VentaCompra from './body/views/ventaCompra/VentaCompra';
 import Compras from './body/views/ventaCompra/Compras';
 import Actividades from './body/views/actividades/Actividades';
@@ -54,6 +55,7 @@ import StaffCreator from './body/views/actividades/StaffCreator.jsx';
 import ItemsModal from './body/components/Items/ItemsModal.jsx';
 import StaffDetailView from './body/views/staff/StaffDetailView.jsx';
 import StaffManager from './body/views/staff/StaffManager.jsx';
+import TipsManager from './body/views/staff/TipsManager.jsx';
 import EditarTurnosView from './body/views/staff/EditarTurnosView.jsx';
 // import Manager from './body/views/actividades/Manager';
 
@@ -131,6 +133,7 @@ function App() {
           {/* <Route path="/StaffPortal" element={<StaffPortal />} /> */}
           <Route path="/Inventario" element={<Inventario />} />
           <Route path="/GestionAlmacen" element={<GestionAlmacen />} />
+          <Route path="/Inventario/BarcodeManager" element={<BarcodeManager />} />
           <Route path="/VentaCompra" element={<VentaCompra />} />
           <Route path="/Actividades" element={<Actividades />} />
           <Route path="/Gastos" element={<Gastos />} />
@@ -159,6 +162,8 @@ function App() {
           <Route path="/staff-details/:cc" element={<StaffDetailView />} />
           <Route path="/staff-manager/:cc" element={<StaffDetailView />} />
           <Route path="/staff-manager/:cc/editar-turnos" element={<EditarTurnosView />} />
+          <Route path="/staff-manager/tips" element={<TipsManager />} />
+          <Route path="/TipsManager" element={<TipsManager />} />
           <Route path="/Model" element={<Model />} />
           <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
           <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
