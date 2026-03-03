@@ -7,15 +7,16 @@ import {
   UPDATE_SELECTED_VALUE,
   INSERT_RECETAS_SUCCESS,
   INSERT_RECETAS_FAILURE,
-  INSERT_ITEM_FAILURE ,
+  INSERT_ITEM_FAILURE,
   SET_PREPROCESS_DATA,
   SCRAP,
   ItemsAlmacen,
   TOGGLE_SHOW_EDIT,
   ProduccionInterna,
   RESET_EXPANDED_GROUPS,
-  ADD_ORDER_ITEM
-  
+  ADD_ORDER_ITEM,
+  MenuItems,
+  MENU
 } from "./actions-types";
 
 import axios from "axios";
@@ -231,7 +232,7 @@ export function procesarRecetaYEnviarASupabase() {
         recetaParaSupabase.legacyName = receta.nombre;
 
         recetaParaSupabase.rendimiento = {
-          porcion:  receta.rendimiento_porcion || null,
+          porcion: receta.rendimiento_porcion || null,
           cantidad: receta.rendimiento_cantidad || null,
           unidades: receta.rendimiento_unidades || null,
         };
@@ -280,8 +281,8 @@ export function procesarRecetaYEnviarASupabase() {
                   imperial: {
                     cuantity: null, // Puedes calcular las unidades imperiales si es necesario
                     units: null,
-                  }, 
-                  legacyName:ingrediente.nombre
+                  },
+                  legacyName: ingrediente.nombre
                 };
               } else if (ingredienteEnProduccion) {
                 recetaParaSupabase[productoInternoIdKey] = validarUUID(ingredienteEnProduccion._id) ? ingredienteEnProduccion._id : null;
@@ -294,7 +295,7 @@ export function procesarRecetaYEnviarASupabase() {
                     cuantity: null, // Puedes calcular las unidades imperiales si es necesario
                     units: null,
                   },
-                  legacyName:ingrediente.nombre
+                  legacyName: ingrediente.nombre
                 };
               }
               recetaParaSupabase.legacyName = receta.nombre;
@@ -309,8 +310,8 @@ export function procesarRecetaYEnviarASupabase() {
 
         // Llamar a la acción insertarRecetas para insertar los datos en Supabase
         dispatch(insertarRecetas([recetaParaSupabase]));
-  //  console.log(recetaParaSupabase);
-   
+        //  console.log(recetaParaSupabase);
+
       }
     } catch (error) {
       console.error('Error al procesar la receta y enviar a Supabase:', error);
@@ -354,7 +355,7 @@ function validarUUID(uuid) {
   return uuidRegex.test(uuid);
 }
 
-export function actualizarPrecioUnitario(items,type) {
+export function actualizarPrecioUnitario(items, type) {
   return async (dispatch) => {
     try {
       for (let item of items) {
@@ -407,12 +408,12 @@ function calcularPrecioUnitario(item) {
   const cantidad = parseFloat(item.CANTIDAD);
   const coor = parseFloat(item.COOR);
 
-  precioUnitario = (costo / cantidad) * ajusteInflacionario * ( coor ? coor : 0);
+  precioUnitario = (costo / cantidad) * ajusteInflacionario * (coor ? coor : 0);
 
   return parseFloat(precioUnitario.toFixed(2));
 }
 
-export function copiarAlPortapapeles(items, estado , ) {
+export function copiarAlPortapapeles(items, estado,) {
   return async () => {
     try {
       // Filtrar los elementos que coincidan con el estado
@@ -442,7 +443,7 @@ export function copiarAlPortapapeles(items, estado , ) {
 export function crearItem(itemData, type, forId) {
 
   console.log(itemData);
-  
+
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
@@ -452,12 +453,12 @@ export function crearItem(itemData, type, forId) {
 
       };
 
-      if (type === "RecetasProduccion") { 
+      if (type === "RecetasProduccion") {
         nuevoItem = {
           ...nuevoItem,
           forId: forId
         };
-        
+
       }
 
       // Si el tipo NO es 'Recetas', agregar FECHA_ACT
@@ -495,10 +496,11 @@ export function crearItem(itemData, type, forId) {
 }
 
 export function updateItem(itemId, updatedFields, type) {
+  const table = type === MenuItems ? MENU : type;
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from(type)
+        .from(table)
         .update(updatedFields)
         .eq('_id', itemId)
         .select();
@@ -516,12 +518,13 @@ export function updateItem(itemId, updatedFields, type) {
   };
 }
 
-export function deleteItem(itemId , type) {
+export function deleteItem(itemId, type) {
+  const table = type === MenuItems ? MENU : type;
   return async (dispatch) => {
     try {
       // Llamada a Supabase para eliminar el registro
       const { error } = await supabase
-        .from(type)
+        .from(table)
         .delete()
         .eq("_id", itemId); // Filtrar por el ID del ítem
 
@@ -546,7 +549,7 @@ export function deleteItem(itemId , type) {
 
 export const getRecepie = async (uuid, type) => {
   // console.log(uuid, type);
-  
+
   try {
     const { data, error } = await supabase
       .from(type)
@@ -558,7 +561,7 @@ export const getRecepie = async (uuid, type) => {
       console.error("Error al obtener la receta:", error);
       throw new Error(error.message);
     }
-// console.log(data);
+    // console.log(data);
 
     return data;
   } catch (error) {
@@ -578,7 +581,7 @@ export const getProveedor = async (uuid, type) => {
       console.error("Error al obtener el proveedor :", error);
       throw new Error(error.message);
     }
-// console.log(data);
+    // console.log(data);
 
     return data;
   } catch (error) {
@@ -599,23 +602,23 @@ export const trimRecepie = (items, recepie) => {
       (validarUUID(recepie[key]) || (typeof recepie[key] === 'object' && recepie[key] !== null && Object.values(recepie[key]).some(value => value !== "")))
   );
   const resultado = clavesFiltradas.map((key) => {
-    
+
     const idValor = recepie[key];
     const cuantityKey = key.replace("_Id", "_Cuantity_Units");
     const cuantityValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.cuantity
       : null;
-      const unitsValor = recepie[cuantityKey]
+    const unitsValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.units
       : null;
-      const resultadoBusqueda = buscarPorId(idValor);
-      const precioUnitario1 = resultadoBusqueda.precioUnitario
-    
+    const resultadoBusqueda = buscarPorId(idValor);
+    const precioUnitario1 = resultadoBusqueda.precioUnitario
+
     return {
       name: resultadoBusqueda ? resultadoBusqueda.Nombre_del_producto : "",
-      key:key,
+      key: key,
       item_Id: idValor,
-      precioUnitario :precioUnitario1,
+      precioUnitario: precioUnitario1,
       cuantity: cuantityValor || "",
       units: unitsValor || "",
       source: resultadoBusqueda ? (items.some(item => item._id === idValor) ? 'Items' : 'Produccion') : null

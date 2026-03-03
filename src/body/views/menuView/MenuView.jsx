@@ -100,7 +100,7 @@ function MenuView() {
           {currentLeng === ESP ? 'Nuestro Menú' : 'Our Menu'}
         </h1>
         <p className="text-lg md:text-xl font-medium text-black rounded-none">
-          {currentLeng === ESP ? 'Todo es fresco y hecho con amor' : 'All our products are fresh and made with love'}
+          {currentLeng === ESP ? 'Todo es fresco y hecho con amor' : 'Everything is fresh and made with love'}
         </p>
       </div>
 

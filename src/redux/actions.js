@@ -522,10 +522,11 @@ export function crearItem(itemData, type, forId) {
 }
 
 export function updateItem(itemId, updatedFields, type) {
+  const table = type === MenuItems ? MENU : type;
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from(type)
+        .from(table)
         .update(updatedFields)
         .eq('_id', itemId)
         .select();

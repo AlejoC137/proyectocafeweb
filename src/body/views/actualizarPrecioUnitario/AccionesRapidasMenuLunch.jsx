@@ -58,7 +58,7 @@
 
 //       alert("Formulario llenado correctamente desde el JSON.");
 //       console.log("Datos cargados desde JSON:", newData);
-      
+
 //     } catch (error) {
 //       console.error("Error al parsear el JSON:", error);
 //       alert("El texto introducido no es un JSON válido. Por favor, revísalo.");
@@ -82,7 +82,7 @@
 
 //     // 3. Despacha la acción de Redux para crear el ítem en la base de datos.
 //     await dispatch(crearItem(menuItem, MENU));
-    
+
 //     // 4. Si todo sale bien, notifica al usuario y resetea el formulario.
 //     alert("Ítem de menú creado correctamente.");
 //     setMenuItemData(initialMenuItemData); // Vuelve al estado inicial
@@ -109,7 +109,7 @@
 //       {formVisible && (
 //         <div className="bg-gray-50 p-6 rounded-lg mt-4 border border-gray-200">
 //           <h3 className="text-2xl font-bold mb-6 text-gray-800">Crear Nuevo Menú</h3>
-          
+
 //           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 //             <label className="text-sm text-gray-700 font-bold">
 //               Nombre en Español:
@@ -130,9 +130,9 @@
 //               />
 //             </label>
 //           </div>
-          
+
 //           <FormularioMenuAlmuerzo onMenuChange={handleLunchDataChange} />
-          
+
 //           {/* --- 3. NUEVA SECCIÓN EN EL FORMULARIO PARA PEGAR EL JSON --- */}
 //           <div className="mt-8 pt-6 border-t border-gray-300">
 //             <h4 className="text-lg font-semibold mb-2 text-gray-700">Alternativa: Cargar desde JSON</h4>
@@ -152,7 +152,7 @@
 //               Llenar Formulario con JSON
 //             </button>
 //           </div>
-          
+
 //           <button
 //             className="bg-blue-500 text-white font-bold py-3 px-6 rounded-md mt-8 hover:bg-blue-600 transition-colors w-full text-lg"
 //             onClick={handleCrearMenuItem}
@@ -192,7 +192,6 @@ function AccionesRapidasMenuLunch() {
 
   const [menuItemData, setMenuItemData] = useState(initialMenuItemData);
   const [formVisible, setFormVisible] = useState(false);
-  const [jsonInput, setJsonInput] = useState("");
   const [formKey, setFormKey] = useState(Date.now()); // Key para forzar el reinicio del formulario
 
   const handleInputChange = (e) => {
@@ -205,43 +204,13 @@ function AccionesRapidasMenuLunch() {
     setMenuItemData((prev) => ({ ...prev, Comp_Lunch: lunchJsonString }));
   }, []);
 
-  const handleJsonParse = () => {
-    if (!jsonInput.trim()) {
-      alert("El campo de JSON está vacío.");
-      return;
-    }
-    try {
-      const parsedData = JSON.parse(jsonInput);
-
-      // Si Comp_Lunch es un objeto, conviértelo a string. Si no existe, déjalo como null.
-      if (parsedData.Comp_Lunch && typeof parsedData.Comp_Lunch === 'object') {
-        parsedData.Comp_Lunch = JSON.stringify(parsedData.Comp_Lunch, null, 2);
-      } else if (parsedData.Comp_Lunch && typeof parsedData.Comp_Lunch === 'string') {
-        // Asegúrate que el string sea un JSON válido para el formulario hijo
-        JSON.parse(parsedData.Comp_Lunch);
-      } else {
-        parsedData.Comp_Lunch = null;
-      }
-
-      const newData = { ...initialMenuItemData, ...parsedData };
-      setMenuItemData(newData);
-      setFormKey(Date.now()); // Cambiamos la key para forzar el re-render del formulario hijo
-
-      alert("Formulario llenado correctamente desde el JSON.");
-      
-    } catch (error) {
-      console.error("Error al parsear el JSON:", error);
-      alert("El texto introducido no es un JSON válido. Por favor, revísalo.");
-    }
-  };
-
   const handleCrearMenuItem = async () => {
     // Validación básica
     if (!menuItemData.NombreES || !menuItemData.Precio) {
-        alert("Por favor, completa al menos el Nombre y el Precio.");
-        return;
+      alert("Por favor, completa al menos el Nombre y el Precio.");
+      return;
     }
-    
+
     try {
       const menuItemToSubmit = { ...menuItemData };
 
@@ -251,16 +220,15 @@ function AccionesRapidasMenuLunch() {
           delete menuItemToSubmit[key];
         }
       });
-      
-      if(menuItemToSubmit.Precio) {
+
+      if (menuItemToSubmit.Precio) {
         menuItemToSubmit.Precio = parseInt(menuItemToSubmit.Precio, 10);
       }
 
       await dispatch(crearItem(menuItemToSubmit, MENU));
-      
+
       alert("Ítem de menú creado correctamente.");
       setMenuItemData(initialMenuItemData);
-      setJsonInput("");
       setFormVisible(false);
 
     } catch (error) {
@@ -296,7 +264,7 @@ function AccionesRapidasMenuLunch() {
       {formVisible && (
         <div className="bg-gray-50 p-6 rounded-lg mt-4 border border-gray-200">
           <h3 className="text-2xl font-bold mb-6 text-gray-800">Crear Nuevo Menú</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <label className="text-sm text-gray-700 font-bold">
               Nombre en Español:
@@ -317,34 +285,15 @@ function AccionesRapidasMenuLunch() {
               />
             </label>
           </div>
-          
-          <FormularioMenuAlmuerzo 
+
+          <FormularioMenuAlmuerzo
             key={formKey} // <-- SOLUCIÓN: Forzar reinicio del componente
             initialData={getInitialLunchData()} // <-- Pasar los datos parseados
-            onMenuChange={handleLunchDataChange} 
+            onMenuChange={handleLunchDataChange}
           />
-          
-          <div className="mt-8 pt-6 border-t border-gray-300">
-            <h4 className="text-lg font-semibold mb-2 text-gray-700">Alternativa: Cargar desde JSON</h4>
-            <p className="text-sm text-gray-500 mb-2">
-              Pega el JSON de un ítem de menú para pre-llenar todos los campos.
-            </p>
-            <textarea
-              className="border p-2 rounded-md w-full h-40 font-mono text-sm bg-gray-900 text-green-400"
-              value={jsonInput}
-              onChange={(e) => setJsonInput(e.target.value)}
-              placeholder='{ "NombreES": "Plato desde JSON", "Precio": 30000, "Comp_Lunch": { ... } }'
-            />
-            <button
-              onClick={handleJsonParse}
-              className="bg-purple-500 text-white font-bold py-2 px-4 rounded-md mt-2 hover:bg-purple-600 transition-colors"
-            >
-              Llenar Formulario con JSON
-            </button>
-          </div>
-          
+
           <button
-            className="bg-blue-500 text-white font-bold py-3 px-6 rounded-md mt-8 hover:bg-blue-600 transition-colors w-full text-lg"
+            className="bg-blue-500 text-white font-bold py-3 px-6 rounded-md mt-8 hover:bg-blue-600 transition-colors w-full text-lg shadow-md"
             onClick={handleCrearMenuItem}
           >
             GUARDAR NUEVO ÍTEM DE MENÚ

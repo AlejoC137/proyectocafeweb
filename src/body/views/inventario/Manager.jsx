@@ -57,6 +57,12 @@ function Manager() {
   }, [currentType, AllStaff, AllWorkIsue, AllProcedimientos, Menu]);
 
   useEffect(() => {
+    if (currentType === MenuItems) {
+      console.log("Menús mostrados en Manager:", filteredItems);
+    }
+  }, [currentType, filteredItems]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         await Promise.all([

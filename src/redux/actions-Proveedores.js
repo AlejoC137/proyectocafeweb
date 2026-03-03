@@ -15,7 +15,7 @@ import {
   MenuItems,
   MENU,
   MENUVIEW, // Importar la acción
-  
+
 } from "./actions-types";
 
 import axios from "axios";
@@ -231,7 +231,7 @@ export function procesarRecetaYEnviarASupabase() {
         recetaParaSupabase.legacyName = receta.nombre;
 
         recetaParaSupabase.rendimiento = {
-          porcion:  receta.rendimiento_porcion || null,
+          porcion: receta.rendimiento_porcion || null,
           cantidad: receta.rendimiento_cantidad || null,
           unidades: receta.rendimiento_unidades || null,
         };
@@ -280,8 +280,8 @@ export function procesarRecetaYEnviarASupabase() {
                   imperial: {
                     cuantity: null, // Puedes calcular las unidades imperiales si es necesario
                     units: null,
-                  }, 
-                  legacyName:ingrediente.nombre
+                  },
+                  legacyName: ingrediente.nombre
                 };
               } else if (ingredienteEnProduccion) {
                 recetaParaSupabase[productoInternoIdKey] = validarUUID(ingredienteEnProduccion._id) ? ingredienteEnProduccion._id : null;
@@ -294,7 +294,7 @@ export function procesarRecetaYEnviarASupabase() {
                     cuantity: null, // Puedes calcular las unidades imperiales si es necesario
                     units: null,
                   },
-                  legacyName:ingrediente.nombre
+                  legacyName: ingrediente.nombre
                 };
               }
               recetaParaSupabase.legacyName = receta.nombre;
@@ -309,8 +309,8 @@ export function procesarRecetaYEnviarASupabase() {
 
         // Llamar a la acción insertarRecetas para insertar los datos en Supabase
         dispatch(insertarRecetas([recetaParaSupabase]));
-  //  console.log(recetaParaSupabase);
-   
+        //  console.log(recetaParaSupabase);
+
       }
     } catch (error) {
       console.error('Error al procesar la receta y enviar a Supabase:', error);
@@ -354,7 +354,7 @@ function validarUUID(uuid) {
   return uuidRegex.test(uuid);
 }
 
-export function actualizarPrecioUnitario(items,type) {
+export function actualizarPrecioUnitario(items, type) {
   return async (dispatch) => {
     try {
       for (let item of items) {
@@ -393,17 +393,17 @@ export function actualizarPrecioUnitario(items,type) {
 }
 
 export function calcularPrecioUnitario(item) {
-  
+
   let precioUnitario;
   const ajusteInflacionario = 1.04;
 
   // Validar si alguno de los valores necesarios es "NaN"
-  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN" ) {
+  if (item.COSTO === "NaN" || item.CANTIDAD === "NaN") {
     console.error("No se puede calcular el valor porque uno de los parámetros es NaN:", item);
     return "No se puede calcular el valor porque uno de los parámetros es NaN";
   }
-  
-  if (item.COOR === "NaN" ) { item.COOR = 1.05; }
+
+  if (item.COOR === "NaN") { item.COOR = 1.05; }
   // Calcular el precio unitario si todos los valores son válidos
   const costo = parseFloat(item.COSTO);
   const cantidad = (parseFloat(item.CANTIDAD) - (parseFloat(item.CANTIDAD) * parseFloat(item.Merma)));
@@ -411,10 +411,10 @@ export function calcularPrecioUnitario(item) {
   const coor = parseFloat(item.COOR);
 
   // precioUnitario = (costo / (cantidad-(cantidad*Merma)) ) * ajusteInflacionario * ( coor ? coor : 1.05);
-  precioUnitario = (costo / cantidad ) * ajusteInflacionario * ( coor ? coor : 1.05);
+  precioUnitario = (costo / cantidad) * ajusteInflacionario * (coor ? coor : 1.05);
 
 
-console.log(precioUnitario);
+  console.log(precioUnitario);
 
 
   return parseFloat(precioUnitario.toFixed(2));
@@ -505,7 +505,7 @@ export function crearItem(itemData, type, forId) {
         ...itemData,
       };
 
-      if (type === "Proveedores") { 
+      if (type === "Proveedores") {
         nuevoItem = {
           ...nuevoItem,
           forId: forId
@@ -554,6 +554,7 @@ export function crearItem(itemData, type, forId) {
 }
 
 export function updateItem(itemId, updatedFields, type) {
+  const table = type === MenuItems ? MENU : type;
   return async (dispatch) => {
     try {
       // Validar que los parámetros requeridos estén presentes
@@ -578,10 +579,10 @@ export function updateItem(itemId, updatedFields, type) {
         }
       });
 
-      console.log(`Actualizando ítem ${itemId} en tabla ${type}:`, sanitizedFields);
+      console.log(`Actualizando ítem ${itemId} en tabla ${table}:`, sanitizedFields);
 
       const { data, error } = await supabase
-        .from(type)
+        .from(table)
         .update(sanitizedFields)
         .eq('_id', itemId)
         .select();
@@ -596,30 +597,30 @@ export function updateItem(itemId, updatedFields, type) {
       }
 
       console.log('Ítem actualizado correctamente:', data[0]);
-      
+
       // Despachar acción de éxito al store (opcional)
       dispatch({
         type: 'UPDATE_ITEM_SUCCESS',
         payload: { id: itemId, data: data[0], tableType: type }
       });
-      
+
       return data[0];
     } catch (error) {
       console.error('Error en la acción updateItem:', error);
-      
+
       // Despachar acción de error al store (opcional)
       dispatch({
         type: 'UPDATE_ITEM_ERROR',
         payload: { id: itemId, error: error.message, tableType: type }
       });
-      
+
       throw error; // Re-lanzar el error para que lo maneje el componente
     }
   };
 }
 
-export function deleteItem(itemId , type) {
-  const table = type === MenuItems ? MENU : type 
+export function deleteItem(itemId, type) {
+  const table = type === MenuItems ? MENU : type
   return async (dispatch) => {
     try {
       // Llamada a Supabase para eliminar el registro
@@ -685,16 +686,16 @@ export const trimRecepie = (items, recepie) => {
     const cuantityValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.cuantity
       : null;
-      const unitsValor = recepie[cuantityKey]
+    const unitsValor = recepie[cuantityKey]
       ? JSON.parse(recepie[cuantityKey]).metric.units
       : null;
-      const resultadoBusqueda = buscarPorId(idValor);
-      const precioUnitario1 = resultadoBusqueda.precioUnitario
-    
+    const resultadoBusqueda = buscarPorId(idValor);
+    const precioUnitario1 = resultadoBusqueda.precioUnitario
+
     return {
       name: resultadoBusqueda ? resultadoBusqueda.Nombre_del_producto : "",
       item_Id: idValor,
-      precioUnitario :precioUnitario1,
+      precioUnitario: precioUnitario1,
       cuantity: cuantityValor || "",
       units: unitsValor || "",
       source: resultadoBusqueda ? (items.some(item => item._id === idValor) ? 'Items' : 'Produccion') : null
@@ -858,7 +859,7 @@ export const getProveedor = async (uuid) => {
 
 
 export function crearStaff(staffData) {
-      console.log(staffData)
+  console.log(staffData)
 
   return async (dispatch) => {
     try {
@@ -884,7 +885,7 @@ export function crearStaff(staffData) {
       dispatch({
         // Puedes seguir usando "CREAR_ITEM_SUCCESS" si tu reducer está configurado para ello,
         // o cambiarlo a "CREAR_STAFF_SUCCESS" para mayor especificidad.
-        type: "CREAR_ITEM_SUCCESS", 
+        type: "CREAR_ITEM_SUCCESS",
         payload: data[0], // El nuevo miembro del personal creado.
       });
 

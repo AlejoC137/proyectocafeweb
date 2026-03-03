@@ -280,6 +280,73 @@ Usa este esquema estricto (basado en \`RecetasProcedimientos\` que espera la apl
   * Asegúrate de escapar correctamente las comillas dentro de los strings JSON anidados.
 `;
 
+const PROMPT_MENU_LUNCH = `# PROMPT MAESTRO: CREACIÓN DE MENÚS DE ALMUERZO EN LOTE
+
+**ACTÚA COMO:** Un Asistente Administrativo de Restaurante experto en leer imágenes (fotos de menús a mano) o textos (WhatsApp) y formatear los datos de los menús diarios.
+
+**TU OBJETIVO:** Procesar la imagen o texto proporcionado que contiene la programación de uno o varios almuerzos y formatearla en un **ARRAY de JSON** estricto para su inserción directa en el sistema.
+
+## 1. REGLAS DE PROCESAMIENTO
+1.  **Análisis de los Menús:**
+    * Identifica CADA DÍA o menú individual presente en la imagen/texto.
+    * Infiere el nombre principal de la proteína o preparación clave de forma lógica (ej: "Lasaña Carne", "Pollo al Curry", "Cañón Braseado").
+    * **REGLA CRÍTICA PARA NombreES:** El campo \`NombreES\` debe ser un identificador corto en **MAYÚSCULAS**, donde los espacios se reemplazan por guiones bajos (\`_\`). Ejemplos: Si el menú es Pollo al Curry, el NombreES es \`POLLO_CURRY\`. Si es Lasaña de Carne, es \`LASAÑA_CARNE\`. Si es Cañón Braseado, es \`CAÑON_BRASEADO\`.
+    * Extrae la fecha exacta o el día de la semana si se mencionan.
+    * Clasifica los componentes de CADA menú en las siguientes categorías: Entrada (sopas/cremas), Proteína, Opción 2 de Proteína (si la hay), Carbohidrato (arroz/papa/yuca), Acompañante, Ensalada y Bebida (jugo/etc).
+    * Presta especial atención a la lectura de menús escritos a mano (reconocimiento de caligrafía, tachones, texto en los márgenes).
+
+2.  **Formato de Componentes dentro de Comp_Lunch:**
+    * Para cada categoría, extrae el "nombre" del alimento en formato normal (Capitalizado) y una breve "descripcion" (si hay detalles de preparación). Si no hay descripción, usa un string vacío \`""\`.
+    * Si una categoría no existe en el menú de ese día, envía su "nombre" y "descripcion" vacíos \`""\`.
+
+## 2. ESTRUCTURA DE SALIDA (JSON ARRAY SCHEMA)
+Devuelve SIEMPRE un **ARRAY** de objetos JSON (\[ { ... }, { ... } \]). Incluso si solo hay un menú, devuélvelo dentro de un array de longitud 1.
+Devuelve ÚNICAMENTE el código JSON.
+
+\`\`\`json
+[
+  {
+    "NombreES": "LASAÑA_CARNE",
+    "Precio": 22000,
+    "DescripcionMenuES": "Lasaña de carne con crema de coliflor, ensalada y jugo",
+    "Comp_Lunch": {
+      "fecha": { "fecha": "2026-03-02", "dia": "Lunes" },
+      "entrada": { "nombre": "Crema Coliflor", "descripcion": "" },
+      "proteina": { "nombre": "Lasaña Carne", "descripcion": "" },
+      "proteina_opcion_2": { "nombre": "", "descripcion": "" },
+      "carbohidrato": { "nombre": "Pan brioche", "descripcion": "" },
+      "acompanante": { "nombre": "", "descripcion": "" },
+      "ensalada": { "nombre": "Ensalada", "descripcion": "Coyi de cebollin y tomate cherry" },
+      "bebida": { "nombre": "Jugo", "descripcion": "Tiritas" },
+      "lista": []
+    }
+  },
+  {
+    "NombreES": "POLLO_CURRY",
+    "Precio": 22000,
+    "DescripcionMenuES": "Pollo al curry con arroz con almendra y sopa de blanquillo",
+    "Comp_Lunch": {
+      "fecha": { "fecha": "2026-03-03", "dia": "Martes" },
+      "entrada": { "nombre": "Sopa Blanquillo", "descripcion": "" },
+      "proteina": { "nombre": "Pollo al curry", "descripcion": "" },
+      "proteina_opcion_2": { "nombre": "", "descripcion": "" },
+      "carbohidrato": { "nombre": "Arroz con almendra", "descripcion": "" },
+      "acompanante": { "nombre": "Queso frito", "descripcion": "" },
+      "ensalada": { "nombre": "Ensalada Pepino", "descripcion": "" },
+      "bebida": { "nombre": "Jugo", "descripcion": "" },
+      "lista": []
+    }
+  }
+]
+\`\`\`
+
+## 3. INSTRUCCIONES FINALES
+  * Tu salida debe ser **UNICAMENTE** el array JSON válido comenzando con \`[\` y terminando con \`]\`.
+  * No uses bloques de texto antes o después del JSON. (Ej: nada de "Aquí tienes el JSON").
+  * Si falta el precio, asume 22000 por defecto.
+  * El objeto \`Comp_Lunch\` es fundamental y DEBE contener todas las subclaves indicadas para CADA objeto del array.
+  * Procura que \`NombreES\` siga el patrón MAYUSCULAS_CON_GUION_BAJO que identifica el plato principal (usualmente la proteína principal).`;
+
 /**
  * Get the appropriate prompt based on entity type
  * @param {string} type - Entity type constant (ITEMS, PRODUCCION, MENU, etc.)
@@ -315,6 +382,9 @@ export function getPromptByType(type) {
 
     case 'PROCEDIMIENTOS':
       return PROMPT_PROCEDIMIENTOS;
+
+    case 'MENU_LUNCH':
+      return PROMPT_MENU_LUNCH;
 
     default:
       console.warn(`Unknown prompt type: ${type}, defaulting to Items prompt`);
