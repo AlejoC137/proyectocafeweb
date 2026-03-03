@@ -1,80 +1,67 @@
-import { Label } from "@/components/ui/label";
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { CardInstance } from "@/components/ui/cardInstance";
 import { CardInstanceDetail } from "@/components/ui/cardInstanceDetail";
 import { TARDEO_ALMUERZO } from "../../redux/actions-types";
 
-// La prop 'TITTLE' ahora reemplaza a 'category' para mayor claridad.
 export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
-  const containerRef = useRef(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  // Estado para controlar si la sección está abierta o cerrada. Por defecto, está abierta.
   const [isOpen, setIsOpen] = useState(true);
 
-  // Función para cambiar el estado de visibilidad
   const toggleVisibility = () => {
     setIsOpen(!isOpen);
   };
 
-  
-
   return (
-    <div className="relative overflow-y-hidden">
+    <div className="relative w-full rounded-none">
       {selectedProduct && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-40 p-4">
-          <CardInstanceDetail 
-            product={selectedProduct} 
+        <div className="fixed inset-0 flex justify-center items-center bg-black/80 z-50 p-4 rounded-none backdrop-blur-sm">
+          <CardInstanceDetail
+            product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
             onNext={() => {
-              // Navegación dentro de los productos filtrados
-              const filteredProducts = products.filter(p => p.GRUPO === filterKey && p.Estado === "Activo");
+              const filteredProducts = products.filter(p => p.GRUPO === filterKey && p.Estado === "Activo" && p.SUB_GRUPO !== TARDEO_ALMUERZO);
               const currentIndex = filteredProducts.findIndex(p => p._id === selectedProduct._id);
               const nextProduct = filteredProducts[currentIndex + 1] || filteredProducts[0];
               setSelectedProduct(nextProduct);
             }}
-            isEnglish={isEnglish} 
+            isEnglish={isEnglish}
           />
         </div>
       )}
-      
-      {/* El título ahora es un botón que controla la visibilidad */}
-      <button 
-        onClick={toggleVisibility} 
-        className="flex border-black border justify-start items-center mb-1 w-full text-left cursor-pointer"
-      style={{ backgroundColor: "#fff" }}
-      >
-  
 
-          <Label
-            className="text-left text-2xl font-SpaceGrotesk font-bold truncate m-0 cursor-pointer flex items-center gap-2"
-            
-          >
-            <span>{TITTLE} {ICON}</span>
-            {isOpen ? (
-            // Flecha hacia abajo (abierto)
-            <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-              <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <button
+        onClick={toggleVisibility}
+        className="flex border-[3px] border-black justify-between items-center w-full text-left cursor-pointer bg-cream-bg p-3 hover:bg-black hover:text-white transition-colors duration-0 rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[3px] hover:translate-x-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group relative z-10"
+      >
+        <div className="text-left text-xl md:text-3xl font-black uppercase tracking-tighter m-0 flex items-center gap-3 rounded-none">
+          <span className="text-3xl md:text-4xl">{ICON}</span>
+          <span>{TITTLE}</span>
+        </div>
+        <div>
+          {isOpen ? (
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" className="stroke-current stroke-[4] group-hover:text-white">
+              <path d="M6 9l6 6 6-6" strokeLinecap="square" strokeLinejoin="miter" />
             </svg>
           ) : (
-            // Flecha hacia la derecha (cerrado)
-            <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-              <path d="M8 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" className="stroke-current stroke-[4] group-hover:text-white">
+              <path d="M9 5l7 7-7 7" strokeLinecap="square" strokeLinejoin="miter" />
             </svg>
           )}
-        </Label>
+        </div>
       </button>
+
       {isOpen && (
-        <div className="container mx-auto">
-          <div ref={containerRef} className="flex overflow-x-auto scrollbar-hide snap-x  snap-mandatory scroll-smooth gap-x-4">
+        <div className="w-full mb-8 rounded-none mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full rounded-none">
             {products
               .filter(
                 (product) =>
                   product.GRUPO === filterKey &&
                   product.Estado === "Activo" &&
-                  product.SUB_GRUPO !== TARDEO_ALMUERZO // <-- Agregado este filtro
+                  product.SUB_GRUPO !== TARDEO_ALMUERZO
               )
               .map((product) => (
-                <div key={product._id} className="snap-center  flex-shrink-0 w-[280px]" onClick={() => setSelectedProduct(product)}>
+                <div key={product._id} className="w-full flex justify-center rounded-none" onClick={() => setSelectedProduct(product)}>
                   <CardInstance product={product} isEnglish={isEnglish} />
                 </div>
               ))}

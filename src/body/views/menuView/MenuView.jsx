@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CardGrid } from '@/components/ui/cardGrid'; // Asegúrate que la ruta sea correcta
+import { CardGrid } from '@/components/ui/cardGrid';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllFromTable } from '../../../redux/actions';
 import { MENU, ITEMS, ESP, CATEGORIES_t, ENG } from '../../../redux/actions-types';
@@ -30,70 +30,64 @@ function MenuView() {
     fetchData();
   }, [dispatch]);
 
-  // Se obtienen las categorías únicas basadas en el GRUPO del producto.
   const uniqueCategories = Array.from(new Set(menuData.map(item => item.GRUPO)));
 
-  /**
-   * Busca la traducción de un grupo de categoría en el objeto CATEGORIES_t.
-   * @param {string} elGrupo - La clave de la categoría (ej. "CAFE").
-   * @returns {{ES: string, EN: string}} Un objeto con la traducción en español e inglés.
-   */
   const getCategoryTitle = (elGrupo, getIcon) => {
     const grupo = CATEGORIES_t[elGrupo];
-
-    // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
     if (currentLeng === ESP && grupo) {
-      return grupo.es
-
-
+      return grupo.es;
     }
     if (currentLeng === ENG && grupo) {
-
-      return grupo.en
-
-
+      return grupo.en;
     }
-
-
-    // Si no se encuentra, se devuelve el nombre del grupo como fallback.
+    return elGrupo;
   };
+
   const getCategoryIcon = (elGrupo, getIcon) => {
     const grupo = CATEGORIES_t[elGrupo];
-
-    // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
-
     if (getIcon === "icon" && grupo) {
-
-      return grupo.icon
-
-
+      return grupo.icon;
     }
-
-    // Si no se encuentra, se devuelve el nombre del grupo como fallback.
+    return null;
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen w-full bg-white rounded-none">
+        <span className="text-xl font-bold uppercase tracking-widest text-black rounded-none">
+          Cargando Menú...
+        </span>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col w-screen border pt-20">
-      <div className="flex justify-center items-center">
-        {/* Título principal del menú si es necesario */}
+    <div className="flex flex-col w-full min-h-screen bg-cream-bg bg-[url('/bg-pattern.jpg')] bg-repeat text-black pt-20 px-2 md:px-6 lg:px-8 rounded-none font-sans">
+
+      <div className="w-full border-b-[4px] border-black mb-6 pb-4 rounded-none bg-white/80 p-4 border-[3px]">
+        <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-black rounded-none">
+          {currentLeng === ESP ? 'Nuestro Menú' : 'Our Menu'}
+        </h1>
       </div>
-      {uniqueCategories.map((category) => (
-        <div key={category} className="overflow-hidden w-screen px-3 mb-3">
-          <CardGrid
-            // La clave para filtrar ahora es el GRUPO
-            filterKey={category}
-            products={menuData}
-            // El título ahora viene de la función de traducción
-            TITTLE={getCategoryTitle(category)}
-            ICON={getCategoryIcon(category, "icon")}
-            isEnglish={currentLeng}
-          />
-        </div>
-      ))}
+
+      <div className="flex flex-col gap-6 rounded-none">
+        {uniqueCategories.map((category) => (
+          <div
+            key={category}
+            className="w-full flex flex-col rounded-none"
+          >
+            <div className="w-full rounded-none">
+              <CardGrid
+                filterKey={category}
+                products={menuData}
+                TITTLE={getCategoryTitle(category)}
+                ICON={getCategoryIcon(category, "icon")}
+                isEnglish={currentLeng}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
