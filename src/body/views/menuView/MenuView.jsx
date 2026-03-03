@@ -93,12 +93,15 @@ function MenuView() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-cream-bg bg-[url('/bg-pattern.jpg')] bg-repeat text-black pt-20 px-2 md:px-6 lg:px-8 rounded-none font-sans">
+    <div className="flex flex-col w-full min-h-screen bg-cream-bg bg-[url('/bg-pattern.jpg')] bg-repeat text-black pt-5 px-2 md:px-6 lg:px-8 rounded-none font-sans">
 
-      <div className="w-full border-b-[4px] border-black mb-6 pb-4 rounded-none bg-white/80 p-4 border-[3px]">
+      <div className="w-full border-b-[4px] border-black mb-6 pb-2 rounded-none bg-white/80 p-4 border-[3px]">
         <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-black rounded-none">
           {currentLeng === ESP ? 'Nuestro Menú' : 'Our Menu'}
         </h1>
+        <p className="text-lg md:text-xl font-medium text-black rounded-none">
+          {currentLeng === ESP ? 'Todo es fresco y hecho con amor' : 'All our products are fresh and made with love'}
+        </p>
       </div>
 
       <div className="flex flex-col gap-6 rounded-none">
