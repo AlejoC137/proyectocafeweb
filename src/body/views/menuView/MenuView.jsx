@@ -30,7 +30,38 @@ function MenuView() {
     fetchData();
   }, [dispatch]);
 
-  const uniqueCategories = Array.from(new Set(menuData.map(item => item.GRUPO)));
+  // Importar CATEGORIES desde actions-types (necesitas agregarlo arriba)
+  // O ordenarlo manualmente
+  const uniqueCategories = Array.from(new Set(menuData.map(item => item.GRUPO)))
+    .sort((a, b) => {
+      // Define el orden deseado basado en actions-types
+      const order = [
+        "CAFE",
+        "REPOSTERIA",
+        "PANADERIA",
+        "DESAYUNO",
+        "BEBIDAS",
+        "TARDEO",
+        "ADICIONES",
+        "CARNICO",
+        "LACTEO",
+        "VERDURAS_FRUTAS",
+        "CONDIMENTOS_ESPECIAS_ADITIVOS",
+        "GRANOS_CEREALES",
+        "LIMPIEZA",
+        "DOTACION",
+        "CONCERVAS_FERMENTOS_PRECOCIDOS",
+        "GUARNICION",
+        "DESECHABLES",
+        "ENLATADOS",
+        "GRANOS",
+        "HARINAS"
+      ];
+      const indexA = order.indexOf(a);
+      const indexB = order.indexOf(b);
+      // Si alguno no está en el arreglo, lo manda al final
+      return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+    });
 
   const getCategoryTitle = (elGrupo, getIcon) => {
     const grupo = CATEGORIES_t[elGrupo];
