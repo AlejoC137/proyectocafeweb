@@ -1,48 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import StaffInstance from "./StaffInstance";
-import Pagar from "./Pagar";
-import Gastos from "../../components/gastos/Gastos";
-import { STAFF, PROCEDE } from "../../../redux/actions-types";
-import { getAllFromTable } from "../../../redux/actions-WorkIsue";
-import supabase from "../../../config/supabaseClient";
-import StaffOrdered from "./StaffOrdered";
+import { useDispatch, useSelector } from "react-redux";
+import { STAFF, WORKISUE, Procedimientos, PROCEDE } from "../../../redux/actions-types";
+import { getAllFromTable } from "../../../redux/actions";
+import PageLayout from "../../../components/ui/page-layout";
+import ContentCard from "../../../components/ui/content-card";
+
+// Componentes a renderizar en las columnas
+import WorkIsueStaff from "./WorkE/WorkIsueStaff";
+import Notas from "./WorkE/Notas";
+import { CardGridProcedimientos } from "../../views/inventario/gridInstance/CardGridProcedimientos";
 
 function Actividades() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [ventas, setVentas] = useState([]);
-  const [showPagarModal, setShowPagarModal] = useState(false);
-  const [ventaId, setVentaId] = useState(null);
-  const [totalPago, setTotalPago] = useState(null);
-  const [showGastos, setShowGastos] = useState(false);
 
-  const fetchVentas = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("WorkIsue")
-        .select("*")
-        .eq("Terminado", false);
-
-      if (error) {
-        console.error("Error fetching ventas:", error);
-      } else {
-        setVentas(data);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-    }
-  };
-
+  // Cargar datos necesarios
   useEffect(() => {
     const fetchData = async () => {
       try {
         await Promise.all([
-          dispatch(getAllFromTable(PROCEDE)),
           dispatch(getAllFromTable(STAFF)),
+          dispatch(getAllFromTable(WORKISUE)),
+          dispatch(getAllFromTable(PROCEDE))
         ]);
-
-        await fetchVentas();
         setLoading(false);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -51,62 +31,36 @@ function Actividades() {
     };
 
     fetchData();
-  }, []);
-
-  const reloadVentas = async () => {
-    setLoading(true);
-    await fetchVentas();
-    setLoading(false);
-  };
-
-  const handlePagar = (ventaId, total) => {
-    setVentaId(ventaId);
-    setTotalPago(total);
-    setShowPagarModal(true);
-  };
-
-  const handleClosePagarModal = () => {
-    setShowPagarModal(false);
-    setVentaId(null);
-    setTotalPago(null);
-  };
-
-  const toggleGastos = () => {
-    setShowGastos(!showGastos);
-  };
-
-  if (loading) {
-    return <div className="text-center text-lg font-semibold">Loading...</div>;
-  }
+  }, [dispatch]);
 
   return (
-    <div className="bg-gray-100 h-[calc(100vh-8rem)] w-full overflow-auto">
-      <button onClick={toggleGastos} className="m-2 p-2 bg-blue-500 text-white rounded">
-        {showGastos ? "Ocultar Gastos" : "Mostrar Gastos"}
-      </button>
+    <PageLayout loading={loading}>
+      {/* Contenedor principal FLEX que organiza las 3 columnas */}
+      <div className="flex flex-col lg:flex-row gap-4 pb-20 lg:pb-0 h-[calc(100vh-8rem)]">
 
-      {showGastos && <Gastos />}
-
-      <div className="col-span-1 pl-1 pr-1 pt-1">
-        <StaffOrdered
-          key="mesa-barra"
-          index={0}
-          ventas={ventas}
-          reloadVentas={reloadVentas}
-          onPagar={handlePagar}
-        />
-      </div>
-
-      <div className="gap-1 p-1">
-        <div className="col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-1">
-          {/* Additional content can be added here */}
+        {/* --- COLUMNA 1 (a): Tareas y Work Issues --- */}
+        <div className="w-full lg:w-1/3 flex flex-col h-full"> {/* h-full and flex flex-col to match Notas */}
+          <WorkIsueStaff />
         </div>
-      </div>
 
-      {showPagarModal && (
-        <Pagar onClose={handleClosePagarModal} ventaId={ventaId} total={totalPago} />
-      )}
-    </div>
+        {/* --- COLUMNA 2 (b): Procedimientos --- */}
+        <div className="w-full lg:w-1/3 flex flex-col h-full overflow-y-auto">
+          <ContentCard title="Procedimientos" className="h-full flex flex-col">
+            <div className="flex-1 overflow-y-auto min-h-0 relative">
+              <div className="absolute inset-0">
+                <CardGridProcedimientos currentType={Procedimientos} />
+              </div>
+            </div>
+          </ContentCard>
+        </div>
+
+        {/* --- COLUMNA 3 (c): Notas (Mirror) --- */}
+        <div className="w-full lg:w-1/3 flex flex-col h-full"> {/* Match StaffPortal Notas wrapper roughly */}
+          <Notas />
+        </div>
+
+      </div>
+    </PageLayout>
   );
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import {WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems } from "../../../redux/actions-types";
+import { WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems } from "../../../redux/actions-types";
 import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapidasActividades";
 // Vistas tipo grid (cards)
 import { CardGridWorkIsue } from "./gridInstance/CardGridWorkIsue";
@@ -16,16 +16,17 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { ViewToggle } from "@/components/ui/viewToggle";
-import { 
-  UtensilsCrossed, 
-  FileText, 
-  Users, 
-  Wrench, 
-  Settings, 
+import {
+  UtensilsCrossed,
+  FileText,
+  Users,
+  Wrench,
+  Settings,
   Zap,
   BarChart3
 } from "lucide-react";
 import WorkIsueExcelView from "../actividades/WorkE/WorkIsueExcelView";
+import ProcedimientoImportModal from "../ventaCompra/ProcedimientoImportModal";
 
 function Manager() {
   const dispatch = useDispatch();
@@ -33,6 +34,7 @@ function Manager() {
   const [currentType, setCurrentType] = useState(MenuItems);
   const [showAccionesRapidasActividades, setShowAccionesRapidasActividades] = useState(false);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' por defecto, como Inventario
+  const [showProcedimientoImportModal, setShowProcedimientoImportModal] = useState(false);
 
   // Redux selectors
   const AllProcedimientos = useSelector((state) => state.allProcedimientos || []);
@@ -50,7 +52,7 @@ function Manager() {
       [Procedimientos]: AllProcedimientos,
       [MenuItems]: Menu,
     }[currentType];
-    
+
     return Array.isArray(items) ? items : [];
   }, [currentType, AllStaff, AllWorkIsue, AllProcedimientos, Menu]);
 
@@ -154,11 +156,11 @@ function Manager() {
     const total = filteredItems.length;
     const typeLabels = {
       [Staff]: "empleados",
-      [WorkIsue]: "work issues", 
+      [WorkIsue]: "work issues",
       [Procedimientos]: "procedimientos",
       [MenuItems]: "items del menú"
     };
-    
+
     return {
       total,
       label: typeLabels[currentType] || "elementos"
@@ -229,13 +231,24 @@ function Manager() {
       )}
 
       {/* Contenido principal, siguiendo el patrón de Inventario */}
-      <ContentCard 
+      <ContentCard
         title={`Listado de ${currentType}`}
         actions={
-          <ViewToggle 
-            viewMode={viewMode} 
-            onViewModeChange={setViewMode}
-          />
+          <div className="flex items-center gap-2">
+            {currentType === Procedimientos && (
+              <button
+                onClick={() => setShowProcedimientoImportModal(true)}
+                className="flex items-center justify-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors mr-2"
+                title="Importar Procedimiento JSON"
+              >
+                📥 <span className="hidden sm:inline">Importar</span>
+              </button>
+            )}
+            <ViewToggle
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          </div>
         }
       >
         {viewMode === "cards" ? (
@@ -265,6 +278,19 @@ function Manager() {
         <span>Total de elementos: {filteredItems.length}</span>
         <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
       </div>
+
+      {showProcedimientoImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex justify-center items-center p-4 py-8 overflow-hidden">
+          <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl flex flex-col max-h-full">
+            <ProcedimientoImportModal
+              onClose={() => setShowProcedimientoImportModal(false)}
+              onSuccess={() => {
+                dispatch(getAllFromTable(PROCEDE));
+              }}
+            />
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 }

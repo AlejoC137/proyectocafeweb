@@ -173,10 +173,15 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                         name: itemData?.Nombre || itemData?.Nombre_del_producto || 'Desconocido',
                                         totalQuantity: 0,
                                         unit: unit,
-                                        unitPrice: Number(itemData?.precioUnitario) || Number(itemData?.COSTO) || 0
+                                        unitPrice: Number(itemData?.precioUnitario) || Number(itemData?.COSTO) || 0,
+                                        breakdown: []
                                     };
                                 }
                                 aggregatedIngredients[itemId].totalQuantity += amount;
+                                aggregatedIngredients[itemId].breakdown.push({
+                                    recipeName: receta.name,
+                                    quantity: amount
+                                });
                                 // Update unit if we found a better one (though master should be constant)
                                 if (!aggregatedIngredients[itemId].unit && unit) {
                                     aggregatedIngredients[itemId].unit = unit;
@@ -277,14 +282,22 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            ${calculationResult.ingredientsList.map(ing => `
+                            ${calculationResult.ingredientsList.map(ing => {
+            const breakdownStr = ing.breakdown
+                .map(b => `${b.quantity.toLocaleString()} para ${b.recipeName}`)
+                .join(', ');
+            return `
                                 <tr>
-                                    <td>${ing.name}</td>
+                                    <td>
+                                        ${ing.name}
+                                        <div style="font-size: 10px; color: #666; margin-top: 2px;">(${breakdownStr})</div>
+                                    </td>
                                     <td class="text-right">${ing.totalQuantity.toLocaleString()}</td>
                                     <td class="text-right">${ing.unit || '-'}</td>
                                     <td class="text-right">$${ing.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
                                 </tr>
-                            `).join('')}
+                            `;
+        }).join('')}
                         </tbody>
                         <tfoot>
                             <tr>
@@ -461,6 +474,9 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                                 <tr key={ing.id} className="hover:bg-gray-50">
                                                     <td className="px-4 py-2 text-gray-800 font-medium">
                                                         {ing.name}
+                                                        <div className="text-xs text-gray-400 font-normal mt-1">
+                                                            ({ing.breakdown.map(b => `${b.quantity.toLocaleString()} para ${b.recipeName}`).join(', ')})
+                                                        </div>
                                                     </td>
                                                     <td className="px-4 py-2 text-right font-mono text-indigo-700">
                                                         {ing.totalQuantity.toLocaleString(undefined, { maximumFractionDigits: 2 })}

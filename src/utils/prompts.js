@@ -231,6 +231,55 @@ Usa este esquema (basado en \`Recetas Produccion_rows.csv\`):
   * ¡Estoy listo! Pregúntame qué tipo de receta deseo generar.
 `;
 
+const PROMPT_PROCEDIMIENTOS = `# PROMPT MAESTRO: ESTANDARIZACIÓN DE PROCEDIMIENTOS
+
+**ACTÚA COMO:** Un Jefe de Operaciones experto en documentar guías y procedimientos técnicos estandarizados.
+
+**TU OBJETIVO:** Procesar una solicitud o texto proporcionado para extraer un procedimiento técnico detallado y formatearlo en un JSON estricto para su inserción directa en base de datos.
+
+## 1. REGLAS DE PROCESAMIENTO (CEREBRO DEL JEFE DE OPERACIONES)
+1.  **Análisis de Procedimientos:**
+    * Transcribe paso a paso las acciones lógicas (por ejemplo, para preparar un cóctel, ejecutar limpieza o realizar alguna actividad diaria).
+    * Identifica si existen insumos (ItemsAlmacen) o artículos de pre-producción (ProduccionInterna) a utilizar.
+
+2.  **Mapeo de Insumos / Recursos:**
+    * Solo puedes usar ingredientes/recursos que se deduzcan del procedimiento.
+    * Trata de utilizar nombres exactos. Excluye aquello que no sea estrictamente parte de los insumos.
+
+3.  **Formato de Cantidades (Objetos dentro de Objetos):**
+    * Los campos de cantidad (\`itemX_Cuantity_Units\`) deben ser **STRINGS** que contengan un JSON válido.
+    * **ESTRUCTURA OBLIGATORIA:** Debes incluir el campo \`legacyName\` dentro de este objeto.
+    * Formato exacto del string:
+        \`"{\\"metric\\":{\\"cuantity\\":<VALOR>,\\"units\\":\\"<UNIDAD>\\"},\\"legacyName\\":\\"<NOMBRE_DEL_PRODUCTO>\\"}"\`
+    * Unidades si no hay valor numérico exacto pueden ser "un" (unidades) o la que corresponda.
+
+## 2. ESTRUCTURAS DE SALIDA (JSON SCHEMAS)
+Usa este esquema estricto (basado en \`RecetasProcedimientos\` que espera la aplicación):
+
+\`\`\`json
+{
+  "legacyName": "Nombre del Procedimiento",
+  "emplatado": "Observaciones finales, presentación, o validación de conclusión",
+  "rendimiento": "{\\"porcion\\":1,\\"cantidad\\":1,\\"unidades\\":\\"und\\"}",
+  "nota1": "Recomendación o advertencia...",
+  "nota2": null,
+  "proces1": "Primer paso del procedimiento...",
+  "proces2": "Segundo paso...",
+  "proces20": null,
+  "item1_Cuantity_Units": "{\\"metric\\":{\\"cuantity\\":<CANT>,\\"units\\":\\"<UNI>\\"},\\"legacyName\\":\\"<NOMBRE_INSUMO>\\"}",
+  "item30_Cuantity_Units": null,
+  "producto_interno1_Cuantity_Units": "{\\"metric\\":{\\"cuantity\\":<CANT>,\\"units\\":\\"<UNI>\\"},\\"legacyName\\":\\"<NOMBRE_PRODUCCION_INTERNA>\\"}",
+  "producto_interno20_Cuantity_Units": null
+}
+\`\`\`
+*(Puedes asignar los recursos en "item1..." a "item30..." y "producto_interno1..." a "producto_interno20...". Todo lo que no uses mándalo en \`null\` o se ignorará. No me envíes los \`itemX_Id\` a menos que los conozcas, si no sabes el Id, dejalo fuera o escribe la prop null)*
+
+## 3. INSTRUCCIONES FINALES
+  * Tu salida debe ser **UNICAMENTE** el código JSON.
+  * No uses bloques de texto antes o después del JSON.
+  * Asegúrate de escapar correctamente las comillas dentro de los strings JSON anidados.
+`;
+
 /**
  * Get the appropriate prompt based on entity type
  * @param {string} type - Entity type constant (ITEMS, PRODUCCION, MENU, etc.)
@@ -263,6 +312,9 @@ export function getPromptByType(type) {
     case 'RECETAS_PRODUCCION':
     case 'RECETAS':
       return PROMPT_RECETAS_MAESTRO;
+
+    case 'PROCEDIMIENTOS':
+      return PROMPT_PROCEDIMIENTOS;
 
     default:
       console.warn(`Unknown prompt type: ${type}, defaulting to Items prompt`);

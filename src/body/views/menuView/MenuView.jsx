@@ -8,8 +8,11 @@ function MenuView() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
-  const menuData = useSelector((state) => state.allMenu);
+  const rawMenuData = useSelector((state) => state.allMenu);
+  const menuData = rawMenuData.filter(item => item.SUB_GRUPO !== "TARDEO_ALMUERZO");
   const currentLeng = useSelector((state) => state.currentLeng);
+
+  console.log("Elementos del menú a mostrar:", menuData);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,35 +40,35 @@ function MenuView() {
    */
   const getCategoryTitle = (elGrupo, getIcon) => {
     const grupo = CATEGORIES_t[elGrupo];
-    
+
     // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
-    if (currentLeng === ESP   && grupo  ) {
-      return    grupo.es
+    if (currentLeng === ESP && grupo) {
+      return grupo.es
 
-    
+
     }
-    if (currentLeng === ENG && grupo ) {
-     
-      return    grupo.en
+    if (currentLeng === ENG && grupo) {
 
-  
+      return grupo.en
+
+
     }
 
-    
+
     // Si no se encuentra, se devuelve el nombre del grupo como fallback.
   };
   const getCategoryIcon = (elGrupo, getIcon) => {
     const grupo = CATEGORIES_t[elGrupo];
-    
+
     // Si se encuentra una traducción, se devuelve en el formato que espera CardGrid.
 
-    if (getIcon === "icon" && grupo ) {
-     
-      return    grupo.icon
+    if (getIcon === "icon" && grupo) {
 
-  
+      return grupo.icon
+
+
     }
-    
+
     // Si no se encuentra, se devuelve el nombre del grupo como fallback.
   };
 
@@ -82,12 +85,12 @@ function MenuView() {
         <div key={category} className="overflow-hidden w-screen px-3 mb-3">
           <CardGrid
             // La clave para filtrar ahora es el GRUPO
-            filterKey={category} 
+            filterKey={category}
             products={menuData}
             // El título ahora viene de la función de traducción
             TITTLE={getCategoryTitle(category)}
-            ICON={getCategoryIcon(category,"icon")}
-            isEnglish={ currentLeng }
+            ICON={getCategoryIcon(category, "icon")}
+            isEnglish={currentLeng}
           />
         </div>
       ))}

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types.js";
 import EditableText from "../../../components/ui/EditableText.jsx";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
+import { FileJson } from "lucide-react";
+import ProcedimientoImportModal from "./ProcedimientoImportModal.jsx";
 
 // --- Componente para la fila de edición de un ingrediente ---
 const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove }) => {
@@ -181,6 +183,7 @@ function ProcedimientoModal({ item, onClose }) {
   const [rendimientoCantidad, setRendimientoCantidad] = useState("");
   const [rendimientoUnidades, setRendimientoUnidades] = useState("");
   const [imagenUrl, setImagenUrl] = useState("");
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const [ingredientes, setIngredientes] = useState([]);
   const [produccion, setProduccion] = useState([]);
@@ -535,7 +538,17 @@ function ProcedimientoModal({ item, onClose }) {
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-screen h-screen flex flex-col overflow-auto">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center sticky top-0 z-10">
-          <h2 className="text-2xl font-bold text-gray-800">{menuItem.tittle || "Receta"}</h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="text-gray-600 hover:text-blue-600"
+              onClick={() => setShowImportModal(true)}
+              title="Importar Procedimiento desde JSON"
+            >
+              <FileJson size={24} />
+            </Button>
+            <h2 className="text-2xl font-bold text-gray-800">{menuItem.tittle || "Procedimiento"}</h2>
+          </div>
           <Button variant="ghost" onClick={handleClose} title="Cerrar">
             Cerrar
           </Button>
@@ -871,6 +884,20 @@ function ProcedimientoModal({ item, onClose }) {
           </div>
         </div>
       </div>
+      {showImportModal && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-[90%] max-h-[90%] overflow-auto">
+            <ProcedimientoImportModal
+              onClose={() => setShowImportModal(false)}
+              forcedRecipeId={receta._id}
+              forcedRecipeSource={recetaSource}
+              onSuccess={() => {
+                alert("Procedimiento importado correctamente. Por favor recarga si es necesario.");
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 
