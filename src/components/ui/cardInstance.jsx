@@ -44,38 +44,40 @@ export function CardInstance({ product, isEnglish, onClick }) {
       onClick={onClick}
     >
       {/* Image Container */}
-      <div className="relative w-full aspect-[4/3] border-b-[3px] border-black overflow-hidden rounded-none bg-sage-green-light">
-        <img
-          src={product.Foto || "/placeholder.svg"}
-          alt={leng ? product.NombreEN : product.NombreES}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+      {product.Foto && product.Foto !== "" && (
+        <div className="relative w-full aspect-[4/3] border-b-[3px] border-black overflow-hidden rounded-none bg-sage-green-light">
+          <img
+            src={product.Foto}
+            alt={leng ? product.NombreEN : product.NombreES}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
 
-        {/* Cart Button */}
-        <button
-          className="absolute top-2 right-2 bg-white border-[3px] border-black p-1.5 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white transition-colors duration-0 z-10 active:shadow-none active:translate-y-[3px] active:translate-x-[3px]"
-          tabIndex={-1}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <ShoppingCart className="h-5 w-5" strokeWidth={2.5} />
-        </button>
+          {/* Cart Button */}
+          <button
+            className="absolute top-2 right-2 bg-white border-[3px] border-black p-1.5 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white transition-colors duration-0 z-10 active:shadow-none active:translate-y-[3px] active:translate-x-[3px]"
+            tabIndex={-1}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <ShoppingCart className="h-5 w-5" strokeWidth={2.5} />
+          </button>
 
-        {/* Details Badge */}
-        <div className="absolute bottom-2 left-2 bg-white border-[3px] border-black p-1 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-10 hover:bg-cobalt-blue hover:text-white transition-colors duration-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
-            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-          </svg>
+          {/* Details Badge */}
+          <div className="absolute bottom-2 left-2 bg-white border-[3px] border-black p-1 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-10 hover:bg-cobalt-blue hover:text-white transition-colors duration-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </svg>
+          </div>
+
+          {/* Time Badge */}
+          <div className="absolute top-2 left-2 bg-white border-[3px] border-black px-1.5 py-0.5 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-10">
+            <span className="text-black font-black uppercase text-[10px] tracking-wider">
+              {product.AproxTime}m
+            </span>
+          </div>
         </div>
-
-        {/* Time Badge */}
-        <div className="absolute top-2 left-2 bg-white border-[3px] border-black px-1.5 py-0.5 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-10">
-          <span className="text-black font-black uppercase text-[10px] tracking-wider">
-            {product.AproxTime}m
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Content Container - Compact Version */}
       <div className="p-3 flex items-start justify-between bg-white text-black rounded-none min-h-[64px] gap-2">
