@@ -55,7 +55,14 @@ function MenuDelDiaPrint() {
     }
     try {
       const canvas = await html2canvas(elementToCapture, {
-        allowTaint: true, useCORS: true, backgroundColor: '#fff5e1', scale: 2,
+        allowTaint: true,
+        useCORS: true,
+        backgroundColor: '#fff5e1',
+        scale: 2,
+        width: 650,     // Forzamos el ancho estricto para ignorar el 'transform' o encogimientos
+        height: 1200,   // Forzamos la altura estricta
+        windowWidth: 650,
+        windowHeight: 1200
       });
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png', 1.0);
