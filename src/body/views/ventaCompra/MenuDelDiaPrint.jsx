@@ -111,7 +111,7 @@ function MenuDelDiaPrint() {
       return (
         <>
           {/* Header: DÍA y Info */}
-          <div className="absolute top-[15px] right-[45px] text-right max-w-[400px]">
+          <div className="absolute top-[15px] right-[75px] text-right max-w-[400px]">
             <h1 className="font-LilitaOne text-[90px] text-[#1f2937] leading-none mb-4 uppercase">
               {dayName}
             </h1>

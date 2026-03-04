@@ -141,7 +141,8 @@ const StaffDetailView = () => {
                     Cuenta: cuenta || { banco: '', tipo: '', numero: '' },
                     infoContacto: infoContacto || { nombreDeContacto: '', numeroDeContacto: '' },
                     isAdmin: found.isAdmin || false,
-                    Show: found.Show !== false
+                    Show: found.Show !== false,
+                    Contratacion: found.Contratacion !== false
                 });
                 setLoading(false);
             } else {
@@ -403,6 +404,14 @@ const StaffDetailView = () => {
                                                 onChange={handleInputChange}
                                                 disabled={!isEditing}
                                                 description="Determina si el empleado aparece en el cálculo de pagos."
+                                            />
+                                            <ToggleOption
+                                                id="Contratacion"
+                                                label="Empleado Activo"
+                                                checked={formData.Contratacion}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                description="Activa o desactiva al empleado. Los inactivos se agrupan colapsados."
                                             />
                                         </div>
                                     </div>
