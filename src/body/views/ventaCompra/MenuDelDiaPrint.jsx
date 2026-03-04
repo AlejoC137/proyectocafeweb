@@ -53,17 +53,33 @@ function MenuDelDiaPrint() {
       alert("No se pudo generar la imagen.");
       return;
     }
+
+    // Ubicamos al contenedor padre que tiene el `transform: scale`
+    const parentContainer = elementToCapture.parentElement;
+    const originalTransform = parentContainer.style.transform;
+    const originalMarginBottom = parentContainer.style.marginBottom;
+
     try {
+      // 1. Apagamos el escalado visual para que html2canvas capture píxeles 1:1 perfectos
+      parentContainer.style.transform = 'none';
+      parentContainer.style.marginBottom = '0px';
+
+      // 2. Esperamos a que el DOM aplique el reseteo visual
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       const canvas = await html2canvas(elementToCapture, {
         allowTaint: true,
         useCORS: true,
         backgroundColor: '#fff5e1',
-        scale: 2,
-        width: 650,     // Forzamos el ancho estricto para ignorar el 'transform' o encogimientos
-        height: 1200,   // Forzamos la altura estricta
-        windowWidth: 650,
-        windowHeight: 1200
+        scale: 2, // Genera mejor resolución interior al exportar (no confundir con css scale)
+        width: 650,
+        height: 1200,
       });
+
+      // 3. Restauramos la vista miniatura responsiva para el usuario INMEDIATAMENTE después de la foto
+      parentContainer.style.transform = originalTransform;
+      parentContainer.style.marginBottom = originalMarginBottom;
+
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png', 1.0);
       link.download = `menu-${selectedDate}.png`;
@@ -71,6 +87,11 @@ function MenuDelDiaPrint() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
+      // Restauración de seguridad por si algo falla
+      if (parentContainer) {
+        parentContainer.style.transform = originalTransform;
+        parentContainer.style.marginBottom = originalMarginBottom;
+      }
       console.error("Error al generar PNG:", error);
       alert("Ocurrió un error al generar la imagen.");
     }
