@@ -75,7 +75,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
 
       {isOpen && (
         <div className="w-full mb-2 rounded-none mt-2">
-          <div className="flex overflow-x-auto gap-2 w-full rounded-none pb-2 snap-x snap-mandatory drop-shadow-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex overflow-x-auto gap-1 w-full rounded-none pb-2 snap-x snap-mandatory drop-shadow-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {products
               .filter(
                 (product) =>
