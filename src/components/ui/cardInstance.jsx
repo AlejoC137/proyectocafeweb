@@ -40,7 +40,7 @@ export function CardInstance({ product, isEnglish, onClick }) {
 
   return (
     <div
-      className="w-full max-w-[300px] flex flex-col cursor-pointer transition-all duration-0 bg-cream-bg border-[3px] border-black group rounded-none shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+      className="w-full max-w-[340px] flex flex-col cursor-pointer transition-all duration-0 bg-cream-bg border-[3px] border-black group rounded-none shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
       onClick={onClick}
     >
       {/* Image Container */}

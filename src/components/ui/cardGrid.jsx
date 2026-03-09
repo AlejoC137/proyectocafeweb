@@ -49,7 +49,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
             .animate-marquee-seamless {
               display: flex;
               width: max-content;
-              animation: marquee-seamless 6s linear infinite;
+              animation: marquee-seamless 12s linear infinite;
             }
           `}</style>
           <div className="animate-marquee-seamless text-[14px] md:text-sm font-black uppercase tracking-widest text-black">
@@ -75,7 +75,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
 
       {isOpen && (
         <div className="w-full mb-2 rounded-none mt-2">
-          <div className="flex overflow-x-auto gap-1 w-full rounded-none pb-2 snap-x snap-mandatory drop-shadow-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex overflow-x-auto gap-2 w-full rounded-none pb-2 snap-x snap-mandatory drop-shadow-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {products
               .filter(
                 (product) =>
@@ -84,7 +84,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
                   product.SUB_GRUPO !== TARDEO_ALMUERZO
               )
               .map((product) => (
-                <div key={product._id} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-[30vw] xl:min-w-[22vw] flex flex-shrink-0 justify-center rounded-none snap-start" onClick={() => setSelectedProduct(product)}>
+                <div key={product._id} className="min-w-[340px] sm:min-w-[300px] lg:min-w-[30vw] xl:min-w-[22vw] flex flex-shrink-0 justify-center rounded-none snap-start" onClick={() => setSelectedProduct(product)}>
                   <CardInstance product={product} isEnglish={isEnglish} />
                 </div>
               ))}
