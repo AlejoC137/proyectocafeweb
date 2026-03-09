@@ -197,7 +197,9 @@ function MenuView() {
             <span className="mr-6">•</span>
             <span className="mr-6">SÁBADO 8:00 A.M. - 6:00 P.M.</span>
             <span className="mr-6">•</span>
-            <span className="mr-6">DOMINGO Y FESTIVO: CERRADO</span>
+            <span className="mr-6">DOMINGO 9:00 A.M. - 2:00 P.M.</span>
+            <span className="mr-6">•</span>
+            <span className="mr-6">FESTIVO: CERRADO</span>
           </p>
         </div>
       </section>
@@ -226,9 +228,9 @@ function MenuView() {
           {/* Fila Inferior: Horario compacto */}
           <div className="w-full flex justify-center items-center mt-[-4px]">
             <div className="text-[11.5px] md:text-[14px] lg:text-base font-black text-black bg-white px-2 md:px-4 py-1 flex flex-row flex-wrap gap-2 md:gap-4 justify-center items-center uppercase w-full">
-              <span>DESAYUNO: 8:00 AM - 11:30 AM.</span>
+              <span>DESAYUNO: 8:00 AM - 11:45 AM.</span>
               <span className="hidden sm:inline font-bold text-[#A2A2A2]">|</span>
-              <span>ALMUERZO: CAMBIA CADA DÍA, INICIA A 12:30.</span>
+              <span>ALMUERZO: CAMBIA CADA DÍA, INICIA A 12:00.</span>
             </div>
           </div>
         </section>
