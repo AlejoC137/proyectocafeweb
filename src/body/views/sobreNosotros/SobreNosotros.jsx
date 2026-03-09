@@ -20,7 +20,7 @@ function SobreNosotros() {
     <div className="flex flex-col w-full border-[3px] border-black bg-white rounded-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
       {/* Título centrado */}
       <div className="flex justify-center items-center p-6 bg-cream-bg border-b-[3px] border-black">
-        <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-black m-0">
+        <h1 className="text-3xl md:text-5xl font-black uppercase tracking-widest text-black m-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
           PROYECTO CAFÉ
         </h1>
       </div>
@@ -29,7 +29,7 @@ function SobreNosotros() {
       <div className="p-6 md:p-8 flex flex-col gap-10">
         {/* Información del café */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-black border-b-[3px] border-black pb-2 inline-block self-start">
+          <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-black border-b-[3px] border-black pb-2 inline-block self-start" style={{ fontFamily: "'First Bunny', sans-serif" }}>
             Nuestra Historia
           </h2>
           <p className="text-lg font-medium text-black leading-relaxed">
@@ -49,7 +49,7 @@ function SobreNosotros() {
 
         {/* Misión e Input de Proyecto */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-black border-b-[3px] border-black pb-2 inline-block self-start">
+          <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-black border-b-[3px] border-black pb-2 inline-block self-start" style={{ fontFamily: "'First Bunny', sans-serif" }}>
             Nuestra Misión
           </h2>
           <p className="text-lg font-medium text-black leading-relaxed">
@@ -104,20 +104,10 @@ function SobreNosotros() {
 
         {/* Proveedores y WiFi */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <section className="flex flex-col gap-4 border-[3px] border-black p-6 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-cream-bg">
-            <h2 className="text-2xl font-black uppercase tracking-tight text-black border-b-[3px] border-black pb-1 inline-block self-start">
-              Nuestros Proveedores
-            </h2>
-            <ul className="text-lg font-medium text-black flex flex-col gap-2 mt-2">
-              <li><strong className="font-black">Verduras:</strong> Plaza Minorista</li>
-              <li><strong className="font-black">Frutas:</strong> Plaza Minorista</li>
-              <li><strong className="font-black">Pan de masa madre:</strong> Carlos - @lapanaderiamodou</li>
-              <li><strong className="font-black">Café:</strong> Santa Bárbara, Antioquia - Marta @cafe_lucus</li>
-            </ul>
-          </section>
+          {/* Columna Vacía o extendemos WiFi (lo dejaré centrado o solo ocupando el espacio) */}
 
           <section className="flex flex-col gap-4 border-[3px] border-black p-6 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-blue-100 justify-center">
-            <h2 className="text-3xl font-black uppercase tracking-tight text-black border-b-[3px] border-black pb-1 inline-block self-center">
+            <h2 className="text-3xl font-black uppercase tracking-widest text-black border-b-[3px] border-black pb-1 inline-block self-center" style={{ fontFamily: "'First Bunny', sans-serif" }}>
               WiFi
             </h2>
             <div className="text-xl font-medium text-black text-center mt-4 border-[3px] border-black bg-white p-4">
@@ -131,7 +121,7 @@ function SobreNosotros() {
 
         {/* Ubicación original */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-black border-b-[3px] border-black pb-2 inline-block self-start">
+          <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-black border-b-[3px] border-black pb-2 inline-block self-start" style={{ fontFamily: "'First Bunny', sans-serif" }}>
             Ubicación
           </h2>
           <p className="text-lg font-medium text-black leading-relaxed">

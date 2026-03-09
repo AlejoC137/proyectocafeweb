@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @font-face {
+  font-family: 'First Bunny';
+  src: url('./assets/First Bunny.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
   font-family: 'Bobby Jones Regular';
   src: url('./assets/Bobby Jones Soft.otf') format('opentype');
   font-weight: normal;
