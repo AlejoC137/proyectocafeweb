@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: 'First Bunny';
-  src: url('./assets/First Bunny.ttf') format('truetype');
+  src: url('./assets/first_bunny/FirstBunny-FIX.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
