@@ -14,7 +14,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
   return (
     <div className="relative w-full rounded-none">
       {selectedProduct && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black/80 z-50 p-4 rounded-none backdrop-blur-sm">
+        <div className="fixed inset-0 flex justify-center items-center z-50 p-4 rounded-none ">
           <CardInstanceDetail
             product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
@@ -51,8 +51,8 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
       </button>
 
       {isOpen && (
-        <div className="w-full mb-8 rounded-none mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full rounded-none">
+        <div className="w-full mb-2 rounded-none mt-2">
+          <div className="flex overflow-x-auto gap-2 w-full rounded-none pb-2 snap-x snap-mandatory drop-shadow-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {products
               .filter(
                 (product) =>
@@ -61,7 +61,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
                   product.SUB_GRUPO !== TARDEO_ALMUERZO
               )
               .map((product) => (
-                <div key={product._id} className="w-full flex justify-center rounded-none" onClick={() => setSelectedProduct(product)}>
+                <div key={product._id} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-[30vw] xl:min-w-[22vw] flex flex-shrink-0 justify-center rounded-none snap-start" onClick={() => setSelectedProduct(product)}>
                   <CardInstance product={product} isEnglish={isEnglish} />
                 </div>
               ))}
