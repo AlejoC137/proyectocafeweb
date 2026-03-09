@@ -160,7 +160,7 @@ function MenuView() {
             }`}
         >
           <h1 className="text-lg sm:text-xl md:text-3xl lg:text-4xl font-black uppercase tracking-widest m-0 rounded-none leading-none md:leading-tight" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-            {currentLeng === ESP ? 'Sobre Nosotros' : 'About Us'}
+            {currentLeng === ESP ? 'Nosotros' : 'About Us'}
           </h1>
         </button>
 
