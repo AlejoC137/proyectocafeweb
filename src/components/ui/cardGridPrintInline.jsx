@@ -29,7 +29,7 @@ export function CardGridPrintInline({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
 
     return (
         <>
-            <span className="font-black text-sm uppercase tracking-wide mr-2 bg-black text-white px-2 py-0.5 border-[2px] border-black inline-block align-baseline mb-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] print:shadow-none">
+            <span className="font-black text-sm uppercase tracking-wide mr-2 bg-black text-white px-2 py-0.5 border-[2px] border-black inline-block align-baseline mb-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 {titleText}
             </span>
             <span className="font-light text-sm leading-snug">

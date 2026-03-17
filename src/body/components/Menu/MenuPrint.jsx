@@ -76,10 +76,10 @@ function MenuPrint() {
 
         {/* VERSIÓN 2: HORIZONTAL CONTINUO (ALTERNATIVA) */}
         <div
-          className="bg-[#fcfbf9] text-black shadow-2xl print:shadow-none w-[11in] h-[17in] border print:border-none mx-auto overflow-hidden flex flex-col box-border print:break-after-page"
+          className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page"
         >
           <div className="p-4 h-full flex flex-col relative print:p-2 bg-[#fcfbf9]">
-            <div className="border-[2px] border-black bg-white p-2 md:p-3 mb-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] print:shadow-none flex justify-between items-end">
+            <div className="border-[2px] border-black bg-white p-2 md:p-3 mb-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex justify-between items-end">
               <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
               </h1>
@@ -91,9 +91,9 @@ function MenuPrint() {
             <div className="flex-grow flex flex-col gap-3 text-justify leading-snug">
 
               {/* GRUPO QRS - MOVIDO AL TOP, DEBAJO DEL HEADER */}
-              <div className="flex-grow flex flex-row gap-2 break-inside-avoid max-h-[240px] mb-2.5">
+              <div className="flex-none flex flex-row gap-2 break-inside-avoid min-h-[220px] mb-2.5">
                 {/* LEFT COLUMN: MENU QR & INTRO */}
-                <div className="border-[2px] border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none flex flex-row flex-[0.3] break-inside-avoid">
+                <div className="border-[2px] border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex flex-row flex-[0.3] break-inside-avoid">
                   <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black overflow-hidden bg-white">
                     <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                       MENÚ DIGITAL
@@ -107,7 +107,7 @@ function MenuPrint() {
                 </div>
 
                 {/* RIGHT COLUMN: INFO */}
-                <div className="border-[2px] border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none flex flex-row flex-[0.7] p-3 items-start justify-center text-center overflow-hidden">
+                <div className="border-[2px] border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex flex-row flex-[0.7] p-3 items-start justify-center text-center">
                   <div className="flex flex-col items-center justify-between h-full w-full gap-2">
                     <div className="flex flex-col w-full text-left font-SpaceGrotesk">
 
@@ -133,7 +133,7 @@ function MenuPrint() {
               </div>
 
               {/* GRUPO CAFE */}
-              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] break-inside-avoid flex flex-row">
                 <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
                   <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Café" : "Coffee"}
@@ -150,7 +150,7 @@ function MenuPrint() {
               </div>
 
               {/* GRUPO BEBIDAS */}
-              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] break-inside-avoid flex flex-row">
                 <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
                   <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Bebidas" : "Drinks"}
@@ -170,7 +170,7 @@ function MenuPrint() {
               </div>
 
               {/* GRUPO ALIMENTOS */}
-              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] break-inside-avoid flex flex-row">
                 <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
                   <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Alimentos" : "Food"}
@@ -196,7 +196,7 @@ function MenuPrint() {
               </div>
 
               {/* GRUPO EXTRAS */}
-              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] break-inside-avoid flex flex-row">
                 <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
                   <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Adiciones" : "Extras"}
