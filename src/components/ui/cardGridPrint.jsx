@@ -11,7 +11,7 @@ export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE })
 
     return (
       groupMatch &&
-      product.Estado === "Activo" &&
+      (product.Estado === "Activo" || product.Estado === "OK") &&
       (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO)
     );
   });

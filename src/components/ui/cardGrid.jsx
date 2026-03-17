@@ -20,7 +20,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
             product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
             onNext={() => {
-              const filteredProducts = products.filter(p => p.GRUPO === filterKey && p.Estado === "Activo" && p.SUB_GRUPO !== TARDEO_ALMUERZO);
+              const filteredProducts = products.filter(p => p.GRUPO === filterKey && (p.Estado === "Activo" || p.Estado === "OK") && p.SUB_GRUPO !== TARDEO_ALMUERZO);
               const currentIndex = filteredProducts.findIndex(p => p._id === selectedProduct._id);
               const nextProduct = filteredProducts[currentIndex + 1] || filteredProducts[0];
               setSelectedProduct(nextProduct);
@@ -80,7 +80,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
               .filter(
                 (product) =>
                   product.GRUPO === filterKey &&
-                  product.Estado === "Activo" &&
+                  (product.Estado === "Activo" || product.Estado === "OK") &&
                   product.SUB_GRUPO !== TARDEO_ALMUERZO
               )
               .map((product) => (

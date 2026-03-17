@@ -9,7 +9,7 @@ export function CardGridPrintInline({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
 
         return (
             groupMatch &&
-            product.Estado === "Activo" &&
+            (product.Estado === "Activo" || product.Estado === "OK") &&
             (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO)
         );
     });

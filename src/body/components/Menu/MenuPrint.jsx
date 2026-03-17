@@ -7,13 +7,11 @@ import { CardGridPrintInline } from "@/components/ui/cardGridPrintInline";
 import { Button } from "@/components/ui/button";
 import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
 import QrMenu from "@/assets/QR MENU.png";
-import QrMapa from "@/assets/QR MAPA.png";
-import QrWifi from "@/assets/QR WIFI.png";
-import QrAgenda from "@/assets/QR AGENDA.png";
 import MenuPrintInfo from "./MenuPrintInfo";
 import MenuAgenda from "./MenuAgenda";
 import MenuMenu from "./MenuMenu";
 import MenuPrintFormInfo from "./MenuPrintForm";
+import { ArrowLeft } from "lucide-react";
 
 function MenuPrint() {
   const dispatch = useDispatch();
@@ -92,10 +90,52 @@ function MenuPrint() {
 
             <div className="flex-grow flex flex-col gap-3 text-justify leading-snug">
 
+              {/* GRUPO QRS - MOVIDO AL TOP, DEBAJO DEL HEADER */}
+              <div className="flex-grow flex flex-row gap-2 break-inside-avoid max-h-[240px] mb-2.5">
+                {/* LEFT COLUMN: MENU QR & INTRO */}
+                <div className="border-[2px] border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none flex flex-row flex-[0.3] break-inside-avoid">
+                  <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black overflow-hidden bg-white">
+                    <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                      MENÚ DIGITAL
+                    </h2>
+                  </div>
+                  <div className="flex-grow flex justify-center items-center h-full p-2">
+                    <div className="flex flex-col items-center justify-center w-full h-full text-center">
+                      <img src={QrMenu} alt="QR Menu" className="w-[85%] max-w-[185px] aspect-square object-contain mix-blend-multiply" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: INFO */}
+                <div className="border-[2px] border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none flex flex-row flex-[0.7] p-3 items-start justify-center text-center overflow-hidden">
+                  <div className="flex flex-col items-center justify-between h-full w-full gap-2">
+                    <div className="flex flex-col w-full text-left font-SpaceGrotesk">
+
+                      <div className="border-[2px] border-black  bg-cream-bg flex items-center justify-center text-center w-full">
+                        <ArrowLeft size={42} className="stroke-[3px]" />
+                        <ArrowLeft size={42} className="stroke-[3px]" />
+                        <ArrowLeft size={42} className="stroke-[3px]" />
+                        <p className="font-SpaceGrotesk font-black text-[12px] md:text-[15px] uppercase tracking-tight text-black leading-[1.1] flex items-center justify-center gap-3">
+                          <span>
+                            {!leng ? "Please scan the menu for photos, promotions, and important info." : "Por favor escanea el menú para ver fotos, promociones e información importante."}
+                          </span>
+                        </p>
+                      </div>
+
+                      <h1 className="text-[12px] md:text-[14px] font-black uppercase tracking-tight mb-2  border-black pb-1 leading-none mt-1">
+                      </h1>
+                      <div className="text-[7px] md:text-[8px] leading-tight origin-top-left transform scale-90 w-[110%]">
+                        <MenuPrintInfo isEnglish={leng} className="p-0 m-0 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* GRUPO CAFE */}
               <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
-                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
-                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Café" : "Coffee"}
                   </h2>
                 </div>
@@ -111,8 +151,8 @@ function MenuPrint() {
 
               {/* GRUPO BEBIDAS */}
               <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
-                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
-                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Bebidas" : "Drinks"}
                   </h2>
                 </div>
@@ -131,8 +171,8 @@ function MenuPrint() {
 
               {/* GRUPO ALIMENTOS */}
               <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
-                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
-                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Alimentos" : "Food"}
                   </h2>
                 </div>
@@ -157,8 +197,8 @@ function MenuPrint() {
 
               {/* GRUPO EXTRAS */}
               <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
-                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
-                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-white">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {!leng ? "Adiciones" : "Extras"}
                   </h2>
                 </div>
@@ -172,9 +212,11 @@ function MenuPrint() {
                 </div>
               </div>
 
+              {/* END OF THE FOOD LISTINGS */}
+
             </div>
             {/* FOOTER */}
-            <div className="mt-auto border-t-[2px] border-black pt-1 flex justify-between items-center tracking-widest text-[9px] font-bold font-SpaceGrotesk uppercase px-2 bg-black text-white py-1">
+            <div className="mt-auto border-[2px] border-black flex justify-between items-center tracking-widest text-[9px] font-bold font-SpaceGrotesk uppercase px-2 bg-black text-white py-1 mb-[3px] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none">
               <span>TRANSVERSAL 39 #65D - 22, CONQ.</span>
               <span>|</span>
               <span>+57 300 821 4593</span>
