@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
-import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO, BEBIDAS_FRIAS,BEBIDAS_CALIENTES,PANADERIA_REPOSTERIA_DULCE, PANADERIA_REPOSTERIA_SALADA, ADICIONES_COMIDAS, ADICIONES_BEBIDAS, AGENDA  } from "../../../redux/actions-types";
+import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO, CAFE_METODOS, CAFE_ESPRESSO, BEBIDAS_FRIAS, BEBIDAS_CALIENTES, PANADERIA_REPOSTERIA_DULCE, PANADERIA_REPOSTERIA_SALADA, ADICIONES_COMIDAS, ADICIONES_BEBIDAS, AGENDA } from "../../../redux/actions-types";
 import { CardGridPrint } from "@/components/ui/cardGridPrint";
+import { CardGridPrintInline } from "@/components/ui/cardGridPrintInline";
 import { Button } from "@/components/ui/button";
 import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
 import QrMenu from "@/assets/QR MENU.png";
@@ -21,7 +22,9 @@ function MenuPrint() {
   const [showForm, setShowForm] = useState(false);
   const printRef = useRef(null);
   const menuData = useSelector((state) => state.allMenu);
-  const qrSize = "h-[200px]"; // Puedes ajustar el valor aquí
+
+  // unused var kept intact for compatibility if ever needed later
+  const qrSize = "h-[200px]";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,228 +53,140 @@ function MenuPrint() {
   };
 
   if (loading) {
-    return <div className="text-center text-white text-2xl font-SpaceGrotesk font-light">Cargando menú...</div>;
+    return <div className="text-center text-black text-2xl font-SpaceGrotesk font-light">Cargando menú...</div>;
   }
 
   return (
-    <div className="flex w-screen flex-col items-center justify-center  " ref={printRef}>
-      <div className="flex gap-4 mt-12 mb-5 print:hidden">
-        <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium">
-          🖨️
+    <div className="flex w-full flex-col items-center justify-center bg-gray-200 min-h-screen pb-10">
+      <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center">
+        <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
+          🖨️ Imprimir
         </Button>
-        <Button onClick={() => setLeng(!leng)} className="font-SpaceGrotesk font-medium">
+        <Button onClick={() => setLeng(!leng)} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           {leng ? "Switch to Spanish" : "Switch to English"}
         </Button>
-        <Button onClick={() => setShowForm((prev) => !prev)} className="font-SpaceGrotesk font-medium">
-          {showForm ? "Ocultar Formulario" : "Mostrar Formulario"}
+        <Button onClick={() => setShowForm((prev) => !prev)} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
+          {showForm ? "Ocultar Mapeo" : "Mostrar Mapeo"}
         </Button>
       </div>
 
-      {showForm && <MenuPrintFormInfo />}
+      {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
-      <div className="flex justify-center bg-white">
-        <div id="print-area" className="print:h-auto">
-          
-          {/* --- INICIO PÁGINA 1 --- */}
-          {/* CORRECTO: Se añade flex, flex-col y print:h-screen para crear el layout de página completa */}
-          <div className="print:break-after-page flex flex-col print:h-screen">
-            <div className=" text-center ">
-              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
+      <div ref={printRef} className="flex flex-col gap-10">
+
+
+
+        {/* VERSIÓN 2: HORIZONTAL CONTINUO (ALTERNATIVA) */}
+        <div
+          className="bg-[#fcfbf9] text-black shadow-2xl print:shadow-none w-[11in] h-[17in] border print:border-none mx-auto overflow-hidden flex flex-col box-border print:break-after-page"
+        >
+          <div className="p-4 h-full flex flex-col relative print:p-2 bg-[#fcfbf9]">
+            <div className="border-[2px] border-black bg-white p-2 md:p-3 mb-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] print:shadow-none flex justify-between items-end">
+              <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
               </h1>
-            </div>
-            
-            {/* CORRECTO: Se añade 'grow' para que esta sección ocupe el espacio disponible */}
-            <div className="pt-0 gap-8 flex flex-row justify-center items-start grow">
-              {/* COFFEE */}
-              <div className="flex flex-col gap-1 w-custom-width400px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Café":"Coffee"}</h1>
-                <div className="flex flex-col gap-1">
-                  <CardGridPrint products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
-                  <br />
-                  <CardGridPrint products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
-                </div>
-              </div>
-              {/* DRINKS */}
-              <div className="flex flex-col gap-1 w-custom-width400px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Bebidas":"Drinks"}</h1>
-                <div className="flex flex-col gap-1 ">
-                  <CardGridPrint products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES}  TITTLE={{ES:"Caliente",EN:"Hot"}} isEnglish={leng} />
-                  <CardGridPrint products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS}  TITTLE={{ES:"Frío",EN:"Cold"}} isEnglish={leng} />
-                </div>
-              </div>
-              {/* SOMETHING ELSE */}
-              <div className="flex flex-col gap-1 w-custom-width400px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
-                <div className="flex flex-row gap-1">
-                  <CardGridPrint products={menuData} TITTLE={{ES:"ENBOTELLADOS",EN:"BOTTLED"}} GRUPO={"ENLATADOS"} isEnglish={leng} />
-                </div>
-                <br />
-                <div className="flex flex-row gap-1">
-                  <CardGridPrint products={menuData} TITTLE={{ES:"ADICIONES BEBIDAS",EN:"DRINK ADDITION"}} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} isEnglish={leng} />
-                </div>
+              <div className="text-[10px] md:text-xs font-LilitaOne tracking-widest uppercase text-right leading-tight">
+                <span>TRANSVERSAL 39 #65D - 22, CONQUISTADORES</span>
               </div>
             </div>
 
-            <div className="flex justify-between mt-4 pb-4">
-              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Proyecto Café |</h4>
-              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
-              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
-            </div>
-          </div>
-          
-          {/* --- INICIO PÁGINA 2 --- */}
-          <div className="print:break-after-page flex flex-col print:h-screen">
-            <div className=" text-center ">
-              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
-                {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
-              </h1>
-            </div>
+            <div className="flex-grow flex flex-col gap-3 text-justify leading-snug">
 
-            <div className="pt-0 gap-8 flex flex-row justify-center items-start grow">
-              {/* BAKED GOODS */}
-              <div className="flex flex-col gap-1 w-custom-width400px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2" >{!leng ?"Horneados":"Baked Goods"}</h1>
-                <div className="flex flex-col gap-1">
-                  <CardGridPrint products={menuData} GRUPO={PANADERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA}/>
-                  <CardGridPrint products={menuData} GRUPO={REPOSTERIA} isEnglish={leng}  SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE}/>
+              {/* GRUPO CAFE */}
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                    {!leng ? "Café" : "Coffee"}
+                  </h2>
                 </div>
-              </div>
-              {/* BREAKFAST */}
-              <div className="flex flex-col gap-1 w-custom-width400px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Desayuno":"Breakfast"}</h1>
-                <div className="flex flex-col gap-1 ">
-                  <CardGridPrint products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet Breakfast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
-                  <CardGridPrint products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Savory Breakfast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
-                </div>
-              </div>
-              {/* MORE */}
-              <div className="flex flex-col gap-1 w-custom-width400px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2 ">{!leng ?"Más":"More"}</h1>
-                <div className="flex flex-row gap-1">
-                  <CardGridPrint products={menuData} TITTLE={{ES:"Tardeo",EN:"Evening"}} GRUPO={TARDEO} isEnglish={leng} />
-                </div>
-                <br />
-                <div className="flex flex-row gap-1">
-                  <CardGridPrint products={menuData} TITTLE={{ES:"ADICIONES COMIDA",EN:"FOOD ADDITION "}} GRUPO={"ADICIONES"}  SUB_GRUPO={ADICIONES_COMIDAS} isEnglish={leng} />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-between mt-4 pb-4">
-              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Proyecto Café |</h4>
-              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
-              <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
-            </div>
-          </div>
-          
-          {/* --- INICIO PÁGINA 3 --- */}
-          <div className="flex flex-col print:h-screen">
-            <div className=" text-center mb-4">
-              <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
-                {/* {leng ? "Menu" : "Menú"} */}
-              </h1>
-            </div>
-            <div className="flex flex-row justify-between w-full gap-2 mb-6 grow">
-              <div className="flex flex-col gap-2 w-custom-width400px">
-                <div className="pt-2">
-                  <MenuMenu isEnglish={leng} />
-                </div>
-                <div className="flex flex-row w-full  justify-between ">
-                  <div className="w-full flex flex-col items-center justify-center">
-                    <img src={QrMenu} alt="QR Menu " className={`object-contain ${qrSize}`} />
-                    {/* <h3 className="text-center font-LilitaOne pt-2 text-sm">QR MENU</h3> */}
+                <div className="flex-grow flex flex-col justify-center">
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} />
                   </div>
-        
+                  <div>
+                    <CardGridPrintInline products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} />
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-2 w-custom-width400px">
-                                <div className=" text-center mb-4">
 
-                        <h1 className="text-3xl font-LilitaOne mt-3 font-bold leading-tight">
-          {!leng ? "More about Proyecto Café." : "Más sobre Proyecto Café."}
-        </h1>
-                <div className="pt-2">
-                  <MenuPrintInfo isEnglish={leng} />
+              {/* GRUPO BEBIDAS */}
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                    {!leng ? "Bebidas" : "Drinks"}
+                  </h2>
                 </div>
-                </div>
-                <div className="flex flex-row w-full  justify-between ">
-                  <div className="w-full flex flex-col items-center justify-center">
-                    <img src={QrMapa} alt="QR MAPA " className={`object-contain ${qrSize}`} />
-                    <h3 className="text-center font-LilitaOne pt-2 text-sm">QR Mapa</h3>
+                <div className="flex-grow flex flex-col justify-center">
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} />
                   </div>
-        
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} />
+                  </div>
+                  <div>
+                    <CardGridPrintInline products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} />
+                  </div>
                 </div>
               </div>
-          
 
-        <div className="flex flex-col gap-2 w-custom-width400px">
-                <div className="pt-2">
-                  <MenuAgenda isEnglish={leng} />
+              {/* GRUPO ALIMENTOS */}
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                    {!leng ? "Alimentos" : "Food"}
+                  </h2>
                 </div>
-                <div className="flex flex-row w-full  justify-center ">
-                  <div className=" flex flex-col items-center bg-red-700 px-1">
-                    <img 
-                    src={QrAgenda} 
-                    alt="QR Agenda" 
-                    className={`object-contain ${qrSize} mx-auto `} 
-                    />
-                    <h3 className="text-center font-LilitaOne text-sm mt-1">QR AGENDA</h3>
+                <div className="flex-grow flex flex-col justify-center">
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} />
                   </div>
-        
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} />
+                  </div>
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked Goods" }} isEnglish={leng} />
+                  </div>
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked Goods" }} isEnglish={leng} />
+                  </div>
+                  <div>
+                    <CardGridPrintInline products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} />
+                  </div>
                 </div>
-              </div>      
-    
+              </div>
+
+              {/* GRUPO EXTRAS */}
+              <div className="border-[2px] border-black bg-white p-1.5 mb-2.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] print:shadow-none break-inside-avoid flex flex-row">
+                <div className="w-8 shrink-0 flex items-center justify-center border-r-[2px] border-black mr-2 overflow-hidden bg-cream-bg">
+                  <h2 className="font-black text-2xl uppercase text-black tracking-widest whitespace-nowrap [writing-mode:vertical-lr] rotate-180 opacity-20 print:opacity-100" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                    {!leng ? "Adiciones" : "Extras"}
+                  </h2>
+                </div>
+                <div className="flex-grow flex flex-col justify-center">
+                  <div className="mb-1">
+                    <CardGridPrintInline products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} />
+                  </div>
+                  <div>
+                    <CardGridPrintInline products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} />
+                  </div>
+                </div>
+              </div>
+
             </div>
-            <div className="flex justify-between">
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Proyecto Café |</h4>
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
+            {/* FOOTER */}
+            <div className="mt-auto border-t-[2px] border-black pt-1 flex justify-between items-center tracking-widest text-[9px] font-bold font-SpaceGrotesk uppercase px-2 bg-black text-white py-1">
+              <span>TRANSVERSAL 39 #65D - 22, CONQ.</span>
+              <span>|</span>
+              <span>+57 300 821 4593</span>
+              <span>|</span>
+              <span>@PROYECTO__CAFE</span>
             </div>
           </div>
-          {/* --- INICIO PÁGINA 4 --- */}
-          <div className="flex flex-col print:h-screen">
-            <div className=" text-center mb-4">
-              <h1 className="text-3xl font-LilitaOne mt-8 font-bold leading-tight">
-                {leng ? "Proyecto Café" : "Proyecto Café"}
-              </h1>
-            </div>
-            <div className="flex flex-row justify-between w-full gap-2 mb-6 grow">
-           
-       
-              <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
-                {/* <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
-                <p className="text-center  font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
-                  {!leng
-                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
-                    : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
-                </p> */}
-              </div>
-              <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
-                <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
-                <p className="text-center  font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
-                  {!leng
-                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
-                    : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
-                </p>
-              </div>
-              <div className="flex flex-col justify-start items-center w-custom-width400px h-full">
-                {/* <img src={BaseSillaLogo} alt="Base Silla Logo" className=" w-1/2 object-contain  " />
-                <p className="text-center  font-SpaceGrotesk w-4/5 text-sm mt-2 px-2">
-                  {!leng
-                    ? "fig-1: Silla Plan B - Coocreada con Materia nomada (@materianomada) - 2023: Felipe Mesa, de Plan B, diseñó la madera para una exposición de arte. Yo la compré y, junto con mi amigo Daniel, diseñamos y construimos el set de mesas y sillas “Conundrum Banana”. Cuando llegó a mi casa, la astronauta me ayudó a armarla, muy a regañadientes."
-                    : "fig-1: Silla Plan B - Co-created with Materia nomada (@materianomada)  - 2023: Felipe Mesa, from Plan B, designed the wood for an art exhibition. I bought it and, together with my friend Daniel, we designed and built the “Conundrum Banana” table and chair set. When it arrived at my house, the astronaut helped me assemble it, very reluctantly."}
-                </p> */}
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Proyecto Café |</h4>
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| Transversal 39 #65D - 22, Conquistadores |</h4>
-              <h4 className="text-center w-1/3 pt-4 font-LilitaOne text-1 mb-4 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
-            </div>
-          </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }

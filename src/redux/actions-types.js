@@ -11,6 +11,7 @@ export const SET_USER_REG_STATE = "SET_USER_REG_STATE";  // Nueva acción
 export const UPDATE_SELECTED_VALUE = "UPDATE_SELECTED_VALUE";  // Nueva acción
 export const SET_SELECTED_PROVIDER_ID = "SET_SELECTED_PROVIDER_ID"; // Nueva acción para establecer el ID del proveedor seleccionado
 export const UPDATE_LOG_STAFF = "UPDATE_LOG_STAFF"; // Nueva acción para actualizar el registro del personal
+export const SET_CURRENT_STAFF = "SET_CURRENT_STAFF"; // Estado global de usuario logueado
 // Vistas
 export const HOME = "HOME";
 export const SUPABASE = "SUPABASE";

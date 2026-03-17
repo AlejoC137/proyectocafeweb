@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/cardPrint";
 import { ShoppingCart, Flame, Leaf, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CuidadoVariations from "./CuidadoVariations";
-          // <CuidadoVariations             viewName={'MenuPrint'}           product={product}             isEnglish={isEnglish}             />
 
 export function CardInstancePrint({ product, isEnglish }) {
   const [showDetail, setShowDetail] = useState(false);
@@ -15,53 +14,46 @@ export function CardInstancePrint({ product, isEnglish }) {
     return precio;
   };
 
-  // Esta lógica puede ser reemplazada o complementada por CuidadoVariations
   const dietWarning = isEnglish ? product.DietaEN : product.DietaES;
   const careWarning = isEnglish ? product.CuidadoEN : product.CuidadoES;
+
   const renderIcons = () => {
     const icons = [];
     if (dietWarning === "Vegetarian" || dietWarning === "Vegetarino") {
-      icons.push(<Leaf key="vegetarian" className="h-4 w-4 text-green-500 mr-2" title="Vegetarian" />);
+      icons.push(<Leaf key="vegetarian" className="h-3 w-3 text-green-500 mr-1" title="Vegetarian" />);
     } else if (dietWarning === "Vegan" || dietWarning === "Vegano") {
-      icons.push(<Leaf key="vegan" className="h-4 w-4 text-green-700 mr-2" title="Vegan" />);
+      icons.push(<Leaf key="vegan" className="h-3 w-3 text-green-700 mr-1" title="Vegan" />);
     } else if (dietWarning === "Meat" || dietWarning === "Carnico") {
-      icons.push(<Flame key="meat" className="h-4 w-4 text-red-500 mr-2" title="Meat" />);
+      icons.push(<Flame key="meat" className="h-3 w-3 text-red-500 mr-1" title="Meat" />);
     }
 
     if (careWarning === "Spice" || careWarning === "Picante") {
-      icons.push(<Flame key="spicy" className="h-4 w-4 text-red-500 mr-2" title="Spicy" />);
+      icons.push(<Flame key="spicy" className="h-3 w-3 text-red-500 mr-1" title="Spicy" />);
     } else if (careWarning === "Walnuts" || careWarning === "Nueces") {
-      icons.push(<AlertTriangle key="nuts" className="h-4 w-4 text-orange-500 mr-2" title="Contains Walnuts" />);
+      icons.push(<AlertTriangle key="nuts" className="h-3 w-3 text-orange-500 mr-1" title="Contains Walnuts" />);
     }
     return icons;
   };
 
   return (
-    <Card className="w-full h-full overflow-hidden pt-0 pl-1 pr-1 shadow-none" onClick={() => setShowDetail(true)}>
-      
-      <div className="relative z-0 overflow-hidden ">
-        <Button variant="ghost" size="icon" className="absolute bg-white/70">
-          <ShoppingCart className="h-5 w-5 text-gray-700" />
-        </Button>
-      </div>
-      <CardContent className="p-0 flex flex-col justify-between text-gray-900 font-light">
-        <div className="flex justify-between items-center  border-b border-black">
-          <div className="flex" >
-
-          <h3 className="text-10pt truncate w-full font-bold font-custom font-SpaceGrotesk">
-            {isEnglish ? product.NombreEN : product.NombreES} 
-          </h3>
-          <CuidadoVariations             viewName={'MenuPrint'}           product={product}             isEnglish={isEnglish}             />
+    <Card className="w-full overflow-hidden shadow-none border-none p-0 rounded-none bg-transparent" onClick={() => setShowDetail(true)}>
+      <CardContent className="p-0 flex flex-col justify-between text-black font-light leading-none">
+        <div className="flex justify-between items-end border-b-[0.5px] border-black border-dotted pb-[1px] mb-[1px]">
+          <div className="flex items-center gap-1 overflow-hidden" >
+            <h3 className="text-[10px] sm:text-[11px] font-bold font-SpaceGrotesk uppercase truncate">
+              {isEnglish ? product.NombreEN : product.NombreES}
+            </h3>
+            <div className="scale-75 origin-left">
+              <CuidadoVariations viewName={'MenuPrint'} product={product} isEnglish={isEnglish} />
+            </div>
           </div>
-          
-          {/* 👇 CAMBIO REALIZADO AQUÍ: Se pasa 'isEnglish' directamente 👇 */}
-          
-          <span className="font-semibold text-gray-800 font-SpaceGrotesk" style={{ fontSize: '12px' }}>
+
+          <span className="font-bold font-SpaceGrotesk ml-1 whitespace-nowrap text-[10px] sm:text-[11px]">
             ${formatPrice(product.Precio)}
           </span>
         </div>
-        <div className="flex justify-between items-center">
-          <h3 className="text-md font-medium line-clamp-2 font-SpaceGrotesk" style={{ fontSize: '10px' }}>
+        <div className="flex justify-between items-start mt-[1px]">
+          <h3 className="font-medium line-clamp-2 font-SpaceGrotesk text-[8px] sm:text-[9px] leading-tight text-gray-800">
             {isEnglish ? product.DescripcionMenuEN : product.DescripcionMenuES}
           </h3>
         </div>

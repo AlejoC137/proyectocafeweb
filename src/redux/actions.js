@@ -14,6 +14,7 @@ import {
   ProduccionInterna,
   RESET_EXPANDED_GROUPS,
   ADD_ORDER_ITEM,
+  SET_CURRENT_STAFF,
   AGENDA,
   ITEMS,
   SET_LANGUAGE,
@@ -182,6 +183,13 @@ export function updateUserRegState(newState) {
     } catch (error) {
       console.error("Error updating user registration state:", error);
     }
+  };
+}
+
+export function setCurrentStaff(staff) {
+  return {
+    type: SET_CURRENT_STAFF,
+    payload: staff,
   };
 }
 

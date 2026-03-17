@@ -3,8 +3,7 @@ import React from 'react';
 import { CardInstancePrint } from "@/components/ui/cardInstancePrint";
 
 export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE }) {
-  
-  // Lógica de filtrado simplificada y corregida.
+
   const filteredProducts = products.filter((product) => {
     const groupMatch = Array.isArray(GRUPO)
       ? GRUPO.includes(product.GRUPO)
@@ -17,23 +16,18 @@ export function CardGridPrint({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE })
     );
   });
 
-  // Si no hay productos en esta categoría, no renderiza nada.
   if (filteredProducts.filter(p => p.PRINT === true).length === 0) {
     return null;
   }
 
   return (
-    // CONTENEDOR CORREGIDO:
-    // Se eliminaron 'h-full', 'overflow-hidden' y el 'style' para la altura.
-    // Ahora el componente crecerá verticalmente según su contenido.
     <div className="w-full relative">
-      <div className="flex flex-col items-start gap-1">
-        <Label className="text-left flex text-lg justify-center break-words w-full truncate font-SpaceGrotesk font-bold">
-          {TITTLE ? TITTLE[isEnglish ? "EN" : "ES"].toUpperCase() : String(GRUPO).toUpperCase()}
+      <div className="flex flex-col items-start gap-[2px]">
+        <Label className="text-left flex text-[13px] leading-none mb-[1px] justify-center break-words w-full truncate font-SpaceGrotesk font-bold uppercase tracking-wider">
+          {TITTLE ? TITTLE[isEnglish ? "EN" : "ES"] : String(GRUPO)}
         </Label>
-        
-        {/* LISTA CORREGIDA: Se eliminó 'overflow-y-auto' y 'scrollbar-hide'. */}
-        <div className="flex flex-col gap-1 w-full font-light">
+
+        <div className="flex flex-col gap-[2px] w-full font-light">
           {filteredProducts
             .filter((product) => product.PRINT === true)
             .sort((a, b) => Number(a.Order) - Number(b.Order))

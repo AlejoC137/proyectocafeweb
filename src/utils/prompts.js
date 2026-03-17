@@ -6,101 +6,101 @@
 import { ITEMS, PRODUCCION, MENU } from '../redux/actions-types';
 
 // Prompt for Items Almacen (Inventory Items)
-// const PROMPT_ITEMS_ALMACEN = `# Prompt: ItemsAlmacen (Extracción/Actualización controlada)
+const PROMPT_ITEMS_ALMACEN = `# Prompt: ItemsAlmacen (Extracción/Actualización controlada)
 
-// Actúa como experto en extracción de datos e inventarios. Tu trabajo es leer el enlace del producto y actualizar un registro de ItemsAlmacen sin romper el schema.
+Actúa como experto en extracción de datos e inventarios. Tu trabajo es leer el enlace del producto y actualizar un registro de ItemsAlmacen sin romper el schema.
 
-// ## ENTRADAS (pueden venir 1 o 2)
-// 1) itemBase (opcional pero recomendado): un objeto/registro existente (desde SQL/CSV/JSON) con las columnas de ItemsAlmacen.
-// 2) linkProducto: URL del producto a consultar.
+## ENTRADAS (pueden venir 1 o 2)
+1) itemBase (opcional pero recomendado): un objeto/registro existente (desde SQL/CSV/JSON) con las columnas de ItemsAlmacen.
+2) linkProducto: URL del producto a consultar.
 
-// ## OBJETIVO
-// - Si hay itemBase: SOLO actualizar estos campos (si logras obtenerlos del link):
-//   - Nombre_del_producto
-//   - CANTIDAD
-//   - UNIDADES
-//   - COSTO
-//   - precioUnitario
-//   - MARCA
-//   - FECHA_ACT (poner fecha de hoy)
-//   Todo lo demás se copia EXACTO desde itemBase.
+## OBJETIVO
+- Si hay itemBase: SOLO actualizar estos campos (si logras obtenerlos del link):
+  - Nombre_del_producto
+  - CANTIDAD
+  - UNIDADES
+  - COSTO
+  - precioUnitario
+  - MARCA
+  - FECHA_ACT (poner fecha de hoy)
+  Todo lo demás se copia EXACTO desde itemBase.
 
-// - Si NO hay itemBase: construir el objeto completo con valores por defecto, pero SIEMPRE respetando el schema.
+- Si NO hay itemBase: construir el objeto completo con valores por defecto, pero SIEMPRE respetando el schema.
 
-// ## REGLAS CRÍTICAS (para evitar el bug)
-// - Proveedor ES uuid (string). Si itemBase trae Proveedor, COPIA EXACTAMENTE el mismo valor. NO lo conviertas a texto, NO lo “interpretes”, NO lo reemplaces.
-// - _id ES uuid (string). Si itemBase trae _id, COPIA EXACTAMENTE el mismo valor. NO lo cambies.
-// - PROHIBIDO agregar llaves nuevas. En especial: NO existe "fuente_precio" aquí. Nunca la incluyas.
+## REGLAS CRÍTICAS (para evitar el bug)
+- Proveedor ES uuid (string). Si itemBase trae Proveedor, COPIA EXACTAMENTE el mismo valor. NO lo conviertas a texto, NO lo “interpretes”, NO lo reemplaces.
+- _id ES uuid (string). Si itemBase trae _id, COPIA EXACTAMENTE el mismo valor. NO lo cambies.
+- PROHIBIDO agregar llaves nuevas. En especial: NO existe "fuente_precio" aquí. Nunca la incluyas.
 
-// ## OUTPUT
-// Devuelve ÚNICAMENTE un objeto JSON (no array, no texto). Debe contener EXACTAMENTE estas claves y NINGUNA más:
+## OUTPUT
+Devuelve ÚNICAMENTE un objeto JSON (no array, no texto). Debe contener EXACTAMENTE estas claves y NINGUNA más:
 
-// - Nombre_del_producto (string)
-// - Area (string)
-// - CANTIDAD (string)        <- aunque sea numérico, aquí va como texto por el schema (ej: "1000")
-// - UNIDADES (string)        <- ej: "gr", "ml", "und", "kg", "lb", "un"
-// - COSTO (string)           <- ej: "15000"
-// - COOR (string)            <- valor fijo "1.05" (si itemBase trae otro, respeta el de itemBase)
-// - FECHA_ACT (string)       <- "YYYY-MM-DD" (hoy)
-// - STOCK (string)           <- JSON serializado (ver abajo)
-// - GRUPO (string)
-// - MARCA (array de strings) <- ej: ["Alpina"] o []
-// - _id (string uuid)
-// - precioUnitario (number)  <- número real
-// - Proveedor (string uuid o null)
-// - ALMACENAMIENTO (string)  <- JSON serializado (ver abajo)
-// - Merma (string)           <- ej: "0"
-// - Estado (string)          <- ej: "PC"
+- Nombre_del_producto (string)
+- Area (string)
+- CANTIDAD (string)        <- aunque sea numérico, aquí va como texto por el schema (ej: "1000")
+- UNIDADES (string)        <- ej: "gr", "ml", "und", "kg", "lb", "un"
+- COSTO (string)           <- ej: "15000"
+- COOR (string)            <- valor fijo "1.05" (si itemBase trae otro, respeta el de itemBase)
+- FECHA_ACT (string)       <- "YYYY-MM-DD" (hoy)
+- STOCK (string)           <- JSON serializado (ver abajo)
+- GRUPO (string)
+- MARCA (array de strings) <- ej: ["Alpina"] o []
+- _id (string uuid)
+- precioUnitario (number)  <- número real
+- Proveedor (string uuid o null)
+- ALMACENAMIENTO (string)  <- JSON serializado (ver abajo)
+- Merma (string)           <- ej: "0"
+- Estado (string)          <- ej: "PC"
 
-// ## FORMATO ESPECIAL (strings que contienen JSON serializado)
-// 1) STOCK (string)
-// Debe ser string con JSON serializado. Default:
-// "{\\"minimo\\":0,\\"maximo\\":0,\\"actual\\":0}"
-// Si itemBase trae STOCK, cópialo tal cual (a menos que te pidan actualizarlo explícitamente).
+## FORMATO ESPECIAL (strings que contienen JSON serializado)
+1) STOCK (string)
+Debe ser string con JSON serializado. Default:
+"{\\"minimo\\":0,\\"maximo\\":0,\\"actual\\":0}"
+Si itemBase trae STOCK, cópialo tal cual (a menos que te pidan actualizarlo explícitamente).
 
-// 2) ALMACENAMIENTO (string)
-// Debe ser string con JSON serializado. Default:
-// "{\\"ALMACENAMIENTO\\":\\"\\",\\"BODEGA\\":\\"\\"}"
-// Si itemBase trae ALMACENAMIENTO, cópialo tal cual (a menos que te pidan actualizarlo explícitamente).
+2) ALMACENAMIENTO (string)
+Debe ser string con JSON serializado. Default:
+"{\\"ALMACENAMIENTO\\":\\"\\",\\"BODEGA\\":\\"\\"}"
+Si itemBase trae ALMACENAMIENTO, cópialo tal cual (a menos que te pidan actualizarlo explícitamente).
 
-// ## NORMALIZACIÓN
-// - Si en el título aparece peso/volumen (ej: "500 g", "1kg", "750 ml"):
-//   - CANTIDAD = "500" / "1000" / "750" (SIEMPRE string)
-//   - UNIDADES = "gr" / "ml" / etc.
-// - COSTO: extraer precio del link y guardarlo como string numérica sin símbolos ni separadores. Ej: "16950"
-// - precioUnitario:
-//   - Si CANTIDAD es válida y > 0: precioUnitario = (Number(COSTO) / Number(CANTIDAD))
-//   - Redondear a 2 decimales.
-//   - Si no hay CANTIDAD: precioUnitario = Number(COSTO)
+## NORMALIZACIÓN
+- Si en el título aparece peso/volumen (ej: "500 g", "1kg", "750 ml"):
+  - CANTIDAD = "500" / "1000" / "750" (SIEMPRE string)
+  - UNIDADES = "gr" / "ml" / etc.
+- COSTO: extraer precio del link y guardarlo como string numérica sin símbolos ni separadores. Ej: "16950"
+- precioUnitario:
+  - Si CANTIDAD es válida y > 0: precioUnitario = (Number(COSTO) / Number(CANTIDAD))
+  - Redondear a 2 decimales.
+  - Si no hay CANTIDAD: precioUnitario = Number(COSTO)
 
-// ## MARCA (array)
-// - Si encuentras una marca: MARCA = ["Marca"]
-// - Si no: MARCA = []
+## MARCA (array)
+- Si encuentras una marca: MARCA = ["Marca"]
+- Si no: MARCA = []
 
-// ## VALORES POR DEFECTO (solo si NO hay itemBase)
-// - Area: inferir (si es insumo cocina -> "COCINA", si es bebida -> "CAFE_BEBIDAS", si no estás seguro -> "COCINA")
-// - GRUPO: inferir (ej: "CARNICO", "VERDURAS_FRUTAS", "LACTEO", "DESECHABLES"...)
-// - COOR: "1.05"
-// - FECHA_ACT: fecha de hoy "YYYY-MM-DD"
-// - STOCK: "{\\"minimo\\":0,\\"maximo\\":0,\\"actual\\":0}"
-// - ALMACENAMIENTO: "{\\"ALMACENAMIENTO\\":\\"\\",\\"BODEGA\\":\\"\\"}"
-// - Merma: "0"
-// - Estado: "PC"
-// - _id: generar uuid v4
-// - Proveedor: null
+## VALORES POR DEFECTO (solo si NO hay itemBase)
+- Area: inferir (si es insumo cocina -> "COCINA", si es bebida -> "CAFE_BEBIDAS", si no estás seguro -> "COCINA")
+- GRUPO: inferir (ej: "CARNICO", "VERDURAS_FRUTAS", "LACTEO", "DESECHABLES"...)
+- COOR: "1.05"
+- FECHA_ACT: fecha de hoy "YYYY-MM-DD"
+- STOCK: "{\\"minimo\\":0,\\"maximo\\":0,\\"actual\\":0}"
+- ALMACENAMIENTO: "{\\"ALMACENAMIENTO\\":\\"\\",\\"BODEGA\\":\\"\\"}"
+- Merma: "0"
+- Estado: "PC"
+- _id: generar uuid v4
+- Proveedor: null
 
-// ## RESTRICCIONES DE SALIDA
-// - Devuelve SOLO el JSON.
-// - NO explicaciones.
-// - NO agregar campos extra.
-// `;
+## RESTRICCIONES DE SALIDA
+- Devuelve SOLO el JSON.
+- NO explicaciones.
+- NO agregar campos extra.
+`;
 
 
 
 // Prompt for Produccion Interna (Internal Production Items)
 const PROMPT_PRODUCCION_INTERNA = `ACTÚA COMO: Arquitecto de Base de Datos e Inventario.
 
-CONTEXTO: Acabamos de generar un JSON de "Receta de Producción". Ahora necesito crear el objeto correspondiente para la tabla de inventario "ProduccionInterna".
+  CONTEXTO: Acabamos de generar un JSON de "Receta de Producción".Ahora necesito crear el objeto correspondiente para la tabla de inventario "ProduccionInterna".
 
 TU TAREA: Generar un único objeto JSON basado en el esquema de \`ProduccionInterna_rows.csv\` que represente el producto terminado de la receta anterior.
 

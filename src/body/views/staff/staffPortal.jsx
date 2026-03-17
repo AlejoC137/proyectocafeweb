@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getAllFromTable } from "../../../redux/actions";
+import { getAllFromTable, setCurrentStaff } from "../../../redux/actions";
 import { STAFF, WORKISUE } from "../../../redux/actions-types";
 import StaffInstance from "./staffInstance";
 import StaffShift from "./staffShift";
@@ -68,9 +68,11 @@ function StaffPortal() {
     );
     if (staff) {
       setStaffFound(staff);
+      dispatch(setCurrentStaff(staff));
       setCcInput("");
     } else {
       setStaffFound(null);
+      dispatch(setCurrentStaff(null));
       setError("No se encontró personal con esos primeros 4 dígitos de CC.");
     }
   };
@@ -93,8 +95,10 @@ function StaffPortal() {
     const staff = allStaff.find((s) => s._id === staffId);
     if (staff) {
       setStaffFound(staff);
+      dispatch(setCurrentStaff(staff));
     } else {
       setStaffFound(null);
+      dispatch(setCurrentStaff(null));
       setError("No se encontró personal seleccionado.");
     }
   };

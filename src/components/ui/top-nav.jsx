@@ -6,6 +6,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLenguage } from "../../redux/actions";
 import laTaza from "@/assets/TAZA.svg";
 import pcLogoWide from "@/assets/proyecto_cafe_logo_wide - copia.png";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Objeto para mapear rutas a títulos. Es más limpio y escalable que un switch.
 const pageTitles = {
@@ -33,19 +40,23 @@ const pageTitles = {
 };
 
 // Componente reutilizable para los botones de íconos
-const IconButton = ({ children, onClick, className = '' }) => (
+const IconButton = React.forwardRef(({ children, onClick, className = '', ...props }, ref) => (
   <button
+    ref={ref}
     onClick={onClick}
     className={`p-1.5 rounded-lg shadow-sm transition-all duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}
+    {...props}
   >
     {children}
   </button>
-);
+));
+IconButton.displayName = "IconButton";
 
 export default function TopNav() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentLeng = useSelector((state) => state.currentLeng);
+  const currentStaff = useSelector((state) => state.currentStaff);
   const location = useLocation();
 
   const handleLanguageToggle = () => {
@@ -77,15 +88,53 @@ export default function TopNav() {
     return viewFromUrl.charAt(0) + viewFromUrl.slice(1).toLowerCase();
   };
 
+  const path = location.pathname.toLowerCase();
+  const hideDropdown = path === "/menuview";
+
+  const allTabs = [
+    { label: "Portal Staff", path: "/" },
+    { label: "Work Issues", path: "/WorkIsue" },
+    { label: "Manager", path: "/Manager" },
+    { label: "Inventario", path: "/Inventario" },
+    { label: "Recetas", path: "/Recetas" },
+    { label: "Agenda Produccion", path: "/CalendarioProduccio" },
+    { label: "Menu Print", path: "/MenuPrint" },
+    { label: "Gastos", path: "/Gastos" },
+    { label: "Modelos", path: "/Model" },
+    { label: "Venta / Compra", path: "/VentaCompra" },
+    { label: "Eventos", path: "/Agenda" },
+    { label: "Proveedores", path: "/Proveedores" },
+    { label: "Codigos de Barra", path: "/Inventario/BarcodeManager" },
+    // Tabs anteriormente de admin
+    { label: "Staff Manager", path: "/staff-manager" },
+    { label: "Nómina", path: "/CalculoNomina" },
+    { label: "Pagos", path: "/PagosProveedores" },
+    { label: "Día", path: "/DiaResumen" },
+    { label: "Mes", path: "/MesResumen" }
+  ];
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-md bg-cream-bg border-sage-green text-not-black">
       <div className="container flex items-center justify-between h-14 px-4">
 
         {/* Sección Izquierda/Central: Botón + Logo + Título */}
         <div className="flex flex-1 items-center justify-start gap-2 overflow-hidden">
-          <IconButton className="bg-light-leaf text-sage-green hover:bg-sage-green hover:text-white shrink-0">
-            <Menu className="h-5 w-5" />
-          </IconButton>
+          {!hideDropdown && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <IconButton className="bg-light-leaf text-sage-green hover:bg-sage-green hover:text-white shrink-0">
+                  <Menu className="h-5 w-5" />
+                </IconButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 ml-2 bg-cream-bg border-sage-green z-[100]" align="start">
+                {allTabs.map((tab) => (
+                  <DropdownMenuItem key={tab.path} onClick={() => navigate(tab.path)} className="cursor-pointer font-SpaceGrotesk">
+                    {tab.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <button
             onClick={handleGoHome}

@@ -11,6 +11,7 @@ import {
     COMPRAS,
     UPDATE_ACTIVE_TAB,
     SET_USER_REG_STATE,
+    SET_CURRENT_STAFF,
     UPDATE_SELECTED_VALUE,
     INSERT_RECETAS_SUCCESS,
     INSERT_RECETAS_FAILURE,
@@ -103,6 +104,7 @@ const initialState = {
     allCompras: [],
     currentView: 'MENU',
     userRegState: 'notAuth',
+    currentStaff: null,
     selectedValue: null,
     recetas: [],             // Estado para guardar las recetas insertadas
     preProcess: [],          // Estado para guardar las recetas insertadas
@@ -150,6 +152,11 @@ const reducer = (state = initialState, action) => {
             return {
                 ...state,
                 userRegState: action.payload,
+            };
+        case SET_CURRENT_STAFF:
+            return {
+                ...state,
+                currentStaff: action.payload,
             };
         case SET_PREPROCESS_DATA:
             return {
