@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { COMPRAS, MENU, PROVEE, RECETAS_MENU } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
@@ -7,8 +8,15 @@ import { recetaMariaPaula } from "../../../redux/calcularReceta";
 import DiaResumentStats from "./DiaResumentStats";
 import { fetchAndProcessSales } from "./slicer"; // Import the function
 
+const getToday = () => {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 function DiaResumen() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { date } = useParams();
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
   const [productosRecetasHoy, setProductosRecetasHoy] = useState([]);
@@ -16,12 +24,14 @@ function DiaResumen() {
   const [totalTip, setTotalTip] = useState(0);
   const [productosVendidos, setProductosVendidos] = useState([]);
   const [recetas, setRecetas] = useState([]);
-  const [hoy, setHoy] = useState(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }).split(",")[0]);
+  const [inputDate, setInputDate] = useState(date || getToday());
+  const [hoy, setHoy] = useState(() => {
+    const parts = (date || getToday()).split('-');
+    return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}/${parts[0]}`;
+  });
   const [totalTarjeta, setTotalTarjeta] = useState(0);
   const [totalEfectivo, setTotalEfectivo] = useState(0);
   const [totalTransferencia, setTotalTransferencia] = useState(0);
-  
-  
   
   const allMenu = useSelector((state) => state.allMenu);
   const allItems = useSelector((state) => state.allItems);
@@ -30,18 +40,22 @@ function DiaResumen() {
   const allCompras = useSelector((state) =>  state.allCompras); // Fetch Compras from Redux
   
   // console.log(allCompras);
+  useEffect(() => {
+    if (!date) {
+      navigate(`/DiaResumen/${getToday()}`, { replace: true });
+    } else if (date !== inputDate) {
+      setInputDate(date);
+      const parts = date.split('-');
+      if (parts.length === 3) {
+        setHoy(`${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}/${parts[0]}`);
+      }
+    }
+  }, [date, navigate, inputDate]);
+
   const handleDateChange = (e) => {
-    const date = e.target.value;
-    const dateList = date.split("-");
-
-    // Remove leading zeros from month and day
-    dateList[1] = dateList[1].replace(/^0+/, '');
-    dateList[2] = dateList[2].replace(/^0+/, '');
-
-    let formattedDate = `${dateList[1]}/${dateList[2]}/${dateList[0]}`;
-
-    setHoy(formattedDate);
-    // console.log(formattedDate); // Output: "2/3/2025"
+    const newDate = e.target.value;
+    if (!newDate) return;
+    navigate(`/DiaResumen/${newDate}`);
   };
 
   useEffect(() => {
@@ -55,11 +69,10 @@ function DiaResumen() {
 
         // console.log("Compras from Redux:", allCompras); // Log Compras to console
 
-        // const responce = await supabase
         const { data, error } = await supabase
           .from("Ventas")
           .select("*")
-          .filter("Date", "eq", hoy)
+          .like("Date", `${hoy}%`)
           .order("Date", { ascending: true });
 
 // console.log("Venta" , data[900].Date);
@@ -179,7 +192,21 @@ console.log(data);
           });
 
           const productosArray = Object.values(productosMap);
-          setProductosVendidos(productosArray);
+          
+          const updatedProductosVendidos = await Promise.all(productosArray.map(async (producto) => {
+            if (producto.recetaId !== "N/A") {
+              const menuItem = allMenu.find((item) => item.uuid_receta === producto.recetaId);
+              if (menuItem) {
+                const recetaData = await getRecepie(menuItem.uuid_receta, "Recetas");
+                const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
+                const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
+                return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
+              }
+            }
+            return producto;
+          }));
+          
+          setProductosVendidos(updatedProductosVendidos);
 
           const recetasArray = Object.values(recetasMap);
           setRecetas(recetasArray);
@@ -194,28 +221,6 @@ console.log(data);
 
     fetchData();
   }, [ hoy]);
-  // }, [ ]);
-
-  useEffect(() => {
-
-    const calculateRecipeValues = async () => {
-      const updatedProductosVendidos = await Promise.all(productosVendidos.map(async (producto) => {
-        if (producto.recetaId !== "N/A") {
-          const menuItem = allMenu.find((item) => item.uuid_receta === producto.recetaId);
-          if (menuItem) {
-            const recetaData = await getRecepie(menuItem.uuid_receta, "Recetas");
-            const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
-            const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
-            return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
-          }
-        }
-        return producto;
-      }));
-      setProductosVendidos(updatedProductosVendidos);
-    };
-
-    calculateRecipeValues();
-  }, []);
 
   const handleFetchSales = async () => {
     const processedSales = await fetchAndProcessSales(dispatch);
@@ -241,16 +246,30 @@ console.log(data);
     
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
-      <div>
-        <label htmlFor="date" className="block bg-white text-sm font-medium text-gray-700">Select Date:</label>
-        <input
-          type="date"
-          id="date"
-          name="date"
-          className=" bg-gray-500 mt-1 block w-full pl-3 pr-12 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          onChange={handleDateChange}
-        />
-        <p>Selected Date: {hoy}</p>
+      {/* Header and Date Selector Container */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Resumen del Día</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Consulta las métricas y ventas detalladas de un día específico. ({hoy})
+          </p>
+        </div>
+        
+        <div className="mt-4 md:mt-0 flex items-center gap-3">
+          <label htmlFor="date" className="text-sm font-semibold text-gray-700 shrink-0">
+            Fecha:
+          </label>
+          <div className="relative">
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={inputDate}
+              className="block w-full px-4 py-2.5 text-gray-700 font-medium bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
+              onChange={handleDateChange}
+            />
+          </div>
+        </div>
       </div>
       <DiaResumentStats
         ventasRecepies={productosVendidos}
@@ -263,11 +282,10 @@ console.log(data);
         totalCompras={totalCompras}
       />
       {/* Resumen del Día */}
-      {/* Removed inline rendering */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         {/* Detalles de Ventas */}
-        <div className="p-6 bg-white rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">
             Detalles de Ventas
           </h3>
           <div className="overflow-x-auto">
@@ -363,8 +381,8 @@ console.log(data);
         </div>
 
         {/* Productos Vendidos */}
-        <div className="p-6 bg-white rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">
             Productos Vendidos
           </h3>
           <div className="overflow-x-auto">
@@ -400,12 +418,19 @@ console.log(data);
 
 
       </div>
-      <button
-        onClick={handleFetchSales}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-      >
-        Fetch and Process Sales
-      </button>
+      
+      {/* Footer Sync Button */}
+      <div className="mt-8 flex justify-end">
+        <button
+          onClick={handleFetchSales}
+          className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+          </svg>
+          Sincronizar y Procesar Ventas
+        </button>
+      </div>
     </div>
   );
 }

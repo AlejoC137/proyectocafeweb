@@ -141,6 +141,7 @@ function App() {
           <Route path="/MenuPrint" element={<MenuPrint />} />
           <Route path="/MenuHead" element={<MenuHead />} />
           <Route path="/DiaResumen" element={<DiaResumen />} />
+          <Route path="/DiaResumen/:date" element={<DiaResumen />} />
           <Route path="/MesResumen" element={<MesResumen />} />
           <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
           <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
