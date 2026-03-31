@@ -19,10 +19,11 @@ import { crearProveedor } from "../../../redux/actions-Proveedores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, RefreshCw, PlusCircle, X, Save, ShoppingCart, Hammer, FileText, UserPlus, FileJson, Check } from "lucide-react";
+import { Copy, RefreshCw, PlusCircle, X, Save, ShoppingCart, Hammer, FileText, UserPlus, FileJson, Check, SpellCheck } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { copyPromptToClipboard } from "../../../utils/prompts";
 import MacroEditorItems from "./MacroEditorItems";
+import CorrectorOrtograficoModal from "../inventario/CorrectorOrtograficoModal";
 
 function AccionesRapidas({ currentType: propType }) {
   // Normalize type: "ITEMS" string -> ItemsAlmacen constant
@@ -40,6 +41,7 @@ function AccionesRapidas({ currentType: propType }) {
   const [jsonText, setJsonText] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
   const [macroEditorVisible, setMacroEditorVisible] = useState(false);
+  const [spellCheckerVisible, setSpellCheckerVisible] = useState(false);
 
   // Initial Data
   const initialItemData = {
@@ -252,12 +254,28 @@ function AccionesRapidas({ currentType: propType }) {
             Macro Editor de armas de inventario
           </Button>
 
+          <Button
+            variant={spellCheckerVisible ? "default" : "outline"}
+            className={spellCheckerVisible ? "bg-indigo-600 text-white" : "border-indigo-300 text-indigo-700 hover:bg-indigo-50"}
+            onClick={() => setSpellCheckerVisible(true)}
+          >
+            <SpellCheck className="h-4 w-4 mr-2" />
+            Corrector Ortográfico
+          </Button>
+
         </div>
       </div>
 
       {macroEditorVisible && (
         <MacroEditorItems
           onClose={() => setMacroEditorVisible(false)}
+          currentType={currentType}
+        />
+      )}
+
+      {spellCheckerVisible && (
+        <CorrectorOrtograficoModal
+          onClose={() => setSpellCheckerVisible(false)}
           currentType={currentType}
         />
       )}

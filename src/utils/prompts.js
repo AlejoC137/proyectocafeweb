@@ -347,6 +347,44 @@ Devuelve ÚNICAMENTE el código JSON.
   * El objeto \`Comp_Lunch\` es fundamental y DEBE contener todas las subclaves indicadas para CADA objeto del array.
   * Procura que \`NombreES\` siga el patrón MAYUSCULAS_CON_GUION_BAJO que identifica el plato principal (usualmente la proteína principal).`;
 
+const PROMPT_SPELL_CHECK = `# PROMPT: CORRECTOR ORTOGRÁFICO BILINGÜE (ES/EN)
+
+Actúa como un experto en ortografía y gramática para sistemas de inventario y menús de restaurantes. Tu trabajo es revisar una lista de elementos y sugerir correcciones precisas.
+
+## OBJETIVO
+Identificar errores ortográficos y gramaticales en nombres de productos, descripciones, áreas y marcas, tanto en ESPAÑOL como en INGLÉS.
+
+## ENTRADA
+Recibirás un array de objetos JSON con la siguiente estructura (puede variar según el tipo de ítem):
+- Para Inventario/Producción: { "_id", "Nombre_del_producto", "Area", "MARCA" }
+- Para Menú: { "_id", "NombreES", "NombreEN", "DescripcionMenuES", "DescripcionMenuEN" }
+
+## REGLAS DE CORRECCIÓN
+1. **Preservar el ID**: El campo \`_id\` DEBE permanecer IDÉNTICO. No lo cambies ni lo elimines.
+2. **Corrección Contextual**:
+   - Ajusta mayúsculas/minúsculas de forma coherente (ej: "Arroz Integral" en lugar de "arroz integral").
+   - Corrige tildes y errores comunes (ej: "Jabón" en lugar de "Jabon").
+   - En inglés, usa el formato estándar de títulos (Title Case).
+3. **No Inventar**: Si una palabra es un nombre técnico o marca que parece correcta, no la fuerces a un cambio innecesario.
+4. **Respetar el Idioma**:
+   - Campos finalizados en "ES" o "en español" -> Revisar en Español.
+   - Campos finalizados en "EN" o "en inglés" -> Revisar en Inglés.
+   - "Nombre_del_producto" y "Area" usualmente están en Español.
+
+## OUTPUT
+Devuelve ÚNICAMENTE un array de objetos JSON que contenga SOLO los elementos que requirieron corrección.
+Cada objeto debe incluir el \`_id\` y SOLO los campos que fueron corregidos.
+
+Ejemplo de salida:
+[
+  {
+    "_id": "uuid-123",
+    "NombreES": "Lasaña de Pollo",
+    "DescripcionMenuES": "Exquicita lasaña casera."
+  }
+]
+`;
+
 /**
  * Get the appropriate prompt based on entity type
  * @param {string} type - Entity type constant (ITEMS, PRODUCCION, MENU, etc.)
@@ -385,6 +423,9 @@ export function getPromptByType(type) {
 
     case 'MENU_LUNCH':
       return PROMPT_MENU_LUNCH;
+
+    case 'SPELL_CHECK':
+      return PROMPT_SPELL_CHECK;
 
     default:
       console.warn(`Unknown prompt type: ${type}, defaulting to Items prompt`);

@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { MENU, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from "../../../redux/actions-types";
+import { MENU, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, MenuItems, ProduccionInterna, ItemsAlmacen } from "../../../redux/actions-types";
 import { getAllFromTable, createRecipeForProduct } from "../../../redux/actions";
 import RecetasStats from "./RecetasStats";
 import MacroAgregador from "./MacroAgregador";
 import MacroEditorRecipes from "./MacroEditorRecipes";
 import MacrocalculadorDeValorDeRecetas from "./MacrocalculadorDeValorDeRecetas";
+import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
+import { Zap, X, LayoutGrid, Package, ChefHat } from "lucide-react";
 
 function Recetas() {
   const dispatch = useDispatch();
@@ -21,6 +23,8 @@ function Recetas() {
   const [showMacroAgregador, setShowMacroAgregador] = useState(false);
   const [showMacroEditorRecipes, setShowMacroEditorRecipes] = useState(false);
   const [showMacroCalculador, setShowMacroCalculador] = useState(false);
+  const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
+  const [accionesType, setAccionesType] = useState(MenuItems);
 
   // Searchable Dropdown States
   const [searchTerm, setSearchTerm] = useState('');
@@ -180,7 +184,18 @@ function Recetas() {
           </button>
         </div>
       </div>
+
+      {/* PANEL DE ACCIONES RÁPIDAS (Nuevo) */}
       <div className="flex flex-col sm:flex-row justify-end flex-wrap mb-4 sticky top-4 z-10 gap-2 sm:gap-4">
+        <button
+          onClick={() => setShowAccionesRapidas(!showAccionesRapidas)}
+          className={`w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 font-bold rounded-full shadow-lg transition transform hover:scale-105 text-sm sm:text-base flex items-center justify-center gap-2 ${showAccionesRapidas ? "bg-slate-800 text-white" : "bg-white text-slate-800 border-2 border-slate-800 hover:bg-slate-50"
+            }`}
+        >
+          {showAccionesRapidas ? <X className="h-5 w-5" /> : <Zap className="h-5 w-5 fill-amber-400 text-amber-400" />}
+          Acciones Rápidas (Nuevos)
+        </button>
+
         <button
           onClick={() => setShowMacroEditorRecipes(true)}
           className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 bg-amber-600 text-white font-bold rounded-full shadow-lg hover:bg-amber-700 transition transform hover:scale-105 text-sm sm:text-base"
@@ -201,6 +216,38 @@ function Recetas() {
           🧮 Macro Calculador
         </button>
       </div>
+
+      {showAccionesRapidas && (
+        <div className="mb-8 p-4 border rounded-lg bg-white shadow-md animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center justify-between mb-4 border-b pb-2">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
+              Crear Nuevo Elemento
+            </h3>
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setAccionesType(MenuItems)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${accionesType === MenuItems ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                <ChefHat className="h-3 w-3 inline mr-1" /> Menú
+              </button>
+              <button
+                onClick={() => setAccionesType(ProduccionInterna)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${accionesType === ProduccionInterna ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                <Package className="h-3 w-3 inline mr-1" /> Producción
+              </button>
+              <button
+                onClick={() => setAccionesType(ItemsAlmacen)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${accionesType === ItemsAlmacen ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                <LayoutGrid className="h-3 w-3 inline mr-1" /> Insumo
+              </button>
+            </div>
+          </div>
+          <AccionesRapidas currentType={accionesType} />
+        </div>
+      )}
 
       <RecetasStats />
       {showMacroAgregador && <MacroAgregador onClose={() => setShowMacroAgregador(false)} />}
