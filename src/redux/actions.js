@@ -424,7 +424,7 @@ export function actualizarPrecioUnitario(items, type) {
   };
 }
 
-function calcularPrecioUnitario(item) {
+export function calcularPrecioUnitario(item) {
   let precioUnitario;
   const ajusteInflacionario = 1.04;
 
@@ -438,7 +438,7 @@ function calcularPrecioUnitario(item) {
   const costo = parseFloat(item.COSTO);
   const cantidad = parseFloat(item.CANTIDAD);
   let coor = parseFloat(item.COOR);
-  let merma = parseFloat(item.Merma);
+  let merma = parseFloat(item.Merma) || 0;
 
   // Si coor no es un número válido (ej. falta en Producción), usar 1
   if (isNaN(coor)) {
@@ -447,7 +447,14 @@ function calcularPrecioUnitario(item) {
 
   if (!cantidad || cantidad === 0) return 0;
 
-  precioUnitario = (costo / (cantidad - (merma && (cantidad * merma)))) * ajusteInflacionario * coor;
+  // Si merma está expresada como porcentaje (ej. 70 o 0.7), 
+  // robustecer el cálculo: si es mayor a 1, asumimos que es porcentaje entero.
+  const mermaDecimal = merma > 1 ? merma / 100 : merma;
+  const rendimiento = cantidad - (cantidad * mermaDecimal);
+
+  if (rendimiento <= 0) return 0;
+
+  precioUnitario = (costo / rendimiento) * ajusteInflacionario * coor;
 
   return parseFloat(precioUnitario.toFixed(2));
 }

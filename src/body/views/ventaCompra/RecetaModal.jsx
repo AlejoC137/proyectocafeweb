@@ -638,7 +638,16 @@ function RecetaModal({ item, onClose }) {
                         >
                             <FileJson size={24} />
                         </Button>
-                        <h2 className="text-2xl font-bold text-gray-800">{receta.legacyName || "Receta"}</h2>
+                        <div className="text-2xl font-bold text-gray-800">
+                            <EditableText
+                                value={receta.legacyName || ""}
+                                onSave={(value) => updateInfoField("legacyName", value)}
+                                isEditable={permanentEditMode}
+                                placeholder="Nombre de la receta..."
+                                multiline={false}
+                                disabled={isUpdating}
+                            />
+                        </div>
                     </div>
                     <Button variant="ghost" className="text-gray-500 hover:text-red-500 text-xl font-bold" onClick={onClose}>✕</Button>
                 </div>

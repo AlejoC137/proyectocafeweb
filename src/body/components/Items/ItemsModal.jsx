@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
-import { getAllFromTable, updateItem } from "../../../redux/actions";
+import { getAllFromTable, updateItem, actualizarPrecioUnitario, calcularPrecioUnitario } from "../../../redux/actions";
 import { ITEMS, CATEGORIES, unidades, BODEGA, ESTATUS, PROVEE } from "../../../redux/actions-types";
-import { X, Package, BookOpen, Edit, Save, Loader2, FileJson, Copy, Check } from "lucide-react";
+import { X, Package, BookOpen, Edit, Save, Loader2, FileJson, Copy, Check, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { copyPromptToClipboard } from "../../../utils/prompts";
@@ -127,7 +127,14 @@ const ItemsModal = () => {
       const costo = Number(editableItem.COSTO) || 0;
       const cantidad = Number(editableItem.CANTIDAD) || 1;
       const coor = Number(editableItem.COOR) || 1.05;
-      const precioUnitarioCalculado = (costo / cantidad) * coor;
+      const merma = Number(editableItem.Merma) || 0;
+      
+      const precioUnitarioCalculado = calcularPrecioUnitario({ 
+        COSTO: costo, 
+        CANTIDAD: cantidad, 
+        COOR: coor, 
+        Merma: merma 
+      });
 
       const payload = {
         ...editableItem,
@@ -211,6 +218,22 @@ const ItemsModal = () => {
     await copyPromptToClipboard(ITEMS, setPromptCopied);
   };
 
+  const handleRecalculate = async () => {
+    if (!originalItem) return;
+    if (!window.confirm("¿Recalcular el precio unitario basado en los valores actuales de Costo, Cantidad, Merma y COOR? El valor se guardará inmediatamente.")) return;
+    
+    setIsSaving(true);
+    try {
+      await dispatch(actualizarPrecioUnitario([originalItem], ITEMS));
+      await dispatch(getAllFromTable(ITEMS)); // Refresh list to get updated value
+    } catch (error) {
+      console.error("Error recalulando:", error);
+      alert("Error al recalcular precio unitario.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const formatCurrency = (value) =>
     new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(value || 0);
 
@@ -275,9 +298,23 @@ const ItemsModal = () => {
       else if (value === null || value === undefined || value === "") displayValue = "N/A";
 
       return (
-        <div className="grid grid-cols-3 gap-2 items-start py-2 border-b border-slate-100 last:border-0">
+        <div className="grid grid-cols-3 gap-2 items-start py-2 border-b border-slate-100 last:border-0 relative">
           <span className="text-sm font-medium text-slate-500 col-span-1">{label}:</span>
-          <span className="text-sm font-medium text-slate-800 col-span-2 break-words">{displayValue}</span>
+          <div className="col-span-2 flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-800 break-words">{displayValue}</span>
+            {name === "precioUnitario" && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleRecalculate}
+                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                title="Recalcular Precio Unitario"
+                disabled={isSaving}
+              >
+                <RefreshCw className={`h-4 w-4 ${isSaving ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+          </div>
         </div>
       );
     }
