@@ -47,7 +47,10 @@ const StaffManager = () => {
                             <Filter className="w-4 h-4" />
                             Filtros
                         </button>
-                        <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-medium text-sm">
+                        <button 
+                            onClick={() => navigate('/StaffCreator')}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md transition font-medium text-sm"
+                        >
                             <Plus className="w-4 h-4" />
                             Nuevo Empleado
                         </button>

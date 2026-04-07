@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // Se actualiza la importación para usar getAllFromTable
@@ -247,6 +248,60 @@ function StaffCreator() {
     window.scrollTo(0, 0);
   };
 
+  const handlePrintContract = () => {
+    const printContents = document.getElementById('contract-content').innerHTML;
+    const printWindow = window.open('', '_blank', 'width=800,height=900');
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Contrato - ${formData.Nombre} ${formData.Apellido}</title>
+          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+            body { 
+              font-family: 'Space Grotesk', sans-serif; 
+              padding: 40px;
+              color: #1a202c;
+            }
+            .contract-header { border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; padding-bottom: 16px; text-align: center; }
+            @media print {
+              body { padding: 20px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="max-w-4xl mx-auto">
+            ${printContents}
+            <div class="mt-12 pt-8 border-t border-gray-300 grid grid-cols-2 gap-12">
+              <div class="text-center">
+                <div class="border-b border-black w-48 mx-auto mb-2"></div>
+                <p class="text-xs font-bold uppercase">EL CONTRATANTE</p>
+                <p class="text-[10px]">PROYECTO CAFÉ</p>
+              </div>
+              <div class="text-center">
+                <div class="border-b border-black w-48 mx-auto mb-2"></div>
+                <p class="text-xs font-bold uppercase">EL CONTRATISTA</p>
+                <p class="text-[10px]">${formData.Nombre} ${formData.Apellido}</p>
+                <p class="text-[10px]">C.C. ${formData.CC}</p>
+              </div>
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(() => {
+                window.print();
+                // window.close(); // Opcional: cerrar automáticamente después de imprimir
+              }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar a este miembro del personal?")) {
       await dispatch(deleteItem(id, "Staff"));
@@ -426,16 +481,22 @@ function StaffCreator() {
                   ✕
                 </button>
               </div>
-              <div className="p-6 overflow-y-auto flex-grow text-gray-700 text-sm leading-relaxed space-y-4">
-                <h2 className="text-xl font-bold text-center mb-4">ACUERDO DE VINCULACIÓN DE CONTRATISTA INDEPENDIENTE Y TÉRMINOS DEL SERVICIO</h2>
+              <div 
+                id="contract-content"
+                className="p-6 overflow-y-auto flex-grow text-gray-700 text-sm leading-relaxed space-y-4"
+              >
+                <div className="border-b pb-4 mb-4 text-center">
+                  <h2 className="text-2xl font-serif font-bold text-gray-900 uppercase tracking-tight">Contrato de Prestación de Servicios</h2>
+                  <p className="text-xs text-gray-500 mt-1 font-mono">REFERENCIA: PC-{formData.CC || '0000'}-{new Date().getFullYear()}</p>
+                </div>
 
-                <p className="text-xs text-gray-500 mb-4">
-                  <strong>REFERENCIA LEGAL:</strong> Código Civil Colombiano (Arts. 1495, 2063), Código de Comercio (Art. 968), Ley 1562 de 2012 (Sistema General de Riesgos Laborales) y Decreto 1072 de 2015.
-                </p>
-
-                <p>
-                  Este documento actúa como un contrato de adhesión simplificado para la prestación de servicios independientes. Al marcar las casillas y firmar (digital o físicamente), EL CONTRATISTA acepta que su relación con EL CONTRATANTE (quien requiere el servicio) se rige estrictamente por las siguientes cláusulas:
-                </p>
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 text-sm mb-6 leading-relaxed shadow-inner">
+                  <p className="text-gray-700">
+                    Entre los suscritos, <strong>PROYECTO CAFÉ</strong> (en adelante EL CONTRATANTE) y <strong>{formData.Nombre || "---"} {formData.Apellido || "---"}</strong>, 
+                    identificado(a) con C.C. N° <strong>{formData.CC || "---"}</strong> y con domicilio en <strong>{formData.Direccion || "[Dirección por definir]"}</strong> (en adelante EL CONTRATISTA), 
+                    se ha convenido celebrar el presente contrato civil de prestación de servicios para el cargo de <strong>{formData.Cargo || "[Cargo sin asignar]"}</strong>, bajo las siguientes cláusulas:
+                  </p>
+                </div>
 
                 <div className="space-y-4">
                   <section>
@@ -469,20 +530,46 @@ function StaffCreator() {
                     </ul>
                   </section>
 
-                  <section>
-                    <h3 className="font-bold text-lg mb-2">3. VALOR, AUMENTO LEGAL Y SEGURIDAD SOCIAL</h3>
-                    <p className="mb-2">El pago se realizará bajo la modalidad de <strong>HONORARIOS</strong> o <strong>CUENTA DE COBRO</strong>, calculados sobre la labor realizada.</p>
-                    <ul className="list-none space-y-2 pl-2">
-                      <li className="flex gap-2">
-                        <input type="checkbox" disabled checked className="mt-1" />
-                        <span><strong>ACEPTO EL ESQUEMA DE PAGO:</strong> Los honorarios incluyen un <strong>valor base pactado + un aumento (entre el 16% y 20%)</strong> destinado exclusivamente a subsidiar mi carga prestacional.</span>
+                  <section className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <h3 className="font-bold text-blue-900 border-b pb-2 mb-3">3. VALOR, AUMENTO LEGAL Y SEGURIDAD SOCIAL</h3>
+                    <p className="text-sm mb-4 text-gray-600">El pago se realizará bajo la modalidad de <strong>HONORARIOS</strong>, calculados sobre la labor efectivamente realizada y registrada.</p>
+
+                    <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-4 font-mono text-xs md:text-sm">
+                      <p className="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                        PLANILLA FINANCIERA DE CONTRATACIÓN
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center py-1 border-b border-blue-100/50">
+                          <span className="text-gray-600">Tarifa Total Pactada (Rate):</span>
+                          <span className="font-bold text-gray-900">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(formData.Rate || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1 text-gray-500">
+                          <span>Valor Base de Labor:</span>
+                          <span>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format((formData.Rate || 0) / 1.20)}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1 text-gray-500">
+                          <span>Recargo Prestacional (20%):</span>
+                          <span>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format((formData.Rate || 0) - (formData.Rate || 0) / 1.20)}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-2 bg-white/60 rounded border border-blue-100 text-[10px] text-blue-700 leading-tight italic">
+                        * Nota: La operación legal aplicada es [Base = Rate ÷ 1.20]. El 20% adicional se entrega directamente al contratista para subsidiar su afiliación obligatoria a Seguridad Social como independiente.
+                      </div>
+                    </div>
+
+                    <ul className="list-none space-y-3 pl-2">
+                      <li className="flex gap-3 items-start">
+                        <div className="mt-1 flex-shrink-0 w-4 h-4 rounded border-2 border-blue-600 bg-blue-50 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                        </div>
+                        <span className="text-sm"><strong>ACEPTO EL ESQUEMA DE PAGO:</strong> Reconozco que la tarifa de <strong>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(formData.Rate || 0)}</strong> cubre integralmente mis honorarios y el subsidio de seguridad social.</span>
                       </li>
-                      <li className="flex gap-2">
-                        <input type="checkbox" disabled checked className="mt-1" />
-                        <span><strong>RESPONSABILIDAD DE SEGURIDAD SOCIAL:</strong> Declaro que, al recibir este aumento porcentual en mi tarifa, <strong>soy el único responsable de afiliarme y cotizar</strong> a Salud (EPS), Pensión y Riesgos Laborales (ARL) como independiente, según la Ley 1122 de 2007 y normas concordantes.</span>
-                      </li>
-                      <li className="ml-6 text-xs text-gray-500 italic">
-                        Nota: Entiendo que si incumplo con mi pago de seguridad social, EL CONTRATANTE queda eximido de cualquier responsabilidad solidaria ante accidentes o enfermedades.
+                      <li className="flex gap-3 items-start">
+                        <div className="mt-1 flex-shrink-0 w-4 h-4 rounded border-2 border-blue-600 bg-blue-50 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                        </div>
+                        <span className="text-sm"><strong>RESPONSABILIDAD DE SEGURIDAD SOCIAL:</strong> Me comprometo a afiliarme y cotizar a Salud, Pensión y ARL como independiente, exonerando al CONTRATANTE de cualquier responsabilidad derivada de mi omisión en este deber.</span>
                       </li>
                     </ul>
                   </section>
@@ -522,7 +609,15 @@ function StaffCreator() {
                   <p className="font-bold">HE LEÍDO Y ACEPTO TODOS LOS TÉRMINOS Y CONDICIONES</p>
                 </div>
               </div>
-              <div className="p-4 border-t bg-gray-50 rounded-b-lg flex justify-end">
+              <div className="p-4 border-t bg-gray-50 rounded-b-lg flex justify-end gap-3">
+                <Button
+                  type="button"
+                  onClick={handlePrintContract}
+                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 border flex gap-2 items-center"
+                >
+                  <Printer size={16} />
+                  Imprimir Contrato
+                </Button>
                 <Button
                   onClick={() => { setShowTerms(false); setHasOpenedTerms(true); }}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
