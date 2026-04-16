@@ -7,6 +7,7 @@ import MesResumenStats from './MesResumenStats';
 import ProductosVendidosRentabilidad from './ProductosVendidosRentabilidad';
 import { Loader2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
+import ReportCopyButton from "../../components/ReportCopyButton";
 import {
     formatNumber,
     formatCurrency,
@@ -756,12 +757,29 @@ function ModeloContent({ targetMonth, targetYear }) {
                     </div>
                 </div>
             </div>
-
             <PurchasesModal
                 isOpen={showPurchasesModal}
                 onClose={() => setShowPurchasesModal(false)}
                 purchases={purchasesList}
                 total={realPurchases}
+            />
+
+            <ReportCopyButton 
+                title={`Resumen Contable ${monthsNames[targetMonth]} ${targetYear}`}
+                type="model-content"
+                data={{
+                    income: realIncome,
+                    costs: {
+                        total: totalCostos,
+                        compras: totals.compras,
+                        personal: totals.personal,
+                        fijos: totals.fijos,
+                        impuestos: totals.impuestos,
+                        otros: totals.otros
+                    },
+                    utility: utilidadNeta,
+                    margin: margen
+                }}
             />
         </div>
     );

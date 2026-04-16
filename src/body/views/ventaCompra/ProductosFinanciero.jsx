@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, List, Pencil, Check, X, Filter } from 'lucide-react';
 import { formatCurrency } from './ModelComponents';
+import ReportCopyButton from '../../components/ReportCopyButton';
 import { getAllFromTable, updateItem } from '../../../redux/actions';
 import { MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
 
@@ -22,6 +23,13 @@ const ProductosFinanciero = () => {
     const [filterGroup, setFilterGroup] = useState("");
     const [filterSubGroup, setFilterSubGroup] = useState("");
     const [excludeLunch, setExcludeLunch] = useState(true);
+
+    // Mass Update State
+    const [showMassUpdate, setShowMassUpdate] = useState(false);
+    const [bulkValue, setBulkValue] = useState(0);
+    const [bulkType, setBulkType] = useState('percentage'); // 'percentage' or 'fixed'
+    const [roundingAmount, setRoundingAmount] = useState(100);
+    const [isApplyingBulk, setIsApplyingBulk] = useState(false);
 
     // Determine if we need to fetch data
     useEffect(() => {
@@ -144,6 +152,50 @@ const ProductosFinanciero = () => {
         }
     };
 
+    const calculateNewBulkPrice = (currentPrice) => {
+        let newP = currentPrice;
+        if (bulkType === 'percentage') {
+            newP = currentPrice * (1 + (bulkValue / 100));
+        } else {
+            newP = currentPrice + bulkValue;
+        }
+
+        if (roundingAmount > 0) {
+            newP = Math.ceil(newP / roundingAmount) * roundingAmount;
+        }
+        return newP;
+    };
+
+    const handleApplyMassUpdate = async () => {
+        if (bulkValue === 0) {
+            alert("Por favor ingresa un valor diferente de cero");
+            return;
+        }
+
+        const confirmMsg = `¿Estás seguro de que deseas actualizar el precio de ${filteredItems.length} productos?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setIsApplyingBulk(true);
+        try {
+            // Processing in batches or one by one
+            for (const item of filteredItems) {
+                const newP = calculateNewBulkPrice(item.precioVenta);
+                if (newP !== item.precioVenta) {
+                    await dispatch(updateItem(item.id, { Precio: newP }, MENU));
+                }
+            }
+            dispatch(getAllFromTable(MENU));
+            setShowMassUpdate(false);
+            setBulkValue(0);
+            alert("Precios actualizados exitosamente");
+        } catch (error) {
+            console.error("Error in mass update", error);
+            alert("Ocurrió un error durante la actualización masiva");
+        } finally {
+            setIsApplyingBulk(false);
+        }
+    };
+
     const loading = !allMenu.length;
 
     if (loading) {
@@ -216,7 +268,7 @@ const ProductosFinanciero = () => {
                             ))}
                         </select>
 
-                        <label className="flex items-center gap-2 cursor-pointer ml-auto bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                        <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
                             <input
                                 type="checkbox"
                                 checked={excludeLunch}
@@ -225,7 +277,95 @@ const ProductosFinanciero = () => {
                             />
                             <span className="text-sm font-medium text-gray-700">Ocultar Almuerzo</span>
                         </label>
+
+                        <button
+                            onClick={() => setShowMassUpdate(!showMassUpdate)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all font-semibold text-sm ml-auto ${showMassUpdate ? 'bg-orange-100 border-orange-200 text-orange-700' : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'}`}
+                        >
+                            <Pencil size={18} />
+                            {showMassUpdate ? 'Cerrar Actualizador' : 'Actualización Masiva'}
+                        </button>
                     </div>
+
+                    {/* Mass Update Controls */}
+                    {showMassUpdate && (
+                        <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex flex-wrap items-end gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-orange-700 uppercase">Modo</label>
+                                    <div className="flex bg-white rounded-lg border border-orange-200 p-1">
+                                        <button
+                                            onClick={() => setBulkType('percentage')}
+                                            className={`px-3 py-1 text-sm rounded-md transition-colors ${bulkType === 'percentage' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            Porcentaje (%)
+                                        </button>
+                                        <button
+                                            onClick={() => setBulkType('fixed')}
+                                            className={`px-3 py-1 text-sm rounded-md transition-colors ${bulkType === 'fixed' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            Valor Fijo ($)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-orange-700 uppercase">Valor a {bulkValue >= 0 ? 'Subir' : 'Bajar'}</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={bulkValue}
+                                            onChange={(e) => setBulkValue(parseFloat(e.target.value) || 0)}
+                                            className="w-32 px-3 py-2 bg-white border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-orange-800 font-bold"
+                                        />
+                                        <span className="absolute right-3 top-2 text-orange-300 pointer-events-none">
+                                            {bulkType === 'percentage' ? '%' : '$'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-orange-700 uppercase">Redondeo</label>
+                                    <select
+                                        value={roundingAmount}
+                                        onChange={(e) => setRoundingAmount(parseInt(e.target.value))}
+                                        className="bg-white border border-orange-200 text-orange-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2"
+                                    >
+                                        <option value={0}>Sin redondeo</option>
+                                        <option value={100}>Al 100 más cercano</option>
+                                        <option value={500}>Al 500 más cercano</option>
+                                        <option value={1000}>Al 1000 más cercano</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex-1 min-w-[200px] bg-white/50 p-3 rounded-lg border border-orange-100">
+                                    <p className="text-xs text-orange-600 italic">
+                                        * Se aplicará a <strong>{filteredItems.length}</strong> productos filtrados actualmente.
+                                        {bulkValue !== 0 && (
+                                            <span className="block mt-1">
+                                                Ejemplo: {formatCurrency(10000)} → <span className="font-bold">{formatCurrency(calculateNewBulkPrice(10000))}</span>
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={handleApplyMassUpdate}
+                                    disabled={isApplyingBulk || bulkValue === 0}
+                                    className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {isApplyingBulk ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        'Aplicar Cambios'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Table */}
@@ -238,6 +378,7 @@ const ProductosFinanciero = () => {
                                     <th className="py-3 px-4 text-left font-semibold text-gray-600">Grupo</th>
                                     <th className="py-3 px-4 text-right font-semibold text-gray-600">Costo Unitario (Teórico)</th>
                                     <th className="py-3 px-4 text-right font-semibold text-gray-600">Valor Venta (Base)</th>
+                                    {showMassUpdate && <th className="py-3 px-4 text-right font-semibold text-orange-600">Nuevo Valor</th>}
                                     <th className="py-3 px-4 text-right font-semibold text-gray-600">% Margen</th>
                                     <th className="py-3 px-4 text-center font-semibold text-gray-600">Acciones</th>
                                 </tr>
@@ -284,6 +425,12 @@ const ProductosFinanciero = () => {
                                                 )}
                                             </td>
 
+                                            {showMassUpdate && (
+                                                <td className="py-3 px-4 text-right text-orange-600 font-bold bg-orange-50/30">
+                                                    {formatCurrency(calculateNewBulkPrice(producto.precioVenta))}
+                                                </td>
+                                            )}
+
                                             <td className="py-3 px-4 text-right">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${producto.margin >= 30 ? 'bg-green-100 text-green-700' : (producto.margin > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}`}>
                                                     {producto.margin.toFixed(1)}%
@@ -326,6 +473,12 @@ const ProductosFinanciero = () => {
                     </div>
                 </div>
             </div>
+            
+            <ReportCopyButton 
+                title="Auditoría Financiera de Menú"
+                type="financial-audit"
+                data={filteredItems}
+            />
         </div>
     );
 };

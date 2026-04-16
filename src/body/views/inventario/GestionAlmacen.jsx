@@ -12,9 +12,10 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown } from "lucide-react";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
 import { generateInventoryUpdatePromptLink } from "../../../utils/inventoryUpdatePrompt";
+import ReceiptIngestionModal from "./ReceiptIngestionModal";
 
 import { compareAndGenerateHistory } from "../../../utils/historyUtils";
 
@@ -100,6 +101,7 @@ function GestionAlmacen() {
     { key: "precioUnitario", value: "", enabled: true }
   ]);
   const [newMacroField, setNewMacroField] = useState("");
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const handleMacroToggle = (key) => {
     setActiveMacroFields(prev => prev.map(f => {
@@ -616,6 +618,13 @@ function GestionAlmacen() {
               Acciones
             </h2>
             <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setShowReceiptModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8 flex-1"
+              >
+                <Receipt className="h-3 w-3 mr-2" />
+                Ingestión Recibo (IA)
+              </Button>
               {showHelp && (
                 <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${helpText ? 'bg-amber-100 text-amber-700 border-amber-200 animate-pulse' : 'text-slate-300 border-transparent'}`}>
                   {helpText || "Opciones de Prompt"}
@@ -840,8 +849,19 @@ function GestionAlmacen() {
                   return (
                     <div key={item._id} className="bg-white border rounded shadow-sm overflow-hidden text-xs">
                       <div className="bg-slate-50 border-b px-2 py-1.5 flex justify-between items-center">
-                        <span className="font-bold text-slate-700 truncate flex-1" title={item.Nombre_del_producto}>
-                          {item.Nombre_del_producto}
+                        <span className="font-bold text-slate-700 truncate flex-1 flex flex-col min-w-0" title={item.Nombre_del_producto}>
+                          {item._original?.Nombre_del_producto !== item.Nombre_del_producto ? (
+                            <>
+                              <span className="text-[9px] text-slate-400 line-through truncate opacity-70">
+                                {item._original?.Nombre_del_producto}
+                              </span>
+                              <span className="text-blue-600 truncate">
+                                {item.Nombre_del_producto}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="truncate">{item.Nombre_del_producto}</span>
+                          )}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-100 px-1 rounded flex items-center gap-0.5">
@@ -861,6 +881,11 @@ function GestionAlmacen() {
                           <div className="flex flex-col gap-1 mt-1">
                             {changes.map((change) => {
                               const isExcluded = item._excludedFields?.includes(change.campo);
+                              
+                              // Check if value increased or decreased (for numeric fields like COSTO or precioUnitario)
+                              const isNumeric = (val) => !isNaN(val) && val !== "" && val !== null && typeof val !== 'object';
+                              const subio = isNumeric(change.valor_inicial) && isNumeric(change.valor_final) && Number(change.valor_final) > Number(change.valor_inicial);
+                              const bajo = isNumeric(change.valor_inicial) && isNumeric(change.valor_final) && Number(change.valor_final) < Number(change.valor_inicial);
 
                               return (
                                 <div key={change.campo} className={`text-[10px] flex items-center gap-2 px-1 py-1 rounded border transition-all ${isExcluded ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-blue-50/50 border-blue-100'}`}>
@@ -877,14 +902,21 @@ function GestionAlmacen() {
                                     <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
                                       <span className="text-slate-400 font-mono truncate max-w-[50%] text-[9px] text-right">{change.valor_inicial ?? '-'}</span>
                                       <span className="text-slate-300 flex-shrink-0">→</span>
-                                      <input
-                                        type="text"
-                                        className={`flex-1 min-w-0 text-[10px] border-b focus:outline-none bg-transparent font-mono font-bold text-right px-0.5 ${isExcluded ? 'text-slate-400 border-slate-300' : 'text-blue-700 border-blue-300 focus:border-blue-500'}`}
-                                        value={change.valor_final ?? ""}
-                                        onChange={(e) => handleUpdateStagedItem(item._id, change.campo, e.target.value)}
-                                        disabled={isExcluded}
-                                      />
-                                    </div>
+                                        <input
+                                          type="text"
+                                          className={`flex-1 min-w-0 text-[10px] border-b focus:outline-none bg-transparent font-mono font-bold text-right px-0.5 ${
+                                            isExcluded ? 'text-slate-400 border-slate-300' : 
+                                            subio ? 'text-red-600 border-red-300 focus:border-red-500' : 
+                                            bajo ? 'text-emerald-600 border-emerald-300 focus:border-emerald-500' :
+                                            'text-blue-700 border-blue-300 focus:border-blue-500'
+                                          }`}
+                                          value={change.valor_final ?? ""}
+                                          onChange={(e) => handleUpdateStagedItem(item._id, change.campo, e.target.value)}
+                                          disabled={isExcluded}
+                                        />
+                                        {subio && !isExcluded && <TrendingUp size={10} className="text-red-600 flex-shrink-0" />}
+                                        {bajo && !isExcluded && <TrendingDown size={10} className="text-emerald-600 flex-shrink-0" />}
+                                      </div>
                                   </div>
                                 </div>
                               )
@@ -908,7 +940,15 @@ function GestionAlmacen() {
           </Button>
         </div>
       </div >
-    </PageLayout >
+      {showReceiptModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
+          <ReceiptIngestionModal 
+            onClose={() => setShowReceiptModal(false)} 
+            onSuccess={() => dispatch(getAllFromTable(ITEMS))}
+          />
+        </div>
+      )}
+    </PageLayout>
   );
 }
 

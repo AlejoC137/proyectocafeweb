@@ -20,7 +20,7 @@ import {
 
 // Valor fijo por unidad de tiempo
 const COSTO_POR_TIEMPO_MANODEOBRA = (SMMV_COL_2026_MINU);
-const COSTO_POR_TIEMPO_SERVICIOS = (1100000 / (31 * 12 * 60));
+const COSTO_POR_TIEMPO_SERVICIOS = (1750000 / (31 * 12 * 60));
 const COSTO_POR_TIEMPO = COSTO_POR_TIEMPO_SERVICIOS + COSTO_POR_TIEMPO_MANODEOBRA;
 
 export function recetaMariaPaula(

@@ -424,6 +424,11 @@ export function getPromptByType(type) {
     case 'MENU_LUNCH':
       return PROMPT_MENU_LUNCH;
 
+    case 'RECIBO':
+    case 'RECIBOS':
+    case 'COMPRAS_RECIBO':
+      return PROMPT_RECIBO;
+
     case 'SPELL_CHECK':
       return PROMPT_SPELL_CHECK;
 
@@ -432,6 +437,38 @@ export function getPromptByType(type) {
       return PROMPT_ITEMS_ALMACEN;
   }
 }
+
+// Prompt for Receipts (Ingestion from images/photos)
+const PROMPT_RECIBO = `# PROMPT: EXTRACCIÓN DE DATOS DE RECIBOS/FACTURAS
+Actúa como un experto en procesamiento de documentos y contabilidad. Tu tarea es extraer información detallada de la foto de un recibo, tiquete o factura de compra de insumos.
+
+## OBJETIVO
+Identificar cada producto comprado, su cantidad, su unidad de medida y su costo total (o precio unitario).
+
+## OUTPUT (JSON ESTRICTO)
+Devuelve ÚNICAMENTE un array de objetos JSON con la siguiente estructura para cada ítem encontrado:
+
+\`\`\`json
+[
+  {
+    "nombre": "Nombre del producto (tal cual aparece o normalizado)",
+    "cantidad": 1.5,
+    "unidades": "kg", 
+    "costo_total": 15000,
+    "precio_unitario": 10000
+  }
+]
+\`\`\`
+
+## REGLAS DE EXTRACCIÓN
+1. **nombre**: Mantén el nombre lo más descriptivo posible.
+2. **cantidad**: Extrae el valor numérico. Si es por peso (ej: 0.534 kg), pon el número exacto.
+3. **unidades**: "kg", "gr", "ml", "und", "paquete", "bolsa", etc.
+4. **costo_total**: El valor total pagado por ese ítem específico.
+5. **precio_unitario**: Si el recibo lo da, úsalo. Si no, calcúlalo: costo_total / cantidad.
+6. Si hay impuestos (IVA) incluidos en el precio del ítem, usa el precio final pagado.
+7. **NO explicaciones**. Solo el array JSON.
+`;
 
 /**
  * Copy prompt to clipboard and provide visual feedback

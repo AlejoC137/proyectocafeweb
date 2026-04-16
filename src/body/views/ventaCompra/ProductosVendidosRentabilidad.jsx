@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Predict from './Predict';
 import RecetaModal from './RecetaModal';
-import { LineChart } from 'lucide-react';
+import { LineChart, DollarSign, TrendingUp } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const ProductosVendidosRentabilidad = ({
   productos,
@@ -11,6 +12,7 @@ const ProductosVendidosRentabilidad = ({
   targetYear,
   onOpenGastos
 }) => {
+  const navigate = useNavigate();
 
 
   console.log(productos);
@@ -48,12 +50,22 @@ const ProductosVendidosRentabilidad = ({
             </button>
           )}
         </div>
-        <button
-          onClick={() => setShowFinancials(!showFinancials)}
-          className={`px-3 py-1 rounded text-xs font-bold transition-colors border ${showFinancials ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-        >
-          {showFinancials ? 'Ocultar Rentabilidad' : 'Ver Rentabilidad'}
-        </button>
+        <div className="flex items-center gap-2">
+            <button
+            onClick={() => navigate('/productosFinanciero')}
+            className="flex items-center gap-1 px-3 py-1 rounded text-xs font-bold transition-all bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 shadow-sm"
+            title="Ir a Auditoría de Precios"
+            >
+            <DollarSign size={14} />
+            Actualizar Precios
+            </button>
+            <button
+            onClick={() => setShowFinancials(!showFinancials)}
+            className={`px-3 py-1 rounded text-xs font-bold transition-colors border ${showFinancials ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+            >
+            {showFinancials ? 'Ocultar Rentabilidad' : 'Ver Rentabilidad'}
+            </button>
+        </div>
       </div>
 
       <div className="overflow-auto flex-1 custom-scrollbar">

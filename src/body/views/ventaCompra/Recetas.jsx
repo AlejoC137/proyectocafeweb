@@ -7,6 +7,7 @@ import MacroAgregador from "./MacroAgregador";
 import MacroEditorRecipes from "./MacroEditorRecipes";
 import MacrocalculadorDeValorDeRecetas from "./MacrocalculadorDeValorDeRecetas";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
+import ReportCopyButton from "../../components/ReportCopyButton";
 import { Zap, X, LayoutGrid, Package, ChefHat } from "lucide-react";
 
 function Recetas() {
@@ -253,6 +254,12 @@ function Recetas() {
       {showMacroAgregador && <MacroAgregador onClose={() => setShowMacroAgregador(false)} />}
       {showMacroEditorRecipes && <MacroEditorRecipes onClose={() => setShowMacroEditorRecipes(false)} />}
       {showMacroCalculador && <MacrocalculadorDeValorDeRecetas onClose={() => setShowMacroCalculador(false)} />}
+      
+      <ReportCopyButton 
+          title="Productos Sin Receta"
+          type="generic"
+          data={`Lista de productos que necesitan receta:\n\n${productsWithoutRecipe.map(p => `- ${p.NombreES || p.Nombre_del_producto} (${p.type})`).join('\n')}`}
+      />
     </div >
   );
 }
