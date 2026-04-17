@@ -2,37 +2,103 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateItem } from '../../redux/actions';
 
-// Mix Premium: Phosphor Icons (Tendencia actual) + Game Icons (especializados)
-import {
-  PiCoffeeBeanBold,
-  PiEggFill,
-  PiPlantFill,
-  PiWineFill,
-  PiCubeFill,
-  PiSnowflakeFill
-} from 'react-icons/pi';
-import {
-  LuMilk,
-  LuApple,
-  LuPlus,
-  LuTrash2,
-  LuChevronLeft,
-  LuChevronRight
-} from 'react-icons/lu';
-import {
-  GiChocolateBar
-} from 'react-icons/gi';
+import adicionesIcon from '../../assets/icons/ADICIONES.svg';
+import bebidasIcon from '../../assets/icons/BEBIDAS.svg';
+import enlatadosIcon from '../../assets/icons/ENLATADOS.svg';
+
+import appleIcon from '../../assets/icons/APPLE.svg';
+import breadIcon from '../../assets/icons/BREAD.svg';
+import cacaoIcon from '../../assets/icons/CACAO BEAN.svg';
+import cheeseIcon from '../../assets/icons/CHEESE.svg';
+import coffeeBeanIcon from '../../assets/icons/COFFEE BEAN.svg';
+import eggIcon from '../../assets/icons/EGG.svg';
+import honeyIcon from '../../assets/icons/HONEY.svg';
+import milkIcon from '../../assets/icons/MILK.svg';
+import cowIcon from '../../assets/icons/COW.svg';
+import nutsIcon from '../../assets/icons/NUTS.svg';
+import spiceIcon from '../../assets/icons/SPICE.svg';
+import avocadoIcon from '../../assets/icons/AVOCADO.svg';
+import baconIcon from '../../assets/icons/BACON.svg';
+import iceIcon from '../../assets/icons/ICE.svg';
+import lemonIcon from '../../assets/icons/LEMON.svg';
+import berryIcon from '../../assets/icons/BERRY.svg';
+import chickenIcon from '../../assets/icons/CHICKEN.svg';
+import chorizoIcon from '../../assets/icons/CHORIZO.svg';
+import waterIcon from '../../assets/icons/WATER.svg';
+import chocBarIcon from '../../assets/icons/CHOCOLATE BAR.svg';
+import hojaldreIcon from '../../assets/icons/HOJALDRE.svg';
+import cafeCatIcon from '../../assets/icons/CAFÉ.svg';
+import desayunoIcon from '../../assets/icons/DESAYUNO.svg';
+import llevarIcon from '../../assets/icons/LLEVAR.svg';
+import panaderiaIcon from '../../assets/icons/PANADERIA.svg';
+import reposteriaIcon from '../../assets/icons/REPOSTERÍA.svg';
+import tardeoIcon from '../../assets/icons/TARDEO.svg';
+import carrotIcon from '../../assets/icons/CARROT.svg';
+import onionIcon from '../../assets/icons/ONION.svg';
+import bananaIcon from '../../assets/icons/BANANA.svg';
+import iceCreamIcon from '../../assets/icons/ICE CREAM.svg';
+import riceIcon from '../../assets/icons/RICE.svg';
+import pepperIcon from '../../assets/icons/PEPPER.svg';
+import tomatoIcon from '../../assets/icons/TOMATE.svg';
+import cornIcon from '../../assets/icons/CORN.svg';
+import pancakeIcon from '../../assets/icons/PANCAKES.svg';
+
+const IconPlus = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+);
+
+const IconTrash = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+);
+
+const IconChevronLeft = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"></polyline></svg>
+);
+
+const IconChevronRight = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"></polyline></svg>
+);
 
 const OPCIONES_INGREDIENTES = [
-  { id: 'cafe', icon: PiCoffeeBeanBold, color: '#6B4423', es: 'Café', en: 'Coffee' },
-  { id: 'leche', icon: LuMilk, color: '#3498DB', es: 'Lácteo', en: 'Dairy' },
-  { id: 'huevo', icon: PiEggFill, color: '#F1C40F', es: 'Huevo', en: 'Egg' },
-  { id: 'harina', icon: PiPlantFill, color: '#D4AC0D', es: 'Harina', en: 'Flour' },
-  { id: 'chocolate', icon: GiChocolateBar, color: '#3E2723', es: 'Chocolate', en: 'Chocolate' },
-  { id: 'fruta', icon: LuApple, color: '#E74C3C', es: 'Fruta', en: 'Fruit' },
-  { id: 'alcohol', icon: PiWineFill, color: '#8E44AD', es: 'Alcohol', en: 'Alcohol' },
-  { id: 'azucar', icon: PiCubeFill, color: '#FF80AB', es: 'Azúcar', en: 'Sugar' },
-  { id: 'frio', icon: PiSnowflakeFill, color: '#5DADE2', es: 'Hielo', en: 'Iced' },
+  { id: 'cafe', icon: coffeeBeanIcon, es: 'Café', en: 'Coffee' },
+  { id: 'leche', icon: milkIcon, es: 'Lácteo', en: 'Dairy' },
+  { id: 'huevo', icon: eggIcon, es: 'Huevo', en: 'Egg' },
+  { id: 'pan', icon: breadIcon, es: 'Pan/Harina', en: 'Bread' },
+  { id: 'queso', icon: cheeseIcon, es: 'Queso', en: 'Cheese' },
+  { id: 'chocolate', icon: cacaoIcon, es: 'Chocolate', en: 'Chocolate' },
+  { id: 'fruta', icon: appleIcon, es: 'Fruta', en: 'Fruit' },
+  { id: 'miel', icon: honeyIcon, es: 'Miel/Dulce', en: 'Honey' },
+  { id: 'nueces', icon: nutsIcon, es: 'Nueces', en: 'Nuts' },
+  { id: 'especias', icon: spiceIcon, es: 'Especias', en: 'Spice' },
+  { id: 'aguacate', icon: avocadoIcon, es: 'Aguacate', en: 'Avocado' },
+  { id: 'tocineta', icon: baconIcon, es: 'Tocineta', en: 'Bacon' },
+  { id: 'hielo', icon: iceIcon, es: 'Hielo', en: 'Ice' },
+  { id: 'limon', icon: lemonIcon, es: 'Limón', en: 'Lemon' },
+  { id: 'mora', icon: berryIcon, es: 'Mora/Fresa', en: 'Berry' },
+  { id: 'carne', icon: cowIcon, es: 'Res/Lácteo', en: 'Dairy/Meat' },
+  { id: 'pollo', icon: chickenIcon, es: 'Pollo', en: 'Chicken' },
+  { id: 'chorizo', icon: chorizoIcon, es: 'Embutido', en: 'Sausage' },
+  { id: 'bebidas', icon: bebidasIcon, es: 'Líquidos', en: 'Liquids' },
+  { id: 'agua', icon: waterIcon, es: 'Agua', en: 'Water' },
+  { id: 'barra_choco', icon: chocBarIcon, es: 'Choco Barra', en: 'Choc Bar' },
+  { id: 'hojaldre', icon: hojaldreIcon, es: 'Hojaldre', en: 'Puff Pastry' },
+  { id: 'cafe_bolsa', icon: cafeCatIcon, es: 'Café (Paquete)', en: 'Coffee (Bag)' },
+  { id: 'desayuno', icon: desayunoIcon, es: 'Desayuno', en: 'Breakfast' },
+  { id: 'llevar', icon: llevarIcon, es: 'Para llevar', en: 'To Go' },
+  { id: 'panaderia_cat', icon: panaderiaIcon, es: 'Panadería', en: 'Bakery' },
+  { id: 'reposteria', icon: reposteriaIcon, es: 'Repostería', en: 'Pastry' },
+  { id: 'tardeo', icon: tardeoIcon, es: 'Tardeo', en: 'Afternoon' },
+  { id: 'zanahoria', icon: carrotIcon, es: 'Zanahoria', en: 'Carrot' },
+  { id: 'cebolla', icon: onionIcon, es: 'Cebolla', en: 'Onion' },
+  { id: 'banano', icon: bananaIcon, es: 'Banano', en: 'Banana' },
+  { id: 'helado', icon: iceCreamIcon, es: 'Helado', en: 'Ice Cream' },
+  { id: 'arroz', icon: riceIcon, es: 'Bowl de Arroz', en: 'Rice Bowl' },
+  { id: 'pimienton', icon: pepperIcon, es: 'Pimentón', en: 'Bell Pepper' },
+  { id: 'tomate', icon: tomatoIcon, es: 'Tomate', en: 'Tomato' },
+  { id: 'maiz', icon: cornIcon, es: 'Maíz', en: 'Corn' },
+  { id: 'pancakes', icon: pancakeIcon, es: 'Pancakes', en: 'Pancakes' },
+  { id: 'adiciones', icon: adicionesIcon, es: 'Adiciones', en: 'Add-ons' },
+  { id: 'enlatados', icon: enlatadosIcon, es: 'Fríos', en: 'Canned/Cold' },
 ];
 
 export default function IngredientesBasicos({ product, showEdit, isEnglish, viewName }) {
@@ -41,37 +107,13 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
 
   // Sync with Redux in real-time with debounce
   const isFirstRender = React.useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    // Deep equality check to prevent redundant updates
-    const currentData = product.IngredientesBasicos || [];
-    if (JSON.stringify(currentData) === JSON.stringify(selected)) return;
-
-    const timeoutId = setTimeout(() => {
-      dispatch(updateItem(product._id, { IngredientesBasicos: selected }, "Menu"));
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [selected, product._id, dispatch, product.IngredientesBasicos]);
-
-  useEffect(() => {
-    const remoteData = product.IngredientesBasicos || [];
-    // Only update local state if it's actually different from what we have
-    // This prevents losing local changes while a sync is in progress
-    if (JSON.stringify(remoteData) !== JSON.stringify(selected)) {
-      setSelected(Array.isArray(remoteData) ? remoteData : []);
-    }
-  }, [product.IngredientesBasicos]);
+  const selected = Array.isArray(product.IngredientesBasicos) ? product.IngredientesBasicos : [];
 
   const addSlot = () => {
     if (!showEdit) return;
-    const newSelected = [...selected, 'cafe']; // Default to coffee
-    setSelected(newSelected);
-    setActiveIndex(newSelected.length - 1); // Correct: Last index is length - 1
+    const newSelected = [...selected, 'cafe']; // Default slot
+    dispatch(updateItem(product._id, { IngredientesBasicos: newSelected }, "Menu"));
+    setActiveIndex(newSelected.length - 1);
   };
 
   const selectIcon = (id) => {
@@ -79,10 +121,11 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
     if (activeIndex !== null) {
       const newSelected = [...selected];
       newSelected[activeIndex] = id;
-      setSelected(newSelected);
+      dispatch(updateItem(product._id, { IngredientesBasicos: newSelected }, "Menu"));
+      setActiveIndex(null); // Deselect after choosing
     } else {
-      // If no slot active, just add it
-      setSelected(prev => [...prev, id]);
+      const newSelected = [...selected, id];
+      dispatch(updateItem(product._id, { IngredientesBasicos: newSelected }, "Menu"));
     }
   };
 
@@ -90,7 +133,7 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
     e.stopPropagation();
     if (!showEdit) return;
     const newSelected = selected.filter((_, i) => i !== index);
-    setSelected(newSelected);
+    dispatch(updateItem(product._id, { IngredientesBasicos: newSelected }, "Menu"));
     if (activeIndex === index) setActiveIndex(null);
     else if (activeIndex > index) setActiveIndex(activeIndex - 1);
   };
@@ -98,7 +141,7 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
   const clearAll = () => {
     if (!showEdit) return;
     if (window.confirm(isEnglish ? 'Clear all ingredients?' : '¿Limpiar todos los ingredientes?')) {
-      setSelected([]);
+      dispatch(updateItem(product._id, { IngredientesBasicos: [] }, "Menu"));
       setActiveIndex(null);
     }
   };
@@ -109,10 +152,10 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
     const newSelected = [...selected];
     const newIdx = index + direction;
     if (newIdx < 0 || newIdx >= selected.length) return;
-    
+
     // Swap
     [newSelected[index], newSelected[newIdx]] = [newSelected[newIdx], newSelected[index]];
-    setSelected(newSelected);
+    dispatch(updateItem(product._id, { IngredientesBasicos: newSelected }, "Menu"));
     setActiveIndex(newIdx);
   };
 
@@ -120,17 +163,16 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
   if (viewName === "MenuPrint") {
     if (!selected.length) return null;
     return (
-      <div className="flex flex-wrap gap-x-1 items-center mr-1 print:mr-0.5">
+      <div className="flex flex-wrap gap-0 items-center mr-0 print:mr-0.5">
         {selected.map((id, idx) => {
           const ing = OPCIONES_INGREDIENTES.find(i => i.id === id);
           if (!ing) return null;
-          const Icon = ing.icon;
           return (
-            <Icon
+            <img
               key={`${id}-${idx}`}
-              size={12}
-              color={ing.color}
-              className="opacity-90"
+              src={ing.icon}
+              alt={ing.es}
+              className="opacity-90  w-5 h-5 object-contain filter grayscale contrast-200"
             />
           );
         })}
@@ -145,32 +187,35 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
       </h4>
 
       {/* ÁREA DE COMPOSICIÓN DINÁMICA */}
-      <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-inner flex flex-wrap gap-3 items-center min-h-[56px] relative group">
+      <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-inner flex flex-wrap gap-0 items-center min-h-[56px] relative group">
         {!selected.length && (
           <span className="text-[9px] text-slate-400 italic font-medium px-2">
             {isEnglish ? 'Add icons to start...' : 'Agrega iconos para comenzar...'}
           </span>
         )}
-        
+
         {selected.map((id, index) => {
           const ing = OPCIONES_INGREDIENTES.find(i => i.id === id);
           if (!ing) return null;
-          const Icon = ing.icon;
           const isActive = activeIndex === index;
-          
+
           return (
             <div
               key={`${id}-${index}`}
-              onClick={() => setActiveIndex(index)}
-              className={`relative flex flex-col items-center gap-1 transition-all ${isActive ? 'z-20' : 'z-10'}`}
+              onClick={() => setActiveIndex(isActive ? null : index)}
+              className={`relative flex flex-col items-center gap-0 transition-all ${isActive ? 'z-20' : 'z-10'}`}
             >
-              <div className={`cursor-pointer transition-all p-2 rounded-xl border-2 ${
-                isActive 
-                ? 'bg-blue-50 border-blue-500 scale-110 shadow-lg ring-4 ring-blue-100' 
+              <div className={`cursor-pointer transition-all p-1 rounded-xl border-1 ${isActive
+                ? 'bg-blue-50 border-blue-500 scale-110 shadow-lg ring-4 ring-blue-100'
                 : 'bg-white border-transparent hover:border-slate-200'
-              }`}>
-                <Icon size={20} color={ing.color} />
-                
+                }`}>
+                <img
+                  src={ing.icon}
+                  alt={ing.es}
+                  className="w-6 h-6 object-contain "
+                  style={{ filter: isActive ? 'none' : 'grayscale(100%) contrast(500%) opacity(80%)' }}
+                />
+
                 {showEdit && (
                   <button
                     onClick={(e) => removeIngredient(e, index)}
@@ -184,20 +229,20 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
               {/* CONTROLES DE MOVIMIENTO (Solo cuando está activo) */}
               {showEdit && isActive && (
                 <div className="flex gap-1 absolute -bottom-6 bg-white shadow-md border border-slate-200 rounded-full px-1 py-0.5 animate-in fade-in zoom-in duration-200">
-                  <button 
+                  <button
                     onClick={(e) => moveItem(e, index, -1)}
                     disabled={index === 0}
                     className="p-0.5 text-slate-400 hover:text-blue-500 disabled:opacity-20"
                   >
-                    <LuChevronLeft size={12} />
+                    <IconChevronLeft size={12} />
                   </button>
                   <div className="w-[1px] bg-slate-100" />
-                  <button 
+                  <button
                     onClick={(e) => moveItem(e, index, 1)}
                     disabled={index === selected.length - 1}
                     className="p-0.5 text-slate-400 hover:text-blue-500 disabled:opacity-20"
                   >
-                    <LuChevronRight size={12} />
+                    <IconChevronRight size={12} />
                   </button>
                 </div>
               )}
@@ -211,7 +256,7 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
             className="w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded-xl hover:bg-blue-600 active:scale-90 transition-all shadow-md border-2 border-blue-400/20"
             title={isEnglish ? 'Add new slot' : 'Agregar nuevo icono'}
           >
-            <LuPlus size={20} />
+            <IconPlus size={20} />
           </button>
         )}
 
@@ -221,32 +266,34 @@ export default function IngredientesBasicos({ product, showEdit, isEnglish, view
             className="absolute -right-1 -top-6 text-slate-300 hover:text-red-500 transition-colors bg-white p-1 rounded-full shadow-sm"
             title={isEnglish ? 'Clear all' : 'Limpiar todo'}
           >
-            <LuTrash2 size={12} />
+            <IconTrash size={12} />
           </button>
         )}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
         {OPCIONES_INGREDIENTES.map(ing => {
-          const Icon = ing.icon;
           return (
             <button
               key={ing.id}
               onClick={() => selectIcon(ing.id)}
               disabled={!showEdit}
-              className={`flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-lg border transition-all shadow-sm active:scale-95 ${
-                activeIndex !== null 
+              className={`flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-lg border transition-all shadow-sm active:scale-95 ${activeIndex !== null
                 ? 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50'
                 : 'bg-slate-50 text-slate-500 border-slate-100 opacity-80'
-              }`}
+                }`}
             >
-              <Icon size={14} color={ing.color} />
+              <img
+                src={ing.icon}
+                alt={ing.es}
+                className="w-5 h-5 object-contain filter grayscale contrast-200"
+              />
               <span className="font-semibold">{isEnglish ? ing.en : ing.es}</span>
             </button>
           );
         })}
       </div>
-      
+
       {showEdit && activeIndex === null && selected.length > 0 && (
         <p className="text-[8px] text-blue-500 mt-2 italic animate-pulse">
           {isEnglish ? 'Tip: Click an icon above to change its type' : 'Tip: Haz clic en un icono arriba para cambiar su tipo'}

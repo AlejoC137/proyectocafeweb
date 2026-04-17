@@ -5,13 +5,44 @@ import { MENU } from '../../redux/actions-types';
 
 import adicionesIcon from '../../assets/icons/ADICIONES.svg';
 import bebidasIcon from '../../assets/icons/BEBIDAS.svg';
-import cafeIcon from '../../assets/icons/CAFÉ.svg';
-import desayunoIcon from '../../assets/icons/DESAYUNO.svg';
 import enlatadosIcon from '../../assets/icons/ENLATADOS.svg';
+
+import appleIcon from '../../assets/icons/APPLE.svg';
+import breadIcon from '../../assets/icons/BREAD.svg';
+import cacaoIcon from '../../assets/icons/CACAO BEAN.svg';
+import cheeseIcon from '../../assets/icons/CHEESE.svg';
+import coffeeBeanIcon from '../../assets/icons/COFFEE BEAN.svg';
+import eggIcon from '../../assets/icons/EGG.svg';
+import honeyIcon from '../../assets/icons/HONEY.svg';
+import milkIcon from '../../assets/icons/MILK.svg';
+import cowIcon from '../../assets/icons/COW.svg';
+import nutsIcon from '../../assets/icons/NUTS.svg';
+import spiceIcon from '../../assets/icons/SPICE.svg';
+import avocadoIcon from '../../assets/icons/AVOCADO.svg';
+import baconIcon from '../../assets/icons/BACON.svg';
+import iceIcon from '../../assets/icons/ICE.svg';
+import lemonIcon from '../../assets/icons/LEMON.svg';
+import berryIcon from '../../assets/icons/BERRY.svg';
+import chickenIcon from '../../assets/icons/CHICKEN.svg';
+import chorizoIcon from '../../assets/icons/CHORIZO.svg';
+import waterIcon from '../../assets/icons/WATER.svg';
+import chocBarIcon from '../../assets/icons/CHOCOLATE BAR.svg';
+import hojaldreIcon from '../../assets/icons/HOJALDRE.svg';
+import cafeCatIcon from '../../assets/icons/CAFÉ.svg';
+import desayunoIcon from '../../assets/icons/DESAYUNO.svg';
 import llevarIcon from '../../assets/icons/LLEVAR.svg';
 import panaderiaIcon from '../../assets/icons/PANADERIA.svg';
 import reposteriaIcon from '../../assets/icons/REPOSTERÍA.svg';
 import tardeoIcon from '../../assets/icons/TARDEO.svg';
+import carrotIcon from '../../assets/icons/CARROT.svg';
+import onionIcon from '../../assets/icons/ONION.svg';
+import bananaIcon from '../../assets/icons/BANANA.svg';
+import iceCreamIcon from '../../assets/icons/ICE CREAM.svg';
+import riceIcon from '../../assets/icons/RICE.svg';
+import pepperIcon from '../../assets/icons/PEPPER.svg';
+import tomatoIcon from '../../assets/icons/TOMATE.svg';
+import cornIcon from '../../assets/icons/CORN.svg';
+import pancakeIcon from '../../assets/icons/PANCAKES.svg';
 
 const IconPlus = ({ size = 24, color = "currentColor", className = "" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -30,15 +61,45 @@ const IconChevronRight = ({ size = 24, color = "currentColor", className = "" })
 );
 
 const OPCIONES_INGREDIENTES = [
-    { id: 'adiciones', icon: adicionesIcon, es: 'Adiciones', en: 'Add-ons' },
-    { id: 'bebidas', icon: bebidasIcon, es: 'Bebidas', en: 'Drinks' },
-    { id: 'cafe', icon: cafeIcon, es: 'Café', en: 'Coffee' },
+    { id: 'cafe', icon: coffeeBeanIcon, es: 'Café', en: 'Coffee' },
+    { id: 'leche', icon: milkIcon, es: 'Lácteo', en: 'Dairy' },
+    { id: 'huevo', icon: eggIcon, es: 'Huevo', en: 'Egg' },
+    { id: 'pan', icon: breadIcon, es: 'Pan/Harina', en: 'Bread' },
+    { id: 'queso', icon: cheeseIcon, es: 'Queso', en: 'Cheese' },
+    { id: 'chocolate', icon: cacaoIcon, es: 'Chocolate', en: 'Chocolate' },
+    { id: 'fruta', icon: appleIcon, es: 'Fruta', en: 'Fruit' },
+    { id: 'miel', icon: honeyIcon, es: 'Miel/Dulce', en: 'Honey' },
+    { id: 'nueces', icon: nutsIcon, es: 'Nueces', en: 'Nuts' },
+    { id: 'especias', icon: spiceIcon, es: 'Especias', en: 'Spice' },
+    { id: 'aguacate', icon: avocadoIcon, es: 'Aguacate', en: 'Avocado' },
+    { id: 'tocineta', icon: baconIcon, es: 'Tocineta', en: 'Bacon' },
+    { id: 'hielo', icon: iceIcon, es: 'Hielo', en: 'Ice' },
+    { id: 'limon', icon: lemonIcon, es: 'Limón', en: 'Lemon' },
+    { id: 'mora', icon: berryIcon, es: 'Mora/Fresa', en: 'Berry' },
+    { id: 'carne', icon: cowIcon, es: 'Res/Lácteo', en: 'Dairy/Meat' },
+    { id: 'pollo', icon: chickenIcon, es: 'Pollo', en: 'Chicken' },
+    { id: 'chorizo', icon: chorizoIcon, es: 'Embutido', en: 'Sausage' },
+    { id: 'bebidas', icon: bebidasIcon, es: 'Líquidos', en: 'Liquids' },
+    { id: 'agua', icon: waterIcon, es: 'Agua', en: 'Water' },
+    { id: 'barra_choco', icon: chocBarIcon, es: 'Choco Barra', en: 'Choc Bar' },
+    { id: 'hojaldre', icon: hojaldreIcon, es: 'Hojaldre', en: 'Puff Pastry' },
+    { id: 'cafe_bolsa', icon: cafeCatIcon, es: 'Café (Paquete)', en: 'Coffee (Bag)' },
     { id: 'desayuno', icon: desayunoIcon, es: 'Desayuno', en: 'Breakfast' },
-    { id: 'enlatados', icon: enlatadosIcon, es: 'Enlatados', en: 'Canned' },
-    { id: 'llevar', icon: llevarIcon, es: 'Llevar', en: 'To Go' },
-    { id: 'panaderia', icon: panaderiaIcon, es: 'Panadería', en: 'Bakery' },
+    { id: 'llevar', icon: llevarIcon, es: 'Para llevar', en: 'To Go' },
+    { id: 'panaderia_cat', icon: panaderiaIcon, es: 'Panadería', en: 'Bakery' },
     { id: 'reposteria', icon: reposteriaIcon, es: 'Repostería', en: 'Pastry' },
     { id: 'tardeo', icon: tardeoIcon, es: 'Tardeo', en: 'Afternoon' },
+    { id: 'zanahoria', icon: carrotIcon, es: 'Zanahoria', en: 'Carrot' },
+    { id: 'cebolla', icon: onionIcon, es: 'Cebolla', en: 'Onion' },
+    { id: 'banano', icon: bananaIcon, es: 'Banano', en: 'Banana' },
+    { id: 'helado', icon: iceCreamIcon, es: 'Helado', en: 'Ice Cream' },
+    { id: 'arroz', icon: riceIcon, es: 'Bowl de Arroz', en: 'Rice Bowl' },
+    { id: 'pimienton', icon: pepperIcon, es: 'Pimentón', en: 'Bell Pepper' },
+    { id: 'tomate', icon: tomatoIcon, es: 'Tomate', en: 'Tomato' },
+    { id: 'maiz', icon: cornIcon, es: 'Maíz', en: 'Corn' },
+    { id: 'pancakes', icon: pancakeIcon, es: 'Pancakes', en: 'Pancakes' },
+    { id: 'adiciones', icon: adicionesIcon, es: 'Adiciones', en: 'Add-ons' },
+    { id: 'enlatados', icon: enlatadosIcon, es: 'Fríos', en: 'Canned/Cold' },
 ];
 
 const formatPrice = (precio) => {
@@ -112,7 +173,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                     {isEnglish ? product.NombreEN : product.NombreES}
                 </span>
 
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-0 items-center">
                     {localIngredients.map((id, index) => {
                         const ing = OPCIONES_INGREDIENTES.find(i => i.id === id);
                         if (!ing) return null;
@@ -123,12 +184,12 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                                 <button
                                     disabled={!editMode}
                                     onClick={() => setActiveSlot(isActive ? null : { productId: product._id, index })}
-                                    className={`p-0.5 transition-all flex items-center justify-center rounded-sm ${isActive ? 'bg-blue-100 scale-110 shadow-sm border border-blue-400' : 'hover:bg-black/5'}`}
+                                    className={`p-0 transition-all flex items-center justify-center rounded-sm ${isActive ? 'bg-blue-100 scale-110 shadow-sm border border-blue-400' : 'hover:bg-black/5'}`}
                                 >
                                     <img
                                         src={ing.icon}
                                         alt={ing.es}
-                                        className="opacity-90 w-3 h-3 object-contain filter grayscale contrast-200 opacity-80"
+                                        className="opacity-90 w-4 h-4 object-contain filter grayscale contrast-200 opacity-80"
                                     />
                                 </button>
 
@@ -156,10 +217,10 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                                                     className={`p-1 hover:scale-125 transition-transform flex items-center justify-center ${id === option.id ? 'bg-black rounded-sm' : ''}`}
                                                     title={isEnglish ? option.en : option.es}
                                                 >
-                                                    <img 
-                                                        src={option.icon} 
-                                                        alt={option.es} 
-                                                        className={`w-3.5 h-3.5 object-contain ${id === option.id ? 'invert' : ''}`} 
+                                                    <img
+                                                        src={option.icon}
+                                                        alt={option.es}
+                                                        className={`w-5 h-5 object-contain ${id === option.id ? 'invert' : ''}`}
                                                     />
                                                 </button>
                                             );
