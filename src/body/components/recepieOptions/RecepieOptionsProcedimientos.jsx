@@ -25,19 +25,19 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
   const [costoDirecto, setCostoDirecto] = useState();
   const [processTime, setProcessTime] = useState(receta?.ProcessTime);
   const [editvCMP, setEditvCMP] = useState();
-  
+
   useEffect(() => {
     if (receta && currentType === PROCEDE) {
       loadRecepie('RecetasProcedimientos');
     }
   }, [receta, dispatch, editvCMP]);
-  
+
   const loadRecepie = async (source) => {
     if (!receta) {
       console.error("Receta is undefined or missing _id");
       return;
     }
-    
+
     const recepieData = await getRecepie(receta, source);
     if (recepieData) {
       const trimmedRecepie = trimRecepie(allOptions, recepieData);
@@ -49,12 +49,12 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
       setRevisor(recepieData.revisor || "Revisor por defecto");
       setProces(Array.from({ length: 20 }, (_, i) => recepieData[`proces${i + 1}`] || ""));
       calculateTotalIngredientes(trimmedRecepie);
-       setProcessTime(recepieData.ProcessTime)
-      
+      setProcessTime(recepieData.ProcessTime)
+
       console.log(recepieData);
 
     }
-    
+
   };
 
   const addIngredient = () => {
@@ -150,7 +150,7 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
     }
   };
 
-   const testIngridient = (itemId) => {
+  const testIngridient = (itemId) => {
     return Items.some(item => item._id === itemId) ? 'item' : 'producto_interno';
   };
   const mapItemsToPayload = (items) => {
@@ -163,8 +163,8 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
       payload[`${keyPrefix}${idx}_Id`] = item.item_Id || null;
       payload[`${keyPrefix}${idx}_Cuantity_Units`] = item.item_Id
         ? JSON.stringify({
-            metric: { cuantity: item.cuantity || null, units: item.units || null },
-          })
+          metric: { cuantity: item.cuantity || null, units: item.units || null },
+        })
         : null;
     });
     return payload;
@@ -325,7 +325,7 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
             )}
           </div>
           <div className=" bg-slate-50 flex gap-1">
-            <input 
+            <input
               onChange={(e) => setEditvCMP(e.target.value)}
               className="bg-white border-black w-[80px] p-1 border rounded mb-2"
             />
@@ -346,7 +346,7 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
 
       {activeTab === "proces" && (
         <>
-                  <h2 className="text-lg font-bold mb-4">{ 'Tiempo de proceso:' }</h2>
+          <h2 className="text-lg font-bold mb-4">{'Tiempo de proceso:'}</h2>
 
           <input
             type="text"
