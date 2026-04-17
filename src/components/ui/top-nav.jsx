@@ -37,6 +37,7 @@ const pageTitles = {
   "CALCULONOMINA": { [ESP]: "Cálculo de Nómina", [ENG]: "Payroll Calculation" },
   "WORKISUE": { [ESP]: "Tareas", [ENG]: "Tasks" },
   "STAFF-MANAGER": { [ESP]: "Gestión de Empleados", [ENG]: "Employee Management" },
+  "MODELOPROYECTO": { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -110,7 +111,8 @@ export default function TopNav() {
     { label: "Nómina", path: "/CalculoNomina" },
     { label: "Pagos", path: "/PagosProveedores" },
     { label: "Día", path: "/DiaResumen" },
-    { label: "Mes", path: "/MesResumen" }
+    { label: "Mes", path: "/MesResumen" },
+    { label: "Modelo Proyecto", path: "/ModeloProyecto" }
   ];
 
   return (

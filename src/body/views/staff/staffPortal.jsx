@@ -39,6 +39,9 @@ function StaffPortal() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // LOG PARA REVISAR PROPIEDADES (Solicitado por el usuario)
+  console.log("DEBUG - Lista de Staff completa:", allStaff);
+
   const [activeView, setActiveView] = useState(null);
   const [propinaInput, setPropinaInput] = useState("");
   const [selectedStaffId, setSelectedStaffId] = useState("");
@@ -226,6 +229,18 @@ function StaffPortal() {
         variant: "destructive"
       },
       {
+        label: "Financiero",
+        icon: "💰",
+        onClick: () => navigate("/productosFinanciero"),
+        variant: "destructive"
+      },
+      {
+        label: "Almacén",
+        icon: "🏪",
+        onClick: () => navigate("/GestionAlmacen"),
+        variant: "destructive"
+      },
+      {
         label: "Mes",
         icon: "📅",
         onClick: () => navigate("/MesResumen"),
@@ -275,11 +290,13 @@ function StaffPortal() {
                   className="flex border rounded px-2 py-2 bg-gray-100 w-full"
                 >
                   <option value="">Seleccione Staff</option>
-                  {allStaff.map((staff) => (
-                    <option key={staff._id} value={staff._id}>
-                      {staff.Nombre} {staff.Apellido}
-                    </option>
-                  ))}
+                  {allStaff
+                    .filter(staff => staff.Contratacion !== false && staff.Contratacion !== "false")
+                    .map((staff) => (
+                      <option key={staff._id} value={staff._id}>
+                        {staff.Nombre} {staff.Apellido}
+                      </option>
+                    ))}
                 </select>
               </div>
               {error && (

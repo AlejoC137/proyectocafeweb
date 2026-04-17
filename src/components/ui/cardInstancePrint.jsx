@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/cardPrint";
 import { ShoppingCart, Flame, Leaf, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CuidadoVariations from "./CuidadoVariations";
+import IngredientesBasicos from "./IngredientesBasicos";
 
 export function CardInstancePrint({ product, isEnglish }) {
   const [showDetail, setShowDetail] = useState(false);
@@ -43,6 +44,7 @@ export function CardInstancePrint({ product, isEnglish }) {
             <h3 className="text-[10px] sm:text-[11px] font-bold font-SpaceGrotesk uppercase truncate">
               {isEnglish ? product.NombreEN : product.NombreES}
             </h3>
+            <IngredientesBasicos product={product} viewName="MenuPrint" isEnglish={isEnglish} />
             <div className="scale-75 origin-left">
               <CuidadoVariations viewName={'MenuPrint'} product={product} isEnglish={isEnglish} />
             </div>

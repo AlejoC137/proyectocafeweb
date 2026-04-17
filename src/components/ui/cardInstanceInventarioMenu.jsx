@@ -8,11 +8,10 @@ import {
   MenuItems } from "../../redux/actions-types";
 import RecepieOptionsMenu from "../../body/components/recepieOptions/RecepieOptionsMenu";
 import CuidadoVariations from "./CuidadoVariations";
+import IngredientesBasicos from "./IngredientesBasicos";
 import { useParams } from "react-router-dom";
 
 export function CardInstanceInventarioMenu({ product, showEdit }) {
-
-// como saber cual es la direccion del sitio actual es decir /Inventario o /MenuPrint
 
     const { section } = useParams(); // 'section' contendrá "Inventario" o "MenuPrint"
 
@@ -279,13 +278,10 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
             <label className="text-sm text-gray-700 flex-1 font-bold">
               Cuidado:
               <CuidadoVariations isEnglish={false} viewName={"Inventario"} product={product} />
-              {/* <input
-                type="text"
-                name="CuidadoES"
-                value={editableProduct.CuidadoES || ""}
-                onChange={handleChange}
-                className="border p-2 rounded-md w-full mb-2 bg-slate-100 font-light"
-              /> */}
+            </label>
+            <label className="text-sm text-gray-700 flex-1 font-bold">
+              Ingredientes Base:
+              <IngredientesBasicos product={product} showEdit={showEdit} isEnglish={false} viewName={"Inventario"} />
             </label>
             {/* <label className="text-sm text-gray-700 flex-1 font-bold">
               Cuidado en Inglés:

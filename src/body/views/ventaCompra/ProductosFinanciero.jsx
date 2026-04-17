@@ -31,6 +31,10 @@ const ProductosFinanciero = () => {
     const [roundingAmount, setRoundingAmount] = useState(100);
     const [isApplyingBulk, setIsApplyingBulk] = useState(false);
 
+    // Selection & Search State
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedIds, setSelectedIds] = useState(new Set());
+
     // Determine if we need to fetch data
     useEffect(() => {
         if (!allMenu || allMenu.length === 0) dispatch(getAllFromTable(MENU));
@@ -101,9 +105,12 @@ const ProductosFinanciero = () => {
             // 3. SubGroup Filter
             if (filterSubGroup && item.subGrupo !== filterSubGroup) return false;
 
+            // 4. Search Filter
+            if (searchQuery && !item.nombre.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+
             return true;
         });
-    }, [calculatedItems, excludeLunch, filterGroup, filterSubGroup]);
+    }, [calculatedItems, excludeLunch, filterGroup, filterSubGroup, searchQuery]);
 
     // Sort by Margin Ascending
     const sortedItems = useMemo(() => {
@@ -119,6 +126,11 @@ const ProductosFinanciero = () => {
         }
         return [...new Set(itemsToConsider.map(i => i.subGrupo).filter(Boolean))].sort();
     }, [calculatedItems, filterGroup]);
+
+    // Clear selection when filters or search change
+    useEffect(() => {
+        setSelectedIds(new Set());
+    }, [filterGroup, filterSubGroup, excludeLunch, searchQuery]);
 
 
     // --- Handlers ---
@@ -152,6 +164,24 @@ const ProductosFinanciero = () => {
         }
     };
 
+    const handleToggleSelect = (id) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) {
+            next.delete(id);
+        } else {
+            next.add(id);
+        }
+        setSelectedIds(next);
+    };
+
+    const handleToggleSelectAll = () => {
+        if (selectedIds.size === filteredItems.length && filteredItems.length > 0) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredItems.map(i => i.id)));
+        }
+    };
+
     const calculateNewBulkPrice = (currentPrice) => {
         let newP = currentPrice;
         if (bulkType === 'percentage') {
@@ -172,13 +202,20 @@ const ProductosFinanciero = () => {
             return;
         }
 
-        const confirmMsg = `¿Estás seguro de que deseas actualizar el precio de ${filteredItems.length} productos?`;
+        const itemsToUpdate = filteredItems.filter(item => selectedIds.has(item.id));
+
+        if (itemsToUpdate.length === 0) {
+            alert("Por favor selecciona al menos un producto de la lista");
+            return;
+        }
+
+        const confirmMsg = `¿Estás seguro de que deseas actualizar el precio de ${itemsToUpdate.length} productos seleccionados?`;
         if (!window.confirm(confirmMsg)) return;
 
         setIsApplyingBulk(true);
         try {
             // Processing in batches or one by one
-            for (const item of filteredItems) {
+            for (const item of itemsToUpdate) {
                 const newP = calculateNewBulkPrice(item.precioVenta);
                 if (newP !== item.precioVenta) {
                     await dispatch(updateItem(item.id, { Precio: newP }, MENU));
@@ -187,6 +224,7 @@ const ProductosFinanciero = () => {
             dispatch(getAllFromTable(MENU));
             setShowMassUpdate(false);
             setBulkValue(0);
+            setSelectedIds(new Set());
             alert("Precios actualizados exitosamente");
         } catch (error) {
             console.error("Error in mass update", error);
@@ -232,9 +270,15 @@ const ProductosFinanciero = () => {
                             </div>
                         </div>
 
-                        <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
-                            <p className="text-xs text-blue-600 font-bold uppercase">Items Visibles</p>
-                            <p className="text-lg font-bold text-blue-800">{filteredItems.length} / {calculatedItems.length}</p>
+                        <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 flex gap-4">
+                            <div>
+                                <p className="text-xs text-blue-600 font-bold uppercase">Items Visibles</p>
+                                <p className="text-lg font-bold text-blue-800 text-center">{filteredItems.length}</p>
+                            </div>
+                            <div className="border-l border-blue-200 pl-4">
+                                <p className="text-xs text-blue-600 font-bold uppercase">Seleccionados</p>
+                                <p className="text-lg font-bold text-blue-800 text-center">{selectedIds.size}</p>
+                            </div>
                         </div>
                     </div>
 
@@ -277,6 +321,17 @@ const ProductosFinanciero = () => {
                             />
                             <span className="text-sm font-medium text-gray-700">Ocultar Almuerzo</span>
                         </label>
+
+                        {/* Text Search */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Buscar por nombre..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 pl-4 w-64 shadow-sm"
+                            />
+                        </div>
 
                         <button
                             onClick={() => setShowMassUpdate(!showMassUpdate)}
@@ -340,7 +395,7 @@ const ProductosFinanciero = () => {
 
                                 <div className="flex-1 min-w-[200px] bg-white/50 p-3 rounded-lg border border-orange-100">
                                     <p className="text-xs text-orange-600 italic">
-                                        * Se aplicará a <strong>{filteredItems.length}</strong> productos filtrados actualmente.
+                                        * Se aplicará a <strong>{selectedIds.size}</strong> productos seleccionados actualmente.
                                         {bulkValue !== 0 && (
                                             <span className="block mt-1">
                                                 Ejemplo: {formatCurrency(10000)} → <span className="font-bold">{formatCurrency(calculateNewBulkPrice(10000))}</span>
@@ -351,7 +406,7 @@ const ProductosFinanciero = () => {
 
                                 <button
                                     onClick={handleApplyMassUpdate}
-                                    disabled={isApplyingBulk || bulkValue === 0}
+                                    disabled={isApplyingBulk || bulkValue === 0 || selectedIds.size === 0}
                                     className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isApplyingBulk ? (
@@ -374,6 +429,14 @@ const ProductosFinanciero = () => {
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
+                                    <th className="py-3 px-4 text-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
+                                            onChange={handleToggleSelectAll}
+                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                    </th>
                                     <th className="py-3 px-4 text-left font-semibold text-gray-600">Producto</th>
                                     <th className="py-3 px-4 text-left font-semibold text-gray-600">Grupo</th>
                                     <th className="py-3 px-4 text-right font-semibold text-gray-600">Costo Unitario (Teórico)</th>
@@ -388,7 +451,15 @@ const ProductosFinanciero = () => {
                                     const isEditing = editingId === producto.id;
 
                                     return (
-                                        <tr key={producto.id} className={`hover:bg-gray-50 transition-colors ${isEditing ? 'bg-blue-50' : ''}`}>
+                                        <tr key={producto.id} className={`hover:bg-gray-50 transition-colors ${isEditing ? 'bg-blue-50' : ''} ${selectedIds.has(producto.id) ? 'bg-blue-50/50' : ''}`}>
+                                            <td className="py-3 px-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(producto.id)}
+                                                    onChange={() => handleToggleSelect(producto.id)}
+                                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                />
+                                            </td>
                                             <td className="py-3 px-4 font-medium text-gray-800">
                                                 <div className="flex items-center gap-2">
                                                     {producto.recetaId && (
@@ -427,7 +498,7 @@ const ProductosFinanciero = () => {
 
                                             {showMassUpdate && (
                                                 <td className="py-3 px-4 text-right text-orange-600 font-bold bg-orange-50/30">
-                                                    {formatCurrency(calculateNewBulkPrice(producto.precioVenta))}
+                                                    {selectedIds.has(producto.id) ? formatCurrency(calculateNewBulkPrice(producto.precioVenta)) : '-'}
                                                 </td>
                                             )}
 
