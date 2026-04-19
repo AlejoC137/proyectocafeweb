@@ -22,10 +22,17 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
+    let resolveId = id;
+    if (id.length < 36) {
+      const { data: allIds } = await supabase.from("Agenda").select('_id');
+      const match = allIds?.find(e => e._id.startsWith(id));
+      if (match) resolveId = match._id;
+    }
+
     const { data: evento, error } = await supabase
       .from("Agenda")
       .select("nombreES, bannerIMG, decripcion")
-      .eq("_id", id)
+      .eq("_id", resolveId)
       .single();
 
     if (error || !evento) {

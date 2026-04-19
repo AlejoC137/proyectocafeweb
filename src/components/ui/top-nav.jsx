@@ -80,13 +80,13 @@ export default function TopNav() {
     }
     if (path.startsWith('/evento/')) {
       const id = path.split('/')[2];
-      const ev = allAgenda?.find(a => a._id === id);
-      return ev ? `Edición de Evento: ${ev.nombreES}` : "Cargando Evento...";
+      const ev = allAgenda?.find(a => a._id && a._id.startsWith(id));
+      return ev ? `Edición de Evento: ${ev.nombreES || "Sin nombre"}` : "Cargando Evento...";
     }
     if (path.startsWith('/inscripcion/')) {
       const id = path.split('/')[2];
-      const ev = allAgenda?.find(a => a._id === id);
-      return ev ? `Inscripción: ${ev.nombreES}` : "Inscripción de Evento";
+      const ev = allAgenda?.find(a => a._id && a._id.startsWith(id));
+      return ev ? `Inscripción: ${ev.nombreES || "Sin nombre"}` : "Inscripción de Evento";
     }
 
     const viewFromUrl = path.substring(1).toUpperCase();

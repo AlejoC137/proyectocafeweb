@@ -18,6 +18,7 @@ function InscripcionEvento() {
   const [evento, setEvento] = useState(null);
   const [success, setSuccess] = useState(false);
   const [currentAttendeesCount, setCurrentAttendeesCount] = useState(0);
+  const [realId, setRealId] = useState(id);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -38,10 +39,20 @@ function InscripcionEvento() {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
+        let resolveId = id;
+        if (id.length < 36) {
+          const { data: allIds } = await supabase.from(AGENDA).select('_id');
+          const match = allIds?.find(e => e._id.startsWith(id));
+          if (match) {
+             resolveId = match._id;
+             setRealId(match._id);
+          }
+        }
+
         const { data, error } = await supabase
           .from(AGENDA)
           .select("*")
-          .eq("_id", id)
+          .eq("_id", resolveId)
           .single();
 
         if (error) throw error;
@@ -51,7 +62,7 @@ function InscripcionEvento() {
         const { count, error: countError } = await supabase
           .from("attendees")
           .select("*", { count: "exact", head: true })
-          .eq("evento_id", id);
+          .eq("evento_id", resolveId);
           
         if (!countError) {
           setCurrentAttendeesCount(count || 0);
@@ -159,7 +170,7 @@ function InscripcionEvento() {
       }
 
       const attendeeData = {
-        evento_id: id,
+        evento_id: realId,
         nombre: formData.nombre,
         email: formData.email,
         telefono: formData.telefono,

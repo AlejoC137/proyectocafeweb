@@ -13,9 +13,11 @@ import supabase from "@/config/supabaseClient";
 import PageLayout from "../../../components/ui/page-layout";
 
 function AgendaModal() {
-  const { id } = useParams();
+  const { id, tab } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
+  const [realId, setRealId] = useState(id); // Para mantener el UUID real completo en base de datos
 
   const isNewEvent = id === "new";
   const [loading, setLoading] = useState(!isNewEvent);
@@ -58,7 +60,18 @@ function AgendaModal() {
 
       setLoading(true);
       try {
-        const { data, error } = await supabase.from(AGENDA).select("*").eq("_id", id).single();
+        let resolveId = id;
+        // Búsqueda inteligente: si el id es corto, buscamos a qué UUID pertenece
+        if (id.length < 36) {
+          const { data: allIds } = await supabase.from(AGENDA).select('_id');
+          const match = allIds?.find(e => e._id.startsWith(id));
+          if (match) {
+            resolveId = match._id;
+            setRealId(match._id);
+          }
+        }
+
+        const { data, error } = await supabase.from(AGENDA).select("*").eq("_id", resolveId).single();
         if (error) throw error;
         if (!data) {
           alert("Evento no encontrado"); navigate("/Agenda"); return;
@@ -119,22 +132,28 @@ function AgendaModal() {
       }
     };
 
-    const fetchAttendeesInfo = async () => {
-      if (isNewEvent) return;
-      setLoadingAttendees(true);
-      try {
-        const { data, error } = await supabase.from('attendees').select('*').eq('evento_id', id).order('fecha_inscripcion', { ascending: false });
-        if (!error && data) setAttendees(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoadingAttendees(false);
-      }
-    };
-
     fetchEvento();
-    fetchAttendeesInfo();
   }, [id, isNewEvent, navigate]);
+
+  useEffect(() => {
+    if (!isNewEvent) {
+      setLoadingAttendees(true);
+      const fetchAttendees = async () => {
+        let resolveId = realId;
+        // Misma lógica de búsqueda inteligente por si realId no se ha establecido todavía (condición de carrera)
+        if (resolveId.length < 36) {
+          const { data: allIds } = await supabase.from(AGENDA).select('_id');
+          const match = allIds?.find(e => e._id.startsWith(resolveId));
+          if (match) resolveId = match._id;
+        }
+
+        const { data, error } = await supabase.from('attendees').select('*').eq('evento_id', resolveId);
+        if (!error && data) setAttendees(data);
+        setLoadingAttendees(false);
+      };
+      fetchAttendees();
+    }
+  }, [id, isNewEvent, realId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -236,9 +255,9 @@ function AgendaModal() {
     try {
       if (isNewEvent) {
         await dispatch(crearItem(eventoData, AGENDA));
-        alert("Evento creado exitosamente");
+        alert("Evento Creado. Revise el calendario");
       } else {
-        await dispatch(updateItem(id, eventoData, AGENDA));
+        await dispatch(updateItem(realId, eventoData, AGENDA));
         alert("Evento actualizado exitosamente");
       }
       dispatch(getAllFromTable(AGENDA));
@@ -311,7 +330,7 @@ function AgendaModal() {
           </CardHeader>
 
           <CardContent className="p-0">
-            <Tabs defaultValue="detalles" className="w-full">
+            <Tabs value={tab || "detalles"} onValueChange={(t) => navigate(`/evento/${id}/${t}`, { replace: true })} className="w-full">
               <div className="p-4 border-b bg-gray-50/50">
                 <TabsList className="grid w-full grid-cols-3 max-w-2xl">
                   <TabsTrigger value="detalles">Detalles del Evento</TabsTrigger>

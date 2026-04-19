@@ -68,13 +68,13 @@ function Agenda() {
   };
 
   const handleEditEvento = (evento) => {
-    // Navegar al modal con el ID del evento
-    navigate(`/evento/${evento._id}`);
+    // Navegar al modal con el ID corto del evento y la pestaña inicial
+    navigate(`/evento/${evento._id.substring(0, 8)}/detalles`);
   };
 
   const handleViewEvento = (evento) => {
     // Navegar al modal para ver detalles
-    navigate(`/evento/${evento._id}`);
+    navigate(`/evento/${evento._id.substring(0, 8)}/detalles`);
   };
 
   const handleDeleteEvento = async (evento) => {

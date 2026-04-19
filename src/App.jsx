@@ -155,7 +155,7 @@ function App() {
           <Route path="/receta/:id" element={<RecetaModal />} />
           <Route path="/item/:id" element={<ItemsModal />} />
           <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
-          <Route path="/evento/:id" element={<AgendaModal />} />
+          <Route path="/evento/:id/:tab?" element={<AgendaModal />} />
           <Route path="/inscripcion/:id" element={<InscripcionEvento />} />
           <Route path="/agendaForm/:id" element={<AgendaFormPage />} />
           <Route path="/Predict/:MenuItem" element={<Predict />} />
