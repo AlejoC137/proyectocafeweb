@@ -342,17 +342,7 @@ export default function EventosOffer() {
                                                 <Instagram size={16} strokeWidth={3} /> @proyecto__cafe
                                             </a>
 
-                                            <button
-                                                onClick={() => {
-                                                    const shareUrl = `${window.location.origin}/api/share?id=${selectedEvent._id.substring(0, 8)}`;
-                                                    navigator.clipboard.writeText(shareUrl);
-                                                    setCopiedShare(true);
-                                                    setTimeout(() => setCopiedShare(false), 2000);
-                                                }}
-                                                className={`flex-1 flex items-center justify-center gap-2 bg-sage-green/20 border-[3px] ${borderColor} py-3 px-4 text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all`}
-                                            >
 
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
