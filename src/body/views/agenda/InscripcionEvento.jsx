@@ -52,7 +52,7 @@ function InscripcionEvento() {
         }
 
         if (resolveId.length < 36) {
-          throw new Error("ID inválido detectado"); // Previene choque DB 400
+          throw new Error("ID inválido detectado"); 
         }
 
         const { data, error } = await supabase
@@ -64,7 +64,6 @@ function InscripcionEvento() {
         if (error) throw error;
         setEvento(data);
 
-        // Fetch attendees count
         const { count, error: countError } = await supabase
           .from("attendees")
           .select("*", { count: "exact", head: true })
@@ -74,7 +73,6 @@ function InscripcionEvento() {
           setCurrentAttendeesCount(count || 0);
         }
 
-        // Parsear servicios para ver si hay alimentos seleccionados
         let hasFood = false;
         if (data.servicios) {
           try {
@@ -131,7 +129,6 @@ function InscripcionEvento() {
       return;
     }
 
-    // Validar preguntas requeridas
     if (evento?.preguntas_personalizadas) {
       for (let p of evento.preguntas_personalizadas) {
         if (p.requerido && !formData.respuestas[p.id]) {
@@ -145,7 +142,6 @@ function InscripcionEvento() {
     try {
       let authUserId = null;
 
-      // Handle user registration if requested
       if (formData.recordar_usuario && formData.password) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
@@ -159,16 +155,14 @@ function InscripcionEvento() {
 
         if (authError) {
           console.error("Error creating user account:", authError);
-          // Omitimos la alerta si es un error de email de Supabase, porque la inscripción de asistente aún puede proceder.
           if (!authError.message.includes("email")) {
-            alert("Hubo un error al crear tu cuenta de usuario. Sin embargo, tu inscripción se completará.");
+            alert("Hubo un error al crear tu cuenta de usuario.");
           }
         } else if (authData?.user) {
           authUserId = authData.user.id;
         }
       }
 
-      // Determine payment status based on event price
       const valorStr = (evento?.valor || "").toLowerCase();
       let estadoPago = "pendiente";
       if (!evento?.valor || valorStr.includes("gratis") || valorStr === "0") {
@@ -198,7 +192,7 @@ function InscripcionEvento() {
       setSuccess(true);
     } catch (err) {
       console.error("Error submitting inscription:", err);
-      alert("No pudimos completar tu inscripción. Por favor intenta de nuevo.");
+      alert("No pudimos completar tu inscripción.");
     } finally {
       setSubmitting(false);
     }
@@ -207,7 +201,7 @@ function InscripcionEvento() {
   if (loading) {
     return (
       <PageLayout title="Cargando...">
-        <div className="flex items-center justify-center p-12 w-screen">
+        <div className="flex items-center justify-center p-12 w-full h-[70vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6600]"></div>
         </div>
       </PageLayout>
@@ -217,29 +211,9 @@ function InscripcionEvento() {
   if (!evento) {
     return (
       <PageLayout title="Evento no encontrado">
-        <div className="flex flex-col items-center justify-center p-12 w-full text-center">
+        <div className="flex flex-col items-center justify-center p-12 w-full text-center h-[70vh]">
           <h2 className="text-2xl font-bold mb-4">El evento no existe o fue eliminado.</h2>
           <Button onClick={() => navigate("/Home")}>Volver al Inicio</Button>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  const isFull = evento.numeroPersonas && currentAttendeesCount >= parseInt(evento.numeroPersonas, 10);
-
-  if (isFull && !success) {
-    return (
-      <PageLayout title="Evento Agotado">
-        <div className="flex flex-col items-center justify-center p-12 w-full max-w-2xl mx-auto text-center">
-          <div className="bg-red-50 p-8 rounded-2xl shadow-sm border border-red-200">
-            <h2 className="text-3xl font-bold text-red-700 mb-4">¡Cupos Agotados!</h2>
-            <p className="text-lg text-gray-700 mb-6">
-              Lo sentimos, el evento <strong>{evento.nombreES}</strong> ya ha alcanzado su límite máximo de {evento.numeroPersonas} inscripciones.
-            </p>
-            <Button onClick={() => navigate("/Home")} className="bg-gray-800 hover:bg-gray-900 border-none text-white">
-              Explorar otros eventos
-            </Button>
-          </div>
         </div>
       </PageLayout>
     );
@@ -248,13 +222,13 @@ function InscripcionEvento() {
   if (success) {
     return (
       <PageLayout title="¡Inscripción Exitosa!">
-        <div className="flex flex-col items-center justify-center p-12 w-full max-w-2xl mx-auto text-center">
+        <div className="flex flex-col items-center justify-center p-12 w-full max-w-2xl mx-auto text-center h-[70vh]">
           <div className="bg-green-100 p-8 rounded-2xl shadow-sm border border-green-200">
             <h2 className="text-3xl font-bold text-green-700 mb-4">¡Gracias por inscribirte!</h2>
             <p className="text-lg text-gray-700 mb-6">
-              Has sido registrado exitosamente para el evento <strong>{evento.nombreES}</strong>.
+              Has sido registrado exitosamente para <strong>{evento.nombreES}</strong>.
             </p>
-            <Button onClick={() => navigate("/Home")} className="bg-[#ff6600] hover:bg-[#e65c00]">
+            <Button onClick={() => navigate("/Home")} className="bg-[#ff6600]">
               Volver al Inicio
             </Button>
           </div>
@@ -266,203 +240,191 @@ function InscripcionEvento() {
   const isFree = !evento.valor || evento.valor.toLowerCase().includes("gratis") || evento.valor === "0";
 
   return (
-    <PageLayout className="md:!overflow-hidden">
-      <div className="max-w-8xl mx-auto p-2 md:p-0 w-full flex flex-col md:flex-row gap-4 items-start justify-center md:h-[calc(100vh-7.5rem)]">
+    // Aplicamos overflow-hidden a nivel de Layout para que nada se salga
+    <PageLayout className="h-screen max-h-screen overflow-hidden !p-0">
+      
+      {/* Contenedor Principal: forzamos el alto de la pantalla menos el posible Header (ajustado a 4rem/64px aprox) */}
+      <div className="w-full flex flex-col md:flex-row items-stretch justify-center gap-4 p-2 md:p-4 h-[calc(100vh-4.5rem)] overflow-hidden">
 
-        {/* Lado Izquierdo: Imagen del Evento Independiente */}
+        {/* Lado Izquierdo: Imagen del Evento (Fija, sin scroll) */}
         {evento.bannerIMG && (
-          <div className="w-full md:w-5/12 bg-white rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 md:h-full">
+          <div className="hidden md:flex md:w-5/12 bg-white rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 h-full">
             <img
               src={evento.bannerIMG}
-              alt={`Banner de ${evento.nombreES}`}
+              alt={evento.nombreES}
               className="w-full h-full object-cover"
             />
           </div>
         )}
 
-        {/* Lado Derecho: Formulario Estructurado */}
-        <Card className="w-full md:flex-1 shadow-2xl border-0 overflow-hidden md:overflow-y-auto rounded-2xl md:h-full">
-          <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Calendar size={28} />
-              <CardTitle className="text-3xl">{evento.nombreES}</CardTitle>
-            </div>
-            <CardDescription className="text-white/90 text-lg">
-              {evento.fecha} | {evento.horaInicio} - {evento.horaFinal}
-            </CardDescription>
-            {evento.decripcion && (
-              <p className="mt-4 text-white/80">{evento.decripcion}</p>
-            )}
-          </CardHeader>
-          <CardContent className="p-8 bg-white">
-            {!isFree && (
-              <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-                <Info className="text-amber-600 mt-1 flex-shrink-0" size={20} />
-                <div>
-                  <h4 className="font-semibold text-amber-800">Costo del Evento: {evento.valor}</h4>
-                  <p className="text-sm text-amber-700 mt-1">Este evento tiene un costo. Al registrarte quedarás en estado "Pendiente" hasta que confirmes tu pago con el organizador.</p>
-                </div>
+        {/* Lado Derecho: Card del Formulario (Contenedor del Scroll) */}
+        <Card className="w-full md:flex-1 shadow-2xl border-0 rounded-2xl flex flex-col overflow-hidden h-full bg-white">
+          
+          {/* Este div es el que permite el scroll solo en el formulario */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
+            
+            {/* Header del Formulario */}
+            <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-6 sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <Calendar size={24} />
+                <CardTitle className="text-2xl md:text-3xl">{evento.nombreES}</CardTitle>
               </div>
-            )}
+              <CardDescription className="text-white/90 text-sm md:text-base">
+                {evento.fecha} | {evento.horaInicio} - {evento.horaFinal}
+              </CardDescription>
+            </CardHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="p-6 md:p-8">
+              {!isFree && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                  <Info className="text-amber-600 mt-1 flex-shrink-0" size={18} />
+                  <div>
+                    <h4 className="font-semibold text-amber-800 text-sm">Costo: {evento.valor}</h4>
+                    <p className="text-xs text-amber-700">Quedarás en estado "Pendiente" hasta confirmar pago.</p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Datos Personales */}
-                <div className="space-y-4 md:col-span-2">
-                  <h3 className="text-xl font-semibold border-b pb-2">Tus Datos</h3>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-1">Tus Datos</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="nombre">Nombre Completo *</Label>
                       <input
                         id="nombre" name="nombre" type="text" required
                         value={formData.nombre} onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] focus:border-transparent outline-none transition"
+                        className="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none"
                         placeholder="Ej. Juan Pérez"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="email">Correo Electrónico *</Label>
                       <input
                         id="email" name="email" type="email" required
                         value={formData.email} onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] focus:border-transparent outline-none transition"
+                        className="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none"
                         placeholder="juan@ejemplo.com"
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="md:col-span-2 space-y-1">
                       <Label htmlFor="telefono">Teléfono / WhatsApp</Label>
                       <input
                         id="telefono" name="telefono" type="tel"
                         value={formData.telefono} onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] focus:border-transparent outline-none transition"
-                        placeholder="+57 300 000 0000"
+                        className="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none"
+                        placeholder="+57 300..."
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Info adicional */}
-                <div className="space-y-4 md:col-span-2">
-                  <h3 className="text-xl font-semibold border-b pb-2">Información Adicional</h3>
-
-                  <div className="space-y-2">
+                {/* Info Adicional */}
+                <div className="space-y-4 pt-2">
+                  <h3 className="text-lg font-semibold border-b pb-1">Información Adicional</h3>
+                  <div className="space-y-1">
                     <Label htmlFor="como_nos_encontraste">¿Cómo supiste del evento?</Label>
                     <textarea
                       id="como_nos_encontraste" name="como_nos_encontraste"
                       value={formData.como_nos_encontraste} onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition resize-none h-24"
-                      placeholder="Redes sociales, un amigo, etc..."
+                      className="w-full p-2.5 border border-gray-300 rounded-xl h-20 resize-none outline-none focus:ring-2 focus:ring-[#ff6600]"
+                      placeholder="Redes sociales, un amigo..."
                     />
                   </div>
 
                   {tieneAlimentos && (
-                    <div className="space-y-2">
-                      <Label htmlFor="dieta_especial" className="text-green-700 font-semibold flex items-center gap-2">🍽️ Dieta Especial / Vegana</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="dieta_especial" className="text-green-700 font-semibold">🍽️ Dieta Especial</Label>
                       <input
                         id="dieta_especial" name="dieta_especial" type="text"
                         value={formData.dieta_especial} onChange={handleChange}
-                        className="w-full p-3 border border-green-200 bg-green-50 rounded-xl focus:ring-2 focus:ring-green-400 outline-none transition"
-                        placeholder="Ej. Vegano, Intolerante a la lactosa, Ninguna..."
+                        className="w-full p-2.5 border border-green-200 bg-green-50 rounded-xl outline-none"
+                        placeholder="Ej. Vegano, Alérgico..."
                       />
                     </div>
                   )}
 
-                  {evento?.preguntas_personalizadas && evento.preguntas_personalizadas.length > 0 && (
-                    <div className="pt-4 border-t mt-6 space-y-4">
-                      <h3 className="text-xl font-semibold border-b pb-2">Preguntas del Organizador</h3>
-                      {evento.preguntas_personalizadas.map(p => (
-                        <div key={p.id} className="space-y-2">
-                          <Label htmlFor={p.id}>{p.label} {p.requerido && <span className="text-red-500">*</span>}</Label>
-                          {p.tipo === 'parrafo' ? (
-                            <textarea
-                              id={p.id} required={p.requerido}
-                              value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition resize-none h-24"
-                            />
-                          ) : p.tipo === 'numero' ? (
-                            <input
-                              id={p.id} type="number" required={p.requerido}
-                              value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
-                            />
-                          ) : (
-                            <input
-                              id={p.id} type="text" required={p.requerido}
-                              value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
-                            />
-                          )}
-                        </div>
-                      ))}
+                  {evento?.preguntas_personalizadas?.map(p => (
+                    <div key={p.id} className="space-y-1">
+                      <Label htmlFor={p.id}>{p.label} {p.requerido && <span className="text-red-500">*</span>}</Label>
+                      {p.tipo === 'parrafo' ? (
+                        <textarea
+                          id={p.id} required={p.requerido}
+                          value={formData.respuestas[p.id] || ''}
+                          onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
+                          className="w-full p-2.5 border border-gray-300 rounded-xl h-20 outline-none"
+                        />
+                      ) : (
+                        <input
+                          id={p.id} type={p.tipo === 'numero' ? 'number' : 'text'}
+                          required={p.requerido}
+                          value={formData.respuestas[p.id] || ''}
+                          onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
+                          className="w-full p-2.5 border border-gray-300 rounded-xl outline-none"
+                        />
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
 
-                {/* Consentimientos */}
-                <div className="space-y-4 md:col-span-2 mt-4 bg-gray-50 p-6 rounded-xl border border-gray-100">
-                  <h3 className="text-lg font-semibold mb-4">Preferencias y Cuenta</h3>
-
-                  <div className="flex items-start space-x-3">
+                {/* Consentimientos y Cuenta */}
+                <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <h3 className="text-md font-semibold">Preferencias y Cuenta</h3>
+                  <div className="flex items-center space-x-2">
                     <Checkbox
                       id="acepta_promociones"
                       checked={formData.acepta_promociones}
-                      onCheckedChange={(checked) => handleCheckboxChange("acepta_promociones", checked)}
+                      onCheckedChange={(v) => handleCheckboxChange("acepta_promociones", v)}
                     />
-                    <Label htmlFor="acepta_promociones" className="font-normal cursor-pointer pt-0.5">
-                      Deseo recibir promociones y descuentos especiales.
-                    </Label>
+                    <Label htmlFor="acepta_promociones" className="text-xs cursor-pointer">Recibir promociones.</Label>
                   </div>
-
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-center space-x-2">
                     <Checkbox
                       id="acepta_nuevos_eventos"
                       checked={formData.acepta_nuevos_eventos}
-                      onCheckedChange={(checked) => handleCheckboxChange("acepta_nuevos_eventos", checked)}
+                      onCheckedChange={(v) => handleCheckboxChange("acepta_nuevos_eventos", v)}
                     />
-                    <Label htmlFor="acepta_nuevos_eventos" className="font-normal cursor-pointer pt-0.5">
-                      Quiero enterarme de futuros eventos y actividades.
-                    </Label>
+                    <Label htmlFor="acepta_nuevos_eventos" className="text-xs cursor-pointer">Enterarme de futuros eventos.</Label>
                   </div>
-
-                  <div className="pt-4 border-t border-gray-200 mt-4">
-                    <div className="flex items-start space-x-3 mb-4">
+                  
+                  <div className="pt-2 border-t mt-2">
+                    <div className="flex items-center space-x-2">
                       <Checkbox
                         id="recordar_usuario"
                         checked={formData.recordar_usuario}
-                        onCheckedChange={(checked) => handleCheckboxChange("recordar_usuario", checked)}
+                        onCheckedChange={(v) => handleCheckboxChange("recordar_usuario", v)}
                       />
-                      <Label htmlFor="recordar_usuario" className="font-medium cursor-pointer pt-0.5">
-                        Crear una cuenta para recordar mis datos en el futuro.
-                      </Label>
+                      <Label htmlFor="recordar_usuario" className="text-sm font-medium cursor-pointer">Crear cuenta.</Label>
                     </div>
-
                     {formData.recordar_usuario && (
-                      <div className="ml-7 space-y-2 animate-in fade-in slide-in-from-top-2">
-                        <Label htmlFor="password">Establece una contraseña</Label>
+                      <div className="mt-2 space-y-1">
+                        <Label htmlFor="password">Contraseña</Label>
                         <input
-                          id="password" name="password" type="password" required={formData.recordar_usuario}
+                          id="password" name="password" type="password"
+                          required={formData.recordar_usuario}
                           value={formData.password} onChange={handleChange}
-                          className="w-full md:w-1/2 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
+                          className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                           placeholder="Mínimo 6 caracteres"
                         />
-                        <p className="text-xs text-gray-500">Usaremos tu correo ({formData.email || '...'}) para iniciar sesión.</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-              </div>
-              <div className="pt-6">
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-6 text-lg bg-[#ff6600] hover:bg-[#e65c00] text-white rounded-xl shadow-md transition-all font-bold"
-                >
-                  {submitting ? "Procesando inscripción..." : "Finalizar Inscripción"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
+                {/* Botón Final (se mueve con el scroll del formulario) */}
+                <div className="pt-4">
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-6 bg-[#ff6600] hover:bg-[#e65c00] text-white rounded-xl font-bold text-lg"
+                  >
+                    {submitting ? "Inscribiendo..." : "Finalizar Inscripción"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </div>
         </Card>
       </div>
     </PageLayout>
