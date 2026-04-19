@@ -271,7 +271,18 @@ function InscripcionEvento() {
         <Card className="w-full md:flex-1 shadow-2xl border-0 rounded-2xl flex flex-col overflow-hidden h-full bg-white">
           <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
             {/* Este div es el que permite el scroll solo en el formulario */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
+            <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden relative">
+
+              {/* Imagen en vista móvil, dentro del scroll */}
+              {evento.bannerIMG && (
+                <div className="block md:hidden w-full bg-black/5">
+                  <img
+                    src={evento.bannerIMG}
+                    alt={evento.nombreES}
+                    className="w-full h-auto object-contain max-h-[50vh]"
+                  />
+                </div>
+              )}
 
               {/* Header del Formulario */}
               <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-2 sticky top-0 z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
