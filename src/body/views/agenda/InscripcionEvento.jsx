@@ -44,15 +44,15 @@ function InscripcionEvento() {
           const { data: allIds } = await supabase.from(AGENDA).select('_id');
           const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(id.toLowerCase()));
           if (match) {
-             resolveId = match._id;
-             setRealId(match._id);
+            resolveId = match._id;
+            setRealId(match._id);
           } else {
-             throw new Error(`Enlace roto: Evento corto no hallado (${id})`);
+            throw new Error(`Enlace roto: Evento corto no hallado (${id})`);
           }
         }
 
         if (resolveId.length < 36) {
-             throw new Error("ID inválido detectado"); // Previene choque DB 400
+          throw new Error("ID inválido detectado"); // Previene choque DB 400
         }
 
         const { data, error } = await supabase
@@ -69,7 +69,7 @@ function InscripcionEvento() {
           .from("attendees")
           .select("*", { count: "exact", head: true })
           .eq("evento_id", resolveId);
-          
+
         if (!countError) {
           setCurrentAttendeesCount(count || 0);
         }
@@ -84,7 +84,7 @@ function InscripcionEvento() {
             } else if (typeof parsedSvc === "object" && parsedSvc.alimentos) {
               hasFood = parsedSvc.alimentos.activo === true || parsedSvc.alimentos === true;
             }
-          } catch(e) {}
+          } catch (e) { }
         }
         setTieneAlimentos(hasFood);
 
@@ -161,7 +161,7 @@ function InscripcionEvento() {
           console.error("Error creating user account:", authError);
           // Omitimos la alerta si es un error de email de Supabase, porque la inscripción de asistente aún puede proceder.
           if (!authError.message.includes("email")) {
-             alert("Hubo un error al crear tu cuenta de usuario. Sin embargo, tu inscripción se completará.");
+            alert("Hubo un error al crear tu cuenta de usuario. Sin embargo, tu inscripción se completará.");
           }
         } else if (authData?.user) {
           authUserId = authData.user.id;
@@ -266,24 +266,23 @@ function InscripcionEvento() {
   const isFree = !evento.valor || evento.valor.toLowerCase().includes("gratis") || evento.valor === "0";
 
   return (
-    <PageLayout>
-      <div className="max-w-5xl mx-auto p-0 md:p-8 w-full">
-        <Card className="shadow-2xl border-0 overflow-hidden rounded-none md:rounded-2xl flex flex-col md:flex-row">
-          
-          {/* Lado Izquierdo: Imagen del Evento */}
-          {evento.bannerIMG && (
-            <div className="w-full md:w-5/12 bg-gray-50 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 p-0">
-              <img 
-                src={evento.bannerIMG} 
-                alt={`Banner de ${evento.nombreES}`} 
-                className="w-full h-auto md:h-full object-contain md:object-cover" 
-              />
-            </div>
-          )}
+    <PageLayout className="md:!overflow-hidden">
+      <div className="max-w-8xl mx-auto p-2 md:p-0 w-full flex flex-col md:flex-row gap-4 items-start justify-center md:h-[calc(100vh-7.5rem)]">
 
-          {/* Lado Derecho: Formulario y Detalles */}
-          <div className="w-full flex-1 flex flex-col">
-            <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-8">
+        {/* Lado Izquierdo: Imagen del Evento Independiente */}
+        {evento.bannerIMG && (
+          <div className="w-full md:w-5/12 bg-white rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 md:h-full">
+            <img
+              src={evento.bannerIMG}
+              alt={`Banner de ${evento.nombreES}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
+        {/* Lado Derecho: Formulario Estructurado */}
+        <Card className="w-full md:flex-1 shadow-2xl border-0 overflow-hidden md:overflow-y-auto rounded-2xl md:h-full">
+          <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-8">
             <div className="flex items-center gap-3 mb-2">
               <Calendar size={28} />
               <CardTitle className="text-3xl">{evento.nombreES}</CardTitle>
@@ -345,7 +344,7 @@ function InscripcionEvento() {
                 {/* Info adicional */}
                 <div className="space-y-4 md:col-span-2">
                   <h3 className="text-xl font-semibold border-b pb-2">Información Adicional</h3>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="como_nos_encontraste">¿Cómo supiste del evento?</Label>
                     <textarea
@@ -370,31 +369,31 @@ function InscripcionEvento() {
 
                   {evento?.preguntas_personalizadas && evento.preguntas_personalizadas.length > 0 && (
                     <div className="pt-4 border-t mt-6 space-y-4">
-                       <h3 className="text-xl font-semibold border-b pb-2">Preguntas del Organizador</h3>
-                       {evento.preguntas_personalizadas.map(p => (
-                         <div key={p.id} className="space-y-2">
-                           <Label htmlFor={p.id}>{p.label} {p.requerido && <span className="text-red-500">*</span>}</Label>
-                           {p.tipo === 'parrafo' ? (
-                             <textarea 
-                               id={p.id} required={p.requerido}
-                               value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
-                               className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition resize-none h-24"
-                             />
-                           ) : p.tipo === 'numero' ? (
-                             <input 
-                               id={p.id} type="number" required={p.requerido}
-                               value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
-                               className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
-                             />
-                           ) : (
-                             <input 
-                               id={p.id} type="text" required={p.requerido}
-                               value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
-                               className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
-                             />
-                           )}
-                         </div>
-                       ))}
+                      <h3 className="text-xl font-semibold border-b pb-2">Preguntas del Organizador</h3>
+                      {evento.preguntas_personalizadas.map(p => (
+                        <div key={p.id} className="space-y-2">
+                          <Label htmlFor={p.id}>{p.label} {p.requerido && <span className="text-red-500">*</span>}</Label>
+                          {p.tipo === 'parrafo' ? (
+                            <textarea
+                              id={p.id} required={p.requerido}
+                              value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition resize-none h-24"
+                            />
+                          ) : p.tipo === 'numero' ? (
+                            <input
+                              id={p.id} type="number" required={p.requerido}
+                              value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
+                            />
+                          ) : (
+                            <input
+                              id={p.id} type="text" required={p.requerido}
+                              value={formData.respuestas[p.id] || ''} onChange={(e) => handleRespuestaChange(p.id, e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ff6600] outline-none transition"
+                            />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -402,7 +401,7 @@ function InscripcionEvento() {
                 {/* Consentimientos */}
                 <div className="space-y-4 md:col-span-2 mt-4 bg-gray-50 p-6 rounded-xl border border-gray-100">
                   <h3 className="text-lg font-semibold mb-4">Preferencias y Cuenta</h3>
-                  
+
                   <div className="flex items-start space-x-3">
                     <Checkbox
                       id="acepta_promociones"
@@ -413,7 +412,7 @@ function InscripcionEvento() {
                       Deseo recibir promociones y descuentos especiales.
                     </Label>
                   </div>
-                  
+
                   <div className="flex items-start space-x-3">
                     <Checkbox
                       id="acepta_nuevos_eventos"
@@ -454,8 +453,8 @@ function InscripcionEvento() {
 
               </div>
               <div className="pt-6">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={submitting}
                   className="w-full py-6 text-lg bg-[#ff6600] hover:bg-[#e65c00] text-white rounded-xl shadow-md transition-all font-bold"
                 >
@@ -464,7 +463,6 @@ function InscripcionEvento() {
               </div>
             </form>
           </CardContent>
-          </div>
         </Card>
       </div>
     </PageLayout>
