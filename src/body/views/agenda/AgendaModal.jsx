@@ -265,7 +265,7 @@ function AgendaModal() {
     if (!error) setAttendees(prev => prev.map(a => a.id === attendeeId ? { ...a, estado_pago: newStatus } : a));
   };
   const copyInscriptionLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/inscripcion/${id}`);
+    navigator.clipboard.writeText(`${window.location.origin}/api/share?id=${id}`);
     setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000);
   };
 
