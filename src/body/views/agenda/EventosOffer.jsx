@@ -16,6 +16,7 @@ import {
     Play,
     Ticket,
     Instagram,
+    Share2,
     Calendar as CalendarIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function EventosOffer() {
         presentacion: "",
         descripcion: "",
     });
+    const [copiedShare, setCopiedShare] = useState(false);
 
     // Border color constant (not pure black)
     const borderColor = "border-[#1F2937]";
@@ -178,7 +180,7 @@ export default function EventosOffer() {
 
                 {/* Grid de Posters Neobrutalista */}
                 {eventosFiltrados.length === 0 ? (
-                    <div className={`text-center py-32 bg-pink-100 border-[3px] ${borderColor} shadow-[6px_6px_0px_0px_rgba(31,41,55,1)] rounded-none`}>
+                    <div className={`text-center py-10 bg-pink-100 border-[3px] ${borderColor} shadow-[6px_6px_0px_0px_rgba(31,41,55,1)] rounded-none`}>
                         <h3 className="text-3xl font-black uppercase mb-4" style={{ fontFamily: "'First Bunny', sans-serif" }}>Cerrado por el momento</h3>
                         <p className="text-lg font-black opacity-60">Pronto tendremos nuevas funciones para {monthName}.</p>
                     </div>
@@ -240,22 +242,22 @@ export default function EventosOffer() {
 
                 {/* Modal Estilo Neobrutalista */}
                 <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
-                    <DialogContent className={`max-w-6xl p-0 overflow-hidden rounded-none border-[3px] ${borderColor} shadow-[10px_10px_0px_0px_rgba(31,41,55,1)] bg-white`}>
+                    <DialogContent className={`max-w-[1400px] w-[95vw] p-0 overflow-hidden rounded-none border-[3px] ${borderColor} shadow-[10px_10px_0px_0px_rgba(31,41,55,1)] bg-white`}>
                         {selectedEvent && (
                             <div className="flex flex-col md:flex-row max-h-[90vh]">
                                 {/* Poster del Modal */}
-                                <div className={`md:w-5/12 relative border-b-[3px] md:border-b-0 md:border-r-[3px] ${borderColor} min-h-[300px]`}>
+                                <div className={`flex-1 relative border-b-[3px] md:border-b-0 md:border-r-[3px] ${borderColor} min-h-[300px] bg-gray-50`}>
                                     {selectedEvent.bannerIMG ? (
                                         <img src={selectedEvent.bannerIMG} className="w-full h-full object-contain" />
                                     ) : (
-                                        <div className="w-full h-full bg-sage-green/10 flex items-center justify-center">
+                                        <div className="w-full h-full flex items-center justify-center">
                                             <Ticket size={80} className="opacity-10" />
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Detalles del Modal */}
-                                <div className="flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar flex flex-col">
+                                <div className="md:w-[670px] flex-shrink-0 p-8 md:p-12 overflow-y-auto custom-scrollbar flex flex-col">
                                     <div className="mb-6">
                                         <span className="bg-yellow-100 border-[2px] border-[#1F2937] px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]">
                                             Información del Evento
@@ -339,6 +341,18 @@ export default function EventosOffer() {
                                             >
                                                 <Instagram size={16} strokeWidth={3} /> @proyecto__cafe
                                             </a>
+
+                                            <button
+                                                onClick={() => {
+                                                    const shareUrl = `${window.location.origin}/api/share?id=${selectedEvent._id.substring(0, 8)}`;
+                                                    navigator.clipboard.writeText(shareUrl);
+                                                    setCopiedShare(true);
+                                                    setTimeout(() => setCopiedShare(false), 2000);
+                                                }}
+                                                className={`flex-1 flex items-center justify-center gap-2 bg-sage-green/20 border-[3px] ${borderColor} py-3 px-4 text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all`}
+                                            >
+                                                <Share2 size={16} strokeWidth={3} /> {copiedShare ? '¡COPIADO!' : 'COMPARTIR'}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
