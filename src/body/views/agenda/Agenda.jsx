@@ -19,10 +19,13 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Utensils,
+  MonitorPlay
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import AgendaForm from "./AgendaForm";
+import supabase from "@/config/supabaseClient";
 
 function Agenda() {
   const dispatch = useDispatch();
@@ -35,10 +38,24 @@ function Agenda() {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
+  const [attendeeCounts, setAttendeeCounts] = useState({});
 
-  // Cargar eventos al montar el componente
+  // Cargar eventos y asistentes al montar
   useEffect(() => {
     dispatch(getAllFromTable(AGENDA));
+    
+    // Cargar cantidad de inscritos
+    const fetchCounts = async () => {
+      const { data, error } = await supabase.from('attendees').select('evento_id');
+      if (data && !error) {
+        const counts = {};
+        data.forEach(a => {
+          counts[a.evento_id] = (counts[a.evento_id] || 0) + 1;
+        });
+        setAttendeeCounts(counts);
+      }
+    };
+    fetchCounts();
   }, [dispatch]);
 
   const handleCreateEvento = (fecha = null) => {
@@ -334,23 +351,38 @@ function Agenda() {
                             </div>
                             {/* --- INICIO BLOQUE MODIFICADO --- */}
                             <div className="space-y-2"> {/* Espaciado aumentado */}
-                              {day.events.map((evento) => (
+                              {day.events.map((evento) => {
+                                // Parsear servicios para mostrar los iconos
+                                let hasFood = false;
+                                let hasAudioVisual = false;
+                                if (evento.servicios) {
+                                  try {
+                                    const parsedSvc = typeof evento.servicios === "string" ? JSON.parse(evento.servicios) : evento.servicios;
+                                    if (Array.isArray(parsedSvc)) {
+                                      hasFood = parsedSvc.some(s => s.alimentos === true);
+                                      hasAudioVisual = parsedSvc.some(s => s.audioVisual === true);
+                                    } else if (typeof parsedSvc === "object" && parsedSvc !== null) {
+                                      hasFood = parsedSvc.alimentos?.activo === true || parsedSvc.alimentos === true;
+                                      hasAudioVisual = parsedSvc.audioVisual?.activo === true || parsedSvc.audioVisual === true;
+                                    }
+                                  } catch(e) {}
+                                }
+
+                                return (
                                 <div
                                   key={evento._id}
-                                  className="text-xs rounded cursor-pointer shadow-sm hover:shadow-md relative overflow-hidden h-14 border" // Altura fija, relativo
+                                  className="text-xs rounded cursor-pointer shadow-sm hover:shadow-md relative overflow-hidden h-16 border flex flex-col justify-between group" // Altura fija a 4rem (16)
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleViewEvento(evento);
                                   }}
-                                  title={`${evento.nombre} (${evento.horaInicio} - ${evento.horaFinal})`}
+                                  title={`${evento.nombreES || evento.nombre || "Evento"} (${evento.horaInicio} - ${evento.horaFinal})`}
                                 >
                                   {/* Imagen de Fondo */}
                                   {evento.bannerIMG && (
                                     <div
-                                      className="absolute inset-0 w-full h-full bg-cover bg-center"
-                                      style={{
-                                        backgroundImage: `url(${evento.bannerIMG})`,
-                                      }}
+                                      className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform group-hover:scale-105"
+                                      style={{ backgroundImage: `url(${evento.bannerIMG})` }}
                                     ></div>
                                   )}
 
@@ -358,20 +390,28 @@ function Agenda() {
                                   <div className="absolute inset-0 w-full h-full bg-black bg-opacity-60 hover:bg-opacity-50 transition-opacity"></div>
 
                                   {/* Contenido de Texto */}
-                                  <div className="relative z-10 p-1.5 text-white">
-                                    <p className="truncate font-semibold text-xs">
-                                      {evento.nombre}
+                                  <div className="relative z-10 p-1.5 text-white flex-1 flex flex-col justify-between">
+                                    <p className="truncate font-bold text-xs drop-shadow-md">
+                                      {evento.nombreES || evento.nombre || "Sin Nombre"}
                                     </p>
-                                    <p className="truncate text-gray-200 text-[11px] mt-1">
-                                      <Clock
-                                        size={10}
-                                        className="inline-block mr-1"
-                                      />
-                                      {evento.horaInicio} - {evento.horaFinal}
-                                    </p>
+                                    <div className="flex items-center justify-between mt-1">
+                                      <p className="truncate text-gray-200 text-[10px] drop-shadow-md flex items-center font-medium">
+                                        <Clock size={10} className="mr-0.5" />
+                                        {evento.horaInicio}
+                                      </p>
+                                      
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        {hasFood && <Utensils size={10} className="text-orange-300 drop-shadow-md" title="Alimentos" />}
+                                        {hasAudioVisual && <MonitorPlay size={10} className="text-blue-300 drop-shadow-md" title="Música / Audiovisual" />}
+                                        <span className="flex items-center bg-white/20 backdrop-blur-sm px-1 py-0.5 rounded text-[9px] font-bold border border-white/20" title="Inscritos">
+                                          <Users size={9} className="mr-0.5" />
+                                          {attendeeCounts[evento._id] || 0}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              ))}
+                              )})}
                             </div>
                             {/* --- FIN BLOQUE MODIFICADO --- */}
                           </>

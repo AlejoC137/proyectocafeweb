@@ -218,9 +218,18 @@ function InscripcionEvento() {
   const isFree = !evento.valor || evento.valor.toLowerCase().includes("gratis") || evento.valor === "0";
 
   return (
-    <PageLayout title={`Inscripción: ${evento.nombreES}`}>
-      <div className="max-w-3xl mx-auto p-4 w-full">
-        <Card className="shadow-2xl border-0 overflow-hidden rounded-2xl">
+    <PageLayout>
+      <div className="max-w-3xl mx-auto p-0 md:p-4 w-full">
+        <Card className="shadow-2xl border-0 overflow-hidden rounded-none md:rounded-2xl">
+          {evento.bannerIMG && (
+            <div className="w-full bg-white flex items-center justify-center border-b">
+              <img 
+                src={evento.bannerIMG} 
+                alt={`Banner de ${evento.nombreES}`} 
+                className="w-full h-auto object-contain" 
+              />
+            </div>
+          )}
           <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-8">
             <div className="flex items-center gap-3 mb-2">
               <Calendar size={28} />

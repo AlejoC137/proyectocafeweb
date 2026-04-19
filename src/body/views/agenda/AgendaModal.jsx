@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Users, ArrowLeft, Save, Copy, CheckCircle2, Edit2, Trash2, Plus, GripVertical, FileText, CheckCircle, X } from "lucide-react";
+import { Calendar, Users, ArrowLeft, Save, Copy, CheckCircle2, Edit2, Trash2, Plus, GripVertical, FileText, CheckCircle, X, ImageIcon, UploadCloud } from "lucide-react";
 import supabase from "@/config/supabaseClient";
 import PageLayout from "../../../components/ui/page-layout";
 
@@ -16,11 +16,11 @@ function AgendaModal() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   const isNewEvent = id === "new";
   const [loading, setLoading] = useState(!isNewEvent);
   const [evento, setEvento] = useState(null);
-  
+
   // Inscripciones Data
   const [attendees, setAttendees] = useState([]);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
@@ -29,6 +29,9 @@ function AgendaModal() {
   // Attendees Edit State
   const [editingAttendeeId, setEditingAttendeeId] = useState(null);
   const [editAttendeeData, setEditAttendeeData] = useState({});
+
+  // Image Upload State
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   // Dynamic Form Builder State
   const [preguntas, setPreguntas] = useState([]);
@@ -52,7 +55,7 @@ function AgendaModal() {
   useEffect(() => {
     const fetchEvento = async () => {
       if (isNewEvent) return;
-      
+
       setLoading(true);
       try {
         const { data, error } = await supabase.from(AGENDA).select("*").eq("_id", id).single();
@@ -63,7 +66,7 @@ function AgendaModal() {
 
         setEvento(data);
         setPreguntas(data.preguntas_personalizadas || []);
-        
+
         setFormData({
           nombreES: data.nombreES || "", fecha: data.fecha || "", horaInicio: data.horaInicio || "",
           horaFinal: data.horaFinal || "", nombreCliente: data.nombreCliente || "", emailCliente: data.emailCliente || "",
@@ -73,41 +76,41 @@ function AgendaModal() {
         });
 
         const parseServiciosToState = (raw) => {
-            let parsed = raw;
-            if (!parsed) return null;
-            try {
-              if (typeof parsed === "string") parsed = JSON.parse(parsed);
-            } catch (e) {
-              console.warn("No se pudo parsear servicios desde string:", e);
-            }
+          let parsed = raw;
+          if (!parsed) return null;
+          try {
+            if (typeof parsed === "string") parsed = JSON.parse(parsed);
+          } catch (e) {
+            console.warn("No se pudo parsear servicios desde string:", e);
+          }
 
-            if (Array.isArray(parsed)) {
-              const obj = {
-                alimentos: { activo: false, descripcion: "" }, mesas: { activo: false, descripcion: "" },
-                audioVisual: { activo: false, descripcion: "" }, otros: { activo: false, descripcion: "" },
-              };
-              parsed.forEach((item) => {
-                if (item.alimentos !== undefined) { obj.alimentos.activo = !!item.alimentos; obj.alimentos.descripcion = item.alimentosDescripcion || ""; }
-                if (item.mesas !== undefined) { obj.mesas.activo = !!item.mesas; obj.mesas.descripcion = item.mesasDescription || ""; }
-                if (item.audioVisual !== undefined) { obj.audioVisual.activo = !!item.audioVisual; obj.audioVisual.descripcion = item.audioVisualDescription || ""; }
-                if (item.otros !== undefined) { obj.otros.activo = !!item.otros; obj.otros.descripcion = item.otrosDescroptions || item.otrosDescription || ""; }
-              });
-              return obj;
-            }
+          if (Array.isArray(parsed)) {
+            const obj = {
+              alimentos: { activo: false, descripcion: "" }, mesas: { activo: false, descripcion: "" },
+              audioVisual: { activo: false, descripcion: "" }, otros: { activo: false, descripcion: "" },
+            };
+            parsed.forEach((item) => {
+              if (item.alimentos !== undefined) { obj.alimentos.activo = !!item.alimentos; obj.alimentos.descripcion = item.alimentosDescripcion || ""; }
+              if (item.mesas !== undefined) { obj.mesas.activo = !!item.mesas; obj.mesas.descripcion = item.mesasDescription || ""; }
+              if (item.audioVisual !== undefined) { obj.audioVisual.activo = !!item.audioVisual; obj.audioVisual.descripcion = item.audioVisualDescription || ""; }
+              if (item.otros !== undefined) { obj.otros.activo = !!item.otros; obj.otros.descripcion = item.otrosDescroptions || item.otrosDescription || ""; }
+            });
+            return obj;
+          }
 
-            if (typeof parsed === "object") {
-              return {
-                alimentos: { activo: !!(parsed.alimentos && parsed.alimentos.activo) || !!parsed.alimentos, descripcion: parsed.alimentos?.descripcion || parsed.alimentosDescripcion || "" },
-                mesas: { activo: !!(parsed.mesas && parsed.mesas.activo) || !!parsed.mesas, descripcion: parsed.mesas?.descripcion || parsed.mesasDescription || "" },
-                audioVisual: { activo: !!(parsed.audioVisual && parsed.audioVisual.activo) || !!parsed.audioVisual, descripcion: parsed.audioVisual?.descripcion || parsed.audioVisualDescription || "" },
-                otros: { activo: !!(parsed.otros && parsed.otros.activo) || !!parsed.otros, descripcion: parsed.otros?.descripcion || parsed.otrosDescroptions || parsed.otrosDescription || "" },
-              };
-            }
-            return null;
-          };
+          if (typeof parsed === "object") {
+            return {
+              alimentos: { activo: !!(parsed.alimentos && parsed.alimentos.activo) || !!parsed.alimentos, descripcion: parsed.alimentos?.descripcion || parsed.alimentosDescripcion || "" },
+              mesas: { activo: !!(parsed.mesas && parsed.mesas.activo) || !!parsed.mesas, descripcion: parsed.mesas?.descripcion || parsed.mesasDescription || "" },
+              audioVisual: { activo: !!(parsed.audioVisual && parsed.audioVisual.activo) || !!parsed.audioVisual, descripcion: parsed.audioVisual?.descripcion || parsed.audioVisualDescription || "" },
+              otros: { activo: !!(parsed.otros && parsed.otros.activo) || !!parsed.otros, descripcion: parsed.otros?.descripcion || parsed.otrosDescroptions || parsed.otrosDescription || "" },
+            };
+          }
+          return null;
+        };
 
-          const serviciosState = parseServiciosToState(data.servicios);
-          if (serviciosState) setServicios(serviciosState);
+        const serviciosState = parseServiciosToState(data.servicios);
+        if (serviciosState) setServicios(serviciosState);
       } catch (err) {
         console.error("Error al cargar evento:", err);
         alert("Error al cargar el evento"); navigate("/Agenda");
@@ -146,6 +149,57 @@ function AgendaModal() {
 
   const handleServicioDescripcionChange = (servicioKey, value) => {
     setServicios(prev => ({ ...prev, [servicioKey]: { ...prev[servicioKey], descripcion: value } }));
+  };
+
+  // Subir imagen al bucket
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    try {
+      // Si ya hay una imagen en ese bucket, intentamos eliminarla primero
+      if (formData.bannerIMG && formData.bannerIMG.includes("Images_eventos")) {
+        const urlParts = formData.bannerIMG.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        await supabase.storage.from("Images_eventos").remove([fileName]);
+      }
+
+      // Subimos la nueva imagen
+      const fileExt = file.name.split('.').pop();
+      const uniqueName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from("Images_eventos").upload(uniqueName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Obtenemos su URL pública
+      const { data: { publicUrl } } = supabase.storage.from("Images_eventos").getPublicUrl(uniqueName);
+      setFormData(prev => ({ ...prev, bannerIMG: publicUrl }));
+
+    } catch (err) {
+      console.error("Error subiendo la imagen", err);
+      alert("Hubo un error al subir la imagen del banner");
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    if (!formData.bannerIMG) return;
+    setIsUploadingBanner(true);
+    try {
+      if (formData.bannerIMG.includes("Images_eventos")) {
+        const urlParts = formData.bannerIMG.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        await supabase.storage.from("Images_eventos").remove([fileName]);
+      }
+      setFormData(prev => ({ ...prev, bannerIMG: "" }));
+    } catch (e) {
+      console.error(e);
+      alert("Error eliminando imagen");
+    } finally {
+      setIsUploadingBanner(false);
+    }
   };
 
   // Guardar datos generales del evento
@@ -206,7 +260,7 @@ function AgendaModal() {
     navigator.clipboard.writeText(`${window.location.origin}/inscripcion/${id}`);
     setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000);
   };
-  
+
   const startEditAttendee = (a) => {
     setEditingAttendeeId(a.id);
     setEditAttendeeData({ nombre: a.nombre, email: a.email, telefono: a.telefono });
@@ -296,10 +350,54 @@ function AgendaModal() {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Aux Info */}
+
+                  {/* Detalles del Administrador / Auxiliares */}
                   <div className="space-y-4">
-                    <div className="space-y-2"><Label>Descripción (Pública)</Label><textarea name="decripcion" value={formData.decripcion} onChange={handleInputChange} className="w-full p-2 border rounded-md" rows="3" /></div>
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                      <Users className="text-blue-600" size={20} /> Información de Contacto / Extras
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2"><Label>Nombre del Cliente</Label><input name="nombreCliente" type="text" value={formData.nombreCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Email Cliente</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Teléfono Cliente</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Autores/Organizadores</Label><input name="autores" type="text" value={formData.autores} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+
+                      <div className="space-y-2">
+                        <Label>Imagen Banner del Evento</Label>
+                        <div className="border-2 border-dashed rounded-md p-4 flex flex-col items-center justify-center text-center bg-gray-50 relative">
+                          {isUploadingBanner && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 rounded-md">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                            </div>
+                          )}
+                          {formData.bannerIMG ? (
+                            <div className="relative w-full group">
+                              <img src={formData.bannerIMG} alt="Banner" className="w-full h-32 object-cover rounded-md border" />
+                              <button type="button" onClick={handleRemoveBanner} className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full hover:bg-red-700 opacity-0 group-hover:opacity-100 transition shadow-md">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <ImageIcon className="text-gray-400 mb-2" size={28} />
+                              <Label className="cursor-pointer text-blue-600 hover:underline font-semibold text-sm">
+                                <UploadCloud className="inline mr-1 mb-0.5" size={16} /> Subir Imagen
+                                <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
+                              </Label>
+                              <span className="text-xs text-gray-400 mt-1">Soporta JPG, PNG (Max 10MB)</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2"><Label>Link de Inscripción externo</Label><input name="linkInscripcion" type="url" value={formData.linkInscripcion} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Número de Personas</Label><input name="numeroPersonas" type="number" min="1" value={formData.numeroPersonas} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Descripción (Pública)</Label><textarea name="decripcion" value={formData.decripcion} onChange={handleInputChange} className="w-full p-2 border rounded-md" rows="2" /></div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Información Adicional (infoAdicional)</Label>
+                      <textarea name="infoAdicional" value={formData.infoAdicional} onChange={handleInputChange} className="w-full p-2 border rounded-md" rows="3" />
+                    </div>
                   </div>
 
                   <div className="flex gap-4 pt-4 border-t">
@@ -317,16 +415,16 @@ function AgendaModal() {
                       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><FileText className="text-purple-600" /> Constructor de Preguntas</h3>
                         <p className="text-sm text-gray-500 mb-6">Añade información extra que quieras pedir a los asistentes de este evento (Ej. Talla de Camiseta, Nivel de Inglés, Empresa).</p>
-                        
+
                         <div className="space-y-4 bg-gray-50 p-4 rounded-lg border">
                           <div>
                             <Label>Título de la pregunta</Label>
-                            <input type="text" value={newPregunta.label} onChange={(e) => setNewPregunta({...newPregunta, label: e.target.value})} className="w-full p-2 border rounded mt-1" placeholder="Ej. ¿Cuál es tu nivel de inglés?" />
+                            <input type="text" value={newPregunta.label} onChange={(e) => setNewPregunta({ ...newPregunta, label: e.target.value })} className="w-full p-2 border rounded mt-1" placeholder="Ej. ¿Cuál es tu nivel de inglés?" />
                           </div>
                           <div className="flex gap-4">
                             <div className="flex-1">
                               <Label>Tipo de Respuesta</Label>
-                              <select value={newPregunta.tipo} onChange={(e) => setNewPregunta({...newPregunta, tipo: e.target.value})} className="w-full p-2 border rounded mt-1 bg-white">
+                              <select value={newPregunta.tipo} onChange={(e) => setNewPregunta({ ...newPregunta, tipo: e.target.value })} className="w-full p-2 border rounded mt-1 bg-white">
                                 <option value="texto">Texto Corto</option>
                                 <option value="parrafo">Párrafo (Largo)</option>
                                 <option value="numero">Número</option>
@@ -334,7 +432,7 @@ function AgendaModal() {
                             </div>
                             <div className="flex items-end pb-2">
                               <label className="flex items-center gap-2 cursor-pointer">
-                                <Checkbox checked={newPregunta.requerido} onCheckedChange={(checked)=> setNewPregunta({...newPregunta, requerido: checked})} />
+                                <Checkbox checked={newPregunta.requerido} onCheckedChange={(checked) => setNewPregunta({ ...newPregunta, requerido: checked })} />
                                 <span className="text-sm font-medium">Obligatorio</span>
                               </label>
                             </div>
@@ -347,7 +445,7 @@ function AgendaModal() {
                       <div className="space-y-3">
                         <h4 className="font-semibold text-gray-700">Tus preguntas configuradas:</h4>
                         {preguntas.length === 0 ? (
-                           <div className="text-sm text-gray-500 text-center py-6 border-2 border-dashed rounded-lg">No hay preguntas adicionales añadidas.</div>
+                          <div className="text-sm text-gray-500 text-center py-6 border-2 border-dashed rounded-lg">No hay preguntas adicionales añadidas.</div>
                         ) : (
                           preguntas.map((p, idx) => (
                             <div key={p.id} className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between group">
@@ -404,10 +502,10 @@ function AgendaModal() {
                         <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">Total: {attendees.length}</div>
                       </div>
                       <Button type="button" onClick={copyInscriptionLink} className="flex items-center gap-2 text-sm bg-[#ff6600] text-white hover:bg-[#e65c00] transition shadow-md px-5 py-2 rounded-xl font-semibold">
-                        {copiedLink ? <CheckCircle2 size={18}/> : <Copy size={18} />} {copiedLink ? "¡Copiado!" : "Copiar Enlace Público"}
+                        {copiedLink ? <CheckCircle2 size={18} /> : <Copy size={18} />} {copiedLink ? "¡Copiado!" : "Copiar Enlace Público"}
                       </Button>
                     </div>
-                    
+
                     {loadingAttendees ? (
                       <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div></div>
                     ) : attendees.length === 0 ? (
@@ -433,13 +531,13 @@ function AgendaModal() {
                               return (
                                 <tr key={a.id} className={`border-b hover:bg-gray-50 ${isEditing ? 'bg-blue-50' : ''}`}>
                                   <td className="px-4 py-3 align-top">
-                                    {isEditing ? <input value={editAttendeeData.nombre} onChange={(e) => setEditAttendeeData({...editAttendeeData, nombre: e.target.value})} className="border p-1 w-full text-sm rounded"/> : <p className="font-medium text-gray-900">{a.nombre}</p>}
+                                    {isEditing ? <input value={editAttendeeData.nombre} onChange={(e) => setEditAttendeeData({ ...editAttendeeData, nombre: e.target.value })} className="border p-1 w-full text-sm rounded" /> : <p className="font-medium text-gray-900">{a.nombre}</p>}
                                   </td>
                                   <td className="px-4 py-3 align-top">
                                     {isEditing ? (
                                       <div className="space-y-1">
-                                        <input value={editAttendeeData.email} onChange={(e) => setEditAttendeeData({...editAttendeeData, email: e.target.value})} className="border p-1 w-full text-sm rounded mb-1" placeholder="Email"/>
-                                        <input value={editAttendeeData.telefono || ''} onChange={(e) => setEditAttendeeData({...editAttendeeData, telefono: e.target.value})} className="border p-1 w-full text-sm rounded" placeholder="Teléfono"/>
+                                        <input value={editAttendeeData.email} onChange={(e) => setEditAttendeeData({ ...editAttendeeData, email: e.target.value })} className="border p-1 w-full text-sm rounded mb-1" placeholder="Email" />
+                                        <input value={editAttendeeData.telefono || ''} onChange={(e) => setEditAttendeeData({ ...editAttendeeData, telefono: e.target.value })} className="border p-1 w-full text-sm rounded" placeholder="Teléfono" />
                                       </div>
                                     ) : (
                                       <div className="flex flex-col gap-1">
@@ -471,13 +569,13 @@ function AgendaModal() {
                                   <td className="px-4 py-3 text-center align-top">
                                     {isEditing ? (
                                       <div className="flex items-center justify-center gap-2 pt-1">
-                                        <Button size="sm" onClick={() => saveEditAttendee(a.id)} className="bg-green-600 h-7 w-7 p-0"><CheckCircle size={14}/></Button>
-                                        <Button size="sm" variant="outline" onClick={() => setEditingAttendeeId(null)} className="h-7 w-7 p-0"><X size={14}/></Button>
+                                        <Button size="sm" onClick={() => saveEditAttendee(a.id)} className="bg-green-600 h-7 w-7 p-0"><CheckCircle size={14} /></Button>
+                                        <Button size="sm" variant="outline" onClick={() => setEditingAttendeeId(null)} className="h-7 w-7 p-0"><X size={14} /></Button>
                                       </div>
                                     ) : (
                                       <div className="flex items-center justify-center gap-2 pt-1">
-                                        <button title="Editar" onClick={() => startEditAttendee(a)} className="text-gray-400 hover:text-blue-600"><Edit2 size={16}/></button>
-                                        <button title="Eliminar" onClick={() => deleteAttendee(a.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={16}/></button>
+                                        <button title="Editar" onClick={() => startEditAttendee(a)} className="text-gray-400 hover:text-blue-600"><Edit2 size={16} /></button>
+                                        <button title="Eliminar" onClick={() => deleteAttendee(a.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={16} /></button>
                                       </div>
                                     )}
                                   </td>
