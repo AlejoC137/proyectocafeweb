@@ -17,6 +17,7 @@ function InscripcionEvento() {
   const [submitting, setSubmitting] = useState(false);
   const [evento, setEvento] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [currentAttendeesCount, setCurrentAttendeesCount] = useState(0);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -45,6 +46,16 @@ function InscripcionEvento() {
 
         if (error) throw error;
         setEvento(data);
+
+        // Fetch attendees count
+        const { count, error: countError } = await supabase
+          .from("attendees")
+          .select("*", { count: "exact", head: true })
+          .eq("evento_id", id);
+          
+        if (!countError) {
+          setCurrentAttendeesCount(count || 0);
+        }
 
         // Parsear servicios para ver si hay alimentos seleccionados
         let hasFood = false;
@@ -192,6 +203,26 @@ function InscripcionEvento() {
         <div className="flex flex-col items-center justify-center p-12 w-full text-center">
           <h2 className="text-2xl font-bold mb-4">El evento no existe o fue eliminado.</h2>
           <Button onClick={() => navigate("/Home")}>Volver al Inicio</Button>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  const isFull = evento.numeroPersonas && currentAttendeesCount >= parseInt(evento.numeroPersonas, 10);
+
+  if (isFull && !success) {
+    return (
+      <PageLayout title="Evento Agotado">
+        <div className="flex flex-col items-center justify-center p-12 w-full max-w-2xl mx-auto text-center">
+          <div className="bg-red-50 p-8 rounded-2xl shadow-sm border border-red-200">
+            <h2 className="text-3xl font-bold text-red-700 mb-4">¡Cupos Agotados!</h2>
+            <p className="text-lg text-gray-700 mb-6">
+              Lo sentimos, el evento <strong>{evento.nombreES}</strong> ya ha alcanzado su límite máximo de {evento.numeroPersonas} inscripciones.
+            </p>
+            <Button onClick={() => navigate("/Home")} className="bg-gray-800 hover:bg-gray-900 border-none text-white">
+              Explorar otros eventos
+            </Button>
+          </div>
         </div>
       </PageLayout>
     );

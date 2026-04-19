@@ -138,7 +138,15 @@ function AgendaModal() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Restricción para forzar que numeroPersonas sea estrictamente numérico
+    if (name === "numeroPersonas") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      setFormData((prev) => ({ ...prev, [name]: numericValue }));
+      return;
+    }
+    
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleServicioToggle = (servicioKey) => {
@@ -390,8 +398,14 @@ function AgendaModal() {
                         </div>
                       </div>
 
-                      <div className="space-y-2"><Label>Link de Inscripción externo</Label><input name="linkInscripcion" type="url" value={formData.linkInscripcion} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                      <div className="space-y-2"><Label>Número de Personas</Label><input name="numeroPersonas" type="number" min="1" value={formData.numeroPersonas} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2">
+                        <Label>Link de Inscripción externo</Label>
+                        <input name="linkInscripcion" type="url" value={formData.linkInscripcion} onChange={handleInputChange} className="w-full p-2 border rounded-md" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Número de Personas</Label>
+                        <input name="numeroPersonas" type="text" inputMode="numeric" pattern="[0-9]*" value={formData.numeroPersonas} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="Ej: 50" />
+                      </div>
                       <div className="space-y-2"><Label>Descripción (Pública)</Label><textarea name="decripcion" value={formData.decripcion} onChange={handleInputChange} className="w-full p-2 border rounded-md" rows="2" /></div>
                     </div>
                     <div className="space-y-2">
