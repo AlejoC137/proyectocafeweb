@@ -72,9 +72,6 @@ export default async function handler(req, res) {
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:image" content="${imageUrl}" />
           
-          <!-- Redirección diferida para asegurar que los bots lean el Meta antes de huir -->
-          <meta http-equiv="refresh" content="1; url=/inscripcion/${id}">
-          
           <!-- Redirección ultra rápida vía JavaScript -->
           <script>
             window.location.replace("/inscripcion/${id}");
