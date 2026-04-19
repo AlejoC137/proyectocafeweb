@@ -163,7 +163,7 @@ function StaffPortal() {
       variant: "default"
     },
     {
-      label: "Eventos",
+      label: "Eventos Manager",
       icon: "🎟️",
       onClick: () => navigate("/Agenda"),
       variant: "default"
