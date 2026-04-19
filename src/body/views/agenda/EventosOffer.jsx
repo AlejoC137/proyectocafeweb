@@ -351,7 +351,7 @@ export default function EventosOffer() {
                                                 }}
                                                 className={`flex-1 flex items-center justify-center gap-2 bg-sage-green/20 border-[3px] ${borderColor} py-3 px-4 text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all`}
                                             >
-                                                <Share2 size={16} strokeWidth={3} /> {copiedShare ? '¡COPIADO!' : 'COMPARTIR'}
+
                                             </button>
                                         </div>
                                     </div>
