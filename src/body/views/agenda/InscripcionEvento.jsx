@@ -267,18 +267,23 @@ function InscripcionEvento() {
 
   return (
     <PageLayout>
-      <div className="max-w-3xl mx-auto p-0 md:p-4 w-full">
-        <Card className="shadow-2xl border-0 overflow-hidden rounded-none md:rounded-2xl">
+      <div className="max-w-5xl mx-auto p-0 md:p-8 w-full">
+        <Card className="shadow-2xl border-0 overflow-hidden rounded-none md:rounded-2xl flex flex-col md:flex-row">
+          
+          {/* Lado Izquierdo: Imagen del Evento */}
           {evento.bannerIMG && (
-            <div className="w-full bg-white flex items-center justify-center border-b">
+            <div className="w-full md:w-5/12 bg-gray-50 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 p-0">
               <img 
                 src={evento.bannerIMG} 
                 alt={`Banner de ${evento.nombreES}`} 
-                className="w-full h-auto object-contain" 
+                className="w-full h-auto md:h-full object-contain md:object-cover" 
               />
             </div>
           )}
-          <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-8">
+
+          {/* Lado Derecho: Formulario y Detalles */}
+          <div className="w-full flex-1 flex flex-col">
+            <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-8">
             <div className="flex items-center gap-3 mb-2">
               <Calendar size={28} />
               <CardTitle className="text-3xl">{evento.nombreES}</CardTitle>
@@ -459,6 +464,7 @@ function InscripcionEvento() {
               </div>
             </form>
           </CardContent>
+          </div>
         </Card>
       </div>
     </PageLayout>
