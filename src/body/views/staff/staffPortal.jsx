@@ -175,6 +175,12 @@ function StaffPortal() {
       variant: "default"
     },
     {
+      label: "Eventos Offer",
+      icon: "🍿",
+      onClick: () => navigate("/EventosOffer"),
+      variant: "default"
+    },
+    {
       label: "Codigos de Barra",
       icon: "🏷️",
       onClick: () => navigate("/Inventario/BarcodeManager"),

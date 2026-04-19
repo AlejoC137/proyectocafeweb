@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Info, User, UserCheck } from "lucide-react";
+import { Calendar, Info, User, UserCheck, Instagram } from "lucide-react";
 import supabase from "@/config/supabaseClient";
 import PageLayout from "@/components/ui/page-layout";
 import { AGENDA, USER_PREFERENCES } from "@/redux/actions-types";
@@ -367,12 +367,36 @@ function InscripcionEvento() {
 
         {/* Lado Izquierdo: Imagen del Evento (Fija, sin scroll) */}
         {evento.bannerIMG && (
-          <div className="hidden md:flex md:w-5/12 bg-white rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 h-full">
-            <img
-              src={evento.bannerIMG}
-              alt={evento.nombreES}
-              className="w-full h-full object-cover"
-            />
+          <div className="hidden md:flex md:w-5/12 flex-col bg-white rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 h-full">
+            <div className="flex-1 overflow-hidden">
+              <img
+                src={evento.bannerIMG}
+                alt={evento.nombreES}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            
+            {/* Botones Sociales Desktop */}
+            <div className="p-6 bg-white border-t border-gray-100 flex flex-wrap gap-4">
+              {evento.instagramAliado && (
+                <a
+                  href={`https://instagram.com/${evento.instagramAliado.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-pink-100 border-2 border-[#1F2937] px-4 py-3 rounded-2xl font-bold text-sm hover:translate-y-[-2px] transition-transform shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] active:translate-y-[2px] active:shadow-none"
+                >
+                  <Instagram size={18} strokeWidth={3} /> {evento.instagramAliado}
+                </a>
+              )}
+              <a
+                href="https://instagram.com/proyecto__cafe"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 bg-[#ff6600]/10 border-2 border-[#ff6600] px-4 py-3 rounded-2xl font-bold text-sm hover:translate-y-[-2px] transition-transform shadow-[4px_4px_0px_0px_rgba(255,102,0,0.3)] active:translate-y-[2px] active:shadow-none"
+              >
+                <Instagram size={18} strokeWidth={3} /> @proyecto__cafe
+              </a>
+            </div>
           </div>
         )}
 
@@ -403,6 +427,30 @@ function InscripcionEvento() {
                   {evento.fecha} | {evento.horaInicio} - {evento.horaFinal}
                 </CardDescription>
               </CardHeader>
+
+              {/* Redes Sociales en Móvil */}
+              <div className="block md:hidden px-6 py-4 bg-gray-50 border-b border-gray-100">
+                <div className="flex flex-wrap gap-3">
+                  {evento.instagramAliado && (
+                    <a
+                      href={`https://instagram.com/${evento.instagramAliado.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 bg-pink-50 border-2 border-pink-200 px-3 py-2 rounded-xl font-bold text-xs"
+                    >
+                      <Instagram size={14} /> {evento.instagramAliado}
+                    </a>
+                  )}
+                  <a
+                    href="https://instagram.com/proyecto__cafe"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 bg-orange-50 border-2 border-orange-200 px-3 py-2 rounded-xl font-bold text-xs"
+                  >
+                    <Instagram size={14} /> @proyecto__cafe
+                  </a>
+                </div>
+              </div>
 
               <CardContent className="p-6 md:p-8">
                 {!isFree && (

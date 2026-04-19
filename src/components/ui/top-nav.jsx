@@ -102,7 +102,7 @@ export default function TopNav() {
   };
 
   const path = location.pathname.toLowerCase();
-  const hideDropdown = path === "/menuview" || path === "/eventosoffer" || path.startsWith('/evento/') || path.startsWith('/inscripcion/');
+  const hideDropdown = path === "/menuview" || path === "/eventosoffer" || path === "/userportal" || path.startsWith('/evento/') || path.startsWith('/inscripcion/');
 
   const allTabs = [
     { label: "Portal Staff", path: "/" },

@@ -44,6 +44,7 @@ function AgendaModal() {
     fecha: "", horaInicio: "", horaFinal: "", nombreES: "", nombreEN: "",
     nombreCliente: "", autores: "", valor: "", bannerIMG: "", linkInscripcion: "",
     infoAdicional: "", telefonoCliente: "", decripcion: "", emailCliente: "", numeroPersonas: 1,
+    instagramAliado: "",
   });
 
   // Estado para servicios
@@ -93,6 +94,7 @@ function AgendaModal() {
           telefonoCliente: data.telefonoCliente || "", numeroPersonas: data.numeroPersonas || 1, bannerIMG: data.bannerIMG || "",
           linkInscripcion: data.linkInscripcion || "", infoAdicional: data.infoAdicional || "", valor: data.valor || "",
           autores: data.autores || "", nombreEN: data.nombreEN || "", decripcion: data.decripcion || data.descripcion || "",
+          instagramAliado: data.instagramAliado || "",
         });
 
         const parseServiciosToState = (raw) => {
@@ -259,6 +261,7 @@ function AgendaModal() {
       nombreEN: formData.nombreEN || "", autores: formData.autores || "", valor: formData.valor || "", bannerIMG: formData.bannerIMG || "",
       linkInscripcion: formData.linkInscripcion || "", infoAdicional: formData.infoAdicional || "", decripcion: formData.decripcion || "",
       emailCliente: formData.emailCliente || "", telefonoCliente: formData.telefonoCliente || "", numeroPersonas: parseInt(formData.numeroPersonas) || 1,
+      instagramAliado: formData.instagramAliado || "",
       servicios: JSON.stringify(buildServiciosForSupabase(servicios)),
       preguntas_personalizadas: preguntas // Guardamos las preguntas dinámicas
     };
@@ -392,13 +395,14 @@ function AgendaModal() {
                   {/* Detalles del Administrador / Auxiliares */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <Users className="text-blue-600" size={20} /> Información de Contacto / Extras
+                       <Users className="text-blue-600" size={20} /> Información del Aliado / Organizador
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2"><Label>Nombre del Cliente</Label><input name="nombreCliente" type="text" value={formData.nombreCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                      <div className="space-y-2"><Label>Email Cliente</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                      <div className="space-y-2"><Label>Teléfono Cliente</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                      <div className="space-y-2"><Label>Autores/Organizadores</Label><input name="autores" type="text" value={formData.autores} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Nombre del Aliado</Label><input name="nombreCliente" type="text" value={formData.nombreCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Email del Aliado</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Teléfono del Aliado</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      <div className="space-y-2"><Label>Instagram del Aliado</Label><input name="instagramAliado" type="text" value={formData.instagramAliado} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="@usuario" /></div>
+                      <div className="space-y-2"><Label>Organizadores Secundarios</Label><input name="autores" type="text" value={formData.autores} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
 
                       <div className="space-y-2">
                         <Label>Imagen Banner del Evento</Label>
