@@ -25,7 +25,7 @@ import supabase from "@/config/supabaseClient";
 export default function EventosOffer() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const allAgenda = useSelector((state) => state.allAgenda || []);
 
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -85,6 +85,14 @@ export default function EventosOffer() {
     const handleEventClick = (evento) => {
         setSelectedEvent(evento);
         setIsModalOpen(true);
+        setSearchParams({ id: evento._id.substring(0, 8) });
+    };
+
+    const handleModalClose = (open) => {
+        setIsModalOpen(open);
+        if (!open) {
+            setSearchParams({});
+        }
     };
 
     const getServiciosFlags = (servicios) => {
@@ -231,7 +239,7 @@ export default function EventosOffer() {
                 )}
 
                 {/* Modal Estilo Neobrutalista */}
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
                     <DialogContent className={`max-w-6xl p-0 overflow-hidden rounded-none border-[3px] ${borderColor} shadow-[10px_10px_0px_0px_rgba(31,41,55,1)] bg-white`}>
                         {selectedEvent && (
                             <div className="flex flex-col md:flex-row max-h-[90vh]">
