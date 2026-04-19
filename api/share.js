@@ -25,8 +25,13 @@ export default async function handler(req, res) {
     let resolveId = id;
     if (id.length < 36) {
       const { data: allIds } = await supabase.from("Agenda").select('_id');
-      const match = allIds?.find(e => e._id.startsWith(id));
+      const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(id.toLowerCase()));
       if (match) resolveId = match._id;
+    }
+
+    if (resolveId.length < 36) {
+       // Si no pudo resolver el ID, redirige directo para que el front-end maneje el NotFound. Esto previene un crash 400 del servidor.
+       return res.redirect(302, `/inscripcion/${id}`);
     }
 
     const { data: evento, error } = await supabase
@@ -58,12 +63,17 @@ export default async function handler(req, res) {
           <meta property="og:title" content="🎟️ ${title}" />
           <meta property="og:description" content="${description}" />
           <meta property="og:image" content="${imageUrl}" />
-          <!-- Recomienda a WhatsApp que muestre una tarjeta grande -->
-          <meta name="twitter:card" content="summary_large_image" />
+          <meta property="og:image:secure_url" content="${imageUrl}" />
+          <meta property="og:image:alt" content="Banner del Evento" />
+          <meta property="og:url" content="https://proyectocafeweb.vercel.app/api/share?id=${id}" />
           <meta property="og:type" content="website" />
           
-          <!-- Redirección para humanos y robots ignorantes de JS -->
-          <meta http-equiv="refresh" content="0; url=/inscripcion/${id}">
+          <!-- Recomienda a WhatsApp/Twitter que muestre una tarjeta grande -->
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:image" content="${imageUrl}" />
+          
+          <!-- Redirección diferida para asegurar que los bots lean el Meta antes de huir -->
+          <meta http-equiv="refresh" content="1; url=/inscripcion/${id}">
           
           <!-- Redirección ultra rápida vía JavaScript -->
           <script>

@@ -42,11 +42,17 @@ function InscripcionEvento() {
         let resolveId = id;
         if (id.length < 36) {
           const { data: allIds } = await supabase.from(AGENDA).select('_id');
-          const match = allIds?.find(e => e._id.startsWith(id));
+          const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(id.toLowerCase()));
           if (match) {
              resolveId = match._id;
              setRealId(match._id);
+          } else {
+             throw new Error(`Enlace roto: Evento corto no hallado (${id})`);
           }
+        }
+
+        if (resolveId.length < 36) {
+             throw new Error("ID inválido detectado"); // Previene choque DB 400
         }
 
         const { data, error } = await supabase

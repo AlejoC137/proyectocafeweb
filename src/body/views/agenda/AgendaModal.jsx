@@ -61,14 +61,21 @@ function AgendaModal() {
       setLoading(true);
       try {
         let resolveId = id;
-        // Búsqueda inteligente: si el id es corto, buscamos a qué UUID pertenece
         if (id.length < 36) {
-          const { data: allIds } = await supabase.from(AGENDA).select('_id');
-          const match = allIds?.find(e => e._id.startsWith(id));
+          const { data: allIds, error: idsErr } = await supabase.from(AGENDA).select('_id');
+          if (idsErr) throw idsErr;
+          
+          const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(id.toLowerCase()));
           if (match) {
             resolveId = match._id;
             setRealId(match._id);
+          } else {
+             throw new Error(`No se encontró un evento que coincida con el ID corto: ${id}`);
           }
+        }
+
+        if (resolveId.length < 36) {
+            throw new Error("Invalid UUID format resolved");
         }
 
         const { data, error } = await supabase.from(AGENDA).select("*").eq("_id", resolveId).single();
@@ -140,15 +147,19 @@ function AgendaModal() {
       setLoadingAttendees(true);
       const fetchAttendees = async () => {
         let resolveId = realId;
-        // Misma lógica de búsqueda inteligente por si realId no se ha establecido todavía (condición de carrera)
         if (resolveId.length < 36) {
           const { data: allIds } = await supabase.from(AGENDA).select('_id');
-          const match = allIds?.find(e => e._id.startsWith(resolveId));
-          if (match) resolveId = match._id;
+          const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(resolveId.toLowerCase()));
+          if (match) {
+            resolveId = match._id;
+            setRealId(resolveId); // Actulizamos local state también por precaución
+          }
         }
 
-        const { data, error } = await supabase.from('attendees').select('*').eq('evento_id', resolveId);
-        if (!error && data) setAttendees(data);
+        if (resolveId.length >= 36) {
+          const { data, error } = await supabase.from('attendees').select('*').eq('evento_id', resolveId);
+          if (!error && data) setAttendees(data);
+        }
         setLoadingAttendees(false);
       };
       fetchAttendees();
