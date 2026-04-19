@@ -122,15 +122,15 @@ function InscripcionEvento() {
 
   const handleLoginSuccess = (user) => {
     setLoggedUser(user);
-    
+
     let dieta = "";
     if (user.userPreferences) {
       try {
-        const parsed = typeof user.userPreferences === 'string' 
-          ? JSON.parse(user.userPreferences) 
+        const parsed = typeof user.userPreferences === 'string'
+          ? JSON.parse(user.userPreferences)
           : user.userPreferences;
         dieta = parsed.Notas || "";
-      } catch (e) {}
+      } catch (e) { }
     }
 
     setFormData(prev => ({
@@ -216,10 +216,10 @@ function InscripcionEvento() {
           // If user already exists in Auth, we might still want to try creating preference record 
           // or just link if they share email. For simplicity, we just continue if error is 'already exists'.
           if (!authError.message.includes("already registered")) {
-             alert("Hubo un error al crear tu cuenta: " + authError.message);
+            alert("Hubo un error al crear tu cuenta: " + authError.message);
           }
         }
-        
+
         if (authData?.user) {
           authUserId = authData.user.id;
         }
@@ -234,7 +234,7 @@ function InscripcionEvento() {
 
         if (!existingPref) {
           // Create new preference record
-          const newPrefId = authUserId || crypto.randomUUID(); 
+          const newPrefId = authUserId || crypto.randomUUID();
           const { error: prefError } = await supabase
             .from("USER_PREFERENCES")
             .insert([{
@@ -327,21 +327,21 @@ function InscripcionEvento() {
       <PageLayout title="¡Inscripción Exitosa!">
         <div className="flex flex-col items-center justify-center p-12 w-full max-w-2xl mx-auto text-center h-[70vh]">
           <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-sage-green/10 backdrop-blur-sm relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sage-green to-emerald-500"></div>
-             
-             <div className="bg-sage-green/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <UserCheck className="w-10 h-10 text-sage-green" />
-             </div>
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sage-green to-emerald-500"></div>
+
+            <div className="bg-sage-green/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <UserCheck className="w-10 h-10 text-sage-green" />
+            </div>
 
             <h2 className="text-4xl font-black text-not-black mb-4 font-SpaceGrotesk">¡Inscripción Exitosa!</h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Te has inscrito correctamente <span className="text-sage-green font-black">{formData.nombre}</span>. 
+              Te has inscrito correctamente <span className="text-sage-green font-black">{formData.nombre}</span>.
               <br />
               <span className="text-sm font-medium mt-4 block text-gray-400">
                 Revisa en tu cuenta el estado de tu inscripción y detalles del evento.
               </span>
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button onClick={() => navigate("/UserPortal")} className="bg-sage-green hover:bg-sage-green/90 text-white px-8 py-6 rounded-2xl font-bold">
                 Ver Mi Cuenta
@@ -375,19 +375,20 @@ function InscripcionEvento() {
                 className="w-full h-full object-cover"
               />
             </div>
-            
+
             {/* Botones Sociales Desktop */}
             <div className="p-6 bg-white border-t border-gray-100 flex flex-wrap gap-4">
-              {evento.instagramAliado && (
+              {Array.isArray(evento.instagramsAliados) && evento.instagramsAliados.map((handle, idx) => (
                 <a
-                  href={`https://instagram.com/${evento.instagramAliado.replace('@', '')}`}
+                  key={idx}
+                  href={`https://instagram.com/${handle.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 bg-pink-100 border-2 border-[#1F2937] px-4 py-3 rounded-2xl font-bold text-sm hover:translate-y-[-2px] transition-transform shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] active:translate-y-[2px] active:shadow-none"
+                  className="flex-1 flex items-center justify-center gap-2 bg-pink-100 border-2 border-[#1F2937] px-4 py-3 rounded-2xl font-bold text-sm hover:translate-y-[-2px] transition-transform shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] active:translate-y-[2px] active:shadow-none min-w-[140px]"
                 >
-                  <Instagram size={18} strokeWidth={3} /> {evento.instagramAliado}
+                  <Instagram size={18} strokeWidth={3} /> {handle}
                 </a>
-              )}
+              ))}
               <a
                 href="https://instagram.com/proyecto__cafe"
                 target="_blank"
@@ -424,23 +425,24 @@ function InscripcionEvento() {
                   <CardTitle className="text-2xl md:text-3xl">{evento.nombreES}</CardTitle>
                 </div>
                 <CardDescription className="text-white/90 text-sm md:text-base flex-shrink-0 md:text-right m-0">
-                  {evento.fecha} | {evento.horaInicio} - {evento.horaFinal}
+                  {evento.fecha ? new Date(evento.fecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }) : evento.fecha} | {evento.horaInicio} - {evento.horaFinal}
                 </CardDescription>
               </CardHeader>
 
               {/* Redes Sociales en Móvil */}
               <div className="block md:hidden px-6 py-4 bg-gray-50 border-b border-gray-100">
                 <div className="flex flex-wrap gap-3">
-                  {evento.instagramAliado && (
+                  {Array.isArray(evento.instagramsAliados) && evento.instagramsAliados.map((handle, idx) => (
                     <a
-                      href={`https://instagram.com/${evento.instagramAliado.replace('@', '')}`}
+                      key={idx}
+                      href={`https://instagram.com/${handle.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 bg-pink-50 border-2 border-pink-200 px-3 py-2 rounded-xl font-bold text-xs"
+                      className="flex-1 flex items-center justify-center gap-2 bg-pink-50 border-2 border-pink-200 px-3 py-2 rounded-xl font-bold text-xs min-w-[100px]"
                     >
-                      <Instagram size={14} /> {evento.instagramAliado}
+                      <Instagram size={14} /> {handle}
                     </a>
-                  )}
+                  ))}
                   <a
                     href="https://instagram.com/proyecto__cafe"
                     target="_blank"
@@ -567,7 +569,7 @@ function InscripcionEvento() {
                         />
                         <Label htmlFor="acepta_nuevos_eventos" className="text-xs cursor-pointer">Enterarme de futuros eventos.</Label>
                       </div>
-                      
+
                       {!loggedUser && (
                         <div className="flex items-center space-x-2">
                           <Checkbox
@@ -613,7 +615,7 @@ function InscripcionEvento() {
                   <User size={20} /> Inscribirme como Usuario
                 </Button>
               )}
-              
+
               {loggedUser && (
                 <div className="flex-1 flex items-center justify-center gap-2 bg-sage-green/10 text-sage-green rounded-2xl px-4 py-2 border border-sage-green/20">
                   <UserCheck size={18} />
@@ -624,9 +626,8 @@ function InscripcionEvento() {
               <Button
                 type="submit"
                 disabled={submitting || !isFormValid}
-                className={`py-7 text-white rounded-2xl font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl ${
-                  loggedUser ? 'flex-[2]' : 'flex-1'
-                } ${isFormValid ? 'bg-gradient-to-r from-[#ff6600] to-[#ff9933] hover:scale-[1.01]' : 'bg-gray-300'}`}
+                className={`py-7 text-white rounded-2xl font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl ${loggedUser ? 'flex-[2]' : 'flex-1'
+                  } ${isFormValid ? 'bg-gradient-to-r from-[#ff6600] to-[#ff9933] hover:scale-[1.01]' : 'bg-gray-300'}`}
               >
                 {submitting ? "Procesando..." : "Finalizar Inscripción"}
               </Button>
@@ -634,10 +635,10 @@ function InscripcionEvento() {
           </form>
         </Card>
 
-        <LoginPortalDialog 
-          open={isLoginOpen} 
-          onOpenChange={setIsLoginOpen} 
-          onLoginSuccess={handleLoginSuccess} 
+        <LoginPortalDialog
+          open={isLoginOpen}
+          onOpenChange={setIsLoginOpen}
+          onLoginSuccess={handleLoginSuccess}
         />
       </div>
     </PageLayout>

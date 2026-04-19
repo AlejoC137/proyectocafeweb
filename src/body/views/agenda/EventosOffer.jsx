@@ -15,6 +15,7 @@ import {
     X,
     Play,
     Ticket,
+    Instagram,
     Calendar as CalendarIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -147,7 +148,7 @@ export default function EventosOffer() {
                 <div className={`flex flex-wrap justify-between items-center mb-10 gap-4 bg-white border-[3px] ${borderColor} p-4 rounded-none shadow-[6px_6px_0px_0px_rgba(31,41,55,1)]`}>
                     <div className="flex items-center gap-4">
                         <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                            {monthName}
+                            EVENTOS {monthName}
                         </h2>
                     </div>
 
@@ -194,8 +195,9 @@ export default function EventosOffer() {
                                         )}
 
                                         {/* Badge de Fecha (Showtime) */}
-                                        <div className={`absolute top-4 left-4 bg-yellow-100 border-[3px] ${borderColor} px-3 py-1 font-black text-sm uppercase shadow-[3px_3px_0px_0px_rgba(31,41,55,1)]`}>
-                                            {event.fecha ? new Date(event.fecha + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Next'}
+                                        <div className={`absolute top-4 left-4 bg-yellow-100 border-[3px] ${borderColor} px-3 py-1 font-black text-[10px] sm:text-xs uppercase shadow-[3px_3px_0px_0px_rgba(31,41,55,1)] leading-tight flex flex-col items-center`}>
+                                            <span className="opacity-60">{event.fecha ? new Date(event.fecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'short' }) : ''}</span>
+                                            <span>{event.fecha ? new Date(event.fecha + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Next'}</span>
                                         </div>
 
                                         {hasFood && (
@@ -260,7 +262,7 @@ export default function EventosOffer() {
                                         <div className={`p-4 border-[3px] ${borderColor} bg-pink-100 shadow-[4px_4px_0px_0px_rgba(31,41,55,1)]`}>
                                             <p className="text-[10px] font-black uppercase opacity-50 mb-1">Fecha y Hora</p>
                                             <p className="text-lg font-black uppercase flex items-center gap-2">
-                                                <CalendarIcon size={18} strokeWidth={3} /> {selectedEvent.fecha} <span className="opacity-30">|</span> {selectedEvent.horaInicio}
+                                                <CalendarIcon size={18} strokeWidth={3} /> {selectedEvent.fecha ? new Date(selectedEvent.fecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }) : selectedEvent.fecha} <span className="opacity-30">|</span> {selectedEvent.horaInicio}
                                             </p>
                                         </div>
                                         <div className={`p-4 border-[3px] ${borderColor} bg-yellow-100 shadow-[4px_4px_0px_0px_rgba(31,41,55,1)]`}>
@@ -307,6 +309,29 @@ export default function EventosOffer() {
                                         >
                                             ¡INSCRIBIRME!
                                         </button>
+
+                                        {/* Redes Sociales */}
+                                        <div className="flex flex-wrap gap-4 pt-2">
+                                            {Array.isArray(selectedEvent.instagramsAliados) && selectedEvent.instagramsAliados.map((handle, idx) => (
+                                                <a
+                                                    key={idx}
+                                                    href={`https://instagram.com/${handle.replace('@', '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`flex-1 flex items-center justify-center gap-2 bg-pink-100 border-[3px] ${borderColor} py-3 px-4 text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all`}
+                                                >
+                                                    <Instagram size={16} strokeWidth={3} /> {handle}
+                                                </a>
+                                            ))}
+                                            <a
+                                                href="https://instagram.com/proyecto__cafe"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={`flex-1 flex items-center justify-center gap-2 bg-[#ff6600]/10 border-[3px] border-[#ff6600] py-3 px-4 text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(255,102,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all`}
+                                            >
+                                                <Instagram size={16} strokeWidth={3} /> @proyecto__cafe
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

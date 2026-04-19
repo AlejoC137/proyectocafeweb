@@ -44,8 +44,10 @@ function AgendaModal() {
     fecha: "", horaInicio: "", horaFinal: "", nombreES: "", nombreEN: "",
     nombreCliente: "", autores: "", valor: "", bannerIMG: "", linkInscripcion: "",
     infoAdicional: "", telefonoCliente: "", decripcion: "", emailCliente: "", numeroPersonas: 1,
-    instagramAliado: "",
+    instagramsAliados: [],
   });
+
+  const [tempIG, setTempIG] = useState("");
 
   // Estado para servicios
   const [servicios, setServicios] = useState({
@@ -94,7 +96,7 @@ function AgendaModal() {
           telefonoCliente: data.telefonoCliente || "", numeroPersonas: data.numeroPersonas || 1, bannerIMG: data.bannerIMG || "",
           linkInscripcion: data.linkInscripcion || "", infoAdicional: data.infoAdicional || "", valor: data.valor || "",
           autores: data.autores || "", nombreEN: data.nombreEN || "", decripcion: data.decripcion || data.descripcion || "",
-          instagramAliado: data.instagramAliado || "",
+          instagramsAliados: Array.isArray(data.instagramsAliados) ? data.instagramsAliados : (data.instagramsAliados ? [data.instagramsAliados] : []),
         });
 
         const parseServiciosToState = (raw) => {
@@ -261,7 +263,7 @@ function AgendaModal() {
       nombreEN: formData.nombreEN || "", autores: formData.autores || "", valor: formData.valor || "", bannerIMG: formData.bannerIMG || "",
       linkInscripcion: formData.linkInscripcion || "", infoAdicional: formData.infoAdicional || "", decripcion: formData.decripcion || "",
       emailCliente: formData.emailCliente || "", telefonoCliente: formData.telefonoCliente || "", numeroPersonas: parseInt(formData.numeroPersonas) || 1,
-      instagramAliado: formData.instagramAliado || "",
+      instagramsAliados: formData.instagramsAliados || [],
       servicios: JSON.stringify(buildServiciosForSupabase(servicios)),
       preguntas_personalizadas: preguntas // Guardamos las preguntas dinámicas
     };
@@ -280,6 +282,19 @@ function AgendaModal() {
       console.error("Error al guardar evento:", error);
       alert("Error al guardar el evento");
     }
+  };
+
+  const addInstagramHandle = () => {
+    if (!tempIG.trim()) return;
+    const handle = tempIG.trim().startsWith('@') ? tempIG.trim() : `@${tempIG.trim()}`;
+    if (!formData.instagramsAliados.includes(handle)) {
+      setFormData(prev => ({ ...prev, instagramsAliados: [...prev.instagramsAliados, handle] }));
+    }
+    setTempIG("");
+  };
+
+  const removeInstagramHandle = (handle) => {
+    setFormData(prev => ({ ...prev, instagramsAliados: prev.instagramsAliados.filter(h => h !== handle) }));
   };
 
   // Manejo de Preguntas Personalizadas
@@ -401,8 +416,36 @@ function AgendaModal() {
                       <div className="space-y-2"><Label>Nombre del Aliado</Label><input name="nombreCliente" type="text" value={formData.nombreCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
                       <div className="space-y-2"><Label>Email del Aliado</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
                       <div className="space-y-2"><Label>Teléfono del Aliado</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                      <div className="space-y-2"><Label>Instagram del Aliado</Label><input name="instagramAliado" type="text" value={formData.instagramAliado} onChange={handleInputChange} className="w-full p-2 border rounded-md" placeholder="@usuario" /></div>
-                      <div className="space-y-2"><Label>Organizadores Secundarios</Label><input name="autores" type="text" value={formData.autores} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                      
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Instagrams de los Aliados</Label>
+                        <div className="flex gap-2 mb-2">
+                          <input 
+                            type="text" 
+                            value={tempIG} 
+                            onChange={(e) => setTempIG(e.target.value)} 
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())}
+                            className="flex-1 p-2 border rounded-md" 
+                            placeholder="@usuario" 
+                          />
+                          <Button type="button" onClick={addInstagramHandle} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                            <Plus size={16} className="mr-1" /> Agregar
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {formData.instagramsAliados.map((handle, idx) => (
+                            <div key={idx} className="flex items-center gap-1 bg-pink-50 text-pink-700 px-3 py-1 rounded-full border border-pink-200 text-sm font-semibold">
+                              {handle}
+                              <button type="button" onClick={() => removeInstagramHandle(handle)} className="hover:text-pink-900 ml-1">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                          {formData.instagramsAliados.length === 0 && <span className="text-xs text-gray-400 italic">No hay Instagrams agregados todavía.</span>}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2 pt-2"><Label>Organizadores Secundarios</Label><input name="autores" type="text" value={formData.autores} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
 
                       <div className="space-y-2">
                         <Label>Imagen Banner del Evento</Label>
