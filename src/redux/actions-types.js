@@ -44,6 +44,8 @@ export const GET_MODELS_FAILURE = 'GET_MODELS_FAILURE';
 export const UPDATE_MODEL_SUCCESS = 'UPDATE_MODEL_SUCCESS';
 export const CREATE_MODEL_SUCCESS = 'CREATE_MODEL_SUCCESS';
 export const DELETE_MODEL_SUCCESS = 'DELETE_MODEL_SUCCESS';
+
+export const USER_PREFERENCES = 'userPreferences';
 // Areas
 
 export const COCINA = 'COCINA'

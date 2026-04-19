@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Mesa from "./Mesa";
 import MesaBarra from "./MesaBarra";
+import ClientForm from "./ClientForm"; // Added ClientForm
 import Gastos from "../../components/gastos/Gastos";
-import { MENU, ITEMS, PRODUCCION, PROVEE } from "../../../redux/actions-types";
+import { MENU, ITEMS, PRODUCCION, PROVEE, USER_PREFERENCES } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import MenuDelDiaPrint from "./MenuDelDiaPrint";
 import Propina from "./Propina";
 import { Button } from "@/components/ui/button"; // Importamos el botón para consistencia
-import { Eye, UtensilsCrossed } from "lucide-react"; // Iconos para los botones
+import { Eye, UtensilsCrossed, UserPlus } from "lucide-react"; // Iconos para los botones
 
 /**
  * Componente principal para la gestión de ventas, con un diseño modernizado.
@@ -22,6 +23,7 @@ function VentaCompra() {
   const [ventas, setVentas] = useState([]);
   const [showGastos, setShowGastos] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
   const [errorVentas, setErrorVentas] = useState(false);
 
   // Carga las ventas activas (no pagadas) desde Supabase
@@ -56,6 +58,7 @@ function VentaCompra() {
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(PROVEE)),
+          dispatch(getAllFromTable(USER_PREFERENCES)),
         ]);
         // Una vez cargados los datos maestros, cargamos las ventas
         await fetchVentas();
@@ -107,6 +110,14 @@ function VentaCompra() {
           <UtensilsCrossed size={18} />
           {showMenu ? "Ocultar Almuerzo" : "Mostrar Almuerzo"}
         </Button>
+
+        <Button
+          onClick={() => setShowClientForm(!showClientForm)}
+          className={`gap-2 h-10 border-2 font-bold w-full sm:w-auto ${showClientForm ? 'bg-orange-100 border-orange-400 text-orange-800' : 'bg-white border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-800'}`}
+        >
+          <UserPlus size={18} />
+          {showClientForm ? "Ocultar Registro" : "Nuevo Cliente"}
+        </Button>
       </div>
 
       {/* --- Error Alert / Retry --- */}
@@ -128,6 +139,7 @@ function VentaCompra() {
       <div className="space-y-4 mb-2 shrink-0">
         {showMenu && <div className="bg-white rounded-lg shadow-md p-4"><MenuDelDiaPrint /></div>}
         {showGastos && <div className="bg-white rounded-lg shadow-md p-4"><Gastos /></div>}
+        {showClientForm && <div className="animate-in slide-in-from-top-2 duration-300"><ClientForm onClose={() => setShowClientForm(false)} /></div>}
       </div>
 
       {/* --- Contenido Principal (Grid de Mesas) --- */}

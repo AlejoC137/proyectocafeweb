@@ -58,6 +58,9 @@ import StaffDetailView from './body/views/staff/StaffDetailView.jsx';
 import StaffManager from './body/views/staff/StaffManager.jsx';
 import TipsManager from './body/views/staff/TipsManager.jsx';
 import EditarTurnosView from './body/views/staff/EditarTurnosView.jsx';
+import UserManager from './body/views/staff/UserManager.jsx';
+import UserPortal from './body/views/user/UserPortal.jsx';
+import EventosOffer from './body/views/agenda/EventosOffer';
 // import Manager from './body/views/actividades/Manager';
 
 
@@ -162,6 +165,9 @@ function App() {
           <Route path="/CalculoNomina" element={<CalculoNomina />} />
           <Route path="/staff-detail" element={<StaffDetailView />} />
           <Route path="/staff-manager" element={<StaffManager />} />
+           <Route path="/user-manager" element={<UserManager />} />
+          <Route path="/UserPortal" element={<UserPortal />} />
+          <Route path="/EventosOffer" element={<EventosOffer />} />
           <Route path="/staff-details/:cc" element={<StaffDetailView />} />
           <Route path="/staff-manager/:cc" element={<StaffDetailView />} />
           <Route path="/staff-manager/:cc/editar-turnos" element={<EditarTurnosView />} />

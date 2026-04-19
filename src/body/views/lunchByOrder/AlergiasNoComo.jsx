@@ -26,16 +26,16 @@ export default function AlergiasNoComo({ formData, handlePreferenceChange, onNex
             <div key={alergia} className="flex items-center justify-center gap-4">
               <Checkbox
                 id={`allergy-${alergia}`}
-                checked={!!formData.preferenciasUsuario.Alergias[alergia]}
+                checked={!!formData.preferenciasUsuario.Alergies[alergia]}
                 onCheckedChange={(checked) => {
-                  handlePreferenceChange("Alergias", {
-                    ...formData.preferenciasUsuario.Alergias,
+                  handlePreferenceChange("Alergies", {
+                    ...formData.preferenciasUsuario.Alergies,
                     [alergia]: checked,
                   })
                 }}
                 className={checkboxClassName}
               >
-                {!!formData.preferenciasUsuario.Alergias[alergia] && <CheckboxIcon />}
+                {!!formData.preferenciasUsuario.Alergies[alergia] && <CheckboxIcon />}
               </Checkbox>
               <Label htmlFor={`allergy-${alergia}`}>{alergia}</Label>
             </div>

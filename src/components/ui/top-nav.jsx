@@ -38,6 +38,7 @@ const pageTitles = {
   "WORKISUE": { [ESP]: "Tareas", [ENG]: "Tasks" },
   "STAFF-MANAGER": { [ESP]: "Gestión de Empleados", [ENG]: "Employee Management" },
   "MODELOPROYECTO": { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" },
+  "USERPORTAL": { [ESP]: "Portal de Usuario", [ENG]: "User Portal" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -101,7 +102,7 @@ export default function TopNav() {
   };
 
   const path = location.pathname.toLowerCase();
-  const hideDropdown = path === "/menuview" || path.startsWith('/evento/') || path.startsWith('/inscripcion/');
+  const hideDropdown = path === "/menuview" || path === "/eventosoffer" || path.startsWith('/evento/') || path.startsWith('/inscripcion/');
 
   const allTabs = [
     { label: "Portal Staff", path: "/" },

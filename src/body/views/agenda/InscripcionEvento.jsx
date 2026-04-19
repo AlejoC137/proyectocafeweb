@@ -4,14 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Info } from "lucide-react";
+import { Calendar, Info, User, UserCheck } from "lucide-react";
 import supabase from "@/config/supabaseClient";
 import PageLayout from "@/components/ui/page-layout";
-import { AGENDA } from "@/redux/actions-types";
+import { AGENDA, USER_PREFERENCES } from "@/redux/actions-types";
+import LoginPortalDialog from "../user/LoginPortalDialog";
+import { useSelector, useDispatch } from "react-redux";
+import { getAllFromTable } from "@/redux/actions";
 
 function InscripcionEvento() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const allUsers = useSelector((state) => state.allUserPreferences || []);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -19,6 +24,8 @@ function InscripcionEvento() {
   const [success, setSuccess] = useState(false);
   const [currentAttendeesCount, setCurrentAttendeesCount] = useState(0);
   const [realId, setRealId] = useState(id);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [loggedUser, setLoggedUser] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -97,6 +104,46 @@ function InscripcionEvento() {
     fetchEvento();
   }, [id]);
 
+  useEffect(() => {
+    if (allUsers.length === 0) {
+      dispatch(getAllFromTable(USER_PREFERENCES));
+    }
+  }, [dispatch, allUsers.length]);
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userPortalId");
+    if (storedUserId && !loggedUser && allUsers.length > 0) {
+      const user = allUsers.find(u => u._id === storedUserId);
+      if (user) {
+        handleLoginSuccess(user);
+      }
+    }
+  }, [allUsers, loggedUser]);
+
+  const handleLoginSuccess = (user) => {
+    setLoggedUser(user);
+    
+    let dieta = "";
+    if (user.userPreferences) {
+      try {
+        const parsed = typeof user.userPreferences === 'string' 
+          ? JSON.parse(user.userPreferences) 
+          : user.userPreferences;
+        dieta = parsed.Notas || "";
+      } catch (e) {}
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      nombre: user.name || prev.nombre,
+      email: user.email || prev.email,
+      telefono: user.phone ? String(user.phone) : prev.telefono,
+      dieta_especial: dieta || prev.dieta_especial,
+      recordar_usuario: false, // User already has a portal account
+      password: ""
+    }));
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -153,6 +200,7 @@ function InscripcionEvento() {
       let authUserId = null;
 
       if (formData.recordar_usuario && formData.password) {
+        // 1. Create Auth User
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -165,11 +213,56 @@ function InscripcionEvento() {
 
         if (authError) {
           console.error("Error creating user account:", authError);
-          if (!authError.message.includes("email")) {
-            alert("Hubo un error al crear tu cuenta de usuario.");
+          // If user already exists in Auth, we might still want to try creating preference record 
+          // or just link if they share email. For simplicity, we just continue if error is 'already exists'.
+          if (!authError.message.includes("already registered")) {
+             alert("Hubo un error al crear tu cuenta: " + authError.message);
           }
-        } else if (authData?.user) {
+        }
+        
+        if (authData?.user) {
           authUserId = authData.user.id;
+        }
+
+        // 2. Create/Update USER_PREFERENCES record to make it manageble in Portal/CRM
+        // We use email/phone as primary link if _id (uuid) is unknown yet
+        const { data: existingPref } = await supabase
+          .from("USER_PREFERENCES")
+          .select("*")
+          .or(`email.eq.${formData.email},phone.eq.${formData.telefono}`)
+          .single();
+
+        if (!existingPref) {
+          // Create new preference record
+          const newPrefId = authUserId || crypto.randomUUID(); 
+          const { error: prefError } = await supabase
+            .from("USER_PREFERENCES")
+            .insert([{
+              _id: newPrefId,
+              name: formData.nombre,
+              email: formData.email,
+              phone: formData.telefono ? parseInt(formData.telefono) : null,
+              password: formData.password, // Storing in plain text for the portal access as per existing system design
+              loyalty_points: 0,
+              userPreferences: JSON.stringify({
+                Alergies: {},
+                noComo: [],
+                primeDiet: [],
+                Picante: 0,
+                Notas: formData.dieta_especial || ""
+              })
+            }]);
+          if (prefError) console.error("Error creating user preferences:", prefError);
+          authUserId = newPrefId;
+        } else {
+          // If it exists, update password if not set
+          if (!existingPref.password) {
+            await supabase
+              .from("USER_PREFERENCES")
+              .update({ password: formData.password })
+              .eq("_id", existingPref._id);
+          }
+          authUserId = existingPref._id;
         }
       }
 
@@ -233,14 +326,30 @@ function InscripcionEvento() {
     return (
       <PageLayout title="¡Inscripción Exitosa!">
         <div className="flex flex-col items-center justify-center p-12 w-full max-w-2xl mx-auto text-center h-[70vh]">
-          <div className="bg-green-100 p-8 rounded-2xl shadow-sm border border-green-200">
-            <h2 className="text-3xl font-bold text-green-700 mb-4">¡Gracias por inscribirte!</h2>
-            <p className="text-lg text-gray-700 mb-6">
-              Has sido registrado exitosamente para <strong>{evento.nombreES}</strong>.
+          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-sage-green/10 backdrop-blur-sm relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sage-green to-emerald-500"></div>
+             
+             <div className="bg-sage-green/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <UserCheck className="w-10 h-10 text-sage-green" />
+             </div>
+
+            <h2 className="text-4xl font-black text-not-black mb-4 font-SpaceGrotesk">¡Inscripción Exitosa!</h2>
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              Te has inscrito correctamente <span className="text-sage-green font-black">{formData.nombre}</span>. 
+              <br />
+              <span className="text-sm font-medium mt-4 block text-gray-400">
+                Revisa en tu cuenta el estado de tu inscripción y detalles del evento.
+              </span>
             </p>
-            <Button onClick={() => navigate("/Home")} className="bg-[#ff6600]">
-              Volver al Inicio
-            </Button>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button onClick={() => navigate("/UserPortal")} className="bg-sage-green hover:bg-sage-green/90 text-white px-8 py-6 rounded-2xl font-bold">
+                Ver Mi Cuenta
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/Home")} className="px-8 py-6 rounded-2xl font-bold border-gray-200">
+                Volver al Inicio
+              </Button>
+            </div>
           </div>
         </div>
       </PageLayout>
@@ -410,19 +519,22 @@ function InscripcionEvento() {
                         />
                         <Label htmlFor="acepta_nuevos_eventos" className="text-xs cursor-pointer">Enterarme de futuros eventos.</Label>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="recordar_usuario"
-                          checked={formData.recordar_usuario}
-                          onCheckedChange={(v) => handleCheckboxChange("recordar_usuario", v)}
-                        />
-                        <Label htmlFor="recordar_usuario" className="text-sm font-medium cursor-pointer">Crear cuenta para próximos eventos.</Label>
-                      </div>
+                      
+                      {!loggedUser && (
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="recordar_usuario"
+                            checked={formData.recordar_usuario}
+                            onCheckedChange={(v) => handleCheckboxChange("recordar_usuario", v)}
+                          />
+                          <Label htmlFor="recordar_usuario" className="text-sm font-medium cursor-pointer">Crear cuenta para próximos eventos.</Label>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-1 border-t border-gray-200 ">
 
-                      {formData.recordar_usuario && (
+                      {!loggedUser && formData.recordar_usuario && (
                         <div className="mt-1 space-y-1">
                           <Label htmlFor="password">Establecer Contraseña Automática</Label>
                           <input
@@ -442,17 +554,43 @@ function InscripcionEvento() {
             </div>
 
             {/* Botón Final (Fijo, fuera del scroll, habilitado solo si isFormValid) */}
-            <div className="p-1 bg-white border-t border-gray-100 flex-shrink-0">
+            <div className="p-2 md:p-3 bg-white border-t border-gray-100 flex-shrink-0 flex flex-col sm:flex-row gap-2">
+              {!loggedUser && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsLoginOpen(true)}
+                  className="flex-1 py-7 border-sage-green text-sage-green hover:bg-sage-green/5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <User size={20} /> Inscribirme como Usuario
+                </Button>
+              )}
+              
+              {loggedUser && (
+                <div className="flex-1 flex items-center justify-center gap-2 bg-sage-green/10 text-sage-green rounded-2xl px-4 py-2 border border-sage-green/20">
+                  <UserCheck size={18} />
+                  <span className="text-sm font-black truncate">Sesión: {loggedUser.name}</span>
+                </div>
+              )}
+
               <Button
                 type="submit"
                 disabled={submitting || !isFormValid}
-                className="w-full py-6 bg-[#ff6600] hover:bg-[#e65c00] text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className={`py-7 text-white rounded-2xl font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl ${
+                  loggedUser ? 'flex-[2]' : 'flex-1'
+                } ${isFormValid ? 'bg-gradient-to-r from-[#ff6600] to-[#ff9933] hover:scale-[1.01]' : 'bg-gray-300'}`}
               >
-                {submitting ? "Inscribiendo..." : "Finalizar Inscripción"}
+                {submitting ? "Procesando..." : "Finalizar Inscripción"}
               </Button>
             </div>
           </form>
         </Card>
+
+        <LoginPortalDialog 
+          open={isLoginOpen} 
+          onOpenChange={setIsLoginOpen} 
+          onLoginSuccess={handleLoginSuccess} 
+        />
       </div>
     </PageLayout>
   );

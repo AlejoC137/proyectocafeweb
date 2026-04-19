@@ -205,6 +205,12 @@ function StaffPortal() {
     // Botones de administrador
     ...(staffFound.isAdmin ? [
       {
+        label: "Gestión Usuarios",
+        icon: "👥",
+        onClick: () => navigate("/user-manager"),
+        variant: "destructive"
+      },
+      {
         label: "Staff Manager",
         icon: "👥",
         onClick: () => navigate("/staff-manager"),

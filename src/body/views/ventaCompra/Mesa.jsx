@@ -6,7 +6,8 @@ import { crearVenta, actualizarVenta, eliminarVenta } from "../../../redux/actio
 import Pagar from "./Pagar";
 
 // Íconos de lucide-react para acciones en línea de ítems
-import { PlusCircle, MinusCircle, XCircle, BookOpen, Save, CreditCard, Trash2 } from 'lucide-react';
+import { PlusCircle, MinusCircle, XCircle, BookOpen, Save, CreditCard, Trash2, UserPlus, UserCheck, Gift } from 'lucide-react';
+import { USER_PREFERENCES } from "../../../redux/actions-types";
 
 /**
  * Componente final para gestionar una mesa, con formato de moneda local,
@@ -16,13 +17,16 @@ import { PlusCircle, MinusCircle, XCircle, BookOpen, Save, CreditCard, Trash2 } 
  * @param {function} onVentaChange - Callback para notificar al padre sobre cambios.
  */
 function Mesa({ index, ventaActual, onVentaChange }) {
-  const [formData, setFormData] = useState({ Cliente: '', Cajero: '' }); // REMOVED Tip
+  const [formData, setFormData] = useState({ Cliente: '', Cajero: '', clientId: null }); // Added clientId
   const [orderItems, setOrderItems] = useState([]);
   const [ventaId, setVentaId] = useState(null);
   const [buttonState, setButtonState] = useState("save"); // 'save', 'syncing', 'done'
   const [showPagarModal, setShowPagarModal] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [showUserMatches, setShowUserMatches] = useState(false);
 
   const allMenu = useSelector((state) => state.allMenu || []);
+  const allUsers = useSelector((state) => state.allUserPreferences || []);
   const dispatch = useDispatch();
 
   const formatCurrency = (value) => {
@@ -32,9 +36,13 @@ function Mesa({ index, ventaActual, onVentaChange }) {
 
   useEffect(() => {
     if (ventaActual) {
+      const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+      const isLinkedUser = isUuid(ventaActual.Cliente);
+
       setFormData({
-        Cliente: ventaActual.Cliente || '',
+        Cliente: isLinkedUser ? (allUsers.find(u => u._id === ventaActual.Cliente)?.name || ventaActual.Cliente) : (ventaActual.Cliente || ''),
         Cajero: ventaActual.Cajero || '',
+        clientId: isLinkedUser ? ventaActual.Cliente : null,
       });
       try {
         setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
@@ -45,12 +53,38 @@ function Mesa({ index, ventaActual, onVentaChange }) {
       setVentaId(ventaActual._id);
       setButtonState("done");
     } else {
-      setFormData({ Cliente: '', Cajero: '' });
+      setFormData({ Cliente: '', Cajero: '', clientId: null });
       setOrderItems([]);
       setVentaId(null);
       setButtonState("save");
     }
   }, [ventaActual]);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearchTerm) return [];
+    const term = userSearchTerm.toLowerCase();
+    return allUsers.filter(u => 
+      (u.name && u.name.toLowerCase().includes(term)) || 
+      (u.email && u.email.toLowerCase().includes(term)) ||
+      (u.phone && String(u.phone).includes(term))
+    );
+  }, [userSearchTerm, allUsers]);
+
+  const handleUserSelect = (user) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      clientId: user._id, 
+      Cliente: user.name || user.email 
+    }));
+    setUserSearchTerm("");
+    setShowUserMatches(false);
+    setButtonState("save");
+  };
+
+  const currentLinkedUser = useMemo(() => {
+    if (!formData.clientId) return null;
+    return allUsers.find(u => u._id === formData.clientId);
+  }, [formData.clientId, allUsers]);
 
   const totalPago = useMemo(() => {
     const totalItems = orderItems.reduce((acc, item) => acc + (Number(item.Precio) * Number(item.quantity)), 0);
@@ -136,9 +170,14 @@ function Mesa({ index, ventaActual, onVentaChange }) {
     if (buttonState !== 'save' || !window.confirm("¿Confirmar y guardar cambios?")) return;
 
     setButtonState("syncing");
+    
+    // Destructuramos para no enviar 'clientId' que no existe en la tabla de Supabase
+    const { clientId, ...restFormData } = formData;
+
     const ventaData = {
-      ...formData,
-      Tip: 0, // Ensure Tip is 0 just in case backend expects it
+      ...restFormData,
+      Cliente: clientId || formData.Cliente || null, // Guardamos ID si existe, sino el nombre, sino null
+      Tip: 0, 
       Total_Ingreso: totalPago,
       Productos: JSON.stringify(orderItems),
       Mesa: index,
@@ -195,16 +234,56 @@ function Mesa({ index, ventaActual, onVentaChange }) {
           <span className={`h-2.5 w-2.5 rounded-full ${isMesaInUse ? 'bg-green-500' : 'bg-slate-300'}`}></span>
           <h2 className="text-base font-bold text-slate-700">Mesa {index}</h2>
         </div>
-        <div className="w-1/2">
-          <Input
-            type="text"
-            name="Cliente"
-            placeholder="Cliente"
-            value={formData.Cliente}
-            onChange={handleInputChange}
-            className="text-xs h-7 px-2"
-            disabled={!isMesaInUse}
-          />
+        <div className="w-1/2 flex flex-col gap-1">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder={formData.clientId ? formData.Cliente : "Buscar Usuario..."}
+              value={userSearchTerm}
+              onChange={(e) => {
+                setUserSearchTerm(e.target.value);
+                setShowUserMatches(true);
+              }}
+              onFocus={() => setShowUserMatches(true)}
+              className={`text-xs h-7 px-2 ${formData.clientId ? 'bg-blue-50 border-blue-300' : ''}`}
+              disabled={!isMesaInUse}
+            />
+            {formData.clientId && (
+              <button 
+                onClick={() => setFormData(prev => ({ ...prev, clientId: null, Cliente: '' }))}
+                className="absolute right-2 top-1.5 text-slate-400 hover:text-red-500"
+              >
+                <XCircle size={14} />
+              </button>
+            )}
+            
+            {showUserMatches && filteredUsers.length > 0 && (
+              <ul className="absolute bg-white border rounded-sm shadow-xl max-h-40 overflow-y-auto z-[60] w-full mt-0.5 text-xs">
+                {filteredUsers.map((user) => (
+                  <li 
+                    key={user._id} 
+                    onClick={() => handleUserSelect(user)} 
+                    className="p-2 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 flex justify-between items-center"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-bold">{user.name || "Sin nombre"}</span>
+                      <span className="text-[10px] text-slate-400">{user.email}</span>
+                    </div>
+                    <span className="bg-amber-50 text-amber-600 px-1.5 rounded flex items-center gap-0.5 font-bold">
+                      <Gift size={10} /> {user.loyalty_points || 0}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {currentLinkedUser && (
+            <div className="flex items-center gap-1.5 px-1 py-0.5 bg-amber-50 rounded border border-amber-100 text-[10px] font-bold text-amber-700 animate-in fade-in slide-in-from-top-1">
+              <Gift size={10} />
+              <span>{currentLinkedUser.loyalty_points || 0} Pts Acumulados</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -294,7 +373,14 @@ function Mesa({ index, ventaActual, onVentaChange }) {
       )}
 
       {showPagarModal && (
-        <Pagar onClose={() => setShowPagarModal(false)} ventaId={ventaId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
+        <Pagar 
+          onClose={() => setShowPagarModal(false)} 
+          ventaId={ventaId} 
+          total={totalPago} 
+          onPaymentComplete={handlePaymentComplete} 
+          clientId={formData.clientId}
+          productos={orderItems}
+        />
       )}
     </div>
   );

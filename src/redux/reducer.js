@@ -39,6 +39,7 @@ import {
     DELETE_MODEL_SUCCESS,
     // --- FIN: ADICIONES ---
     UPDATE_COMPRA_SUCCESS,
+    USER_PREFERENCES, // Added USER_PREFERENCES
 } from './actions-types';
 
 const initialState = {
@@ -113,6 +114,7 @@ const initialState = {
     selectedProviderId: null, // Estado para guardar el ID del proveedor seleccionado
     orderItems: [],          // Estado para guardar los ítems pedidos
     scrapedData: null,       // Propiedad inicializada para SCRAP
+    allUserPreferences: [],  // Estado para los usuarios
 
     // --- INICIO: ADICIONES DE ESTADO PARA MODELOS ---
     models: [],
@@ -192,6 +194,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allProcedimientos: action.payload };
                 case AGENDA:
                     return { ...state, allAgenda: action.payload };
+                case USER_PREFERENCES:
+                    return { ...state, allUserPreferences: action.payload };
                 default:
                     return state;
             }

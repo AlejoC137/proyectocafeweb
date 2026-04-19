@@ -17,8 +17,10 @@ export default function DietaMeGusta({ formData, handlePreferenceChange, onNext,
   return (
     <div className="flex flex-col items-center justify-center  bg-gray-100">
       <div className="p-6 max-w-md bg-white rounded shadow-md">
-        <h2 className="text-xl font-bold flex items-center gap-2 text-center">🍽️ Dieta Principal</h2>
-        <Select onValueChange={(value) => handlePreferenceChange("dietaPrincipal", value)}>
+        <Select 
+          value={formData.preferenciasUsuario.primeDiet && formData.preferenciasUsuario.primeDiet[0] ? formData.preferenciasUsuario.primeDiet[0] : ""}
+          onValueChange={(value) => handlePreferenceChange("primeDiet", [value])}
+        >
           <SelectTrigger className="bg-white border rounded-md px-3 py-2 mt-2">
             <SelectValue placeholder="Selecciona una dieta" />
           </SelectTrigger>
