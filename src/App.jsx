@@ -40,6 +40,7 @@ import RecetaModal from './body/views/ventaCompra/RecetaModal';
 import ProcedimientoModal from './body/views/ventaCompra/ProcedimientoModal';
 import AgendaModal from './body/views/agenda/AgendaModal';
 import AgendaFormPage from './body/views/agenda/AgendaFormPage';
+import InscripcionEvento from './body/views/agenda/InscripcionEvento';
 import Predict from './body/views/ventaCompra/Predict';
 import Gastos from './body/components/gastos/Gastos';
 import Proveedores from './body/views/proveedores/Proveedores';
@@ -155,6 +156,7 @@ function App() {
           <Route path="/item/:id" element={<ItemsModal />} />
           <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
           <Route path="/evento/:id" element={<AgendaModal />} />
+          <Route path="/inscripcion/:id" element={<InscripcionEvento />} />
           <Route path="/agendaForm/:id" element={<AgendaFormPage />} />
           <Route path="/Predict/:MenuItem" element={<Predict />} />
           <Route path="/CalculoNomina" element={<CalculoNomina />} />

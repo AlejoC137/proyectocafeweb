@@ -58,6 +58,7 @@ export default function TopNav() {
   const navigate = useNavigate();
   const currentLeng = useSelector((state) => state.currentLeng);
   const currentStaff = useSelector((state) => state.currentStaff);
+  const allAgenda = useSelector((state) => state.allAgenda);
   const location = useLocation();
 
   const handleLanguageToggle = () => {
@@ -77,6 +78,16 @@ export default function TopNav() {
     if (path.startsWith('/predict/')) {
       return currentLeng === ESP ? "Predicción de Venta" : "Sale Prediction";
     }
+    if (path.startsWith('/evento/')) {
+      const id = path.split('/')[2];
+      const ev = allAgenda?.find(a => a._id === id);
+      return ev ? `Edición de Evento: ${ev.nombreES}` : "Cargando Evento...";
+    }
+    if (path.startsWith('/inscripcion/')) {
+      const id = path.split('/')[2];
+      const ev = allAgenda?.find(a => a._id === id);
+      return ev ? `Inscripción: ${ev.nombreES}` : "Inscripción de Evento";
+    }
 
     const viewFromUrl = path.substring(1).toUpperCase();
     const titleEntry = pageTitles[viewFromUrl];
@@ -90,7 +101,7 @@ export default function TopNav() {
   };
 
   const path = location.pathname.toLowerCase();
-  const hideDropdown = path === "/menuview";
+  const hideDropdown = path === "/menuview" || path.startsWith('/evento/') || path.startsWith('/inscripcion/');
 
   const allTabs = [
     { label: "Portal Staff", path: "/" },
