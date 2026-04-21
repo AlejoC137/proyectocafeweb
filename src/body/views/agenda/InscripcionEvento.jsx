@@ -343,10 +343,10 @@ function InscripcionEvento() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => navigate("/UserPortal")} className="bg-sage-green hover:bg-sage-green/90 text-white px-8 py-6 rounded-2xl font-bold">
+              <Button onClick={() => navigate("/UserPortal")} className="bg-sage-green hover:bg-sage-green/90 text-white px-8 py-4 rounded-2xl font-bold">
                 Ver Mi Cuenta
               </Button>
-              <Button variant="outline" onClick={() => navigate("/Home")} className="px-8 py-6 rounded-2xl font-bold border-gray-200">
+              <Button variant="outline" onClick={() => navigate("/Home")} className="px-8 py-4 rounded-2xl font-bold border-gray-200">
                 Volver al Inicio
               </Button>
             </div>
@@ -363,7 +363,7 @@ function InscripcionEvento() {
     <PageLayout className="h-screen max-h-screen overflow-hidden !p-0">
 
       {/* Contenedor Principal: forzamos el alto de la pantalla menos el posible Header (ajustado a 4rem/64px aprox) */}
-      <div className="w-full flex flex-col md:flex-row items-stretch justify-center gap-4 p-2 md:p-4 h-[calc(100vh-4.5rem)] overflow-hidden">
+      <div className="w-full flex flex-col md:flex-row items-stretch justify-center gap-4 p-1.5 md:p-4 h-[calc(100vh-4.5rem)] overflow-hidden">
 
         {/* Lado Izquierdo: Imagen del Evento (Fija, sin scroll) */}
         {evento.bannerIMG && (
@@ -419,7 +419,7 @@ function InscripcionEvento() {
               )}
 
               {/* Header del Formulario */}
-              <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-2 sticky top-0 z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+              <CardHeader className="bg-gradient-to-r from-[#ff6600] to-[#ff9933] text-white p-1.5 sticky top-0 z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
                 <div className="flex items-center gap-3">
                   <Calendar size={24} className="flex-shrink-0" />
                   <CardTitle className="text-2xl md:text-3xl">{evento.nombreES}</CardTitle>
@@ -430,7 +430,7 @@ function InscripcionEvento() {
               </CardHeader>
 
               {/* Redes Sociales en Móvil */}
-              <div className="block md:hidden px-6 py-4 bg-gray-50 border-b border-gray-100">
+              <div className="block md:hidden px-4 py-2 bg-gray-50 border-b border-gray-100">
                 <div className="flex flex-wrap gap-3">
                   {Array.isArray(evento.instagramsAliados) && evento.instagramsAliados.map((handle, idx) => (
                     <a
@@ -454,7 +454,7 @@ function InscripcionEvento() {
                 </div>
               </div>
 
-              <CardContent className="p-6 md:p-8">
+              <CardContent className="p-4 md:p-8">
                 {!isFree && (
                   <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
                     <Info className="text-amber-600 mt-1 flex-shrink-0" size={18} />
@@ -465,7 +465,7 @@ function InscripcionEvento() {
                   </div>
                 )}
 
-                <div className="space-y-6 pb-1">
+                <div className="space-y-4 pb-1">
                   {/* Datos Personales */}
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold border-b pb-1">Tus Datos</h3>
@@ -604,13 +604,13 @@ function InscripcionEvento() {
             </div>
 
             {/* Botón Final (Fijo, fuera del scroll, habilitado solo si isFormValid) */}
-            <div className="p-2 md:p-3 bg-white border-t border-gray-100 flex-shrink-0 flex flex-col sm:flex-row gap-2">
+            <div className="p-1 md:p-3 bg-white border-t border-gray-100 flex-shrink-0 flex flex-col sm:flex-row gap-1.5">
               {!loggedUser && (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsLoginOpen(true)}
-                  className="flex-1 py-7 border-sage-green text-sage-green hover:bg-sage-green/5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 border-sage-green text-sage-green hover:bg-sage-green/5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2"
                 >
                   <User size={20} /> Inscribirme como Usuario
                 </Button>
@@ -626,7 +626,7 @@ function InscripcionEvento() {
               <Button
                 type="submit"
                 disabled={submitting || !isFormValid}
-                className={`py-7 text-white rounded-2xl font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl ${loggedUser ? 'flex-[2]' : 'flex-1'
+                className={`py-3 text-white rounded-2xl font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl ${loggedUser ? 'flex-[2]' : 'flex-1'
                   } ${isFormValid ? 'bg-gradient-to-r from-[#ff6600] to-[#ff9933] hover:scale-[1.01]' : 'bg-gray-300'}`}
               >
                 {submitting ? "Procesando..." : "Finalizar Inscripción"}

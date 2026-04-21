@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import AgendaForm from "./AgendaForm";
 import supabase from "@/config/supabaseClient";
+import { EventImporter } from "./EventImporter";
 
 function Agenda() {
   const dispatch = useDispatch();
@@ -547,6 +548,9 @@ function Agenda() {
           <AgendaForm eventoToEdit={eventoToEdit} onClose={handleCloseForm} />
         </DialogContent>
       </Dialog>
+
+      {/* Importador de Eventos AI */}
+      <EventImporter />
     </PageLayout>
   );
 }
