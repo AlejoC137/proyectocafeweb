@@ -243,8 +243,20 @@ export default function EventosOffer() {
                                                 <Clock size={14} strokeWidth={3} />
                                                 <span>{event.horaInicio}</span>
                                             </div>
-                                            <div className="text-lg font-black tracking-tighter">
-                                                {event.valor === "0" || !event.valor ? 'Gratis' : event.valor}
+                                            <div className="flex items-center gap-3">
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleShare(event);
+                                                    }}
+                                                    className={`p-1.5 border-[2px] ${borderColor} bg-white shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:bg-black hover:text-white transition-all active:shadow-none active:translate-x-[2px] active:translate-y-[2px]`}
+                                                    title="Compartir"
+                                                >
+                                                    <Share2 size={12} strokeWidth={3} />
+                                                </button>
+                                                <div className="text-lg font-black tracking-tighter">
+                                                    {event.valor === "0" || !event.valor ? 'Gratis' : event.valor}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
