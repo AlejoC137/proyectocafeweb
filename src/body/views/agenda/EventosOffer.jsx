@@ -123,10 +123,11 @@ export default function EventosOffer() {
         setProposalForm({ presentacion: "", descripcion: "" });
     };
 
-    const handleShare = () => {
-        if (!selectedEvent) return;
-        const shareUrl = `${window.location.origin}/EventosOffer?id=${selectedEvent._id.substring(0, 8)}`;
-        const shareText = `¡Mira este evento en Proyecto Café! ☕️%0A%0A*${encodeURIComponent(selectedEvent.nombreES || selectedEvent.nombre)}*%0A📅 ${encodeURIComponent(selectedEvent.fecha)}%0A🕒 ${encodeURIComponent(selectedEvent.horaInicio)}%0A%0AMás info e inscripciones aquí: ${shareUrl}`;
+    const handleShare = (eventToShare = null) => {
+        const event = eventToShare || selectedEvent;
+        if (!event) return;
+        const shareUrl = `${window.location.origin}/EventosOffer?id=${event._id.substring(0, 8)}`;
+        const shareText = `¡Mira este evento en Proyecto Café! ☕️%0A%0A*${encodeURIComponent(event.nombreES || event.nombre)}*%0A📅 ${encodeURIComponent(event.fecha)}%0A🕒 ${encodeURIComponent(event.horaInicio)}%0A%0AMás info e inscripciones aquí: ${shareUrl}`;
         
         window.open(`https://wa.me/?text=${shareText}`, "_blank");
         
