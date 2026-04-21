@@ -123,6 +123,19 @@ export default function EventosOffer() {
         setProposalForm({ presentacion: "", descripcion: "" });
     };
 
+    const handleShare = () => {
+        if (!selectedEvent) return;
+        const shareUrl = `${window.location.origin}/EventosOffer?id=${selectedEvent._id.substring(0, 8)}`;
+        const shareText = `¡Mira este evento en Proyecto Café! ☕️%0A%0A*${encodeURIComponent(selectedEvent.nombreES || selectedEvent.nombre)}*%0A📅 ${encodeURIComponent(selectedEvent.fecha)}%0A🕒 ${encodeURIComponent(selectedEvent.horaInicio)}%0A%0AMás info e inscripciones aquí: ${shareUrl}`;
+        
+        window.open(`https://wa.me/?text=${shareText}`, "_blank");
+        
+        // Copiar al portapapeles como respaldo
+        navigator.clipboard.writeText(shareUrl);
+        setCopiedShare(true);
+        setTimeout(() => setCopiedShare(false), 2000);
+    };
+
     const monthName = useMemo(() => {
         const [year, month] = selectedMonth.split("-");
         const date = new Date(year, month - 1);
@@ -258,10 +271,17 @@ export default function EventosOffer() {
 
                                 {/* Detalles del Modal */}
                                 <div className="md:w-[670px] flex-shrink-0 p-8 md:p-12 overflow-y-auto custom-scrollbar flex flex-col">
-                                    <div className="mb-6">
+                                    <div className="mb-6 flex justify-between items-center">
                                         <span className="bg-yellow-100 border-[2px] border-[#1F2937] px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]">
                                             Información del Evento
                                         </span>
+                                        <button 
+                                            onClick={handleShare}
+                                            className={`flex items-center gap-2 bg-white border-[2px] ${borderColor} px-3 py-1 text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all active:bg-green-100`}
+                                        >
+                                            <Share2 size={14} strokeWidth={3} />
+                                            {copiedShare ? "¡Copiado!" : "Compartir"}
+                                        </button>
                                     </div>
 
                                     <h2 className="text-4xl md:text-5xl font-black uppercase leading-none mb-8" style={{ fontFamily: "'First Bunny', sans-serif" }}>
