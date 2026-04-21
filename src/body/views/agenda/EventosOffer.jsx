@@ -123,16 +123,16 @@ export default function EventosOffer() {
         setProposalForm({ presentacion: "", descripcion: "" });
     };
 
-    const handleShare = (eventToShare = null) => {
-        const event = eventToShare || selectedEvent;
-        if (!event) return;
-        const shareUrl = `${window.location.origin}/EventosOffer?id=${event._id.substring(0, 8)}`;
-        const shareText = `¡Mira este evento en Proyecto Café! ☕️%0A%0A*${encodeURIComponent(event.nombreES || event.nombre)}*%0A📅 ${encodeURIComponent(event.fecha)}%0A🕒 ${encodeURIComponent(event.horaInicio)}%0A%0AMás info e inscripciones aquí: ${shareUrl}`;
-        
-        window.open(`https://wa.me/?text=${shareText}`, "_blank");
-        
-        // Copiar al portapapeles como respaldo
-        navigator.clipboard.writeText(shareUrl);
+    const handleSharePage = () => {
+        const url = window.location.origin + "/EventosOffer";
+        navigator.clipboard.writeText(url);
+        setCopiedShare(true);
+        setTimeout(() => setCopiedShare(false), 2000);
+    };
+
+    const handleShareEvent = (event) => {
+        const url = window.location.origin + "/EventosOffer?id=" + event._id.substring(0, 8);
+        navigator.clipboard.writeText(url);
         setCopiedShare(true);
         setTimeout(() => setCopiedShare(false), 2000);
     };
@@ -177,6 +177,13 @@ export default function EventosOffer() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleSharePage}
+                            className={`hidden md:flex items-center gap-2 px-4 border-[3px] ${borderColor} bg-blue-100 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all h-12 text-xs font-black uppercase`}
+                        >
+                            <Share2 size={18} strokeWidth={3} />
+                            {copiedShare ? "¡Copiado!" : "Compartir Cartelera"}
+                        </button>
                         <button
                             onClick={() => changeMonth(-1)}
                             className={`p-2 border-[3px] ${borderColor} bg-white shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:bg-black hover:text-white transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none h-12 w-12 flex items-center justify-center`}
@@ -243,20 +250,8 @@ export default function EventosOffer() {
                                                 <Clock size={14} strokeWidth={3} />
                                                 <span>{event.horaInicio}</span>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleShare(event);
-                                                    }}
-                                                    className={`p-1.5 border-[2px] ${borderColor} bg-white shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:bg-black hover:text-white transition-all active:shadow-none active:translate-x-[2px] active:translate-y-[2px]`}
-                                                    title="Compartir"
-                                                >
-                                                    <Share2 size={12} strokeWidth={3} />
-                                                </button>
-                                                <div className="text-lg font-black tracking-tighter">
-                                                    {event.valor === "0" || !event.valor ? 'Gratis' : event.valor}
-                                                </div>
+                                            <div className="text-lg font-black tracking-tighter">
+                                                {event.valor === "0" || !event.valor ? 'Gratis' : event.valor}
                                             </div>
                                         </div>
                                     </div>
@@ -284,17 +279,10 @@ export default function EventosOffer() {
 
                                 {/* Detalles del Modal */}
                                 <div className="md:w-[670px] flex-shrink-0 p-8 md:p-12 overflow-y-auto custom-scrollbar flex flex-col">
-                                    <div className="mb-6 flex justify-between items-center">
+                                    <div className="mb-6">
                                         <span className="bg-yellow-100 border-[2px] border-[#1F2937] px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]">
                                             Información del Evento
                                         </span>
-                                        <button 
-                                            onClick={handleShare}
-                                            className={`flex items-center gap-2 bg-white border-[2px] ${borderColor} px-3 py-1 text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all active:bg-green-100`}
-                                        >
-                                            <Share2 size={14} strokeWidth={3} />
-                                            {copiedShare ? "¡Copiado!" : "Compartir"}
-                                        </button>
                                     </div>
 
                                     <h2 className="text-4xl md:text-5xl font-black uppercase leading-none mb-8" style={{ fontFamily: "'First Bunny', sans-serif" }}>
@@ -342,16 +330,25 @@ export default function EventosOffer() {
                                             </div>
                                         </div>
 
-                                        <button
-                                            onClick={() => {
-                                                selectedEvent.linkInscripcion
-                                                    ? window.open(selectedEvent.linkInscripcion, "_blank")
-                                                    : navigate(`/inscripcion/${selectedEvent._id.substring(0, 8)}`)
-                                            }}
-                                            className={`w-full bg-black text-white py-6 text-xl font-black uppercase border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(165,184,161,1)] hover:bg-sage-green hover:text-black transition-all active:shadow-none active:translate-x-[6px] active:translate-y-[6px]`}
-                                        >
-                                            ¡INSCRIBIRME!
-                                        </button>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    selectedEvent.linkInscripcion
+                                                        ? window.open(selectedEvent.linkInscripcion, "_blank")
+                                                        : navigate(`/inscripcion/${selectedEvent._id.substring(0, 8)}`)
+                                                }}
+                                                className={`flex-grow bg-black text-white py-6 text-xl font-black uppercase border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(165,184,161,1)] hover:bg-sage-green hover:text-black transition-all active:shadow-none active:translate-x-[6px] active:translate-y-[6px]`}
+                                            >
+                                                ¡INSCRIBIRME!
+                                            </button>
+                                            <button
+                                                onClick={() => handleShareEvent(selectedEvent)}
+                                                className={`bg-white border-[3px] ${borderColor} p-6 shadow-[6px_6px_0px_0px_rgba(31,41,55,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center justify-center`}
+                                                title="Compartir este evento"
+                                            >
+                                                <Share2 size={24} strokeWidth={3} className={copiedShare ? "text-green-600" : ""} />
+                                            </button>
+                                        </div>
 
                                         {/* Redes Sociales */}
                                         <div className="flex flex-wrap gap-4 pt-2">
