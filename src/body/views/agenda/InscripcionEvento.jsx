@@ -244,6 +244,8 @@ function InscripcionEvento() {
               phone: formData.telefono ? parseInt(formData.telefono) : null,
               password: formData.password, // Storing in plain text for the portal access as per existing system design
               loyalty_points: 0,
+              acepta_promociones: formData.acepta_promociones,
+              acepta_nuevos_eventos: formData.acepta_nuevos_eventos,
               userPreferences: JSON.stringify({
                 Alergies: {},
                 noComo: [],

@@ -1,13 +1,30 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { crearItem, getAllFromTable } from "@/redux/actions";
-import { AGENDA } from "@/redux/actions-types";
+import { v4 as uuidv4 } from "uuid";
+import { 
+  FileJson, 
+  Copy, 
+  Check, 
+  X, 
+  Upload, 
+  Info,
+  Sparkles
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Copy, Check, Import, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import supabase from "@/config/supabaseClient";
+import { AGENDA } from "@/redux/actions-types";
+import { getAllFromTable } from "@/redux/actions";
 
-const EVENT_PROMPT = `Actúa como un Asistente de Gestión de Eventos. Tu tarea es generar un objeto JSON para un nuevo evento basado en la información proporcionada.
+const PROMPT_MAESTRO = `Actúa como un Asistente de Gestión de Eventos. Tu tarea es generar un objeto JSON para un nuevo evento basado en la información proporcionada.
 
 Estructura obligatoria del JSON:
 {
@@ -21,131 +38,140 @@ Estructura obligatoria del JSON:
   "infoAdicional": "Descripción detallada",
   "valor": "Precio o 'Gratis'",
   "autores": "Organizadores",
-  "servicios": "{\\"alimentos\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"},\\"mesas\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"},\\"audioVisual\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"},\\"otros\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"}}"
-}
-
-Reglas Críticas de Formato:
-1. Servicios como String Puro: El campo servicios debe ser un string que contenga el JSON de servicios. Usa comillas dobles escapadas \\" para las propiedades internas.
-2. Evitar Saltos de Línea Internos: No incluyas saltos de línea (\\n) ni caracteres especiales complejos dentro del string de servicios para evitar errores de SyntaxError: Bad escaped character.
-3. Puntualidad: Si no hay hora de finalización, asume 3 horas después del inicio.
-4. Salida Limpia: Solo devuelve el JSON puro, sin bloques de código ( \` \` \` ), sin texto adicional, ni explicaciones. La respuesta debe comenzar con { y terminar con }.`;
+  "servicios": "{\\"alimentos\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"},\\"mesas\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"},\\"audioVisual\\":{\\"activo\\":false,\\"descripcion\\":\\"\\"}}",
+  "preguntas_personalizadas": []
+}`;
 
 export function EventImporter() {
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [jsonInput, setJsonInput] = useState("");
-  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleCopyPrompt = () => {
-    navigator.clipboard.writeText(EVENT_PROMPT);
+    navigator.clipboard.writeText(PROMPT_MAESTRO);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleImport = async () => {
-    setError("");
+    if (!jsonInput.trim()) return;
+
     setLoading(true);
     try {
-      const data = JSON.parse(jsonInput);
+      const eventData = JSON.parse(jsonInput);
       
-      // Validaciones mínimas
-      if (!data.nombreES || !data.fecha || !data.horaInicio) {
-        throw new Error("El JSON debe contener al menos nombreES, fecha y horaInicio.");
+      // Validaciones básicas
+      if (!eventData.nombreES && !eventData.nombreEN) {
+        throw new Error("El JSON debe tener al menos un nombre.");
       }
 
-      await dispatch(crearItem(data, AGENDA));
+      const newId = uuidv4();
+      const finalEvent = {
+        _id: newId,
+        ...eventData,
+        // Asegurar que servicios sea string si viene como objeto
+        servicios: typeof eventData.servicios === "object" ? JSON.stringify(eventData.servicios) : eventData.servicios,
+        // Valores por defecto para campos faltantes
+        fecha: eventData.fecha || new Date().toISOString().split('T')[0],
+        horaInicio: eventData.horaInicio || "08:00",
+        horaFinal: eventData.horaFinal || "10:00"
+      };
+
+      const { error } = await supabase
+        .from(AGENDA)
+        .insert([finalEvent]);
+
+      if (error) throw error;
+
+      alert("🎉 Evento importado exitosamente");
       dispatch(getAllFromTable(AGENDA));
       setJsonInput("");
       setIsOpen(false);
-      alert("Evento importado exitosamente");
     } catch (err) {
       console.error("Error al importar:", err);
-      setError("Error: JSON inválido o faltan campos obligatorios.");
+      alert("Error al procesar el JSON: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-80 md:w-96 shadow-2xl"
-          >
-            <Card className="border-2 border-purple-500 overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles size={20} />
-                    Importador AI
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsOpen(false)}
-                    className="text-white hover:bg-white/20 h-8 w-8"
-                  >
-                    <X size={18} />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4 bg-white">
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-500 font-medium">
-                    1. Copia el prompt para tu IA (ChatGPT/Claude/Gemini)
-                  </p>
-                  <Button
-                    onClick={handleCopyPrompt}
-                    className="w-full gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200 border-dashed border-2 border-slate-300"
-                    variant="outline"
-                  >
-                    {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                    {copied ? "¡Copiado!" : "Copiar Prompt Maestro"}
-                  </Button>
-                </div>
+    <>
+      {/* Botón Flotante */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button 
+          onClick={() => setIsOpen(true)}
+          className="rounded-full w-14 h-14 shadow-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 hover:scale-110 transition-all duration-300 group p-0"
+        >
+          <Sparkles className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
+        </Button>
+      </div>
 
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-500 font-medium">
-                    2. Pega el JSON generado aquí
-                  </p>
-                  <textarea
-                    value={jsonInput}
-                    onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder='{"nombreES": "Evento...", ...}'
-                    className="w-full h-32 p-2 text-xs font-mono border rounded-md focus:ring-2 focus:ring-purple-500 outline-none resize-none"
-                  />
-                </div>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-white border-2 border-indigo-100">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-indigo-900">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              Importador de Eventos AI
+            </DialogTitle>
+            <DialogDescription>
+              Copia el prompt maestro para la IA, genera el JSON y pégalo aquí abajo para crear el evento instantáneamente.
+            </DialogDescription>
+          </DialogHeader>
 
-                {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-indigo-600" />
+                <span className="text-sm font-medium text-indigo-900">Prompt Maestro</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCopyPrompt}
+                className="gap-2 bg-white border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? "Copiado" : "Copiar Prompt"}
+              </Button>
+            </div>
 
-                <Button
-                  onClick={handleImport}
-                  disabled={!jsonInput || loading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold"
-                >
-                  <Import size={18} className="mr-2" />
-                  {loading ? "Importando..." : "Importar Evento"}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                <FileJson className="w-4 h-4" /> Pegar JSON aquí
+              </label>
+              <Textarea 
+                placeholder='{ "nombreES": "Cata de Café Especial", ... }'
+                className="min-h-[250px] font-mono text-xs bg-slate-50 border-indigo-100 focus:ring-indigo-500"
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+              />
+            </div>
+          </div>
 
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:shadow-2xl transition-shadow border-2 border-white"
-      >
-        {isOpen ? <X size={28} /> : <Sparkles size={28} />}
-      </motion.button>
-    </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setIsOpen(false)} disabled={loading}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleImport} 
+              disabled={loading || !jsonInput.trim()}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-200"
+            >
+              {loading ? (
+                "Procesando..."
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Importar Evento
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -8,8 +8,8 @@ import supabase from "../../../config/supabaseClient";
 import { USER_PREFERENCES } from "../../../redux/actions-types";
 
 // Conversión desde env o valores por defecto
-const VAL_PUNTO = parseInt(import.meta.env.VITE_POINTS_REDEMPTION_VALUE) || 300;
-const PUNTOS_POR_MIL = parseInt(import.meta.env.VITE_POINTS_VAL_FOR_1000) || 1;
+const VAL_PUNTO = parseInt(import.meta.env.VITE_POINTS_REDEMPTION_VALUE) || 1;
+const PUNTOS_POR_MIL = parseInt(import.meta.env.VITE_POINTS_VAL_FOR_1000) || 100;
 
 function Pagar({ ventaId, onClose, total, onPaymentComplete, clientId, productos }) {
   const dispatch = useDispatch();

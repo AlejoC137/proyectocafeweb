@@ -106,6 +106,8 @@ export default function UserManager() {
           address: editForm.address,
           password: editForm.password,
           loyalty_points: editForm.loyalty_points ? parseInt(editForm.loyalty_points) : 0,
+          acepta_promociones: editForm.acepta_promociones,
+          acepta_nuevos_eventos: editForm.acepta_nuevos_eventos,
         }, 
         USER_PREFERENCES
       ));
@@ -277,6 +279,36 @@ export default function UserManager() {
                       placeholder="Contraseña del usuario"
                     />
                   </div>
+
+                  <div className="bg-blue-50 p-3 rounded-md border border-blue-100 space-y-3">
+                    <p className="text-xs font-bold text-blue-800 uppercase tracking-wider">Marketing / Comunicación</p>
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id="acepta_promociones" 
+                        name="acepta_promociones"
+                        checked={editForm.acepta_promociones || false} 
+                        onChange={(e) => setEditForm({...editForm, acepta_promociones: e.target.checked})}
+                        className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor="acepta_promociones" className="text-xs font-medium text-blue-900 cursor-pointer">
+                        Acepta Promociones y Ofertas 🎁
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id="acepta_nuevos_eventos" 
+                        name="acepta_nuevos_eventos"
+                        checked={editForm.acepta_nuevos_eventos || false} 
+                        onChange={(e) => setEditForm({...editForm, acepta_nuevos_eventos: e.target.checked})}
+                        className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor="acepta_nuevos_eventos" className="text-xs font-medium text-blue-900 cursor-pointer">
+                        Enterarme de Nuevos Eventos 🍷
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Formulario Derecha */}
@@ -298,7 +330,7 @@ export default function UserManager() {
                       </span>
                     </div>
                     <p className="text-[10px] text-amber-600 font-semibold mt-1">
-                      Equivalen a: $ {new Intl.NumberFormat('es-CO').format((editForm.loyalty_points || 0) * (parseInt(import.meta.env.VITE_POINTS_REDEMPTION_VALUE) || 300))} COP
+                      Equivalen a: $ {new Intl.NumberFormat('es-CO').format((editForm.loyalty_points || 0) * (parseInt(import.meta.env.VITE_POINTS_REDEMPTION_VALUE) || 1))} COP
                     </p>
                   </div>
 

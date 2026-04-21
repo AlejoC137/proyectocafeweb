@@ -385,7 +385,7 @@ export default function UserPortal() {
                 <div className="mt-8 pt-6 border-t border-white/20 flex justify-between items-end">
                   <div>
                     <p className="text-[10px] opacity-70 uppercase font-black">Tu saldo actual</p>
-                    <p className="text-xl font-black">${new Intl.NumberFormat('es-CO').format((currentUser.loyalty_points || 0) * 300)} <span className="text-[10px] opacity-60">COP</span></p>
+                    <p className="text-xl font-black">${new Intl.NumberFormat('es-CO').format((currentUser.loyalty_points || 0) * (parseInt(import.meta.env.VITE_POINTS_REDEMPTION_VALUE) || 1))} <span className="text-[10px] opacity-60">COP</span></p>
                   </div>
                   <div className="animate-pulse">
                     <Heart className="w-6 h-6 fill-white" />

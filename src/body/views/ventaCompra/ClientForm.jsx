@@ -19,7 +19,7 @@ import { getAllFromTable } from "../../../redux/actions";
 const ALERGENOS = ["Frutos secos 🥜", "Mariscos 🦐", "Gluten 🌾", "Cerdo 🐷"];
 const COMIDA_NO_DESEADA = ["Cebolla 🧅", "Pepino 🥒", "Pimentón 🫑", "Plátano 🍌"];
 const OPCIONES_DIETA = [
-  "Vegano 🌱", "Vegetariano 🥗", "Sin Gluten 🌾", "Sin Lactosa 🥛",
+  "Sin preferencia", "Vegano 🌱", "Vegetariano 🥗", "Sin Gluten 🌾", "Sin Lactosa 🥛",
   "Bajo en Carbohidratos 🍚", "Bajo en Calorías 📉", "Alto en Proteínas 💪"
 ];
 
@@ -45,6 +45,8 @@ export default function ClientForm({ onClose, initialData = "" }) {
       meGusta: [],
       Picante: 0,
       Notas: "",
+      acepta_promociones: false,
+      acepta_nuevos_eventos: false,
     }
   });
 
@@ -81,6 +83,8 @@ export default function ClientForm({ onClose, initialData = "" }) {
         redeemed_points: 0,
         purchase_history: [],
         ordered_lunches: [],
+        acepta_promociones: formData.preferenciasUsuario.acepta_promociones,
+        acepta_nuevos_eventos: formData.preferenciasUsuario.acepta_nuevos_eventos,
         userPreferences: formData.preferenciasUsuario // El JSON con toda la dieta
       };
 
@@ -152,7 +156,7 @@ export default function ClientForm({ onClose, initialData = "" }) {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-xs font-bold text-slate-600">Contraseña Administrador</Label>
+                <Label htmlFor="password" className="text-xs font-bold text-slate-600">Contraseña</Label>
                 <div className="relative">
                   <Key className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                   <Input id="password" name="password" value={formData.password} onChange={handleChange} placeholder="Clave para su cuenta" className="h-9 pl-10 shadow-sm" />
@@ -169,8 +173,51 @@ export default function ClientForm({ onClose, initialData = "" }) {
           </div>
         )}
 
-        {/* STEP 1: ALLERGIES & NO COMO */}
+        {/* STEP 1: SPICE & DIET */}
         {step === 1 && (
+          <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-orange-700 flex items-center gap-2">
+                <Flame className="w-4 h-4" /> Tolerancia al Picante
+              </Label>
+              <Select
+                value={String(formData.preferenciasUsuario.Picante)}
+                onValueChange={(value) => handlePreferenceChange("Picante", parseInt(value))}
+              >
+                <SelectTrigger className="h-10 border-indigo-200">
+                  <SelectValue placeholder="Nivel de picante" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Nada 😊</SelectItem>
+                  <SelectItem value="1">Moderado 🔥</SelectItem>
+                  <SelectItem value="2">Fuerte 🔥🔥</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <Label className="text-sm font-bold text-indigo-800 flex items-center gap-2">
+                <Utensils className="w-4 h-4" /> Dieta Principal
+              </Label>
+              <Select
+                value={formData.preferenciasUsuario.primeDiet[0] || ""}
+                onValueChange={(value) => handlePreferenceChange("primeDiet", [value])}
+              >
+                <SelectTrigger className="h-10 bg-white border-indigo-200">
+                  <SelectValue placeholder="Selecciona un tipo de dieta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {OPCIONES_DIETA.map((dieta) => (
+                    <SelectItem key={dieta} value={dieta}>{dieta}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: ALLERGIES & NO COMO */}
+        {step === 2 && (
           <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
             <div>
               <Label className="text-sm font-bold text-indigo-800 flex items-center gap-2 mb-3">
@@ -222,80 +269,41 @@ export default function ClientForm({ onClose, initialData = "" }) {
           </div>
         )}
 
-        {/* STEP 2: DIET & ME GUSTA */}
-        {step === 2 && (
-          <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-indigo-800 flex items-center gap-2">
-                <Utensils className="w-4 h-4" /> Dieta Principal
-              </Label>
-              <Select
-                value={formData.preferenciasUsuario.primeDiet[0] || ""}
-                onValueChange={(value) => handlePreferenceChange("primeDiet", [value])}
-              >
-                <SelectTrigger className="h-10 bg-white border-indigo-200">
-                  <SelectValue placeholder="Selecciona un tipo de dieta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {OPCIONES_DIETA.map((dieta) => (
-                    <SelectItem key={dieta} value={dieta}>{dieta}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <Label className="text-sm font-bold text-emerald-800 flex items-center gap-2">
-                Me Gusta Mucho
-              </Label>
-              <Input
-                placeholder="Ej. Aguacate, Cilantro..."
-                value={formData.preferenciasUsuario.meGusta.join(", ")}
-                onChange={(e) =>
-                  handlePreferenceChange(
-                    "meGusta",
-                    e.target.value.split(",").map((item) => item.trim()).filter(i => i),
-                  )
-                }
-                className="h-10 border-indigo-200"
-              />
-              <p className="text-[10px] text-slate-400 italic">Separa los ingredientes con comas</p>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: SPICE & NOTES */}
+        {/* STEP 3: ADDITIONAL NOTES */}
         {step === 3 && (
           <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
             <div className="space-y-2">
-              <Label className="text-sm font-bold text-orange-700 flex items-center gap-2">
-                <Flame className="w-4 h-4" /> Tolerancia al Picante
-              </Label>
-              <Select
-                value={String(formData.preferenciasUsuario.Picante)}
-                onValueChange={(value) => handlePreferenceChange("Picante", parseInt(value))}
-              >
-                <SelectTrigger className="h-10 border-indigo-200">
-                  <SelectValue placeholder="Nivel de picante" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">Nada 😊</SelectItem>
-                  <SelectItem value="1">Moderado 🔥</SelectItem>
-                  <SelectItem value="2">Fuerte 🔥🔥</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <Label className="text-xs font-bold text-slate-600 flex items-center gap-2">
+              <Label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                 <Clipboard className="w-4 h-4" /> Notas Adicionales
               </Label>
               <Input
-                placeholder="Observaciones de preparación..."
+                placeholder="Observaciones de preparación, gustos específicos o cualquier otro detalle..."
                 value={formData.preferenciasUsuario.Notas}
                 onChange={(e) => handlePreferenceChange("Notas", e.target.value)}
-                className="h-12 border-indigo-200"
+                className="h-20 border-indigo-200"
               />
+              <p className="text-[10px] text-slate-400 italic">Escribe aquí cualquier otra preferencia que no hayamos cubierto.</p>
+            </div>
+            <div className="space-y-2 pt-2 border-t border-indigo-50 mt-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Comunicación</Label>
+              <div className="flex flex-col gap-3 pt-1">
+                <div className="flex items-center space-x-3 bg-indigo-50/30 p-2 rounded-lg border border-indigo-100/50">
+                  <Checkbox 
+                    id="acepta_promociones" 
+                    checked={formData.preferenciasUsuario.acepta_promociones}
+                    onCheckedChange={(checked) => handlePreferenceChange("acepta_promociones", checked)}
+                  />
+                  <Label htmlFor="acepta_promociones" className="text-xs cursor-pointer font-medium text-slate-700">Deseo recibir promociones y descuentos 🎁</Label>
+                </div>
+                <div className="flex items-center space-x-3 bg-indigo-50/30 p-2 rounded-lg border border-indigo-100/50">
+                  <Checkbox 
+                    id="acepta_nuevos_eventos" 
+                    checked={formData.preferenciasUsuario.acepta_nuevos_eventos}
+                    onCheckedChange={(checked) => handlePreferenceChange("acepta_nuevos_eventos", checked)}
+                  />
+                  <Label htmlFor="acepta_nuevos_eventos" className="text-xs cursor-pointer font-medium text-slate-700">Enterarme de futuros eventos y catas 🍷</Label>
+                </div>
+              </div>
             </div>
           </div>
         )}

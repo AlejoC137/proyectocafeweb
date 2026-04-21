@@ -1,5 +1,5 @@
 import React from "react";
-import { Menu, ShoppingCart, Languages } from "lucide-react";
+import { Menu, ShoppingCart, Languages, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ENG, ESP } from "../../redux/actions-types";
 import { useDispatch, useSelector } from "react-redux";
@@ -173,6 +173,14 @@ export default function TopNav() {
             <Languages className="h-3 w-3" />
             {currentLeng === ESP ? 'EN' : 'ES'}
           </button>
+
+          <IconButton 
+            onClick={() => navigate('/UserPortal')}
+            className="bg-purple-600 text-white hover:bg-opacity-80"
+            title={currentLeng === ESP ? "Portal de Usuario" : "User Portal"}
+          >
+            <User className="h-4 w-4" />
+          </IconButton>
 
           <IconButton className="bg-cobalt-blue text-white hover:bg-opacity-80">
             <ShoppingCart className="h-4 w-4" />
