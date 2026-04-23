@@ -128,7 +128,7 @@ function App() {
           <Route path="/LunchByOrder" element={<LunchByOrder />} />
           <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
           <Route path="/Home" element={<MenuView />} />
-          <Route path="/Agenda" element={<Agenda />} />
+          <Route path="/Agenda/:year?/:month?" element={<Agenda />} />
           <Route path="/Manager" element={<Manager />} />
           <Route path="/Recetas" element={<Recetas />} />
           <Route path="/SobreNosotros" element={<SobreNosotros />} />

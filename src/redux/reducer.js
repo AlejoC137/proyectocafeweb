@@ -40,6 +40,7 @@ import {
     // --- FIN: ADICIONES ---
     UPDATE_COMPRA_SUCCESS,
     USER_PREFERENCES, // Added USER_PREFERENCES
+    USER_MESSAGES,
 } from './actions-types';
 
 const initialState = {
@@ -115,6 +116,7 @@ const initialState = {
     orderItems: [],          // Estado para guardar los ítems pedidos
     scrapedData: null,       // Propiedad inicializada para SCRAP
     allUserPreferences: [],  // Estado para los usuarios
+    allUserMessages: [],     // Estado para los mensajes
 
     // --- INICIO: ADICIONES DE ESTADO PARA MODELOS ---
     models: [],
@@ -196,6 +198,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allAgenda: action.payload };
                 case USER_PREFERENCES:
                     return { ...state, allUserPreferences: action.payload };
+                case USER_MESSAGES:
+                    return { ...state, allUserMessages: action.payload };
                 default:
                     return state;
             }

@@ -11,6 +11,7 @@ import { AGENDA, USER_PREFERENCES } from "@/redux/actions-types";
 import LoginPortalDialog from "../user/LoginPortalDialog";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllFromTable } from "@/redux/actions";
+import { MESSAGE_TEMPLATES } from "@/utils/messageTemplates";
 
 function InscripcionEvento() {
   const { id } = useParams();
@@ -255,6 +256,22 @@ function InscripcionEvento() {
               })
             }]);
           if (prefError) console.error("Error creating user preferences:", prefError);
+          
+          // Auto-send welcome message for new portal account
+          try {
+            await supabase
+              .from("UserMessages")
+              .insert({
+                title: MESSAGE_TEMPLATES.WELCOME.title,
+                content: MESSAGE_TEMPLATES.WELCOME.content(formData.nombre),
+                type: MESSAGE_TEMPLATES.WELCOME.type,
+                userId: newPrefId,
+                created_at: new Date().toISOString(),
+              });
+          } catch (msgError) {
+            console.error("Error sending auto-welcome message:", msgError);
+          }
+
           authUserId = newPrefId;
         } else {
           // If it exists, update password if not set

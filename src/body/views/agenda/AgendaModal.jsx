@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Users, ArrowLeft, Save, Copy, CheckCircle2, Edit2, Trash2, Plus, GripVertical, FileText, CheckCircle, X, ImageIcon, UploadCloud } from "lucide-react";
+import { Calendar, Users, ArrowLeft, Save, Copy, CheckCircle2, Edit2, Trash2, Plus, GripVertical, FileText, CheckCircle, X, ImageIcon, UploadCloud, MessageSquare, Send, Bell } from "lucide-react";
+import { MESSAGE_TEMPLATES } from "@/utils/messageTemplates";
 import supabase from "@/config/supabaseClient";
 import PageLayout from "../../../components/ui/page-layout";
 
@@ -38,6 +39,11 @@ function AgendaModal() {
   // Dynamic Form Builder State
   const [preguntas, setPreguntas] = useState([]);
   const [newPregunta, setNewPregunta] = useState({ label: '', tipo: 'texto', requerido: false });
+
+  // Messaging State
+  const [messageForm, setMessageForm] = useState({ title: "", content: "", type: "reminder" });
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [showMassiveMessage, setShowMassiveMessage] = useState(false);
 
   // Estado principal del formulario (Evento)
   const [formData, setFormData] = useState({
@@ -341,6 +347,35 @@ function AgendaModal() {
     }
   };
 
+  // Manejo de Mensajería
+  const handleWhatsAppMessage = (a) => {
+    if (!a || !a.telefono) {
+      alert("El asistente no tiene un número de teléfono registrado.");
+      return;
+    }
+
+    let content = "";
+    if (typeof messageForm.content === 'function') {
+      content = messageForm.content(a.nombre, formData.nombreES, formData.fecha, formData.horaInicio);
+    } else {
+      // Si el usuario editó el mensaje, reemplazamos el marcador manualmente
+      content = (messageForm.content || "")
+        .replace(/{nombre}/g, a.nombre)
+        .replace(/{evento}/g, formData.nombreES)
+        .replace(/{fecha}/g, formData.fecha)
+        .replace(/{hora}/g, formData.horaInicio);
+    }
+    
+    const textToEncode = content || `Hola ${a.nombre}, te contactamos de Proyecto Café sobre el evento ${formData.nombreES}.`;
+    const fullText = encodeURIComponent(textToEncode);
+    
+    let phone = String(a.telefono).replace(/\D/g, '');
+    if (phone.length === 10) phone = '57' + phone;
+    
+    // wa.me es más robusto para redirecciones con emojis en dispositivos móviles
+    window.open(`https://wa.me/${phone}?text=${fullText}`, "_blank");
+  };
+
   if (loading) return (
     <PageLayout title="Cargando...">
       <div className="flex items-center justify-center p-12 w-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div></div>
@@ -587,15 +622,79 @@ function AgendaModal() {
               {!isNewEvent && (
                 <TabsContent value="inscripciones" className="p-6 m-0">
                   <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <h3 className="text-xl font-bold">Asistentes Inscritos</h3>
                         <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">Total: {attendees.length}</div>
                       </div>
-                      <Button type="button" onClick={copyInscriptionLink} className="flex items-center gap-2 text-sm bg-[#ff6600] text-white hover:bg-[#e65c00] transition shadow-md px-5 py-2 rounded-xl font-semibold">
-                        {copiedLink ? <CheckCircle2 size={18} /> : <Copy size={18} />} {copiedLink ? "¡Copiado!" : "Copiar Enlace Público"}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => setShowMassiveMessage(!showMassiveMessage)} 
+                          variant={showMassiveMessage ? "secondary" : "default"}
+                          className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                        >
+                          <MessageSquare size={18} /> Redactar WhatsApp
+                        </Button>
+                        <Button type="button" onClick={copyInscriptionLink} className="flex items-center gap-2 text-sm bg-[#ff6600] text-white hover:bg-[#e65c00] transition shadow-md px-5 py-2 rounded-xl font-semibold">
+                          {copiedLink ? <CheckCircle2 size={18} /> : <Copy size={18} />} {copiedLink ? "¡Copiado!" : "Copiar Enlace Público"}
+                        </Button>
+                      </div>
                     </div>
+
+                    {showMassiveMessage && (
+                      <div className="p-6 bg-green-50 border border-green-200 rounded-2xl animate-in slide-in-from-top-2">
+                        <h4 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
+                          <MessageSquare className="w-5 h-5" /> Preparar Comunicación WhatsApp
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div className="space-y-1">
+                              <Label>Contenido del Mensaje</Label>
+                              <textarea 
+                                placeholder="Escribe el mensaje para los asistentes..." 
+                                value={typeof messageForm.content === 'function' ? messageForm.content('{nombre}', formData.nombreES, formData.fecha, formData.horaInicio) : messageForm.content}
+                                onChange={(e) => setMessageForm({...messageForm, content: e.target.value})}
+                                className="w-full p-2 border rounded-md text-sm bg-white min-h-[120px]"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <Label>Plantillas Rápidas</Label>
+                            <div className="flex flex-wrap gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setMessageForm({
+                                  title: MESSAGE_TEMPLATES.EVENT_REMINDER.title,
+                                  content: MESSAGE_TEMPLATES.EVENT_REMINDER.content,
+                                  type: "reminder"
+                                })}
+                                className="border-green-200 text-green-700 hover:bg-green-100"
+                              >
+                                Recordatorio de Evento
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setMessageForm({
+                                  title: MESSAGE_TEMPLATES.EVENT.title,
+                                  content: MESSAGE_TEMPLATES.EVENT.content,
+                                  type: "announcement"
+                                })}
+                                className="border-green-200 text-green-700 hover:bg-green-100"
+                              >
+                                Anuncio Gral
+                              </Button>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl border border-green-100 mt-4">
+                              <p className="text-xs text-gray-500">
+                                <b>Instrucciones:</b> El mensaje redactado arriba se enviará cuando hagas clic en el icono de WhatsApp al lado de cada asistente en la tabla de abajo.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {loadingAttendees ? (
                       <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div></div>
@@ -613,6 +712,7 @@ function AgendaModal() {
                               <th className="px-4 py-3">Contacto</th>
                               <th className="px-4 py-3">Respuestas & Extra</th>
                               <th className="px-4 py-3 text-center">Pago</th>
+                              <th className="px-4 py-3 text-center">Mensaje</th>
                               <th className="px-4 py-3 text-center">Acciones</th>
                             </tr>
                           </thead>
@@ -655,6 +755,17 @@ function AgendaModal() {
                                           <span className={`text-xs font-semibold ${a.estado_pago === 'pagado' ? 'text-green-600' : 'text-amber-600'}`}>{a.estado_pago === 'pagado' ? 'Pagado' : 'Pendiente'}</span>
                                         </label>
                                       )}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 align-top">
+                                    <div className="flex flex-col items-center gap-1 pt-1">
+                                      <button 
+                                        onClick={() => handleWhatsAppMessage(a)} 
+                                        title="Enviar WhatsApp"
+                                        className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition shadow-sm"
+                                      >
+                                        <MessageSquare size={16} />
+                                      </button>
                                     </div>
                                   </td>
                                   <td className="px-4 py-3 text-center align-top">

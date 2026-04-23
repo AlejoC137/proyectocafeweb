@@ -40,6 +40,7 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
     numeroPersonas: 1,
     instagramsAliados: [],
     decripcion: "",
+    estado: "pendiente",
   });
 
   // Estado para servicios
@@ -71,6 +72,7 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
         numeroPersonas: eventoToEdit.numeroPersonas || 1,
         decripcion: eventoToEdit.decripcion || eventoToEdit.descripcion || "",
         instagramsAliados: Array.isArray(eventoToEdit.instagramsAliados) ? eventoToEdit.instagramsAliados : (eventoToEdit.instagramsAliados ? [eventoToEdit.instagramsAliados] : []),
+        estado: eventoToEdit.estado || "pendiente",
       });
 
       if (eventoToEdit.servicios) {
@@ -224,6 +226,22 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                 <div><Label>Fin *</Label><input name="horaFinal" type="time" value={formData.horaFinal} onChange={handleInputChange} className="w-full p-2 border rounded-md" required /></div>
               </div>
               <div><Label>Valor / Precio</Label><input name="valor" type="text" value={formData.valor} onChange={handleInputChange} placeholder="Ej: $50.000 o Gratis" className="w-full p-2 border rounded-md" /></div>
+              <div>
+                <Label>Estado del Evento</Label>
+                <select 
+                  name="estado" 
+                  value={formData.estado} 
+                  onChange={handleInputChange} 
+                  className={`w-full p-2 border rounded-md font-bold ${
+                    formData.estado === 'aprobado' ? 'bg-green-50 text-green-700' : 
+                    formData.estado === 'desaprobado' ? 'bg-red-50 text-red-700' : 'bg-yellow-50 text-yellow-700'
+                  }`}
+                >
+                  <option value="pendiente">Pendiente</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="desaprobado">Desaprobado</option>
+                </select>
+              </div>
             </div>
 
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2 pt-2"><Users className="text-blue-600" size={20} /> Aliado / Organizador</h3>

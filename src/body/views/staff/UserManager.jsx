@@ -7,19 +7,23 @@ import ContentCard from "../../../components/ui/content-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
-  Users, 
-  Search, 
-  Trash2, 
-  Save, 
-  Gift, 
+  RefreshCw,
+  MessageSquare,
+  Send,
+  Bell,
+  Users,
+  Search,
+  Gift,
   X,
-  History,
   Mail,
   Phone,
   MapPin,
-  RefreshCw
+  Save,
+  History,
+  Trash2
 } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
+import { MESSAGE_TEMPLATES } from "../../../utils/messageTemplates";
 
 export default function UserManager() {
   const dispatch = useDispatch();
@@ -31,6 +35,9 @@ export default function UserManager() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [userSales, setUserSales] = useState([]);
   const [salesLoading, setSalesLoading] = useState(false);
+  const [messageForm, setMessageForm] = useState({ title: "", content: "", type: "announcement" });
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [showMassiveMessage, setShowMassiveMessage] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -141,6 +148,89 @@ export default function UserManager() {
     }
   };
 
+  const handleSendMessage = async (isMassive = false) => {
+    if (!messageForm.title || !messageForm.content) {
+      alert("Por favor completa el título y el contenido del mensaje");
+      return;
+    }
+
+    if (!isMassive && !selectedUser) {
+      alert("No hay un usuario seleccionado");
+      return;
+    }
+
+    const confirmMsg = isMassive 
+      ? `¿Estás seguro de enviar este mensaje a TODOS los ${allUsers.length} usuarios?`
+      : `¿Enviar mensaje a ${selectedUser.name || selectedUser.email}?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsSendingMessage(true);
+    try {
+      if (isMassive) {
+        const { error } = await supabase
+          .from("UserMessages")
+          .insert({
+            title: messageForm.title,
+            content: typeof messageForm.content === 'function' ? messageForm.content("todos") : messageForm.content,
+            type: messageForm.type,
+            userId: null, // Masivo
+            created_at: new Date().toISOString(),
+          });
+        
+        if (error) throw error;
+        alert("Mensaje masivo enviado correctamente al portal");
+        setShowMassiveMessage(false);
+      } else {
+        const { error } = await supabase
+          .from("UserMessages")
+          .insert({
+            title: messageForm.title,
+            content: typeof messageForm.content === 'function' ? messageForm.content(selectedUser.name) : messageForm.content,
+            type: messageForm.type,
+            userId: selectedUser._id,
+            created_at: new Date().toISOString(),
+          });
+        
+        if (error) throw error;
+        alert("Mensaje enviado correctamente al portal del usuario");
+      }
+      setMessageForm({ title: "", content: "", type: "announcement" });
+    } catch (error) {
+      console.error("Error al enviar mensaje:", error);
+      alert("Error al enviar el mensaje al portal.");
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const handleWhatsAppMessage = () => {
+    if (!selectedUser || !selectedUser.phone) {
+      alert("El usuario no tiene un número de teléfono registrado.");
+      return;
+    }
+
+    if (!messageForm.content) {
+      alert("Por favor selecciona o escribe un mensaje primero.");
+      return;
+    }
+
+    const name = selectedUser.name || "amigo";
+    const content = typeof messageForm.content === 'function' 
+      ? messageForm.content(name) 
+      : messageForm.content;
+    
+    // Encode the content to preserve emojis and formatting.
+    const fullText = encodeURIComponent(content);
+    
+    // Format phone: remove non-digits and ensure country code (default 57 for Colombia if 10 digits)
+    let phone = String(selectedUser.phone).replace(/\D/g, '');
+    if (phone.length === 10) phone = '57' + phone;
+    
+    // Using api.whatsapp.com/send which is more robust for encoded text
+    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${fullText}`, "_blank");
+  };
+
   return (
     <PageLayout loading={loading}>
       <div className="flex flex-col lg:flex-row gap-6 p-4">
@@ -164,7 +254,81 @@ export default function UserManager() {
               <Button onClick={fetchUsers} variant="outline" title="Refrescar">
                 <RefreshCw className="w-4 h-4" />
               </Button>
+              <Button 
+                onClick={() => setShowMassiveMessage(!showMassiveMessage)} 
+                variant={showMassiveMessage ? "secondary" : "default"}
+                className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
+              >
+                <Bell className="w-4 h-4" /> Masivo
+              </Button>
             </div>
+
+            {showMassiveMessage && (
+              <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg animate-in slide-in-from-top-2">
+                <h4 className="text-sm font-bold text-purple-900 mb-2 flex items-center gap-2">
+                  <Bell className="w-4 h-4" /> Comunicado Masivo
+                </h4>
+                <div className="space-y-3">
+                  <Input 
+                    placeholder="Título del anuncio..." 
+                    value={messageForm.title}
+                    onChange={(e) => setMessageForm({...messageForm, title: e.target.value})}
+                    className="bg-white"
+                  />
+                  <textarea 
+                    placeholder="Escribe el mensaje para todos los usuarios..." 
+                    value={messageForm.content}
+                    onChange={(e) => setMessageForm({...messageForm, content: e.target.value})}
+                    className="w-full p-2 border rounded-md text-sm bg-white min-h-[80px]"
+                  />
+                  <div className="flex justify-between items-center">
+                    <select 
+                      className="text-xs p-1.5 border rounded-md"
+                      value={messageForm.type}
+                      onChange={(e) => setMessageForm({...messageForm, type: e.target.value})}
+                    >
+                      <option value="announcement">📢 Anuncio</option>
+                      <option value="promo">🎁 Promoción</option>
+                      <option value="welcome">👋 Bienvenida</option>
+                    </select>
+                    <Button 
+                      size="sm" 
+                      disabled={isSendingMessage}
+                      onClick={() => handleSendMessage(true)}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      {isSendingMessage ? "Enviando..." : "Enviar a Todos"}
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setMessageForm({
+                        title: MESSAGE_TEMPLATES.WELCOME.title,
+                        content: MESSAGE_TEMPLATES.WELCOME.content("todos"),
+                        type: MESSAGE_TEMPLATES.WELCOME.type
+                      })}
+                      className="text-[10px] h-6 px-2 border-purple-200 text-purple-700"
+                    >
+                      Bienvenida Gral
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setMessageForm({
+                        title: MESSAGE_TEMPLATES.PROMO.title,
+                        content: MESSAGE_TEMPLATES.PROMO.content,
+                        type: MESSAGE_TEMPLATES.PROMO.type
+                      })}
+                      className="text-[10px] h-6 px-2 border-purple-200 text-purple-700"
+                    >
+                      Promo Gral
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-md border max-h-[600px] overflow-y-auto">
               {filteredUsers.length > 0 ? (
@@ -420,6 +584,86 @@ export default function UserManager() {
                           <div className="text-gray-400 italic">No hay almuerzos registrados.</div>
                         );
                       })()}
+                    </div>
+                  </div>
+
+                  {/* Nueva Sección: Enviar Mensaje Directo */}
+                  <div className="bg-indigo-50 p-4 rounded-3xl border border-indigo-100 shadow-sm">
+                    <label className="text-sm font-bold flex items-center gap-2 mb-3 text-indigo-800">
+                      <MessageSquare className="w-4 h-4" /> Enviar Mensaje Directo
+                    </label>
+                    <div className="space-y-3">
+                      <Input 
+                        placeholder="Título (ej: ¡Bienvenido!)" 
+                        value={messageForm.title}
+                        onChange={(e) => setMessageForm({...messageForm, title: e.target.value})}
+                        className="bg-white border-indigo-200 focus:ring-indigo-500"
+                      />
+                      <textarea 
+                        placeholder="Escribe el mensaje personal..." 
+                        value={messageForm.content}
+                        onChange={(e) => setMessageForm({...messageForm, content: e.target.value})}
+                        className="w-full p-3 border border-indigo-200 rounded-2xl text-sm bg-white min-h-[100px] focus:ring-2 focus:ring-indigo-500 outline-none"
+                      />
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setMessageForm({
+                              title: MESSAGE_TEMPLATES.WELCOME.title,
+                              content: MESSAGE_TEMPLATES.WELCOME.content(selectedUser.name),
+                              type: MESSAGE_TEMPLATES.WELCOME.type
+                            })}
+                            className="text-[10px] h-7 px-2 border-indigo-200 text-indigo-700"
+                          >
+                            Bienvenida
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setMessageForm({
+                              title: MESSAGE_TEMPLATES.PROMO.title,
+                              content: MESSAGE_TEMPLATES.PROMO.content,
+                              type: MESSAGE_TEMPLATES.PROMO.type
+                            })}
+                            className="text-[10px] h-7 px-2 border-indigo-200 text-indigo-700"
+                          >
+                            Promo
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setMessageForm({
+                              title: MESSAGE_TEMPLATES.EVENT.title,
+                              content: MESSAGE_TEMPLATES.EVENT.content,
+                              type: MESSAGE_TEMPLATES.EVENT.type
+                            })}
+                            className="text-[10px] h-7 px-2 border-indigo-200 text-indigo-700"
+                          >
+                            Evento
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            disabled={isSendingMessage}
+                            onClick={() => handleSendMessage(false)}
+                            className="bg-indigo-600 hover:bg-indigo-700 gap-2"
+                            title="Enviar al portal del cliente"
+                          >
+                            <Send className="w-3 h-3" /> Portal
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={handleWhatsAppMessage}
+                            className="bg-green-600 hover:bg-green-700 gap-2"
+                            title="Enviar por WhatsApp"
+                          >
+                            <MessageSquare className="w-3 h-3" /> WhatsApp
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

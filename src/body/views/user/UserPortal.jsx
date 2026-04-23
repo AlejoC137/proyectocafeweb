@@ -11,25 +11,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import {
-  User,
-  Search,
-  MapPin,
-  Phone,
-  Mail,
-  Gift,
-  History,
-  Calendar,
-  Settings,
-  LogOut,
-  ChevronRight,
-  TrendingUp,
-  Heart,
-  ShieldCheck,
-  Utensils,
-  AlertTriangle,
   Flame,
   FileText,
-  QrCode
+  QrCode,
+  Bell,
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 import ClientForm from "../ventaCompra/ClientForm";
@@ -48,8 +35,10 @@ export default function UserPortal() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview"); // overview, events, history, diet, settings
+  const [activeTab, setActiveTab] = useState("overview"); // overview, events, history, diet, settings, messages
   const [isRegistering, setIsRegistering] = useState(false);
+  const [userMessages, setUserMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
 
   // Form state for editing
   const [editForm, setEditForm] = useState({});
@@ -167,6 +156,45 @@ export default function UserPortal() {
     } finally {
       setLoading(false);
     }
+    
+    fetchUserMessages(user._id);
+  };
+
+  const handleMarkAsRead = async (messageId) => {
+    try {
+      const { error } = await supabase
+        .from("UserMessages")
+        .update({ isRead: true })
+        .eq("_id", messageId);
+
+      if (error) throw error;
+      
+      // Actualizar localmente
+      setUserMessages(prev => prev.map(m => 
+        m._id === messageId ? { ...m, isRead: true } : m
+      ));
+    } catch (err) {
+      console.error("Error marking message as read:", err);
+    }
+  };
+
+  const fetchUserMessages = async (userId) => {
+    setMessagesLoading(true);
+    try {
+      // Buscamos mensajes para el usuario específico O mensajes globales (userId is null)
+      const { data, error } = await supabase
+        .from("UserMessages")
+        .select("*")
+        .or(`userId.eq.${userId},userId.is.null`)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setUserMessages(data || []);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    } finally {
+      setMessagesLoading(false);
+    }
   };
 
   const handleUpdateProfile = async () => {
@@ -203,6 +231,7 @@ export default function UserPortal() {
     setShowPassword(false);
     setUserSales([]);
     setUserEvents([]);
+    setUserMessages([]);
     setActiveTab("overview");
     localStorage.removeItem("userPortalId");
   };
@@ -349,6 +378,14 @@ export default function UserPortal() {
                 {[
                   { id: "overview", label: "Dashboard", icon: <TrendingUp className="w-4 h-4" /> },
                   { id: "events", label: "Eventos", icon: <Calendar className="w-4 h-4" /> },
+                  { id: "messages", label: "Mensajes", icon: (
+                    <div className="relative">
+                      <Bell className="w-4 h-4" />
+                      {userMessages.some(m => !m.isRead) && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                      )}
+                    </div>
+                  ) },
                   { id: "diet", label: "Alimentación", icon: <Utensils className="w-4 h-4" /> },
                   { id: "history", label: "Compras", icon: <History className="w-4 h-4" /> },
                   { id: "settings", label: "Perfil", icon: <Settings className="w-4 h-4" /> },
@@ -399,6 +436,27 @@ export default function UserPortal() {
 
             {activeTab === "overview" && (
               <div className="space-y-6 animate-in fade-in duration-500">
+                {/* Banner de Bienvenida o Mensaje Importante */}
+                {userMessages.length > 0 && userMessages[0] && (
+                  <div 
+                    onClick={() => setActiveTab("messages")}
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 p-1 rounded-3xl shadow-xl cursor-pointer hover:scale-[1.01] transition-all"
+                  >
+                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-[22px] text-white flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-white/20 p-3 rounded-2xl animate-bounce">
+                          {userMessages[0].type === 'welcome' ? <Sparkles className="w-6 h-6" /> : <Bell className="w-6 h-6" />}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Mensaje Reciente</p>
+                          <h3 className="text-xl font-bold font-SpaceGrotesk">{userMessages[0].title}</h3>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-6 h-6 opacity-50" />
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <ContentCard title="Próximos Eventos" icon={<Calendar className="text-sage-green" />} className="h-full border-none shadow-lg">
                     {userEvents.length > 0 ? (
@@ -563,6 +621,74 @@ export default function UserPortal() {
                       <Calendar className="mx-auto mb-4 opacity-10" size={64} />
                       <p className="font-bold text-lg">No tienes eventos registrados actualmente.</p>
                       <Button onClick={() => navigate("/EventosOffer")} className="mt-4 bg-sage-green text-white font-bold">Ver próximos eventos</Button>
+                    </div>
+                  )}
+                </div>
+              </ContentCard>
+            )}
+
+            {activeTab === "messages" && (
+              <ContentCard title="Centro de Notificaciones" icon={<Bell className="text-purple-600" />} className="border-none shadow-xl">
+                <div className="space-y-4 py-2">
+                  {messagesLoading ? (
+                    <div className="text-center py-20 text-gray-400">Cargando mensajes...</div>
+                  ) : userMessages.length > 0 ? (
+                    userMessages.map((msg) => (
+                      <div 
+                        key={msg._id} 
+                        className={`p-6 rounded-3xl border transition-all ${
+                          msg.type === 'welcome' ? 'bg-emerald-50/50 border-emerald-100' : 
+                          msg.type === 'promo' ? 'bg-amber-50/50 border-amber-100' : 
+                          'bg-indigo-50/50 border-indigo-100'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-xl ${
+                              msg.type === 'welcome' ? 'bg-emerald-100 text-emerald-600' : 
+                              msg.type === 'promo' ? 'bg-amber-100 text-amber-600' : 
+                              'bg-indigo-100 text-indigo-600'
+                            }`}>
+                              {msg.type === 'welcome' ? <Sparkles size={18} /> : 
+                               msg.type === 'promo' ? <Gift size={18} /> : 
+                               <MessageSquare size={18} />}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900">{msg.title}</h3>
+                              <p className="text-[10px] text-gray-500 font-medium">
+                                {new Date(msg.created_at).toLocaleDateString('es-CO', { 
+                                  day: 'numeric', 
+                                  month: 'long', 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          {msg.userId === null && (
+                            <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Global</span>
+                          )}
+                          {!msg.isRead && (
+                            <button 
+                              onClick={() => handleMarkAsRead(msg._id)}
+                              className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold hover:bg-blue-700 transition-colors"
+                            >
+                              Marcar como leído
+                            </button>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-700 leading-relaxed pl-11">
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-24 text-gray-400">
+                      <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed">
+                        <Bell className="opacity-10" size={32} />
+                      </div>
+                      <p className="font-bold text-lg">No tienes mensajes nuevos.</p>
+                      <p className="text-sm">Aquí verás anuncios, promociones y mensajes de bienvenida.</p>
                     </div>
                   )}
                 </div>

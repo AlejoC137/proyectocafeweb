@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import { WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems } from "../../../redux/actions-types";
+import { WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems, AGENDA } from "../../../redux/actions-types";
 import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapidasActividades";
 // Vistas tipo grid (cards)
 import { CardGridWorkIsue } from "./gridInstance/CardGridWorkIsue";
@@ -43,6 +43,7 @@ function Manager() {
   const recetas = useSelector((state) => state.allRecetasMenu || []);
   const showEdit = useSelector((state) => state.showEdit);
   const Menu = useSelector((state) => state.allMenu || []);
+  const allAgenda = useSelector((state) => state.allAgenda || []);
 
   // Memoize filtered items to prevent recalculation on every render
   const filteredItems = useMemo(() => {
@@ -51,6 +52,7 @@ function Manager() {
       [WorkIsue]: AllWorkIsue,
       [Procedimientos]: AllProcedimientos,
       [MenuItems]: Menu,
+      [AGENDA]: allAgenda,
     }[currentType];
 
     return Array.isArray(items) ? items : [];
@@ -73,7 +75,7 @@ function Manager() {
           dispatch(getAllFromTable(ITEMS)),
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(PROCEDE)),
-
+          dispatch(getAllFromTable(AGENDA)),
         ]);
         setLoading(false);
       } catch (error) {
@@ -109,7 +111,8 @@ function Manager() {
     { type: MenuItems, label: "Menú", icon: "🗺️" },
     { type: Procedimientos, label: "Procedimientos", icon: "📝" },
     { type: Staff, label: "Staff", icon: "👩‍🚀" },
-    { type: WorkIsue, label: "Work Issues", icon: "🧹" }
+    { type: WorkIsue, label: "Work Issues", icon: "🧹" },
+    { type: AGENDA, label: "Eventos", icon: "📅" }
   ];
 
   const headerActions = (
@@ -164,7 +167,8 @@ function Manager() {
       [Staff]: "empleados",
       [WorkIsue]: "work issues",
       [Procedimientos]: "procedimientos",
-      [MenuItems]: "items del menú"
+      [MenuItems]: "items del menú",
+      [AGENDA]: "eventos"
     };
 
     return {
@@ -267,6 +271,7 @@ function Manager() {
               {currentType === WorkIsue && <Wrench size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === Procedimientos && <FileText size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === MenuItems && <UtensilsCrossed size={48} className="mx-auto mb-4 opacity-50" />}
+              {currentType === AGENDA && <Calendar size={48} className="mx-auto mb-4 opacity-50" />}
               <p className="text-lg font-medium">No hay {stats.label} disponibles</p>
               <p className="text-sm">Los elementos aparecerán aquí cuando se agreguen</p>
             </div>

@@ -139,6 +139,17 @@ export function TableViewManager({ products, currentType }) {
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
       
+      case AGENDA:
+        return {
+          nombre: { label: "Nombre", key: "nombreES", default: true },
+          fecha: { label: "Fecha", key: "fecha", default: true },
+          horario: { label: "Horario", key: "horaInicio", default: true },
+          cliente: { label: "Cliente", key: "nombreCliente", default: true },
+          valor: { label: "Valor", key: "valor", default: true },
+          estado: { label: "Estado", key: "estado", default: true },
+          acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
+        };
+      
       default:
         return {};
     }
@@ -244,6 +255,8 @@ export function TableViewManager({ products, currentType }) {
         return product.tittle;
       case MenuItems:
         return `${product.NombreES || ""} ${product.NombreEN || ""} ${product.DescripcionMenuES || ""}`;
+      case AGENDA:
+        return `${product.nombreES || product.nombre || ""} ${product.nombreCliente || ""} ${product.infoAdicional || ""}`;
       default:
         return "";
     }
@@ -260,6 +273,8 @@ export function TableViewManager({ products, currentType }) {
         return product.Categoria;
       case MenuItems:
         return product.GRUPO;
+      case AGENDA:
+        return product.fecha ? product.fecha.substring(0, 7) : "Sin fecha";
       default:
         return "";
     }
@@ -271,6 +286,8 @@ export function TableViewManager({ products, currentType }) {
         case WorkIsue:
             // Convertir boolean 'Terminado' a string "Terminado" / "Pendiente"
             return product.Terminado ? "Terminado" : "Pendiente";
+        case AGENDA:
+            return product.estado || "pendiente";
         default:
             return product.Estado;
     }
@@ -993,6 +1010,44 @@ export function TableViewManager({ products, currentType }) {
         
         return procedimientosHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
+      case AGENDA:
+        const agendaHeaders = [
+          { key: 'nombre', content: (
+            <th key="nombre" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("nombreES")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Nombre <SortIcon column="nombreES" />
+              </button>
+            </th>
+          )},
+          { key: 'fecha', content: (
+            <th key="fecha" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("fecha")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Fecha <SortIcon column="fecha" />
+              </button>
+            </th>
+          )},
+          { key: 'horario', content: (
+            <th key="horario" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Horario</th>
+          )},
+          { key: 'cliente', content: (
+            <th key="cliente" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Cliente</th>
+          )},
+          { key: 'valor', content: (
+            <th key="valor" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">Valor</th>
+          )},
+          { key: 'estado', content: (
+            <th key="estado" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
+              <button onClick={() => handleSort("estado")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
+                Estado <SortIcon column="estado" />
+              </button>
+            </th>
+          )},
+          { key: 'acciones', content: (
+            <th key="acciones" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Acciones</th>
+          )}
+        ];
+        return agendaHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
+      
       default:
         return [<th key="default" className="px-3 py-2 text-left text-xs font-semibold text-gray-700">Sin columnas definidas</th>];
     }
@@ -1690,6 +1745,59 @@ export function TableViewManager({ products, currentType }) {
         ];
         
         return procedimientosCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
+      
+      case AGENDA:
+        const agendaCells = [
+          { key: 'nombre', content: (
+            <td key="nombre" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "nombreES") : <span className="font-medium text-purple-800">{item.nombreES || item.nombre || "Sin nombre"}</span>}
+            </td>
+          )},
+          { key: 'fecha', content: (
+            <td key="fecha" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "fecha", "date") : <span className="text-gray-600">{item.fecha || "Sin fecha"}</span>}
+            </td>
+          )},
+          { key: 'horario', content: (
+            <td key="horario" className="px-3 py-2 border-r border-gray-100 text-xs">
+              <div className="flex gap-1">
+                {showEdit ? (
+                  <>
+                    {renderEditableCell(item, "horaInicio", "time")}
+                    {renderEditableCell(item, "horaFinal", "time")}
+                  </>
+                ) : (
+                  <span>{item.horaInicio} - {item.horaFinal}</span>
+                )}
+              </div>
+            </td>
+          )},
+          { key: 'cliente', content: (
+            <td key="cliente" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "nombreCliente") : <span>{item.nombreCliente || "-"}</span>}
+            </td>
+          )},
+          { key: 'valor', content: (
+            <td key="valor" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "valor") : <span className="font-mono text-green-600">{item.valor || "-"}</span>}
+            </td>
+          )},
+          { key: 'estado', content: (
+            <td key="estado" className="px-3 py-2 border-r border-gray-100 text-xs">
+              {showEdit ? renderEditableCell(item, "estado", "select", ["pendiente", "aprobado", "desaprobado"]) :
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  item.estado === "aprobado" ? "bg-green-100 text-green-800" : 
+                  item.estado === "desaprobado" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"
+                }`}>
+                  {item.estado || "pendiente"}
+                </span>}
+            </td>
+          )},
+          { key: 'acciones', content: (
+            <td key="acciones" className="px-3 py-2 text-xs">{renderActionButtons(item, isEditing)}</td>
+          )}
+        ];
+        return agendaCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
       default:
         return [<td key="default" className="px-3 py-2 text-xs">Tipo no soportado</td>];

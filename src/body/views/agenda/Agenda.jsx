@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { getAllFromTable, deleteItem } from "@/redux/actions";
+import { useNavigate, useParams } from "react-router-dom";
+import { getAllFromTable, deleteItem, updateItem } from "@/redux/actions";
 import { AGENDA } from "@/redux/actions-types";
 import { CardGridAgenda } from "@/components/ui/cardGridAgenda";
 import PageLayout from "../../../components/ui/page-layout";
@@ -33,12 +33,14 @@ function Agenda() {
   const navigate = useNavigate();
   const allAgenda = useSelector((state) => state.allAgenda || []);
 
+  const { year, month } = useParams();
   const [viewMode, setViewMode] = useState("calendar"); // calendar, table, cards
   const [showForm, setShowForm] = useState(false);
   const [eventoToEdit, setEventoToEdit] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
+  
+  // Initialize month from URL or current date
+  const initialMonth = (year && month) ? `${year}-${month}` : new Date().toISOString().slice(0, 7);
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [attendeeCounts, setAttendeeCounts] = useState({});
 
   // Cargar eventos y asistentes al montar
@@ -95,16 +97,43 @@ function Agenda() {
 
   // Handlers para navegación de calendario
   const changeMonth = (offset) => {
-    const [year, month] = selectedMonth.split("-").map(Number);
-    // new Date(year, month - 1 + offset, 1) -> month - 1 porque JS Date es 0-index
-    const newDate = new Date(year, month - 1 + offset, 1);
-    setSelectedMonth(newDate.toISOString().slice(0, 7));
+    const [y, m] = selectedMonth.split("-").map(Number);
+    const newDate = new Date(y, m - 1 + offset, 1);
+    const newMonthStr = newDate.toISOString().slice(0, 7);
+    setSelectedMonth(newMonthStr);
+    
+    // Actualizar URL
+    const [newYear, newMonth] = newMonthStr.split("-");
+    navigate(`/Agenda/${newYear}/${newMonth}`);
+  };
+
+  // Sincronizar estado con cambios en la URL
+  useEffect(() => {
+    if (year && month) {
+      const monthStr = `${year}-${month}`;
+      if (selectedMonth !== monthStr) {
+        setSelectedMonth(monthStr);
+      }
+    }
+  }, [year, month]);
+
+  const handleStatusChange = async (evento, nuevoEstado) => {
+    try {
+      await dispatch(updateItem(evento._id, { estado: nuevoEstado }, AGENDA));
+      dispatch(getAllFromTable(AGENDA));
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+    }
   };
 
   const handlePrevMonth = () => changeMonth(-1);
   const handleNextMonth = () => changeMonth(1);
+
   const handleToday = () => {
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    const today = new Date().toISOString().slice(0, 7);
+    setSelectedMonth(today);
+    const [y, m] = today.split("-");
+    navigate(`/Agenda/${y}/${m}`);
   };
 
   const totalEventos = allAgenda.length;
@@ -252,12 +281,19 @@ function Agenda() {
           >
             <ChevronLeft size={18} />
           </Button>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="p-2 border rounded-md"
-          />
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedMonth(val);
+                if (val) {
+                  const [y, m] = val.split("-");
+                  navigate(`/Agenda/${y}/${m}`);
+                }
+              }}
+              className="p-2 border rounded-md"
+            />
           <Button
             variant="outline"
             size="icon"
@@ -476,6 +512,7 @@ function Agenda() {
                           Personas
                         </th>
                         <th className="p-3 text-left font-semibold">Valor</th>
+                        <th className="p-3 text-center font-semibold">Estado</th>
                         <th className="p-3 text-center font-semibold">
                           Acciones
                         </th>
@@ -514,13 +551,28 @@ function Agenda() {
                           </td>
                           <td className="p-3">{evento.valor || "-"}</td>
                           <td className="p-3">
+                            <select 
+                              value={evento.estado || "pendiente"} 
+                              onChange={(e) => handleStatusChange(evento, e.target.value)}
+                              className={`text-xs p-1 border rounded font-bold ${
+                                evento.estado === 'aprobado' ? 'bg-green-100 text-green-700' : 
+                                evento.estado === 'desaprobado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                            >
+                              <option value="pendiente">Pendiente</option>
+                              <option value="aprobado">Aprobado</option>
+                              <option value="desaprobado">Desaprobado</option>
+                            </select>
+                          </td>
+                          <td className="p-3">
                             <div className="flex gap-2 justify-center">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleViewEvento(evento)}
+                                title="Ver / Editar detalles"
                               >
-                                <Eye size={14} />
+                                <Edit size={14} />
                               </Button>
                               <Button
                                 size="sm"

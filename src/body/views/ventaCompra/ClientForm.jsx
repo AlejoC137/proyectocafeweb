@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 import { USER_PREFERENCES } from "../../../redux/actions-types";
+import { MESSAGE_TEMPLATES } from "../../../utils/messageTemplates";
 import { getAllFromTable } from "../../../redux/actions";
 
 const ALERGENOS = ["Frutos secos 🥜", "Mariscos 🦐", "Gluten 🌾", "Cerdo 🐷"];
@@ -27,6 +28,7 @@ export default function ClientForm({ onClose, initialData = "" }) {
   const dispatch = useDispatch();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Initialize with passed data if available
   const isEmail = initialData.includes("@");
@@ -93,10 +95,24 @@ export default function ClientForm({ onClose, initialData = "" }) {
         .insert([newClient]);
 
       if (error) throw error;
+      
+      // Auto-send welcome message
+      try {
+        await supabase
+          .from("UserMessages")
+          .insert({
+            title: MESSAGE_TEMPLATES.WELCOME.title,
+            content: MESSAGE_TEMPLATES.WELCOME.content(formData.name),
+            type: MESSAGE_TEMPLATES.WELCOME.type,
+            userId: newClient._id,
+            created_at: new Date().toISOString(),
+          });
+      } catch (msgError) {
+        console.error("Error sending auto-welcome message:", msgError);
+      }
 
-      alert("Cliente registrado exitosamente con perfil dietético.");
       await dispatch(getAllFromTable(USER_PREFERENCES));
-      if (onClose) onClose();
+      setIsSuccess(true); // Show success screen instead of alert
     } catch (error) {
       console.error("Error al registrar cliente:", error);
       alert("Error al registrar cliente: " + error.message);
@@ -113,6 +129,16 @@ export default function ClientForm({ onClose, initialData = "" }) {
       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z" clipRule="evenodd" />
     </svg>
   );
+
+  const handleWhatsAppWelcome = () => {
+    if (!formData.phone) return;
+    const content = MESSAGE_TEMPLATES.WELCOME.content(formData.name);
+    // Encode the content to preserve emojis and formatting.
+    const fullText = encodeURIComponent(content);
+    let phone = String(formData.phone).replace(/\D/g, '');
+    if (phone.length === 10) phone = '57' + phone;
+    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${fullText}`, "_blank");
+  };
 
   return (
     <Card className="w-full bg-white shadow-xl border-2 border-indigo-100 animate-in fade-in zoom-in-95 duration-300">
@@ -132,6 +158,39 @@ export default function ClientForm({ onClose, initialData = "" }) {
       </CardHeader>
 
       <CardContent className="p-5">
+
+        {isSuccess ? (
+          <div className="py-8 flex flex-col items-center text-center space-y-4 animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+              <UserPlus className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">¡Registro Exitoso!</h3>
+              <p className="text-sm text-slate-500 max-w-[250px] mx-auto mt-1">
+                {formData.name} ha sido registrado correctamente en el sistema.
+              </p>
+            </div>
+            
+            <div className="flex flex-col gap-2 w-full pt-4">
+              {formData.phone && (
+                <Button 
+                  onClick={handleWhatsAppWelcome}
+                  className="bg-green-600 hover:bg-green-700 text-white w-full gap-2 py-6 text-lg"
+                >
+                  <MessageSquare className="w-5 h-5" /> Enviar Bienvenida por WhatsApp
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="w-full"
+              >
+                Cerrar Ventana
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
 
         {/* STEP 0: BASIC INFO */}
         {step === 0 && (
@@ -331,7 +390,9 @@ export default function ClientForm({ onClose, initialData = "" }) {
             )}
           </div>
         </div>
-      </CardContent>
+      </>
+    )}
+  </CardContent>
     </Card>
   );
 }
