@@ -33,13 +33,20 @@ Esta semana tenemos 2x1 en todos nuestros cafés de especialidad. ¡Te esperamos
   },
   EVENT_REMINDER: {
     title: "Recordatorio de Evento \u23F0",
-    content: (name, eventName, date, time) => `¡Hola ${name || 'asistente'}! \u2728
-
-Este es un recordatorio de nuestro evento *${eventName}*.
-\u{1F4C5} *Fecha:* ${date}
-\u231A *Hora:* ${time}
-
-¡Te esperamos con mucha emoción! \u2615`,
+    content: (name, eventName, date, time, endTime, value, description, additionalInfo, allies, link, organizers) => {
+      let msg = `¡Hola ${name || 'asistente'}! \u2728\n\n`;
+      msg += `Este es un recordatorio de nuestro evento *${eventName}*.\n\n`;
+      msg += `\u{1F4C5} *Fecha:* ${date}\n`;
+      msg += `\u231A *Hora:* ${time}${endTime ? ` - ${endTime}` : ''}\n`;
+      if (value) msg += `\u{1F4B5} *Valor:* ${value}\n`;
+      if (description) msg += `\n*Descripción:* ${description}\n`;
+      if (organizers) msg += `\n\u{1F465} *Organizado por:* ${organizers}\n`;
+      if (allies && allies.length > 0) msg += `\n\u{1F91D} *Aliados:* ${allies.join(', ')}\n`;
+      if (additionalInfo) msg += `\n\u2139\ufe0f *Info Adicional:* ${additionalInfo}\n`;
+      if (link) msg += `\n\u{1F517} *Enlace:* ${link}\n`;
+      msg += `\n¡Te esperamos con mucha emoción! \u2615`;
+      return msg;
+    },
     type: "reminder"
   }
 };

@@ -80,7 +80,11 @@ export default function EventosOffer() {
 
     const eventosFiltrados = useMemo(() => {
         return allAgenda
-            .filter((evento) => evento.fecha?.startsWith(selectedMonth) && evento.estado === 'aprobado')
+            .filter((evento) => {
+                const matchesMonth = evento.fecha?.startsWith(selectedMonth);
+                const matchesStatus = evento.estado === 'aprobado' || !evento.estado;
+                return matchesMonth && matchesStatus;
+            })
             .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
     }, [allAgenda, selectedMonth]);
 

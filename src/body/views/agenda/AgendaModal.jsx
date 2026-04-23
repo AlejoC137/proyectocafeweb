@@ -17,7 +17,7 @@ function AgendaModal() {
   const { id, tab } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   const [realId, setRealId] = useState(id); // Para mantener el UUID real completo en base de datos
 
   const isNewEvent = id === "new";
@@ -73,18 +73,18 @@ function AgendaModal() {
         if (id.length < 36) {
           const { data: allIds, error: idsErr } = await supabase.from(AGENDA).select('_id');
           if (idsErr) throw idsErr;
-          
+
           const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(id.toLowerCase()));
           if (match) {
             resolveId = match._id;
             setRealId(match._id);
           } else {
-             throw new Error(`No se encontró un evento que coincida con el ID corto: ${id}`);
+            throw new Error(`No se encontró un evento que coincida con el ID corto: ${id}`);
           }
         }
 
         if (resolveId.length < 36) {
-            throw new Error("Invalid UUID format resolved");
+          throw new Error("Invalid UUID format resolved");
         }
 
         const { data, error } = await supabase.from(AGENDA).select("*").eq("_id", resolveId).single();
@@ -178,14 +178,14 @@ function AgendaModal() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Restricción para forzar que numeroPersonas sea estrictamente numérico
     if (name === "numeroPersonas") {
       const numericValue = value.replace(/[^0-9]/g, "");
       setFormData((prev) => ({ ...prev, [name]: numericValue }));
       return;
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -356,22 +356,41 @@ function AgendaModal() {
 
     let content = "";
     if (typeof messageForm.content === 'function') {
-      content = messageForm.content(a.nombre, formData.nombreES, formData.fecha, formData.horaInicio);
+      content = messageForm.content(
+        a.nombre,
+        formData.nombreES,
+        formData.fecha,
+        formData.horaInicio,
+        formData.horaFinal,
+        formData.valor,
+        formData.decripcion,
+        formData.infoAdicional,
+        formData.instagramsAliados,
+        formData.linkInscripcion,
+        formData.autores
+      );
     } else {
       // Si el usuario editó el mensaje, reemplazamos el marcador manualmente
       content = (messageForm.content || "")
         .replace(/{nombre}/g, a.nombre)
         .replace(/{evento}/g, formData.nombreES)
         .replace(/{fecha}/g, formData.fecha)
-        .replace(/{hora}/g, formData.horaInicio);
+        .replace(/{hora}/g, formData.horaInicio)
+        .replace(/{horaFin}/g, formData.horaFinal)
+        .replace(/{valor}/g, formData.valor)
+        .replace(/{descripcion}/g, formData.decripcion)
+        .replace(/{info}/g, formData.infoAdicional)
+        .replace(/{aliados}/g, formData.instagramsAliados?.join(', ') || "")
+        .replace(/{link}/g, formData.linkInscripcion || "")
+        .replace(/{autores}/g, formData.autores || "");
     }
-    
-    const textToEncode = content || `Hola ${a.nombre}, te contactamos de Proyecto Café sobre el evento ${formData.nombreES}.`;
+
+    const textToEncode = content || `Hola ${a.nombre}, te escribimos de Proyecto Café para recordarte el evento ${formData.nombreES}, el día ${formData.fecha} a las ${formData.horaInicio} en Proyecto Café.`;
     const fullText = encodeURIComponent(textToEncode);
-    
+
     let phone = String(a.telefono).replace(/\D/g, '');
     if (phone.length === 10) phone = '57' + phone;
-    
+
     // wa.me es más robusto para redirecciones con emojis en dispositivos móviles
     window.open(`https://wa.me/${phone}?text=${fullText}`, "_blank");
   };
@@ -445,23 +464,23 @@ function AgendaModal() {
                   {/* Detalles del Administrador / Auxiliares */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                       <Users className="text-blue-600" size={20} /> Información del Aliado / Organizador
+                      <Users className="text-blue-600" size={20} /> Información del Aliado / Organizador
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2"><Label>Nombre del Aliado</Label><input name="nombreCliente" type="text" value={formData.nombreCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
                       <div className="space-y-2"><Label>Email del Aliado</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
                       <div className="space-y-2"><Label>Teléfono del Aliado</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                      
+
                       <div className="space-y-2 md:col-span-2">
                         <Label>Instagrams de los Aliados</Label>
                         <div className="flex gap-2 mb-2">
-                          <input 
-                            type="text" 
-                            value={tempIG} 
-                            onChange={(e) => setTempIG(e.target.value)} 
+                          <input
+                            type="text"
+                            value={tempIG}
+                            onChange={(e) => setTempIG(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())}
-                            className="flex-1 p-2 border rounded-md" 
-                            placeholder="@usuario" 
+                            className="flex-1 p-2 border rounded-md"
+                            placeholder="@usuario"
                           />
                           <Button type="button" onClick={addInstagramHandle} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
                             <Plus size={16} className="mr-1" /> Agregar
@@ -622,14 +641,14 @@ function AgendaModal() {
               {!isNewEvent && (
                 <TabsContent value="inscripciones" className="p-6 m-0">
                   <div className="space-y-6">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <h3 className="text-xl font-bold">Asistentes Inscritos</h3>
                         <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">Total: {attendees.length}</div>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          onClick={() => setShowMassiveMessage(!showMassiveMessage)} 
+                        <Button
+                          onClick={() => setShowMassiveMessage(!showMassiveMessage)}
                           variant={showMassiveMessage ? "secondary" : "default"}
                           className="bg-green-600 hover:bg-green-700 text-white gap-2"
                         >
@@ -650,10 +669,10 @@ function AgendaModal() {
                           <div className="space-y-4">
                             <div className="space-y-1">
                               <Label>Contenido del Mensaje</Label>
-                              <textarea 
-                                placeholder="Escribe el mensaje para los asistentes..." 
-                                value={typeof messageForm.content === 'function' ? messageForm.content('{nombre}', formData.nombreES, formData.fecha, formData.horaInicio) : messageForm.content}
-                                onChange={(e) => setMessageForm({...messageForm, content: e.target.value})}
+                              <textarea
+                                placeholder="Escribe el mensaje para los asistentes..."
+                                value={typeof messageForm.content === 'function' ? messageForm.content('{nombre}', formData.nombreES, formData.fecha, formData.horaInicio, formData.horaFinal, formData.valor, formData.decripcion, formData.infoAdicional, formData.instagramsAliados, formData.linkInscripcion, formData.autores) : messageForm.content}
+                                onChange={(e) => setMessageForm({ ...messageForm, content: e.target.value })}
                                 className="w-full p-2 border rounded-md text-sm bg-white min-h-[120px]"
                               />
                             </div>
@@ -661,8 +680,8 @@ function AgendaModal() {
                           <div className="space-y-4">
                             <Label>Plantillas Rápidas</Label>
                             <div className="flex flex-wrap gap-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => setMessageForm({
                                   title: MESSAGE_TEMPLATES.EVENT_REMINDER.title,
@@ -673,8 +692,8 @@ function AgendaModal() {
                               >
                                 Recordatorio de Evento
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => setMessageForm({
                                   title: MESSAGE_TEMPLATES.EVENT.title,
@@ -759,8 +778,8 @@ function AgendaModal() {
                                   </td>
                                   <td className="px-4 py-3 align-top">
                                     <div className="flex flex-col items-center gap-1 pt-1">
-                                      <button 
-                                        onClick={() => handleWhatsAppMessage(a)} 
+                                      <button
+                                        onClick={() => handleWhatsAppMessage(a)}
                                         title="Enviar WhatsApp"
                                         className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition shadow-sm"
                                       >
