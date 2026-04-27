@@ -515,7 +515,6 @@ function ModeloContent({ targetMonth, targetYear }) {
 
         if (modelId) {
             dispatch(updateModelAction(modelId, { costs: dataStr }));
-            console.log("Updating model:", dataStr);
 
         } else {
             const modelName = `Contabilidad ${monthsNames[targetMonth]} ${targetYear}`;

@@ -35,58 +35,47 @@ function Mesa({ index, ventaActual, onVentaChange }) {
   };
 
   useEffect(() => {
-    // Solo sincronizamos con ventaActual si:
-    // 1. Es una venta diferente (ID distinto)
-    // 2. No tenemos cambios locales pendientes (buttonState !== 'save')
-    // 3. O si ventaActual es null (la mesa se liberó)
-    
     if (ventaActual) {
-      if (ventaActual._id !== ventaId || buttonState !== 'save') {
-        const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-        const isLinkedUser = isUuid(ventaActual.Cliente);
+      const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+      const isLinkedUser = isUuid(ventaActual.Cliente);
+      console.log(ventaActual);
 
-        setFormData({
-          Cliente: isLinkedUser ? (allUsers.find(u => u._id === ventaActual.Cliente)?.name || ventaActual.Cliente) : (ventaActual.Cliente || ''),
-          Cajero: ventaActual.Cajero || '',
-          clientId: isLinkedUser ? ventaActual.Cliente : null,
-        });
-        try {
-          setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
-        } catch (e) {
-          console.error("Error parsing Productos JSON:", e);
-          setOrderItems([]);
-        }
-        setVentaId(ventaActual._id);
-        setButtonState("done");
-      }
-    } else {
-      // Si ya no hay venta activa en el servidor para esta mesa,
-      // y no estamos en medio de una creación local (ventaId === null && items.length > 0)
-      // entonces limpiamos.
-      if (ventaId !== null || (orderItems.length === 0)) {
-        setFormData({ Cliente: '', Cajero: '', clientId: null });
+      setFormData({
+        Cliente: isLinkedUser ? (allUsers.find(u => u._id === ventaActual.Cliente)?.name || ventaActual.Cliente) : (ventaActual.Cliente || ''),
+        Cajero: ventaActual.Cajero || '',
+        clientId: isLinkedUser ? ventaActual.Cliente : null,
+      });
+      try {
+        setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
+      } catch (e) {
+        console.error("Error parsing Productos JSON:", e);
         setOrderItems([]);
-        setVentaId(null);
-        setButtonState("save");
       }
+      setVentaId(ventaActual._id);
+      setButtonState("done");
+    } else {
+      setFormData({ Cliente: '', Cajero: '', clientId: null });
+      setOrderItems([]);
+      setVentaId(null);
+      setButtonState("save");
     }
-  }, [ventaActual, allUsers]); // Añadimos allUsers para asegurar nombres correctos si cargan después
+  }, [ventaActual]);
 
   const filteredUsers = useMemo(() => {
     if (!userSearchTerm) return [];
     const term = userSearchTerm.toLowerCase();
-    return allUsers.filter(u => 
-      (u.name && u.name.toLowerCase().includes(term)) || 
+    return allUsers.filter(u =>
+      (u.name && u.name.toLowerCase().includes(term)) ||
       (u.email && u.email.toLowerCase().includes(term)) ||
       (u.phone && String(u.phone).includes(term))
     );
   }, [userSearchTerm, allUsers]);
 
   const handleUserSelect = (user) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      clientId: user._id, 
-      Cliente: user.name || user.email 
+    setFormData(prev => ({
+      ...prev,
+      clientId: user._id,
+      Cliente: user.name || user.email
     }));
     setUserSearchTerm("");
     setShowUserMatches(false);
@@ -182,14 +171,14 @@ function Mesa({ index, ventaActual, onVentaChange }) {
     if (buttonState !== 'save' || !window.confirm("¿Confirmar y guardar cambios?")) return;
 
     setButtonState("syncing");
-    
+
     // Destructuramos para no enviar 'clientId' que no existe en la tabla de Supabase
     const { clientId, ...restFormData } = formData;
 
     const ventaData = {
       ...restFormData,
       Cliente: clientId || formData.Cliente || null, // Guardamos ID si existe, sino el nombre, sino null
-      Tip: 0, 
+      Tip: 0,
       Total_Ingreso: totalPago,
       Productos: JSON.stringify(orderItems),
       Mesa: index,
@@ -261,20 +250,20 @@ function Mesa({ index, ventaActual, onVentaChange }) {
               disabled={!isMesaInUse}
             />
             {formData.clientId && (
-              <button 
+              <button
                 onClick={() => setFormData(prev => ({ ...prev, clientId: null, Cliente: '' }))}
                 className="absolute right-2 top-1.5 text-slate-400 hover:text-red-500"
               >
                 <XCircle size={14} />
               </button>
             )}
-            
+
             {showUserMatches && filteredUsers.length > 0 && (
               <ul className="absolute bg-white border rounded-sm shadow-xl max-h-40 overflow-y-auto z-[60] w-full mt-0.5 text-xs">
                 {filteredUsers.map((user) => (
-                  <li 
-                    key={user._id} 
-                    onClick={() => handleUserSelect(user)} 
+                  <li
+                    key={user._id}
+                    onClick={() => handleUserSelect(user)}
                     className="p-2 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 flex justify-between items-center"
                   >
                     <div className="flex flex-col">
@@ -385,11 +374,11 @@ function Mesa({ index, ventaActual, onVentaChange }) {
       )}
 
       {showPagarModal && (
-        <Pagar 
-          onClose={() => setShowPagarModal(false)} 
-          ventaId={ventaId} 
-          total={totalPago} 
-          onPaymentComplete={handlePaymentComplete} 
+        <Pagar
+          onClose={() => setShowPagarModal(false)}
+          ventaId={ventaId}
+          total={totalPago}
+          onPaymentComplete={handlePaymentComplete}
           clientId={formData.clientId}
           productos={orderItems}
         />

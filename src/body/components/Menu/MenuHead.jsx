@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
 import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO, BEBIDAS_FRIAS,BEBIDAS_CALIENTES,PANADERIA_REPOSTERIA_DULCE, PANADERIA_REPOSTERIA_SALADA, ADICIONES_COMIDAS, ADICIONES_BEBIDAS, AGENDA  } from "../../../redux/actions-types";
@@ -19,9 +19,8 @@ function MenuHead() {
   const [loading, setLoading] = useState(true);
   const [leng, setLeng] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const printRef = useRef(null);
   const menuData = useSelector((state) => state.allMenu);
-  const qrSize = "h-[200px]"; // Puedes ajustar el valor aquí
+  const qrSize = "h-[200px]";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,21 +39,15 @@ function MenuHead() {
     fetchData();
   }, [dispatch]);
 
-  const handlePrint = () => {
-    const printContent = printRef.current.innerHTML;
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
-    window.location.reload();
-  };
+  // Usa @media print en CSS para ocultar nav/overlay — sin tocar el DOM de React
+  const handlePrint = () => window.print();
 
   if (loading) {
     return <div className="text-center text-white text-2xl font-SpaceGrotesk font-light">Cargando menú...</div>;
   }
 
   return (
-    <div className="flex w-screen flex-col items-center justify-center " ref={printRef}>
+    <div className="flex w-screen flex-col items-center justify-center " data-print-target>
       <div className="flex gap-4 mt-12 mb-5 print:hidden">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium">
           🖨️

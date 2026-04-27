@@ -108,7 +108,6 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
 
   const calculateTotalIngredientes = (items) => {
     const resultad = recetaMariaPaula(items , product.GRUPO , (editvCMP? `.${editvCMP}` : null) , processTime);
-    console.log(resultad);
     
     setCostoDirecto(resultad.detalles)
     setTotalIngredientes(resultad.consolidado);
@@ -171,7 +170,6 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
   };
 
   const handleRecetaClick = (item) => {
-    console.log(product.Receta);
     
     const url = `/receta/${product.Receta}`;
     window.open(url, '_blank');

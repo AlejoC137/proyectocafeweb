@@ -49,8 +49,6 @@ export function scrapAction(url, pointers) {
         type: SCRAP,
         payload: resultData,
       });
-
-      console.log('Datos extraídos:', resultData);
     } catch (err) {
       console.error('Error durante el scraping:', err);
     }
@@ -109,7 +107,6 @@ export function fixUrl(datos, campo, buscar, reemplazar) {
       });
 
       await Promise.all(updatePromises);
-      console.log("Actualización completada");
 
     } catch (error) {
       console.error("Error en la función fixUrl:", error);
@@ -309,7 +306,6 @@ export function procesarRecetaYEnviarASupabase() {
 
         // Llamar a la acción insertarRecetas para insertar los datos en Supabase
         dispatch(insertarRecetas([recetaParaSupabase]));
-        //  console.log(recetaParaSupabase);
 
       }
     } catch (error) {
@@ -368,7 +364,6 @@ export function actualizarPrecioUnitario(items, type) {
         }
 
         // Log para verificar los datos antes de la actualización
-        console.log(`Actualizando el item con _id: ${item._id}, precioUnitario: ${precioUnitario}`);
 
         // Actualizar el valor unitario en el item correspondiente usando update()
         let { data, error } = await supabase
@@ -383,7 +378,6 @@ export function actualizarPrecioUnitario(items, type) {
         if (error) {
           console.error(`Error al actualizar el item con _id: ${item._id}`, error);
         } else {
-          console.log(`Item actualizado correctamente: ${item._id}`, data);
         }
       }
     } catch (error) {
@@ -412,9 +406,6 @@ export function calcularPrecioUnitario(item) {
 
   // precioUnitario = (costo / (cantidad-(cantidad*Merma)) ) * ajusteInflacionario * ( coor ? coor : 1.05);
   precioUnitario = (costo / cantidad) * ajusteInflacionario * (coor ? coor : 1.05);
-
-
-  console.log(precioUnitario);
 
 
   return parseFloat(precioUnitario.toFixed(2));
@@ -543,8 +534,6 @@ export function crearItem(itemData, type, forId) {
         type: "CREAR_ITEM_SUCCESS",
         payload: data[0], // El nuevo ítem creado
       });
-
-      console.log("Ítem creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearItem:", error);
@@ -579,8 +568,6 @@ export function updateItem(itemId, updatedFields, type) {
         }
       });
 
-      console.log(`Actualizando ítem ${itemId} en tabla ${table}:`, sanitizedFields);
-
       const { data, error } = await supabase
         .from(table)
         .update(sanitizedFields)
@@ -595,8 +582,6 @@ export function updateItem(itemId, updatedFields, type) {
       if (!data || data.length === 0) {
         throw new Error('No se encontró el ítem para actualizar o no se realizaron cambios');
       }
-
-      console.log('Ítem actualizado correctamente:', data[0]);
 
       // Despachar acción de éxito al store (opcional)
       dispatch({
@@ -639,8 +624,6 @@ export function deleteItem(itemId, type) {
         type: "DELETE_ITEM_SUCCESS",
         payload: itemId, // Enviar el ID del ítem eliminado
       });
-
-      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
     } catch (error) {
       console.error("Error en la acción deleteItem:", error);
       throw error;
@@ -655,11 +638,11 @@ export const getRecepie = async (uuid, type) => {
       .from(type)
       .select("*")
       .eq("_id", uuid)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error al obtener la receta:", error);
-      throw new Error(error.message);
+      return null;
     }
 
     return data;
@@ -670,9 +653,7 @@ export const getRecepie = async (uuid, type) => {
 };
 
 export const trimRecepie = (items, recepie) => {
-  // console.log(recepie);
   const buscarPorId = (id) => {
-    // console.log(items.find((item) => item._id === id) || null)
     return items.find((item) => item._id === id) || null;
   };
   const clavesFiltradas = Object.keys(recepie).filter(
@@ -772,8 +753,6 @@ export function crearProveedor(proveedorData) {
         type: "CREAR_PROVEEDOR_SUCCESS",
         payload: data[0],
       });
-
-      console.log("Proveedor creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearProveedor:", error);
@@ -795,8 +774,6 @@ export function updateProveedor(proveedorId, updatedFields) {
         console.error('Error al actualizar el proveedor:', error);
         return null;
       }
-
-      console.log('Proveedor actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción updateProveedor:', error);
@@ -821,8 +798,6 @@ export function deleteProveedor(proveedorId) {
         type: "DELETE_PROVEEDOR_SUCCESS",
         payload: proveedorId,
       });
-
-      console.log(`Proveedor con ID ${proveedorId} eliminado correctamente.`);
     } catch (error) {
       console.error("Error en la acción deleteProveedor:", error);
       throw error;
@@ -859,7 +834,6 @@ export const getProveedor = async (uuid) => {
 
 
 export function crearStaff(staffData) {
-  console.log(staffData)
 
   return async (dispatch) => {
     try {
@@ -888,8 +862,6 @@ export function crearStaff(staffData) {
         type: "CREAR_ITEM_SUCCESS",
         payload: data[0], // El nuevo miembro del personal creado.
       });
-
-      console.log("Miembro del personal creado correctamente:", data[0]);
       return data[0]; // Devuelve el nuevo objeto.
 
     } catch (error) {

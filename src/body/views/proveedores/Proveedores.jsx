@@ -36,7 +36,6 @@ function Proveedores() {
 
         
         setLoading(false);
-        console.log("Proveedores loaded:", proveedores);
         
       } catch (error) {
         console.error("Error loading data:", error);

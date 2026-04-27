@@ -60,7 +60,6 @@ function Manager() {
 
   useEffect(() => {
     if (currentType === MenuItems) {
-      console.log("Menús mostrados en Manager:", filteredItems);
     }
   }, [currentType, filteredItems]);
 

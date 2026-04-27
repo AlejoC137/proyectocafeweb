@@ -10,7 +10,6 @@ function SobreNosotros() {
       return;
     }
     const payload = { correo, proyecto };
-    console.log("Nuevo Proyecto Recibido:", JSON.stringify(payload, null, 2));
     alert("¡Proyecto enviado!\nRevisaremos tu idea y te contactaremos al correo: " + correo);
     setProyecto("");
     setCorreo("");

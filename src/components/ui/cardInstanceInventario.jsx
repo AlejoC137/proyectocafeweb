@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { setSelectedProviderId } from "../../redux/actions-Proveedores";
 import supabase from "../../config/supabaseClient";
 import { showSuccessToast, showErrorToast } from "../../utils/toast";
 
-export function CardInstanceInventario({ product, currentType }) {
+export const CardInstanceInventario = memo(function CardInstanceInventario({ product, currentType }) {
   const Proveedores = useSelector((state) => state.Proveedores || []);
   const dispatch = useDispatch();
   const showEdit = useSelector((state) => state.showEdit);
@@ -135,7 +135,6 @@ export function CardInstanceInventario({ product, currentType }) {
   };
 
   const handleUpdate = async () => {
-    console.log(product);
 
     let { data, error } = await supabase
       .from(currentType) // Nombre correcto de la tabla
@@ -526,4 +525,4 @@ export function CardInstanceInventario({ product, currentType }) {
       </CardContent>
     </Card>
   );
-}
+}, (prev, next) => prev.product === next.product && prev.currentType === next.currentType);

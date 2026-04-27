@@ -13,7 +13,6 @@ import {
 
 export function CardInstance({ product, isEnglish }) {
   const [showDescription, setShowDescription] = useState(false)
-console.log(product);
 
   return (
     (<Card

@@ -68,7 +68,6 @@ function MesResumen() {
             .select('*')
             .order('Date', { ascending: false })
             .range(from, to);
-          // console.log(data);
 
           if (error) throw error;
 
@@ -206,7 +205,6 @@ function MesResumen() {
     }
 
     const calculateRecipeValues = () => {
-      // console.log(allMenu);
 
       const updatedProductos = datosCalculadosDelMes.productosVendidos.map((producto) => {
 
@@ -288,7 +286,6 @@ function MesResumen() {
 
   const handleFetchSales = async () => {
     const processedSales = await fetchAndProcessSales(dispatch);
-    console.log("Fetched and Processed Sales:", processedSales);
   };
 
   if (loading) {

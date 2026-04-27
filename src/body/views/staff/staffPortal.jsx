@@ -40,14 +40,12 @@ function StaffPortal() {
   const [loading, setLoading] = useState(true);
 
   // LOG PARA REVISAR PROPIEDADES (Solicitado por el usuario)
-  console.log("DEBUG - Lista de Staff completa:", allStaff);
 
   const [activeView, setActiveView] = useState(null);
   const [propinaInput, setPropinaInput] = useState("");
   const [selectedStaffId, setSelectedStaffId] = useState("");
 
   useEffect(() => {
-    // console.log("All Staff Data:", allStaff);
 
     const fetchData = async () => {
       try {

@@ -9,8 +9,6 @@ function StaffWorkIssues_Instance({ issue }) {
   // Acceder a los datos globales
   const allProcedimientos = useSelector((state) => state.allProcedimientos || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
-// console.log(allProcedimientos);
-// console.log(allProduccion);
 
   // Parsear campos JSON si vienen como string
   let fechas = {};
@@ -48,11 +46,10 @@ function StaffWorkIssues_Instance({ issue }) {
   // Función que compara un elemento con la lista global
   const encontrarElementoCompleto = (item) => {
     if (item._tipo === "procedimiento") {
-      console.log(allProcedimientos.find(el => el._id === item._id));    
+    
     return allProcedimientos.find(el => el._id === item._id);
     
   } else if (item._tipo === "produccion") {
-      console.log(allProduccion.find(el => el._id === item._id));
       return allProduccion.find(el => el._id === item._id);
     }
     return null;

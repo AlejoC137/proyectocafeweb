@@ -28,8 +28,6 @@ export async function fetchAndProcessSales(dispatch) {
       }
       return sale;
     });
-
-    console.log("Processed Sales:", processedSales);
     return processedSales;
   } catch (error) {
     console.error("Error processing sales:", error);

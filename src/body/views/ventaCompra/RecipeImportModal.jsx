@@ -9,6 +9,7 @@ import { MENU, PRODUCCION } from "../../../redux/actions-types";
 import AccionesRapidas from '../actualizarPrecioUnitario/AccionesRapidas';
 import { copyPromptToClipboard } from '../../../utils/prompts';
 import { Copy, Check } from 'lucide-react';
+import { RecipeButton } from '@/components/RecipeButton';
 
 const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRecipeId, forcedRecipeSource }) => {
     const dispatch = useDispatch();
@@ -39,6 +40,7 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
     const [step, setStep] = useState(1); // 1: JSON Input, 2: Mapping & Confirmation
     const [isSaving, setIsSaving] = useState(false);
     const [promptCopied, setPromptCopied] = useState(false);
+    const [claudeQuery, setClaudeQuery] = useState("");
 
     // Helpers
     const getProductName = (product) => product?.Nombre_del_producto || product?.NombreES || product?.name || "(Sin nombre)";
@@ -464,6 +466,24 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
             <div className="flex-1 overflow-hidden p-6 max-h-[800px] overflow-y-auto">
                 {step === 1 ? (
                     <div className="flex flex-col gap-4">
+                        {/* AI GENERATION SECTION */}
+                        <div className="bg-amber-50 p-4 rounded-md border border-amber-200 flex flex-col gap-3">
+                            <p className="text-sm font-semibold text-amber-800">Generar JSON con IA</p>
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    value={claudeQuery}
+                                    onChange={(e) => setClaudeQuery(e.target.value)}
+                                    placeholder="Ej: receta de sopa de tomate con albahaca"
+                                    className="flex-1 bg-white"
+                                />
+                                <RecipeButton
+                                    userQuery={claudeQuery}
+                                    sources={["menu", "inventario"]}
+                                    onResult={(data) => setJsonInput(JSON.stringify(data, null, 2))}
+                                />
+                            </div>
+                        </div>
+
                         <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                             <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm text-blue-800 font-medium">

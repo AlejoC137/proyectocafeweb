@@ -299,8 +299,6 @@ function GestionAlmacen() {
           _includedFields: Object.keys(update).filter(k => k !== "_id" && k !== "COSTO") // Default included fields (COSTO excluded by default per logic if needed, but usually we include everything provided)
         };
       }).filter(Boolean);
-
-      console.log("ITEMS PROCESADOS (STAGED):", newStagedItems);
       setStagedItems(newStagedItems);
       // alert(`Procesados ${newStagedItems.length} items.`);
     } catch (e) {
@@ -425,7 +423,6 @@ function GestionAlmacen() {
         });
 
         // Debug log for user validation
-        console.log("ITEM A GUARDAR (PAYLOAD):", payload);
 
         // Ensure numbers are numbers
         if (payload.COSTO) payload.COSTO = Number(payload.COSTO);

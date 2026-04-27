@@ -57,7 +57,6 @@
 //       setMenuItemData(newData);
 
 //       alert("Formulario llenado correctamente desde el JSON.");
-//       console.log("Datos cargados desde JSON:", newData);
 
 //     } catch (error) {
 //       console.error("Error al parsear el JSON:", error);

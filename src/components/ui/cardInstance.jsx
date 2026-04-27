@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { memo, useState } from "react"
 import { ShoppingCart, Flame, Leaf, AlertTriangle } from "lucide-react"
 import { ESP } from "../../redux/actions-types"
 
-export function CardInstance({ product, isEnglish, onClick }) {
+// memo: evita re-render si product, isEnglish y onClick no cambiaron
+export const CardInstance = memo(function CardInstance({ product, isEnglish, onClick }) {
   const leng = isEnglish === ESP ? false : true
 
   const dietWarning = leng ? product.DietaEN : product.DietaES
@@ -103,4 +104,4 @@ export function CardInstance({ product, isEnglish, onClick }) {
       </div>
     </div>
   )
-}
+});

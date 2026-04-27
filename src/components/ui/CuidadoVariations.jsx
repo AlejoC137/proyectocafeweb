@@ -35,7 +35,6 @@ const OPCIONES_DISPONIBLES = {
 
 // --- Componente principal ---
 export default function CuidadoVariations({ showEdit,product, viewName, isEnglish: isEnglishProp = false }) {
-  console.log(showEdit);
   
   const dispatch = useDispatch();
   const [isEnglish, setIsEnglish] = useState(isEnglishProp);

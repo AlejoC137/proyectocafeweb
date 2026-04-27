@@ -21,8 +21,6 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Log de configuración exitosa (solo en desarrollo)
 if (import.meta.env.DEV) {
-  console.log('✅ Supabase configurado correctamente');
-  console.log('🔗 URL:', supabaseUrl);
 }
 
 export default supabase;

@@ -16,7 +16,6 @@ export function AuthFormComponent() {
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    console.log('Iniciar sesión con:', { email, password });
   };
 
   return (

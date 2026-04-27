@@ -39,7 +39,6 @@ function DiaResumen() {
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) =>  state.allCompras); // Fetch Compras from Redux
   
-  // console.log(allCompras);
   useEffect(() => {
     if (!date) {
       navigate(`/DiaResumen/${getToday()}`, { replace: true });
@@ -67,7 +66,6 @@ function DiaResumen() {
           dispatch(getAllFromTable(COMPRAS)),
         ]);
 
-        // console.log("Compras from Redux:", allCompras); // Log Compras to console
 
         const { data, error } = await supabase
           .from("Ventas")
@@ -75,9 +73,6 @@ function DiaResumen() {
           .like("Date", `${hoy}%`)
           .order("Date", { ascending: true });
 
-// console.log("Venta" , data[900].Date);
-// console.log("Fencha" , hoy);
-console.log(data);
 
 
         if (error) {
@@ -97,7 +92,6 @@ console.log(data);
           });
 
           const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === hoy );
-          // console.log(ventasHoy);
 
           // Ordenar las ventas por fecha y hora
           ventasHoy.sort((a, b) => new Date(a.Date) - new Date(b.Date));
@@ -130,7 +124,6 @@ console.log(data);
                 console.error("Error parsing Pago_Info:", e);
                 return;
               }
-              // console.log(pagos.metodo);
 
               // if (Array.isArray(pagos)) {
                 // pagos.forEach((pago) => {
@@ -144,7 +137,6 @@ console.log(data);
                     
                     transferencia += parseFloat(venta.Total_Ingreso || 0);
                   }
-                  // console.log(transferencia);
                   
                
                 // });
@@ -224,7 +216,6 @@ console.log(data);
 
   const handleFetchSales = async () => {
     const processedSales = await fetchAndProcessSales(dispatch);
-    console.log("Fetched and Processed Sales:", processedSales);
   };
 
   if (loading) {
@@ -239,10 +230,6 @@ console.log(data);
   const totalCompras = allCompras
     .filter((compra) => compra.Date === hoy)
     .reduce((acc, compra) => acc + parseFloat(compra.Valor), 0);
-
-
-
-    console.log(ventas);
     
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">

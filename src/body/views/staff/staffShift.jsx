@@ -6,7 +6,6 @@ function StaffShift({ staffId }) {
   const dispatch = useDispatch();
   const allStaff = useSelector((state) => state.allStaff || []);
   const staff = allStaff.find((s) => s._id === staffId);
-console.log("StaffShift staff:", staff);
 
   // Inicializar turnos desde Redux
   const [turnos, setTurnos] = useState(() => {
@@ -63,8 +62,6 @@ console.log("StaffShift staff:", staff);
       horaInicio: ahora.toTimeString().split(" ")[0].slice(0, 5),
       horaCierre: "false",
     };
-
-    console.log(nuevoTurno);
 
     const nuevosTurnos = [...turnos, nuevoTurno];
     setTurnos(nuevosTurnos);

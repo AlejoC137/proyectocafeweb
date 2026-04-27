@@ -1,10 +1,10 @@
-import React from "react";
+import React, { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, Trash2, Users, Clock, ExternalLink } from "lucide-react";
 
-export function CardInstanceAgenda({ product, onDelete }) {
+export const CardInstanceAgenda = memo(function CardInstanceAgenda({ product, onDelete }) {
   const navigate = useNavigate();
 
   const handleViewEvento = () => {
@@ -93,4 +93,4 @@ export function CardInstanceAgenda({ product, onDelete }) {
       </CardContent>
     </Card>
   );
-}
+});

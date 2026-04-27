@@ -144,7 +144,6 @@ function RecepieOptions({ product, Receta }) {
   };
 
   const handleRecetaClick = (item) => {
-    console.log(product.Receta);
     
     const url = `/receta/${product.Receta}`;
     window.open(url, '_blank');

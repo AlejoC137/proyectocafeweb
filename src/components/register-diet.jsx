@@ -17,7 +17,6 @@ import { useToast } from "@/hooks/use-toast"; // Asegúrate de que la ruta sea c
 
 // Simulated Google sign-up function
 const signUpWithGoogle = async () => {
-  console.log("Signing up with Google");
 };
 
 export function RegisterFormComponent() {
@@ -38,7 +37,6 @@ export function RegisterFormComponent() {
       return;
     }
     // Aquí típicamente enviarías los datos al backend para registrar el usuario
-    console.log("Registrar usuario:", { name, email, password });
     toast({
       title: "Registro exitoso",
       description: "Tu cuenta ha sido creada.",

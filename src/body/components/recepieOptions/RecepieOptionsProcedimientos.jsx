@@ -51,8 +51,6 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
       calculateTotalIngredientes(trimmedRecepie);
       setProcessTime(recepieData.ProcessTime)
 
-      console.log(recepieData);
-
     }
 
   };
@@ -132,8 +130,6 @@ function RecepieOptionsProcedimientos({ product, receta, currentType }) {
           ...mapItemsToPayload(productoInternoItems),
           ...mapProcesToPayload(proces),
         };
-
-        console.log("Objeto a enviar:", recetaPayload);
 
         if (receta) {
           await dispatch(updateItem(receta, recetaPayload, "RecetasProcedimientos"));

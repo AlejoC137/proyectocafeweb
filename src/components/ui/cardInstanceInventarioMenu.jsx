@@ -29,13 +29,11 @@ export function CardInstanceInventarioMenu({ product, showEdit }) {
  
   useEffect(() => {
     const fetchReceta = async () => {
-      // console.log(product.Receta);
       
       // if (product.Receta !== null && product.Receta !== undefined && /^[0-9a-fA-F]{24}$/.test(product.Receta)) {
       if (product.Receta !== null && product.Receta !== undefined ) {
         const result = await getRecepie(product.Receta, "Recetas");
         setReceta(result);
-        // console.log(result);
         
       }
     };

@@ -50,8 +50,6 @@ export function scrapAction(url, pointers) {
         type: SCRAP,
         payload: resultData,
       });
-
-      console.log('Datos extraídos:', resultData);
     } catch (err) {
       console.error('Error durante el scraping:', err);
     }
@@ -110,7 +108,6 @@ export function fixUrl(datos, campo, buscar, reemplazar) {
       });
 
       await Promise.all(updatePromises);
-      console.log("Actualización completada");
 
     } catch (error) {
       console.error("Error en la función fixUrl:", error);
@@ -310,7 +307,6 @@ export function procesarRecetaYEnviarASupabase() {
 
         // Llamar a la acción insertarRecetas para insertar los datos en Supabase
         dispatch(insertarRecetas([recetaParaSupabase]));
-        //  console.log(recetaParaSupabase);
 
       }
     } catch (error) {
@@ -369,7 +365,6 @@ export function actualizarPrecioUnitario(items, type) {
         }
 
         // Log para verificar los datos antes de la actualización
-        console.log(`Actualizando el item con _id: ${item._id}, precioUnitario: ${precioUnitario}`);
 
         // Actualizar el valor unitario en el item correspondiente usando update()
         let { data, error } = await supabase
@@ -384,7 +379,6 @@ export function actualizarPrecioUnitario(items, type) {
         if (error) {
           console.error(`Error al actualizar el item con _id: ${item._id}`, error);
         } else {
-          console.log(`Item actualizado correctamente: ${item._id}`, data);
         }
       }
     } catch (error) {
@@ -442,8 +436,6 @@ export function copiarAlPortapapeles(items, estado,) {
 
 export function crearItem(itemData, type, forId) {
 
-  console.log(itemData);
-
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
@@ -485,8 +477,6 @@ export function crearItem(itemData, type, forId) {
         type: "CREAR_ITEM_SUCCESS",
         payload: data[0], // El nuevo ítem creado
       });
-
-      console.log("Ítem creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearItem:", error);
@@ -509,8 +499,6 @@ export function updateItem(itemId, updatedFields, type) {
         console.error('Error al actualizar el ítem:', error);
         return null;
       }
-
-      console.log('Ítem actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción updateItem:', error);
@@ -538,8 +526,6 @@ export function deleteItem(itemId, type) {
         type: "DELETE_ITEM_SUCCESS",
         payload: itemId, // Enviar el ID del ítem eliminado
       });
-
-      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
     } catch (error) {
       console.error("Error en la acción deleteItem:", error);
       throw error;
@@ -548,20 +534,17 @@ export function deleteItem(itemId, type) {
 }
 
 export const getRecepie = async (uuid, type) => {
-  // console.log(uuid, type);
-
   try {
     const { data, error } = await supabase
       .from(type)
       .select("*")
       .eq("_id", uuid)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error al obtener la receta:", error);
-      throw new Error(error.message);
+      return null;
     }
-    // console.log(data);
 
     return data;
   } catch (error) {
@@ -581,7 +564,6 @@ export const getProveedor = async (uuid, type) => {
       console.error("Error al obtener el proveedor :", error);
       throw new Error(error.message);
     }
-    // console.log(data);
 
     return data;
   } catch (error) {
@@ -591,9 +573,7 @@ export const getProveedor = async (uuid, type) => {
 };
 
 export const trimRecepie = (items, recepie) => {
-  // console.log(recepie);
   const buscarPorId = (id) => {
-    // console.log(items.find((item) => item._id === id) || null)
     return items.find((item) => item._id === id) || null;
   };
   const clavesFiltradas = Object.keys(recepie).filter(
@@ -656,8 +636,6 @@ export function crearReceta(recetaData, productId) {
         type: INSERT_RECETAS_SUCCESS,
         payload: data[0], // La nueva receta creada
       });
-
-      console.log("Receta creada correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearReceta:", error);

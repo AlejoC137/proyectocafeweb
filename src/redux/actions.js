@@ -75,8 +75,6 @@ export function scrapAction(url, pointers) {
         type: SCRAP,
         payload: resultData,
       });
-
-      console.log('Datos extraídos:', resultData);
     } catch (err) {
       console.error('Error durante el scraping:', err);
     }
@@ -136,7 +134,6 @@ export function fixUrl(datos, campo, buscar, reemplazar) {
       });
 
       await Promise.all(updatePromises);
-      console.log("Actualización completada");
 
     } catch (error) {
       console.error("Error en la función fixUrl:", error);
@@ -340,7 +337,6 @@ export function procesarRecetaYEnviarASupabase() {
 
         // Llamar a la acción insertarRecetas para insertar los datos en Supabase
         dispatch(insertarRecetas([recetaParaSupabase]));
-        //  console.log(recetaParaSupabase);
 
       }
     } catch (error) {
@@ -400,7 +396,6 @@ export function actualizarPrecioUnitario(items, type) {
         }
 
         // Log para verificar los datos antes de la actualización
-        console.log(`Actualizando el item con _id: ${item._id}, precioUnitario: ${precioUnitario}`);
 
         // Actualizar el valor unitario en el item correspondiente usando update()
         let { data, error } = await supabase
@@ -415,7 +410,6 @@ export function actualizarPrecioUnitario(items, type) {
         if (error) {
           console.error(`Error al actualizar el item con _id: ${item._id}`, error);
         } else {
-          console.log(`Item actualizado correctamente: ${item._id}`, data);
         }
       }
     } catch (error) {
@@ -526,8 +520,6 @@ export function crearItem(itemData, type, forId) {
         type: "CREAR_ITEM_SUCCESS",
         payload: data[0], // El nuevo ítem creado
       });
-
-      console.log("Ítem creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearItem:", error);
@@ -550,8 +542,6 @@ export function updateItem(itemId, updatedFields, type) {
         console.error('Error al actualizar el ítem:', error);
         return null;
       }
-
-      console.log('Ítem actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción updateItem:', error);
@@ -571,8 +561,6 @@ export const updateStaff = (staffData) => async (dispatch) => {
       .select();
 
     if (error) throw error;
-
-    console.log("Staff actualizado correctamente:", data);
     alert("Empleado actualizado correctamente.");
     dispatch(getAllFromTable(STAFF)); // Recargar la lista
     return data;
@@ -590,8 +578,6 @@ export const deleteStaff = (staffId) => async (dispatch) => {
       .eq('_id', staffId);
 
     if (error) throw error;
-
-    console.log(`Staff con ID ${staffId} eliminado.`);
     alert("Empleado eliminado correctamente.");
     dispatch(getAllFromTable(STAFF)); // Recargar la lista
   } catch (error) {
@@ -621,8 +607,6 @@ export function deleteItem(itemId, type) {
         type: "DELETE_ITEM_SUCCESS",
         payload: itemId, // Enviar el ID del ítem eliminado
       });
-
-      console.log(`Ítem con ID ${itemId} eliminado correctamente.`);
     } catch (error) {
       console.error("Error en la acción deleteItem:", error);
       throw error;
@@ -649,7 +633,6 @@ export const addNota = (notaData) => async (dispatch) => {
     if (error) throw error;
 
     dispatch({ type: ADD_NOTA_SUCCESS, payload: data });
-    console.log("Nota creada exitosamente:", data);
     return data;
   } catch (error) {
     console.error("Error al crear la nota:", error);
@@ -675,7 +658,6 @@ export const updateNota = (notaId, updatedFields) => async (dispatch) => {
     if (error) throw error;
 
     dispatch({ type: UPDATE_NOTA_SUCCESS, payload: data });
-    console.log("Nota actualizada exitosamente:", data);
     return data;
   } catch (error) {
     console.error("Error al actualizar la nota:", error);
@@ -698,7 +680,6 @@ export const deleteNota = (notaId) => async (dispatch) => {
     if (error) throw error;
 
     dispatch({ type: DELETE_NOTA_SUCCESS, payload: notaId });
-    console.log(`Nota con ID ${notaId} eliminada correctamente.`);
     return notaId;
   } catch (error) {
     console.error("Error al eliminar la nota:", error);
@@ -716,7 +697,6 @@ export const deleteNota = (notaId) => async (dispatch) => {
 export function sincronizarRecetasYProductos() {
   return async (dispatch, getState) => {
     try {
-      console.log("Iniciando sincronización de recetas y productos...");
       const state = getState();
       const {
         allRecetasMenu,
@@ -735,7 +715,6 @@ export function sincronizarRecetasYProductos() {
           const product = allProducts.find(p => p._id === recipe.forId);
           if (product && product.Receta !== recipe._id) {
             const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
-            console.log(`SINCRONIZANDO: El producto "${product.NombreES || product.Nombre_del_producto}" ahora apuntará a la receta "${recipe.legacyName}".`);
             await dispatch(updateItem(product._id, { Receta: recipe._id }, productTable));
             updatesCounter++;
           }
@@ -749,8 +728,6 @@ export function sincronizarRecetasYProductos() {
           if (product) {
             const recipeTable = allRecetasMenu.some(r => r._id === recipe._id) ? RECETAS_MENU : RECETAS_PRODUCCION;
             const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
-
-            console.log(`SINCRONIZANDO: La receta huérfana "${recipe.legacyName}" se enlazará con el producto "${product.NombreES || product.Nombre_del_producto}".`);
 
             // Actualizar receta con forId y producto con Receta ID
             await dispatch(updateItem(recipe._id, { forId: product._id }, recipeTable));
@@ -768,7 +745,6 @@ export function sincronizarRecetasYProductos() {
           const recipeExists = allRecipes.some(r => r._id === product.Receta);
           if (!recipeExists) {
             const productTable = allMenu.some(p => p._id === product._id) ? MENU : PRODUCCION;
-            console.log(`LIMPIANDO: El producto "${product.NombreES || product.Nombre_del_producto}" apuntaba a una receta eliminada. Se limpiará el enlace.`);
             await dispatch(updateItem(product._id, { Receta: null }, productTable));
             updatesCounter++;
           }
@@ -801,7 +777,6 @@ export function sincronizarRecetasYProductos() {
 export function createRecipeForProduct(baseRecipeData, productId, productTable, recipeTable) {
   return async (dispatch) => {
     try {
-      console.log(`Creando receta para el producto ID: ${productId} en la tabla ${productTable}`);
 
       // 1. Preparar los datos de la nueva receta
       const newRecipeData = {
@@ -822,8 +797,6 @@ export function createRecipeForProduct(baseRecipeData, productId, productTable, 
         console.error("Error al crear la receta:", recipeError);
         throw new Error("No se pudo crear la receta en la base de datos.");
       }
-
-      console.log("Receta creada correctamente:", newRecipe);
       const newRecipeId = newRecipe._id;
 
       // 3. Actualizar el producto para que apunte a la nueva receta
@@ -834,8 +807,6 @@ export function createRecipeForProduct(baseRecipeData, productId, productTable, 
         // pero por ahora solo lanzamos un error para notificar el problema.
         throw new Error("La receta se creó, pero no se pudo actualizar el producto asociado.");
       }
-
-      console.log(`Producto ${productId} actualizado para enlazar a la nueva receta ${newRecipeId}`);
 
       // 4. Notificar y recargar los datos para mantener la UI sincronizada
       alert(`Receta "${newRecipe.legacyName || 'Nueva Receta'}" creada y enlazada correctamente.`);
@@ -860,15 +831,11 @@ export const getRecepie = async (uuid, type) => {
       .from(type)
       .select("*")
       .eq("_id", uuid)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      // PGRST116: JSON object requested, multiple (or no) rows returned
-      if (error.code === 'PGRST116' || error.message.includes('JSON object requested, multiple (or no) rows returned')) {
-        return null;
-      }
       console.error("Error al obtener la receta:", error);
-      throw new Error(error.message);
+      return null;
     }
 
     return data;
@@ -965,8 +932,6 @@ export function crearReceta(recetaData, productId) {
         type: INSERT_RECETAS_SUCCESS,
         payload: data[0], // La nueva receta creada
       });
-
-      console.log("Receta creada correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearReceta:", error);
@@ -1000,20 +965,11 @@ import { UPDATE_LOG_STAFF } from './actions-types'; // 👈 Import your action t
 export const updateLogStaff = (personaId, updatedTurnoPasados) => {
   return async (dispatch) => {
     try {
-      console.log("🔄 [updateLogStaff] Iniciando actualización de turnos...");
-      console.log("📋 [updateLogStaff] Staff ID (personaId):", personaId);
-      console.log("📋 [updateLogStaff] Turnos recibidos:", updatedTurnoPasados);
-      console.log("📋 [updateLogStaff] Tipo de datos:", typeof updatedTurnoPasados);
 
       // Convertir a JSON si es array
       const turnosData = typeof updatedTurnoPasados === 'string'
         ? updatedTurnoPasados
         : JSON.stringify(updatedTurnoPasados);
-
-      console.log("📋 [updateLogStaff] Turnos en formato JSON:", turnosData);
-      console.log("📋 [updateLogStaff] Longitud del JSON:", turnosData.length);
-
-      console.log("🚀 [updateLogStaff] Ejecutando actualización en Supabase...");
       const { data, error } = await supabase
         .from('Staff')
         .update({ Turnos: turnosData })
@@ -1028,27 +984,18 @@ export const updateLogStaff = (personaId, updatedTurnoPasados) => {
         throw error;
       }
 
-      console.log("✅ [updateLogStaff] Turnos actualizados correctamente en la base de datos");
-      console.log("📊 [updateLogStaff] Datos retornados por Supabase:", data);
-      console.log("📊 [updateLogStaff] Número de filas afectadas:", data?.length || 0);
-
       dispatch({
         type: UPDATE_LOG_STAFF,
         payload: { personaId, updatedTurnoPasados },
       });
 
-      console.log("✅ [updateLogStaff] Dispatch ejecutado correctamente");
-
       // Importar utilidades de toast centralizadas
       try {
         const { showSuccessToast } = await import('../utils/toast');
         showSuccessToast('💾 Turno actualizado correctamente');
-        console.log("✅ [updateLogStaff] Toast de éxito mostrado");
       } catch (toastError) {
         console.warn("⚠️ [updateLogStaff] No se pudo mostrar toast:", toastError);
       }
-
-      console.log("✅ [updateLogStaff] Operación completada exitosamente");
       return true; // Éxito
     } catch (error) {
       console.error('❌ [updateLogStaff] Error al actualizar turno:', error);
@@ -1178,7 +1125,6 @@ export const deleteModelAction = (modelId) => async (dispatch) => {
 export function sincronizarCostosProduccion() {
   return async (dispatch, getState) => {
     try {
-      console.log("Iniciando sincronización de COSTOS de producción con recetas...");
 
       // Asegurar datos frescos
       await dispatch(getAllFromTable(RECETAS_PRODUCCION));
@@ -1264,7 +1210,6 @@ export function sincronizarCostosProduccion() {
 
             // APLICAR ACTUALIZACIONES
             if (hasChanges) {
-              console.log(`SINCRONIZANDO: Item "${item.Nombre_del_producto}" actualizaciones:`, updates);
               await dispatch(updateItem(item._id, updates, PRODUCCION));
               updatesCounter++;
             }

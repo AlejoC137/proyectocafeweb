@@ -104,27 +104,15 @@ const EditarTurnosView = () => {
     const handleSave = async () => {
         // Simple confirmation
         if (!window.confirm("¿Confirmar guardado de turnos?")) {
-            console.log("❌ [EditarTurnos] Usuario canceló el guardado");
             return;
         }
 
-        console.log("💾 [EditarTurnos] ========== INICIANDO GUARDADO ==========");
-        console.log("📋 [EditarTurnos] Empleado:", employee);
-        console.log("📋 [EditarTurnos] Turnos modificados:", modifiedShifts);
-        console.log("📋 [EditarTurnos] Número de turnos:", modifiedShifts.length);
-
         try {
-            console.log("🚀 [EditarTurnos] Llamando a updateLogStaff...");
-            console.log("📌 [EditarTurnos] ID del empleado (_id):", employee._id);
-            console.log("📌 [EditarTurnos] Turnos a enviar:", JSON.stringify(modifiedShifts, null, 2));
 
             // Use updateLogStaff which updates directly in Supabase
             const success = await dispatch(updateLogStaff(employee._id, modifiedShifts));
 
-            console.log("📡 [EditarTurnos] Respuesta de updateLogStaff:", success);
-
             if (success) {
-                console.log("✅ [EditarTurnos] Turnos guardados exitosamente");
                 alert("✅ Turnos guardados correctamente");
 
                 // Reload staff data to reflect changes (stay on same page)
@@ -138,8 +126,6 @@ const EditarTurnosView = () => {
             console.error("❌ [EditarTurnos] Mensaje:", error.message);
             alert("❌ Error inesperado al guardar.");
         }
-
-        console.log("💾 [EditarTurnos] ========== FIN GUARDADO ==========");
     };
 
     const handleCancel = () => {

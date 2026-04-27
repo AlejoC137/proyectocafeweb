@@ -2,57 +2,40 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Mesa from "./Mesa";
 import MesaBarra from "./MesaBarra";
-import ClientForm from "./ClientForm"; // Added ClientForm
+import ClientForm from "./ClientForm";
 import Gastos from "../../components/gastos/Gastos";
 import { MENU, ITEMS, PRODUCCION, PROVEE, USER_PREFERENCES } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import MenuDelDiaPrint from "./MenuDelDiaPrint";
 import Propina from "./Propina";
-import { Button } from "@/components/ui/button"; // Importamos el botón para consistencia
-import { Eye, UtensilsCrossed, UserPlus } from "lucide-react"; // Iconos para los botones
+import { Button } from "@/components/ui/button";
+import { Eye, UtensilsCrossed, UserPlus } from "lucide-react";
 
-/**
- * Componente principal para la gestión de ventas, con un diseño modernizado.
- * Organiza las mesas y la barra, y permite alternar la visibilidad de
- * los gastos y el menú del día.
- */
 function VentaCompra() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [ventas, setVentas] = useState([]);
+  const [ventasDelDia, setVentasDelDia] = useState([]);
   const [showGastos, setShowGastos] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
-  const [errorVentas, setErrorVentas] = useState(false);
 
-  // Carga las ventas activas (no pagadas) desde Supabase
-  const fetchVentas = async () => {
-    try {
-      setErrorVentas(false); // Reset error state on new attempt
-      const { data, error } = await supabase
-        .from("Ventas")
-        .select("*")
-        .eq("Pagado", false);
-
-      if (error) {
-        console.error("Error fetching ventas:", error);
-        setErrorVentas(true);
-      } else {
-        setVentas(data);
-      }
-    } catch (error) {
-      console.error("Error cargando datos de ventas:", error);
-      setErrorVentas(true);
+  const fetchVentasDelDia = async () => {
+    const fecha = new Date().toISOString().split("T")[0];
+    const { data, error } = await supabase.functions.invoke("DateFilter", {
+      body: { fecha },
+    });
+    if (!error && data?.data?.items?.length) {
+      setVentasDelDia(data.data.items);
+    } else {
+      setVentasDelDia([]);
     }
   };
 
-  // Efecto inicial para cargar todos los datos necesarios para la aplicación
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Cargamos datos maestros en paralelo
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
@@ -60,8 +43,7 @@ function VentaCompra() {
           dispatch(getAllFromTable(PROVEE)),
           dispatch(getAllFromTable(USER_PREFERENCES)),
         ]);
-        // Una vez cargados los datos maestros, cargamos las ventas iniciales
-        await fetchVentas();
+        await fetchVentasDelDia();
       } catch (error) {
         console.error("Error cargando datos iniciales:", error);
       } finally {
@@ -70,25 +52,11 @@ function VentaCompra() {
     };
 
     fetchData();
-
-    // Configurar suscripción Realtime para la tabla Ventas
-    const channel = supabase
-      .channel('public:Ventas')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'Ventas' }, (payload) => {
-        console.log('Cambio detectado en Ventas:', payload);
-        fetchVentas(); // Recargamos para asegurar consistencia
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [dispatch]);
 
-  // Si está cargando, muestra un mensaje
   if (loading) {
     return (
-      <div className="flex  items-center justify-center h-screen bg-slate-100">
+      <div className="flex items-center justify-center h-screen bg-slate-100">
         <div className="text-center">
           <div className="h-12 w-12 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto"></div>
           <p className="text-lg font-semibold text-gray-700 mt-4">Cargando Datos...</p>
@@ -97,7 +65,6 @@ function VentaCompra() {
     );
   }
 
-  // Renderizado del componente principal
   return (
     <div className="h-[calc(100dvh-5rem)] w-full bg-slate-100 overflow-y-auto p-2 flex flex-col">
       {/* --- Cabecera con Controles --- */}
@@ -133,21 +100,6 @@ function VentaCompra() {
         </Button>
       </div>
 
-      {/* --- Error Alert / Retry --- */}
-      {errorVentas && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-2 shrink-0" role="alert">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="font-bold text-red-700">Error de Conexión</p>
-              <p className="text-red-600">No se pudieron cargar las ventas activas.</p>
-            </div>
-            <Button onClick={fetchVentas} variant="destructive" size="sm">
-              Reintentar
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* --- Componentes Condicionales (Gastos y Menú) --- */}
       <div className="space-y-4 mb-2 shrink-0">
         {showMenu && <div className="bg-white rounded-lg shadow-md p-4"><MenuDelDiaPrint /></div>}
@@ -155,51 +107,25 @@ function VentaCompra() {
         {showClientForm && <div className="animate-in slide-in-from-top-2 duration-300"><ClientForm onClose={() => setShowClientForm(false)} /></div>}
       </div>
 
-      {/* --- Contenido Principal --- */}
-      <div className="flex-grow space-y-6 pb-10">
-        
-        {/* Sección de Mesas */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-6 w-1 bg-blue-500 rounded-full"></div>
-            <h2 className="text-lg font-bold text-slate-700">Área de Mesas</h2>
-          </div>
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-            style={{ gridAutoRows: 'minmax(0, 1fr)' }}
-          >
-            {[...Array(6)].map((_, index) => {
-              const mesaIndex = index + 1;
-              const ventaParaMesa = ventas.find(venta => venta.Mesa === mesaIndex && !venta.Pagado);
-              return (
-                <Mesa
-                  key={`mesa-${mesaIndex}`}
-                  index={mesaIndex}
-                  ventaActual={ventaParaMesa}
-                  onVentaChange={fetchVentas}
-                />
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Sección de Barra */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-6 w-1 bg-emerald-500 rounded-full"></div>
-            <h2 className="text-lg font-bold text-slate-700">Barra / Rápido</h2>
-          </div>
-          <div className="space-y-3">
-            {[7, 8, 9].map((barIndex) => (
-              <MesaBarra 
-                key={`barra-${barIndex}`} 
-                index={barIndex} 
-                ventas={ventas} 
-                reloadVentas={fetchVentas} 
+      {/* --- Grid de Mesas --- */}
+      <div className="flex-grow min-h-[600px]">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full"
+          style={{ gridAutoRows: 'minmax(0, 1fr)' }}
+        >
+          {[...Array(6)].map((_, index) => {
+            const mesaIndex = index + 1;
+            const ventaActual = ventasDelDia.find(v => v.Mesa === mesaIndex && !v.Pagado);
+            return (
+              <Mesa
+                key={`mesa-${mesaIndex}`}
+                index={mesaIndex}
+                ventaActual={ventaActual}
+                onVentaChange={fetchVentasDelDia}
               />
-            ))}
-          </div>
-        </section>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

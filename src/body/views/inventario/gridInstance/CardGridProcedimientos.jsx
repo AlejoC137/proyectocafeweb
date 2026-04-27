@@ -6,7 +6,6 @@ import { Procedimientos } from "../../../../redux/actions-types";
 
 export function CardGridProcedimientos() {
   const allProcedimientos = useSelector((state) => state.allProcedimientos || []);
-  // console.log(allProcedimientos);
   
   const dispatch = useDispatch();
   const globalExpandedGroups = useSelector((state) => state.expandedGroups);

@@ -39,8 +39,6 @@ function MenuView() {
   const menuData = rawMenuData.filter(item => item.SUB_GRUPO !== "TARDEO_ALMUERZO");
   const currentLeng = useSelector((state) => state.currentLeng);
 
-  console.log("Elementos del menú a mostrar:", menuData);
-
   useEffect(() => {
     const fetchData = async () => {
       try {

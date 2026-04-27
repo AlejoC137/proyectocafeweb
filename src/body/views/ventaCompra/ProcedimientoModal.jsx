@@ -226,7 +226,6 @@ function ProcedimientoModal({ item, onClose }) {
 
         if (result.forId) {
           const plato = await getRecepie(result.forId, "Procedimientos");
-          console.log("Procedimientos", plato.tittle);
 
           if (plato) {
             setFoto(plato.Foto);

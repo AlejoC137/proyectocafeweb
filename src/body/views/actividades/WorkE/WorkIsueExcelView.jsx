@@ -313,7 +313,6 @@ const WorkIsueExcelView = () => {
 
   // --- Data Fetching ---
   const fetchAllData = useCallback(async () => {
-    console.log("Fetching all data...");
     const [tareasAction, staffAction] = await Promise.all([
       dispatch(getAllFromTable('WorkIsue')),
       dispatch(getAllFromTable('Staff')),
@@ -434,7 +433,6 @@ const WorkIsueExcelView = () => {
     }
 
     // 5. Despachar la acción de actualización
-    console.log("Actualizando Tarea:", taskId, "Data:", updateData);
     await dispatch(actualizarWorkIsue(taskId, updateData));
     
     // 6. Refrescar los datos para mostrar el cambio

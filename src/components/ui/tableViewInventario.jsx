@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useDebounce } from "../../hooks/useDebounce";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions";
@@ -21,6 +22,7 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
 
   // Estados UI
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterEstado, setFilterEstado] = useState("");
   const [filterAlmacenamiento, setFilterAlmacenamiento] = useState("");
@@ -112,7 +114,6 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
       while (payloadToSend) {
         try {
           // despachamos
-          console.log(productId);
 
           await dispatch(updateItem(productId, payloadToSend, currentType));
 
@@ -318,7 +319,7 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
         ? `${product.NombreES || ""} ${product.NombreEN || ""}`
         : product.Nombre_del_producto || "";
 
-      const matchesSearch = !searchTerm || searchField.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = !debouncedSearchTerm || searchField.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       const matchesCategory = !filterCategory || product.GRUPO === filterCategory;
       const matchesEstado = !filterEstado || product.Estado === filterEstado;
 
@@ -335,7 +336,7 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
 
       return matchesSearch && matchesCategory && matchesEstado && matchesAlmacenamiento && matchesProveedor;
     });
-  }, [editableProducts, searchTerm, filterCategory, filterEstado, filterAlmacenamiento, filterProveedor, currentType]);
+  }, [editableProducts, debouncedSearchTerm, filterCategory, filterEstado, filterAlmacenamiento, filterProveedor, currentType]);
 
   const sortedProducts = useMemo(() => {
     const sortable = [...filteredProducts];

@@ -14,7 +14,6 @@ const ModeloProyecto = () => {
     const models = useSelector(state => state.models);
     const allVentas = useSelector(state => state.allVentas);
     const loading = useSelector(state => state.modelsLoading);
-    console.log(models);
 
     // Estado Local: Fecha seleccionada
     const { year: paramYear, month: paramMonth } = useParams();

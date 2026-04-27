@@ -31,37 +31,27 @@ function MesaBarra({ index, ventas, reloadVentas }) {
   // Carga los datos de una venta existente cuando el componente se monta o las ventas cambian
   useEffect(() => {
     const ventaActual = ventas.find(v => v.Mesa === index && !v.Pagado);
-    
-    // Solo sincronizamos si:
-    // 1. Es una venta diferente (ID distinto)
-    // 2. O no tenemos cambios locales pendientes
     if (ventaActual) {
-      if (ventaActual._id !== ventaId || buttonState !== 'save') {
-        setFormData({
-          Cliente: ventaActual.Cliente || '',
-          Cajero: ventaActual.Cajero || '',
-          Tip: ventaActual.Tip || '0',
-        });
-        try {
-          setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
-        } catch (e) {
-          console.error("Error al parsear productos:", e);
-          setOrderItems([]);
-        }
-        setVentaId(ventaActual._id);
-        setButtonState("done");
-      }
-    } else {
-      // Si no hay venta en el servidor pero teníamos una cargada localmente, limpiamos
-      // A menos que estemos en medio de crear una nueva (orderItems > 0 pero ventaId es null)
-      if (ventaId !== null || (orderItems.length === 0)) {
-        setFormData({ Cliente: '', Cajero: '', Tip: '0' });
+      setFormData({
+        Cliente: ventaActual.Cliente || '',
+        Cajero: ventaActual.Cajero || '',
+        Tip: ventaActual.Tip || '0',
+      });
+      try {
+        setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
+      } catch (e) {
+        console.error("Error al parsear productos:", e);
         setOrderItems([]);
-        setVentaId(null);
-        setButtonState("save");
       }
+      setVentaId(ventaActual._id);
+      setButtonState("done");
+    } else {
+      setFormData({ Cliente: '', Cajero: '', Tip: '0' });
+      setOrderItems([]);
+      setVentaId(null);
+      setButtonState("save");
     }
-  }, [ventas, index]); // Quitamos dependencias innecesarias que podrían causar loops
+  }, [ventas, index]);
 
   // --- CÁLCULOS MEMORIZADOS ---
 

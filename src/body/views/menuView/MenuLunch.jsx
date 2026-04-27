@@ -72,7 +72,6 @@ function MenuLunch() {
   if (loading) {
     return <div>Loading...</div>;
   }
-console.log(uniqueCategories);
 
   return (
     <div className="flex flex-col w-screen border pt-20">

@@ -106,7 +106,6 @@ const WorkIsueStaff = () => {
         setSortConfig({ key, direction });
     };
     // --- FIN Lógica de datos ---
-    console.log(groupedAndSortedItems);
 
     return (
         <div className="flex flex-col h-full font-sans">

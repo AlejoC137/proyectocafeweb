@@ -23,7 +23,6 @@ function Pagar({ ventaId, onClose, total, onPaymentComplete }) {
 
     dispatch(actualizarPago(ventaId, pagoInfo))
       .then(() => {
-        console.log(`Pago realizado con ${metodo} para la venta ${ventaId}`);
         onClose();
         if (onPaymentComplete) {
           onPaymentComplete();

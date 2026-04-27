@@ -112,8 +112,6 @@ function Pagar({ ventaId, onClose, total, onPaymentComplete, clientId, productos
                 purchase_history: updatedHistory
               })
               .eq("_id", clientId);
-
-            console.log(`Transacción completada. Cambio puntos: ${earnedPoints - (usePoints ? pointsToUse : 0)}. Nuevo Saldo: ${newPoints}`);
           } catch (err) {
             console.error("Error actualizando perfil de cliente:", err);
           }

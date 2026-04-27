@@ -244,13 +244,10 @@ function Gastos() {
       }))),
     };
 
-    console.log("Enviando Gasto:", gastoData);
-
     try {
       const result = await dispatch(crearCompra(gastoData));
 
       if (result) {
-        console.log("Gasto registrado con éxito:", result);
         alert("Gasto registrado exitosamente!");
         setHoy(new Date().toISOString().split('T')[0]);
         setFormattedHoy(new Date().toLocaleDateString("en-US", { timeZone: "America/Bogota" }));

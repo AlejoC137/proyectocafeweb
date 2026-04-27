@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "../../hooks/useDebounce";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions-Proveedores";
@@ -22,6 +23,8 @@ export function TableViewManager({ products, currentType }) {
 
   // Estados para filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState("");
+  // Debounce: espera 300ms sin escribir antes de filtrar — evita re-renders en cada keystroke
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filterGrupo, setFilterGrupo] = useState(
     currentType === MenuItems ? "TARDEO" : ""
   );
@@ -163,13 +166,10 @@ export function TableViewManager({ products, currentType }) {
     Object.entries(availableColumns).forEach(([key, column]) => {
       defaultVisibleColumns[key] = column.default;
     });
-    console.log('Initializing visible columns:', defaultVisibleColumns);
     setVisibleColumns(defaultVisibleColumns);
   }, [availableColumns]);
 
   // Debug log para ver el estado actual
-  console.log('Current visibleColumns state:', visibleColumns);
-  console.log('Available columns:', availableColumns);
 
   // Cerrar el selector de columnas al hacer clic fuera
   useEffect(() => {
@@ -306,8 +306,8 @@ export function TableViewManager({ products, currentType }) {
   // Filtrar productos
   const filteredProducts = products.filter(product => {
     const searchField = getSearchField(product);
-    const matchesSearch = !searchTerm || 
-      (searchField && searchField.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = !debouncedSearchTerm ||
+      (searchField && searchField.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
     
     const grupoField = getCategoryField(product);
     const matchesGrupo = !filterGrupo || grupoField === filterGrupo;
@@ -579,7 +579,6 @@ export function TableViewManager({ products, currentType }) {
       
       // Llamar a updateItem según el tipo
       const tableType = currentType === MenuItems ? "Menu" : currentType;
-      console.log("Saving item...", { id: item._id, fields: updatedFields, table: tableType });
       const result = await dispatch(updateItem(item._id, updatedFields, tableType));
       
       if (result) {
@@ -589,8 +588,6 @@ export function TableViewManager({ products, currentType }) {
           delete newState[item._id];
           return newState;
         });
-        
-        console.log('Ítem actualizado correctamente');
       } else {
         throw new Error('No se pudo actualizar el ítem');
       }

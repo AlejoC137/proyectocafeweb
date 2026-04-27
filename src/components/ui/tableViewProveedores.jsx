@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "../../hooks/useDebounce";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteProveedor, updateProveedor, copiarAlPortapapeles } from "../../redux/actions-Proveedores";
@@ -14,6 +15,7 @@ export function TableViewProveedores(/* { products = [] } */) {
 
   // Estados para filtros y ordenamiento
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [editingRows, setEditingRows] = useState({});
@@ -47,13 +49,10 @@ export function TableViewProveedores(/* { products = [] } */) {
     Object.entries(availableColumns).forEach(([key, column]) => {
       defaultVisibleColumns[key] = column.default;
     });
-    console.log('Initializing visible columns (Proveedores):', defaultVisibleColumns);
     setVisibleColumns(defaultVisibleColumns);
   }, [availableColumns]);
 
   // Debug log para ver el estado current
-  console.log('Current visibleColumns state (Proveedores):', visibleColumns);
-  console.log('Available columns (Proveedores):', availableColumns);
 
   // Cerrar el selector de columnas al hacer clic fuera
   useEffect(() => {
@@ -100,8 +99,8 @@ export function TableViewProveedores(/* { products = [] } */) {
   // Usamos 'allProveedores' (de Redux) en lugar de 'products' (del prop)
   const filteredProducts = allProveedores.filter(product => { // <-- CAMBIO 2
     const searchField = `${product.Nombre_Proveedor || ""} ${product.Contacto_Nombre || ""} ${product.Direccion || ""}`;
-    const matchesSearch = !searchTerm ||
-      searchField.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !debouncedSearchTerm ||
+      searchField.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
     return matchesSearch;
   });
@@ -232,8 +231,6 @@ export function TableViewProveedores(/* { products = [] } */) {
           delete newState[item._id];
           return newState;
         });
-
-        console.log('Proveedor actualizado correctamente');
       } else {
         throw new Error('No se pudo actualizar el proveedor');
       }

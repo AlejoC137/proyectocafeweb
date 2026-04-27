@@ -3,7 +3,6 @@ import supabase from "../config/supabaseClient";
 import { GET_ALL_FROM_TABLE } from './actions-types';
 
 export function crearItem(itemData, type, forId) {
-  console.log(itemData);
   
   return async (dispatch) => {
     try {
@@ -44,8 +43,6 @@ export function crearItem(itemData, type, forId) {
         type: "CREAR_ITEM_SUCCESS",
         payload: data[0], // El nuevo ítem creado
       });
-
-      console.log("Ítem creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearItem:", error);
@@ -55,7 +52,6 @@ export function crearItem(itemData, type, forId) {
 }
 
 export function crearWorkIsue(workIsueData) {
-  console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
   
   return async (dispatch) => {
     try {
@@ -83,8 +79,6 @@ export function crearWorkIsue(workIsueData) {
         type: "CREAR_WORKISUE_SUCCESS",
         payload: data[0], // El nuevo WorkIsue creado
       });
-
-      console.log("WorkIsue creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearWorkIsue:", error);
@@ -94,7 +88,6 @@ export function crearWorkIsue(workIsueData) {
 }
 
 export function crearCompra(compraData) {
-  console.log(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
   
   return async (dispatch) => {
     try {
@@ -122,8 +115,6 @@ export function crearCompra(compraData) {
         type: "CREAR_COMPRA_SUCCESS",
         payload: data[0], // La nueva venta creada
       });
-
-      console.log("Venta creada correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearVenta:", error);
@@ -145,8 +136,6 @@ export function actualizarWorkIsue(workIsueId, updatedFields) {
         console.error('Error al actualizar el WorkIsue:', error);
         return null;
       }
-
-      console.log('WorkIsue actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción actualizarWorkIsue:', error);
@@ -167,8 +156,6 @@ export function eliminarWorkIsue(workIsueId) {
         console.error('Error al eliminar el WorkIsue:', error);
         return null;
       }
-
-      console.log('WorkIsue eliminado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción eliminarWorkIsue:', error);
@@ -192,8 +179,6 @@ export function actualizarPago(workIsueId, pagoInfo) {
         console.error('Error al actualizar el pago:', error);
         return null;
       }
-
-      console.log('Pago actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción actualizarPago:', error);
@@ -223,8 +208,6 @@ export const crearProcedimiento = (procedimientoData) => {
         type: "CREAR_PROCEDIMIENTO_SUCCESS",
         payload: data[0],
       });
-
-      console.log("Procedimiento creado correctamente:", data[0]);
       return data[0];
     } catch (error) {
       console.error("Error en la acción crearProcedimiento:", error);
@@ -246,8 +229,6 @@ export function actualizarProcedimiento(procedimientoId, updatedFields) {
         console.error('Error al actualizar el procedimiento:', error);
         return null;
       }
-
-      console.log('Procedimiento actualizado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción actualizarProcedimiento:', error);
@@ -268,8 +249,6 @@ export function eliminarProcedimiento(procedimientoId) {
         console.error('Error al eliminar el procedimiento:', error);
         return null;
       }
-
-      console.log('Procedimiento eliminado correctamente:', data);
       return data;
     } catch (error) {
       console.error('Error en la acción eliminarProcedimiento:', error);

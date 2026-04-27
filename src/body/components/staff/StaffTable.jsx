@@ -10,7 +10,6 @@ const StaffTable = ({ employees }) => {
     const [showInactive, setShowInactive] = useState(false);
 
     // Console log for user to check the staff object
-    console.log("Employees array to check properties:", employees);
 
     // Un empleado esta activo si Contratacion no es explicitamente false
     const activeEmployees = employees.filter(emp => emp.Contratacion !== false && emp.Contratacion !== "false");

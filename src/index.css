@@ -516,4 +516,34 @@ button:focus-visible {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  /* Ocultar elementos de navegación y overlays al imprimir */
+  nav,
+  header,
+  [data-topnav],
+  [data-bottomnav] {
+    display: none !important;
+  }
+
+  /* Quitar fondo e imagen de portada para impresión limpia */
+  body,
+  html,
+  #root {
+    background: white !important;
+    background-image: none !important;
+  }
+
+  /* Ocultar overlay semitransparente de fondo */
+  .bg-cream-bg\/60,
+  .pointer-events-none.absolute.inset-0 {
+    display: none !important;
+  }
+
+  /* El área de impresión ocupa toda la página */
+  #print-area,
+  [data-print-target] {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 }
