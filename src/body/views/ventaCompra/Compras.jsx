@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { TableViewCompras } from "./TableViewCompras";
 import { getAllFromTable, toggleShowEdit } from "../../../redux/actions";
 import { COMPRAS, PROVEE, STAFF } from "../../../redux/actions-types.js";
+import supabase from "../../../config/supabaseClient";
 
 function Compras() {
   const dispatch = useDispatch();
@@ -32,6 +33,19 @@ function Compras() {
       }
     };
     fetchData();
+
+    // Configurar suscripción Realtime para la tabla Compras
+    const channel = supabase
+      .channel('public:Compras')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Compras' }, (payload) => {
+        console.log('Cambio detectado en Compras:', payload);
+        dispatch(getAllFromTable(COMPRAS)); // Recargamos compras
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [dispatch]);
 
   const handleToggleShowEdit = () => {

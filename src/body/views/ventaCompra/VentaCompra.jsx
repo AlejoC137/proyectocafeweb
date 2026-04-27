@@ -60,7 +60,7 @@ function VentaCompra() {
           dispatch(getAllFromTable(PROVEE)),
           dispatch(getAllFromTable(USER_PREFERENCES)),
         ]);
-        // Una vez cargados los datos maestros, cargamos las ventas
+        // Una vez cargados los datos maestros, cargamos las ventas iniciales
         await fetchVentas();
       } catch (error) {
         console.error("Error cargando datos iniciales:", error);
@@ -70,6 +70,19 @@ function VentaCompra() {
     };
 
     fetchData();
+
+    // Configurar suscripción Realtime para la tabla Ventas
+    const channel = supabase
+      .channel('public:Ventas')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Ventas' }, (payload) => {
+        console.log('Cambio detectado en Ventas:', payload);
+        fetchVentas(); // Recargamos para asegurar consistencia
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [dispatch]);
 
   // Si está cargando, muestra un mensaje
@@ -142,25 +155,51 @@ function VentaCompra() {
         {showClientForm && <div className="animate-in slide-in-from-top-2 duration-300"><ClientForm onClose={() => setShowClientForm(false)} /></div>}
       </div>
 
-      {/* --- Contenido Principal (Grid de Mesas) --- */}
-      <div className="flex-grow min-h-[600px]">
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full"
-          style={{ gridAutoRows: 'minmax(0, 1fr)' }}
-        >
-          {[...Array(6)].map((_, index) => {
-            const mesaIndex = index + 1;
-            const ventaParaMesa = ventas.find(venta => venta.Mesa === mesaIndex && !venta.Pagado);
-            return (
-              <Mesa
-                key={`mesa-${mesaIndex}`}
-                index={mesaIndex}
-                ventaActual={ventaParaMesa}
-                onVentaChange={fetchVentas}
+      {/* --- Contenido Principal --- */}
+      <div className="flex-grow space-y-6 pb-10">
+        
+        {/* Sección de Mesas */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-6 w-1 bg-blue-500 rounded-full"></div>
+            <h2 className="text-lg font-bold text-slate-700">Área de Mesas</h2>
+          </div>
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+            style={{ gridAutoRows: 'minmax(0, 1fr)' }}
+          >
+            {[...Array(6)].map((_, index) => {
+              const mesaIndex = index + 1;
+              const ventaParaMesa = ventas.find(venta => venta.Mesa === mesaIndex && !venta.Pagado);
+              return (
+                <Mesa
+                  key={`mesa-${mesaIndex}`}
+                  index={mesaIndex}
+                  ventaActual={ventaParaMesa}
+                  onVentaChange={fetchVentas}
+                />
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Sección de Barra */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-6 w-1 bg-emerald-500 rounded-full"></div>
+            <h2 className="text-lg font-bold text-slate-700">Barra / Rápido</h2>
+          </div>
+          <div className="space-y-3">
+            {[7, 8, 9].map((barIndex) => (
+              <MesaBarra 
+                key={`barra-${barIndex}`} 
+                index={barIndex} 
+                ventas={ventas} 
+                reloadVentas={fetchVentas} 
               />
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -11,10 +11,10 @@ import CoffeeLeafDecoration from "./coffee-leaf-decoration";
  * @param {string} className - Clases CSS adicionales
  * @param {boolean} noPadding - Si debe eliminar el padding interno
  */
-function ContentCard({ 
-  children, 
-  title, 
-  actions, 
+function ContentCard({
+  children,
+  title,
+  actions,
   className = "",
   noPadding = false
 }) {
@@ -39,7 +39,7 @@ function ContentCard({
           )}
         </div>
       )}
-      
+
       {/* Contenido principal */}
       <div className={paddingClass}>
         {children}

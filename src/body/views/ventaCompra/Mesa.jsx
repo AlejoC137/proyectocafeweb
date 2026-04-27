@@ -35,30 +35,42 @@ function Mesa({ index, ventaActual, onVentaChange }) {
   };
 
   useEffect(() => {
+    // Solo sincronizamos con ventaActual si:
+    // 1. Es una venta diferente (ID distinto)
+    // 2. No tenemos cambios locales pendientes (buttonState !== 'save')
+    // 3. O si ventaActual es null (la mesa se liberó)
+    
     if (ventaActual) {
-      const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-      const isLinkedUser = isUuid(ventaActual.Cliente);
+      if (ventaActual._id !== ventaId || buttonState !== 'save') {
+        const isUuid = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+        const isLinkedUser = isUuid(ventaActual.Cliente);
 
-      setFormData({
-        Cliente: isLinkedUser ? (allUsers.find(u => u._id === ventaActual.Cliente)?.name || ventaActual.Cliente) : (ventaActual.Cliente || ''),
-        Cajero: ventaActual.Cajero || '',
-        clientId: isLinkedUser ? ventaActual.Cliente : null,
-      });
-      try {
-        setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
-      } catch (e) {
-        console.error("Error parsing Productos JSON:", e);
-        setOrderItems([]);
+        setFormData({
+          Cliente: isLinkedUser ? (allUsers.find(u => u._id === ventaActual.Cliente)?.name || ventaActual.Cliente) : (ventaActual.Cliente || ''),
+          Cajero: ventaActual.Cajero || '',
+          clientId: isLinkedUser ? ventaActual.Cliente : null,
+        });
+        try {
+          setOrderItems(JSON.parse(ventaActual.Productos || '[]'));
+        } catch (e) {
+          console.error("Error parsing Productos JSON:", e);
+          setOrderItems([]);
+        }
+        setVentaId(ventaActual._id);
+        setButtonState("done");
       }
-      setVentaId(ventaActual._id);
-      setButtonState("done");
     } else {
-      setFormData({ Cliente: '', Cajero: '', clientId: null });
-      setOrderItems([]);
-      setVentaId(null);
-      setButtonState("save");
+      // Si ya no hay venta activa en el servidor para esta mesa,
+      // y no estamos en medio de una creación local (ventaId === null && items.length > 0)
+      // entonces limpiamos.
+      if (ventaId !== null || (orderItems.length === 0)) {
+        setFormData({ Cliente: '', Cajero: '', clientId: null });
+        setOrderItems([]);
+        setVentaId(null);
+        setButtonState("save");
+      }
     }
-  }, [ventaActual]);
+  }, [ventaActual, allUsers]); // Añadimos allUsers para asegurar nombres correctos si cargan después
 
   const filteredUsers = useMemo(() => {
     if (!userSearchTerm) return [];
