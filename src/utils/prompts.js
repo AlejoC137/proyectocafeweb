@@ -30,7 +30,12 @@ Actúa como experto en extracción de datos e inventarios. Tu trabajo es leer el
 ## REGLAS CRÍTICAS (para evitar el bug)
 - Proveedor ES uuid (string). Si itemBase trae Proveedor, COPIA EXACTAMENTE el mismo valor. NO lo conviertas a texto, NO lo “interpretes”, NO lo reemplaces.
 - _id ES uuid (string). Si itemBase trae _id, COPIA EXACTAMENTE el mismo valor. NO lo cambies.
-- PROHIBIDO agregar llaves nuevas. En especial: NO existe "fuente_precio" aquí. Nunca la incluyas.
+- PROHIBIDO agregar llaves nuevas. En especial: NO existe “fuente_precio” aquí. Nunca la incluyas.
+
+## POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
+- Si un dato no está disponible en la información proporcionada: **busca en internet** para obtenerlo con fuente verificable.
+- **PROHIBIDO** inventar, alucinar o deducir valores por cuenta propia sin respaldo.
+- Si tras buscar en internet el dato sigue sin encontrarse con certeza, usa \`null\` o conserva el valor original del input.
 
 ## OUTPUT
 Devuelve ÚNICAMENTE un objeto JSON (no array, no texto). Debe contener EXACTAMENTE estas claves y NINGUNA más:
@@ -90,9 +95,10 @@ Si itemBase trae ALMACENAMIENTO, cópialo tal cual (a menos que te pidan actuali
 - Proveedor: null
 
 ## RESTRICCIONES DE SALIDA
-- Devuelve SOLO el JSON.
-- NO explicaciones.
+- Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina).
+- NO incluyas texto antes ni después del bloque.
 - NO agregar campos extra.
+- Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
 
@@ -135,9 +141,15 @@ ESQUEMA DE SALIDA (JSON ESTRICTO):
   "Merma": 0
 }
 
+POLÍTICA DE DATOS (ANTI-ALUCINACIÓN):
+• Si un dato no está en la información proporcionada, búscalo en internet con fuente verificable.
+• PROHIBIDO inventar, alucinar o deducir valores sin respaldo. Si no se encuentra con certeza, usa null.
+
 INSTRUCCIÓN FINALES:
-• Dame solo el JSON, listo para copiar.
+• Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina).
+• No incluyas texto antes ni después del bloque.
 • No inventes datos que no estén en las reglas.
+• Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
 // Prompt Maestro for Recipes
@@ -222,13 +234,18 @@ Usa este esquema (basado en \`Recetas Produccion_rows.csv\`):
 }
 \`\`\`
 
-## 4. INSTRUCCIONES FINALES
+## 4. POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
+  * Si un ingrediente o dato no está en las listas proporcionadas: búscalo en internet con fuente verificable.
+  * **PROHIBIDO** inventar, alucinar o deducir valores sin respaldo. Si no se encuentra con certeza, excluye el ítem o usa \`null\`.
 
-  * Tu salida debe ser **UNICAMENTE** el código JSON.
-  * No uses bloques de texto antes o después del JSON.
+## 5. INSTRUCCIONES FINALES
+
+  * Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina).
+  * No incluyas texto antes ni después del bloque.
   * Asegúrate de escapar correctamente las comillas dentro de los strings JSON anidados (ej: \`\\"legacyName\\"\`).
   * Si un campo está vacío, usa \`null\` o una cadena vacía \`""\` según corresponda, pero mantén la estructura.
   * ¡Estoy listo! Pregúntame qué tipo de receta deseo generar.
+  * Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
 const PROMPT_PROCEDIMIENTOS = `# PROMPT MAESTRO: ESTANDARIZACIÓN DE PROCEDIMIENTOS
@@ -274,10 +291,15 @@ Usa este esquema estricto (basado en \`RecetasProcedimientos\` que espera la apl
 \`\`\`
 *(Puedes asignar los recursos en "item1..." a "item30..." y "producto_interno1..." a "producto_interno20...". Todo lo que no uses mándalo en \`null\` o se ignorará. No me envíes los \`itemX_Id\` a menos que los conozcas, si no sabes el Id, dejalo fuera o escribe la prop null)*
 
-## 3. INSTRUCCIONES FINALES
-  * Tu salida debe ser **UNICAMENTE** el código JSON.
-  * No uses bloques de texto antes o después del JSON.
+## 3. POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
+  * Si un insumo o dato no está en la información proporcionada: búscalo en internet con fuente verificable.
+  * **PROHIBIDO** inventar, alucinar o deducir valores sin respaldo. Si no se encuentra con certeza, usa \`null\`.
+
+## 4. INSTRUCCIONES FINALES
+  * Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina).
+  * No incluyas texto antes ni después del bloque.
   * Asegúrate de escapar correctamente las comillas dentro de los strings JSON anidados.
+  * Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
 const PROMPT_MENU_LUNCH = `# PROMPT MAESTRO: CREACIÓN DE MENÚS DE ALMUERZO EN LOTE
@@ -340,12 +362,18 @@ Devuelve ÚNICAMENTE el código JSON.
 ]
 \`\`\`
 
-## 3. INSTRUCCIONES FINALES
-  * Tu salida debe ser **UNICAMENTE** el array JSON válido comenzando con \`[\` y terminando con \`]\`.
-  * No uses bloques de texto antes o después del JSON. (Ej: nada de "Aquí tienes el JSON").
+## 3. POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
+  * Si un dato del menú no se puede leer con claridad: búscalo en internet o déjalo vacío \`""\`.
+  * **PROHIBIDO** inventar, alucinar o deducir nombres, fechas o precios sin respaldo real.
+  * Si no se encuentra con certeza, usa \`""\` o el valor por defecto indicado.
+
+## 4. INSTRUCCIONES FINALES
+  * Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina).
+  * No incluyas texto antes ni después del bloque. (Ej: nada de "Aquí tienes el JSON").
   * Si falta el precio, asume 22000 por defecto.
   * El objeto \`Comp_Lunch\` es fundamental y DEBE contener todas las subclaves indicadas para CADA objeto del array.
-  * Procura que \`NombreES\` siga el patrón MAYUSCULAS_CON_GUION_BAJO que identifica el plato principal (usualmente la proteína principal).`;
+  * Procura que \`NombreES\` siga el patrón MAYUSCULAS_CON_GUION_BAJO que identifica el plato principal (usualmente la proteína principal).
+  * Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.`;
 
 const PROMPT_SPELL_CHECK = `# PROMPT: CORRECTOR ORTOGRÁFICO BILINGÜE (ES/EN)
 
@@ -371,11 +399,19 @@ Recibirás un array de objetos JSON con la siguiente estructura (puede variar se
    - Campos finalizados en "EN" o "en inglés" -> Revisar en Inglés.
    - "Nombre_del_producto" y "Area" usualmente están en Español.
 
+## POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
+- Si una corrección no es segura o verificable, **NO la incluyas**.
+- **PROHIBIDO** inventar correcciones, asumir idiomas o cambiar términos técnicos sin certeza.
+- Si no puedes determinar si una palabra está bien escrita, consérvala tal cual.
+
 ## OUTPUT
 Devuelve ÚNICAMENTE un array de objetos JSON que contenga SOLO los elementos que requirieron corrección.
 Cada objeto debe incluir el \`_id\` y SOLO los campos que fueron corregidos.
 
+Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina). Sin texto antes ni después del bloque.
+
 Ejemplo de salida:
+\`\`\`json
 [
   {
     "_id": "uuid-123",
@@ -383,6 +419,9 @@ Ejemplo de salida:
     "DescripcionMenuES": "Exquicita lasaña casera."
   }
 ]
+\`\`\`
+
+Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
 /**
@@ -460,6 +499,11 @@ Devuelve ÚNICAMENTE un array de objetos JSON con la siguiente estructura para c
 ]
 \`\`\`
 
+## POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
+- Extrae SOLO lo que esté claramente visible en el recibo/imagen.
+- **PROHIBIDO** inventar, alucinar o deducir productos, cantidades o precios sin respaldo visible.
+- Si un dato no se puede leer con certeza, usa \`null\` para ese campo.
+
 ## REGLAS DE EXTRACCIÓN
 1. **nombre**: Mantén el nombre lo más descriptivo posible.
 2. **cantidad**: Extrae el valor numérico. Si es por peso (ej: 0.534 kg), pon el número exacto.
@@ -467,7 +511,8 @@ Devuelve ÚNICAMENTE un array de objetos JSON con la siguiente estructura para c
 4. **costo_total**: El valor total pagado por ese ítem específico.
 5. **precio_unitario**: Si el recibo lo da, úsalo. Si no, calcúlalo: costo_total / cantidad.
 6. Si hay impuestos (IVA) incluidos en el precio del ítem, usa el precio final pagado.
-7. **NO explicaciones**. Solo el array JSON.
+7. Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina). Sin texto antes ni después del bloque.
+8. Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
 /**

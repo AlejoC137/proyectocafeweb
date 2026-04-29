@@ -92,7 +92,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('menu'); // 'menu' | 'produccion'
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGroup, setSelectedGroup] = useState('');
-    const [selectedItems, setSelectedItems] = useState(new Set()); // IDs
+    const [selectedItems, setSelectedItems] = useState(new Map()); // ID -> batches (quantity)
     const [expandedIngredients, setExpandedIngredients] = useState(true);
 
     // --- Filtering ---
@@ -110,24 +110,31 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
 
     // --- Selection Handlers ---
     const toggleItem = (itemId) => {
-        const newSet = new Set(selectedItems);
-        if (newSet.has(itemId)) { newSet.delete(itemId); } else { newSet.add(itemId); }
-        setSelectedItems(newSet);
+        const newMap = new Map(selectedItems);
+        if (newMap.has(itemId)) { newMap.delete(itemId); } else { newMap.set(itemId, 1); }
+        setSelectedItems(newMap);
+    };
+
+    const setItemBatches = (itemId, value) => {
+        const parsed = Math.max(1, parseInt(value) || 1);
+        const newMap = new Map(selectedItems);
+        newMap.set(itemId, parsed);
+        setSelectedItems(newMap);
     };
 
     const handleSelectVisible = () => {
-        const newSet = new Set(selectedItems);
-        filteredRecipes.forEach(i => newSet.add(i._id));
-        setSelectedItems(newSet);
+        const newMap = new Map(selectedItems);
+        filteredRecipes.forEach(i => { if (!newMap.has(i._id)) newMap.set(i._id, 1); });
+        setSelectedItems(newMap);
     };
 
     const handleDeselectVisible = () => {
-        const newSet = new Set(selectedItems);
-        filteredRecipes.forEach(i => newSet.delete(i._id));
-        setSelectedItems(newSet);
+        const newMap = new Map(selectedItems);
+        filteredRecipes.forEach(i => newMap.delete(i._id));
+        setSelectedItems(newMap);
     };
 
-    const handleClearSelection = () => setSelectedItems(new Set());
+    const handleClearSelection = () => setSelectedItems(new Map());
 
     // --- Calculation Logic ---
     const calculationResult = useMemo(() => {
@@ -136,13 +143,17 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
 
         // Search in BOTH/ALL lists to find the selected items correctly
         const allList = [...allRecipes.menu, ...allRecipes.produccion];
-        const selectedRecipesList = allList.filter(r => selectedItems.has(r._id));
+        const selectedRecipesList = allList
+            .filter(r => selectedItems.has(r._id))
+            .map(r => ({ ...r, batches: selectedItems.get(r._id) || 1 }));
 
         selectedRecipesList.forEach(receta => {
-            // 1. Add Recipe Cost
-            totalCost += receta.calculatedCost;
+            const batches = receta.batches;
 
-            // 2. Extract Ingredients
+            // 1. Add Recipe Cost × batches
+            totalCost += receta.calculatedCost * batches;
+
+            // 2. Extract Ingredients × batches
             const extract = (prefix, max) => {
                 for (let i = 1; i <= max; i++) {
                     const itemId = receta[`${prefix}${i}_Id`];
@@ -151,16 +162,11 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                     if (itemId && cuantityUnitsRaw) {
                         try {
                             const qUnits = typeof cuantityUnitsRaw === 'string' ? JSON.parse(cuantityUnitsRaw) : cuantityUnitsRaw;
-                            const amount = Number(qUnits?.metric?.cuantity) || 0;
+                            const baseAmount = Number(qUnits?.metric?.cuantity) || 0;
+                            const amount = baseAmount * batches;
 
-                            // Retrieve master data for this item
                             const itemData = ingredientMap[itemId];
-
-                            // Source of Truth: Master Data (ItemsAlmacen/ProduccionInterna)
-                            // We look ideally for 'UNIDADES' or 'units' in the master record.
                             let masterUnitRaw = itemData?.UNIDADES || itemData?.units;
-
-                            // Sanitize unit: Ensure it's a string and not "NaN"
                             let unit = '';
                             if (masterUnitRaw && masterUnitRaw !== 'NaN') {
                                 unit = String(masterUnitRaw);
@@ -180,9 +186,9 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                 aggregatedIngredients[itemId].totalQuantity += amount;
                                 aggregatedIngredients[itemId].breakdown.push({
                                     recipeName: receta.name,
-                                    quantity: amount
+                                    quantity: amount,
+                                    batches
                                 });
-                                // Update unit if we found a better one (though master should be constant)
                                 if (!aggregatedIngredients[itemId].unit && unit) {
                                     aggregatedIngredients[itemId].unit = unit;
                                 }
@@ -251,6 +257,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                             <tr>
                                 <th>Receta</th>
                                 <th>Origen</th>
+                                <th class="text-right">Tandas</th>
                                 <th class="text-right">Costo Calc.</th>
                             </tr>
                         </thead>
@@ -259,13 +266,14 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                 <tr>
                                     <td>${r.name}</td>
                                     <td>${r.sourceType === 'menu' ? 'Menú' : 'Producción'}</td>
-                                    <td class="text-right">$${r.calculatedCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
+                                    <td class="text-right">${r.batches}x</td>
+                                    <td class="text-right">$${(r.calculatedCost * r.batches).toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                         <tfoot>
                             <tr>
-                                <th colspan="2" class="text-right">Total Costo Recetas</th>
+                                <th colspan="3" class="text-right">Total Costo Recetas</th>
                                 <th class="text-right">$${calculationResult.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</th>
                             </tr>
                         </tfoot>
@@ -284,7 +292,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                         <tbody>
                             ${calculationResult.ingredientsList.map(ing => {
             const breakdownStr = ing.breakdown
-                .map(b => `${b.quantity.toLocaleString()} para ${b.recipeName}`)
+                .map(b => `${b.quantity.toLocaleString()} para ${b.recipeName}${b.batches > 1 ? ` ×${b.batches}` : ''}`)
                 .join(', ');
             return `
                                 <tr>
@@ -375,15 +383,18 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                 <p className="text-gray-400 text-center mt-8">No se encontraron recetas en esta categoría.</p>
                             ) : (
                                 <div className="space-y-1">
-                                    {filteredRecipes.map(item => (
+                                    {filteredRecipes.map(item => {
+                                        const isSelected = selectedItems.has(item._id);
+                                        const batches = selectedItems.get(item._id) || 1;
+                                        return (
                                         <div
                                             key={item._id}
-                                            className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${selectedItems.has(item._id) ? 'bg-indigo-50 border-indigo-300' : 'bg-white hover:bg-gray-100'}`}
+                                            className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50 border-indigo-300' : 'bg-white hover:bg-gray-100'}`}
                                             onClick={() => toggleItem(item._id)}
                                         >
                                             <input
                                                 type="checkbox"
-                                                checked={selectedItems.has(item._id)}
+                                                checked={isSelected}
                                                 onChange={() => { }}
                                                 className="mt-1"
                                             />
@@ -392,19 +403,42 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                                                     <span>{item.group}</span>
                                                     <span className={`font-mono font-semibold ${item.calculatedCost > 0 ? 'text-indigo-700' : 'text-red-400'}`}>
-                                                        ${item.calculatedCost.toLocaleString()}
+                                                        ${(item.calculatedCost * (isSelected ? batches : 1)).toLocaleString()}
                                                     </span>
                                                 </div>
-                                                {/* Detailed cost breakdown */}
                                                 {(item.costData && (item.costData.vIB || item.costData.vCMP)) && (
                                                     <div className="flex gap-2 text-[10px] text-gray-400 mt-0.5">
                                                         {item.costData.vIB && <span>vIB: ${Number(item.costData.vIB).toLocaleString()}</span>}
                                                         {item.costData.vCMP && <span>vCMP: ${Number(item.costData.vCMP).toLocaleString()}</span>}
                                                     </div>
                                                 )}
+                                                {isSelected && (
+                                                    <div
+                                                        className="flex items-center gap-1.5 mt-1.5"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <span className="text-[10px] text-indigo-500 font-semibold">Tandas:</span>
+                                                        <button
+                                                            className="w-5 h-5 text-xs rounded border border-indigo-300 bg-white hover:bg-indigo-100 flex items-center justify-center leading-none"
+                                                            onClick={() => setItemBatches(item._id, batches - 1)}
+                                                        >−</button>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={batches}
+                                                            onChange={(e) => setItemBatches(item._id, e.target.value)}
+                                                            className="w-10 text-xs border border-indigo-300 rounded px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                                        />
+                                                        <button
+                                                            className="w-5 h-5 text-xs rounded border border-indigo-300 bg-white hover:bg-indigo-100 flex items-center justify-center leading-none"
+                                                            onClick={() => setItemBatches(item._id, batches + 1)}
+                                                        >+</button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -475,7 +509,7 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
                                                     <td className="px-4 py-2 text-gray-800 font-medium">
                                                         {ing.name}
                                                         <div className="text-xs text-gray-400 font-normal mt-1">
-                                                            ({ing.breakdown.map(b => `${b.quantity.toLocaleString()} para ${b.recipeName}`).join(', ')})
+                                                            ({ing.breakdown.map(b => `${b.quantity.toLocaleString(undefined, { maximumFractionDigits: 2 })} para ${b.recipeName}${b.batches > 1 ? ` ×${b.batches}` : ''}`).join(', ')})
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-2 text-right font-mono text-indigo-700">

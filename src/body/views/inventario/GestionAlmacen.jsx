@@ -14,7 +14,6 @@ import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown } from "lucide-react";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
-import { generateInventoryUpdatePromptLink } from "../../../utils/inventoryUpdatePrompt";
 import ReceiptIngestionModal from "./ReceiptIngestionModal";
 
 import { compareAndGenerateHistory } from "../../../utils/historyUtils";
@@ -237,26 +236,6 @@ function GestionAlmacen() {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleCopyPromptLink = async () => {
-    if (selectedItems.length === 0) return;
-    try {
-      const selectedProviderObjects = proveedores.filter(p => selectedProviderIds.includes(p._id));
-      // Generate prompt using the new centralized utility
-      const promptText = generateInventoryUpdatePromptLink(
-        selectedItems,
-        selectedProviderObjects,
-        proveedores, // Pass all providers for lookup
-        forceSelectedProviders,
-        singleProviderReturn,
-        forceLowestUnitPrice // Pass the new flag
-      );
-      await navigator.clipboard.writeText(promptText);
-      alert("Prompt copiado al portapapeles");
-    } catch (err) {
-      console.error("Failed to copy prompt:", err);
-      alert("Error al copiar el prompt");
-    }
-  };
   const handleCopyPrompt = async () => {
     if (selectedItems.length === 0) return;
     try {
@@ -282,25 +261,26 @@ function GestionAlmacen() {
   const handleProcessJson = () => {
     if (!jsonText) return;
     try {
-      const updates = JSON.parse(jsonText);
-      if (!Array.isArray(updates)) {
-        alert("El JSON debe ser un array de objetos");
-        return;
-      }
+      let parsed = JSON.parse(jsonText);
+      const updates = Array.isArray(parsed) ? parsed : [parsed];
 
       const newStagedItems = updates.map(update => {
         const original = selectedItems.find(i => i._id === update._id);
-        if (!original) return null; // Skip if not in selected
+        if (!original) return null;
         return {
-          ...original, // Keep original props
-          ...update,   // Overwrite with updates
-          _original: original, // Store ref to original for diffing
-          _isStaged: true, // Marker
-          _includedFields: Object.keys(update).filter(k => k !== "_id" && k !== "COSTO") // Default included fields (COSTO excluded by default per logic if needed, but usually we include everything provided)
+          ...original,
+          ...update,
+          _original: original,
+          _isStaged: true,
+          _includedFields: Object.keys(update).filter(k => k !== "_id" && k !== "COSTO")
         };
       }).filter(Boolean);
+
+      if (newStagedItems.length === 0) {
+        alert("Ningún _id del JSON coincide con los items seleccionados. Asegúrate de seleccionar los items en la columna izquierda antes de procesar.");
+        return;
+      }
       setStagedItems(newStagedItems);
-      // alert(`Procesados ${newStagedItems.length} items.`);
     } catch (e) {
       alert("Error al parsear JSON: " + e.message);
     }
@@ -647,14 +627,6 @@ function GestionAlmacen() {
                   className="flex-1 justify-between items-center border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-xs h-8"
                 >
                   <span>Generar Prompt IA</span>
-                  <Zap className="h-3 w-3" />
-                </Button>
-                <Button
-                  onClick={handleCopyPromptLink}
-                  variant="outline"
-                  className="flex-1 justify-between items-center border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-xs h-8"
-                >
-                  <span>Prompt por link</span>
                   <Zap className="h-3 w-3" />
                 </Button>
 

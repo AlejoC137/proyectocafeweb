@@ -68,7 +68,7 @@ const EditableText = ({
 
   if (!isEditable) {
     return (
-      <span style={{ color: 'rgb(0, 0, 0)' }}>
+      <span style={{ color: 'inherit' }}>
         {value || placeholder}
       </span>
     );
@@ -143,7 +143,7 @@ const EditableText = ({
         }`}
       onClick={handleEdit}
       style={{
-        color: !value ? 'rgb(156, 163, 175)' : 'rgb(0, 0, 0)',
+        color: !value ? 'rgb(156, 163, 175)' : 'inherit',
         backgroundColor: 'transparent'
       }}
     >

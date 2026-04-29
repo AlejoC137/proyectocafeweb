@@ -467,7 +467,7 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                 {step === 1 ? (
                     <div className="flex flex-col gap-4">
                         {/* AI GENERATION SECTION */}
-                        <div className="bg-amber-50 p-4 rounded-md border border-amber-200 flex flex-col gap-3">
+                        {/* <div className="bg-amber-50 p-4 rounded-md border border-amber-200 flex flex-col gap-3">
                             <p className="text-sm font-semibold text-amber-800">Generar JSON con IA</p>
                             <div className="flex gap-2 items-center">
                                 <Input
@@ -482,7 +482,7 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                                     onResult={(data) => setJsonInput(JSON.stringify(data, null, 2))}
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                             <div className="flex items-center justify-between mb-2">
