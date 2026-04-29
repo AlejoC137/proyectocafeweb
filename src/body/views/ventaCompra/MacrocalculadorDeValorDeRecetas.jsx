@@ -221,105 +221,132 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
             return;
         }
 
-        const today = new Date().toLocaleDateString();
+        const today = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+        const formatCurrencyPrint = (value) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(value || 0);
 
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>Lista de Ingredientes - ${today}</title>
-                    <style>
-                        body { font-family: sans-serif; padding: 20px; }
-                        h1, h2 { text-align: center; color: #333; }
-                        h2 { font-size: 18px; margin-top: 30px; margin-bottom: 10px; text-align: left; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-                        .info { margin-bottom: 20px; font-size: 14px; text-align: center; color: #666; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-                        th { background-color: #f2f2f2; font-weight: bold; }
-                        .text-right { text-align: right; }
-                        @media print {
-                            .no-print { display: none; }
-                            table { page-break-inside: auto; }
-                            tr { page-break-inside: avoid; page-break-after: auto; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h1>Reporte Costos y Materiales</h1>
-                    <div class="info">
-                        <strong>Fecha de impresión:</strong> ${today}<br>
-                        <strong>Total Recetas:</strong> ${calculationResult.count}
-                    </div>
+        const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Reporte: Macro Calculador de Valor de Recetas</title>
+<style>
+  @page{size:letter;margin:1.5cm 2cm}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Georgia',serif;font-size:10.5px;color:#1a1a1a;line-height:1.6}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:16px}
+  .header-left h1{font-size:20px;color:#1d4ed8;font-weight:700;letter-spacing:-0.3px}
+  .badges{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+  .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px}
+  .badge-blue{background:#dbeafe;color:#1d4ed8}
+  .badge-gray{background:#f1f5f9;color:#475569}
+  .badge-emerald{background:#d1fae5;color:#059669}
+  h2{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:3px;margin:18px 0 6px}
+  table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px}
+  thead th{background:#f0f4f8;padding:5px 6px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#475569}
+  thead th.num{text-align:right}
+  td{padding:4px 6px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  td.num{text-align:right;font-family:monospace}
+  .total-row{background:#eff6ff;font-weight:700}
+  .total-row td{border-top:1.5px solid #bfdbfe;color:#1d4ed8;font-size:11px}
+  .breakdown{font-size:8.5px;color:#64748b;margin-top:2px;font-style:italic}
+  .footer{margin-top:20px;padding-top:8px;border-top:1px solid #e2e8f0;font-size:8.5px;color:#94a3b8;display:flex;justify-content:space-between}
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:10px}
+  .summary-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px}
+  .summary-label{font-size:8px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:2px}
+  .summary-value{font-size:16px;font-weight:700;color:#1d4ed8}
+</style></head><body>
+<div class="header">
+  <div class="header-left">
+    <h1>Reporte de Costos y Materiales</h1>
+    <div class="badges">
+      <span class="badge badge-blue">📊 ${calculationResult.count} Receta(s) Seleccionada(s)</span>
+      <span class="badge badge-gray">📅 ${today}</span>
+      <span class="badge badge-emerald">📦 ${calculationResult.ingredientsList.length} Items Únicos</span>
+    </div>
+  </div>
+</div>
 
-                    <h2>1. Resumen de Recetas Seleccionadas</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Receta</th>
-                                <th>Origen</th>
-                                <th class="text-right">Tandas</th>
-                                <th class="text-right">Costo Calc.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                             ${calculationResult.selectedRecipes.map(r => `
-                                <tr>
-                                    <td>${r.name}</td>
-                                    <td>${r.sourceType === 'menu' ? 'Menú' : 'Producción'}</td>
-                                    <td class="text-right">${r.batches}x</td>
-                                    <td class="text-right">$${(r.calculatedCost * r.batches).toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="3" class="text-right">Total Costo Recetas</th>
-                                <th class="text-right">$${calculationResult.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</th>
-                            </tr>
-                        </tfoot>
-                    </table>
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="summary-label">Costo Total de Recetas</div>
+    <div class="summary-value">${formatCurrencyPrint(calculationResult.totalCost)}</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Total Materiales</div>
+    <div class="summary-value">${formatCurrencyPrint(calculationResult.totalCost)}</div>
+  </div>
+</div>
 
-                    <h2>2. Lista Consolidad de Ingredientes</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Ingrediente</th>
-                                <th class="text-right">Cant. Total</th>
-                                <th class="text-right">Unidad</th>
-                                <th class="text-right">Costo Est.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${calculationResult.ingredientsList.map(ing => {
+<h2>1. Desglose de Recetas Seleccionadas</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Nombre de la Receta</th>
+      <th>Origen</th>
+      <th class="num">Tandas</th>
+      <th class="num">Costo Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${calculationResult.selectedRecipes.map(r => `
+      <tr>
+        <td style="font-weight:600">${r.name}</td>
+        <td><span style="font-size:9px; color:#64748b">${r.sourceType === 'menu' ? 'MENÚ' : 'PRODUCCIÓN'}</span></td>
+        <td class="num">${r.batches}x</td>
+        <td class="num">${formatCurrencyPrint(r.calculatedCost * r.batches)}</td>
+      </tr>
+    `).join('')}
+    <tr class="total-row">
+      <td colspan="3" class="num">TOTAL COSTO RECETAS</td>
+      <td class="num">${formatCurrencyPrint(calculationResult.totalCost)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Lista Consolidada de Ingredientes e Insumos</h2>
+<table>
+  <thead>
+    <tr>
+      <th style="width:50%">Ingrediente / Insumo</th>
+      <th class="num">Cant. Total</th>
+      <th>Unidad</th>
+      <th class="num">Costo Est.</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${calculationResult.ingredientsList.map(ing => {
             const breakdownStr = ing.breakdown
-                .map(b => `${b.quantity.toLocaleString()} para ${b.recipeName}${b.batches > 1 ? ` ×${b.batches}` : ''}`)
+                .map(b => `${b.quantity.toLocaleString(undefined, { maximumFractionDigits: 2 })} para ${b.recipeName}${b.batches > 1 ? ` (x${b.batches})` : ''}`)
                 .join(', ');
             return `
-                                <tr>
-                                    <td>
-                                        ${ing.name}
-                                        <div style="font-size: 10px; color: #666; margin-top: 2px;">(${breakdownStr})</div>
-                                    </td>
-                                    <td class="text-right">${ing.totalQuantity.toLocaleString()}</td>
-                                    <td class="text-right">${ing.unit || '-'}</td>
-                                    <td class="text-right">$${ing.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
-                                </tr>
-                            `;
+        <tr>
+          <td>
+            <div style="font-weight:600">${ing.name}</div>
+            <div class="breakdown">${breakdownStr}</div>
+          </td>
+          <td class="num" style="font-weight:600; color:#1d4ed8">${ing.totalQuantity.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+          <td><span style="font-size:9px; color:#64748b">${ing.unit || '-'}</span></td>
+          <td class="num">${formatCurrencyPrint(ing.totalCost)}</td>
+        </tr>
+      `;
         }).join('')}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="3" class="text-right">Total Materiales</th>
-                                <th class="text-right">$${calculationResult.totalCost.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <script>
-                        window.onload = function() { window.print(); window.close(); }
-                    </script>
-                </body>
-            </html>
-        `;
+    <tr class="total-row">
+      <td colspan="3" class="num">TOTAL ESTIMADO MATERIALES</td>
+      <td class="num">${formatCurrencyPrint(calculationResult.totalCost)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <span>Generado por Macro Calculador de Valor de Recetas</span>
+  <span>Página 1</span>
+</div>
+
+<script>
+  window.onload = function() {
+    window.focus();
+    window.print();
+    setTimeout(() => { window.close(); }, 500);
+  }
+</script>
+</body></html>`;
 
         printWindow.document.write(htmlContent);
         printWindow.document.close();
