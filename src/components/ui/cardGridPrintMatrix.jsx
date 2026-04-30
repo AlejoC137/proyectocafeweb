@@ -109,7 +109,7 @@ const formatPrice = (precio) => {
     return precio;
 };
 
-function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot }) {
+function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons }) {
     const dispatch = useDispatch();
     const [localIngredients, setLocalIngredients] = React.useState(Array.isArray(product.IngredientesBasicos) ? product.IngredientesBasicos : []);
 
@@ -157,10 +157,10 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     };
 
     return (
-        <div className="flex justify-between items-baseline border-b border-black/10 pb-0.5 group relative">
-            <div className="flex items-center gap-1 overflow-visible flex-grow">
+        <div className="flex justify-between items-baseline border-b border-black/10 pb-0.5 group relative gap-2">
+            <div className="flex items-start gap-1 flex-grow min-w-0">
                 {editMode && (
-                    <div className="flex items-center gap-1 print:hidden ">
+                    <div className="flex items-center gap-1 print:hidden pt-0.5">
                         <input
                             type="number"
                             defaultValue={product.Order}
@@ -169,11 +169,11 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         />
                     </div>
                 )}
-                <span className="font-SpaceGrotesk font-bold uppercase text-[11px] leading-tight truncate mr-1">
+                <span className="font-SpaceGrotesk font-bold uppercase text-[11px] leading-tight mr-1 break-words whitespace-normal flex-1">
                     {isEnglish ? product.NombreEN : product.NombreES}
                 </span>
 
-                <div className="flex gap-0 items-center">
+                <div className={`flex gap-0 items-center flex-shrink-0 pt-[2px] ${!showIcons ? 'hidden' : ''}`}>
                     {localIngredients.map((id, index) => {
                         const ing = OPCIONES_INGREDIENTES.find(i => i.id === id);
                         if (!ing) return null;
@@ -249,7 +249,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     );
 }
 
-export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE, columns = 2, editMode = false }) {
+export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE, columns = 2, editMode = false, showIcons = true }) {
     const [activeSlot, setActiveSlot] = React.useState(null);
 
     const filteredProducts = products.filter((product) => {
@@ -265,7 +265,7 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
     const gridColsClass = columns === 3 ? "grid-cols-3" : columns === 2 ? "grid-cols-2" : "grid-cols-1";
 
     return (
-        <div className="mb-4 break-inside-avoid">
+        <div className="mb-2 break-inside-avoid">
             <div className="flex items-center mb-1.5 ">
                 <span className="font-black text-xs uppercase tracking-widest bg-black text-white px-2 py-0.5 border-[2px] border-black inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     {titleText}
@@ -282,6 +282,7 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
                         editMode={editMode}
                         activeSlot={activeSlot}
                         setActiveSlot={setActiveSlot}
+                        showIcons={showIcons}
                     />
                 ))}
             </div>
