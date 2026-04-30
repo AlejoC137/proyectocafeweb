@@ -20,6 +20,15 @@ function MenuPrint() {
   const [showIcons, setShowIcons] = useState(true);
   const menuData = useSelector((state) => state.allMenu);
 
+  useEffect(() => {
+    if (menuData && menuData.length > 0) {
+      const shownItems = menuData
+        .filter(p => p.PRINT === true && p.Estado === "Activo")
+        .sort((a, b) => (Number(a.Order) || 9999) - (Number(b.Order) || 9999));
+      console.log("Items currently visible on the menu (PRINT: true & Active, sorted by Order):", shownItems);
+    }
+  }, [menuData]);
+
   const [printImages, setPrintImages] = useState([]);
   const [groupDescriptions, setGroupDescriptions] = useState({});
   const [photosWidth, setPhotosWidth] = useState(210);
@@ -62,11 +71,11 @@ function MenuPrint() {
         let loadedImages = config.images || [];
         let modifiedImages = false;
         loadedImages = loadedImages.map(img => {
-            if (!img.id) { modifiedImages = true; return { ...img, id: 'IMG_' + Math.random().toString(36).substr(2, 9), nameES: '', nameEN: '' }; }
-            return img;
+          if (!img.id) { modifiedImages = true; return { ...img, id: 'IMG_' + Math.random().toString(36).substr(2, 9), nameES: '', nameEN: '' }; }
+          return img;
         });
         if (modifiedImages) {
-            supabase.from('menu_print_config').update({ images: loadedImages }).eq('id', 1).then();
+          supabase.from('menu_print_config').update({ images: loadedImages }).eq('id', 1).then();
         }
         setPrintImages(loadedImages);
         setGroupDescriptions(config.group_descriptions || {});
@@ -75,7 +84,7 @@ function MenuPrint() {
         setPhotosWidthUnit(config.group_descriptions?.__layout?.photosWidthUnit ?? 'px');
         setLeftColRatio(config.group_descriptions?.__layout?.leftColRatio ?? 50);
         setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
-        
+
         const savedLeft = config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
         const savedCenter = config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
         let savedRight = config.group_descriptions?.__layout?.rightColBlocks;
@@ -181,7 +190,7 @@ function MenuPrint() {
       const newImages = [...printImages, { id: newImageId, url: data.publicUrl, path: fileName, height: 100, nameES: '', nameEN: '' }];
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
-      
+
       const newRight = [...rightColBlocks, newImageId];
       setRightColBlocks(newRight);
       saveLayoutSizes({ rightColBlocks: newRight });
@@ -216,15 +225,15 @@ function MenuPrint() {
       if (error) throw error;
 
       const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
-      
+
       const newImages = [...printImages];
       const index = newImages.findIndex(img => String(img.id) === String(blockId));
       if (index !== -1) {
         const oldImage = newImages[index];
         if (oldImage.path) {
-           supabase.storage.from("Images_eventos").remove([oldImage.path]).catch(err => console.error("Error removing old image", err));
+          supabase.storage.from("Images_eventos").remove([oldImage.path]).catch(err => console.error("Error removing old image", err));
         }
-        
+
         newImages[index].url = data.publicUrl;
         newImages[index].path = fileName;
         setPrintImages(newImages);
@@ -251,7 +260,7 @@ function MenuPrint() {
       const newImages = printImages.filter((_, i) => i !== index);
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
-      
+
       const newLeft = leftColBlocks.filter(b => b !== blockId);
       const newCenter = centerColBlocks.filter(b => b !== blockId);
       const newRight = rightColBlocks.filter(b => b !== blockId);
@@ -269,15 +278,15 @@ function MenuPrint() {
     const newImages = [...printImages];
     const index = newImages.findIndex(img => img.id === blockId);
     if (index !== -1) {
-       newImages[index].height = Number(val);
-       setPrintImages(newImages);
+      newImages[index].height = Number(val);
+      setPrintImages(newImages);
     }
   };
 
   const saveLayoutSizes = (updates = {}) => {
-    saveGroupDescriptions({ 
-      ...groupDescriptions, 
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, ...updates } 
+    saveGroupDescriptions({
+      ...groupDescriptions,
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, ...updates }
     });
   };
 
@@ -372,7 +381,7 @@ function MenuPrint() {
   };
 
   const renderBlock = (blockId) => {
-    switch(blockId) {
+    switch (blockId) {
       case "CAFE":
         return (
           <div key="CAFE" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
@@ -436,8 +445,8 @@ function MenuPrint() {
               {renderGroupDescription("ADICIONES")}
             </div>
             <div className="p-2">
-              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} />
             </div>
           </div>
         );
@@ -457,9 +466,9 @@ function MenuPrint() {
             {editMode && (
               <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity print:hidden text-white p-2 text-xs font-SpaceGrotesk">
                 <div className="flex items-center gap-2 w-full justify-center">
-                   <span className="text-right font-bold">Escalar Todo:</span>
-                   <input type="range" min="0.5" max="3" step="0.1" value={qrScale} onChange={e => setQrScale(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ qrScale: Number(qrScale) })} onTouchEnd={() => saveLayoutSizes({ qrScale: Number(qrScale) })} className="w-24 cursor-pointer" />
-                   <span>{(qrScale * 100).toFixed(0)}%</span>
+                  <span className="text-right font-bold">Escalar Todo:</span>
+                  <input type="range" min="0.5" max="3" step="0.1" value={qrScale} onChange={e => setQrScale(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ qrScale: Number(qrScale) })} onTouchEnd={() => saveLayoutSizes({ qrScale: Number(qrScale) })} className="w-24 cursor-pointer" />
+                  <span>{(qrScale * 100).toFixed(0)}%</span>
                 </div>
               </div>
             )}
@@ -476,11 +485,11 @@ function MenuPrint() {
             </div>
             <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic text-gray-700">
               <MenuPrintInfo
-                 isEnglish={leng}
-                 editMode={editMode}
-                 groupDescriptions={groupDescriptions}
-                 saveGroupDescriptions={saveLayoutSizes ? (updated) => saveGroupDescriptions(updated) : undefined}
-                 className="p-0 m-0 w-full"
+                isEnglish={leng}
+                editMode={editMode}
+                groupDescriptions={groupDescriptions}
+                saveGroupDescriptions={saveLayoutSizes ? (updated) => saveGroupDescriptions(updated) : undefined}
+                className="p-0 m-0 w-full"
               />
             </div>
           </div>
@@ -491,7 +500,7 @@ function MenuPrint() {
           return (
             <div key={blockId} className="relative group border-[2px] border-black p-2 bg-white flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px] overflow-hidden">
               {renderBlockControls(blockId)}
-              
+
               <div className="w-full flex justify-between items-center mb-1">
                 {editMode ? (
                   <input
@@ -499,32 +508,32 @@ function MenuPrint() {
                     defaultValue={leng ? (imgObj.nameEN || '') : (imgObj.nameES || '')}
                     placeholder={leng ? "Image Name (English)" : "Nombre de Imagen (Español)"}
                     onBlur={(e) => {
-                       const updatedName = e.target.value;
-                       const newImages = printImages.map(img =>
-                         String(img.id) === String(blockId)
-                           ? { ...img, [leng ? 'nameEN' : 'nameES']: updatedName }
-                           : img
-                       );
-                       setPrintImages(newImages);
-                       saveImagesConfig(newImages);
+                      const updatedName = e.target.value;
+                      const newImages = printImages.map(img =>
+                        String(img.id) === String(blockId)
+                          ? { ...img, [leng ? 'nameEN' : 'nameES']: updatedName }
+                          : img
+                      );
+                      setPrintImages(newImages);
+                      saveImagesConfig(newImages);
                     }}
                     className="text-[11px] font-bold font-SpaceGrotesk uppercase w-full border-b border-black/30 focus:outline-none focus:border-black print:hidden mb-1"
                   />
                 ) : (
                   (leng ? imgObj.nameEN : imgObj.nameES) && (
-                     <span className="text-[11px] font-bold font-SpaceGrotesk uppercase mb-1 w-full border-b-[2px] border-black pb-1 leading-none text-center">
-                       {leng ? imgObj.nameEN : imgObj.nameES}
-                     </span>
+                    <span className="text-[11px] font-bold font-SpaceGrotesk uppercase mb-1 w-full border-b-[2px] border-black pb-1 leading-none text-center">
+                      {leng ? imgObj.nameEN : imgObj.nameES}
+                    </span>
                   )
                 )}
                 {editMode && (
-                   <div className="flex gap-2 print:hidden ml-2 items-center shrink-0">
-                     <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase" title="Reemplazar Imagen">
-                        Cambiar
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(e, blockId)} disabled={uploadingImage} />
-                     </label>
-                     <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center">X</button>
-                   </div>
+                  <div className="flex gap-2 print:hidden ml-2 items-center shrink-0">
+                    <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase" title="Reemplazar Imagen">
+                      Cambiar
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(e, blockId)} disabled={uploadingImage} />
+                    </label>
+                    <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center">X</button>
+                  </div>
                 )}
               </div>
 
@@ -535,7 +544,7 @@ function MenuPrint() {
                   className="w-full h-full object-cover rounded-none grayscale-[30%] contrast-[1.1] brightness-[1.05] border border-black"
                 />
               </div>
-              
+
               {editMode && (
                 <div className="absolute bottom-1 left-1 bg-white border border-black p-0.5 text-[9px] z-10 print:hidden font-SpaceGrotesk opacity-0 group-hover:opacity-100 transition-opacity">
                   Alto: <input type="number" defaultValue={imgObj.height || 150} onBlur={(e) => { updateImageHeight(blockId, e.target.value); saveImagesConfig(printImages); }} className="w-10 border-b border-black/30 text-center focus:outline-none" /> px
@@ -582,7 +591,7 @@ function MenuPrint() {
           <div className="flex items-center gap-2">
             <span className="font-bold">Ancho Col. Fotos:</span>
             <input type="range" min={photosWidthUnit === 'px' ? "100" : "15"} max={photosWidthUnit === 'px' ? "400" : "50"} value={photosWidth} onChange={(e) => setPhotosWidth(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ photosWidth: Number(photosWidth) })} onTouchEnd={() => saveLayoutSizes({ photosWidth: Number(photosWidth) })} className="w-[150px]" />
-            <span 
+            <span
               className="cursor-pointer font-bold text-blue-600 hover:text-blue-800 underline px-1 bg-white rounded border border-blue-300"
               title="Cambiar unidad (% / px)"
               onClick={() => {
@@ -742,7 +751,7 @@ function MenuPrint() {
                     </Button>
                   </div>
                 )}
-                
+
                 {rightColBlocks.length === 0 && !editMode && (
                   <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10">Sin elementos</div>
                 )}

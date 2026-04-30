@@ -168,110 +168,114 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     };
 
     return (
-        <div className="flex justify-between items-baseline border-b border-black/10 pb-0.5 group relative gap-2">
-            <div className="flex items-start gap-1 flex-grow min-w-0">
-                {editMode && (
-                    <div className="flex items-center gap-1 print:hidden pt-0.5">
-                        <input
-                            type="number"
-                            defaultValue={product.Order || ''}
-                            onBlur={(e) => handleOrderChange(e.target.value)}
-                            className="w-7 h-5 text-[9px] border border-black px-0.5 font-bold focus:outline-none focus:ring-1 focus:ring-black bg-yellow-100"
-                        />
-                    </div>
-                )}
-                <div className="flex flex-col flex-1 min-w-0 mr-1">
-                    <div className="font-SpaceGrotesk font-bold text-[11px] leading-tight break-words whitespace-normal">
-                        <span className="uppercase">{isEnglish ? product.NombreEN : product.NombreES}</span>
-                        {!editMode && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
-                            <span className="text-[9.5px] text-gray-600 italic font-serif font-normal normal-case ml-1.5 tracking-normal">
-                                {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
-                            </span>
+        <div className="border-b border-black/10 pb-0.5 group relative flex flex-col">
+            <div className="flex justify-between items-baseline gap-2">
+                <div className="flex items-start gap-1 flex-grow min-w-0">
+                    {editMode && (
+                        <div className="flex items-center gap-1 print:hidden pt-0.5">
+                            <input
+                                type="number"
+                                defaultValue={product.Order || ''}
+                                onBlur={(e) => handleOrderChange(e.target.value)}
+                                className="w-7 h-5 text-[9px] border border-black px-0.5 font-bold focus:outline-none focus:ring-1 focus:ring-black bg-yellow-100"
+                            />
+                        </div>
+                    )}
+                    <div className="flex flex-col flex-1 min-w-0 mr-1">
+                        <div className="font-SpaceGrotesk font-bold text-[11px] leading-tight break-words whitespace-normal uppercase">
+                            {isEnglish ? product.NombreEN : product.NombreES}
+                        </div>
+                        {editMode && (
+                            <input
+                                type="text"
+                                defaultValue={(isEnglish ? product.MenuComentsEN : product.MenuComentsES) || ''}
+                                placeholder={isEnglish ? "Add comment (e.g. Gluten Free)..." : "Añadir comentario (ej. Gluten Free)..."}
+                                onBlur={(e) => handleComentsChange(e.target.value)}
+                                className="w-full text-[9px] border-b border-black/30 px-0.5 focus:outline-none focus:border-black bg-blue-50/30 print:hidden italic text-gray-600 font-serif"
+                            />
                         )}
                     </div>
-                    {editMode && (
-                        <input
-                            type="text"
-                            defaultValue={(isEnglish ? product.MenuComentsEN : product.MenuComentsES) || ''}
-                            placeholder={isEnglish ? "Add comment (e.g. Gluten Free)..." : "Añadir comentario (ej. Gluten Free)..."}
-                            onBlur={(e) => handleComentsChange(e.target.value)}
-                            className="w-full text-[9px] border-b border-black/30 mt-0.5 px-0.5 focus:outline-none focus:border-black bg-blue-50/30 print:hidden italic text-gray-600 font-serif"
-                        />
-                    )}
+
+                    <div className={`flex gap-0 items-center flex-shrink-0 pt-[2px] ${!showIcons ? 'hidden' : ''}`}>
+                        {localIngredients.map((id, index) => {
+                            const ing = OPCIONES_INGREDIENTES.find(i => i.id === id);
+                            if (!ing) return null;
+                            const isActive = activeSlot?.productId === product._id && activeSlot?.index === index;
+
+                            return (
+                                <div key={`${product._id}-${index}`} className="relative group/slot flex items-center">
+                                    <button
+                                        disabled={!editMode}
+                                        onClick={() => setActiveSlot(isActive ? null : { productId: product._id, index })}
+                                        className={`p-0 transition-all flex items-center justify-center rounded-sm ${isActive ? 'bg-blue-100 scale-110 shadow-sm border border-blue-400' : 'hover:bg-black/5'}`}
+                                    >
+                                        <img
+                                            src={ing.icon}
+                                            alt={ing.es}
+                                            className="opacity-90 w-4 h-4 object-contain filter grayscale contrast-200 opacity-80"
+                                        />
+                                    </button>
+
+                                    {editMode && isActive && (
+                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-[60] flex gap-0.5 bg-white border border-black p-0.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-sm">
+                                            <button onClick={(e) => { e.stopPropagation(); moveIconSlot(index, -1); }} disabled={index === 0} className="hover:bg-slate-100 p-0.5 disabled:opacity-30">
+                                                <IconChevronLeft size={10} />
+                                            </button>
+                                            <button onClick={(e) => { e.stopPropagation(); moveIconSlot(index, 1); }} disabled={index === localIngredients.length - 1} className="hover:bg-slate-100 p-0.5 disabled:opacity-30">
+                                                <IconChevronRight size={10} />
+                                            </button>
+                                            <button onClick={(e) => { e.stopPropagation(); removeIconSlot(index); }} className="hover:bg-red-100 text-red-600 p-0.5">
+                                                <IconTrash size={10} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {editMode && isActive && (
+                                        <div className="absolute top-5 left-0 z-50 bg-white border-2 border-black p-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex flex-wrap gap-1 animate-in fade-in zoom-in duration-200 w-32">
+                                            {OPCIONES_INGREDIENTES.map(option => {
+                                                return (
+                                                    <button
+                                                        key={option.id}
+                                                        onClick={() => setIconForSlot(option.id, index)}
+                                                        className={`p-1 hover:scale-125 transition-transform flex items-center justify-center ${id === option.id ? 'bg-black rounded-sm' : ''}`}
+                                                        title={isEnglish ? option.en : option.es}
+                                                    >
+                                                        <img
+                                                            src={option.icon}
+                                                            alt={option.es}
+                                                            className={`w-5 h-5 object-contain ${id === option.id ? 'invert' : ''}`}
+                                                        />
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        {editMode && (
+                            <button
+                                onClick={() => addIconSlot()}
+                                className="w-4 h-4 flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 rounded-sm border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none transition-all ml-1"
+                                title={isEnglish ? "Add ingredient" : "Agregar ingrediente"}
+                            >
+                                <IconPlus size={10} />
+                            </button>
+                        )}
+                    </div>
                 </div>
-
-                <div className={`flex gap-0 items-center flex-shrink-0 pt-[2px] ${!showIcons ? 'hidden' : ''}`}>
-                    {localIngredients.map((id, index) => {
-                        const ing = OPCIONES_INGREDIENTES.find(i => i.id === id);
-                        if (!ing) return null;
-                        const isActive = activeSlot?.productId === product._id && activeSlot?.index === index;
-
-                        return (
-                            <div key={`${product._id}-${index}`} className="relative group/slot flex items-center">
-                                <button
-                                    disabled={!editMode}
-                                    onClick={() => setActiveSlot(isActive ? null : { productId: product._id, index })}
-                                    className={`p-0 transition-all flex items-center justify-center rounded-sm ${isActive ? 'bg-blue-100 scale-110 shadow-sm border border-blue-400' : 'hover:bg-black/5'}`}
-                                >
-                                    <img
-                                        src={ing.icon}
-                                        alt={ing.es}
-                                        className="opacity-90 w-4 h-4 object-contain filter grayscale contrast-200 opacity-80"
-                                    />
-                                </button>
-
-                                {editMode && isActive && (
-                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-[60] flex gap-0.5 bg-white border border-black p-0.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-sm">
-                                        <button onClick={(e) => { e.stopPropagation(); moveIconSlot(index, -1); }} disabled={index === 0} className="hover:bg-slate-100 p-0.5 disabled:opacity-30">
-                                            <IconChevronLeft size={10} />
-                                        </button>
-                                        <button onClick={(e) => { e.stopPropagation(); moveIconSlot(index, 1); }} disabled={index === localIngredients.length - 1} className="hover:bg-slate-100 p-0.5 disabled:opacity-30">
-                                            <IconChevronRight size={10} />
-                                        </button>
-                                        <button onClick={(e) => { e.stopPropagation(); removeIconSlot(index); }} className="hover:bg-red-100 text-red-600 p-0.5">
-                                            <IconTrash size={10} />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {editMode && isActive && (
-                                    <div className="absolute top-5 left-0 z-50 bg-white border-2 border-black p-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex flex-wrap gap-1 animate-in fade-in zoom-in duration-200 w-32">
-                                        {OPCIONES_INGREDIENTES.map(option => {
-                                            return (
-                                                <button
-                                                    key={option.id}
-                                                    onClick={() => setIconForSlot(option.id, index)}
-                                                    className={`p-1 hover:scale-125 transition-transform flex items-center justify-center ${id === option.id ? 'bg-black rounded-sm' : ''}`}
-                                                    title={isEnglish ? option.en : option.es}
-                                                >
-                                                    <img
-                                                        src={option.icon}
-                                                        alt={option.es}
-                                                        className={`w-5 h-5 object-contain ${id === option.id ? 'invert' : ''}`}
-                                                    />
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-
-                    {editMode && (
-                        <button
-                            onClick={() => addIconSlot()}
-                            className="w-4 h-4 flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 rounded-sm border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none transition-all ml-1"
-                            title={isEnglish ? "Add ingredient" : "Agregar ingrediente"}
-                        >
-                            <IconPlus size={10} />
-                        </button>
-                    )}
-                </div>
+                <span className="font-SpaceGrotesk font-black text-[11px] whitespace-nowrap">
+                    ${formatPrice(product.Precio)}
+                </span>
             </div>
-            <span className="font-SpaceGrotesk font-black text-[11px] whitespace-nowrap">
-                ${formatPrice(product.Precio)}
-            </span>
+
+            {/* Comentario en una nueva línea que puede ocupar todo el ancho */}
+            {!editMode && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
+                <div className="text-[9.2px] text-gray-500 italic font-serif font-normal normal-case tracking-normal leading-tight w-full">
+                    {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
+                </div>
+            )}
         </div>
     );
 }
@@ -281,7 +285,7 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
 
     const filteredProducts = products.filter((product) => {
         const groupMatch = Array.isArray(GRUPO) ? GRUPO.includes(product.GRUPO) : product.GRUPO === GRUPO;
-        return groupMatch && (product.Estado === "Activo" || product.Estado === "OK") && (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO);
+        return groupMatch && product.Estado === "Activo" && (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO);
     });
 
     const getOrder = (val) => {

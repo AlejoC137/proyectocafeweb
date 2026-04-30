@@ -173,14 +173,16 @@ export const PC = 'PC'
 export const PP = 'PP'
 export const OK = 'OK'
 export const NA = 'NA'
+export const ACTIVO = 'Activo'
+export const INACTIVO = 'Inactivo'
 
 export const ESTATUS = [
   PC,
   PP,
   OK,
-  NA
-
-
+  NA,
+  ACTIVO,
+  INACTIVO
 ]
 
 

@@ -3,7 +3,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { deleteItem, updateItem, getRecepie } from "../../redux/actions";
-import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades } from "../../redux/actions-types";
+import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades, ACTIVO, INACTIVO } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search, Save } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 import CuidadoVariations from "./CuidadoVariations";
@@ -505,7 +505,19 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
             return <span>{displayUnits || 'N/A'}</span>;
 
           case 'estado':
-            return showEdit ? <div className="flex gap-1">{/* usar nuestro handler que hace enqueue */}<StatusButtonGroup item={item} /></div> : <span className={`px-2 py-1 rounded-full text-xs ${item.Estado === 'OK' || item.Estado === 'PC' || item.Estado === 'PP' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{item.Estado}</span>;
+            return showEdit ? (
+              <div className="flex gap-1">
+                <StatusButtonGroup item={item} />
+              </div>
+            ) : (
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                item.Estado === 'OK' || item.Estado === 'Activo' ? 'bg-green-100 text-green-800' : 
+                (item.Estado === 'PC' || item.Estado === 'PP') ? 'bg-yellow-100 text-yellow-800' : 
+                'bg-red-100 text-red-800'
+              }`}>
+                {item.Estado}
+              </span>
+            );
 
           case 'stock':
             return (
@@ -604,14 +616,21 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
   // StatusButtonGroup ahora usa handleStatusChange (que encola)
   const StatusButtonGroup = ({ item }) => {
     const statuses = ESTATUS.filter(s => {
-      if (currentType === "ProduccionInterna" && s === "PC") return false;
-      if (currentType === "ItemsAlmacen" && s === "PP") return false;
+      if (currentType === MenuItems) {
+        return s === ACTIVO || s === INACTIVO;
+      }
+      if (currentType === ProduccionInterna && s === "PC") return false;
+      if (currentType === ItemsAlmacen && s === "PP") return false;
+      // No mostrar Activo/Inactivo para almacen/produccion si se prefiere mantener PC/OK
+      if ((currentType === ItemsAlmacen || currentType === ProduccionInterna) && (s === ACTIVO || s === INACTIVO)) return false;
       return true;
     });
 
     const getStatusClass = (status, isActive) => {
       if (isActive) {
-        return ((status === 'OK' ? "bg-green-500 text-white" : "bg-red-500 text-white") || ((status === 'PC' || status === 'PP') ? "bg-red-500 text-white" : "bg-red-500 text-white"))
+        if (status === 'OK' || status === 'Activo') return "bg-green-500 text-white";
+        if (status === 'PC' || status === 'PP') return "bg-yellow-500 text-black";
+        return "bg-red-500 text-white";
       }
       return "bg-gray-200 text-gray-700 hover:bg-gray-300";
     };
