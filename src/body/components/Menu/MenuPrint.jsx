@@ -23,6 +23,9 @@ function MenuPrint() {
   const [printImages, setPrintImages] = useState([]);
   const [groupDescriptions, setGroupDescriptions] = useState({});
   const [photosWidth, setPhotosWidth] = useState(210);
+  const [photosWidthUnit, setPhotosWidthUnit] = useState('px');
+  const [leftColRatio, setLeftColRatio] = useState(50);
+  const [qrScale, setQrScale] = useState(1);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -57,6 +60,9 @@ function MenuPrint() {
         setGroupDescriptions(config.group_descriptions || {});
         setShowIcons(config.show_icons ?? true);
         setPhotosWidth(config.group_descriptions?.__layout?.photosWidth ?? 210);
+        setPhotosWidthUnit(config.group_descriptions?.__layout?.photosWidthUnit ?? 'px');
+        setLeftColRatio(config.group_descriptions?.__layout?.leftColRatio ?? 50);
+        setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
       } else {
         // Auto-insert initial row if the user created the table but forgot to insert a record
         await supabase.from('menu_print_config').insert([{ id: 1, images: [], group_descriptions: {}, show_icons: true }]);
@@ -195,6 +201,13 @@ function MenuPrint() {
     setPrintImages(newImages);
   };
 
+  const saveLayoutSizes = (updates = {}) => {
+    saveGroupDescriptions({ 
+      ...groupDescriptions, 
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, ...updates } 
+    });
+  };
+
   // Usa @media print en CSS para ocultar nav/overlay — sin tocar el DOM de React
   const handlePrint = () => window.print();
 
@@ -225,10 +238,30 @@ function MenuPrint() {
       {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
       {editMode && (
-        <div className="flex items-center justify-center gap-4 bg-yellow-100 border border-yellow-400 p-2 text-xs font-SpaceGrotesk mb-4 print:hidden rounded">
-          <span className="font-bold">Ancho de columna de fotos:</span>
-          <input type="range" min="100" max="400" value={photosWidth} onChange={(e) => setPhotosWidth(Number(e.target.value))} onMouseUp={() => saveGroupDescriptions({ ...groupDescriptions, __layout: { photosWidth } })} onTouchEnd={() => saveGroupDescriptions({ ...groupDescriptions, __layout: { photosWidth } })} className="w-[200px]" />
-          <span>{photosWidth}px</span>
+        <div className="flex items-center justify-center gap-8 bg-yellow-100 border border-yellow-400 p-2 text-xs font-SpaceGrotesk mb-4 print:hidden rounded flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">Ancho Col. Fotos:</span>
+            <input type="range" min={photosWidthUnit === 'px' ? "100" : "15"} max={photosWidthUnit === 'px' ? "400" : "50"} value={photosWidth} onChange={(e) => setPhotosWidth(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ photosWidth: Number(photosWidth) })} onTouchEnd={() => saveLayoutSizes({ photosWidth: Number(photosWidth) })} className="w-[150px]" />
+            <span 
+              className="cursor-pointer font-bold text-blue-600 hover:text-blue-800 underline px-1 bg-white rounded border border-blue-300"
+              title="Cambiar unidad (% / px)"
+              onClick={() => {
+                const newUnit = photosWidthUnit === 'px' ? '%' : 'px';
+                const newVal = newUnit === '%' ? 25 : 210;
+                setPhotosWidthUnit(newUnit);
+                setPhotosWidth(newVal);
+                saveLayoutSizes({ photosWidthUnit: newUnit, photosWidth: newVal });
+              }}
+            >
+              {photosWidth}{photosWidthUnit}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 border-l border-yellow-400 pl-4">
+            <span className="font-bold">Col. Bebidas vs Comida:</span>
+            <input type="range" min="30" max="70" value={leftColRatio} onChange={(e) => setLeftColRatio(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ leftColRatio: Number(leftColRatio) })} onTouchEnd={() => saveLayoutSizes({ leftColRatio: Number(leftColRatio) })} className="w-[150px]" />
+            <span>{leftColRatio}%</span>
+          </div>
         </div>
       )}
 
@@ -250,7 +283,7 @@ function MenuPrint() {
               </div>
             </div>
 
-            <div className="flex-grow grid gap-4 items-start h-full" style={{ gridTemplateColumns: `1fr 1fr ${photosWidth}px` }}>
+            <div className="flex-grow grid gap-4 items-start h-full" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
 
               {/* COLUMNA IZQUIERDA: CAFE Y BEBIDAS */}
               <div className="flex flex-col gap-3">
@@ -284,16 +317,26 @@ function MenuPrint() {
                 </div>
 
                 {/* QR Y MENSAJE */}
-                <div className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto">
-                  <img src={QrMenu} alt="QR Menu" className="w-16 h-16 mix-blend-multiply" />
+                <div className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto relative group">
+                  <img src={QrMenu} alt="QR Menu" className="mix-blend-multiply flex-shrink-0" style={{ width: `${64 * qrScale}px`, height: `${64 * qrScale}px`, minWidth: `${64 * qrScale}px` }} />
                   <div>
-                    <p className="font-SpaceGrotesk font-black text-[10px] uppercase leading-tight">
+                    <p className="font-SpaceGrotesk font-black uppercase leading-tight" style={{ fontSize: `${Math.max(6, 10 * qrScale)}px` }}>
                       {!leng ? "Escanea para ver fotos y promociones" : "Scan for photos and specials"}
                     </p>
                     <div className="flex gap-1 mt-1">
-                      <img src={PointingHand} alt="Point" className="w-22 h-12" />
+                      <img src={PointingHand} alt="Point" style={{ height: `${48 * qrScale}px`, width: 'auto' }} />
                     </div>
                   </div>
+                  
+                  {editMode && (
+                    <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity print:hidden text-white p-2 text-xs font-SpaceGrotesk">
+                      <div className="flex items-center gap-2 w-full justify-center">
+                         <span className="text-right font-bold">Escalar Todo:</span>
+                         <input type="range" min="0.5" max="3" step="0.1" value={qrScale} onChange={e => setQrScale(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ qrScale: Number(qrScale) })} onTouchEnd={() => saveLayoutSizes({ qrScale: Number(qrScale) })} className="w-24 cursor-pointer" />
+                         <span>{(qrScale * 100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -345,7 +388,7 @@ function MenuPrint() {
                     )}
 
                     {printImages.map((img, i) => (
-                      <div key={img.id} className="relative w-full border-[2px] border-black bg-gray-100 flex-shrink-0 group" style={{ height: img.height ? `${img.height}px` : `${photosWidth}px` }}>
+                      <div key={img.id} className="relative w-full border-[2px] border-black bg-gray-100 flex-shrink-0 group" style={{ height: img.height ? `${img.height}px` : (photosWidthUnit === 'px' ? `${photosWidth}px` : '210px') }}>
                         <img src={img.url} alt="Menu photo" className="absolute inset-0 w-full h-full object-cover grayscale-[30%] contrast-[1.1] brightness-[1.05]" />
 
                         {editMode && (
@@ -365,7 +408,7 @@ function MenuPrint() {
                     ))}
 
                     {editMode && (
-                      <div className="relative w-full border-[2px] border-dashed border-gray-400 bg-gray-50 flex-shrink-0 print:hidden cursor-pointer hover:bg-gray-100 transition-colors" style={{ height: `${photosWidth}px` }}>
+                      <div className="relative w-full border-[2px] border-dashed border-gray-400 bg-gray-50 flex-shrink-0 print:hidden cursor-pointer hover:bg-gray-100 transition-colors" style={{ height: photosWidthUnit === 'px' ? `${photosWidth}px` : '210px' }}>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           {uploadingImage ? (
                             <span className="text-xs font-bold text-gray-500 animate-pulse">Subiendo...</span>
