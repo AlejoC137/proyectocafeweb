@@ -26,6 +26,8 @@ function MenuPrint() {
   const [photosWidthUnit, setPhotosWidthUnit] = useState('px');
   const [leftColRatio, setLeftColRatio] = useState(50);
   const [qrScale, setQrScale] = useState(1);
+  const [leftColBlocks, setLeftColBlocks] = useState(["CAFE", "BEBIDAS", "QR"]);
+  const [centerColBlocks, setCenterColBlocks] = useState(["ALIMENTOS", "EXTRAS", "INFO"]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -63,6 +65,8 @@ function MenuPrint() {
         setPhotosWidthUnit(config.group_descriptions?.__layout?.photosWidthUnit ?? 'px');
         setLeftColRatio(config.group_descriptions?.__layout?.leftColRatio ?? 50);
         setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
+        setLeftColBlocks(config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"]);
+        setCenterColBlocks(config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"]);
       } else {
         // Auto-insert initial row if the user created the table but forgot to insert a record
         await supabase.from('menu_print_config').insert([{ id: 1, images: [], group_descriptions: {}, show_icons: true }]);
@@ -204,8 +208,161 @@ function MenuPrint() {
   const saveLayoutSizes = (updates = {}) => {
     saveGroupDescriptions({ 
       ...groupDescriptions, 
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, ...updates } 
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, ...updates } 
     });
+  };
+
+  const moveBlock = (blockId, direction) => {
+    let inLeft = leftColBlocks.includes(blockId);
+    let col = inLeft ? leftColBlocks : centerColBlocks;
+    const idx = col.indexOf(blockId);
+    if (direction === 'up' && idx > 0) {
+      const newCol = [...col];
+      [newCol[idx - 1], newCol[idx]] = [newCol[idx], newCol[idx - 1]];
+      if (inLeft) setLeftColBlocks(newCol); else setCenterColBlocks(newCol);
+      saveLayoutSizes({ [inLeft ? 'leftColBlocks' : 'centerColBlocks']: newCol });
+    } else if (direction === 'down' && idx < col.length - 1) {
+      const newCol = [...col];
+      [newCol[idx + 1], newCol[idx]] = [newCol[idx], newCol[idx + 1]];
+      if (inLeft) setLeftColBlocks(newCol); else setCenterColBlocks(newCol);
+      saveLayoutSizes({ [inLeft ? 'leftColBlocks' : 'centerColBlocks']: newCol });
+    } else if (direction === 'right' && inLeft) {
+      const newLeft = leftColBlocks.filter(b => b !== blockId);
+      const newCenter = [...centerColBlocks, blockId];
+      setLeftColBlocks(newLeft);
+      setCenterColBlocks(newCenter);
+      saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter });
+    } else if (direction === 'left' && !inLeft) {
+      const newCenter = centerColBlocks.filter(b => b !== blockId);
+      const newLeft = [...leftColBlocks, blockId];
+      setLeftColBlocks(newLeft);
+      setCenterColBlocks(newCenter);
+      saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter });
+    }
+  };
+
+  const renderBlockControls = (blockId) => {
+    if (!editMode) return null;
+    let inLeft = leftColBlocks.includes(blockId);
+    let col = inLeft ? leftColBlocks : centerColBlocks;
+    const idx = col.indexOf(blockId);
+    return (
+      <div className="absolute -top-3 -right-3 flex flex-col gap-1 z-20 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'up')} disabled={idx === 0} title="Subir">↑</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'down')} disabled={idx === col.length - 1} title="Bajar">↓</Button>
+        {inLeft ? (
+          <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'right')} title="Mover a Derecha">→</Button>
+        ) : (
+          <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'left')} title="Mover a Izquierda">←</Button>
+        )}
+      </div>
+    );
+  };
+
+  const renderBlock = (blockId) => {
+    switch(blockId) {
+      case "CAFE":
+        return (
+          <div key="CAFE" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+            {renderBlockControls("CAFE")}
+            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                {!leng ? "Café" : "Coffee"}
+              </h2>
+              {renderGroupDescription("CAFE")}
+            </div>
+            <div className="p-2">
+              <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+            </div>
+          </div>
+        );
+      case "BEBIDAS":
+        return (
+          <div key="BEBIDAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+            {renderBlockControls("BEBIDAS")}
+            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                {!leng ? "Bebidas" : "Drinks"}
+              </h2>
+              {renderGroupDescription("BEBIDAS")}
+            </div>
+            <div className="p-2">
+              <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+            </div>
+          </div>
+        );
+      case "ALIMENTOS":
+        return (
+          <div key="ALIMENTOS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+            {renderBlockControls("ALIMENTOS")}
+            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                {!leng ? "Alimentos" : "Food"}
+              </h2>
+              {renderGroupDescription("ALIMENTOS")}
+            </div>
+            <div className="p-2">
+              <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+            </div>
+          </div>
+        );
+      case "EXTRAS":
+        return (
+          <div key="EXTRAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+            {renderBlockControls("EXTRAS")}
+            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                {!leng ? "Adiciones" : "Extras"}
+              </h2>
+              {renderGroupDescription("ADICIONES")}
+            </div>
+            <div className="p-2">
+              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+            </div>
+          </div>
+        );
+      case "QR":
+        return (
+          <div key="QR" className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto relative group">
+            {renderBlockControls("QR")}
+            <img src={QrMenu} alt="QR Menu" className="mix-blend-multiply flex-shrink-0" style={{ width: `${64 * qrScale}px`, height: `${64 * qrScale}px`, minWidth: `${64 * qrScale}px` }} />
+            <div>
+              <p className="font-SpaceGrotesk font-black uppercase leading-tight" style={{ fontSize: `${Math.max(6, 10 * qrScale)}px` }}>
+                {!leng ? "Escanea para ver fotos y promociones" : "Scan for photos and specials"}
+              </p>
+              <div className="flex gap-1 mt-1">
+                <img src={PointingHand} alt="Point" style={{ height: `${48 * qrScale}px`, width: 'auto' }} />
+              </div>
+            </div>
+            {editMode && (
+              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity print:hidden text-white p-2 text-xs font-SpaceGrotesk">
+                <div className="flex items-center gap-2 w-full justify-center">
+                   <span className="text-right font-bold">Escalar Todo:</span>
+                   <input type="range" min="0.5" max="3" step="0.1" value={qrScale} onChange={e => setQrScale(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ qrScale: Number(qrScale) })} onTouchEnd={() => saveLayoutSizes({ qrScale: Number(qrScale) })} className="w-24 cursor-pointer" />
+                   <span>{(qrScale * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case "INFO":
+        return (
+          <div key="INFO" className="mt-1 border-[2px] border-black p-2 text-[9px] leading-tight font-SpaceGrotesk italic text-gray-700 bg-white relative group">
+            {renderBlockControls("INFO")}
+            <MenuPrintInfo isEnglish={leng} className="p-0 m-0 w-full" />
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   // Usa @media print en CSS para ocultar nav/overlay — sin tocar el DOM de React
@@ -285,97 +442,14 @@ function MenuPrint() {
 
             <div className="flex-grow grid gap-4 items-start h-full" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
 
-              {/* COLUMNA IZQUIERDA: CAFE Y BEBIDAS */}
+              {/* COLUMNA IZQUIERDA */}
               <div className="flex flex-col gap-3">
-                {/* GRUPO CAFE */}
-                <div className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
-                    <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                      {!leng ? "Café" : "Coffee"}
-                    </h2>
-                    {renderGroupDescription("CAFE")}
-                  </div>
-                  <div className="p-2">
-                    <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                  </div>
-                </div>
-
-                {/* GRUPO BEBIDAS */}
-                <div className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
-                    <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                      {!leng ? "Bebidas" : "Drinks"}
-                    </h2>
-                    {renderGroupDescription("BEBIDAS")}
-                  </div>
-                  <div className="p-2">
-                    <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                  </div>
-                </div>
-
-                {/* QR Y MENSAJE */}
-                <div className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto relative group">
-                  <img src={QrMenu} alt="QR Menu" className="mix-blend-multiply flex-shrink-0" style={{ width: `${64 * qrScale}px`, height: `${64 * qrScale}px`, minWidth: `${64 * qrScale}px` }} />
-                  <div>
-                    <p className="font-SpaceGrotesk font-black uppercase leading-tight" style={{ fontSize: `${Math.max(6, 10 * qrScale)}px` }}>
-                      {!leng ? "Escanea para ver fotos y promociones" : "Scan for photos and specials"}
-                    </p>
-                    <div className="flex gap-1 mt-1">
-                      <img src={PointingHand} alt="Point" style={{ height: `${48 * qrScale}px`, width: 'auto' }} />
-                    </div>
-                  </div>
-                  
-                  {editMode && (
-                    <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity print:hidden text-white p-2 text-xs font-SpaceGrotesk">
-                      <div className="flex items-center gap-2 w-full justify-center">
-                         <span className="text-right font-bold">Escalar Todo:</span>
-                         <input type="range" min="0.5" max="3" step="0.1" value={qrScale} onChange={e => setQrScale(Number(e.target.value))} onMouseUp={() => saveLayoutSizes({ qrScale: Number(qrScale) })} onTouchEnd={() => saveLayoutSizes({ qrScale: Number(qrScale) })} className="w-24 cursor-pointer" />
-                         <span>{(qrScale * 100).toFixed(0)}%</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {leftColBlocks.map(blockId => renderBlock(blockId))}
               </div>
 
-              {/* COLUMNA CENTRO: COMIDA Y EXTRAS */}
+              {/* COLUMNA CENTRO */}
               <div className="flex flex-col gap-3">
-                {/* GRUPO ALIMENTOS */}
-                <div className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
-                    <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                      {!leng ? "Alimentos" : "Food"}
-                    </h2>
-                    {renderGroupDescription("ALIMENTOS")}
-                  </div>
-                  <div className="p-2">
-                    <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                  </div>
-                </div>
-
-                {/* GRUPO EXTRAS */}
-                <div className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
-                    <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                      {!leng ? "Adiciones" : "Extras"}
-                    </h2>
-                    {renderGroupDescription("ADICIONES")}
-                  </div>
-                  <div className="p-2">
-                    <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                    <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-                  </div>
-                </div>
-
-                <div className="mt-1 border-[2px] border-black p-2 text-[9px] leading-tight font-SpaceGrotesk italic text-gray-700 bg-white">
-                  <MenuPrintInfo isEnglish={leng} className="p-0 m-0 w-full" />
-                </div>
+                {centerColBlocks.map(blockId => renderBlock(blockId))}
               </div>
 
               {/* COLUMNA DERECHA: FRANJA DE FOTOS */}
