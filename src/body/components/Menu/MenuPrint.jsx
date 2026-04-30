@@ -199,6 +199,46 @@ function MenuPrint() {
     }
   };
 
+  const handleReplaceImage = async (e, blockId) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      alert("La imagen es demasiado pesada. Sube una de menos de 4MB.");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `menu_print_images/${Date.now()}_replaced.${ext}`;
+      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
+      if (error) throw error;
+
+      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
+      
+      const newImages = [...printImages];
+      const index = newImages.findIndex(img => String(img.id) === String(blockId));
+      if (index !== -1) {
+        const oldImage = newImages[index];
+        if (oldImage.path) {
+           supabase.storage.from("Images_eventos").remove([oldImage.path]).catch(err => console.error("Error removing old image", err));
+        }
+        
+        newImages[index].url = data.publicUrl;
+        newImages[index].path = fileName;
+        setPrintImages(newImages);
+        await saveImagesConfig(newImages);
+      }
+    } catch (err) {
+      console.error("Error replacing image:", err);
+      alert("Error reemplazando imagen.");
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  };
+
   const deleteImage = async (blockId) => {
     if (!window.confirm("¿Seguro que deseas eliminar esta imagen?")) return;
     const index = printImages.findIndex(img => img.id === blockId);
@@ -302,13 +342,18 @@ function MenuPrint() {
     );
   };
 
+  const hatchStyle = {
+    backgroundImage: 'repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0, rgba(0,0,0,0.25) 1px, transparent 1px, transparent 7px)',
+    backgroundColor: '#f0f0f0'
+  };
+
   const renderBlock = (blockId) => {
     switch(blockId) {
       case "CAFE":
         return (
           <div key="CAFE" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
             {renderBlockControls("CAFE")}
-            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Café" : "Coffee"}
               </h2>
@@ -324,7 +369,7 @@ function MenuPrint() {
         return (
           <div key="BEBIDAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
             {renderBlockControls("BEBIDAS")}
-            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Bebidas" : "Drinks"}
               </h2>
@@ -341,7 +386,7 @@ function MenuPrint() {
         return (
           <div key="ALIMENTOS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
             {renderBlockControls("ALIMENTOS")}
-            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Alimentos" : "Food"}
               </h2>
@@ -360,7 +405,7 @@ function MenuPrint() {
         return (
           <div key="EXTRAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
             {renderBlockControls("EXTRAS")}
-            <div className="border-b-[2px] border-black bg-[#f0f0f0] px-2 py-1 flex items-end gap-2 overflow-hidden">
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Adiciones" : "Extras"}
               </h2>
@@ -398,9 +443,22 @@ function MenuPrint() {
         );
       case "INFO":
         return (
-          <div key="INFO" className="mt-1 border-[2px] border-black p-2 text-[9px] leading-tight font-SpaceGrotesk italic text-gray-700 bg-white relative group">
+          <div key="INFO" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
             {renderBlockControls("INFO")}
-            <MenuPrintInfo isEnglish={leng} className="p-0 m-0 w-full" />
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                {!leng ? "Más sobre el Menú" : "More About"}
+              </h2>
+            </div>
+            <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic text-gray-700">
+              <MenuPrintInfo
+                 isEnglish={leng}
+                 editMode={editMode}
+                 groupDescriptions={groupDescriptions}
+                 saveGroupDescriptions={saveLayoutSizes ? (updated) => saveGroupDescriptions(updated) : undefined}
+                 className="p-0 m-0 w-full"
+              />
+            </div>
           </div>
         );
       default:
@@ -436,7 +494,13 @@ function MenuPrint() {
                   )
                 )}
                 {editMode && (
-                   <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold ml-2 print:hidden p-1 bg-red-100 rounded leading-none text-xs">X</button>
+                   <div className="flex gap-2 print:hidden ml-2 items-center shrink-0">
+                     <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase" title="Reemplazar Imagen">
+                        Cambiar
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(e, blockId)} disabled={uploadingImage} />
+                     </label>
+                     <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center">X</button>
+                   </div>
                 )}
               </div>
 
@@ -555,6 +619,61 @@ function MenuPrint() {
               page-break-after: avoid !important;
               page-break-before: avoid !important;
             }
+          }
+          
+          /* Markdown Styles */
+          .print-markdown-content p {
+            margin-bottom: 0.5em;
+          }
+          .print-markdown-content p:last-child {
+            margin-bottom: 0;
+          }
+          .print-markdown-content h1, .print-markdown-content h2, .print-markdown-content h3 {
+            font-weight: bold;
+            margin-top: 0.5em;
+            margin-bottom: 0.2em;
+            line-height: 1.1;
+            color: #000;
+          }
+          .print-markdown-content h1 { font-size: 1.4em; }
+          .print-markdown-content h2 { font-size: 1.2em; }
+          .print-markdown-content h3 { font-size: 1.1em; }
+          .print-markdown-content strong { font-weight: bold; }
+          .print-markdown-content hr {
+            border: 0;
+            border-bottom: 1px solid #ccc;
+            margin: 0.5em 0;
+          }
+          .print-markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0.5em;
+            font-size: 11px;
+          }
+          .print-markdown-content th, .print-markdown-content td {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            text-align: left;
+          }
+          .print-markdown-content th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+          }
+          .print-markdown-content blockquote {
+            border-left: 2px solid #000;
+            padding-left: 6px;
+            margin-left: 0;
+            color: #444;
+          }
+          .print-markdown-content table, 
+          .print-markdown-content blockquote, 
+          .print-markdown-content ul, 
+          .print-markdown-content ol, 
+          .print-markdown-content h1, 
+          .print-markdown-content h2, 
+          .print-markdown-content h3 {
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
         `}
       </style>
