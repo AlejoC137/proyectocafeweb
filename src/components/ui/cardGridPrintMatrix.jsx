@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { updateItem } from '../../redux/actions';
+import { updateItem, getAllFromTable } from '../../redux/actions';
 import { MENU } from '../../redux/actions-types';
 
 import adicionesIcon from '../../assets/icons/ADICIONES.svg';
@@ -125,7 +125,18 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     };
 
     const handleOrderChange = (newOrder) => {
-        dispatch(updateItem(product._id, { Order: newOrder }, MENU));
+        console.log("Guardando Order:", newOrder, "para el producto:", product.NombreES, product._id);
+        dispatch(updateItem(product._id, { Order: newOrder }, MENU)).then(() => {
+            dispatch(getAllFromTable(MENU));
+        });
+    };
+
+    const handleComentsChange = (newComents) => {
+        const fieldName = isEnglish ? "MenuComentsEN" : "MenuComentsES";
+        console.log("Guardando " + fieldName + ":", newComents, "para el producto:", product.NombreES, product._id);
+        dispatch(updateItem(product._id, { [fieldName]: newComents }, MENU)).then(() => {
+            dispatch(getAllFromTable(MENU));
+        });
     };
 
     const addIconSlot = () => {
@@ -163,15 +174,31 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                     <div className="flex items-center gap-1 print:hidden pt-0.5">
                         <input
                             type="number"
-                            defaultValue={product.Order}
+                            defaultValue={product.Order || ''}
                             onBlur={(e) => handleOrderChange(e.target.value)}
                             className="w-7 h-5 text-[9px] border border-black px-0.5 font-bold focus:outline-none focus:ring-1 focus:ring-black bg-yellow-100"
                         />
                     </div>
                 )}
-                <span className="font-SpaceGrotesk font-bold uppercase text-[11px] leading-tight mr-1 break-words whitespace-normal flex-1">
-                    {isEnglish ? product.NombreEN : product.NombreES}
-                </span>
+                <div className="flex flex-col flex-1 min-w-0 mr-1">
+                    <div className="font-SpaceGrotesk font-bold text-[11px] leading-tight break-words whitespace-normal">
+                        <span className="uppercase">{isEnglish ? product.NombreEN : product.NombreES}</span>
+                        {!editMode && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
+                            <span className="text-[9.5px] text-gray-600 italic font-serif font-normal normal-case ml-1.5 tracking-normal">
+                                {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
+                            </span>
+                        )}
+                    </div>
+                    {editMode && (
+                        <input
+                            type="text"
+                            defaultValue={(isEnglish ? product.MenuComentsEN : product.MenuComentsES) || ''}
+                            placeholder={isEnglish ? "Add comment (e.g. Gluten Free)..." : "Añadir comentario (ej. Gluten Free)..."}
+                            onBlur={(e) => handleComentsChange(e.target.value)}
+                            className="w-full text-[9px] border-b border-black/30 mt-0.5 px-0.5 focus:outline-none focus:border-black bg-blue-50/30 print:hidden italic text-gray-600 font-serif"
+                        />
+                    )}
+                </div>
 
                 <div className={`flex gap-0 items-center flex-shrink-0 pt-[2px] ${!showIcons ? 'hidden' : ''}`}>
                     {localIngredients.map((id, index) => {
@@ -257,7 +284,12 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
         return groupMatch && (product.Estado === "Activo" || product.Estado === "OK") && (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO);
     });
 
-    const activeProducts = filteredProducts.filter(p => p.PRINT === true).sort((a, b) => Number(a.Order) - Number(b.Order));
+    const getOrder = (val) => {
+        const num = Number(val);
+        return (!isNaN(num) && val !== '' && val !== null && val !== undefined) ? num : 9999;
+    };
+
+    const activeProducts = filteredProducts.filter(p => p.PRINT === true).sort((a, b) => getOrder(a.Order) - getOrder(b.Order));
 
     if (activeProducts.length === 0) return null;
 
