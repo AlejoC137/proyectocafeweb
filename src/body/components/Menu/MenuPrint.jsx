@@ -28,6 +28,7 @@ function MenuPrint() {
   const [qrScale, setQrScale] = useState(1);
   const [leftColBlocks, setLeftColBlocks] = useState(["CAFE", "BEBIDAS", "QR"]);
   const [centerColBlocks, setCenterColBlocks] = useState(["ALIMENTOS", "EXTRAS", "INFO"]);
+  const [rightColBlocks, setRightColBlocks] = useState([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -58,15 +59,35 @@ function MenuPrint() {
       }
       if (data && data.length > 0) {
         const config = data[0];
-        setPrintImages(config.images || []);
+        let loadedImages = config.images || [];
+        let modifiedImages = false;
+        loadedImages = loadedImages.map(img => {
+            if (!img.id) { modifiedImages = true; return { ...img, id: 'IMG_' + Math.random().toString(36).substr(2, 9), nameES: '', nameEN: '' }; }
+            return img;
+        });
+        if (modifiedImages) {
+            supabase.from('menu_print_config').update({ images: loadedImages }).eq('id', 1).then();
+        }
+        setPrintImages(loadedImages);
         setGroupDescriptions(config.group_descriptions || {});
         setShowIcons(config.show_icons ?? true);
         setPhotosWidth(config.group_descriptions?.__layout?.photosWidth ?? 210);
         setPhotosWidthUnit(config.group_descriptions?.__layout?.photosWidthUnit ?? 'px');
         setLeftColRatio(config.group_descriptions?.__layout?.leftColRatio ?? 50);
         setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
-        setLeftColBlocks(config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"]);
-        setCenterColBlocks(config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"]);
+        
+        const savedLeft = config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
+        const savedCenter = config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
+        let savedRight = config.group_descriptions?.__layout?.rightColBlocks;
+
+        const allBlocks = [...savedLeft, ...savedCenter, ...(savedRight || [])];
+        const missingImageIds = loadedImages.filter(img => !allBlocks.includes(img.id)).map(img => img.id);
+        if (!savedRight) savedRight = missingImageIds;
+        else savedRight = [...savedRight, ...missingImageIds];
+
+        setLeftColBlocks(savedLeft);
+        setCenterColBlocks(savedCenter);
+        setRightColBlocks(savedRight);
       } else {
         // Auto-insert initial row if the user created the table but forgot to insert a record
         await supabase.from('menu_print_config').insert([{ id: 1, images: [], group_descriptions: {}, show_icons: true }]);
@@ -156,9 +177,14 @@ function MenuPrint() {
       if (error) throw error;
 
       const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
-      const newImages = [...printImages, { id: Date.now(), url: data.publicUrl, path: fileName }];
+      const newImageId = 'IMG_' + Math.random().toString(36).substr(2, 9);
+      const newImages = [...printImages, { id: newImageId, url: data.publicUrl, path: fileName, height: 100, nameES: '', nameEN: '' }];
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
+      
+      const newRight = [...rightColBlocks, newImageId];
+      setRightColBlocks(newRight);
+      saveLayoutSizes({ rightColBlocks: newRight });
     } catch (err) {
       console.error("Error uploading image:", err);
       // El error de "Unexpected token <" ocurre cuando el servidor devuelve un HTML 504 en vez de JSON
@@ -173,18 +199,10 @@ function MenuPrint() {
     }
   };
 
-  const moveImage = async (index, direction) => {
-    if (index + direction < 0 || index + direction >= printImages.length) return;
-    const newImages = [...printImages];
-    const temp = newImages[index];
-    newImages[index] = newImages[index + direction];
-    newImages[index + direction] = temp;
-    setPrintImages(newImages);
-    await saveImagesConfig(newImages);
-  };
-
-  const deleteImage = async (index) => {
+  const deleteImage = async (blockId) => {
     if (!window.confirm("¿Seguro que deseas eliminar esta imagen?")) return;
+    const index = printImages.findIndex(img => img.id === blockId);
+    if (index === -1) return;
     const image = printImages[index];
     try {
       if (image.path) {
@@ -193,68 +211,93 @@ function MenuPrint() {
       const newImages = printImages.filter((_, i) => i !== index);
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
+      
+      const newLeft = leftColBlocks.filter(b => b !== blockId);
+      const newCenter = centerColBlocks.filter(b => b !== blockId);
+      const newRight = rightColBlocks.filter(b => b !== blockId);
+      setLeftColBlocks(newLeft);
+      setCenterColBlocks(newCenter);
+      setRightColBlocks(newRight);
+      saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter, rightColBlocks: newRight });
     } catch (e) {
       console.error("Error deleting image:", e);
       alert("Error eliminando imagen");
     }
   };
 
-  const updateImageHeight = (index, val) => {
+  const updateImageHeight = (blockId, val) => {
     const newImages = [...printImages];
-    newImages[index].height = Number(val);
-    setPrintImages(newImages);
+    const index = newImages.findIndex(img => img.id === blockId);
+    if (index !== -1) {
+       newImages[index].height = Number(val);
+       setPrintImages(newImages);
+    }
   };
 
   const saveLayoutSizes = (updates = {}) => {
     saveGroupDescriptions({ 
       ...groupDescriptions, 
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, ...updates } 
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, ...updates } 
     });
   };
 
   const moveBlock = (blockId, direction) => {
-    let inLeft = leftColBlocks.includes(blockId);
-    let col = inLeft ? leftColBlocks : centerColBlocks;
-    const idx = col.indexOf(blockId);
+    let colName = leftColBlocks.includes(blockId) ? 'left' : centerColBlocks.includes(blockId) ? 'center' : 'right';
+    let colArray = colName === 'left' ? leftColBlocks : colName === 'center' ? centerColBlocks : rightColBlocks;
+    const idx = colArray.indexOf(blockId);
+
     if (direction === 'up' && idx > 0) {
-      const newCol = [...col];
+      const newCol = [...colArray];
       [newCol[idx - 1], newCol[idx]] = [newCol[idx], newCol[idx - 1]];
-      if (inLeft) setLeftColBlocks(newCol); else setCenterColBlocks(newCol);
-      saveLayoutSizes({ [inLeft ? 'leftColBlocks' : 'centerColBlocks']: newCol });
-    } else if (direction === 'down' && idx < col.length - 1) {
-      const newCol = [...col];
+      if (colName === 'left') setLeftColBlocks(newCol);
+      else if (colName === 'center') setCenterColBlocks(newCol);
+      else setRightColBlocks(newCol);
+      saveLayoutSizes({ [`${colName}ColBlocks`]: newCol });
+    } else if (direction === 'down' && idx < colArray.length - 1) {
+      const newCol = [...colArray];
       [newCol[idx + 1], newCol[idx]] = [newCol[idx], newCol[idx + 1]];
-      if (inLeft) setLeftColBlocks(newCol); else setCenterColBlocks(newCol);
-      saveLayoutSizes({ [inLeft ? 'leftColBlocks' : 'centerColBlocks']: newCol });
-    } else if (direction === 'right' && inLeft) {
-      const newLeft = leftColBlocks.filter(b => b !== blockId);
-      const newCenter = [...centerColBlocks, blockId];
-      setLeftColBlocks(newLeft);
-      setCenterColBlocks(newCenter);
-      saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter });
-    } else if (direction === 'left' && !inLeft) {
-      const newCenter = centerColBlocks.filter(b => b !== blockId);
-      const newLeft = [...leftColBlocks, blockId];
-      setLeftColBlocks(newLeft);
-      setCenterColBlocks(newCenter);
-      saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter });
+      if (colName === 'left') setLeftColBlocks(newCol);
+      else if (colName === 'center') setCenterColBlocks(newCol);
+      else setRightColBlocks(newCol);
+      saveLayoutSizes({ [`${colName}ColBlocks`]: newCol });
+    } else if (direction === 'right') {
+      if (colName === 'left') {
+        const newLeft = leftColBlocks.filter(b => b !== blockId);
+        const newCenter = [...centerColBlocks, blockId];
+        setLeftColBlocks(newLeft); setCenterColBlocks(newCenter);
+        saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter });
+      } else if (colName === 'center') {
+        const newCenter = centerColBlocks.filter(b => b !== blockId);
+        const newRight = [...rightColBlocks, blockId];
+        setCenterColBlocks(newCenter); setRightColBlocks(newRight);
+        saveLayoutSizes({ centerColBlocks: newCenter, rightColBlocks: newRight });
+      }
+    } else if (direction === 'left') {
+      if (colName === 'right') {
+        const newRight = rightColBlocks.filter(b => b !== blockId);
+        const newCenter = [...centerColBlocks, blockId];
+        setRightColBlocks(newRight); setCenterColBlocks(newCenter);
+        saveLayoutSizes({ rightColBlocks: newRight, centerColBlocks: newCenter });
+      } else if (colName === 'center') {
+        const newCenter = centerColBlocks.filter(b => b !== blockId);
+        const newLeft = [...leftColBlocks, blockId];
+        setCenterColBlocks(newCenter); setLeftColBlocks(newLeft);
+        saveLayoutSizes({ centerColBlocks: newCenter, leftColBlocks: newLeft });
+      }
     }
   };
 
   const renderBlockControls = (blockId) => {
     if (!editMode) return null;
-    let inLeft = leftColBlocks.includes(blockId);
-    let col = inLeft ? leftColBlocks : centerColBlocks;
-    const idx = col.indexOf(blockId);
+    let colName = leftColBlocks.includes(blockId) ? 'left' : centerColBlocks.includes(blockId) ? 'center' : 'right';
+    let colArray = colName === 'left' ? leftColBlocks : colName === 'center' ? centerColBlocks : rightColBlocks;
+    const idx = colArray.indexOf(blockId);
     return (
       <div className="absolute -top-3 -right-3 flex flex-col gap-1 z-20 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'up')} disabled={idx === 0} title="Subir">↑</Button>
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'down')} disabled={idx === col.length - 1} title="Bajar">↓</Button>
-        {inLeft ? (
-          <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'right')} title="Mover a Derecha">→</Button>
-        ) : (
-          <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'left')} title="Mover a Izquierda">←</Button>
-        )}
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'down')} disabled={idx === colArray.length - 1} title="Bajar">↓</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'right')} disabled={colName === 'right'} title="Mover a Derecha">→</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(blockId, 'left')} disabled={colName === 'left'} title="Mover a Izquierda">←</Button>
       </div>
     );
   };
@@ -361,6 +404,58 @@ function MenuPrint() {
           </div>
         );
       default:
+        const imgObj = printImages.find(img => String(img.id) === String(blockId));
+        if (imgObj) {
+          return (
+            <div key={blockId} className="relative group border-[2px] border-black p-2 bg-white flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              {renderBlockControls(blockId)}
+              
+              <div className="w-full flex justify-between items-center mb-1">
+                {editMode ? (
+                  <input
+                    type="text"
+                    defaultValue={leng ? (imgObj.nameEN || '') : (imgObj.nameES || '')}
+                    placeholder={leng ? "Image Name (English)" : "Nombre de Imagen (Español)"}
+                    onBlur={(e) => {
+                       const newImages = [...printImages];
+                       const idx = newImages.findIndex(img => img.id === blockId);
+                       if (idx !== -1) {
+                         if (leng) newImages[idx].nameEN = e.target.value;
+                         else newImages[idx].nameES = e.target.value;
+                         setPrintImages(newImages);
+                         saveImagesConfig(newImages);
+                       }
+                    }}
+                    className="text-[11px] font-bold font-SpaceGrotesk uppercase w-full border-b border-black/30 focus:outline-none focus:border-black print:hidden mb-1"
+                  />
+                ) : (
+                  (leng ? imgObj.nameEN : imgObj.nameES) && (
+                     <span className="text-[11px] font-bold font-SpaceGrotesk uppercase mb-1 w-full border-b-[2px] border-black pb-1 leading-none text-center">
+                       {leng ? imgObj.nameEN : imgObj.nameES}
+                     </span>
+                  )
+                )}
+                {editMode && (
+                   <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold ml-2 print:hidden p-1 bg-red-100 rounded leading-none text-xs">X</button>
+                )}
+              </div>
+
+              <div className="w-full relative" style={{ height: `${imgObj.height || 150}px` }}>
+                <img
+                  src={imgObj.url}
+                  alt={imgObj.nameES || "Menu Image"}
+                  className="w-full h-full object-cover rounded-none grayscale-[30%] contrast-[1.1] brightness-[1.05] border border-black"
+                />
+              </div>
+              
+              {editMode && (
+                <div className="absolute bottom-1 left-1 bg-white border border-black p-0.5 text-[9px] z-10 print:hidden font-SpaceGrotesk opacity-0 group-hover:opacity-100 transition-opacity">
+                  Alto: <input type="number" defaultValue={imgObj.height || 150} onBlur={(e) => { updateImageHeight(blockId, e.target.value); saveImagesConfig(printImages); }} className="w-10 border-b border-black/30 text-center focus:outline-none" /> px
+                </div>
+              )}
+            </div>
+          );
+        }
         return null;
     }
   };
@@ -373,7 +468,7 @@ function MenuPrint() {
   }
 
   return (
-    <div className="flex w-full flex-col items-center justify-center bg-gray-200 min-h-screen pb-10">
+    <div className="flex w-full flex-col items-center justify-center bg-gray-200 min-h-screen pb-10 print:bg-white print:p-0 print:m-0 print:block">
       <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           🖨️ Imprimir
@@ -422,13 +517,55 @@ function MenuPrint() {
         </div>
       )}
 
+      <style>
+        {`
+          @media print {
+            @page {
+              size: 11in 17in !important;
+              margin: 0 !important;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 11in !important;
+              height: 17in !important;
+              max-height: 17in !important;
+              overflow: hidden !important;
+              background: white !important;
+              background-color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body * {
+              visibility: hidden;
+            }
+            #print-area, #print-area * {
+              visibility: visible;
+            }
+            #print-area {
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 11in !important;
+              height: 17in !important;
+              max-height: 17in !important;
+              overflow: hidden !important;
+              page-break-after: avoid !important;
+              page-break-before: avoid !important;
+            }
+          }
+        `}
+      </style>
+
       <div id="print-area" className="flex flex-col gap-10">
 
         {/* VERSIÓN MATRIZ: SIN DESCRIPCIONES */}
         <div
-          className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page"
+          className="bg-[#fcfbf9] print:bg-white text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page print:shadow-none print:border-none print:mx-0 print:my-0"
         >
-          <div className="p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9]">
+          <div className="p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9] print:bg-white">
             {/* HEADER */}
             <div className="border-[3px] border-black bg-white p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center">
               <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
@@ -453,51 +590,20 @@ function MenuPrint() {
               </div>
 
               {/* COLUMNA DERECHA: FRANJA DE FOTOS */}
-              <div className="flex flex-col gap-3 h-full pb-4">
-                <div className="border-[2px] border-black bg-[#fff] p-2 flex flex-col items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-full overflow-hidden">
-                  <div className="flex-grow w-full flex flex-col gap-2 overflow-y-auto print:overflow-hidden hide-scrollbar">
-
-                    {printImages.length === 0 && !editMode && (
-                      <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10">Sin imágenes</div>
-                    )}
-
-                    {printImages.map((img, i) => (
-                      <div key={img.id} className="relative w-full border-[2px] border-black bg-gray-100 flex-shrink-0 group" style={{ height: img.height ? `${img.height}px` : (photosWidthUnit === 'px' ? `${photosWidth}px` : '210px') }}>
-                        <img src={img.url} alt="Menu photo" className="absolute inset-0 w-full h-full object-cover grayscale-[30%] contrast-[1.1] brightness-[1.05]" />
-
-                        {editMode && (
-                          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity print:hidden">
-                            <div className="absolute top-1 left-1 right-1 bg-white p-1 rounded">
-                              <span className="text-[9px] font-bold block text-center mb-1">Alto: {img.height || photosWidth}px</span>
-                              <input type="range" min="100" max="600" value={img.height || photosWidth} onChange={(e) => updateImageHeight(i, e.target.value)} onMouseUp={() => saveImagesConfig(printImages)} onTouchEnd={() => saveImagesConfig(printImages)} className="w-full h-1 cursor-pointer" />
-                            </div>
-                            <div className="flex gap-2 mt-4">
-                              <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={() => moveImage(i, -1)} disabled={i === 0}><ArrowUp size={16} /></Button>
-                              <Button size="sm" variant="secondary" className="h-8 w-8 p-0" onClick={() => moveImage(i, 1)} disabled={i === printImages.length - 1}><ArrowDown size={16} /></Button>
-                            </div>
-                            <Button size="sm" variant="destructive" className="h-8 w-8 p-0" onClick={() => deleteImage(i)}><Trash2 size={16} /></Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-                    {editMode && (
-                      <div className="relative w-full border-[2px] border-dashed border-gray-400 bg-gray-50 flex-shrink-0 print:hidden cursor-pointer hover:bg-gray-100 transition-colors" style={{ height: photosWidthUnit === 'px' ? `${photosWidth}px` : '210px' }}>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          {uploadingImage ? (
-                            <span className="text-xs font-bold text-gray-500 animate-pulse">Subiendo...</span>
-                          ) : (
-                            <>
-                              <Plus size={24} className="text-gray-400 mb-1" />
-                              <span className="text-[10px] text-gray-500 font-bold uppercase">Añadir Foto</span>
-                              <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} ref={fileInputRef} />
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
+              <div className="flex flex-col gap-3 relative">
+                {editMode && (
+                  <div className="absolute -top-10 right-0 z-[60] print:hidden">
+                    <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef} className="hidden" />
+                    <Button onClick={() => fileInputRef.current.click()} disabled={uploadingImage} className="font-SpaceGrotesk text-[10px] bg-green-600 p-1 px-2 h-auto text-white hover:bg-green-700">
+                      {uploadingImage ? "Subiendo..." : "+ Añadir Foto"}
+                    </Button>
                   </div>
-                </div>
+                )}
+                
+                {rightColBlocks.length === 0 && !editMode && (
+                  <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10">Sin elementos</div>
+                )}
+                {rightColBlocks.map(blockId => renderBlock(blockId))}
               </div>
 
             </div>
