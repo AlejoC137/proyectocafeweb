@@ -342,18 +342,42 @@ function MenuPrint() {
     );
   };
 
-  const hatchStyle = {
-    backgroundImage: 'repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0, rgba(0,0,0,0.25) 1px, transparent 1px, transparent 7px)',
-    backgroundColor: '#f0f0f0'
+  const headerStyles = {
+    CAFE: {
+      backgroundImage: 'repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0, rgba(0,0,0,0.25) 1px, transparent 1px, transparent 7px)',
+      backgroundColor: '#f0f0f0',
+    },
+    BEBIDAS: {
+      backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.3) 1.5px, transparent 1.5px)',
+      backgroundSize: '7px 7px',
+      backgroundColor: '#f0f0f0',
+    },
+    ALIMENTOS: {
+      backgroundImage: [
+        'repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 8px)',
+        'repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 8px)',
+      ].join(', '),
+      backgroundColor: '#f0f0f0',
+    },
+    EXTRAS: {
+      backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8'%3E%3Cline x1='1' y1='2' x2='7' y2='2' stroke='rgba(0,0,0,0.28)' stroke-width='1.2'/%3E%3Cline x1='9' y1='6' x2='15' y2='6' stroke='rgba(0,0,0,0.28)' stroke-width='1.2'/%3E%3C/svg%3E\")",
+      backgroundSize: '16px 8px',
+      backgroundColor: '#f0f0f0',
+    },
+    INFO: {
+      backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cline x1='7' y1='3' x2='7' y2='11' stroke='rgba(0,0,0,0.28)' stroke-width='1.2'/%3E%3Cline x1='3' y1='7' x2='11' y2='7' stroke='rgba(0,0,0,0.28)' stroke-width='1.2'/%3E%3C/svg%3E\")",
+      backgroundSize: '14px 14px',
+      backgroundColor: '#f0f0f0',
+    },
   };
 
   const renderBlock = (blockId) => {
     switch(blockId) {
       case "CAFE":
         return (
-          <div key="CAFE" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+          <div key="CAFE" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
             {renderBlockControls("CAFE")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.CAFE}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Café" : "Coffee"}
               </h2>
@@ -367,9 +391,9 @@ function MenuPrint() {
         );
       case "BEBIDAS":
         return (
-          <div key="BEBIDAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+          <div key="BEBIDAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
             {renderBlockControls("BEBIDAS")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.BEBIDAS}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Bebidas" : "Drinks"}
               </h2>
@@ -384,9 +408,9 @@ function MenuPrint() {
         );
       case "ALIMENTOS":
         return (
-          <div key="ALIMENTOS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+          <div key="ALIMENTOS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
             {renderBlockControls("ALIMENTOS")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.ALIMENTOS}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Alimentos" : "Food"}
               </h2>
@@ -403,9 +427,9 @@ function MenuPrint() {
         );
       case "EXTRAS":
         return (
-          <div key="EXTRAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+          <div key="EXTRAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
             {renderBlockControls("EXTRAS")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.EXTRAS}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Adiciones" : "Extras"}
               </h2>
@@ -419,7 +443,7 @@ function MenuPrint() {
         );
       case "QR":
         return (
-          <div key="QR" className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto relative group">
+          <div key="QR" className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto relative group rounded-[6px] overflow-hidden">
             {renderBlockControls("QR")}
             <img src={QrMenu} alt="QR Menu" className="mix-blend-multiply flex-shrink-0" style={{ width: `${64 * qrScale}px`, height: `${64 * qrScale}px`, minWidth: `${64 * qrScale}px` }} />
             <div>
@@ -443,9 +467,9 @@ function MenuPrint() {
         );
       case "INFO":
         return (
-          <div key="INFO" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group">
+          <div key="INFO" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
             {renderBlockControls("INFO")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={hatchStyle}>
+            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.INFO}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {!leng ? "Más sobre el Menú" : "More About"}
               </h2>
@@ -465,7 +489,7 @@ function MenuPrint() {
         const imgObj = printImages.find(img => String(img.id) === String(blockId));
         if (imgObj) {
           return (
-            <div key={blockId} className="relative group border-[2px] border-black p-2 bg-white flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div key={blockId} className="relative group border-[2px] border-black p-2 bg-white flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px] overflow-hidden">
               {renderBlockControls(blockId)}
               
               <div className="w-full flex justify-between items-center mb-1">
@@ -475,14 +499,14 @@ function MenuPrint() {
                     defaultValue={leng ? (imgObj.nameEN || '') : (imgObj.nameES || '')}
                     placeholder={leng ? "Image Name (English)" : "Nombre de Imagen (Español)"}
                     onBlur={(e) => {
-                       const newImages = [...printImages];
-                       const idx = newImages.findIndex(img => img.id === blockId);
-                       if (idx !== -1) {
-                         if (leng) newImages[idx].nameEN = e.target.value;
-                         else newImages[idx].nameES = e.target.value;
-                         setPrintImages(newImages);
-                         saveImagesConfig(newImages);
-                       }
+                       const updatedName = e.target.value;
+                       const newImages = printImages.map(img =>
+                         String(img.id) === String(blockId)
+                           ? { ...img, [leng ? 'nameEN' : 'nameES']: updatedName }
+                           : img
+                       );
+                       setPrintImages(newImages);
+                       saveImagesConfig(newImages);
                     }}
                     className="text-[11px] font-bold font-SpaceGrotesk uppercase w-full border-b border-black/30 focus:outline-none focus:border-black print:hidden mb-1"
                   />
@@ -686,7 +710,7 @@ function MenuPrint() {
         >
           <div className="p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9] print:bg-white">
             {/* HEADER */}
-            <div className="border-[3px] border-black bg-white p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center">
+            <div className="border-[3px] border-black p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center rounded-[6px] overflow-hidden" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
               <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
               </h1>
@@ -728,7 +752,7 @@ function MenuPrint() {
             </div>
 
             {/* FOOTER */}
-            <div className="mt-auto border-[3px] border-black flex justify-between items-center tracking-[0.2em] text-[10px] font-black font-SpaceGrotesk uppercase px-3 bg-black text-white py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="mt-auto border-[3px] border-black flex justify-between items-center tracking-[0.2em] text-[10px] font-black font-SpaceGrotesk uppercase px-3 bg-black text-white py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px]">
               <span>PROYECTO CAFÉ</span>
               <div className="flex gap-4">
                 <span>+57 300 821 4593</span>
