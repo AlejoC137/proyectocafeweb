@@ -78,7 +78,8 @@ function MenuPrint() {
     itemComment: "#6b7280",
     gridBorder: "#0000001a",
     footerBg: "#000000",
-    footerText: "#ffffff"
+    footerText: "#ffffff",
+    blockBg: "#ffffff"
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
@@ -431,7 +432,7 @@ function MenuPrint() {
     switch (blockId) {
       case "CAFE":
         return (
-          <div key="CAFE" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
+          <div key="CAFE" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("CAFE")}
             <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
@@ -447,7 +448,7 @@ function MenuPrint() {
         );
       case "BEBIDAS":
         return (
-          <div key="BEBIDAS" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
+          <div key="BEBIDAS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("BEBIDAS")}
             <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
@@ -464,7 +465,7 @@ function MenuPrint() {
         );
       case "ALIMENTOS":
         return (
-          <div key="ALIMENTOS" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
+          <div key="ALIMENTOS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("ALIMENTOS")}
             <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
@@ -483,7 +484,7 @@ function MenuPrint() {
         );
       case "EXTRAS":
         return (
-          <div key="EXTRAS" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
+          <div key="EXTRAS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("EXTRAS")}
             <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
@@ -499,7 +500,7 @@ function MenuPrint() {
         );
       case "QR":
         return (
-          <div key="QR" className="border-[2px] bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px] mt-auto relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.mainBorder, boxShadow: `4px 4px 0px 0px ${colors.mainBorder}` }}>
+          <div key="QR" className="border-[2px] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px] mt-auto relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.mainBorder, boxShadow: `4px 4px 0px 0px ${colors.mainBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("QR")}
             <img src={QrMenu} alt="QR Menu" className="mix-blend-multiply flex-shrink-0" style={{ width: `${64 * qrScale}px`, height: `${64 * qrScale}px`, minWidth: `${64 * qrScale}px` }} />
             <div>
@@ -523,7 +524,7 @@ function MenuPrint() {
         );
       case "INFO":
         return (
-          <div key="INFO" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
+          <div key="INFO" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("INFO")}
             <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
               <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
@@ -545,7 +546,7 @@ function MenuPrint() {
         const imgObj = printImages.find(img => String(img.id) === String(blockId));
         if (imgObj) {
           return (
-            <div key={blockId} className="relative group border-[2px] border-black p-2 bg-white flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px] overflow-hidden">
+            <div key={blockId} className="relative group border-[2px] border-black p-2 flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px] overflow-hidden" style={{ backgroundColor: colors.blockBg }}>
               {renderBlockControls(blockId)}
 
               <div className="w-full flex justify-between items-center mb-1">
@@ -694,7 +695,8 @@ function MenuPrint() {
                 {[
                   { id: 'categoryTitle', label: 'Títulos', desc: 'Nombres blq.' },
                   { id: 'categoryBorder', label: 'Bordes', desc: 'Marcos blq.' },
-                  { id: 'categoryBg', label: 'Fondos', desc: 'Tras cabec.' }
+                  { id: 'categoryBg', label: 'Fondos', desc: 'Tras cabec.' },
+                  { id: 'blockBg', label: 'Fondo Bloque', desc: 'Cuerpo blq.' }
                 ].map(col => (
                   <ColorSelector key={col.id} col={col} colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
                 ))}
