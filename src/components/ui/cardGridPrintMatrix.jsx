@@ -109,7 +109,7 @@ const formatPrice = (precio) => {
     return precio;
 };
 
-function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons }) {
+function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons, colors }) {
     const dispatch = useDispatch();
     const [localIngredients, setLocalIngredients] = React.useState(Array.isArray(product.IngredientesBasicos) ? product.IngredientesBasicos : []);
 
@@ -168,7 +168,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     };
 
     return (
-        <div className="border-b border-black/10 pb-0.5 group relative flex flex-col">
+        <div className="pb-0.5 group relative flex flex-col" style={{ borderBottom: `1px solid ${colors?.gridBorder || 'rgba(0,0,0,0.1)'}` }}>
             <div className="flex justify-between items-baseline gap-2">
                 <div className="flex items-start gap-1 flex-grow min-w-0">
                     {editMode && (
@@ -182,7 +182,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         </div>
                     )}
                     <div className="flex flex-col flex-1 min-w-0 mr-1">
-                        <div className="font-SpaceGrotesk font-bold text-[11px] leading-tight break-words whitespace-normal uppercase">
+                        <div className="font-SpaceGrotesk font-bold text-[11px] leading-tight break-words whitespace-normal uppercase" style={{ color: colors?.itemName }}>
                             {isEnglish ? product.NombreEN : product.NombreES}
                         </div>
                         {editMode && (
@@ -265,14 +265,14 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         )}
                     </div>
                 </div>
-                <span className="font-SpaceGrotesk font-black text-[11px] whitespace-nowrap">
+                <span className="font-SpaceGrotesk font-black text-[11px] whitespace-nowrap" style={{ color: colors?.itemPrice }}>
                     ${formatPrice(product.Precio)}
                 </span>
             </div>
 
             {/* Comentario en una nueva línea que puede ocupar todo el ancho */}
             {!editMode && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
-                <div className="text-[9.2px] text-gray-500 italic font-serif font-normal normal-case tracking-normal leading-tight w-full">
+                <div className="text-[9.2px] italic font-serif font-normal normal-case tracking-normal leading-tight w-full" style={{ color: colors?.itemComment || '#6b7280' }}>
                     {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
                 </div>
             )}
@@ -280,7 +280,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     );
 }
 
-export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE, columns = 2, editMode = false, showIcons = true }) {
+export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE, columns = 2, editMode = false, showIcons = true, colors }) {
     const [activeSlot, setActiveSlot] = React.useState(null);
 
     const filteredProducts = products.filter((product) => {
@@ -303,10 +303,10 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
     return (
         <div className="mb-2 break-inside-avoid">
             <div className="flex items-center mb-1.5 ">
-                <span className="font-black text-xs uppercase tracking-widest bg-black text-white px-2 py-0.5 border-[2px] border-black inline-block shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <span className="font-black text-xs uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px]" style={{ backgroundColor: colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg, color: colors?.categoryTitle, borderColor: colors?.categoryBorder, boxShadow: `2px 2px 0px 0px ${colors?.categoryBorder}` }}>
                     {titleText}
                 </span>
-                <div className="flex-grow border-b-[2px] border-black ml-2 h-0"></div>
+                <div className="flex-grow border-b-[2px] ml-2 h-0" style={{ borderColor: colors?.categoryBorder }}></div>
             </div>
 
             <div className={`grid ${gridColsClass} gap-x-4 gap-y-1`}>
@@ -319,6 +319,7 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
                         activeSlot={activeSlot}
                         setActiveSlot={setActiveSlot}
                         showIcons={showIcons}
+                        colors={colors}
                     />
                 ))}
             </div>

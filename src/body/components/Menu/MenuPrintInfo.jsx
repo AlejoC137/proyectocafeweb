@@ -76,13 +76,10 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
      );
   }
 
-  return (
     <div
-      className="text-md font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-2 gap-4"
-      style={{ fontSize: '13px' }}
+      className="font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-2 gap-4"
       dangerouslySetInnerHTML={{ __html: parseMarkdown(currentText) }}
     />
-  );
 }
 
 export default MenuPrintInfo;

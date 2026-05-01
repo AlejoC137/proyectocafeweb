@@ -19,6 +19,7 @@ function MenuPrint() {
   const [leng, setLeng] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [showColorPanel, setShowColorPanel] = useState(false);
   const [showIcons, setShowIcons] = useState(true);
   const menuData = useSelector((state) => state.allMenu);
 
@@ -42,6 +43,19 @@ function MenuPrint() {
   const [rightColBlocks, setRightColBlocks] = useState([]);
   const [showWebsiteBg, setShowWebsiteBg] = useState(false);
   const [websiteBgOpacity, setWebsiteBgOpacity] = useState(0.5);
+  const [colors, setColors] = useState({
+    mainTitle: "#000000",
+    mainBorder: "#000000",
+    categoryTitle: "#000000",
+    categoryBorder: "#000000",
+    categoryBg: "#f0f0f0",
+    itemName: "#000000",
+    itemPrice: "#000000",
+    itemComment: "#6b7280",
+    gridBorder: "#0000001a",
+    footerBg: "#000000",
+    footerText: "#ffffff"
+  });
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -90,6 +104,9 @@ function MenuPrint() {
         setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
         setShowWebsiteBg(config.group_descriptions?.__layout?.showWebsiteBg ?? false);
         setWebsiteBgOpacity(config.group_descriptions?.__layout?.websiteBgOpacity ?? 0.5);
+        if (config.group_descriptions?.__layout?.colors) {
+          setColors(prev => ({ ...prev, ...config.group_descriptions.__layout.colors }));
+        }
 
         const savedLeft = config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
         const savedCenter = config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
@@ -292,7 +309,7 @@ function MenuPrint() {
   const saveLayoutSizes = (updates = {}) => {
     saveGroupDescriptions({
       ...groupDescriptions,
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, showWebsiteBg, websiteBgOpacity, ...updates }
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, showWebsiteBg, websiteBgOpacity, colors, ...updates }
     });
   };
 
@@ -390,79 +407,79 @@ function MenuPrint() {
     switch (blockId) {
       case "CAFE":
         return (
-          <div key="CAFE" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
+          <div key="CAFE" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
             {renderBlockControls("CAFE")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.CAFE}>
-              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
                 {!leng ? "Café" : "Coffee"}
               </h2>
               {renderGroupDescription("CAFE")}
             </div>
             <div className="p-2">
-              <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
             </div>
           </div>
         );
       case "BEBIDAS":
         return (
-          <div key="BEBIDAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
+          <div key="BEBIDAS" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
             {renderBlockControls("BEBIDAS")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.BEBIDAS}>
-              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
                 {!leng ? "Bebidas" : "Drinks"}
               </h2>
               {renderGroupDescription("BEBIDAS")}
             </div>
             <div className="p-2">
-              <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
             </div>
           </div>
         );
       case "ALIMENTOS":
         return (
-          <div key="ALIMENTOS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
+          <div key="ALIMENTOS" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
             {renderBlockControls("ALIMENTOS")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.ALIMENTOS}>
-              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
                 {!leng ? "Alimentos" : "Food"}
               </h2>
               {renderGroupDescription("ALIMENTOS")}
             </div>
             <div className="p-2">
-              <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
             </div>
           </div>
         );
       case "EXTRAS":
         return (
-          <div key="EXTRAS" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
+          <div key="EXTRAS" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
             {renderBlockControls("EXTRAS")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.EXTRAS}>
-              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
                 {!leng ? "Adiciones" : "Extras"}
               </h2>
               {renderGroupDescription("ADICIONES")}
             </div>
             <div className="p-2">
-              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} />
-              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} colors={colors} />
+              <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} colors={colors} />
             </div>
           </div>
         );
       case "QR":
         return (
-          <div key="QR" className="border-[2px] border-black bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-auto relative group rounded-[6px] overflow-hidden">
+          <div key="QR" className="border-[2px] bg-[#fff] p-2 flex flex-row items-center gap-3 shadow-[4px_4px_0px_0px] mt-auto relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.mainBorder, boxShadow: `4px 4px 0px 0px ${colors.mainBorder}` }}>
             {renderBlockControls("QR")}
             <img src={QrMenu} alt="QR Menu" className="mix-blend-multiply flex-shrink-0" style={{ width: `${64 * qrScale}px`, height: `${64 * qrScale}px`, minWidth: `${64 * qrScale}px` }} />
             <div>
-              <p className="font-SpaceGrotesk font-black uppercase leading-tight" style={{ fontSize: `${Math.max(6, 10 * qrScale)}px` }}>
+              <p className="font-SpaceGrotesk font-black uppercase leading-tight" style={{ fontSize: `${Math.max(6, 10 * qrScale)}px`, color: colors.mainTitle }}>
                 {!leng ? "Escanea para ver fotos y promociones" : "Scan for photos and specials"}
               </p>
               <div className="flex gap-1 mt-1">
@@ -482,14 +499,14 @@ function MenuPrint() {
         );
       case "INFO":
         return (
-          <div key="INFO" className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group rounded-[6px] overflow-hidden">
+          <div key="INFO" className="border-[2px] bg-white shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}` }}>
             {renderBlockControls("INFO")}
-            <div className="border-b-[2px] border-black px-2 py-1 flex items-end gap-2 overflow-hidden" style={headerStyles.INFO}>
-              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+              <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
                 {!leng ? "Más sobre el Menú" : "More About"}
               </h2>
             </div>
-            <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic text-gray-700">
+            <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic" style={{ color: colors.itemComment }}>
               <MenuPrintInfo
                 isEnglish={leng}
                 editMode={editMode}
@@ -585,6 +602,9 @@ function MenuPrint() {
         <Button onClick={toggleShowIcons} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           {showIcons ? "🚫 Ocultar Iconos" : "👁️ Mostrar Iconos"}
         </Button>
+        <Button onClick={() => setShowColorPanel(!showColorPanel)} className={`font-SpaceGrotesk font-medium ${showColorPanel ? 'bg-purple-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}>
+          🎨 {showColorPanel ? "Cerrar Colores" : "Personalizar Colores"}
+        </Button>
         
         <div className="flex items-center gap-2">
           <Button 
@@ -613,6 +633,52 @@ function MenuPrint() {
           )}
         </div>
       </div>
+
+      {showColorPanel && (
+        <div className="w-full max-w-5xl mb-6 bg-white border-2 border-black p-4 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-in fade-in slide-in-from-top-4 duration-300 print:hidden">
+          <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
+            <h3 className="font-black font-SpaceGrotesk uppercase text-lg flex items-center gap-2">
+              <span className="bg-black text-white px-2 py-0.5 rounded">🎨</span> Personalización de Colores
+            </h3>
+            <Button size="sm" variant="ghost" onClick={() => setShowColorPanel(false)} className="h-8 w-8 p-0 border border-black font-black">X</Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {[
+              { id: 'mainTitle', label: 'Título Principal', desc: 'Texto del encabezado' },
+              { id: 'mainBorder', label: 'Borde y Sombra', desc: 'Líneas y sombras' },
+              { id: 'categoryTitle', label: 'Títulos Secciones', desc: 'Nombres de bloques' },
+              { id: 'categoryBorder', label: 'Bordes Cuadros', desc: 'Marcos de bloques' },
+              { id: 'categoryBg', label: 'Fondo Títulos', desc: 'Detrás del nombre bloque' },
+              { id: 'itemName', label: 'Nombre Producto', desc: 'Texto del item' },
+              { id: 'itemPrice', label: 'Precio Producto', desc: 'Valor del item' },
+              { id: 'itemComment', label: 'Comentarios', desc: 'Textos descriptivos' },
+              { id: 'gridBorder', label: 'Línea Divisora', desc: 'Separador de items' },
+              { id: 'footerBg', label: 'Fondo Pie', desc: 'Barra inferior' },
+              { id: 'footerText', label: 'Texto Pie', desc: 'Info del footer' }
+            ].map(col => (
+              <div key={col.id} className="flex flex-col gap-1.5 p-2 rounded border border-black/5 hover:bg-black/5 transition-colors group">
+                <label className="text-[10px] font-black uppercase tracking-tight leading-none text-gray-700">{col.label}</label>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="color" 
+                    value={colors[col.id]} 
+                    onChange={e => { 
+                      const c = { ...colors, [col.id]: e.target.value }; 
+                      setColors(c); 
+                      saveLayoutSizes({ colors: c }); 
+                    }} 
+                    className="w-10 h-10 border-2 border-black p-0 cursor-pointer rounded-sm bg-white" 
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-mono font-bold uppercase">{colors[col.id]}</span>
+                    <span className="text-[8px] text-gray-400 font-medium italic leading-none">{col.desc}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
@@ -760,16 +826,16 @@ function MenuPrint() {
               />
             )}
             {/* HEADER */}
-            <div className="border-[3px] border-black p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center rounded-[6px] overflow-hidden relative z-10" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+            <div className="border-[3px] p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px] flex justify-between items-center rounded-[6px] overflow-hidden relative z-10" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', borderColor: colors.mainBorder, boxShadow: `6px 6px 0px 0px ${colors.mainBorder}` }}>
               <div className="flex items-center gap-3">
                 <img src={BaseSillaLogo} alt="Logo" className="h-10 w-auto" />
-                <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.mainTitle }}>
                   {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
                 </h1>
               </div>
-              <div className="text-right">
+              <div className="text-right" style={{ color: colors.mainTitle }}>
                 <p className="text-[11px] font-black uppercase tracking-widest leading-none">TRANSVERSAL 39 #65D - 22</p>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-600 mt-1">Conquistadores, Medellín</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest mt-1 opacity-70">Conquistadores, Medellín</p>
               </div>
             </div>
 
@@ -805,7 +871,7 @@ function MenuPrint() {
             </div>
 
             {/* FOOTER */}
-            <div className="mt-auto border-[3px] border-black flex justify-between items-center tracking-[0.2em] text-[10px] font-black font-SpaceGrotesk uppercase px-3 bg-black text-white py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px] relative z-10">
+            <div className="mt-auto border-[3px] flex justify-between items-center tracking-[0.2em] text-[10px] font-black font-SpaceGrotesk uppercase px-3 py-1.5 shadow-[4px_4px_0px_0px] rounded-[6px] relative z-10" style={{ backgroundColor: colors.footerBg, color: colors.footerText || '#ffffff', borderColor: colors.mainBorder, boxShadow: `4px 4px 0px 0px ${colors.mainBorder}` }}>
               <span>PROYECTO CAFÉ</span>
               <div className="flex gap-4">
                 <span>+57 300 821 4593</span>
