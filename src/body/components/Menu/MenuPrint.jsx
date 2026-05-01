@@ -8,6 +8,8 @@ import QrMenu from "@/assets/QR MENU.png";
 import MenuPrintInfo from "./MenuPrintInfo";
 import MenuPrintFormInfo from "./MenuPrintForm";
 import PointingHand from "@/assets/icons/POINTINGHAND.svg";
+import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
+import FondoWeb from "@/assets/fondo.png";
 import { ArrowLeft, ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 
@@ -38,6 +40,8 @@ function MenuPrint() {
   const [leftColBlocks, setLeftColBlocks] = useState(["CAFE", "BEBIDAS", "QR"]);
   const [centerColBlocks, setCenterColBlocks] = useState(["ALIMENTOS", "EXTRAS", "INFO"]);
   const [rightColBlocks, setRightColBlocks] = useState([]);
+  const [showWebsiteBg, setShowWebsiteBg] = useState(false);
+  const [websiteBgOpacity, setWebsiteBgOpacity] = useState(0.5);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -84,6 +88,8 @@ function MenuPrint() {
         setPhotosWidthUnit(config.group_descriptions?.__layout?.photosWidthUnit ?? 'px');
         setLeftColRatio(config.group_descriptions?.__layout?.leftColRatio ?? 50);
         setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
+        setShowWebsiteBg(config.group_descriptions?.__layout?.showWebsiteBg ?? false);
+        setWebsiteBgOpacity(config.group_descriptions?.__layout?.websiteBgOpacity ?? 0.5);
 
         const savedLeft = config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
         const savedCenter = config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
@@ -286,7 +292,7 @@ function MenuPrint() {
   const saveLayoutSizes = (updates = {}) => {
     saveGroupDescriptions({
       ...groupDescriptions,
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, ...updates }
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, showWebsiteBg, websiteBgOpacity, ...updates }
     });
   };
 
@@ -566,7 +572,7 @@ function MenuPrint() {
 
   return (
     <div className="flex w-full flex-col items-center justify-center bg-gray-200 min-h-screen pb-10 print:bg-white print:p-0 print:m-0 print:block">
-      <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center">
+      <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center items-center">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           🖨️ Imprimir
         </Button>
@@ -576,12 +582,36 @@ function MenuPrint() {
         <Button onClick={() => setEditMode(!editMode)} className={`font-SpaceGrotesk font-medium ${editMode ? 'bg-red-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}>
           {editMode ? "💾 Salir Modo Edición" : "✏️ Editar Orden / Fotos"}
         </Button>
-        <Button onClick={() => setShowForm((prev) => !prev)} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
-          {showForm ? "Ocultar Mapeo" : "Mostrar Mapeo"}
-        </Button>
         <Button onClick={toggleShowIcons} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           {showIcons ? "🚫 Ocultar Iconos" : "👁️ Mostrar Iconos"}
         </Button>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => {
+              const next = !showWebsiteBg;
+              setShowWebsiteBg(next);
+              saveLayoutSizes({ showWebsiteBg: next });
+            }} 
+            className={`font-SpaceGrotesk font-medium ${showWebsiteBg ? 'bg-blue-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}
+          >
+            {showWebsiteBg ? "🖼️ Quitar Fondo" : "🖼️ Poner Fondo"}
+          </Button>
+          {showWebsiteBg && (
+            <div className="flex items-center gap-2 bg-black/5 p-1 px-3 rounded-md border border-black/10 h-10">
+              <span className="text-xs font-SpaceGrotesk font-bold">Opacidad:</span>
+              <input 
+                type="range" min="0" max="1" step="0.05" 
+                value={websiteBgOpacity} 
+                onChange={(e) => setWebsiteBgOpacity(Number(e.target.value))}
+                onMouseUp={() => saveLayoutSizes({ websiteBgOpacity: Number(websiteBgOpacity) })}
+                onTouchEnd={() => saveLayoutSizes({ websiteBgOpacity: Number(websiteBgOpacity) })}
+                className="w-24 cursor-pointer accent-black" 
+              />
+              <span className="text-xs font-SpaceGrotesk font-bold w-8">{(websiteBgOpacity * 100).toFixed(0)}%</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
@@ -718,18 +748,32 @@ function MenuPrint() {
           className="bg-[#fcfbf9] print:bg-white text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page print:shadow-none print:border-none print:mx-0 print:my-0"
         >
           <div className="p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9] print:bg-white">
+            {showWebsiteBg && (
+              <div 
+                className="absolute inset-0 pointer-events-none z-0"
+                style={{ 
+                  backgroundImage: `url(${FondoWeb})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: websiteBgOpacity 
+                }}
+              />
+            )}
             {/* HEADER */}
-            <div className="border-[3px] border-black p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center rounded-[6px] overflow-hidden" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
-              <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
-              </h1>
+            <div className="border-[3px] border-black p-2 md:p-3 mb-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center rounded-[6px] overflow-hidden relative z-10" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+              <div className="flex items-center gap-3">
+                <img src={BaseSillaLogo} alt="Logo" className="h-10 w-auto" />
+                <h1 className="text-3xl lg:text-4xl font-black tracking-tighter uppercase leading-none m-0 p-0" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                  {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
+                </h1>
+              </div>
               <div className="text-right">
                 <p className="text-[11px] font-black uppercase tracking-widest leading-none">TRANSVERSAL 39 #65D - 22</p>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-gray-600 mt-1">Conquistadores, Medellín</p>
               </div>
             </div>
 
-            <div className="flex-grow grid gap-4 items-start h-full" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
+            <div className="flex-grow grid gap-4 items-start h-full relative z-10" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
 
               {/* COLUMNA IZQUIERDA */}
               <div className="flex flex-col gap-3">
@@ -761,7 +805,7 @@ function MenuPrint() {
             </div>
 
             {/* FOOTER */}
-            <div className="mt-auto border-[3px] border-black flex justify-between items-center tracking-[0.2em] text-[10px] font-black font-SpaceGrotesk uppercase px-3 bg-black text-white py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px]">
+            <div className="mt-auto border-[3px] border-black flex justify-between items-center tracking-[0.2em] text-[10px] font-black font-SpaceGrotesk uppercase px-3 bg-black text-white py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-[6px] relative z-10">
               <span>PROYECTO CAFÉ</span>
               <div className="flex gap-4">
                 <span>+57 300 821 4593</span>
