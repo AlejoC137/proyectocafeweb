@@ -13,6 +13,30 @@ import FondoWeb from "@/assets/fondo.png";
 import { ArrowLeft, ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 
+function ColorSelector({ col, colors, setColors, saveLayoutSizes }) {
+  return (
+    <div className="flex flex-col gap-1.5 p-2 rounded border border-black/5 hover:bg-black/10 transition-colors group">
+      <label className="text-[10px] font-black uppercase tracking-tight leading-none text-gray-700">{col.label}</label>
+      <div className="flex items-center gap-2">
+        <input 
+          type="color" 
+          value={colors[col.id]} 
+          onChange={e => { 
+            const c = { ...colors, [col.id]: e.target.value }; 
+            setColors(c); 
+            saveLayoutSizes({ colors: c }); 
+          }} 
+          className="w-10 h-10 border-2 border-black p-0 cursor-pointer rounded-sm bg-white" 
+        />
+        <div className="flex flex-col">
+          <span className="text-[9px] font-mono font-bold uppercase">{colors[col.id]}</span>
+          <span className="text-[8px] text-gray-400 font-medium italic leading-none">{col.desc}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MenuPrint() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
@@ -635,47 +659,64 @@ function MenuPrint() {
       </div>
 
       {showColorPanel && (
-        <div className="w-full max-w-5xl mb-6 bg-white border-2 border-black p-4 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-in fade-in slide-in-from-top-4 duration-300 print:hidden">
-          <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-2">
-            <h3 className="font-black font-SpaceGrotesk uppercase text-lg flex items-center gap-2">
-              <span className="bg-black text-white px-2 py-0.5 rounded">🎨</span> Personalización de Colores
+        <div className="w-full max-w-5xl mb-6 bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-in fade-in slide-in-from-top-4 duration-300 print:hidden">
+          <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-3">
+            <h3 className="font-black font-SpaceGrotesk uppercase text-xl flex items-center gap-2">
+              <span className="bg-black text-white px-2 py-0.5 rounded">🎨</span> Configuración de Colores
             </h3>
-            <Button size="sm" variant="ghost" onClick={() => setShowColorPanel(false)} className="h-8 w-8 p-0 border border-black font-black">X</Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowColorPanel(false)} className="h-8 w-8 p-0 border border-black font-black hover:bg-red-50">X</Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {[
-              { id: 'mainTitle', label: 'Título Principal', desc: 'Texto del encabezado' },
-              { id: 'mainBorder', label: 'Borde y Sombra', desc: 'Líneas y sombras' },
-              { id: 'categoryTitle', label: 'Títulos Secciones', desc: 'Nombres de bloques' },
-              { id: 'categoryBorder', label: 'Bordes Cuadros', desc: 'Marcos de bloques' },
-              { id: 'categoryBg', label: 'Fondo Títulos', desc: 'Detrás del nombre bloque' },
-              { id: 'itemName', label: 'Nombre Producto', desc: 'Texto del item' },
-              { id: 'itemPrice', label: 'Precio Producto', desc: 'Valor del item' },
-              { id: 'itemComment', label: 'Comentarios', desc: 'Textos descriptivos' },
-              { id: 'gridBorder', label: 'Línea Divisora', desc: 'Separador de items' },
-              { id: 'footerBg', label: 'Fondo Pie', desc: 'Barra inferior' },
-              { id: 'footerText', label: 'Texto Pie', desc: 'Info del footer' }
-            ].map(col => (
-              <div key={col.id} className="flex flex-col gap-1.5 p-2 rounded border border-black/5 hover:bg-black/5 transition-colors group">
-                <label className="text-[10px] font-black uppercase tracking-tight leading-none text-gray-700">{col.label}</label>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="color" 
-                    value={colors[col.id]} 
-                    onChange={e => { 
-                      const c = { ...colors, [col.id]: e.target.value }; 
-                      setColors(c); 
-                      saveLayoutSizes({ colors: c }); 
-                    }} 
-                    className="w-10 h-10 border-2 border-black p-0 cursor-pointer rounded-sm bg-white" 
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-mono font-bold uppercase">{colors[col.id]}</span>
-                    <span className="text-[8px] text-gray-400 font-medium italic leading-none">{col.desc}</span>
-                  </div>
-                </div>
+          
+          <div className="space-y-8">
+            {/* SECCIÓN ENCABEZADO Y PIE */}
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-gray-500">
+                <span className="w-8 h-[1px] bg-gray-300"></span> Encabezado y Pie de Página
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { id: 'mainTitle', label: 'Título Principal', desc: 'Texto superior' },
+                  { id: 'mainBorder', label: 'Borde y Sombra', desc: 'Líneas generales' },
+                  { id: 'footerBg', label: 'Fondo Pie', desc: 'Barra inferior' },
+                  { id: 'footerText', label: 'Texto Pie', desc: 'Info del footer' }
+                ].map(col => (
+                  <ColorSelector key={col.id} col={col} colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* SECCIÓN CATEGORÍAS */}
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-gray-500">
+                <span className="w-8 h-[1px] bg-gray-300"></span> Secciones y Categorías
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                {[
+                  { id: 'categoryTitle', label: 'Títulos Secciones', desc: 'Nombres bloques' },
+                  { id: 'categoryBorder', label: 'Bordes Cuadros', desc: 'Marcos bloques' },
+                  { id: 'categoryBg', label: 'Fondo Títulos', desc: 'Tras cabeceras' }
+                ].map(col => (
+                  <ColorSelector key={col.id} col={col} colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
+                ))}
+              </div>
+            </div>
+
+            {/* SECCIÓN PRODUCTOS */}
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-gray-500">
+                <span className="w-8 h-[1px] bg-gray-300"></span> Productos e Items
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { id: 'itemName', label: 'Nombre Producto', desc: 'Texto del item' },
+                  { id: 'itemPrice', label: 'Precio Producto', desc: 'Valor del item' },
+                  { id: 'itemComment', label: 'Comentarios', desc: 'Descripciones' },
+                  { id: 'gridBorder', label: 'Línea Divisora', desc: 'Separador items' }
+                ].map(col => (
+                  <ColorSelector key={col.id} col={col} colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
