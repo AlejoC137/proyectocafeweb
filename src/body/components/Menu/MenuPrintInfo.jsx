@@ -37,6 +37,7 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
 
   const keyES = `__${storageKey}_text_es`;
   const keyEN = `__${storageKey}_text_en`;
+  const keyCols = `__${storageKey}_columns`;
 
   const [localTextES, setLocalTextES] = useState(defaultTextES);
   const [localTextEN, setLocalTextEN] = useState(defaultTextEN);
@@ -47,22 +48,23 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
     if (!editMode) {
       if (groupDescriptions?.[keyES] !== undefined) setLocalTextES(groupDescriptions[keyES]);
       else setLocalTextES(defaultTextES);
-      
+
       if (groupDescriptions?.[keyEN] !== undefined) setLocalTextEN(groupDescriptions[keyEN]);
       else setLocalTextEN(defaultTextEN);
     }
   }, [groupDescriptions, keyES, keyEN, defaultTextES, defaultTextEN, editMode]);
 
   const currentText = isEnglish ? localTextEN : localTextES;
+  const columns = groupDescriptions?.[keyCols] || 2;
 
   const handleBlur = () => {
-     if (!saveGroupDescriptions) return;
-     const updated = {
-        ...(groupDescriptions || {}),
-        [keyES]: localTextES,
-        [keyEN]: localTextEN
-     };
-     saveGroupDescriptions(updated);
+    if (!saveGroupDescriptions) return;
+    const updated = {
+      ...(groupDescriptions || {}),
+      [keyES]: localTextES,
+      [keyEN]: localTextEN
+    };
+    saveGroupDescriptions(updated);
   };
 
   const parseMarkdown = (text) => {
@@ -72,26 +74,26 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
   };
 
   if (editMode) {
-     return (
-        <div className="flex flex-col gap-1 w-full print:hidden">
-           <label className="text-xs font-bold text-gray-500 uppercase">{isEnglish ? "Edit Markdown (English)" : "Editar Markdown (Español)"}</label>
-           <textarea 
-              className="w-full min-h-[250px] text-[11px] font-mono border border-gray-400 p-2 outline-none focus:border-black bg-yellow-50"
-              value={currentText}
-              onChange={(e) => {
-                 if (isEnglish) setLocalTextEN(e.target.value);
-                 else setLocalTextES(e.target.value);
-              }}
-              onBlur={handleBlur}
-           />
-           <p className="text-[9px] text-gray-500 mt-1">Soporta Markdown completo: # Títulos, **negrita**, *cursiva*, &gt; Citas, - Listas, | Tablas |.</p>
-        </div>
-     );
+    return (
+      <div className="flex flex-col gap-1 w-full print:hidden">
+        <label className="text-xs font-bold text-gray-500 uppercase">{isEnglish ? "Edit Markdown (English)" : "Editar Markdown (Español)"}</label>
+        <textarea
+          className="w-full min-h-[250px] text-[11px] font-mono border border-gray-400 p-2 outline-none focus:border-black bg-yellow-50"
+          value={currentText}
+          onChange={(e) => {
+            if (isEnglish) setLocalTextEN(e.target.value);
+            else setLocalTextES(e.target.value);
+          }}
+          onBlur={handleBlur}
+        />
+        <p className="text-[9px] text-gray-500 mt-1">Soporta Markdown completo: # Títulos, **negrita**, *cursiva*, &gt; Citas, - Listas, | Tablas |.</p>
+      </div>
+    );
   }
 
   return (
     <div
-      className="font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-2 gap-4"
+      className={`font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-${columns} gap-4`}
       dangerouslySetInnerHTML={{ __html: parseMarkdown(currentText) }}
     />
   );

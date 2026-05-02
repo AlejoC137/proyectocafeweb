@@ -41,14 +41,31 @@ const MenuPrintBlock = ({
   deleteBlock
 }) => {
   
-  const renderBlockControls = (id) => {
+  const renderBlockControls = (id, showColumnToggle = false) => {
     if (!editMode) return null;
     const isFirstPage = pageIndex === 0;
     const isLastPage = pageIndex === (pagesCount - 1);
     const isRemovable = true; // Permitir eliminar cualquier bloque del layout
 
+    const colKey = `__${id}_columns`;
+    const currentCols = groupDescriptions[colKey] || 2;
+
     return (
       <div className="absolute -top-3 -right-3 flex flex-col gap-1 z-20 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
+        {showColumnToggle && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-6 w-12 p-0 text-[8px] rounded-sm border border-black bg-blue-50 hover:bg-blue-100 font-bold" 
+            onClick={() => {
+              const nextCols = currentCols === 2 ? 1 : 2;
+              saveGroupDescriptions({ ...groupDescriptions, [colKey]: nextCols });
+            }}
+            title="Cambiar Columnas"
+          >
+            {currentCols} COL
+          </Button>
+        )}
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'up', pageIndex, columnId)} title="Subir">↑</Button>
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'down', pageIndex, columnId)} title="Bajar">↓</Button>
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'right', pageIndex, columnId)} disabled={columnId === 'right' && isLastPage} title={columnId === 'right' ? "Mover a Siguiente Página" : "Mover a Derecha"}>→</Button>
@@ -104,7 +121,7 @@ const MenuPrintBlock = ({
 
     return (
       <div key={id} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
-        {renderBlockControls(id)}
+        {renderBlockControls(id, true)}
         <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
           {editMode ? (
             <input 
@@ -233,7 +250,7 @@ const MenuPrintBlock = ({
     case "INFO":
       return (
         <div key="INFO" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
-          {renderBlockControls("INFO")}
+          {renderBlockControls("INFO", true)}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
             <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
               {!leng ? "Más sobre el Menú" : "More About"}

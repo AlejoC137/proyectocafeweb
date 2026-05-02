@@ -68,9 +68,19 @@ export const MenuPrintStyles = () => (
           page-break-after: avoid !important;
           page-break-before: avoid !important;
         }
+        /* Garantizar que los fondos y las imágenes absolutas se vean */
+        img {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          display: block !important;
+        }
       }
       
       /* Markdown Styles */
+      .columns-1 { column-count: 1 !important; }
+      .columns-2 { column-count: 2 !important; }
+      .columns-3 { column-count: 3 !important; }
+      
       .print-markdown-content p {
         margin-bottom: 0.5em;
       }

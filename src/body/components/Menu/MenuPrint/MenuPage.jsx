@@ -23,15 +23,14 @@ const MenuPage = ({
   commonProps 
 }) => {
   return (
-    <div id={`page-${pageIndex}`} className="bg-[#fcfbf9] print:bg-white text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page print:shadow-none print:border-none print:mx-0 print:my-0 relative page-container">
-      <div className="p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9] print:bg-white">
+    <div id={`page-${pageIndex}`} className={`bg-[#fcfbf9] ${showWebsiteBg ? 'print:bg-transparent' : 'print:bg-white'} text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page print:shadow-none print:border-none print:mx-0 print:my-0 relative page-container`}>
+      <div className={`p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9] ${showWebsiteBg ? 'print:bg-transparent' : 'print:bg-white'}`}>
         {showWebsiteBg && (
-          <div 
-            className="absolute inset-0 pointer-events-none z-0"
+          <img 
+            src={FondoWeb}
+            alt="background"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
             style={{ 
-              backgroundImage: `url(${FondoWeb})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
               opacity: websiteBgOpacity 
             }}
           />
