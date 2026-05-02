@@ -37,42 +37,53 @@ export const MenuPrintStyles = () => (
           size: 11in 17in !important;
           margin: 0 !important;
         }
-        html, body {
+        
+        /* No usamos display:none en el body porque oculta el #root y rompe todo. 
+           Usamos visibility para que el contenido de impresión sea lo único visible. */
+        body {
+          visibility: hidden !important;
           margin: 0 !important;
           padding: 0 !important;
-          width: 11in !important;
-          height: 17in !important;
-          max-height: 17in !important;
-          overflow: hidden !important;
           background: white !important;
-          background-color: white !important;
+          width: 11in !important;
+          height: auto !important; /* Para soportar múltiples páginas */
+          overflow: visible !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        body * {
-          visibility: hidden;
-        }
-        #print-area, #print-area * {
-          visibility: visible;
-        }
+
         #print-area {
-          position: fixed !important;
-          left: 0 !important;
+          visibility: visible !important;
+          position: absolute !important;
           top: 0 !important;
+          left: 0 !important;
+          width: 11in !important;
           margin: 0 !important;
           padding: 0 !important;
-          width: 11in !important;
-          height: 17in !important;
-          max-height: 17in !important;
-          overflow: hidden !important;
-          page-break-after: avoid !important;
-          page-break-before: avoid !important;
+          display: block !important;
         }
-        /* Garantizar que los fondos y las imágenes absolutas se vean */
-        img {
+
+        #print-area * {
+          visibility: visible !important;
+        }
+
+        /* Asegurar que las páginas se impriman correctamente */
+        .page-container {
+          break-after: page !important;
+          page-break-after: always !important;
+          display: flex !important;
+          visibility: visible !important;
+        }
+
+        /* Forzar que todos los elementos permitan colores y fondos */
+        * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+        }
+
+        img {
           display: block !important;
+          opacity: 1 !important;
         }
       }
       
