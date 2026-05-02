@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
 
-function MenuPrintInfo({ isEnglish, editMode, groupDescriptions, saveGroupDescriptions }) {
+function MenuPrintInfo({ isEnglish, editMode, groupDescriptions, saveGroupDescriptions, storageKey = 'INFO' }) {
   const infoFija = {
     ES: {
-      Intro: `**Más sobre el menú.**
+      Intro: `**Texto personalizado.** Haz clic en editar para cambiar este contenido.`
+    },
+    EN: {
+      Intro: `**Custom text.** Click edit to change this content.`
+    }
+  };
+
+  // Fixed Intro for the main INFO block
+  const isMainInfo = storageKey === 'INFO';
+  const defaultTextES = isMainInfo ? `**Más sobre el menú.**
 En Proyecto Café hacemos todo lo posible para servir platos y bebidas con ingredientes frescos y bien cuidados.
 
 **Desayuno:** 8:00 am - 11:30 am.  **Almuerzo:** Cambia cada día, inicia a 12:30. 
@@ -13,10 +22,9 @@ En Proyecto Café hacemos todo lo posible para servir platos y bebidas con ingre
 
 **WiFi:** Proyecto_cafe | **Contraseña:** FreddieMercury *(El WiFi es gratis pero recomendamos un consumo mínimo de $10.000)*
 
-**Pregunta por promociones, especiales, eventos, talleres y el menú del día.**`
-    },
-    EN: {
-      Intro: `**More about the menu.**
+**Pregunta por promociones, especiales, eventos, talleres y el menú del día.**` : infoFija.ES.Intro;
+
+  const defaultTextEN = isMainInfo ? `**More about the menu.**
 At Proyecto Café we do everything possible to serve dishes and drinks with fresh and well-cared ingredients.
 
 **Breakfast:** 8:00 am - 11:30 am. **Lunch:** Changes daily, starts at 12:30.
@@ -25,20 +33,25 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
 
 **WiFi:** Proyecto_cafe | **Password:** FreddieMercury *(WiFi is free but we recommend a minimum consumption of $10.000)*
 
-**Ask about promotions, specials, events, workshops, and the daily menu.**`
-    }
-  };
+**Ask about promotions, specials, events, workshops, and the daily menu.**` : infoFija.EN.Intro;
 
-  const [localTextES, setLocalTextES] = useState(infoFija.ES.Intro);
-  const [localTextEN, setLocalTextEN] = useState(infoFija.EN.Intro);
+  const keyES = `__${storageKey}_text_es`;
+  const keyEN = `__${storageKey}_text_en`;
+
+  const [localTextES, setLocalTextES] = useState(defaultTextES);
+  const [localTextEN, setLocalTextEN] = useState(defaultTextEN);
 
   useEffect(() => {
-    if (groupDescriptions?.__info_text_es !== undefined) setLocalTextES(groupDescriptions.__info_text_es);
-    else setLocalTextES(infoFija.ES.Intro);
-    
-    if (groupDescriptions?.__info_text_en !== undefined) setLocalTextEN(groupDescriptions.__info_text_en);
-    else setLocalTextEN(infoFija.EN.Intro);
-  }, [groupDescriptions]);
+    // Solo sincronizar con las props si NO estamos editando, 
+    // para evitar que el texto se borre mientras el usuario escribe si hay actualizaciones en segundo plano.
+    if (!editMode) {
+      if (groupDescriptions?.[keyES] !== undefined) setLocalTextES(groupDescriptions[keyES]);
+      else setLocalTextES(defaultTextES);
+      
+      if (groupDescriptions?.[keyEN] !== undefined) setLocalTextEN(groupDescriptions[keyEN]);
+      else setLocalTextEN(defaultTextEN);
+    }
+  }, [groupDescriptions, keyES, keyEN, defaultTextES, defaultTextEN, editMode]);
 
   const currentText = isEnglish ? localTextEN : localTextES;
 
@@ -46,8 +59,8 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
      if (!saveGroupDescriptions) return;
      const updated = {
         ...(groupDescriptions || {}),
-        __info_text_es: localTextES,
-        __info_text_en: localTextEN
+        [keyES]: localTextES,
+        [keyEN]: localTextEN
      };
      saveGroupDescriptions(updated);
   };

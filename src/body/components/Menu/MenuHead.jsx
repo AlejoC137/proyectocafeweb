@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
-import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO , CAFE_METODOS,CAFE_ESPRESSO, BEBIDAS_FRIAS,BEBIDAS_CALIENTES,PANADERIA_REPOSTERIA_DULCE, PANADERIA_REPOSTERIA_SALADA, ADICIONES_COMIDAS, ADICIONES_BEBIDAS, AGENDA  } from "../../../redux/actions-types";
+import { MENU, ITEMS, DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, BEBIDAS, CAFE, ENLATADOS, ADICIONES, DESAYUNO_DULCE, DESAYUNO_SALADO, CAFE_METODOS, CAFE_ESPRESSO, BEBIDAS_FRIAS, BEBIDAS_CALIENTES, PANADERIA_REPOSTERIA_DULCE, PANADERIA_REPOSTERIA_SALADA, ADICIONES_COMIDAS, ADICIONES_BEBIDAS, AGENDA } from "../../../redux/actions-types";
 import { CardGridPrintHead } from "@/components/ui/cardGridPrintHead";
 import { Button } from "@/components/ui/button";
 import BaseSillaLogo from "@/assets/BASE SILLA TEST_LOGO.svg";
@@ -64,25 +64,25 @@ function MenuHead() {
 
       <div className="flex justify-center ">
         <div id="print-area" className="print:h-auto">
-          
+
           {/* --- INICIO PÁGINA 1 --- */}
           {/* CORRECTO: Se añade flex, flex-col y print:h-screen para crear el layout de página completa */}
           <div className="print:break-after-page flex flex-col print:h-screen">
             <div className=" text-center ">
-              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
+              <h1 className="text-1xl font-SpaceGrotesk font-bold mt-1 leading-tight">
                 {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
               </h1>
             </div>
-            
+
             {/* CORRECTO: Se añade 'grow' para que esta sección ocupe el espacio disponible */}
             <div className="pt-0 gap-8 flex flex-row justify-center items-start grow">
               {/* COFFEE */}
               <div className="flex flex-col gap-1 w-custom-width1200px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-xl mb-2" >{!leng ?"Café":"Coffee"}</h1>
+                <h1 className="self-end text-center w-full font-LilitaOne text-xl mb-2" >{!leng ? "Café" : "Coffee"}</h1>
                 <div className="flex flex-col gap-1">
-                  <CardGridPrintHead products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ES:"Espresso",EN:"Espresso"}} GRUPO={CAFE} isEnglish={leng} />
+                  <CardGridPrintHead products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} />
                   <br />
-                  <CardGridPrintHead products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ES:"Métodos",EN:"Methods"}}  GRUPO={CAFE} isEnglish={leng} />
+                  <CardGridPrintHead products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} />
                 </div>
               </div>
               {/* DRINKS */}
@@ -112,11 +112,11 @@ function MenuHead() {
               <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
             </div>
           </div>
-          
+
           {/* --- INICIO PÁGINA 2 --- */}
           <div className="print:break-after-page flex flex-col print:h-screen">
             <div className=" text-center ">
-              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-8 leading-tight">
+              <h1 className="text-4xl font-SpaceGrotesk font-bold mt-1 leading-tight">
                 {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
               </h1>
             </div>
@@ -132,10 +132,10 @@ function MenuHead() {
               </div> */}
               {/* BREAKFAST */}
               <div className="flex flex-col gap-1 w-custom-width1200px">
-                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ?"Desayuno":"Breakfast"}</h1>
+                <h1 className="self-end text-center w-full font-LilitaOne text-2xl mb-2">{!leng ? "Desayuno" : "Breakfast"}</h1>
                 <div className="flex flex-col gap-1 ">
-                  <CardGridPrintHead products={menuData} TITTLE={{ES:"Desayuno Dulce",EN:"Sweet Breakfast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
-                  <CardGridPrintHead products={menuData} TITTLE={{ES:"Desayuno Salado",EN:"Savory Breakfast"}} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
+                  <CardGridPrintHead products={menuData} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} isEnglish={leng} />
+                  <CardGridPrintHead products={menuData} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} isEnglish={leng} />
                 </div>
               </div>
               {/* MORE */}
@@ -157,7 +157,7 @@ function MenuHead() {
               <h4 className="text-center w-1/3 font-LilitaOne text-1 self-end">| +57 300 821 4593 @proyecto_ _cafe |</h4>
             </div>
           </div>
-          
+
 
         </div>
       </div>

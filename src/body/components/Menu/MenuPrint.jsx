@@ -14,6 +14,7 @@ import MenuPrintFooter from "./MenuPrint/MenuPrintFooter";
 import MenuPrintControls from "./MenuPrint/MenuPrintControls";
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
 import MenuPrintColumn from "./MenuPrint/MenuPrintColumn";
+import MenuPage from "./MenuPrint/MenuPage";
 
 function MenuPrint() {
   const dispatch = useDispatch();
@@ -31,9 +32,12 @@ function MenuPrint() {
   const [photosWidthUnit, setPhotosWidthUnit] = useState('px');
   const [leftColRatio, setLeftColRatio] = useState(50);
   const [qrScale, setQrScale] = useState(1);
-  const [leftColBlocks, setLeftColBlocks] = useState(["CAFE", "BEBIDAS", "QR"]);
-  const [centerColBlocks, setCenterColBlocks] = useState(["ALIMENTOS", "EXTRAS", "INFO"]);
-  const [rightColBlocks, setRightColBlocks] = useState([]);
+  
+  // New State: Array of pages
+  const [pages, setPages] = useState([
+    { id: 'PAGE_1', left: ["CAFE", "BEBIDAS", "QR"], center: ["ALIMENTOS", "EXTRAS", "INFO"], right: [] }
+  ]);
+
   const [showWebsiteBg, setShowWebsiteBg] = useState(false);
   const [websiteBgOpacity, setWebsiteBgOpacity] = useState(0.5);
   const [colors, setColors] = useState({
@@ -94,28 +98,44 @@ function MenuPrint() {
         setPrintImages(loadedImages);
         setGroupDescriptions(config.group_descriptions || {});
         setShowIcons(config.show_icons ?? true);
-        setPhotosWidth(config.group_descriptions?.__layout?.photosWidth ?? 210);
-        setPhotosWidthUnit(config.group_descriptions?.__layout?.photosWidthUnit ?? 'px');
-        setLeftColRatio(config.group_descriptions?.__layout?.leftColRatio ?? 50);
-        setQrScale(config.group_descriptions?.__layout?.qrScale ?? 1);
-        setShowWebsiteBg(config.group_descriptions?.__layout?.showWebsiteBg ?? false);
-        setWebsiteBgOpacity(config.group_descriptions?.__layout?.websiteBgOpacity ?? 0.5);
-        if (config.group_descriptions?.__layout?.colors) {
-          setColors(prev => ({ ...prev, ...config.group_descriptions.__layout.colors }));
+        
+        const layout = config.group_descriptions?.__layout || {};
+        setPhotosWidth(layout.photosWidth ?? 210);
+        setPhotosWidthUnit(layout.photosWidthUnit ?? 'px');
+        setLeftColRatio(layout.leftColRatio ?? 50);
+        setQrScale(layout.qrScale ?? 1);
+        setShowWebsiteBg(layout.showWebsiteBg ?? false);
+        setWebsiteBgOpacity(layout.websiteBgOpacity ?? 0.5);
+        if (layout.colors) {
+          setColors(prev => ({ ...prev, ...layout.colors }));
         }
 
-        const savedLeft = config.group_descriptions?.__layout?.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
-        const savedCenter = config.group_descriptions?.__layout?.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
-        let savedRight = config.group_descriptions?.__layout?.rightColBlocks;
+        // Migration or Load multi-page config
+        let savedPages = layout.pages;
+        if (!savedPages) {
+          // Fallback/Migration for legacy single-page data
+          const savedLeft = layout.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
+          const savedCenter = layout.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
+          let savedRight = layout.rightColBlocks || [];
 
-        const allBlocks = [...savedLeft, ...savedCenter, ...(savedRight || [])];
-        const missingImageIds = loadedImages.filter(img => !allBlocks.includes(img.id)).map(img => img.id);
-        if (!savedRight) savedRight = missingImageIds;
-        else savedRight = [...savedRight, ...missingImageIds];
+          // Also include missing images in the right column if they weren't anywhere
+          const allBlocks = [...savedLeft, ...savedCenter, ...savedRight];
+          const missingImageIds = loadedImages.filter(img => !allBlocks.includes(img.id)).map(img => img.id);
+          savedRight = [...savedRight, ...missingImageIds];
 
-        setLeftColBlocks(savedLeft);
-        setCenterColBlocks(savedCenter);
-        setRightColBlocks(savedRight);
+          savedPages = [{ id: 'PAGE_1', left: savedLeft, center: savedCenter, right: savedRight }];
+        }
+
+        // Cleanup duplicates within columns to prevent key collision warnings
+        const cleanedPages = savedPages.map(page => ({
+          ...page,
+          left: [...new Set(page.left || [])],
+          center: [...new Set(page.center || [])],
+          right: [...new Set(page.right || [])]
+        }));
+        
+        setPages(cleanedPages);
+
       } else {
         await supabase.from('menu_print_config').insert([{ id: 1, images: [], group_descriptions: {}, show_icons: true }]);
       }
@@ -174,9 +194,12 @@ function MenuPrint() {
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
 
-      const newRight = [...rightColBlocks, newImageId];
-      setRightColBlocks(newRight);
-      saveLayoutSizes({ rightColBlocks: newRight });
+      // Add to the right column of the FIRST page by default
+      const newPages = [...pages];
+      newPages[0] = { ...newPages[0], right: [...(newPages[0].right || []), newImageId] };
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
+
     } catch (err) {
       console.error("Error uploading image:", err);
       alert("Error subiendo imagen.");
@@ -227,8 +250,8 @@ function MenuPrint() {
   };
 
   const deleteImage = async (blockId) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta imagen?")) return;
-    const index = printImages.findIndex(img => img.id === blockId);
+    if (!window.confirm("¿Seguro que deseas eliminar esta imagen permanentemente?")) return;
+    const index = printImages.findIndex(img => String(img.id) === String(blockId));
     if (index === -1) return;
     const image = printImages[index];
     try {
@@ -239,13 +262,15 @@ function MenuPrint() {
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
 
-      const newLeft = leftColBlocks.filter(b => b !== blockId);
-      const newCenter = centerColBlocks.filter(b => b !== blockId);
-      const newRight = rightColBlocks.filter(b => b !== blockId);
-      setLeftColBlocks(newLeft);
-      setCenterColBlocks(newCenter);
-      setRightColBlocks(newRight);
-      saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter, rightColBlocks: newRight });
+      // Remove from all pages/columns
+      const newPages = pages.map(page => ({
+        ...page,
+        left: page.left.filter(b => b !== blockId),
+        center: page.center.filter(b => b !== blockId),
+        right: page.right.filter(b => b !== blockId),
+      }));
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
     } catch (e) {
       console.error("Error deleting image:", e);
       alert("Error eliminando imagen");
@@ -264,54 +289,114 @@ function MenuPrint() {
   const saveLayoutSizes = (updates = {}) => {
     saveGroupDescriptions({
       ...groupDescriptions,
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, leftColBlocks, centerColBlocks, rightColBlocks, showWebsiteBg, websiteBgOpacity, colors, ...updates }
+      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, pages, showWebsiteBg, websiteBgOpacity, colors, ...updates }
     });
   };
 
-  const moveBlock = (blockId, direction) => {
-    let colName = leftColBlocks.includes(blockId) ? 'left' : centerColBlocks.includes(blockId) ? 'center' : 'right';
-    let colArray = colName === 'left' ? leftColBlocks : colName === 'center' ? centerColBlocks : rightColBlocks;
+  const moveBlock = (blockId, direction, pageIndex, columnId) => {
+    const newPages = [...pages];
+    const page = { ...newPages[pageIndex] };
+    const colArray = [...page[columnId]];
     const idx = colArray.indexOf(blockId);
 
     if (direction === 'up' && idx > 0) {
-      const newCol = [...colArray];
-      [newCol[idx - 1], newCol[idx]] = [newCol[idx], newCol[idx - 1]];
-      if (colName === 'left') setLeftColBlocks(newCol);
-      else if (colName === 'center') setCenterColBlocks(newCol);
-      else setRightColBlocks(newCol);
-      saveLayoutSizes({ [`${colName}ColBlocks`]: newCol });
+      [colArray[idx - 1], colArray[idx]] = [colArray[idx], colArray[idx - 1]];
+      page[columnId] = colArray;
+      newPages[pageIndex] = page;
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
     } else if (direction === 'down' && idx < colArray.length - 1) {
-      const newCol = [...colArray];
-      [newCol[idx + 1], newCol[idx]] = [newCol[idx], newCol[idx + 1]];
-      if (colName === 'left') setLeftColBlocks(newCol);
-      else if (colName === 'center') setCenterColBlocks(newCol);
-      else setRightColBlocks(newCol);
-      saveLayoutSizes({ [`${colName}ColBlocks`]: newCol });
+      [colArray[idx + 1], colArray[idx]] = [colArray[idx], colArray[idx + 1]];
+      page[columnId] = colArray;
+      newPages[pageIndex] = page;
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
     } else if (direction === 'right') {
-      if (colName === 'left') {
-        const newLeft = leftColBlocks.filter(b => b !== blockId);
-        const newCenter = [...centerColBlocks, blockId];
-        setLeftColBlocks(newLeft); setCenterColBlocks(newCenter);
-        saveLayoutSizes({ leftColBlocks: newLeft, centerColBlocks: newCenter });
-      } else if (colName === 'center') {
-        const newCenter = centerColBlocks.filter(b => b !== blockId);
-        const newRight = [...rightColBlocks, blockId];
-        setCenterColBlocks(newCenter); setRightColBlocks(newRight);
-        saveLayoutSizes({ centerColBlocks: newCenter, rightColBlocks: newRight });
+      if (columnId === 'left') {
+        page.left = page.left.filter(b => b !== blockId);
+        page.center = [...page.center, blockId];
+      } else if (columnId === 'center') {
+        page.center = page.center.filter(b => b !== blockId);
+        page.right = [...page.right, blockId];
+      } else if (columnId === 'right' && pageIndex < pages.length - 1) {
+        // Move to next page's left column
+        page.right = page.right.filter(b => b !== blockId);
+        newPages[pageIndex + 1] = { ...newPages[pageIndex + 1], left: [blockId, ...newPages[pageIndex + 1].left] };
       }
+      newPages[pageIndex] = page;
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
     } else if (direction === 'left') {
-      if (colName === 'right') {
-        const newRight = rightColBlocks.filter(b => b !== blockId);
-        const newCenter = [...centerColBlocks, blockId];
-        setRightColBlocks(newRight); setCenterColBlocks(newCenter);
-        saveLayoutSizes({ rightColBlocks: newRight, centerColBlocks: newCenter });
-      } else if (colName === 'center') {
-        const newCenter = centerColBlocks.filter(b => b !== blockId);
-        const newLeft = [...leftColBlocks, blockId];
-        setCenterColBlocks(newCenter); setLeftColBlocks(newLeft);
-        saveLayoutSizes({ centerColBlocks: newCenter, leftColBlocks: newLeft });
+      if (columnId === 'right') {
+        page.right = page.right.filter(b => b !== blockId);
+        page.center = [...page.center, blockId];
+      } else if (columnId === 'center') {
+        page.center = page.center.filter(b => b !== blockId);
+        page.left = [...page.left, blockId];
+      } else if (columnId === 'left' && pageIndex > 0) {
+        // Move to previous page's right column
+        page.left = page.left.filter(b => b !== blockId);
+        newPages[pageIndex - 1] = { ...newPages[pageIndex - 1], right: [...newPages[pageIndex - 1].right, blockId] };
       }
+      newPages[pageIndex] = page;
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
     }
+  };
+
+  const addPage = () => {
+    const newPageId = 'PAGE_' + (pages.length + 1);
+    const newPages = [...pages, { id: newPageId, left: [], center: [], right: [] }];
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
+  };
+
+  const addBlock = () => {
+    const newBlockId = 'CUSTOM_' + Math.random().toString(36).substr(2, 9);
+    const newPages = [...pages];
+    // Por defecto lo añadimos a la columna central de la primera página
+    newPages[0] = { ...newPages[0], center: [...newPages[0].center, newBlockId] };
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
+  };
+
+  const deleteBlock = (blockId) => {
+    // Si es un bloque estándar (no empieza por CUSTOM_ o IMG_), pedimos doble confirmación
+    const isCustom = blockId.startsWith('CUSTOM_') || blockId.startsWith('IMG_');
+    if (!isCustom && !window.confirm("Este es un bloque de sistema. ¿Estás seguro de que quieres quitarlo del menú?")) return;
+    if (isCustom && !window.confirm("¿Eliminar este bloque permanentemente?")) return;
+
+    const newPages = pages.map(page => ({
+      ...page,
+      left: page.left.filter(b => b !== blockId),
+      center: page.center.filter(b => b !== blockId),
+      right: page.right.filter(b => b !== blockId),
+    }));
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
+  };
+
+  const deletePage = (index) => {
+    if (pages.length <= 1) return;
+    if (!window.confirm("¿Seguro que deseas eliminar esta página y devolver sus bloques a la página anterior o siguiente?")) return;
+    
+    const newPages = pages.map(p => ({ ...p }));
+    const pageToDelete = newPages[index];
+    const targetIdx = index > 0 ? index - 1 : 0; // If deleting first page, move to what was the second page
+    
+    if (newPages[targetIdx] && targetIdx !== index) {
+      newPages[targetIdx].left = [...newPages[targetIdx].left, ...pageToDelete.left];
+      newPages[targetIdx].center = [...newPages[targetIdx].center, ...pageToDelete.center];
+      newPages[targetIdx].right = [...newPages[targetIdx].right, ...pageToDelete.right];
+    } else if (newPages[index + 1]) {
+      newPages[index + 1].left = [...pageToDelete.left, ...newPages[index + 1].left];
+      newPages[index + 1].center = [...pageToDelete.center, ...newPages[index + 1].center];
+      newPages[index + 1].right = [...pageToDelete.right, ...newPages[index + 1].right];
+    }
+
+    newPages.splice(index, 1);
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
   };
 
   const handlePrint = () => window.print();
@@ -323,9 +408,6 @@ function MenuPrint() {
   const commonProps = {
     editMode,
     moveBlock,
-    leftColBlocks,
-    centerColBlocks,
-    rightColBlocks,
     colors,
     leng,
     groupDescriptions,
@@ -342,7 +424,9 @@ function MenuPrint() {
     uploadingImage,
     handleReplaceImage,
     deleteImage,
-    updateImageHeight
+    updateImageHeight,
+    pagesCount: pages.length,
+    deleteBlock
   };
 
   return (
@@ -370,6 +454,10 @@ function MenuPrint() {
         setPhotosWidthUnit={setPhotosWidthUnit}
         leftColRatio={leftColRatio}
         setLeftColRatio={setLeftColRatio}
+        addPage={addPage}
+        deletePage={deletePage}
+        pagesCount={pages.length}
+        addBlock={addBlock}
       />
 
       {showColorPanel && (
@@ -384,50 +472,27 @@ function MenuPrint() {
       {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
       <div id="print-area" className="flex flex-col gap-10">
-        <div className="bg-[#fcfbf9] print:bg-white text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page print:shadow-none print:border-none print:mx-0 print:my-0">
-          <div className="p-4 h-full flex flex-col relative print:p-3 bg-[#fcfbf9] print:bg-white">
-            {showWebsiteBg && (
-              <div 
-                className="absolute inset-0 pointer-events-none z-0"
-                style={{ 
-                  backgroundImage: `url(${FondoWeb})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  opacity: websiteBgOpacity 
-                }}
-              />
-            )}
-
-            <MenuPrintHeader colors={colors} leng={leng} />
-
-            <div className="flex-grow grid gap-4 items-start h-full relative z-10" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
-              
-              <MenuPrintColumn blocks={leftColBlocks} {...commonProps} />
-              
-              <MenuPrintColumn blocks={centerColBlocks} {...commonProps} />
-
-              <div className="flex flex-col gap-3 relative">
-                {editMode && (
-                  <div className="absolute -top-10 right-0 z-[60] print:hidden">
-                    <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef} className="hidden" />
-                    <Button onClick={() => fileInputRef.current.click()} disabled={uploadingImage} className="font-SpaceGrotesk text-[10px] bg-green-600 p-1 px-2 h-auto text-white hover:bg-green-700">
-                      {uploadingImage ? "Subiendo..." : "+ Añadir Foto"}
-                    </Button>
-                  </div>
-                )}
-
-                {rightColBlocks.length === 0 && !editMode && (
-                  <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10">Sin elementos</div>
-                )}
-                
-                <MenuPrintColumn blocks={rightColBlocks} {...commonProps} />
-              </div>
-
-            </div>
-
-            <MenuPrintFooter colors={colors} />
-          </div>
-        </div>
+        {pages.map((page, idx) => (
+          <MenuPage 
+            key={page.id}
+            page={page}
+            pageIndex={idx}
+            showWebsiteBg={showWebsiteBg}
+            FondoWeb={FondoWeb}
+            websiteBgOpacity={websiteBgOpacity}
+            colors={colors}
+            leng={leng}
+            leftColRatio={leftColRatio}
+            photosWidth={photosWidth}
+            photosWidthUnit={photosWidthUnit}
+            editMode={editMode}
+            handleImageUpload={handleImageUpload}
+            fileInputRef={fileInputRef}
+            uploadingImage={uploadingImage}
+            Button={Button}
+            commonProps={commonProps}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { getAllFromTable } from '../../../redux/actions';
+import { useSearchParams } from 'react-router-dom';
 import { STAFF } from '../../../redux/actions-types';
-import { ArrowLeft, Calculator, DollarSign, Clock, Users, Save, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Calculator, DollarSign, Clock, Users, Save, RotateCcw, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 const TipsManager = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Data from Redux
     const legacyStaff = useSelector((state) => state.allStaff || []);
@@ -23,9 +23,32 @@ const TipsManager = () => {
     // Combine staff sources
     const staffList = employees.length > 0 ? employees : legacyStaff;
 
-    // State for selected fortnight
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-    const [fortnightType, setFortnightType] = useState('1'); // '1' for 1-15, '2' for 16-End
+    // Dates from URL or Defaults
+    const urlStart = searchParams.get('start');
+    const urlEnd = searchParams.get('end');
+
+    // Initialize dates
+    const getDefaultDates = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        // Default to current fortnight
+        if (today.getDate() <= 15) {
+            return {
+                start: new Date(year, month, 1).toISOString().split('T')[0],
+                end: new Date(year, month, 15).toISOString().split('T')[0]
+            };
+        } else {
+            return {
+                start: new Date(year, month, 16).toISOString().split('T')[0],
+                end: new Date(year, month + 1, 0).toISOString().split('T')[0]
+            };
+        }
+    };
+
+    const defaults = getDefaultDates();
+    const [startDate, setStartDate] = useState(urlStart || defaults.start);
+    const [endDate, setEndDate] = useState(urlEnd || defaults.end);
 
     // ENHANCEMENTS STATE
     const [excludedStaff, setExcludedStaff] = useState([]); // Array of excluded IDs
@@ -48,21 +71,31 @@ const TipsManager = () => {
         fetchData();
     }, [dispatch, staffList.length]);
 
-    // Helper: Get date range for selected fortnight
-    const getFortnightRange = () => {
-        const date = new Date(selectedDate);
-        const year = date.getFullYear();
-        const month = date.getMonth();
+    // Sync state with URL when changed
+    useEffect(() => {
+        setSearchParams({ start: startDate, end: endDate }, { replace: true });
+    }, [startDate, endDate, setSearchParams]);
 
-        let start, end;
-        if (fortnightType === '1') {
-            start = new Date(year, month, 1);
-            end = new Date(year, month, 15, 23, 59, 59);
-        } else {
-            start = new Date(year, month, 16);
-            end = new Date(year, month + 1, 0, 23, 59, 59); // Last day of month
-        }
+    // Helper: Get date objects from strings
+    const getRange = () => {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
         return { start, end };
+    };
+
+    const handleFortnightPreset = (type) => {
+        const baseDate = new Date(startDate);
+        const year = baseDate.getFullYear();
+        const month = baseDate.getMonth();
+        if (type === '1') {
+            setStartDate(new Date(year, month, 1).toISOString().split('T')[0]);
+            setEndDate(new Date(year, month, 15).toISOString().split('T')[0]);
+        } else {
+            setStartDate(new Date(year, month, 16).toISOString().split('T')[0]);
+            setEndDate(new Date(year, month + 1, 0).toISOString().split('T')[0]);
+        }
     };
 
     // Helper: Parse hours from "HH:MM"
@@ -79,7 +112,7 @@ const TipsManager = () => {
 
     // CALCULATION LOGIC
     const calculateDistribution = () => {
-        const { start, end } = getFortnightRange();
+        const { start, end } = getRange();
 
         // 1. Filter Tips
         const periodTips = tipsData.filter(tip => {
@@ -216,28 +249,37 @@ const TipsManager = () => {
                     {/* Controls */}
                     <div className="flex flex-col sm:flex-row gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase">Mes de Referencia</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase">Fecha Inicio</label>
                             <input
                                 type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
                                 className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs font-bold text-gray-500 uppercase">Periodo</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase">Fecha Fin</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-gray-500 uppercase">Quincena</label>
                             <div className="flex bg-white rounded-lg p-1 border border-gray-300">
                                 <button
-                                    onClick={() => setFortnightType('1')}
-                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${fortnightType === '1' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    onClick={() => handleFortnightPreset('1')}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition hover:bg-gray-50`}
                                 >
-                                    1ª Quincena
+                                    1ª
                                 </button>
                                 <button
-                                    onClick={() => setFortnightType('2')}
-                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${fortnightType === '2' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                                    onClick={() => handleFortnightPreset('2')}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition hover:bg-gray-50`}
                                 >
-                                    2ª Quincena
+                                    2ª
                                 </button>
                             </div>
                         </div>

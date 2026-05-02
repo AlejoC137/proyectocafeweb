@@ -16,11 +16,10 @@ import { headerStyles } from "./MenuPrintStyles";
 
 const MenuPrintBlock = ({
   blockId,
+  pageIndex,
+  columnId,
   editMode,
   moveBlock,
-  leftColBlocks,
-  centerColBlocks,
-  rightColBlocks,
   colors,
   leng,
   groupDescriptions,
@@ -37,20 +36,26 @@ const MenuPrintBlock = ({
   uploadingImage,
   handleReplaceImage,
   deleteImage,
-  updateImageHeight
+  updateImageHeight,
+  pagesCount,
+  deleteBlock
 }) => {
   
   const renderBlockControls = (id) => {
     if (!editMode) return null;
-    let colName = leftColBlocks.includes(id) ? 'left' : centerColBlocks.includes(id) ? 'center' : 'right';
-    let colArray = colName === 'left' ? leftColBlocks : colName === 'center' ? centerColBlocks : rightColBlocks;
-    const idx = colArray.indexOf(id);
+    const isFirstPage = pageIndex === 0;
+    const isLastPage = pageIndex === (pagesCount - 1);
+    const isRemovable = true; // Permitir eliminar cualquier bloque del layout
+
     return (
       <div className="absolute -top-3 -right-3 flex flex-col gap-1 z-20 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'up')} disabled={idx === 0} title="Subir">↑</Button>
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'down')} disabled={idx === colArray.length - 1} title="Bajar">↓</Button>
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'right')} disabled={colName === 'right'} title="Mover a Derecha">→</Button>
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'left')} disabled={colName === 'left'} title="Mover a Izquierda">←</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'up', pageIndex, columnId)} title="Subir">↑</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'down', pageIndex, columnId)} title="Bajar">↓</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'right', pageIndex, columnId)} disabled={columnId === 'right' && isLastPage} title={columnId === 'right' ? "Mover a Siguiente Página" : "Mover a Derecha"}>→</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'left', pageIndex, columnId)} disabled={columnId === 'left' && isFirstPage} title={columnId === 'left' ? "Mover a Página Anterior" : "Mover a Izquierda"}>←</Button>
+        {isRemovable && (
+          <Button size="sm" variant="destructive" className="h-6 w-6 p-0 text-xs rounded-sm border border-black mt-1" onClick={() => deleteBlock(id)} title="Eliminar Bloque">X</Button>
+        )}
       </div>
     );
   };
@@ -74,9 +79,6 @@ const MenuPrintBlock = ({
               }));
             }}
             onBlur={() => {
-              // Since onChange already updated the parent state via setGroupDescriptions,
-              // we just need to trigger the actual DB save. 
-              // However, to be safe, we should ensure we are saving the latest state.
               saveGroupDescriptions(groupDescriptions);
             }}
           />
@@ -91,6 +93,46 @@ const MenuPrintBlock = ({
         <p className="text-[9px] font-SpaceGrotesk leading-none text-gray-500 italic truncate">
           {text}
         </p>
+      </div>
+    );
+  };
+
+  const renderCustomBlock = (id) => {
+    const langKey = leng ? 'en' : 'es';
+    const titleKey = `${id}_title_${langKey}`;
+    const title = groupDescriptions[titleKey] || (leng ? "Custom Title" : "Título Personalizado");
+
+    return (
+      <div key={id} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
+        {renderBlockControls(id)}
+        <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+          {editMode ? (
+            <input 
+              className="font-black text-xl uppercase leading-none m-0 bg-transparent border-none outline-none w-full"
+              style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}
+              value={title}
+              onChange={(e) => {
+                setGroupDescriptions(prev => ({ ...prev, [titleKey]: e.target.value }));
+              }}
+              onBlur={() => saveGroupDescriptions(groupDescriptions)}
+            />
+          ) : (
+            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+              {title}
+            </h2>
+          )}
+        </div>
+        <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic" style={{ color: colors.itemComment }}>
+          <MenuPrintInfo
+            isEnglish={leng}
+            editMode={editMode}
+            groupDescriptions={groupDescriptions}
+            saveGroupDescriptions={saveGroupDescriptions}
+            className="p-0 m-0 w-full"
+            // We need to tell MenuPrintInfo which key to use
+            storageKey={id} 
+          />
+        </div>
       </div>
     );
   };
@@ -209,6 +251,9 @@ const MenuPrintBlock = ({
         </div>
       );
     default:
+      if (String(blockId).startsWith('CUSTOM_')) {
+        return renderCustomBlock(blockId);
+      }
       const imgObj = printImages.find(img => String(img.id) === String(blockId));
       if (imgObj) {
         return (
@@ -255,6 +300,10 @@ const MenuPrintBlock = ({
               <img
                 src={imgObj.url}
                 alt={imgObj.nameES || "Menu Image"}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://placehold.co/600x400?text=Imagen+Menu";
+                }}
                 className="w-full h-full object-cover rounded-none border grayscale-[30%] contrast-[1.1] brightness-[1.05]"
                 style={{ 
                   borderColor: colors.imgBorder || '#000000'

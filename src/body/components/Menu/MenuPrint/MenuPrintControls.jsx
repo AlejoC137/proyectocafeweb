@@ -21,7 +21,11 @@ const MenuPrintControls = ({
   photosWidthUnit,
   setPhotosWidthUnit,
   leftColRatio,
-  setLeftColRatio
+  setLeftColRatio,
+  addPage,
+  deletePage,
+  pagesCount,
+  addBlock
 }) => {
   return (
     <>
@@ -41,6 +45,39 @@ const MenuPrintControls = ({
         <Button onClick={() => setShowColorPanel(!showColorPanel)} className={`font-SpaceGrotesk font-medium ${showColorPanel ? 'bg-purple-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}>
           🎨 {showColorPanel ? "Cerrar Colores" : "Personalizar Colores"}
         </Button>
+        
+        {pagesCount > 1 && (
+          <div className="flex items-center gap-1 bg-black/10 p-1 rounded-md border border-black/10">
+            <span className="text-[10px] font-black uppercase px-2">Ir a:</span>
+            {Array.from({ length: pagesCount }).map((_, i) => (
+              <Button 
+                key={i} 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => document.getElementById(`page-${i}`)?.scrollIntoView({ behavior: 'smooth' })}
+                className="h-7 w-8 p-0 font-black text-xs hover:bg-black hover:text-white border border-black/20 bg-white"
+              >
+                P{i + 1}
+              </Button>
+            ))}
+          </div>
+        )}
+        
+        {editMode && (
+          <div className="flex items-center gap-2 border-l border-black/20 pl-4">
+            <Button onClick={addPage} className="font-SpaceGrotesk font-medium bg-green-600 text-white hover:bg-green-700">
+              📄 + Página
+            </Button>
+            <Button onClick={addBlock} className="font-SpaceGrotesk font-medium bg-blue-600 text-white hover:bg-blue-700">
+              📝 + Bloque Texto
+            </Button>
+            {pagesCount > 1 && (
+              <Button onClick={() => deletePage(pagesCount - 1)} className="font-SpaceGrotesk font-medium bg-red-800 text-white hover:bg-red-900">
+                🗑️ - Página
+              </Button>
+            )}
+          </div>
+        )}
         
         <div className="flex items-center gap-2">
           <Button 
