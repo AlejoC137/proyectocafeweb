@@ -16,16 +16,15 @@ const MenuPrintControls = ({
   saveLayoutSizes,
   websiteBgOpacity,
   setWebsiteBgOpacity,
+  backgroundUrl,
   photosWidth,
   setPhotosWidth,
   photosWidthUnit,
   setPhotosWidthUnit,
   leftColRatio,
   setLeftColRatio,
-  addPage,
-  deletePage,
-  pagesCount,
-  addBlock
+  addBlock,
+  handleBackgroundUpload
 }) => {
   return (
     <>
@@ -46,62 +45,60 @@ const MenuPrintControls = ({
           🎨 {showColorPanel ? "Cerrar Colores" : "Personalizar Colores"}
         </Button>
         
-        {pagesCount > 1 && (
-          <div className="flex items-center gap-1 bg-black/10 p-1 rounded-md border border-black/10">
-            <span className="text-[10px] font-black uppercase px-2">Ir a:</span>
-            {Array.from({ length: pagesCount }).map((_, i) => (
-              <Button 
-                key={i} 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => document.getElementById(`page-${i}`)?.scrollIntoView({ behavior: 'smooth' })}
-                className="h-7 w-8 p-0 font-black text-xs hover:bg-black hover:text-white border border-black/20 bg-white"
-              >
-                P{i + 1}
-              </Button>
-            ))}
-          </div>
-        )}
-        
         {editMode && (
           <div className="flex items-center gap-2 border-l border-black/20 pl-4">
-            <Button onClick={addPage} className="font-SpaceGrotesk font-medium bg-green-600 text-white hover:bg-green-700">
-              📄 + Página
-            </Button>
             <Button onClick={addBlock} className="font-SpaceGrotesk font-medium bg-blue-600 text-white hover:bg-blue-700">
               📝 + Bloque Texto
             </Button>
-            {pagesCount > 1 && (
-              <Button onClick={() => deletePage(pagesCount - 1)} className="font-SpaceGrotesk font-medium bg-red-800 text-white hover:bg-red-900">
-                🗑️ - Página
-              </Button>
-            )}
           </div>
         )}
         
-        <div className="flex items-center gap-2">
-          <Button 
-            onClick={() => {
-              const next = !showWebsiteBg;
-              setShowWebsiteBg(next);
-              saveLayoutSizes({ showWebsiteBg: next });
-            }} 
-            className={`font-SpaceGrotesk font-medium ${showWebsiteBg ? 'bg-blue-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}
-          >
-            {showWebsiteBg ? "🖼️ Quitar Fondo" : "🖼️ Poner Fondo"}
-          </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => {
+                const next = !showWebsiteBg;
+                setShowWebsiteBg(next);
+                saveLayoutSizes({ showWebsiteBg: next });
+              }} 
+              className={`font-SpaceGrotesk font-medium ${showWebsiteBg ? 'bg-blue-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}
+            >
+              {showWebsiteBg ? "🖼️ Quitar Fondo" : "🖼️ Poner Fondo"}
+            </Button>
+            {showWebsiteBg && (
+              <div className="flex items-center gap-2 bg-black/5 p-1 px-3 rounded-md border border-black/10 h-10">
+                <span className="text-xs font-SpaceGrotesk font-bold">Opacidad:</span>
+                <input 
+                  type="range" min="0" max="1" step="0.05" 
+                  value={websiteBgOpacity} 
+                  onChange={(e) => setWebsiteBgOpacity(Number(e.target.value))}
+                  onMouseUp={() => saveLayoutSizes({ websiteBgOpacity: Number(websiteBgOpacity) })}
+                  onTouchEnd={() => saveLayoutSizes({ websiteBgOpacity: Number(websiteBgOpacity) })}
+                  className="w-24 cursor-pointer accent-black" 
+                />
+                <span className="text-xs font-SpaceGrotesk font-bold w-8">{(websiteBgOpacity * 100).toFixed(0)}%</span>
+              </div>
+            )}
+          </div>
           {showWebsiteBg && (
-            <div className="flex items-center gap-2 bg-black/5 p-1 px-3 rounded-md border border-black/10 h-10">
-              <span className="text-xs font-SpaceGrotesk font-bold">Opacidad:</span>
-              <input 
-                type="range" min="0" max="1" step="0.05" 
-                value={websiteBgOpacity} 
-                onChange={(e) => setWebsiteBgOpacity(Number(e.target.value))}
-                onMouseUp={() => saveLayoutSizes({ websiteBgOpacity: Number(websiteBgOpacity) })}
-                onTouchEnd={() => saveLayoutSizes({ websiteBgOpacity: Number(websiteBgOpacity) })}
-                className="w-24 cursor-pointer accent-black" 
+            <div className="flex items-center gap-2 bg-black/5 p-2 rounded-md border border-black/10">
+              <span className="text-[10px] font-black uppercase whitespace-nowrap">Imagen de fondo:</span>
+              <Button
+                onClick={() => document.getElementById('bg-upload').click()}
+                className="h-7 px-3 text-[11px] bg-white text-black border border-black/30 hover:bg-gray-100 font-SpaceGrotesk font-bold"
+              >
+                {backgroundUrl ? "🔄 Cambiar imagen" : "📁 Subir imagen"}
+              </Button>
+              {backgroundUrl && (
+                <span className="text-[10px] text-green-700 font-bold">✓ Imagen cargada</span>
+              )}
+              <input
+                id="bg-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleBackgroundUpload}
+                className="hidden"
               />
-              <span className="text-xs font-SpaceGrotesk font-bold w-8">{(websiteBgOpacity * 100).toFixed(0)}%</span>
             </div>
           )}
         </div>

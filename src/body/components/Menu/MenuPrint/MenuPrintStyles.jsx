@@ -37,53 +37,57 @@ export const MenuPrintStyles = () => (
           size: 11in 17in !important;
           margin: 0 !important;
         }
-        
-        /* No usamos display:none en el body porque oculta el #root y rompe todo. 
-           Usamos visibility para que el contenido de impresión sea lo único visible. */
-        body {
+
+        /* 1. Oculta absolutamente todo en la página al imprimir */
+        body * {
           visibility: hidden !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-          width: 11in !important;
-          height: auto !important; /* Para soportar múltiples páginas */
-          overflow: visible !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
         }
 
+        /* 2. Hace visible ÚNICAMENTE el contenedor con el ID 'print-area' y todos sus hijos */
+        #print-area, #print-area * {
+          visibility: visible !important;
+        }
+
+        /* 3. Mueve el área de impresión a la esquina superior izquierda exacta de la hoja */
         #print-area {
-          visibility: visible !important;
           position: absolute !important;
-          top: 0 !important;
           left: 0 !important;
+          top: 6mm !important;
           width: 11in !important;
+          height: 17in !important;
           margin: 0 !important;
           padding: 0 !important;
-          display: block !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          z-index: 9999 !important;
         }
 
-        #print-area * {
-          visibility: visible !important;
+        /* 4. Cortar todo desbordamiento para garantizar 1 hoja tabloide */
+        html, body {
+          width: 11in !important;
+          height: 17in !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          background: transparent !important;
         }
 
-        /* Asegurar que las páginas se impriman correctamente */
         .page-container {
-          break-after: page !important;
-          page-break-after: always !important;
+          width: 11in !important;
+          height: 17in !important;
+          overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          position: relative !important;
           display: flex !important;
-          visibility: visible !important;
+          box-sizing: border-box !important;
+          break-inside: avoid !important;
         }
 
-        /* Forzar que todos los elementos permitan colores y fondos */
+        /* Forzar renderizado de colores en todo */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
-        }
-
-        img {
-          display: block !important;
-          opacity: 1 !important;
         }
       }
       

@@ -2,55 +2,66 @@ import React from "react";
 import MenuPrintHeader from "./MenuPrintHeader";
 import MenuPrintFooter from "./MenuPrintFooter";
 import MenuPrintColumn from "./MenuPrintColumn";
-import FondoWeb from "@/assets/fondo.png";
 
-const MenuPage = ({ 
-  page, 
-  pageIndex, 
-  showWebsiteBg, 
-  FondoWeb, 
-  websiteBgOpacity, 
-  colors, 
-  leng, 
-  leftColRatio, 
-  photosWidth, 
-  photosWidthUnit, 
-  editMode, 
-  handleImageUpload, 
-  fileInputRef, 
-  uploadingImage, 
-  Button, 
-  commonProps 
+const MenuPage = ({
+  page,
+  showWebsiteBg,
+  backgroundUrl,
+  websiteBgOpacity,
+  colors,
+  leng,
+  leftColRatio,
+  photosWidth,
+  photosWidthUnit,
+  editMode,
+  handleImageUpload,
+  fileInputRef,
+  uploadingImage,
+  Button,
+  commonProps
 }) => {
+  const hasBg = showWebsiteBg && backgroundUrl;
+
   return (
-    <div id={`page-${pageIndex}`} className={`bg-[#fcfbf9] ${showWebsiteBg ? 'print:bg-transparent' : 'print:bg-white'} text-black shadow-2xl w-[11in] h-[17in] border mx-auto overflow-hidden flex flex-col box-border print:break-after-page print:shadow-none print:border-none print:mx-0 print:my-0 relative page-container`}>
-      {showWebsiteBg && (
-        <img 
-          src={FondoWeb}
-          alt="background"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[-1]"
-          style={{ 
-            opacity: websiteBgOpacity 
+    <div
+      id="page-1"
+      className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border mx-auto flex flex-col box-border relative print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container"
+      style={hasBg ? {
+        backgroundImage: `url(${backgroundUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        WebkitPrintColorAdjust: 'exact',
+        printColorAdjust: 'exact',
+      } : { backgroundColor: '#fcfbf9' }}
+    >
+      {hasBg && (
+        <div
+          className="absolute inset-0 pointer-events-none print-bg-overlay"
+          style={{
+            backgroundColor: `rgba(255,255,255,${1 - websiteBgOpacity})`,
+            zIndex: 0,
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
           }}
         />
       )}
-      <div className={`p-4 h-full flex flex-col relative z-0 print:p-3 bg-transparent`}>
+
+      <div className="relative z-0 h-full flex flex-col p-4 print:p-3 bg-transparent">
 
         <MenuPrintHeader colors={colors} leng={leng} />
 
         <div className="flex-grow grid gap-4 items-start h-full relative z-10" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
-          
-          <MenuPrintColumn 
-            blocks={page.left || []} 
-            {...commonProps} 
-            pageIndex={pageIndex} 
+
+          <MenuPrintColumn
+            blocks={page.left || []}
+            {...commonProps}
             columnId="left"
           />
-          
-          <MenuPrintColumn 
-            blocks={page.center || []} 
-            {...commonProps} 
-            pageIndex={pageIndex} 
+
+          <MenuPrintColumn
+            blocks={page.center || []}
+            {...commonProps}
             columnId="center"
           />
 
@@ -67,11 +78,10 @@ const MenuPage = ({
             {(page.right || []).length === 0 && !editMode && (
               <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10">Sin elementos</div>
             )}
-            
-            <MenuPrintColumn 
-              blocks={page.right || []} 
-              {...commonProps} 
-              pageIndex={pageIndex} 
+
+            <MenuPrintColumn
+              blocks={page.right || []}
+              {...commonProps}
               columnId="right"
             />
           </div>
@@ -80,12 +90,7 @@ const MenuPage = ({
 
         <MenuPrintFooter colors={colors} />
       </div>
-      
-      {editMode && (
-        <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 text-[10px] rounded print:hidden font-black uppercase">
-          Página {pageIndex + 1}
-        </div>
-      )}
+
     </div>
   );
 };

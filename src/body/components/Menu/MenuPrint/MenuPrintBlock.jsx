@@ -4,13 +4,13 @@ import { CardGridPrintMatrix } from "@/components/ui/cardGridPrintMatrix";
 import QrMenu from "@/assets/QR MENU.png";
 import PointingHand from "@/assets/icons/POINTINGHAND.svg";
 import MenuPrintInfo from "../MenuPrintInfo";
-import { 
-  CAFE, BEBIDAS, CAFE_METODOS, CAFE_ESPRESSO, 
-  BEBIDAS_FRIAS, BEBIDAS_CALIENTES, 
-  DESAYUNO, DESAYUNO_DULCE, DESAYUNO_SALADO, 
-  PANADERIA, PANADERIA_REPOSTERIA_SALADA, 
-  REPOSTERIA, PANADERIA_REPOSTERIA_DULCE, 
-  TARDEO, ADICIONES_BEBIDAS, ADICIONES_COMIDAS 
+import {
+  CAFE, BEBIDAS, CAFE_METODOS, CAFE_ESPRESSO,
+  BEBIDAS_FRIAS, BEBIDAS_CALIENTES,
+  DESAYUNO, DESAYUNO_DULCE, DESAYUNO_SALADO,
+  PANADERIA, PANADERIA_REPOSTERIA_SALADA,
+  REPOSTERIA, PANADERIA_REPOSTERIA_DULCE,
+  TARDEO, ADICIONES_BEBIDAS, ADICIONES_COMIDAS
 } from "../../../../redux/actions-types";
 import { headerStyles } from "./MenuPrintStyles";
 
@@ -40,7 +40,7 @@ const MenuPrintBlock = ({
   pagesCount,
   deleteBlock
 }) => {
-  
+
   const renderBlockControls = (id, showColumnToggle = false) => {
     if (!editMode) return null;
     const isFirstPage = pageIndex === 0;
@@ -53,10 +53,10 @@ const MenuPrintBlock = ({
     return (
       <div className="absolute -top-3 -right-3 flex flex-col gap-1 z-20 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
         {showColumnToggle && (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="h-6 w-12 p-0 text-[8px] rounded-sm border border-black bg-blue-50 hover:bg-blue-100 font-bold" 
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 w-12 p-0 text-[8px] rounded-sm border border-black bg-blue-50 hover:bg-blue-100 font-bold"
             onClick={() => {
               const nextCols = currentCols === 2 ? 1 : 2;
               saveGroupDescriptions({ ...groupDescriptions, [colKey]: nextCols });
@@ -124,7 +124,7 @@ const MenuPrintBlock = ({
         {renderBlockControls(id, true)}
         <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
           {editMode ? (
-            <input 
+            <input
               className="font-black text-xl uppercase leading-none m-0 bg-transparent border-none outline-none w-full"
               style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}
               value={title}
@@ -147,7 +147,7 @@ const MenuPrintBlock = ({
             saveGroupDescriptions={saveGroupDescriptions}
             className="p-0 m-0 w-full"
             // We need to tell MenuPrintInfo which key to use
-            storageKey={id} 
+            storageKey={id}
           />
         </div>
       </div>
@@ -322,7 +322,7 @@ const MenuPrintBlock = ({
                   e.target.src = "https://placehold.co/600x400?text=Imagen+Menu";
                 }}
                 className="w-full h-full object-cover rounded-none border grayscale-[30%] contrast-[1.1] brightness-[1.05]"
-                style={{ 
+                style={{
                   borderColor: colors.imgBorder || '#000000'
                 }}
               />

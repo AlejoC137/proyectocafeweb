@@ -301,7 +301,7 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
     const gridColsClass = columns === 3 ? "grid-cols-3" : columns === 2 ? "grid-cols-2" : "grid-cols-1";
 
     return (
-        <div className="mb-2 break-inside-avoid">
+        <div className="mb-0 break-inside-avoid">
             <div className="flex items-center mb-1.5 ">
                 <span className="font-black text-xs uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px]" style={{ backgroundColor: colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg, color: colors?.categoryTitle, borderColor: colors?.categoryBorder, boxShadow: `2px 2px 0px 0px ${colors?.categoryBorder}` }}>
                     {titleText}

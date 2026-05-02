@@ -5,12 +5,12 @@ const MenuPrintColumn = ({ blocks, pageIndex, columnId, ...props }) => {
   return (
     <div className="flex flex-col gap-3">
       {blocks.map(blockId => (
-        <MenuPrintBlock 
-          key={blockId} 
-          blockId={blockId} 
+        <MenuPrintBlock
+          key={blockId}
+          blockId={blockId}
           pageIndex={pageIndex}
           columnId={columnId}
-          {...props} 
+          {...props}
         />
       ))}
     </div>
