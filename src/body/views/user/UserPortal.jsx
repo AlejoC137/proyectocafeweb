@@ -16,7 +16,22 @@ import {
   QrCode,
   Bell,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  User,
+  Mail,
+  ShieldCheck,
+  Phone,
+  LogOut,
+  TrendingUp,
+  Calendar,
+  Utensils,
+  ChevronRight,
+  Gift,
+  History,
+  Heart,
+  MapPin,
+  AlertTriangle,
+  Settings
 } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 import ClientForm from "../ventaCompra/ClientForm";
@@ -156,7 +171,7 @@ export default function UserPortal() {
     } finally {
       setLoading(false);
     }
-    
+
     fetchUserMessages(user._id);
   };
 
@@ -168,9 +183,9 @@ export default function UserPortal() {
         .eq("_id", messageId);
 
       if (error) throw error;
-      
+
       // Actualizar localmente
-      setUserMessages(prev => prev.map(m => 
+      setUserMessages(prev => prev.map(m =>
         m._id === messageId ? { ...m, isRead: true } : m
       ));
     } catch (err) {
@@ -188,7 +203,14 @@ export default function UserPortal() {
         .or(`userId.eq.${userId},userId.is.null`)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42P01') {
+          // Table does not exist, fail gracefully
+          setUserMessages([]);
+          return;
+        }
+        throw error;
+      }
       setUserMessages(data || []);
     } catch (err) {
       console.error("Error fetching messages:", err);
@@ -378,14 +400,16 @@ export default function UserPortal() {
                 {[
                   { id: "overview", label: "Dashboard", icon: <TrendingUp className="w-4 h-4" /> },
                   { id: "events", label: "Eventos", icon: <Calendar className="w-4 h-4" /> },
-                  { id: "messages", label: "Mensajes", icon: (
-                    <div className="relative">
-                      <Bell className="w-4 h-4" />
-                      {userMessages.some(m => !m.isRead) && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                      )}
-                    </div>
-                  ) },
+                  {
+                    id: "messages", label: "Mensajes", icon: (
+                      <div className="relative">
+                        <Bell className="w-4 h-4" />
+                        {userMessages.some(m => !m.isRead) && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                        )}
+                      </div>
+                    )
+                  },
                   { id: "diet", label: "Alimentación", icon: <Utensils className="w-4 h-4" /> },
                   { id: "history", label: "Compras", icon: <History className="w-4 h-4" /> },
                   { id: "settings", label: "Perfil", icon: <Settings className="w-4 h-4" /> },
@@ -438,7 +462,7 @@ export default function UserPortal() {
               <div className="space-y-6 animate-in fade-in duration-500">
                 {/* Banner de Bienvenida o Mensaje Importante */}
                 {userMessages.length > 0 && userMessages[0] && (
-                  <div 
+                  <div
                     onClick={() => setActiveTab("messages")}
                     className="bg-gradient-to-r from-indigo-600 to-purple-600 p-1 rounded-3xl shadow-xl cursor-pointer hover:scale-[1.01] transition-all"
                   >
@@ -462,8 +486,8 @@ export default function UserPortal() {
                     {userEvents.length > 0 ? (
                       <div className="space-y-4 pt-2">
                         {userEvents.slice(0, 3).map((reg) => (
-                          <div 
-                            key={reg._id} 
+                          <div
+                            key={reg._id}
                             onClick={() => navigate(`/EventosOffer?id=${reg.agenda?._id}`)}
                             className="flex justify-between items-center p-4 bg-sage-green/5 rounded-2xl border border-sage-green/10 hover:border-sage-green/30 transition-all cursor-pointer hover:scale-[1.01] shadow-sm"
                           >
@@ -573,8 +597,8 @@ export default function UserPortal() {
                 <div className="space-y-6">
                   {userEvents.length > 0 ? (
                     userEvents.map((reg) => (
-                      <div 
-                        key={reg._id} 
+                      <div
+                        key={reg._id}
                         onClick={() => navigate(`/EventosOffer?id=${reg.agenda?._id}`)}
                         className="flex flex-col md:flex-row gap-6 p-6 border rounded-3xl hover:border-sage-green/40 hover:shadow-lg transition-all group cursor-pointer"
                       >
@@ -634,33 +658,31 @@ export default function UserPortal() {
                     <div className="text-center py-20 text-gray-400">Cargando mensajes...</div>
                   ) : userMessages.length > 0 ? (
                     userMessages.map((msg) => (
-                      <div 
-                        key={msg._id} 
-                        className={`p-6 rounded-3xl border transition-all ${
-                          msg.type === 'welcome' ? 'bg-emerald-50/50 border-emerald-100' : 
-                          msg.type === 'promo' ? 'bg-amber-50/50 border-amber-100' : 
-                          'bg-indigo-50/50 border-indigo-100'
-                        }`}
+                      <div
+                        key={msg._id}
+                        className={`p-6 rounded-3xl border transition-all ${msg.type === 'welcome' ? 'bg-emerald-50/50 border-emerald-100' :
+                            msg.type === 'promo' ? 'bg-amber-50/50 border-amber-100' :
+                              'bg-indigo-50/50 border-indigo-100'
+                          }`}
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl ${
-                              msg.type === 'welcome' ? 'bg-emerald-100 text-emerald-600' : 
-                              msg.type === 'promo' ? 'bg-amber-100 text-amber-600' : 
-                              'bg-indigo-100 text-indigo-600'
-                            }`}>
-                              {msg.type === 'welcome' ? <Sparkles size={18} /> : 
-                               msg.type === 'promo' ? <Gift size={18} /> : 
-                               <MessageSquare size={18} />}
+                            <div className={`p-2 rounded-xl ${msg.type === 'welcome' ? 'bg-emerald-100 text-emerald-600' :
+                                msg.type === 'promo' ? 'bg-amber-100 text-amber-600' :
+                                  'bg-indigo-100 text-indigo-600'
+                              }`}>
+                              {msg.type === 'welcome' ? <Sparkles size={18} /> :
+                                msg.type === 'promo' ? <Gift size={18} /> :
+                                  <MessageSquare size={18} />}
                             </div>
                             <div>
                               <h3 className="font-bold text-gray-900">{msg.title}</h3>
                               <p className="text-[10px] text-gray-500 font-medium">
-                                {new Date(msg.created_at).toLocaleDateString('es-CO', { 
-                                  day: 'numeric', 
-                                  month: 'long', 
-                                  hour: '2-digit', 
-                                  minute: '2-digit' 
+                                {new Date(msg.created_at).toLocaleDateString('es-CO', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
                                 })}
                               </p>
                             </div>
@@ -669,7 +691,7 @@ export default function UserPortal() {
                             <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Global</span>
                           )}
                           {!msg.isRead && (
-                            <button 
+                            <button
                               onClick={() => handleMarkAsRead(msg._id)}
                               className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold hover:bg-blue-700 transition-colors"
                             >
