@@ -6,7 +6,7 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   RefreshCw,
   MessageSquare,
   Send,
@@ -105,7 +105,7 @@ export default function UserManager() {
       // Usamos supabase directamente para asegurar que mapee a "userPreferences" con mayúsculas si es necesario,
       // pero usar updateItem del Redux debería funcionar.
       await dispatch(updateItem(
-        editForm._id, 
+        editForm._id,
         {
           name: editForm.name,
           email: editForm.email,
@@ -115,7 +115,7 @@ export default function UserManager() {
           loyalty_points: editForm.loyalty_points ? parseInt(editForm.loyalty_points) : 0,
           acepta_promociones: editForm.acepta_promociones,
           acepta_nuevos_eventos: editForm.acepta_nuevos_eventos,
-        }, 
+        },
         USER_PREFERENCES
       ));
       alert("Usuario actualizado correctamente");
@@ -131,7 +131,7 @@ export default function UserManager() {
 
   const handleDeleteUser = async () => {
     if (!selectedUser || !selectedUser._id) return;
-    
+
     if (window.confirm(`¿Estás seguro de que deseas eliminar a ${selectedUser.name || selectedUser.email}? Esta acción no se puede deshacer.`)) {
       setIsUpdating(true);
       try {
@@ -159,7 +159,7 @@ export default function UserManager() {
       return;
     }
 
-    const confirmMsg = isMassive 
+    const confirmMsg = isMassive
       ? `¿Estás seguro de enviar este mensaje a TODOS los ${allUsers.length} usuarios?`
       : `¿Enviar mensaje a ${selectedUser.name || selectedUser.email}?`;
 
@@ -177,7 +177,7 @@ export default function UserManager() {
             userId: null, // Masivo
             created_at: new Date().toISOString(),
           });
-        
+
         if (error) throw error;
         alert("Mensaje masivo enviado correctamente al portal");
         setShowMassiveMessage(false);
@@ -191,7 +191,7 @@ export default function UserManager() {
             userId: selectedUser._id,
             created_at: new Date().toISOString(),
           });
-        
+
         if (error) throw error;
         alert("Mensaje enviado correctamente al portal del usuario");
       }
@@ -216,19 +216,26 @@ export default function UserManager() {
     }
 
     const name = selectedUser.name || "amigo";
-    const content = typeof messageForm.content === 'function' 
-      ? messageForm.content(name) 
+    const content = typeof messageForm.content === 'function'
+      ? messageForm.content(name)
       : messageForm.content;
-    
-    // Encode the content to preserve emojis and formatting.
-    const fullText = encodeURIComponent(content);
-    
+
+    // Copiar el mensaje completo al portapapeles
+    navigator.clipboard.writeText(content).then(() => {
+      // El mensaje ya está en el portapapeles
+    }).catch(err => {
+      console.error('Error al copiar al portapapeles: ', err);
+      alert("No se pudo copiar automáticamente. Por favor cópialo manualmente.");
+    });
+
+    // Enviar solo "¡Hola! " en la URL para evitar problemas de encoding
+    const fullText = encodeURIComponent("¡Hola!");
+
     // Format phone: remove non-digits and ensure country code (default 57 for Colombia if 10 digits)
     let phone = String(selectedUser.phone).replace(/\D/g, '');
     if (phone.length === 10) phone = '57' + phone;
-    
-    // Using api.whatsapp.com/send which is more robust for encoded text
-    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${fullText}`, "_blank");
+
+    window.open(`https://api.whatsapp.com/send/?phone=${phone}&text=${fullText}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -236,8 +243,8 @@ export default function UserManager() {
       <div className="flex flex-col lg:flex-row gap-6 p-4">
         {/* Lista de Usuarios */}
         <div className={`w-full ${selectedUser ? 'lg:w-1/3 border-r pr-4' : 'lg:w-full'}`}>
-          <ContentCard 
-            title="Manejador de Usuarios" 
+          <ContentCard
+            title="Manejador de Usuarios"
             icon={<Users className="w-5 h-5 text-blue-500" />}
           >
             <div className="flex gap-2 mb-4">
@@ -254,8 +261,8 @@ export default function UserManager() {
               <Button onClick={fetchUsers} variant="outline" title="Refrescar">
                 <RefreshCw className="w-4 h-4" />
               </Button>
-              <Button 
-                onClick={() => setShowMassiveMessage(!showMassiveMessage)} 
+              <Button
+                onClick={() => setShowMassiveMessage(!showMassiveMessage)}
                 variant={showMassiveMessage ? "secondary" : "default"}
                 className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
               >
@@ -269,30 +276,30 @@ export default function UserManager() {
                   <Bell className="w-4 h-4" /> Comunicado Masivo
                 </h4>
                 <div className="space-y-3">
-                  <Input 
-                    placeholder="Título del anuncio..." 
+                  <Input
+                    placeholder="Título del anuncio..."
                     value={messageForm.title}
-                    onChange={(e) => setMessageForm({...messageForm, title: e.target.value})}
+                    onChange={(e) => setMessageForm({ ...messageForm, title: e.target.value })}
                     className="bg-white"
                   />
-                  <textarea 
-                    placeholder="Escribe el mensaje para todos los usuarios..." 
+                  <textarea
+                    placeholder="Escribe el mensaje para todos los usuarios..."
                     value={messageForm.content}
-                    onChange={(e) => setMessageForm({...messageForm, content: e.target.value})}
+                    onChange={(e) => setMessageForm({ ...messageForm, content: e.target.value })}
                     className="w-full p-2 border rounded-md text-sm bg-white min-h-[80px]"
                   />
                   <div className="flex justify-between items-center">
-                    <select 
+                    <select
                       className="text-xs p-1.5 border rounded-md"
                       value={messageForm.type}
-                      onChange={(e) => setMessageForm({...messageForm, type: e.target.value})}
+                      onChange={(e) => setMessageForm({ ...messageForm, type: e.target.value })}
                     >
                       <option value="announcement">📢 Anuncio</option>
                       <option value="promo">🎁 Promoción</option>
                       <option value="welcome">👋 Bienvenida</option>
                     </select>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       disabled={isSendingMessage}
                       onClick={() => handleSendMessage(true)}
                       className="bg-purple-600 hover:bg-purple-700"
@@ -301,8 +308,8 @@ export default function UserManager() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => setMessageForm({
                         title: MESSAGE_TEMPLATES.WELCOME.title,
@@ -313,8 +320,8 @@ export default function UserManager() {
                     >
                       Bienvenida Gral
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => setMessageForm({
                         title: MESSAGE_TEMPLATES.PROMO.title,
@@ -334,8 +341,8 @@ export default function UserManager() {
               {filteredUsers.length > 0 ? (
                 <ul className="divide-y">
                   {filteredUsers.map((user) => (
-                    <li 
-                      key={user._id} 
+                    <li
+                      key={user._id}
                       onClick={() => handleSelectUser(user)}
                       className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors ${selectedUser?._id === user._id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
                     >
@@ -363,13 +370,38 @@ export default function UserManager() {
                 </div>
               )}
             </div>
+
+            {/* Resumen Estadístico */}
+            <div className="mt-4 bg-emerald-50 rounded-lg border border-emerald-200 p-4 shadow-sm animate-in fade-in">
+              <h4 className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Resumen del Sistema
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white p-3 rounded-md border border-emerald-100 flex flex-col items-center justify-center text-center">
+                  <span className="text-2xl font-black text-slate-700">{allUsers.length}</span>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold mt-1">Total Registrados</span>
+                </div>
+                <div className="bg-white p-3 rounded-md border border-emerald-100 flex flex-col items-center justify-center text-center">
+                  <span className="text-2xl font-black text-amber-600">
+                    {new Intl.NumberFormat('es-CO').format(allUsers.reduce((acc, user) => acc + (parseInt(user.loyalty_points) || 0), 0))}
+                  </span>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold mt-1">Puntos Activos</span>
+                </div>
+                <div className="bg-white p-2 rounded-md border border-emerald-100 flex flex-col items-center justify-center text-center col-span-2">
+                  <span className="text-sm font-bold text-indigo-600">
+                    {allUsers.filter(u => u.acepta_promociones).length} usuarios ({Math.round((allUsers.filter(u => u.acepta_promociones).length / (allUsers.length || 1)) * 100)}%)
+                  </span>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold mt-1">Aceptan Promociones 🎁</span>
+                </div>
+              </div>
+            </div>
           </ContentCard>
         </div>
 
         {/* Panel de Detalles / Edición de Usuario */}
         {selectedUser && (
           <div className="w-full lg:w-2/3">
-            <ContentCard 
+            <ContentCard
               title={`Perfil: ${selectedUser.name || 'Sin Nombre'}`}
               className="sticky top-4"
             >
@@ -378,16 +410,16 @@ export default function UserManager() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                
+
                 {/* Formulario Izquierda */}
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
                       <Users className="w-4 h-4" /> Nombre Completo
                     </label>
-                    <Input 
-                      name="name" 
-                      value={editForm.name || ""} 
+                    <Input
+                      name="name"
+                      value={editForm.name || ""}
                       onChange={handleFormChange}
                       placeholder="Nombre del usuario"
                     />
@@ -397,10 +429,10 @@ export default function UserManager() {
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
                       <Mail className="w-4 h-4" /> Email
                     </label>
-                    <Input 
-                      name="email" 
+                    <Input
+                      name="email"
                       type="email"
-                      value={editForm.email || ""} 
+                      value={editForm.email || ""}
                       onChange={handleFormChange}
                       placeholder="correo@ejemplo.com"
                     />
@@ -410,10 +442,10 @@ export default function UserManager() {
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
                       <Phone className="w-4 h-4" /> Teléfono
                     </label>
-                    <Input 
-                      name="phone" 
+                    <Input
+                      name="phone"
                       type="number"
-                      value={editForm.phone || ""} 
+                      value={editForm.phone || ""}
                       onChange={handleFormChange}
                       placeholder="Ej: 3001234567"
                     />
@@ -423,9 +455,9 @@ export default function UserManager() {
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
                       <MapPin className="w-4 h-4" /> Dirección
                     </label>
-                    <Input 
-                      name="address" 
-                      value={editForm.address || ""} 
+                    <Input
+                      name="address"
+                      value={editForm.address || ""}
                       onChange={handleFormChange}
                       placeholder="Dirección de entrega"
                     />
@@ -435,10 +467,10 @@ export default function UserManager() {
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
                       <Save className="w-4 h-4 text-purple-600" /> Contraseña
                     </label>
-                    <Input 
-                      name="password" 
+                    <Input
+                      name="password"
                       type="text"
-                      value={editForm.password || ""} 
+                      value={editForm.password || ""}
                       onChange={handleFormChange}
                       placeholder="Contraseña del usuario"
                     />
@@ -447,12 +479,12 @@ export default function UserManager() {
                   <div className="bg-blue-50 p-3 rounded-md border border-blue-100 space-y-3">
                     <p className="text-xs font-bold text-blue-800 uppercase tracking-wider">Marketing / Comunicación</p>
                     <div className="flex items-center space-x-2">
-                      <input 
-                        type="checkbox" 
-                        id="acepta_promociones" 
+                      <input
+                        type="checkbox"
+                        id="acepta_promociones"
                         name="acepta_promociones"
-                        checked={editForm.acepta_promociones || false} 
-                        onChange={(e) => setEditForm({...editForm, acepta_promociones: e.target.checked})}
+                        checked={editForm.acepta_promociones || false}
+                        onChange={(e) => setEditForm({ ...editForm, acepta_promociones: e.target.checked })}
                         className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
                       />
                       <label htmlFor="acepta_promociones" className="text-xs font-medium text-blue-900 cursor-pointer">
@@ -460,12 +492,12 @@ export default function UserManager() {
                       </label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <input 
-                        type="checkbox" 
-                        id="acepta_nuevos_eventos" 
+                      <input
+                        type="checkbox"
+                        id="acepta_nuevos_eventos"
                         name="acepta_nuevos_eventos"
-                        checked={editForm.acepta_nuevos_eventos || false} 
-                        onChange={(e) => setEditForm({...editForm, acepta_nuevos_eventos: e.target.checked})}
+                        checked={editForm.acepta_nuevos_eventos || false}
+                        onChange={(e) => setEditForm({ ...editForm, acepta_nuevos_eventos: e.target.checked })}
                         className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
                       />
                       <label htmlFor="acepta_nuevos_eventos" className="text-xs font-medium text-blue-900 cursor-pointer">
@@ -482,10 +514,10 @@ export default function UserManager() {
                       <Gift className="w-5 h-5" /> Puntos de Lealtad
                     </label>
                     <div className="flex gap-2 items-center">
-                      <Input 
-                        name="loyalty_points" 
+                      <Input
+                        name="loyalty_points"
                         type="number"
-                        value={editForm.loyalty_points || 0} 
+                        value={editForm.loyalty_points || 0}
                         onChange={handleFormChange}
                         className="bg-white max-w-[120px]"
                       />
@@ -529,21 +561,21 @@ export default function UserManager() {
                     <label className="text-sm font-bold flex items-center gap-2 mb-2 border-b border-emerald-200 pb-2 text-emerald-800">
                       <History className="w-4 h-4" /> Perfil Dietético y Pedidos
                     </label>
-                    
+
                     {/* Preferencias de LunchByOrder */}
                     {selectedUser.userPreferences ? (
                       <div className="mb-3 space-y-2">
                         <p className="text-[10px] font-bold text-emerald-700 uppercase">Perfil Dietético:</p>
                         <div className="text-[11px] text-gray-700 bg-white/50 p-2 rounded border border-emerald-100 flex flex-col gap-1">
                           {(() => {
-                            const prefs = typeof selectedUser.userPreferences === 'string' 
-                              ? JSON.parse(selectedUser.userPreferences || '{}') 
+                            const prefs = typeof selectedUser.userPreferences === 'string'
+                              ? JSON.parse(selectedUser.userPreferences || '{}')
                               : (selectedUser.userPreferences || {});
-                            
+
                             const allergies = Object.entries(prefs.Alergies || {})
                               .filter(([_, val]) => val)
                               .map(([key]) => key);
-                            
+
                             return (
                               <>
                                 {allergies.length > 0 && <p>⚠️ <span className="font-bold">Alergias:</span> {allergies.join(", ")}</p>}
@@ -565,14 +597,14 @@ export default function UserManager() {
                       {(() => {
                         let lunches = [];
                         try {
-                          lunches = typeof selectedUser.ordered_lunches === 'string' 
-                            ? JSON.parse(selectedUser.ordered_lunches || '[]') 
+                          lunches = typeof selectedUser.ordered_lunches === 'string'
+                            ? JSON.parse(selectedUser.ordered_lunches || '[]')
                             : (selectedUser.ordered_lunches || []);
                           if (!Array.isArray(lunches)) lunches = [];
                         } catch (e) {
                           console.error("Error parsing ordered_lunches", e);
                         }
-                        
+
                         return lunches.length > 0 ? (
                           lunches.map((lunch, idx) => (
                             <div key={idx} className="bg-white/80 p-1.5 rounded flex justify-between items-center border border-emerald-50">
@@ -593,22 +625,22 @@ export default function UserManager() {
                       <MessageSquare className="w-4 h-4" /> Enviar Mensaje Directo
                     </label>
                     <div className="space-y-3">
-                      <Input 
-                        placeholder="Título (ej: ¡Bienvenido!)" 
+                      <Input
+                        placeholder="Título (ej: ¡Bienvenido!)"
                         value={messageForm.title}
-                        onChange={(e) => setMessageForm({...messageForm, title: e.target.value})}
+                        onChange={(e) => setMessageForm({ ...messageForm, title: e.target.value })}
                         className="bg-white border-indigo-200 focus:ring-indigo-500"
                       />
-                      <textarea 
-                        placeholder="Escribe el mensaje personal..." 
+                      <textarea
+                        placeholder="Escribe el mensaje personal..."
                         value={messageForm.content}
-                        onChange={(e) => setMessageForm({...messageForm, content: e.target.value})}
+                        onChange={(e) => setMessageForm({ ...messageForm, content: e.target.value })}
                         className="w-full p-3 border border-indigo-200 rounded-2xl text-sm bg-white min-h-[100px] focus:ring-2 focus:ring-indigo-500 outline-none"
                       />
                       <div className="flex justify-between items-center">
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => setMessageForm({
                               title: MESSAGE_TEMPLATES.WELCOME.title,
@@ -619,8 +651,8 @@ export default function UserManager() {
                           >
                             Bienvenida
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => setMessageForm({
                               title: MESSAGE_TEMPLATES.PROMO.title,
@@ -631,8 +663,8 @@ export default function UserManager() {
                           >
                             Promo
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => setMessageForm({
                               title: MESSAGE_TEMPLATES.EVENT.title,
@@ -645,8 +677,8 @@ export default function UserManager() {
                           </Button>
                         </div>
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             disabled={isSendingMessage}
                             onClick={() => handleSendMessage(false)}
                             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
@@ -654,8 +686,8 @@ export default function UserManager() {
                           >
                             <Send className="w-3 h-3" /> Portal
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             onClick={handleWhatsAppMessage}
                             className="bg-green-600 hover:bg-green-700 gap-2"
                             title="Enviar por WhatsApp"
@@ -672,15 +704,15 @@ export default function UserManager() {
 
               {/* Botones de Acción */}
               <div className="mt-6 pt-4 border-t flex justify-between">
-                <Button 
-                  disabled={isUpdating} 
-                  variant="destructive" 
+                <Button
+                  disabled={isUpdating}
+                  variant="destructive"
                   onClick={handleDeleteUser}
                   className="gap-2"
                 >
                   <Trash2 className="w-4 h-4" /> Eliminar Usuario
                 </Button>
-                
+
                 <div className="flex gap-2">
                   <Button disabled={isUpdating} variant="outline" onClick={closeUserPanel}>
                     Cancelar

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getAllFromTable, updateItem } from "../../../redux/actions";
 import { USER_PREFERENCES } from "../../../redux/actions-types";
 import PageLayout from "../../../components/ui/page-layout";
@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 import ClientForm from "../ventaCompra/ClientForm";
+import { MESSAGE_TEMPLATES } from "../../../utils/messageTemplates";
 
 export default function UserPortal() {
   const dispatch = useDispatch();
@@ -51,7 +52,12 @@ export default function UserPortal() {
   const [showPassword, setShowPassword] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState("overview"); // overview, events, history, diet, settings, messages
-  const [isRegistering, setIsRegistering] = useState(false);
+  const location = useLocation();
+  const [isRegistering, setIsRegistering] = useState(location.pathname.includes("/Registro"));
+  
+  useEffect(() => {
+    setIsRegistering(location.pathname.includes("/Registro"));
+  }, [location.pathname]);
   const [userMessages, setUserMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
@@ -172,46 +178,39 @@ export default function UserPortal() {
       setLoading(false);
     }
 
-    fetchUserMessages(user._id);
+    fetchUserMessages(user);
   };
 
   const handleMarkAsRead = async (messageId) => {
-    try {
-      const { error } = await supabase
-        .from("UserMessages")
-        .update({ isRead: true })
-        .eq("_id", messageId);
-
-      if (error) throw error;
-
-      // Actualizar localmente
-      setUserMessages(prev => prev.map(m =>
-        m._id === messageId ? { ...m, isRead: true } : m
-      ));
-    } catch (err) {
-      console.error("Error marking message as read:", err);
-    }
+    // Actualizar localmente
+    setUserMessages(prev => prev.map(m =>
+      m._id === messageId ? { ...m, isRead: true } : m
+    ));
   };
 
-  const fetchUserMessages = async (userId) => {
+  const fetchUserMessages = async (userObj) => {
     setMessagesLoading(true);
     try {
-      // Buscamos mensajes para el usuario específico O mensajes globales (userId is null)
-      const { data, error } = await supabase
-        .from("UserMessages")
-        .select("*")
-        .or(`userId.eq.${userId},userId.is.null`)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        if (error.code === '42P01') {
-          // Table does not exist, fail gracefully
-          setUserMessages([]);
-          return;
+      // Usar plantillas estáticas temporalmente en lugar de tabla
+      const localMessages = [
+        {
+          _id: "msg_welcome",
+          title: MESSAGE_TEMPLATES.WELCOME.title,
+          content: MESSAGE_TEMPLATES.WELCOME.content(userObj.name || 'Invitado'),
+          type: MESSAGE_TEMPLATES.WELCOME.type,
+          isRead: false,
+          created_at: new Date().toISOString()
+        },
+        {
+          _id: "msg_promo",
+          title: MESSAGE_TEMPLATES.PROMO.title,
+          content: MESSAGE_TEMPLATES.PROMO.content,
+          type: MESSAGE_TEMPLATES.PROMO.type,
+          isRead: false,
+          created_at: new Date().toISOString()
         }
-        throw error;
-      }
-      setUserMessages(data || []);
+      ];
+      setUserMessages(localMessages);
     } catch (err) {
       console.error("Error fetching messages:", err);
     } finally {
@@ -265,7 +264,10 @@ export default function UserPortal() {
           <div className="max-w-md w-full">
             {isRegistering ? (
               <ClientForm
-                onClose={() => setIsRegistering(false)}
+                onClose={() => {
+                  setIsRegistering(false);
+                  navigate("/UserPortal");
+                }}
                 initialData={accessInput}
               />
             ) : (
@@ -364,7 +366,7 @@ export default function UserPortal() {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => setIsRegistering(true)}
+                    onClick={() => navigate("/UserPortal/Registro")}
                     className="w-full border-sage-green text-sage-green hover:bg-sage-green/5 font-bold"
                   >
                     Crear mi cuenta ahora
@@ -469,7 +471,9 @@ export default function UserPortal() {
                     <div className="bg-white/10 backdrop-blur-md p-6 rounded-[22px] text-white flex justify-between items-center">
                       <div className="flex items-center gap-4">
                         <div className="bg-white/20 p-3 rounded-2xl animate-bounce">
-                          {userMessages[0].type === 'welcome' ? <Sparkles className="w-6 h-6" /> : <Bell className="w-6 h-6" />}
+                          <span className="text-2xl">
+                            {userMessages[0].type === 'welcome' ? '✨' : userMessages[0].type === 'promo' ? '🎁' : '💬'}
+                          </span>
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Mensaje Reciente</p>
@@ -671,9 +675,9 @@ export default function UserPortal() {
                                 msg.type === 'promo' ? 'bg-amber-100 text-amber-600' :
                                   'bg-indigo-100 text-indigo-600'
                               }`}>
-                              {msg.type === 'welcome' ? <Sparkles size={18} /> :
-                                msg.type === 'promo' ? <Gift size={18} /> :
-                                  <MessageSquare size={18} />}
+                              <span className="text-lg">
+                                {msg.type === 'welcome' ? '✨' : msg.type === 'promo' ? '🎁' : '💬'}
+                              </span>
                             </div>
                             <div>
                               <h3 className="font-bold text-gray-900">{msg.title}</h3>

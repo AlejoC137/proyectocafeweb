@@ -123,6 +123,7 @@ function App() {
             <Route path="/staff-manager"                     element={<StaffManager />} />
             <Route path="/user-manager"                      element={<UserManager />} />
             <Route path="/UserPortal"                        element={<UserPortal />} />
+            <Route path="/UserPortal/Registro"               element={<UserPortal />} />
             <Route path="/EventosOffer"                      element={<EventosOffer />} />
             <Route path="/staff-details/:cc"                 element={<StaffDetailView />} />
             <Route path="/staff-manager/:cc"                 element={<StaffDetailView />} />
