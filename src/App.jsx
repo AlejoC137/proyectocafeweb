@@ -52,6 +52,8 @@ const Model                = lazy(() => import('./body/views/ventaCompra/Model')
 const ModeloProyecto       = lazy(() => import('./body/views/ventaCompra/ModeloProyecto'));
 const GastosCalculadosMateriales = lazy(() => import('./body/views/ventaCompra/GastosCalculadosMateriales'));
 const ProductosFinanciero  = lazy(() => import('./body/views/ventaCompra/ProductosFinanciero'));
+const RecruitmentPrint      = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
+
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -135,6 +137,8 @@ function App() {
             <Route path="/ModeloProyecto/:year/:month"       element={<ModeloProyecto />} />
             <Route path="/gastos-calculados"                 element={<GastosCalculadosMateriales />} />
             <Route path="/productosFinanciero"               element={<ProductosFinanciero />} />
+            <Route path="/RecruitmentPrint"                  element={<RecruitmentPrint />} />
+
             <Route path="*"                                  element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
           </Routes>
         </Suspense>
