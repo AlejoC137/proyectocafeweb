@@ -666,6 +666,11 @@ function RecetaModal({ item, onClose }) {
                 {recetaSource === "RecetasProduccion" && (
                   <span className="text-[9px] font-bold bg-amber-500/80 text-white px-2 py-0.5 rounded-full">Producción</span>
                 )}
+                {receta.precioUnitario > 0 && (
+                  <span className="flex items-center gap-1 text-[9px] font-medium bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                    <DollarSign className="h-2.5 w-2.5" />{formatCurrency(receta.precioUnitario)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
