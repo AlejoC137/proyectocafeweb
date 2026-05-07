@@ -233,6 +233,7 @@ function RecetaModal({ item, onClose }) {
         let source = "Recetas";
         if (!result) { result = await getRecepie(id, "RecetasProduccion"); source = "RecetasProduccion"; }
         if (!result) throw new Error("Receta no encontrada");
+        console.log("📦 Objeto Receta cargado:", result);
         setReceta(result); setRecetaSource(source); setTiempoProceso(result.ProcessTime || 0);
         if (result.forId) {
           const plato = await getRecepie(result.forId, "Menu");
@@ -369,6 +370,40 @@ function RecetaModal({ item, onClose }) {
       if (result) setFoto(imagenUrl);
     } catch (error) { alert("Error: " + error.message); }
     finally { setIsUpdating(false); }
+  };
+
+  const handleCalculateUnitValue = async () => {
+    if (!rendimientoCantidad || Number(rendimientoCantidad) <= 0) {
+      alert("Se requiere una cantidad de rendimiento válida para el cálculo.");
+      return;
+    }
+    const valorPorUnidad = costoProduccion / Number(rendimientoCantidad);
+
+    setIsUpdating(true);
+    try {
+      // 1. Actualizar el campo precioUnitario en la receta misma
+      const payloadReceta = { 
+        precioUnitario: valorPorUnidad, 
+        actualizacion: new Date().toISOString() 
+      };
+      const resultReceta = await dispatch(updateItem(receta._id, payloadReceta, recetaSource));
+      
+      if (resultReceta) {
+        setReceta(prev => ({ ...prev, ...payloadReceta }));
+      }
+
+      // 2. Sincronizar con el ítem de Producción Interna (forId)
+      if (receta.forId) {
+        await dispatch(updateItem(receta.forId, { precioUnitario: valorPorUnidad }, "ProduccionInterna"));
+      }
+
+      alert(`✅ Valor por unidad actualizado y sincronizado: ${formatCurrency(valorPorUnidad)}`);
+    } catch (error) {
+      console.error("Error al actualizar valor por unidad:", error);
+      alert("❌ Error al actualizar el valor por unidad.");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const addIngredient = (source) => {
@@ -775,9 +810,22 @@ function RecetaModal({ item, onClose }) {
                 )}
 
                 {recetaSource === "RecetasProduccion" ? (
-                  <div className="flex justify-between items-center bg-blue-50 rounded-lg px-3 py-2 border border-blue-100">
-                    <span className="text-xs font-bold text-blue-700">Costo de Producción</span>
-                    <span className="text-base font-bold text-blue-700">{formatCurrency(costoProduccion)}</span>
+                  <div className="flex flex-col gap-2 bg-blue-50 rounded-lg px-3 py-2 border border-blue-100">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-blue-700">Costo de Producción</span>
+                      <span className="text-base font-bold text-blue-700">{formatCurrency(costoProduccion)}</span>
+                    </div>
+                    {permanentEditMode && (
+                      <Button
+                        size="sm"
+                        onClick={handleCalculateUnitValue}
+                        disabled={isUpdating || !rendimientoCantidad || Number(rendimientoCantidad) <= 0}
+                        className="w-full h-7 text-[10px] bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isUpdating ? "animate-spin" : ""}`} />
+                        Calcular y Guardar Valor x Unidad
+                      </Button>
+                    )}
                   </div>
                 ) : calculoDetalles ? (
                   <div className="space-y-1">
