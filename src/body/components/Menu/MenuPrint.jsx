@@ -31,8 +31,11 @@ function MenuPrint() {
   const [photosWidthUnit, setPhotosWidthUnit] = useState('px');
   const [leftColRatio, setLeftColRatio] = useState(50);
   const [qrScale, setQrScale] = useState(1);
+  const [zoom, setZoom] = useState(0.5);
 
-  const [page, setPage] = useState({ id: 'PAGE_1', left: ["CAFE", "BEBIDAS", "QR"], center: ["ALIMENTOS", "EXTRAS", "INFO"], right: [] });
+  const [pages, setPages] = useState([
+    { id: 'PAGE_1', left: ["CAFE", "BEBIDAS", "QR"], center: ["ALIMENTOS", "EXTRAS", "INFO"], right: [] }
+  ]);
 
   const [showWebsiteBg, setShowWebsiteBg] = useState(false);
   const [websiteBgOpacity, setWebsiteBgOpacity] = useState(0.1);
@@ -108,29 +111,25 @@ function MenuPrint() {
           setColors(prev => ({ ...prev, ...layout.colors }));
         }
 
-        // Load page config (use first page of saved pages or fallback to legacy single layout)
-        let savedPage;
-        const savedPages = layout.pages;
-        if (savedPages && savedPages.length > 0) {
-          savedPage = savedPages[0];
-        } else {
+        let savedPages = layout.pages || [];
+        if (savedPages.length === 0) {
           const savedLeft = layout.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
           const savedCenter = layout.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
           let savedRight = layout.rightColBlocks || [];
           const allBlocks = [...savedLeft, ...savedCenter, ...savedRight];
           const missingImageIds = loadedImages.filter(img => !allBlocks.includes(img.id)).map(img => img.id);
           savedRight = [...savedRight, ...missingImageIds];
-          savedPage = { id: 'PAGE_1', left: savedLeft, center: savedCenter, right: savedRight };
+          savedPages = [{ id: 'PAGE_1', left: savedLeft, center: savedCenter, right: savedRight }];
         }
 
-        const cleanedPage = {
-          ...savedPage,
-          left: [...new Set(savedPage.left || [])],
-          center: [...new Set(savedPage.center || [])],
-          right: [...new Set(savedPage.right || [])]
-        };
+        const cleanedPages = savedPages.map(p => ({
+          ...p,
+          left: [...new Set(p.left || [])],
+          center: [...new Set(p.center || [])],
+          right: [...new Set(p.right || [])]
+        }));
 
-        setPage(cleanedPage);
+        setPages(cleanedPages);
 
       } else {
         await supabase.from('menu_print_config').insert([{ id: 1, images: [], group_descriptions: {}, show_icons: true }]);
@@ -167,7 +166,7 @@ function MenuPrint() {
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, pageIndex = 0) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -190,9 +189,10 @@ function MenuPrint() {
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
 
-      const newPage = { ...page, right: [...(page.right || []), newImageId] };
-      setPage(newPage);
-      saveLayoutSizes({ pages: [newPage] });
+      const newPages = [...pages];
+      newPages[pageIndex].right = [...(newPages[pageIndex].right || []), newImageId];
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
 
     } catch (err) {
       console.error("Error uploading image:", err);
@@ -291,14 +291,14 @@ function MenuPrint() {
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
 
-      const newPage = {
-        ...page,
-        left: page.left.filter(b => b !== blockId),
-        center: page.center.filter(b => b !== blockId),
-        right: page.right.filter(b => b !== blockId),
-      };
-      setPage(newPage);
-      saveLayoutSizes({ pages: [newPage] });
+      const newPages = pages.map(p => ({
+        ...p,
+        left: p.left.filter(b => b !== blockId),
+        center: p.center.filter(b => b !== blockId),
+        right: p.right.filter(b => b !== blockId),
+      }));
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
     } catch (e) {
       console.error("Error deleting image:", e);
       alert("Error eliminando imagen");
@@ -315,27 +315,36 @@ function MenuPrint() {
   };
 
   const saveLayoutSizes = (updates = {}) => {
+    const finalState = {
+      photosWidth,
+      photosWidthUnit,
+      leftColRatio,
+      qrScale,
+      pages,
+      showWebsiteBg,
+      websiteBgOpacity,
+      colors,
+      backgroundUrl,
+      ...updates
+    };
     saveGroupDescriptions({
       ...groupDescriptions,
-      __layout: { photosWidth, photosWidthUnit, leftColRatio, qrScale, pages: [page], showWebsiteBg, websiteBgOpacity, colors, backgroundUrl, ...updates }
+      __layout: { ...finalState }
     });
   };
 
   const moveBlock = (blockId, direction, pageIndex, columnId) => {
-    const currentPage = { ...page };
+    const newPages = JSON.parse(JSON.stringify(pages));
+    const currentPage = newPages[pageIndex];
     const colArray = [...currentPage[columnId]];
     const idx = colArray.indexOf(blockId);
 
     if (direction === 'up' && idx > 0) {
       [colArray[idx - 1], colArray[idx]] = [colArray[idx], colArray[idx - 1]];
       currentPage[columnId] = colArray;
-      setPage(currentPage);
-      saveLayoutSizes({ pages: [currentPage] });
     } else if (direction === 'down' && idx < colArray.length - 1) {
       [colArray[idx + 1], colArray[idx]] = [colArray[idx], colArray[idx + 1]];
       currentPage[columnId] = colArray;
-      setPage(currentPage);
-      saveLayoutSizes({ pages: [currentPage] });
     } else if (direction === 'right') {
       if (columnId === 'left') {
         currentPage.left = currentPage.left.filter(b => b !== blockId);
@@ -343,9 +352,10 @@ function MenuPrint() {
       } else if (columnId === 'center') {
         currentPage.center = currentPage.center.filter(b => b !== blockId);
         currentPage.right = [...currentPage.right, blockId];
+      } else if (columnId === 'right' && pageIndex < pages.length - 1) {
+        currentPage.right = currentPage.right.filter(b => b !== blockId);
+        newPages[pageIndex+1].left = [blockId, ...newPages[pageIndex+1].left];
       }
-      setPage(currentPage);
-      saveLayoutSizes({ pages: [currentPage] });
     } else if (direction === 'left') {
       if (columnId === 'right') {
         currentPage.right = currentPage.right.filter(b => b !== blockId);
@@ -353,17 +363,22 @@ function MenuPrint() {
       } else if (columnId === 'center') {
         currentPage.center = currentPage.center.filter(b => b !== blockId);
         currentPage.left = [...currentPage.left, blockId];
+      } else if (columnId === 'left' && pageIndex > 0) {
+        currentPage.left = currentPage.left.filter(b => b !== blockId);
+        newPages[pageIndex-1].right = [...newPages[pageIndex-1].right, blockId];
       }
-      setPage(currentPage);
-      saveLayoutSizes({ pages: [currentPage] });
     }
+    
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
   };
 
-  const addBlock = () => {
+  const addBlock = (pageIndex = 0) => {
     const newBlockId = 'CUSTOM_' + Math.random().toString(36).substr(2, 9);
-    const newPage = { ...page, center: [...page.center, newBlockId] };
-    setPage(newPage);
-    saveLayoutSizes({ pages: [newPage] });
+    const newPages = [...pages];
+    newPages[pageIndex].center = [...newPages[pageIndex].center, newBlockId];
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
   };
 
   const deleteBlock = (blockId) => {
@@ -371,14 +386,29 @@ function MenuPrint() {
     if (!isCustom && !window.confirm("Este es un bloque de sistema. ¿Estás seguro de que quieres quitarlo del menú?")) return;
     if (isCustom && !window.confirm("¿Eliminar este bloque permanentemente?")) return;
 
-    const newPage = {
-      ...page,
-      left: page.left.filter(b => b !== blockId),
-      center: page.center.filter(b => b !== blockId),
-      right: page.right.filter(b => b !== blockId),
-    };
-    setPage(newPage);
-    saveLayoutSizes({ pages: [newPage] });
+    const newPages = pages.map(p => ({
+      ...p,
+      left: p.left.filter(b => b !== blockId),
+      center: p.center.filter(b => b !== blockId),
+      right: p.right.filter(b => b !== blockId),
+    }));
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
+  };
+
+  const addPage = () => {
+    const newPage = { id: 'PAGE_' + (pages.length + 1), left: [], center: [], right: [] };
+    const newPages = [...pages, newPage];
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
+  };
+
+  const removePage = (pageIndex) => {
+    if (pages.length <= 1) return;
+    if (!window.confirm("¿Estás seguro de eliminar esta página y todo su contenido?")) return;
+    const newPages = pages.filter((_, i) => i !== pageIndex);
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
   };
 
   const handlePrint = () => window.print();
@@ -407,11 +437,12 @@ function MenuPrint() {
     handleReplaceImage,
     deleteImage,
     updateImageHeight,
-    deleteBlock
+    deleteBlock,
+    pagesCount: pages.length
   };
 
   return (
-    <div className="flex w-full flex-col items-center justify-center bg-gray-200 min-h-screen pb-10 print:bg-white print:p-0 print:m-0 print:block">
+    <div className="flex w-full flex-col items-center justify-start bg-gray-200 min-h-screen pb-10 print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden">
       <MenuPrintStyles />
 
       <MenuPrintControls
@@ -439,6 +470,9 @@ function MenuPrint() {
         leftColRatio={leftColRatio}
         setLeftColRatio={setLeftColRatio}
         addBlock={addBlock}
+        addPage={addPage}
+        zoom={zoom}
+        setZoom={setZoom}
       />
 
       {showColorPanel && (
@@ -452,28 +486,43 @@ function MenuPrint() {
 
       {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
-      <div id="print-area">
-        <MenuPage
-          page={page}
-          pageIndex={0}
-          showWebsiteBg={showWebsiteBg}
-          backgroundUrl={backgroundUrl}
-          websiteBgOpacity={websiteBgOpacity}
-          colors={colors}
-          leng={leng}
-          leftColRatio={leftColRatio}
-          photosWidth={photosWidth}
-          photosWidthUnit={photosWidthUnit}
-          editMode={editMode}
-          handleImageUpload={handleImageUpload}
-          fileInputRef={fileInputRef}
-          uploadingImage={uploadingImage}
-          Button={Button}
-          commonProps={commonProps}
-        />
+      <div id="print-area" className="flex flex-row flex-nowrap gap-8 items-start justify-center p-10 overflow-x-auto w-full print:block print:p-0 print:m-0 print:overflow-visible print:gap-0" style={{ transform: editMode ? 'none' : `scale(${zoom})`, transformOrigin: 'top center' }}>
+        {pages.map((p, idx) => (
+          <div key={p.id} className="relative group/page">
+            {editMode && pages.length > 1 && (
+               <Button 
+                onClick={() => removePage(idx)} 
+                variant="destructive" 
+                className="absolute -top-4 -right-4 z-[100] rounded-full h-8 w-8 p-0 border-2 border-white shadow-lg print:hidden"
+                title="Eliminar Página"
+              >
+                X
+              </Button>
+            )}
+            <MenuPage
+              page={p}
+              pageIndex={idx}
+              showWebsiteBg={showWebsiteBg}
+              backgroundUrl={backgroundUrl}
+              websiteBgOpacity={websiteBgOpacity}
+              colors={colors}
+              leng={leng}
+              leftColRatio={leftColRatio}
+              photosWidth={photosWidth}
+              photosWidthUnit={photosWidthUnit}
+              editMode={editMode}
+              handleImageUpload={(e) => handleImageUpload(e, idx)}
+              fileInputRef={fileInputRef}
+              uploadingImage={uploadingImage}
+              Button={Button}
+              commonProps={commonProps}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 export default MenuPrint;
+

@@ -53,6 +53,8 @@ const ModeloProyecto       = lazy(() => import('./body/views/ventaCompra/ModeloP
 const GastosCalculadosMateriales = lazy(() => import('./body/views/ventaCompra/GastosCalculadosMateriales'));
 const ProductosFinanciero  = lazy(() => import('./body/views/ventaCompra/ProductosFinanciero'));
 const RecruitmentPrint      = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
+const MenuPrintHorizontal  = lazy(() => import('./body/components/Menu/MenuPrintHorizontal'));
+
 
 
 const PageLoader = () => (
@@ -75,13 +77,12 @@ function App() {
     >
       <div className="absolute inset-0 bg-cream-bg/60 pointer-events-none z-0"></div>
 
-      <div className="relative z-10 w-screen">
+      <div className="relative z-10 w-full overflow-x-hidden min-h-screen flex flex-col">
         <TopNav />
-        <br />
-        <br />
         <ErrorBoundary section="Aplicación">
         <Suspense fallback={<PageLoader />}>
-          <Routes>
+          <div className="flex-1 flex flex-col">
+            <Routes>
             <Route path="/MenuView"                          element={<MenuView />} />
             <Route path="/MenuLunch"                         element={<MenuLunch />} />
             <Route path="/LunchByOrder"                      element={<LunchByOrder />} />
@@ -138,9 +139,12 @@ function App() {
             <Route path="/gastos-calculados"                 element={<GastosCalculadosMateriales />} />
             <Route path="/productosFinanciero"               element={<ProductosFinanciero />} />
             <Route path="/RecruitmentPrint"                  element={<RecruitmentPrint />} />
+            <Route path="/MenuPrintHorizontal"              element={<MenuPrintHorizontal />} />
+
 
             <Route path="*"                                  element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
           </Routes>
+          </div>
         </Suspense>
         </ErrorBoundary>
       </div>

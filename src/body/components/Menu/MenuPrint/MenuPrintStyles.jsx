@@ -50,25 +50,21 @@ export const MenuPrintStyles = () => (
 
         /* 3. Mueve el área de impresión a la esquina superior izquierda exacta de la hoja */
         #print-area {
-          position: absolute !important;
-          left: 0 !important;
-          top: 6mm !important;
+          position: relative !important;
           width: 11in !important;
-          height: 17in !important;
           margin: 0 !important;
           padding: 0 !important;
-          overflow: hidden !important;
           background: transparent !important;
           z-index: 9999 !important;
         }
 
-        /* 4. Cortar todo desbordamiento para garantizar 1 hoja tabloide */
+        /* 4. Permitir que el documento crezca con las páginas */
         html, body {
           width: 11in !important;
-          height: 17in !important;
+          height: auto !important;
           margin: 0 !important;
           padding: 0 !important;
-          overflow: hidden !important;
+          overflow: visible !important;
           background: transparent !important;
         }
 
@@ -80,8 +76,10 @@ export const MenuPrintStyles = () => (
           padding: 0 !important;
           position: relative !important;
           display: flex !important;
+          flex-direction: column !important;
           box-sizing: border-box !important;
-          break-inside: avoid !important;
+          page-break-after: always !important;
+          break-after: page !important;
         }
 
         /* Forzar renderizado de colores en todo */

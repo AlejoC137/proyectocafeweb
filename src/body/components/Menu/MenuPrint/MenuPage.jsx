@@ -5,6 +5,7 @@ import MenuPrintColumn from "./MenuPrintColumn";
 
 const MenuPage = ({
   page,
+  pageIndex,
   showWebsiteBg,
   backgroundUrl,
   websiteBgOpacity,
@@ -24,8 +25,8 @@ const MenuPage = ({
 
   return (
     <div
-      id="page-1"
-      className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border mx-auto flex flex-col box-border relative print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container"
+      id={`page-${pageIndex}`}
+      className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border flex flex-col box-border relative print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container shrink-0"
       style={hasBg ? {
         backgroundImage: `url(${backgroundUrl})`,
         backgroundSize: 'cover',
@@ -56,12 +57,14 @@ const MenuPage = ({
           <MenuPrintColumn
             blocks={page.left || []}
             {...commonProps}
+            pageIndex={pageIndex}
             columnId="left"
           />
 
           <MenuPrintColumn
             blocks={page.center || []}
             {...commonProps}
+            pageIndex={pageIndex}
             columnId="center"
           />
 
@@ -82,6 +85,7 @@ const MenuPage = ({
             <MenuPrintColumn
               blocks={page.right || []}
               {...commonProps}
+              pageIndex={pageIndex}
               columnId="right"
             />
           </div>

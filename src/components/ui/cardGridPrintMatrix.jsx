@@ -182,7 +182,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         </div>
                     )}
                     <div className="flex flex-col flex-1 min-w-0 mr-1">
-                        <div className="font-SpaceGrotesk font-bold text-[11px] leading-tight break-words whitespace-normal uppercase" style={{ color: colors?.itemName }}>
+                        <div className="font-bold leading-tight break-words whitespace-normal uppercase" style={{ color: colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}` }}>
                             {isEnglish ? product.NombreEN : product.NombreES}
                         </div>
                         {editMode && (
@@ -265,14 +265,14 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         )}
                     </div>
                 </div>
-                <span className="font-SpaceGrotesk font-black text-[11px] whitespace-nowrap" style={{ color: colors?.itemPrice }}>
+                <span className="font-black whitespace-nowrap" style={{ color: colors?.itemPrice, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizePrice || 11}${colors?.fontSizeUnit || 'px'}` }}>
                     ${formatPrice(product.Precio)}
                 </span>
             </div>
 
             {/* Comentario en una nueva línea que puede ocupar todo el ancho */}
             {!editMode && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
-                <div className="text-[9.2px] italic font-serif font-normal normal-case tracking-normal leading-tight w-full" style={{ color: colors?.itemComment || '#6b7280' }}>
+                <div className="italic font-normal normal-case tracking-normal leading-tight w-full" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}` }}>
                     {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
                 </div>
             )}
@@ -303,7 +303,7 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
     return (
         <div className="mb-0 break-inside-avoid">
             <div className="flex items-center mb-1.5 ">
-                <span className="font-black text-xs uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px]" style={{ backgroundColor: colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg, color: colors?.categoryTitle, borderColor: colors?.categoryBorder, boxShadow: `2px 2px 0px 0px ${colors?.categoryBorder}` }}>
+                <span className="font-black uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px]" style={{ backgroundColor: colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg, color: colors?.categoryTitle, borderColor: colors?.categoryBorder, boxShadow: `2px 2px 0px 0px ${colors?.categoryBorder}`, fontFamily: colors?.fontCategory || 'Space Grotesk', fontSize: `${colors?.sizeCategory * 0.6 || 12}${colors?.fontSizeUnit || 'px'}` }}>
                     {titleText}
                 </span>
                 <div className="flex-grow border-b-[2px] ml-2 h-0" style={{ borderColor: colors?.categoryBorder }}></div>

@@ -24,11 +24,14 @@ const MenuPrintControls = ({
   leftColRatio,
   setLeftColRatio,
   addBlock,
+  addPage,
+  zoom,
+  setZoom,
   handleBackgroundUpload
 }) => {
   return (
     <>
-      <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center items-center">
+      <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center items-center px-4">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           🖨️ Imprimir
         </Button>
@@ -36,7 +39,7 @@ const MenuPrintControls = ({
           {leng ? "Switch to Spanish" : "Switch to English"}
         </Button>
         <Button onClick={() => setEditMode(!editMode)} className={`font-SpaceGrotesk font-medium ${editMode ? 'bg-red-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}>
-          {editMode ? "💾 Salir Modo Edición" : "✏️ Editar Orden / Fotos"}
+          {editMode ? "💾 Salir Modo Edición" : "✏️ Editar Layout / Fotos"}
         </Button>
         <Button onClick={toggleShowIcons} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           {showIcons ? "🚫 Ocultar Iconos" : "👁️ Mostrar Iconos"}
@@ -45,10 +48,24 @@ const MenuPrintControls = ({
           🎨 {showColorPanel ? "Cerrar Colores" : "Personalizar Colores"}
         </Button>
         
+        <div className="flex items-center gap-2 bg-black/5 p-1 px-3 rounded-md border border-black/10 h-10">
+          <span className="text-xs font-SpaceGrotesk font-bold">Zoom:</span>
+          <input 
+            type="range" min="0.1" max="1" step="0.05" 
+            value={zoom} 
+            onChange={(e) => setZoom(Number(e.target.value))}
+            className="w-24 cursor-pointer accent-black" 
+          />
+          <span className="text-xs font-SpaceGrotesk font-bold w-8">{(zoom * 100).toFixed(0)}%</span>
+        </div>
+
         {editMode && (
           <div className="flex items-center gap-2 border-l border-black/20 pl-4">
-            <Button onClick={addBlock} className="font-SpaceGrotesk font-medium bg-blue-600 text-white hover:bg-blue-700">
+            <Button onClick={() => addBlock(0)} className="font-SpaceGrotesk font-medium bg-blue-600 text-white hover:bg-blue-700">
               📝 + Bloque Texto
+            </Button>
+            <Button onClick={addPage} className="font-SpaceGrotesk font-medium bg-green-600 text-white hover:bg-green-700">
+              📄 + Añadir Página
             </Button>
           </div>
         )}
@@ -105,9 +122,9 @@ const MenuPrintControls = ({
       </div>
 
       {editMode && (
-        <div className="flex items-center justify-center gap-8 bg-yellow-100 border border-yellow-400 p-2 text-xs font-SpaceGrotesk mb-4 print:hidden rounded flex-wrap">
+        <div className="flex items-center justify-center gap-8 bg-yellow-100 border border-yellow-400 p-2 text-xs font-SpaceGrotesk mb-4 print:hidden rounded flex-wrap mx-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="font-bold">Ancho Col. Fotos:</span>
+            <span className="font-black uppercase">Ancho Col. Fotos:</span>
             <input 
               type="range" 
               min={photosWidthUnit === 'px' ? "100" : "15"} 
@@ -116,10 +133,10 @@ const MenuPrintControls = ({
               onChange={(e) => setPhotosWidth(Number(e.target.value))} 
               onMouseUp={() => saveLayoutSizes({ photosWidth: Number(photosWidth) })} 
               onTouchEnd={() => saveLayoutSizes({ photosWidth: Number(photosWidth) })} 
-              className="w-[150px]" 
+              className="w-[150px] cursor-pointer" 
             />
             <span
-              className="cursor-pointer font-bold text-blue-600 hover:text-blue-800 underline px-1 bg-white rounded border border-blue-300"
+              className="cursor-pointer font-bold text-blue-600 hover:text-blue-800 underline px-2 py-0.5 bg-white rounded border border-blue-300"
               title="Cambiar unidad (% / px)"
               onClick={() => {
                 const newUnit = photosWidthUnit === 'px' ? '%' : 'px';
@@ -134,22 +151,21 @@ const MenuPrintControls = ({
           </div>
 
           <div className="flex items-center gap-2 border-l border-yellow-400 pl-4">
-            <span className="font-bold">Col. Bebidas vs Comida:</span>
+            <span className="font-black uppercase">Col. Bebidas vs Comida:</span>
             <input 
               type="range" 
-              min="30" max="70" 
+              min="20" max="80" 
               value={leftColRatio} 
               onChange={(e) => setLeftColRatio(Number(e.target.value))} 
               onMouseUp={() => saveLayoutSizes({ leftColRatio: Number(leftColRatio) })} 
               onTouchEnd={() => saveLayoutSizes({ leftColRatio: Number(leftColRatio) })} 
-              className="w-[150px]" 
+              className="w-[150px] cursor-pointer" 
             />
-            <span>{leftColRatio}%</span>
+            <span className="font-bold min-w-[30px]">{leftColRatio}%</span>
           </div>
         </div>
       )}
     </>
   );
 };
-
 export default MenuPrintControls;

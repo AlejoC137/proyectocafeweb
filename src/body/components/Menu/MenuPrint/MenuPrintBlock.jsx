@@ -68,8 +68,9 @@ const MenuPrintBlock = ({
         )}
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'up', pageIndex, columnId)} title="Subir">↑</Button>
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'down', pageIndex, columnId)} title="Bajar">↓</Button>
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'right', pageIndex, columnId)} disabled={columnId === 'right' && isLastPage} title={columnId === 'right' ? "Mover a Siguiente Página" : "Mover a Derecha"}>→</Button>
-        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'left', pageIndex, columnId)} disabled={columnId === 'left' && isFirstPage} title={columnId === 'left' ? "Mover a Página Anterior" : "Mover a Izquierda"}>←</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'right', pageIndex, columnId)} title="Mover a Derecha">→</Button>
+        <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'left', pageIndex, columnId)} title="Mover a Izquierda">←</Button>
+
         {isRemovable && (
           <Button size="sm" variant="destructive" className="h-6 w-6 p-0 text-xs rounded-sm border border-black mt-1" onClick={() => deleteBlock(id)} title="Eliminar Bloque">X</Button>
         )}
@@ -107,7 +108,7 @@ const MenuPrintBlock = ({
 
     return (
       <div className="flex-1 min-w-0 flex items-center pb-[2px]">
-        <p className="text-[9px] font-SpaceGrotesk leading-none text-gray-500 italic truncate">
+        <p className="leading-none text-gray-500 italic truncate" style={{ fontFamily: colors.fontBody || 'Space Grotesk', fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}` }}>
           {text}
         </p>
       </div>
@@ -125,8 +126,8 @@ const MenuPrintBlock = ({
         <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
           {editMode ? (
             <input
-              className="font-black text-xl uppercase leading-none m-0 bg-transparent border-none outline-none w-full"
-              style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}
+              className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full"
+              style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}
               value={title}
               onChange={(e) => {
                 setGroupDescriptions(prev => ({ ...prev, [titleKey]: e.target.value }));
@@ -134,12 +135,12 @@ const MenuPrintBlock = ({
               onBlur={() => saveGroupDescriptions(groupDescriptions)}
             />
           ) : (
-            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {title}
             </h2>
           )}
         </div>
-        <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic" style={{ color: colors.itemComment }}>
+        <div className="p-2 leading-tight italic" style={{ color: colors.itemComment, fontFamily: colors.fontBody || 'Space Grotesk', fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}` }}>
           <MenuPrintInfo
             isEnglish={leng}
             editMode={editMode}
@@ -160,7 +161,7 @@ const MenuPrintBlock = ({
         <div key="CAFE" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls("CAFE")}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Café" : "Coffee"}
             </h2>
             {renderGroupDescription("CAFE")}
@@ -176,7 +177,7 @@ const MenuPrintBlock = ({
         <div key="BEBIDAS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls("BEBIDAS")}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Bebidas" : "Drinks"}
             </h2>
             {renderGroupDescription("BEBIDAS")}
@@ -193,7 +194,7 @@ const MenuPrintBlock = ({
         <div key="ALIMENTOS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls("ALIMENTOS")}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Alimentos" : "Food"}
             </h2>
             {renderGroupDescription("ALIMENTOS")}
@@ -212,7 +213,7 @@ const MenuPrintBlock = ({
         <div key="EXTRAS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls("EXTRAS")}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Adiciones" : "Extras"}
             </h2>
             {renderGroupDescription("ADICIONES")}
@@ -252,7 +253,7 @@ const MenuPrintBlock = ({
         <div key="INFO" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls("INFO", true)}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black text-xl uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: "'First Bunny', sans-serif", color: colors.categoryTitle }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Más sobre el Menú" : "More About"}
             </h2>
           </div>
@@ -330,7 +331,7 @@ const MenuPrintBlock = ({
 
             {editMode && (
               <div className="absolute bottom-1 left-1 bg-white border border-black p-0.5 text-[9px] z-10 print:hidden font-SpaceGrotesk opacity-0 group-hover:opacity-100 transition-opacity">
-                Alto: <input type="number" defaultValue={imgObj.height || 150} onBlur={(e) => { updateImageHeight(blockId, e.target.value); saveImagesConfig(printImages); }} className="w-10 border-b border-black/30 text-center focus:outline-none" /> px
+                Alto: <input type="number" defaultValue={imgObj.height || 150} onBlur={(e) => updateImageHeight(blockId, e.target.value)} className="w-10 border-b border-black/30 text-center focus:outline-none" /> px
               </div>
             )}
           </div>

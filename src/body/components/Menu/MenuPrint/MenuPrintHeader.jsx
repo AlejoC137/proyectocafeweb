@@ -14,13 +14,17 @@ const MenuPrintHeader = ({ colors, leng }) => {
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <img src={BaseSillaLogo} alt="Logo" className="h-8 ml-1   object-contain" />
         <h1
-          className="text-[26px] font-black tracking-tighter uppercase leading-none pt-1 truncate"
-          style={{ fontFamily: "'First Bunny', sans-serif", color: colors.mainTitle }}
+          className="font-black tracking-tighter uppercase leading-none pt-1 truncate"
+          style={{ 
+            fontFamily: colors.fontTitle || "'First Bunny', sans-serif", 
+            color: colors.mainTitle,
+            fontSize: `${colors.sizeTitle || 26}${colors.fontSizeUnit || 'px'}`
+          }}
         >
           {leng ? "Proyecto Café Menu" : "Menú Proyecto Café"}
         </h1>
       </div>
-      <div className="text-right ml-6 shrink-0" style={{ color: colors.mainTitle }}>
+      <div className="text-right ml-6 shrink-0" style={{ color: colors.mainTitle, fontFamily: colors.fontBody || 'Inter, sans-serif' }}>
         <p className="text-[13px] font-black uppercase tracking-widest leading-tight">TRANSVERSAL 39 #65D - 22</p>
         <p className="text-[11px] font-bold uppercase tracking-widest mt-1 opacity-70 leading-tight">Conquistadores, Medellín</p>
       </div>
