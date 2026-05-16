@@ -482,6 +482,85 @@ function ModeloContent({ targetMonth, targetYear }) {
         }
     };
 
+    const handleSyncFixedCosts = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('Proyect_Info')
+                .select('gastos_fijos')
+                .order('id', { ascending: false })
+                .limit(1);
+
+            if (error) {
+                console.error("Error completo de Supabase:", error);
+                alert(`Error al acceder a 'Proyect_Info': ${error.message}\n\nDetalles: ${error.details || 'Sin detalles'}`);
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                alert("La tabla 'Proyect_Info' está vacía. Primero debes guardar la configuración actual usando el botón de guardar (💾).");
+                return;
+            }
+
+            const latestConfig = data[0];
+            if (latestConfig && latestConfig.gastos_fijos) {
+                try {
+                    // Limpieza de posibles comas finales (común en ediciones manuales)
+                    const cleanJson = latestConfig.gastos_fijos.replace(/,\s*([\]}])/g, '$1');
+                    const parsedFijos = JSON.parse(cleanJson);
+                    if (Array.isArray(parsedFijos)) {
+                        if (window.confirm(`Se encontraron ${parsedFijos.length} gastos fijos predefinidos. ¿Desea importarlos y reemplazar la lista actual?`)) {
+                            setCurrentCosts(prev => ({ ...prev, fijos: parsedFijos }));
+                            setHasChanges(true);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error al parsear JSON de gastos_fijos:", e);
+                    alert("Los datos guardados no tienen un formato válido.");
+                }
+            }
+        } catch (err) {
+            console.error("Error inesperado en handleSyncFixedCosts:", err);
+            alert("Ocurrió un error inesperado al sincronizar.");
+        }
+    };
+
+    const handleSaveFixedCostsAsDefault = async () => {
+        if (currentCosts.fijos.length === 0) {
+            alert("No hay gastos fijos para guardar.");
+            return;
+        }
+
+        if (window.confirm("¿Desea guardar la lista actual de gastos fijos como la configuración predeterminada?")) {
+            try {
+                const { data: existing } = await supabase.from('Proyect_Info').select('id').limit(1);
+                
+                const payload = {
+                    gastos_fijos: JSON.stringify(currentCosts.fijos)
+                };
+
+                let error;
+                if (existing && existing.length > 0) {
+                    const { error: updateError } = await supabase
+                        .from('Proyect_Info')
+                        .update(payload)
+                        .eq('id', existing[0].id);
+                    error = updateError;
+                } else {
+                    const { error: insertError } = await supabase
+                        .from('Proyect_Info')
+                        .insert([payload]);
+                    error = insertError;
+                }
+
+                if (error) throw error;
+                alert("Configuración de gastos fijos guardada exitosamente.");
+            } catch (err) {
+                console.error("Error saving fixed costs:", err);
+                alert("Error al guardar los gastos fijos.");
+            }
+        }
+    };
+
 
 
     // CRUD
@@ -718,6 +797,10 @@ function ModeloContent({ targetMonth, targetYear }) {
                         <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
                             <div className="flex justify-between items-center mb-1">
                                 <h3 className="font-bold text-gray-700 text-xs">Costos Fijos</h3>
+                                <div className="flex gap-1">
+                                    <button onClick={handleSyncFixedCosts} className="p-1 hover:bg-blue-50 text-blue-600 rounded" title="Sincronizar Predeterminados">🔄</button>
+                                    <button onClick={handleSaveFixedCostsAsDefault} className="p-1 hover:bg-green-50 text-green-600 rounded" title="Guardar como Predeterminados">💾</button>
+                                </div>
                             </div>
                             <div className="flex items-center justify-between mb-2">
                                 <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.fijos)}</div>

@@ -9,6 +9,7 @@ import supabase from "../../../config/supabaseClient";
 import { HorizontalStyles } from "./MenuPrintHorizontal/HorizontalStyles";
 import HorizontalPage from "./MenuPrintHorizontal/HorizontalPage";
 import HorizontalControls from "./MenuPrintHorizontal/HorizontalControls";
+import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
 
 function MenuPrintHorizontal() {
@@ -19,10 +20,9 @@ function MenuPrintHorizontal() {
   const [editMode, setEditMode] = useState(false);
   const [showColorPanel, setShowColorPanel] = useState(false);
   const menuData = useSelector((state) => state.allMenu);
-  const [zoom, setZoom] = useState(0.4);
+  const [zoom, setZoom] = useState(0.6);
   const [showIcons, setShowIcons] = useState(true);
   const [showBlockSelector, setShowBlockSelector] = useState(null); // { pageIndex, colIdx }
-
 
   const [printImages, setPrintImages] = useState([]);
   const [groupDescriptions, setGroupDescriptions] = useState({});
@@ -30,6 +30,9 @@ function MenuPrintHorizontal() {
   const [qrScale, setQrScale] = useState(1);
   const [uploadTargetPage, setUploadTargetPage] = useState(null);
   const [selectedColumn, setSelectedColumn] = useState(null); // { pageIndex, colIdx }
+  const [showGallery, setShowGallery] = useState(false);
+  const [galleryContext, setGalleryContext] = useState(null); // 'ADD_BLOCK' | 'REPLACE_IMAGE' | 'SET_BACKGROUND'
+  const [galleryTarget, setGalleryTarget] = useState(null); 
   const [colors, setColors] = useState({
     mainTitle: "#000000",
     mainBorder: "#000000",
@@ -45,7 +48,6 @@ function MenuPrintHorizontal() {
     blockBg: "#ffffff",
     imgBorder: "#000000",
     imgShadow: "#000000",
-    // Typography defaults
     fontTitle: 'First Bunny',
     fontCategory: 'First Bunny',
     fontItem: 'Space Grotesk',
@@ -59,36 +61,18 @@ function MenuPrintHorizontal() {
   });
 
   const [pages, setPages] = useState([
-    { id: 'PAGE_1', columns: [{ id: 'COL_1', blocks: ["CAFE", "QR"] }] },
-    { id: 'PAGE_2', columns: [{ id: 'COL_1', blocks: ["BEBIDAS"] }] },
-    { id: 'PAGE_3', columns: [{ id: 'COL_1', blocks: ["ALIMENTOS"] }] },
-    { id: 'PAGE_4', columns: [{ id: 'COL_1', blocks: ["INFO"] }] }
+    { id: 'PAGE_1', columns: [{ id: 'COL_1', blocks: ["CAFE", "QR"], flex: 1 }] },
+    { id: 'PAGE_2', columns: [{ id: 'COL_1', blocks: ["BEBIDAS"], flex: 1 }] },
+    { id: 'PAGE_3', columns: [{ id: 'COL_1', blocks: ["ALIMENTOS"], flex: 1 }] },
+    { id: 'PAGE_4', columns: [{ id: 'COL_1', blocks: ["INFO"], flex: 1 }] }
   ]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await Promise.all([
-          dispatch(getAllFromTable(MENU)),
-          dispatch(getAllFromTable(ITEMS)),
-          dispatch(getAllFromTable(AGENDA))
-        ]);
-        await fetchConfig();
-        setLoading(false);
-      } catch (error) {
-        console.error("Error loading data:", error);
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [dispatch]);
-
+  // Define functions before useEffect to avoid TDZ
   const fetchConfig = async () => {
     try {
-      // Using ID 2 for the horizontal version to avoid clashing with the regular one
       const { data, error } = await supabase.from('menu_print_config').select('*').eq('id', 2);
       if (error) {
         console.error("Error fetching config:", error);
@@ -104,7 +88,7 @@ function MenuPrintHorizontal() {
         if (layout.pages) {
           let loadedPages = layout.pages;
           while (loadedPages.length < 4) {
-            loadedPages.push({ id: 'PAGE_' + (loadedPages.length + 1), columns: [{ id: 'COL_1', blocks: [] }] });
+            loadedPages.push({ id: 'PAGE_' + (loadedPages.length + 1), columns: [{ id: 'COL_1', blocks: [], flex: 1 }] });
           }
           setPages(loadedPages);
         }
@@ -114,7 +98,6 @@ function MenuPrintHorizontal() {
         if (layout.leng !== undefined) setLeng(layout.leng);
         if (layout.colors) setColors(prev => ({ ...prev, ...layout.colors }));
       } else {
-        // Initial insert if not exists
         await supabase.from('menu_print_config').insert([{
           id: 2,
           images: [],
@@ -138,147 +121,82 @@ function MenuPrintHorizontal() {
         showIcons,
         leng
       };
-      
+
       const updatedDescriptions = {
         ...groupDescriptions,
         __layout: { ...(groupDescriptions.__layout || {}), ...layoutUpdate }
       };
 
-      const { error } = await supabase.from('menu_print_config').update({
+      await supabase.from('menu_print_config').update({
         group_descriptions: updatedDescriptions,
         images: printImages,
         show_icons: showIcons
       }).eq('id', 2);
-
-      if (error) throw error;
-      setGroupDescriptions(updatedDescriptions);
     } catch (e) {
       console.error("Error saving config:", e);
-      alert("Error al guardar la configuración");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleReplaceImage = async (e, blockId) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 4 * 1024 * 1024) {
-      alert("La imagen es demasiado pesada. Sube una de menos de 4MB.");
-      return;
-    }
-
-    setUploadingImage(true);
+  const saveGroupDescriptions = async (updated) => {
+    setGroupDescriptions(updated);
+    setIsSaving(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `menu_print_images/${Date.now()}_replaced.${ext}`;
-      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
-      if (error) throw error;
-
-      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
-
-      const newImages = [...printImages];
-      const index = newImages.findIndex(img => String(img.id) === String(blockId));
-      if (index !== -1) {
-        const oldImage = newImages[index];
-        if (oldImage.path) {
-          supabase.storage.from("Images_eventos").remove([oldImage.path]).catch(err => console.error("Error removing old image", err));
-        }
-
-        newImages[index].url = data.publicUrl;
-        newImages[index].path = fileName;
-        setPrintImages(newImages);
-        // Save to DB
-        await supabase.from('menu_print_config').update({ images: newImages }).eq('id', 2);
-      }
-    } catch (err) {
-      console.error("Error replacing image:", err);
-      alert("Error reemplazando imagen.");
+      const updatedLayout = {
+        ...updated,
+        __layout: { ...(updated.__layout || {}), pages, pageSize, colors, qrScale, showIcons, leng }
+      };
+      await supabase.from('menu_print_config').update({
+        group_descriptions: updatedLayout
+      }).eq('id', 2);
+    } catch (e) {
+      console.error("Error saving descriptions:", e);
     } finally {
-      setUploadingImage(false);
-      e.target.value = '';
+      setIsSaving(false);
     }
   };
 
-  const deleteImage = async (blockId) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta imagen permanentemente?")) return;
-    const index = printImages.findIndex(img => String(img.id) === String(blockId));
-    if (index === -1) return;
-    const image = printImages[index];
-    try {
-      if (image.path) {
-        await supabase.storage.from("Images_eventos").remove([image.path]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          dispatch(getAllFromTable(MENU)),
+          dispatch(getAllFromTable(ITEMS)),
+          dispatch(getAllFromTable(AGENDA))
+        ]);
+        await fetchConfig();
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setLoading(false);
       }
-      const newImages = printImages.filter((_, i) => i !== index);
-      setPrintImages(newImages);
-      // Save images list
-      await supabase.from('menu_print_config').update({ images: newImages }).eq('id', 2);
+    };
+    fetchData();
+  }, [dispatch]);
 
-      const newPages = pages.map(p => ({
-        ...p,
-        columns: p.columns.map(c => ({
-          ...c,
-          blocks: c.blocks.filter(b => b !== blockId)
-        }))
-      }));
-      setPages(newPages);
-      setTimeout(() => saveConfig(), 200);
-    } catch (e) {
-      console.error("Error deleting image:", e);
-      alert("Error eliminando imagen");
-    }
+  const handlePrint = () => {
+    window.print();
   };
 
-  const updateImageHeight = (blockId, val) => {
-    const newImages = printImages.map(img => 
-      String(img.id) === String(blockId) ? { ...img, height: Number(val) } : img
-    );
-    setPrintImages(newImages);
-    saveImagesConfig(newImages);
-  };
-
-  const saveImagesConfig = async (newImages) => {
-    setPrintImages(newImages);
-    try {
-      await supabase.from('menu_print_config').update({ images: newImages }).eq('id', 2);
-    } catch (e) {
-      console.error("Error saving images config:", e);
-    }
-  };
-
-  const moveBlock = (blockId, direction, pageIndex, colIdx) => {
-    const newPages = JSON.parse(JSON.stringify(pages));
-    const currentBlocks = newPages[pageIndex].columns[colIdx].blocks;
-    const idx = currentBlocks.indexOf(blockId);
-
-    if (direction === 'up' && idx > 0) {
-      [currentBlocks[idx - 1], currentBlocks[idx]] = [currentBlocks[idx], currentBlocks[idx - 1]];
-    } else if (direction === 'down' && idx < currentBlocks.length - 1) {
-      [currentBlocks[idx + 1], currentBlocks[idx]] = [currentBlocks[idx], currentBlocks[idx + 1]];
-    } else if (direction === 'left' && colIdx > 0) {
-      currentBlocks.splice(idx, 1);
-      newPages[pageIndex].columns[colIdx - 1].blocks.push(blockId);
-    } else if (direction === 'right' && colIdx < newPages[pageIndex].columns.length - 1) {
-      currentBlocks.splice(idx, 1);
-      newPages[pageIndex].columns[colIdx + 1].blocks.push(blockId);
-    } else if (direction === 'left' && colIdx === 0 && pageIndex > 0) {
-      currentBlocks.splice(idx, 1);
-      const lastColOfPrevPage = newPages[pageIndex - 1].columns.length - 1;
-      newPages[pageIndex - 1].columns[lastColOfPrevPage].blocks.push(blockId);
-    } else if (direction === 'right' && colIdx === newPages[pageIndex].columns.length - 1 && pageIndex < pages.length - 1) {
-      currentBlocks.splice(idx, 1);
-      newPages[pageIndex + 1].columns[0].blocks.push(blockId);
-    }
-
+  const addPage = () => {
+    const newPages = [...pages, { id: 'PAGE_' + (pages.length + 1), columns: [{ id: 'COL_1', blocks: [], flex: 1 }] }];
     setPages(newPages);
+    setTimeout(() => saveConfig(), 100);
+  };
+
+  const removePage = (idx) => {
+    if (pages.length <= 1) return;
+    if (!window.confirm("¿Eliminar esta página completa?")) return;
+    const newPages = pages.filter((_, i) => i !== idx);
+    setPages(newPages);
+    setTimeout(() => saveConfig(), 100);
   };
 
   const addColumn = (pageIndex) => {
-    const newPages = [...pages];
+    const newPages = JSON.parse(JSON.stringify(pages));
     newPages[pageIndex].columns.push({ id: 'COL_' + Date.now(), blocks: [], flex: 1 });
     setPages(newPages);
-    // Trigger save after state update
     setTimeout(() => saveConfig(), 100);
   };
 
@@ -295,7 +213,7 @@ function MenuPrintHorizontal() {
 
   const removeColumn = (pageIndex, colIdx) => {
     if (!window.confirm("¿Eliminar esta columna y sus bloques?")) return;
-    const newPages = [...pages];
+    const newPages = JSON.parse(JSON.stringify(pages));
     newPages[pageIndex].columns.splice(colIdx, 1);
     setPages(newPages);
     setTimeout(() => saveConfig(), 100);
@@ -305,29 +223,97 @@ function MenuPrintHorizontal() {
     setShowBlockSelector({ pageIndex, colIdx });
   };
 
-  const handleSelectBlockType = (type, category = null) => {
+  const handleSelectBlockType = (type, categoryId = null) => {
     if (!showBlockSelector) return;
     const { pageIndex, colIdx } = showBlockSelector;
-    
-    let newBlockId;
-    if (type === 'MENU') {
-      newBlockId = category;
-    } else if (type === 'QR') {
-      newBlockId = 'QR';
-    } else if (type === 'INFO') {
-      newBlockId = 'INFO';
-    } else if (type === 'IMAGE') {
-      fileInputRef.current.click();
+
+    if (type === 'IMAGE') {
+      openGallery('ADD_BLOCK', { pageIndex, colIdx });
       setShowBlockSelector(null);
       return;
-    } else {
+    }
+
+    let newBlockId = type;
+    if (type === 'MENU' && categoryId) {
+      newBlockId = categoryId;
+    } else if (type === 'CUSTOM') {
       newBlockId = 'CUSTOM_' + Math.random().toString(36).substr(2, 9);
     }
 
-    const newPages = [...pages];
+    const newPages = JSON.parse(JSON.stringify(pages));
     newPages[pageIndex].columns[colIdx].blocks.push(newBlockId);
     setPages(newPages);
     setShowBlockSelector(null);
+    setTimeout(() => saveConfig(), 100);
+  };
+
+  const openGallery = (context, target) => {
+    if (context === 'REMOVE_BACKGROUND') {
+      const newPages = JSON.parse(JSON.stringify(pages));
+      newPages[target.pageIndex].bgImage = null;
+      setPages(newPages);
+      setTimeout(() => saveConfig(), 100);
+      return;
+    }
+    setGalleryContext(context);
+    setGalleryTarget(target);
+    setShowGallery(true);
+  };
+
+  const handleGallerySelect = async (img) => {
+    const newPages = JSON.parse(JSON.stringify(pages));
+    const { pageIndex, colIdx, blockId } = galleryTarget;
+
+    if (galleryContext === 'ADD_BLOCK') {
+      newPages[pageIndex].columns[colIdx].blocks.push(img.id);
+      // Ensure the image exists in printImages for this config
+      if (!printImages.find(pi => pi.id === img.id)) {
+        setPrintImages([...printImages, img]);
+      }
+    } else if (galleryContext === 'REPLACE_IMAGE') {
+      // Logic for replacing image in printImages
+      const updatedImages = printImages.map(pi => pi.id === blockId ? { ...pi, url: img.url, storagePath: img.storagePath } : pi);
+      setPrintImages(updatedImages);
+      // If the image was NOT in printImages, add it
+      if (!printImages.find(pi => pi.id === img.id)) {
+        setPrintImages([...updatedImages, img]);
+      }
+    } else if (galleryContext === 'SET_BACKGROUND') {
+      newPages[pageIndex].bgImage = img;
+    }
+
+    setPages(newPages);
+    setShowGallery(false);
+    setTimeout(() => saveConfig(), 100);
+  };
+
+  const moveBlock = (blockId, direction, pageIndex, colIdx) => {
+    const newPages = JSON.parse(JSON.stringify(pages));
+    const currentBlocks = newPages[pageIndex].columns[colIdx].blocks;
+    const blockIndex = currentBlocks.indexOf(blockId);
+
+    if (direction === 'up' && blockIndex > 0) {
+      [currentBlocks[blockIndex], currentBlocks[blockIndex - 1]] = [currentBlocks[blockIndex - 1], currentBlocks[blockIndex]];
+    } else if (direction === 'down' && blockIndex < currentBlocks.length - 1) {
+      [currentBlocks[blockIndex], currentBlocks[blockIndex + 1]] = [currentBlocks[blockIndex + 1], currentBlocks[blockIndex]];
+    } else if (direction === 'left' || direction === 'right') {
+      // Logic for moving between columns or pages could go here
+    }
+
+    setPages(newPages);
+    setTimeout(() => saveConfig(), 100);
+  };
+
+  const deleteBlock = (blockId) => {
+    if (!window.confirm("¿Eliminar este bloque?")) return;
+    const newPages = JSON.parse(JSON.stringify(pages));
+    newPages.forEach(p => {
+      p.columns.forEach(c => {
+        const idx = c.blocks.indexOf(blockId);
+        if (idx !== -1) c.blocks.splice(idx, 1);
+      });
+    });
+    setPages(newPages);
     setTimeout(() => saveConfig(), 100);
   };
 
@@ -343,102 +329,144 @@ function MenuPrintHorizontal() {
 
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `menu_print_images/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
-      if (error) throw error;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `menu-images/${fileName}`;
 
-      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
-      const newImageId = 'IMG_' + Math.random().toString(36).substr(2, 9);
-      const newImage = { id: newImageId, url: data.publicUrl, path: fileName, height: 150, nameES: '', nameEN: '' };
+      const { error: uploadError } = await supabase.storage
+        .from('menu-assets')
+        .upload(filePath, file);
 
-      setPrintImages(prev => [...prev, newImage]);
+      if (uploadError) throw uploadError;
 
-      const newPages = [...pages];
-      if (newPages[pageIndex].columns.length === 0) {
-        newPages[pageIndex].columns.push({ id: 'COL_1', blocks: [] });
+      const { data: { publicUrl } } = supabase.storage
+        .from('menu-assets')
+        .getPublicUrl(filePath);
+
+      const newImage = {
+        id: 'IMG_' + Date.now(),
+        url: publicUrl,
+        storagePath: filePath,
+        height: 300
+      };
+
+      const updatedImages = [...printImages, newImage];
+      setPrintImages(updatedImages);
+      
+      const newPages = JSON.parse(JSON.stringify(pages));
+      
+      if (galleryContext === 'SET_BACKGROUND') {
+        newPages[pageIndex].bgImage = newImage;
+      } else {
+        // Default to adding as block if no specific context or adding block
+        newPages[pageIndex].columns[0].blocks.push(newImage.id);
       }
-      newPages[pageIndex].columns[0].blocks.push(newImageId);
-      setPages(newPages);
-      setTimeout(() => saveConfig(), 200);
 
-    } catch (err) {
-      console.error("Error uploading image:", err);
+      setPages(newPages);
+      await saveImagesConfig(updatedImages);
+    } catch (error) {
+      console.error("Error uploading:", error);
+      alert("Error al subir la imagen");
     } finally {
       setUploadingImage(false);
       setUploadTargetPage(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setGalleryContext(null);
     }
   };
 
-  const deleteBlock = (blockId) => {
-    if (!window.confirm("¿Eliminar este bloque?")) return;
-    const newPages = JSON.parse(JSON.stringify(pages));
-    newPages.forEach(p => {
-      p.columns.forEach(c => {
-        c.blocks = c.blocks.filter(b => b !== blockId);
+  const handleReplaceImage = async (oldImageId, newFile) => {
+    setUploadingImage(true);
+    try {
+      const oldImage = printImages.find(img => img.id === oldImageId);
+      if (oldImage && oldImage.storagePath) {
+        await supabase.storage.from('menu-assets').remove([oldImage.storagePath]);
+      }
+
+      const fileExt = newFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `menu-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('menu-assets')
+        .upload(filePath, newFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('menu-assets')
+        .getPublicUrl(filePath);
+
+      const updatedImages = printImages.map(img =>
+        img.id === oldImageId ? { ...img, url: publicUrl, storagePath: filePath } : img
+      );
+
+      setPrintImages(updatedImages);
+      await saveImagesConfig(updatedImages);
+    } catch (error) {
+      console.error("Error replacing image:", error);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const deleteImage = async (imageId) => {
+    if (!window.confirm("¿Eliminar imagen permanentemente?")) return;
+    const imgToDelete = printImages.find(img => img.id === imageId);
+
+    try {
+      if (imgToDelete && imgToDelete.storagePath) {
+        await supabase.storage.from('menu-assets').remove([imgToDelete.storagePath]);
+      }
+
+      const updatedImages = printImages.filter(img => img.id !== imageId);
+      setPrintImages(updatedImages);
+
+      const newPages = JSON.parse(JSON.stringify(pages));
+      newPages.forEach(p => {
+        p.columns.forEach(c => {
+          const idx = c.blocks.indexOf(imageId);
+          if (idx !== -1) c.blocks.splice(idx, 1);
+        });
       });
-    });
-    setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+      setPages(newPages);
+
+      await saveImagesConfig(updatedImages);
+    } catch (error) {
+      console.error("Error deleting image:", error);
+    }
   };
 
-  const addPage = () => {
-    const newPage = { id: 'PAGE_' + (pages.length + 1), columns: [{ id: 'COL_1', blocks: [] }] };
-    const newPages = [...pages, newPage];
-    setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+  const updateImageHeight = (blockId, val) => {
+    const newImages = printImages.map(img =>
+      String(img.id) === String(blockId) ? { ...img, height: Number(val) } : img
+    );
+    setPrintImages(newImages);
+    saveImagesConfig(newImages);
   };
 
-  const removePage = (pageIndex) => {
-    if (pages.length <= 1) return;
-    if (!window.confirm("¿Estás seguro de eliminar esta página y todo su contenido?")) return;
-    const newPages = pages.filter((_, i) => i !== pageIndex);
-    setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+  const saveImagesConfig = async (newImages) => {
+    setPrintImages(newImages);
+    try {
+      const updatedLayout = {
+        ...groupDescriptions,
+        __layout: { ...(groupDescriptions.__layout || {}), pages, pageSize, colors, qrScale, showIcons, leng }
+      };
+      await supabase.from('menu_print_config').update({
+        images: newImages,
+        group_descriptions: updatedLayout
+      }).eq('id', 2);
+    } catch (e) {
+      console.error("Error saving images:", e);
+    }
   };
-
-  const handlePrint = () => window.print();
-
-  if (loading) return <div className="text-center p-10">Cargando...</div>;
 
   const commonProps = {
     editMode,
     moveBlock,
     colors,
     leng,
-    groupDescriptions,
-    setGroupDescriptions,
-    saveGroupDescriptions: async (updated) => {
-      setGroupDescriptions(updated);
-      // We call saveConfig with the most recent descriptions
-      setIsSaving(true);
-      try {
-        const layoutUpdate = { pages, pageSize, colors, qrScale, showIcons };
-        const updatedFull = {
-          ...updated,
-          __layout: { ...(updated.__layout || {}), ...layoutUpdate }
-        };
-        await supabase.from('menu_print_config').update({
-          group_descriptions: updatedFull,
-          images: printImages,
-          show_icons: showIcons
-        }).eq('id', 2);
-      } catch (e) {
-        console.error("Error auto-saving descriptions:", e);
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    saveLayoutSizes: (newColorsObj) => {
-      if (newColorsObj && newColorsObj.colors) {
-        setColors(newColorsObj.colors);
-        // We'll let the user save with the main button or we can auto-save colors too
-      }
-    },
     menuData,
     showIcons,
-    setShowIcons,
     qrScale,
     setQrScale,
     printImages,
@@ -449,8 +477,14 @@ function MenuPrintHorizontal() {
     deleteImage,
     updateImageHeight,
     deleteBlock,
-    pagesCount: pages.length
+    groupDescriptions,
+    setGroupDescriptions,
+    saveGroupDescriptions,
+    pagesCount: pages.length,
+    openGallery
   };
+
+  if (loading) return <div className="flex items-center justify-center h-screen font-black italic uppercase text-2xl animate-pulse">Cargando Editor...</div>;
 
   return (
     <div className="flex-1 w-full flex flex-col items-start justify-start bg-zinc-100 pt-[180px] print:bg-white print:p-0 print:m-0 print:block overflow-hidden">
@@ -482,7 +516,6 @@ function MenuPrintHorizontal() {
         updateColumnFlex={updateColumnFlex}
       />
 
-
       {showColorPanel && (
         <MenuPrintColorPanel
           colors={colors}
@@ -492,64 +525,62 @@ function MenuPrintHorizontal() {
         />
       )}
 
-      <div id="print-area" className="flex-1 w-full overflow-auto bg-zinc-200/50 p-8 flex justify-center items-start print:bg-white print:p-0 print:block">
-        <div 
-          className="transition-all duration-300 ease-in-out"
-          style={{ 
-            width: `calc((${pageSize.width}${pageSize.unit} * ${pages.length} + 2.5rem * ${pages.length - 1}) * ${zoom})`,
-            height: `calc(${pageSize.height}${pageSize.unit} * ${zoom} + 4rem)`,
-            position: 'relative'
+      <div id="print-area" className="flex-1 w-full overflow-auto bg-[#e5e7eb] print:bg-white print:p-0 custom-scrollbar">
+        {/* Scrollable Canvas Wrapper */}
+        <div
+          style={{
+            width: `calc((${pageSize.width}${pageSize.unit} * ${pages.length} + 3rem * ${pages.length - 1}) * ${zoom} + 4rem)`,
+            height: `calc((${pageSize.height}${pageSize.unit} + 8rem) * ${zoom})`,
           }}
+          className="relative transition-all duration-300 p-8"
         >
-          <div 
-            className="flex flex-row flex-nowrap items-start justify-start gap-10" 
-            style={{ 
-              transform: `scale(${zoom})`, 
-              transformOrigin: 'top left',
-              width: 'max-content',
-              position: 'absolute',
-              top: 0,
-              left: 0
+          {/* Actual Scaled Content */}
+          <div
+            className="transition-all duration-300 ease-in-out shadow-2xl origin-top-left"
+            style={{
+              width: `calc(${pageSize.width}${pageSize.unit} * ${pages.length} + 3rem * ${pages.length - 1})`,
+              height: `calc(${pageSize.height}${pageSize.unit} + 4rem)`,
+              transform: `scale(${zoom})`,
             }}
           >
-            {pages.map((p, idx) => (
-              <div key={p.id} className="relative group/page">
-                {editMode && pages.length > 1 && (
-                  <Button 
-                    onClick={() => removePage(idx)} 
-                    variant="destructive" 
-                    className="absolute -top-4 -right-4 z-[100] rounded-full h-8 w-8 p-0 border-2 border-white shadow-lg print:hidden"
-                    title="Eliminar Página"
-                  >
-                    X
-                  </Button>
-                )}
-                <HorizontalPage
-                  key={p.id}
-                  page={p}
-                  pageIndex={idx}
-                  width={pageSize.width}
-                  height={pageSize.height}
-                  unit={pageSize.unit}
-                  colors={colors}
-                  leng={leng}
-                  editMode={editMode}
-                  commonProps={commonProps}
-                  onAddColumn={addColumn}
-                  onRemoveColumn={removeColumn}
-                  updateColumnFlex={updateColumnFlex}
-                  onAddBlock={addBlock}
-                  triggerImageUpload={(idx) => {
-                    setUploadTargetPage(idx);
-                    fileInputRef.current.click();
-                  }}
-                  uploadingImage={uploadingImage}
-                  selectedColumn={selectedColumn}
-                  setSelectedColumn={setSelectedColumn}
-                />
+            <div className="flex gap-12 print:gap-0 print:block">
+              {pages.map((p, idx) => (
+                <div key={p.id} className="relative group/page-container bg-white shadow-xl">
+                  <HorizontalPage
+                    page={p}
+                    pageIndex={idx}
+                    width={pageSize.width}
+                    height={pageSize.height}
+                    unit={pageSize.unit}
+                    colors={colors}
+                    leng={leng}
+                    editMode={editMode}
+                    commonProps={commonProps}
+                    onAddColumn={addColumn}
+                    onRemoveColumn={removeColumn}
+                    updateColumnFlex={updateColumnFlex}
+                    onAddBlock={addBlock}
+                    triggerImageUpload={(idx) => {
+                      setUploadTargetPage(idx);
+                      fileInputRef.current.click();
+                    }}
+                    uploadingImage={uploadingImage}
+                    selectedColumn={selectedColumn}
+                    setSelectedColumn={setSelectedColumn}
+                  />
+                  {editMode && pages.length > 1 && (
+                    <button
+                      onClick={() => removePage(idx)}
+                      className="absolute -top-4 -right-4 w-10 h-10 bg-red-600 text-white rounded-full font-black shadow-lg hover:scale-110 transition-transform z-50 print:hidden flex items-center justify-center border-2 border-white"
+                      title="Eliminar Página"
+                    >
+                      X
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
         </div>
       </div>
 
@@ -592,6 +623,27 @@ function MenuPrintHorizontal() {
             </div>
           </div>
         </div>
+      )}
+      {showGallery && (
+        <HorizontalGallery 
+          isOpen={showGallery}
+          onClose={() => setShowGallery(false)}
+          onSelect={handleGallerySelect}
+          onUploadNew={() => {
+            setShowGallery(false);
+            if (galleryContext === 'SET_BACKGROUND') {
+              setUploadTargetPage(galleryTarget.pageIndex);
+              // We need to handle background upload separately or reuse handleImageUpload
+              // For simplicity, let's just trigger the same file input
+              fileInputRef.current.click();
+            } else if (galleryContext === 'ADD_BLOCK') {
+              setUploadTargetPage(galleryTarget.pageIndex);
+              fileInputRef.current.click();
+            } else {
+              fileInputRef.current.click();
+            }
+          }}
+        />
       )}
     </div>
   );

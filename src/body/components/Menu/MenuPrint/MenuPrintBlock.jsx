@@ -38,7 +38,8 @@ const MenuPrintBlock = ({
   deleteImage,
   updateImageHeight,
   pagesCount,
-  deleteBlock
+  deleteBlock,
+  openGallery
 }) => {
 
   const renderBlockControls = (id, showColumnToggle = false) => {
@@ -53,18 +54,20 @@ const MenuPrintBlock = ({
     return (
       <div className="absolute -top-3 -right-3 flex flex-col gap-1 z-20 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
         {showColumnToggle && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-6 w-12 p-0 text-[8px] rounded-sm border border-black bg-blue-50 hover:bg-blue-100 font-bold"
-            onClick={() => {
-              const nextCols = currentCols === 2 ? 1 : 2;
-              saveGroupDescriptions({ ...groupDescriptions, [colKey]: nextCols });
-            }}
-            title="Cambiar Columnas"
-          >
-            {currentCols} COL
-          </Button>
+          <div className="flex items-center gap-1 bg-blue-50 px-1 rounded-sm border border-black h-6">
+            <span className="text-[8px] font-black text-blue-700">COL:</span>
+            <input 
+              type="number"
+              min="1"
+              max="5"
+              className="w-6 bg-transparent text-[10px] font-bold outline-none text-center"
+              value={currentCols}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 1;
+                saveGroupDescriptions({ ...groupDescriptions, [colKey]: val });
+              }}
+            />
+          </div>
         )}
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'up', pageIndex, columnId)} title="Subir">↑</Button>
         <Button size="sm" variant="secondary" className="h-6 w-6 p-0 text-xs rounded-sm border border-black" onClick={() => moveBlock(id, 'down', pageIndex, columnId)} title="Bajar">↓</Button>
@@ -157,9 +160,10 @@ const MenuPrintBlock = ({
 
   switch (blockId) {
     case "CAFE":
+      const cafeCols = groupDescriptions["__CAFE_columns"] || 2;
       return (
         <div key="CAFE" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
-          {renderBlockControls("CAFE")}
+          {renderBlockControls("CAFE", true)}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
             <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Café" : "Coffee"}
@@ -167,15 +171,16 @@ const MenuPrintBlock = ({
             {renderGroupDescription("CAFE")}
           </div>
           <div className="p-2">
-            <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={cafeCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={cafeCols} editMode={editMode} showIcons={showIcons} colors={colors} />
           </div>
         </div>
       );
     case "BEBIDAS":
+      const bebidasCols = groupDescriptions["__BEBIDAS_columns"] || 2;
       return (
         <div key="BEBIDAS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
-          {renderBlockControls("BEBIDAS")}
+          {renderBlockControls("BEBIDAS", true)}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
             <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Bebidas" : "Drinks"}
@@ -183,16 +188,17 @@ const MenuPrintBlock = ({
             {renderGroupDescription("BEBIDAS")}
           </div>
           <div className="p-2">
-            <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={bebidasCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={bebidasCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={"ENLATADOS"} TITTLE={{ ES: "Embotellados", EN: "Bottled" }} isEnglish={leng} columns={bebidasCols} editMode={editMode} showIcons={showIcons} colors={colors} />
           </div>
         </div>
       );
     case "ALIMENTOS":
+      const alimentosCols = groupDescriptions["__ALIMENTOS_columns"] || 2;
       return (
         <div key="ALIMENTOS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
-          {renderBlockControls("ALIMENTOS")}
+          {renderBlockControls("ALIMENTOS", true)}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
             <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Alimentos" : "Food"}
@@ -200,18 +206,19 @@ const MenuPrintBlock = ({
             {renderGroupDescription("ALIMENTOS")}
           </div>
           <div className="p-2">
-            <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} columns={2} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={PANADERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_SALADA} TITTLE={{ ES: "Horneados Salados", EN: "Savory Baked" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={REPOSTERIA} SUB_GRUPO={PANADERIA_REPOSTERIA_DULCE} TITTLE={{ ES: "Horneados Dulces", EN: "Sweet Baked" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={TARDEO} TITTLE={{ ES: "Tardeo", EN: "Evening" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} colors={colors} />
           </div>
         </div>
       );
     case "EXTRAS":
+      const extrasCols = groupDescriptions["__EXTRAS_columns"] || 3;
       return (
         <div key="EXTRAS" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] overflow-hidden" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
-          {renderBlockControls("EXTRAS")}
+          {renderBlockControls("EXTRAS", true)}
           <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 overflow-hidden" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
             <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
               {!leng ? "Adiciones" : "Extras"}
@@ -219,8 +226,8 @@ const MenuPrintBlock = ({
             {renderGroupDescription("ADICIONES")}
           </div>
           <div className="p-2">
-            <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} colors={colors} />
-            <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={3} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} colors={colors} />
+            <CardGridPrintMatrix products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} colors={colors} />
           </div>
         </div>
       );
@@ -305,11 +312,14 @@ const MenuPrintBlock = ({
               )}
               {editMode && (
                 <div className="flex gap-2 print:hidden ml-2 items-center shrink-0">
-                  <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase" title="Reemplazar Imagen">
+                  <button 
+                    onClick={() => openGallery('REPLACE_IMAGE', { blockId })}
+                    className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300"
+                    title="Reemplazar Imagen"
+                  >
                     Cambiar
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(e, blockId)} disabled={uploadingImage} />
-                  </label>
-                  <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center">X</button>
+                  </button>
+                  <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center border border-red-300">X</button>
                 </div>
               )}
             </div>

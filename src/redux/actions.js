@@ -1050,7 +1050,10 @@ export const createModelAction = (newModelData) => async (dispatch) => {
   try {
     const { data, error } = await supabase
       .from('Model')
-      .insert([newModelData])
+      .insert([{
+        _id: uuidv4(),
+        ...newModelData
+      }])
       .select()
       .single(); // Devuelve un solo objeto
 

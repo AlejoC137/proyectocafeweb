@@ -22,7 +22,8 @@ const HorizontalPage = ({
   triggerImageUpload,
   uploadingImage,
   selectedColumn,
-  setSelectedColumn
+  setSelectedColumn,
+  openGallery
 }) => {
   const rulerRef = React.useRef(null);
   const [draggingHandle, setDraggingHandle] = React.useState(null); // { colIdx }
@@ -89,6 +90,19 @@ const HorizontalPage = ({
         color: colors.itemName || '#000'
       }}
     >
+      {/* Background Image Container */}
+      {page.bgImage && (
+        <div 
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `url(${page.bgImage.url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: page.bgOpacity !== undefined ? page.bgOpacity : 0.3
+          }}
+        />
+      )}
+
       <div className="flex flex-col h-full w-full relative z-10">
         <MenuPrintHeader colors={colors} leng={leng} />
 
@@ -128,14 +142,30 @@ const HorizontalPage = ({
                     columnId={colIdx}
                   />
                   {editMode && (
-                    <div className="mt-2 flex justify-center print:hidden opacity-0 group-hover/page:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        className="h-6 text-[8px] font-black uppercase border border-dashed border-black/10 hover:border-black/30"
-                        onClick={() => onAddBlock(pageIndex, colIdx)}
+                    <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-2 print:hidden opacity-0 group-hover/page:opacity-100 transition-opacity">
+                      <Button 
+                        size="sm" 
+                        className="bg-black hover:bg-zinc-800 text-white font-black uppercase italic text-[10px] h-7 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] border border-white"
+                        onClick={() => onAddColumn(pageIndex)}
                       >
-                        + Bloque
+                        + Columna
                       </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-7 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] border border-white"
+                        onClick={() => openGallery('SET_BACKGROUND', { pageIndex })}
+                      >
+                        🖼️ Fondo
+                      </Button>
+                      {page.bgImage && (
+                        <Button 
+                          size="sm" 
+                          className="bg-red-600 hover:bg-red-700 text-white font-black uppercase italic text-[10px] h-7 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] border border-white"
+                          onClick={() => openGallery('REMOVE_BACKGROUND', { pageIndex })}
+                        >
+                          Limpiar Fondo
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
