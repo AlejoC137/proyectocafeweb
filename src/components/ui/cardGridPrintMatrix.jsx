@@ -308,7 +308,7 @@ export function CardGridPrintMatrix({
         return (!isNaN(num) && val !== '' && val !== null && val !== undefined) ? num : 9999;
     };
 
-    const activeProducts = filteredProducts.filter(p => p.PRINT === true).sort((a, b) => getOrder(a.Order) - getOrder(b.Order));
+    const activeProducts = filteredProducts.filter(p => p.PrintConst === true).sort((a, b) => getOrder(a.Order) - getOrder(b.Order));
 
     if (activeProducts.length === 0) return null;
     if (isExcluded && !editMode) return null;

@@ -235,7 +235,8 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
           grupo: { label: "Grupo", key: "GRUPO", default: true },
           subGrupo: { label: "Sub Grupo", key: "SUB_GRUPO", default: true },
           order: { label: "Order", key: "Order", default: false },
-          print: { label: "Print", key: "PRINT", default: true },
+          print: { label: "Print (Ref)", key: "PRINT", default: true },
+          printConst: { label: "PrintConst", key: "PrintConst", default: true },
           estado: { label: "Estado", key: "Estado", default: true },
           foto: { label: "Foto", key: "Foto", default: false },
           composicionAlmuerzo: { label: "Comp. Almuerzo", key: "Comp_Lunch", default: true },
@@ -538,6 +539,9 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
 
           case 'print':
             return showEdit ? renderEditableCell(originalIndex, col.key, 'checkbox') : <span>{item.PRINT ? 'Sí' : 'No'}</span>;
+
+          case 'printConst':
+            return showEdit ? renderEditableCell(originalIndex, col.key, 'checkbox') : <span>{item.PrintConst ? 'Sí' : 'No'}</span>;
 
           case 'foto':
             return item.Foto ? <a href={item.Foto} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Ver</a> : <span>No</span>;
