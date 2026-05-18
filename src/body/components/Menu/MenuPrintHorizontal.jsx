@@ -11,6 +11,7 @@ import HorizontalPage from "./MenuPrintHorizontal/HorizontalPage";
 import HorizontalControls from "./MenuPrintHorizontal/HorizontalControls";
 import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
+import PrintCanvas from "./MenuPrintHorizontal/PrintCanvas";
 
 function MenuPrintHorizontal() {
   const dispatch = useDispatch();
@@ -20,7 +21,6 @@ function MenuPrintHorizontal() {
   const [editMode, setEditMode] = useState(false);
   const [showColorPanel, setShowColorPanel] = useState(false);
   const menuData = useSelector((state) => state.allMenu);
-  const [zoom, setZoom] = useState(0.6);
   const [showIcons, setShowIcons] = useState(true);
   const [showBlockSelector, setShowBlockSelector] = useState(null); // { pageIndex, colIdx }
 
@@ -32,7 +32,7 @@ function MenuPrintHorizontal() {
   const [selectedColumn, setSelectedColumn] = useState(null); // { pageIndex, colIdx }
   const [showGallery, setShowGallery] = useState(false);
   const [galleryContext, setGalleryContext] = useState(null); // 'ADD_BLOCK' | 'REPLACE_IMAGE' | 'SET_BACKGROUND'
-  const [galleryTarget, setGalleryTarget] = useState(null); 
+  const [galleryTarget, setGalleryTarget] = useState(null);
   const [colors, setColors] = useState({
     mainTitle: "#000000",
     mainBorder: "#000000",
@@ -352,9 +352,9 @@ function MenuPrintHorizontal() {
 
       const updatedImages = [...printImages, newImage];
       setPrintImages(updatedImages);
-      
+
       const newPages = JSON.parse(JSON.stringify(pages));
-      
+
       if (galleryContext === 'SET_BACKGROUND') {
         newPages[pageIndex].bgImage = newImage;
       } else {
@@ -487,7 +487,7 @@ function MenuPrintHorizontal() {
   if (loading) return <div className="flex items-center justify-center h-screen font-black italic uppercase text-2xl animate-pulse">Cargando Editor...</div>;
 
   return (
-    <div className="flex-1 w-full flex flex-col items-start justify-start bg-zinc-100 pt-[180px] print:bg-white print:p-0 print:m-0 print:block overflow-hidden">
+    <div className="flex-1 w-full flex flex-col bg-zinc-100 pt-[180px] print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden">
       <HorizontalStyles width={pageSize.width} height={pageSize.height} unit={pageSize.unit} />
 
       <HorizontalControls
@@ -505,8 +505,6 @@ function MenuPrintHorizontal() {
         setPageSize={setPageSize}
         saveConfig={saveConfig}
         isSaving={isSaving}
-        zoom={zoom}
-        setZoom={setZoom}
         showIcons={showIcons}
         setShowIcons={setShowIcons}
         addPage={addPage}
@@ -525,64 +523,24 @@ function MenuPrintHorizontal() {
         />
       )}
 
-      <div id="print-area" className="flex-1 w-full overflow-auto bg-[#e5e7eb] print:bg-white print:p-0 custom-scrollbar">
-        {/* Scrollable Canvas Wrapper */}
-        <div
-          style={{
-            width: `calc((${pageSize.width}${pageSize.unit} * ${pages.length} + 3rem * ${pages.length - 1}) * ${zoom} + 4rem)`,
-            height: `calc((${pageSize.height}${pageSize.unit} + 8rem) * ${zoom})`,
-          }}
-          className="relative transition-all duration-300 p-8"
-        >
-          {/* Actual Scaled Content */}
-          <div
-            className="transition-all duration-300 ease-in-out shadow-2xl origin-top-left"
-            style={{
-              width: `calc(${pageSize.width}${pageSize.unit} * ${pages.length} + 3rem * ${pages.length - 1})`,
-              height: `calc(${pageSize.height}${pageSize.unit} + 4rem)`,
-              transform: `scale(${zoom})`,
-            }}
-          >
-            <div className="flex gap-12 print:gap-0 print:block">
-              {pages.map((p, idx) => (
-                <div key={p.id} className="relative group/page-container bg-white shadow-xl">
-                  <HorizontalPage
-                    page={p}
-                    pageIndex={idx}
-                    width={pageSize.width}
-                    height={pageSize.height}
-                    unit={pageSize.unit}
-                    colors={colors}
-                    leng={leng}
-                    editMode={editMode}
-                    commonProps={commonProps}
-                    onAddColumn={addColumn}
-                    onRemoveColumn={removeColumn}
-                    updateColumnFlex={updateColumnFlex}
-                    onAddBlock={addBlock}
-                    triggerImageUpload={(idx) => {
-                      setUploadTargetPage(idx);
-                      fileInputRef.current.click();
-                    }}
-                    uploadingImage={uploadingImage}
-                    selectedColumn={selectedColumn}
-                    setSelectedColumn={setSelectedColumn}
-                  />
-                  {editMode && pages.length > 1 && (
-                    <button
-                      onClick={() => removePage(idx)}
-                      className="absolute -top-4 -right-4 w-10 h-10 bg-red-600 text-white rounded-full font-black shadow-lg hover:scale-110 transition-transform z-50 print:hidden flex items-center justify-center border-2 border-white"
-                      title="Eliminar Página"
-                    >
-                      X
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PrintCanvas
+        pages={pages}
+        pageSize={pageSize}
+        colors={colors}
+        leng={leng}
+        editMode={editMode}
+        commonProps={commonProps}
+        onAddColumn={addColumn}
+        onRemoveColumn={removeColumn}
+        updateColumnFlex={updateColumnFlex}
+        onAddBlock={addBlock}
+        setUploadTargetPage={setUploadTargetPage}
+        fileInputRef={fileInputRef}
+        uploadingImage={uploadingImage}
+        selectedColumn={selectedColumn}
+        setSelectedColumn={setSelectedColumn}
+        removePage={removePage}
+      />
 
       <input
         type="file"
@@ -594,7 +552,7 @@ function MenuPrintHorizontal() {
 
       {showBlockSelector && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white border-4 border-black p-6 rounded-lg shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-md w-full animate-in zoom-in-95 duration-200">
+          <div className="bg-white border-4 border-black p-6 rounded-lg shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-md w-window animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
               <h3 className="font-black text-xl uppercase italic">Seleccionar Bloque</h3>
               <button onClick={() => setShowBlockSelector(null)} className="font-black hover:text-red-600 transition-colors">CERRAR X</button>
@@ -625,7 +583,7 @@ function MenuPrintHorizontal() {
         </div>
       )}
       {showGallery && (
-        <HorizontalGallery 
+        <HorizontalGallery
           isOpen={showGallery}
           onClose={() => setShowGallery(false)}
           onSelect={handleGallerySelect}
