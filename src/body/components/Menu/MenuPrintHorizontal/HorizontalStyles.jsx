@@ -9,6 +9,19 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           margin: 0 !important;
         }
 
+        /* Reset all ancestors of print area to simple blocks with zero margin/padding/bg */
+        html, body, #root, #root > div, .flex-1, main, .main-content {
+          margin: 0 !important;
+          padding: 0 !important;
+          display: block !important;
+          position: relative !important;
+          width: 100% !important;
+          height: auto !important;
+          background: transparent !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+        }
+
         body * {
           visibility: hidden !important;
         }
@@ -18,12 +31,37 @@ export const HorizontalStyles = ({ width, height, unit }) => (
         }
 
         #print-area {
-          position: absolute !important;
+          position: relative !important;
           left: 0 !important;
           top: 0 !important;
           width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+          background: transparent !important;
+          display: block !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+
+        #canvas-inner {
+          transform: none !important;
+          transition: none !important;
+          display: block !important;
+          width: 100% !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .print-page-wrapper {
+          display: block !important;
+          page-break-after: always !important;
+          break-after: page !important;
+          width: ${width}${unit} !important;
+          height: ${height}${unit} !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-shadow: none !important;
           background: transparent !important;
         }
 
@@ -38,6 +76,8 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           box-sizing: border-box !important;
           overflow: hidden !important;
           visibility: visible !important;
+          margin: 0 !important;
+          padding: 1.5rem !important;
         }
 
         * {

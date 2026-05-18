@@ -4,9 +4,9 @@ import MenuPrintBlock from "./MenuPrintBlock";
 const MenuPrintColumn = ({ blocks, pageIndex, columnId, ...props }) => {
   return (
     <div className="flex flex-col gap-3">
-      {blocks.map(blockId => (
+      {blocks.map((blockId, index) => (
         <MenuPrintBlock
-          key={blockId}
+          key={`${blockId}_${index}`}
           blockId={blockId}
           pageIndex={pageIndex}
           columnId={columnId}

@@ -112,27 +112,6 @@ const HorizontalControls = ({
 
 
 
-      {editMode && selectedColumn && (
-        <div className="flex items-center gap-4 border-r pr-4 bg-blue-50/50 px-3 py-1 rounded-lg animate-in slide-in-from-top-2 duration-300 border-2 border-blue-200">
-          <div className="flex flex-col gap-1 min-w-[150px]">
-            <div className="flex justify-between">
-              <Label className="text-[10px] uppercase font-black text-blue-700">Ajuste Ancho Col</Label>
-              <button onClick={() => setSelectedColumn(null)} className="text-[10px] font-bold text-red-600 hover:scale-110">X</button>
-            </div>
-            <input
-              type="range"
-              min="0.2"
-              max="3"
-              step="0.1"
-              value={currentFlex}
-              onChange={(e) => updateColumnFlex(selectedColumn.pageIndex, selectedColumn.colIdx, parseFloat(e.target.value), false)}
-              onMouseUp={(e) => updateColumnFlex(selectedColumn.pageIndex, selectedColumn.colIdx, parseFloat(e.target.value), true)}
-              className="h-2 cursor-pointer accent-blue-600"
-            />
-          </div>
-        </div>
-      )}
-
       <div className="flex items-center gap-2">
         {editMode && (
           <Button variant="outline" className="h-10 gap-2 border-dashed" onClick={addPage}>

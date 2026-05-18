@@ -280,8 +280,23 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     );
 }
 
-export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TITTLE, columns = 2, editMode = false, showIcons = true, colors }) {
+export function CardGridPrintMatrix({
+    products,
+    isEnglish,
+    GRUPO,
+    SUB_GRUPO,
+    TITTLE,
+    columns = 2,
+    editMode = false,
+    showIcons = true,
+    colors,
+    groupDescriptions,
+    saveGroupDescriptions,
+    excludeKey
+}) {
     const [activeSlot, setActiveSlot] = React.useState(null);
+
+    const isExcluded = excludeKey && groupDescriptions?.[excludeKey] === true;
 
     const filteredProducts = products.filter((product) => {
         const groupMatch = Array.isArray(GRUPO) ? GRUPO.includes(product.GRUPO) : product.GRUPO === GRUPO;
@@ -296,33 +311,73 @@ export function CardGridPrintMatrix({ products, isEnglish, GRUPO, SUB_GRUPO, TIT
     const activeProducts = filteredProducts.filter(p => p.PRINT === true).sort((a, b) => getOrder(a.Order) - getOrder(b.Order));
 
     if (activeProducts.length === 0) return null;
+    if (isExcluded && !editMode) return null;
 
     const titleText = TITTLE ? TITTLE[isEnglish ? "EN" : "ES"] : String(GRUPO);
-    const gridColsClass = columns === 3 ? "grid-cols-3" : columns === 2 ? "grid-cols-2" : "grid-cols-1";
+    const gridColsClass = 
+        columns === 5 ? "grid-cols-5" :
+        columns === 4 ? "grid-cols-4" :
+        columns === 3 ? "grid-cols-3" :
+        columns === 2 ? "grid-cols-2" :
+        "grid-cols-1";
+
+    const handleToggleExclude = () => {
+        if (!saveGroupDescriptions || !excludeKey) return;
+        const newDescriptions = {
+            ...groupDescriptions,
+            [excludeKey]: !isExcluded
+        };
+        saveGroupDescriptions(newDescriptions);
+    };
 
     return (
         <div className="mb-0 break-inside-avoid">
             <div className="flex items-center mb-1.5 ">
-                <span className="font-black uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px]" style={{ backgroundColor: colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg, color: colors?.categoryTitle, borderColor: colors?.categoryBorder, boxShadow: `2px 2px 0px 0px ${colors?.categoryBorder}`, fontFamily: colors?.fontCategory || 'Space Grotesk', fontSize: `${colors?.sizeCategory * 0.6 || 12}${colors?.fontSizeUnit || 'px'}` }}>
-                    {titleText}
+                <span className={`font-black uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px] ${isExcluded ? 'opacity-50 bg-zinc-100 border-zinc-400 text-zinc-400' : ''}`} style={{ 
+                    backgroundColor: isExcluded ? '#f4f4f5' : (colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg), 
+                    color: isExcluded ? '#a1a1aa' : colors?.categoryTitle, 
+                    borderColor: isExcluded ? '#a1a1aa' : colors?.categoryBorder, 
+                    boxShadow: isExcluded ? '2px 2px 0px 0px #a1a1aa' : `2px 2px 0px 0px ${colors?.categoryBorder}`, 
+                    fontFamily: colors?.fontCategory || 'Space Grotesk', 
+                    fontSize: `${colors?.sizeCategory * 0.6 || 12}${colors?.fontSizeUnit || 'px'}` 
+                }}>
+                    {titleText} {isExcluded && (isEnglish ? " (HIDDEN)" : " (OCULTO)")}
                 </span>
-                <div className="flex-grow border-b-[2px] ml-2 h-0" style={{ borderColor: colors?.categoryBorder }}></div>
+                {editMode && excludeKey && (
+                    <button
+                        onClick={handleToggleExclude}
+                        className="ml-3 flex items-center gap-1.5 focus:outline-none print:hidden cursor-pointer bg-transparent border-none p-0"
+                        title={isExcluded ? "Mostrar subcategoría" : "Ocultar subcategoría"}
+                    >
+                        <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out border-2 border-black flex items-center ${
+                            isExcluded ? 'bg-zinc-300' : 'bg-green-500'
+                        }`}>
+                            <div className="w-2.5 h-2.5 bg-white rounded-full border border-black transition-transform duration-200 ease-in-out" style={{ transform: isExcluded ? 'translateX(0px)' : 'translateX(10px)' }} />
+                        </div>
+                        <span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">
+                            {isExcluded ? "OFF" : "ON"}
+                        </span>
+                    </button>
+                )}
+                <div className="flex-grow border-b-[2px] ml-2 h-0" style={{ borderColor: isExcluded ? '#a1a1aa' : colors?.categoryBorder }}></div>
             </div>
 
-            <div className={`grid ${gridColsClass} gap-x-4 gap-y-1`}>
-                {activeProducts.map((product) => (
-                    <ProductSummaryRow
-                        key={product._id}
-                        product={product}
-                        isEnglish={isEnglish}
-                        editMode={editMode}
-                        activeSlot={activeSlot}
-                        setActiveSlot={setActiveSlot}
-                        showIcons={showIcons}
-                        colors={colors}
-                    />
-                ))}
-            </div>
+            {!isExcluded && (
+                <div className={`grid ${gridColsClass} gap-x-4 gap-y-1`}>
+                    {activeProducts.map((product) => (
+                        <ProductSummaryRow
+                            key={product._id}
+                            product={product}
+                            isEnglish={isEnglish}
+                            editMode={editMode}
+                            activeSlot={activeSlot}
+                            setActiveSlot={setActiveSlot}
+                            showIcons={showIcons}
+                            colors={colors}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

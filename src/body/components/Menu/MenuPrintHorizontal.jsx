@@ -235,9 +235,11 @@ function MenuPrintHorizontal() {
 
     let newBlockId = type;
     if (type === 'MENU' && categoryId) {
-      newBlockId = categoryId;
+      newBlockId = categoryId + '_' + Math.random().toString(36).substr(2, 9);
     } else if (type === 'CUSTOM') {
       newBlockId = 'CUSTOM_' + Math.random().toString(36).substr(2, 9);
+    } else if (type === 'INFO' || type === 'QR') {
+      newBlockId = type + '_' + Math.random().toString(36).substr(2, 9);
     }
 
     const newPages = JSON.parse(JSON.stringify(pages));
@@ -266,15 +268,12 @@ function MenuPrintHorizontal() {
 
     if (galleryContext === 'ADD_BLOCK') {
       newPages[pageIndex].columns[colIdx].blocks.push(img.id);
-      // Ensure the image exists in printImages for this config
       if (!printImages.find(pi => pi.id === img.id)) {
         setPrintImages([...printImages, img]);
       }
     } else if (galleryContext === 'REPLACE_IMAGE') {
-      // Logic for replacing image in printImages
       const updatedImages = printImages.map(pi => pi.id === blockId ? { ...pi, url: img.url, storagePath: img.storagePath } : pi);
       setPrintImages(updatedImages);
-      // If the image was NOT in printImages, add it
       if (!printImages.find(pi => pi.id === img.id)) {
         setPrintImages([...updatedImages, img]);
       }
@@ -296,8 +295,6 @@ function MenuPrintHorizontal() {
       [currentBlocks[blockIndex], currentBlocks[blockIndex - 1]] = [currentBlocks[blockIndex - 1], currentBlocks[blockIndex]];
     } else if (direction === 'down' && blockIndex < currentBlocks.length - 1) {
       [currentBlocks[blockIndex], currentBlocks[blockIndex + 1]] = [currentBlocks[blockIndex + 1], currentBlocks[blockIndex]];
-    } else if (direction === 'left' || direction === 'right') {
-      // Logic for moving between columns or pages could go here
     }
 
     setPages(newPages);
@@ -334,13 +331,13 @@ function MenuPrintHorizontal() {
       const filePath = `menu-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('menu-assets')
+        .from('Images_eventos')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('menu-assets')
+        .from('Images_eventos')
         .getPublicUrl(filePath);
 
       const newImage = {
@@ -358,8 +355,9 @@ function MenuPrintHorizontal() {
       if (galleryContext === 'SET_BACKGROUND') {
         newPages[pageIndex].bgImage = newImage;
       } else {
-        // Default to adding as block if no specific context or adding block
-        newPages[pageIndex].columns[0].blocks.push(newImage.id);
+        if (newPages[pageIndex] && newPages[pageIndex].columns && newPages[pageIndex].columns[0]) {
+          newPages[pageIndex].columns[0].blocks.push(newImage.id);
+        }
       }
 
       setPages(newPages);
@@ -379,7 +377,7 @@ function MenuPrintHorizontal() {
     try {
       const oldImage = printImages.find(img => img.id === oldImageId);
       if (oldImage && oldImage.storagePath) {
-        await supabase.storage.from('menu-assets').remove([oldImage.storagePath]);
+        await supabase.storage.from('Images_eventos').remove([oldImage.storagePath]);
       }
 
       const fileExt = newFile.name.split('.').pop();
@@ -387,13 +385,13 @@ function MenuPrintHorizontal() {
       const filePath = `menu-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('menu-assets')
+        .from('Images_eventos')
         .upload(filePath, newFile);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('menu-assets')
+        .from('Images_eventos')
         .getPublicUrl(filePath);
 
       const updatedImages = printImages.map(img =>
@@ -415,7 +413,7 @@ function MenuPrintHorizontal() {
 
     try {
       if (imgToDelete && imgToDelete.storagePath) {
-        await supabase.storage.from('menu-assets').remove([imgToDelete.storagePath]);
+        await supabase.storage.from('Images_eventos').remove([imgToDelete.storagePath]);
       }
 
       const updatedImages = printImages.filter(img => img.id !== imageId);
@@ -591,8 +589,6 @@ function MenuPrintHorizontal() {
             setShowGallery(false);
             if (galleryContext === 'SET_BACKGROUND') {
               setUploadTargetPage(galleryTarget.pageIndex);
-              // We need to handle background upload separately or reuse handleImageUpload
-              // For simplicity, let's just trigger the same file input
               fileInputRef.current.click();
             } else if (galleryContext === 'ADD_BLOCK') {
               setUploadTargetPage(galleryTarget.pageIndex);

@@ -56,8 +56,9 @@ export default function PrintCanvas({
   }, [zoom, panOffset]);
 
   const handleMouseDown = (e) => {
-    // Middle click or Left click on background
-    if (e.button === 1 || (e.button === 0 && e.target.id === "print-area")) {
+    // Allow panning on middle click, OR on left click if not clicking an interactive element
+    const isInteractive = e.target.closest('button, input, select, textarea, a, [role="button"], .cursor-col-resize, [contenteditable="true"]');
+    if (e.button === 1 || (e.button === 0 && !isInteractive)) {
       setIsPanning(true);
       setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
     }
@@ -97,7 +98,7 @@ export default function PrintCanvas({
         }}
       >
         {pages.map((p, idx) => (
-          <div key={p.id} className="relative group/page-container bg-white shadow-xl print:shadow-none">
+          <div key={p.id} className="relative group/page-container bg-white shadow-xl print:shadow-none print-page-wrapper">
             <HorizontalPage
               page={p}
               pageIndex={idx}
@@ -119,6 +120,7 @@ export default function PrintCanvas({
               uploadingImage={uploadingImage}
               selectedColumn={selectedColumn}
               setSelectedColumn={setSelectedColumn}
+              openGallery={commonProps.openGallery}
             />
             {editMode && pages.length > 1 && (
               <button

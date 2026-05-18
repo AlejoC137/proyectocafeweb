@@ -92,12 +92,11 @@ const HorizontalPage = ({
     >
       {/* Background Image Container */}
       {page.bgImage && (
-        <div 
-          className="absolute inset-0 z-0 pointer-events-none"
+        <img 
+          src={page.bgImage.url}
+          alt="Page Background"
+          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
           style={{
-            backgroundImage: `url(${page.bgImage.url})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
             opacity: page.bgOpacity !== undefined ? page.bgOpacity : 0.3
           }}
         />
@@ -134,13 +133,24 @@ const HorizontalPage = ({
                   </div>
                 )}
                 
-                <div className="flex-grow overflow-auto h-full scrollbar-hide">
+                <div className="flex-grow overflow-auto h-full scrollbar-hide pb-12">
                   <MenuPrintColumn
                     blocks={col.blocks || []}
                     {...commonProps}
                     pageIndex={pageIndex}
                     columnId={colIdx}
                   />
+                  {editMode && (
+                    <div className="mt-4 mb-2 flex justify-center print:hidden">
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[9px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black"
+                        onClick={() => onAddBlock(pageIndex, colIdx)}
+                      >
+                        + Bloque
+                      </Button>
+                    </div>
+                  )}
                   {editMode && (
                     <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-2 print:hidden opacity-0 group-hover/page:opacity-100 transition-opacity">
                       <Button 
@@ -223,12 +233,20 @@ const HorizontalPage = ({
 
             <div className="absolute bottom-16 right-4 flex gap-2 print:hidden z-[50]">
               <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-xs font-black shadow-lg"
-                onClick={() => triggerImageUpload(pageIndex)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black uppercase italic rounded-md flex items-center gap-1.5"
+                onClick={() => openGallery ? openGallery('SET_BACKGROUND', { pageIndex }) : commonProps.openGallery('SET_BACKGROUND', { pageIndex })}
                 disabled={uploadingImage}
               >
-                {uploadingImage ? "SUBIENDO..." : "+ IMAGEN"}
+                🖼️ {uploadingImage ? "SUBIENDO..." : "FONDO PÁGINA"}
               </Button>
+              {page.bgImage && (
+                <Button
+                  className="bg-red-600 hover:bg-red-700 text-white h-8 text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black uppercase italic rounded-md flex items-center gap-1.5"
+                  onClick={() => openGallery ? openGallery('REMOVE_BACKGROUND', { pageIndex }) : commonProps.openGallery('REMOVE_BACKGROUND', { pageIndex })}
+                >
+                  🗑️ LIMPIAR
+                </Button>
+              )}
             </div>
           </>
         )}
