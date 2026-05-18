@@ -14,6 +14,7 @@ import MenuPrintControls from "./MenuPrint/MenuPrintControls";
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
 import MenuPrintColumn from "./MenuPrint/MenuPrintColumn";
 import MenuPage from "./MenuPrint/MenuPage";
+import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 
 function MenuPrint() {
   const dispatch = useDispatch();
@@ -58,6 +59,10 @@ function MenuPrint() {
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
+
+  const [showGallery, setShowGallery] = useState(false);
+  const [galleryContext, setGalleryContext] = useState(null);
+  const [galleryTarget, setGalleryTarget] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -241,6 +246,20 @@ function MenuPrint() {
       setUploadingImage(false);
       e.target.value = '';
     }
+  };
+
+  const openGallery = (context, target) => {
+    setGalleryContext(context);
+    setGalleryTarget(target);
+    setShowGallery(true);
+  };
+
+  const handleGallerySelect = async (img) => {
+    const { blockId } = galleryTarget;
+    const updatedImages = printImages.map(pi => pi.id === blockId ? { ...pi, url: img.url, path: img.storagePath || img.path } : pi);
+    setPrintImages(updatedImages);
+    await saveImagesConfig(updatedImages);
+    setShowGallery(false);
   };
 
   const handleBackgroundUpload = async (e) => {
@@ -438,6 +457,7 @@ function MenuPrint() {
     deleteImage,
     updateImageHeight,
     deleteBlock,
+    openGallery,
     pagesCount: pages.length
   };
 
@@ -520,6 +540,20 @@ function MenuPrint() {
           </div>
         ))}
       </div>
+
+      {showGallery && (
+        <HorizontalGallery
+          isOpen={showGallery}
+          onClose={() => setShowGallery(false)}
+          onSelect={handleGallerySelect}
+          onUploadNew={() => {
+            setShowGallery(false);
+            if (fileInputRef.current) {
+              fileInputRef.current.click();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

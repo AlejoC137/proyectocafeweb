@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
-import { ArrowLeft, Save, Trash2, Printer, Plus, X, Settings2, FileJson, Copy, Check, ChefHat, Clock, Users, DollarSign, RefreshCw, Lock, Unlock, BookOpen } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Printer, Plus, X, Settings2, FileJson, Copy, Check, ChefHat, Clock, Users, DollarSign, RefreshCw, Lock, Unlock, BookOpen, Image as ImageIcon } from "lucide-react";
 import RecipeImportModal from './RecipeImportModal';
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
 import EditableText from "../../../components/ui/EditableText";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
+import supabase from "../../../config/supabaseClient";
+import HorizontalGallery from "../../components/Menu/MenuPrintHorizontal/HorizontalGallery";
 
 // ─── EditableIngredientRow ────────────────────────────────────────────────────
 const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove, onSync, onMove, isFirst, isLast, onNavigate }) => {
@@ -204,6 +206,95 @@ function RecetaModal({ item, onClose }) {
   const [rendimientoPorcion, setRendimientoPorcion] = useState("");
   const [imagenUrl, setImagenUrl] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // Shared gallery states
+  const [showGallery, setShowGallery] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleGallerySelect = async (img) => {
+    setImagenUrl(img.url);
+    setShowGallery(false);
+    
+    // Automatically save if possible
+    if (receta.forId) {
+      setIsUpdating(true);
+      try {
+        const result = await dispatch(updateItem(receta.forId, { Foto: img.url }, "Menu"));
+        if (result) setFoto(img.url);
+      } catch (error) {
+        alert("Error al actualizar la imagen: " + error.message);
+      } finally {
+        setIsUpdating(false);
+      }
+    }
+  };
+
+  const handleUploadNewClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      alert("Imagen demasiado pesada (<4MB)");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `menu-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('Images_eventos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('Images_eventos')
+        .getPublicUrl(filePath);
+
+      const newImage = {
+        id: 'IMG_' + Date.now(),
+        url: publicUrl,
+        storagePath: filePath,
+        height: 300
+      };
+
+      // Register in menu_print_config
+      const { data: configs, error: fetchErr } = await supabase.from('menu_print_config').select('*');
+      if (!fetchErr && configs && configs.length > 0) {
+        const configToUpdate = configs.find(c => c.id === 2) || configs[0];
+        const updatedImages = [...(configToUpdate.images || []), newImage];
+        await supabase.from('menu_print_config').update({
+          images: updatedImages
+        }).eq('id', configToUpdate.id);
+      }
+
+      setImagenUrl(publicUrl);
+      
+      // Automatically save if possible
+      if (receta.forId) {
+        const result = await dispatch(updateItem(receta.forId, { Foto: publicUrl }, "Menu"));
+        if (result) setFoto(publicUrl);
+      }
+
+      alert("Imagen subida y guardada exitosamente");
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      alert("Error al subir la imagen");
+    } finally {
+      setUploadingImage(false);
+      setShowGallery(false);
+    }
+  };
 
   const implementationInstances = useMemo(() => {
     if (!receta) return [];
@@ -910,9 +1001,18 @@ function RecetaModal({ item, onClose }) {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input type="url" placeholder="URL de la imagen" value={imagenUrl}
-                        onChange={(e) => setImagenUrl(e.target.value)} disabled={isUpdating}
+                        onChange={(e) => setImagenUrl(e.target.value)} disabled={isUpdating || uploadingImage}
                         className="flex-1 h-8 text-xs" />
-                      <Button size="sm" onClick={updateImagenUrl} disabled={isUpdating} className="h-8 text-xs px-3">
+                      <Button 
+                        type="button"
+                        size="sm" 
+                        onClick={() => setShowGallery(true)} 
+                        disabled={isUpdating || uploadingImage} 
+                        className="h-8 text-xs px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                      >
+                        Galería
+                      </Button>
+                      <Button size="sm" onClick={updateImagenUrl} disabled={isUpdating || uploadingImage} className="h-8 text-xs px-3">
                         {isUpdating ? "..." : "Guardar"}
                       </Button>
                     </div>
@@ -998,6 +1098,23 @@ function RecetaModal({ item, onClose }) {
               onSuccess={() => alert("Receta importada correctamente. Por favor recarga si es necesario.")} />
           </div>
         </div>
+      )}
+
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept="image/*" 
+        className="hidden" 
+      />
+
+      {showGallery && (
+        <HorizontalGallery
+          isOpen={showGallery}
+          onClose={() => setShowGallery(false)}
+          onSelect={handleGallerySelect}
+          onUploadNew={handleUploadNewClick}
+        />
       )}
     </div>
   );

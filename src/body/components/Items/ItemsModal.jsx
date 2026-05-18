@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllFromTable, updateItem, actualizarPrecioUnitario, calcularPrecioUnitario } from "../../../redux/actions";
 import { ITEMS, CATEGORIES, unidades, BODEGA, ESTATUS, PROVEE } from "../../../redux/actions-types";
-import { X, Package, BookOpen, Edit, Save, Loader2, FileJson, Copy, Check, RefreshCw, Printer, Tag, MapPin, DollarSign, BarChart3 } from "lucide-react";
+import { X, Package, BookOpen, Edit, Save, Loader2, FileJson, Copy, Check, RefreshCw, Printer, Tag, MapPin, DollarSign, BarChart3, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { copyPromptToClipboard } from "../../../utils/prompts";
+import supabase from "../../../config/supabaseClient";
+import HorizontalGallery from "../Menu/MenuPrintHorizontal/HorizontalGallery";
 
 const ItemsModal = () => {
   const { id } = useParams();
@@ -19,6 +21,75 @@ const ItemsModal = () => {
   const [showJsonImport, setShowJsonImport] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
+
+  // Shared gallery states
+  const [showGallery, setShowGallery] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleGallerySelect = (img) => {
+    setEditableItem((prev) => ({ ...prev, Foto: img.url }));
+    setShowGallery(false);
+  };
+
+  const handleUploadNewClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      alert("Imagen demasiado pesada (<4MB)");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `menu-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('Images_eventos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('Images_eventos')
+        .getPublicUrl(filePath);
+
+      const newImage = {
+        id: 'IMG_' + Date.now(),
+        url: publicUrl,
+        storagePath: filePath,
+        height: 300
+      };
+
+      // Register the uploaded image in menu_print_config so it appears in the shared gallery
+      const { data: configs, error: fetchErr } = await supabase.from('menu_print_config').select('*');
+      if (!fetchErr && configs && configs.length > 0) {
+        const configToUpdate = configs.find(c => c.id === 2) || configs[0];
+        const updatedImages = [...(configToUpdate.images || []), newImage];
+        await supabase.from('menu_print_config').update({
+          images: updatedImages
+        }).eq('id', configToUpdate.id);
+      }
+
+      setEditableItem((prev) => ({ ...prev, Foto: publicUrl }));
+      alert("Imagen subida y seleccionada de forma exitosa");
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      alert("Error al subir la imagen");
+    } finally {
+      setUploadingImage(false);
+      setShowGallery(false);
+    }
+  };
 
   const items = useSelector((state) => state.allItems || []);
   const proveedores = useSelector((state) => state.Proveedores || []);
@@ -427,6 +498,18 @@ const ItemsModal = () => {
           </SectionCard>
         </div>
 
+        {/* Imagen del Producto */}
+        <SectionCard title="Imagen del Producto" icon={ImageIcon} color="blue">
+          {displayItem.Foto ? (
+            <img src={displayItem.Foto} alt="Imagen del producto" className="w-full h-48 object-cover rounded-xl shadow-sm border border-slate-100" />
+          ) : (
+            <div className="w-full h-24 bg-slate-50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 text-xs gap-1.5">
+              <ImageIcon className="h-5 w-5 text-slate-300" />
+              <span>Sin imagen asociada</span>
+            </div>
+          )}
+        </SectionCard>
+
         {/* Recipe link */}
         {displayItem.recipeId && (
           <a href={`/receta/${displayItem.recipeId}`}
@@ -480,6 +563,38 @@ const ItemsModal = () => {
         <div className="grid grid-cols-2 gap-3 mt-2">
           <FormField label="Almacenamiento" name="almacenamiento_ALMACENAMIENTO" options={BODEGA} />
           <FormField label="Bodega" name="almacenamiento_BODEGA" options={BODEGA} />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Imagen del Producto" icon={ImageIcon} color="blue">
+        <div className="space-y-2.5 mt-2">
+          <div className="flex gap-2">
+            <Input 
+              placeholder="URL de la imagen o selecciona de la galería" 
+              name="Foto" 
+              value={editableItem?.Foto || ""} 
+              onChange={handleChange} 
+              disabled={isSaving || uploadingImage} 
+              className="flex-1 h-8 text-xs" 
+            />
+            <Button 
+              type="button" 
+              size="sm" 
+              onClick={() => setShowGallery(true)} 
+              disabled={isSaving || uploadingImage} 
+              className="h-8 text-xs px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+            >
+              Galería
+            </Button>
+          </div>
+          {(editableItem?.Foto || displayItem?.Foto) && (
+            <img 
+              src={editableItem?.Foto || displayItem?.Foto} 
+              alt="Preview" 
+              className="w-full h-36 object-cover rounded-xl shadow-sm border border-slate-100" 
+              onError={(e) => { e.target.style.display = "none"; }} 
+            />
+          )}
         </div>
       </SectionCard>
     </div>
@@ -607,6 +722,23 @@ const ItemsModal = () => {
           </div>
         )}
       </div>
+
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept="image/*" 
+        className="hidden" 
+      />
+
+      {showGallery && (
+        <HorizontalGallery
+          isOpen={showGallery}
+          onClose={() => setShowGallery(false)}
+          onSelect={handleGallerySelect}
+          onUploadNew={handleUploadNewClick}
+        />
+      )}
     </div>
   );
 };

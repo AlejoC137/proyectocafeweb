@@ -38,9 +38,10 @@ export const MenuPrintStyles = () => (
           margin: 0 !important;
         }
 
-        /* 1. Oculta absolutamente todo en la página al imprimir */
-        body * {
+        /* 1. Oculta la página base al imprimir */
+        body, html, #root {
           visibility: hidden !important;
+          background: transparent !important;
         }
 
         /* 2. Hace visible ÚNICAMENTE el contenedor con el ID 'print-area' y todos sus hijos */
@@ -56,6 +57,7 @@ export const MenuPrintStyles = () => (
           padding: 0 !important;
           background: transparent !important;
           z-index: 9999 !important;
+          transform: none !important;
         }
 
         /* 4. Permitir que el documento crezca con las páginas */
@@ -75,17 +77,39 @@ export const MenuPrintStyles = () => (
           margin: 0 !important;
           padding: 0 !important;
           position: relative !important;
-          display: flex !important;
-          flex-direction: column !important;
+          display: grid !important;
+          grid-template-columns: 100% !important;
+          grid-template-rows: 100% !important;
           box-sizing: border-box !important;
           page-break-after: always !important;
           break-after: page !important;
+          background-color: transparent !important;
         }
 
         /* Forzar renderizado de colores en todo */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        .page-container img[alt="Vertical Page Background"] {
+          display: block !important;
+          visibility: visible !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+
+        .page-container .print-bg-overlay {
+          display: block !important;
+          visibility: visible !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          z-index: 2 !important;
         }
       }
       

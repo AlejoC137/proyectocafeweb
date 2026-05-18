@@ -81,28 +81,38 @@ const HorizontalPage = ({
 
   return (
     <div
-      className="horizontal-page shrink-0 print:m-0 print:p-0 relative group/page"
+      className="horizontal-page shrink-0 print:m-0 print:p-0 group/page"
       style={{
         width: `${width}${unit}`,
         height: `${height}${unit}`,
-        padding: '1.5rem',
         backgroundColor: colors.blockBg || '#fff',
-        color: colors.itemName || '#000'
+        color: colors.itemName || '#000',
+        display: 'grid',
+        gridTemplateColumns: '100%',
+        gridTemplateRows: '100%',
       }}
     >
       {/* Background Image Container */}
       {page.bgImage && (
-        <img 
-          src={page.bgImage.url}
-          alt="Page Background"
-          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
-          style={{
-            opacity: page.bgOpacity !== undefined ? page.bgOpacity : 0.3
-          }}
-        />
+        <div className="col-start-1 row-start-1 w-full h-full relative" style={{ gridArea: '1 / 1 / 2 / 2' }}>
+          <img 
+            src={page.bgImage.url}
+            alt="Page Background"
+            className="w-full h-full object-cover pointer-events-none"
+            style={{
+              opacity: page.bgOpacity !== undefined ? page.bgOpacity : 0.3
+            }}
+          />
+        </div>
       )}
 
-      <div className="flex flex-col h-full w-full relative z-10">
+      <div 
+        className="col-start-1 row-start-1 flex flex-col h-full w-full relative z-10"
+        style={{ 
+          gridArea: '1 / 1 / 2 / 2',
+          padding: '1.5rem'
+        }}
+      >
         <MenuPrintHeader colors={colors} leng={leng} />
 
         <div className="flex-grow flex mt-6 w-full relative h-full min-h-0">

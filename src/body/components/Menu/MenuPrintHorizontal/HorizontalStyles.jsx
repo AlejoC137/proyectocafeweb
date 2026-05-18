@@ -22,8 +22,10 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           overflow: visible !important;
         }
 
-        body * {
+        /* 1. Oculta la página base al imprimir */
+        body, html, #root {
           visibility: hidden !important;
+          background: transparent !important;
         }
 
         #print-area, #print-area * {
@@ -41,6 +43,7 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           display: block !important;
           height: auto !important;
           overflow: visible !important;
+          transform: none !important;
         }
 
         #canvas-inner {
@@ -71,18 +74,29 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           page-break-after: always !important;
           break-after: page !important;
           position: relative !important;
-          display: flex !important;
-          flex-direction: column !important;
+          display: grid !important;
+          grid-template-columns: 100% !important;
+          grid-template-rows: 100% !important;
           box-sizing: border-box !important;
           overflow: hidden !important;
           visibility: visible !important;
           margin: 0 !important;
-          padding: 1.5rem !important;
+          padding: 0 !important;
+          background-color: transparent !important;
         }
 
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        .horizontal-page img[alt="Page Background"] {
+          display: block !important;
+          visibility: visible !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
         }
       }
 

@@ -315,13 +315,27 @@ const MenuPrintBlock = ({
               )}
               {editMode && (
                 <div className="flex gap-2 print:hidden ml-2 items-center shrink-0">
-                  <button 
-                    onClick={() => openGallery('REPLACE_IMAGE', { blockId })}
-                    className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300"
-                    title="Reemplazar Imagen"
-                  >
-                    Cambiar
-                  </button>
+                  {openGallery ? (
+                    <button 
+                      onClick={() => openGallery('REPLACE_IMAGE', { blockId })}
+                      className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300"
+                      title="Reemplazar Imagen"
+                    >
+                      Cambiar
+                    </button>
+                  ) : (
+                    <div className="relative">
+                      <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300">
+                        Cambiar
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleReplaceImage(e, blockId)}
+                        />
+                      </label>
+                    </div>
+                  )}
                   <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center border border-red-300">X</button>
                 </div>
               )}

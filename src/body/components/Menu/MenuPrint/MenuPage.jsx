@@ -26,29 +26,40 @@ const MenuPage = ({
   return (
     <div
       id={`page-${pageIndex}`}
-      className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border flex flex-col box-border relative print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container shrink-0"
-      style={hasBg ? {
-        backgroundImage: `url(${backgroundUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        WebkitPrintColorAdjust: 'exact',
-        printColorAdjust: 'exact',
-      } : { backgroundColor: '#fcfbf9' }}
+      className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border flex flex-col box-border print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container shrink-0"
+      style={{ 
+        backgroundColor: '#fcfbf9',
+        display: 'grid',
+        gridTemplateColumns: '100%',
+        gridTemplateRows: '100%',
+      }}
     >
       {hasBg && (
-        <div
-          className="absolute inset-0 pointer-events-none print-bg-overlay"
-          style={{
-            backgroundColor: `rgba(255,255,255,${1 - websiteBgOpacity})`,
-            zIndex: 0,
-            WebkitPrintColorAdjust: 'exact',
-            printColorAdjust: 'exact',
-          }}
-        />
+        <div className="col-start-1 row-start-1 w-full h-full relative" style={{ gridArea: '1 / 1 / 2 / 2' }}>
+          <img 
+            src={backgroundUrl} 
+            alt="Vertical Page Background" 
+            className="w-full h-full object-cover pointer-events-none"
+            style={{
+              WebkitPrintColorAdjust: 'exact',
+              printColorAdjust: 'exact',
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none print-bg-overlay z-[1]"
+            style={{
+              backgroundColor: `rgba(255,255,255,${1 - websiteBgOpacity})`,
+              WebkitPrintColorAdjust: 'exact',
+              printColorAdjust: 'exact',
+            }}
+          />
+        </div>
       )}
 
-      <div className="relative z-0 h-full flex flex-col p-4 print:p-3 bg-transparent">
+      <div 
+        className="col-start-1 row-start-1 relative z-10 h-full flex flex-col p-4 print:p-3 bg-transparent"
+        style={{ gridArea: '1 / 1 / 2 / 2' }}
+      >
 
         <MenuPrintHeader colors={colors} leng={leng} />
 

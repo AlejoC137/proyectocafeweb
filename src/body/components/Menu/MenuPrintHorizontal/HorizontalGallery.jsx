@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import supabase from "../../../../config/supabaseClient";
 import { Button } from "@/components/ui/button";
+import { useImageUsage } from "../../../../hooks/useImageUsage";
 
 const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
   const [images, setImages] = useState([]);
-  const [usages, setUsages] = useState({});
+  const { usages, refetch: refetchUsages } = useImageUsage();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
       fetchImages();
+      refetchUsages();
     }
   }, [isOpen]);
 
@@ -35,46 +37,6 @@ const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
         }
       });
 
-      // 2. Compute usages of each image across both menus
-      const usageMap = {};
-      data.forEach(row => {
-        const layoutType = row.id === 2 ? "Horizontal" : "Vertical";
-        const layout = row.group_descriptions?.__layout || {};
-        const pages = layout.pages || [];
-
-        pages.forEach((page, pageIdx) => {
-          // Check backgrounds
-          if (page.bgImage) {
-            const keys = [page.bgImage.id, page.bgImage.url].filter(Boolean);
-            keys.forEach(key => {
-              if (!usageMap[key]) usageMap[key] = [];
-              const desc = `Fondo Pág. ${pageIdx + 1} (${layoutType})`;
-              if (!usageMap[key].includes(desc)) {
-                usageMap[key].push(desc);
-              }
-            });
-          }
-
-          // Check block list in columns
-          if (page.columns && Array.isArray(page.columns)) {
-            page.columns.forEach((col, colIdx) => {
-              if (col.blocks && Array.isArray(col.blocks)) {
-                col.blocks.forEach(blockId => {
-                  if (blockId) {
-                    if (!usageMap[blockId]) usageMap[blockId] = [];
-                    const desc = `Col. ${colIdx + 1}, Pág. ${pageIdx + 1} (${layoutType})`;
-                    if (!usageMap[blockId].includes(desc)) {
-                      usageMap[blockId].push(desc);
-                    }
-                  }
-                });
-              }
-            });
-          }
-        });
-      });
-
-      setUsages(usageMap);
       setImages(allImages);
     } catch (err) {
       console.error("Error fetching gallery images:", err);
@@ -146,6 +108,7 @@ const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
       }
 
       await fetchImages();
+      await refetchUsages();
       alert("Imagen eliminada de la galería exitosamente");
     } catch (err) {
       console.error("Error deleting image:", err);

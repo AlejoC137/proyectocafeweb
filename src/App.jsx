@@ -81,7 +81,7 @@ function App() {
         <TopNav />
         <ErrorBoundary section="Aplicación">
         <Suspense fallback={<PageLoader />}>
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col pt-14">
             <Routes>
             <Route path="/MenuView"                          element={<MenuView />} />
             <Route path="/MenuLunch"                         element={<MenuLunch />} />
