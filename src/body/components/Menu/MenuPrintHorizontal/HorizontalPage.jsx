@@ -115,7 +115,7 @@ const HorizontalPage = ({
       >
         <MenuPrintHeader colors={colors} leng={leng} />
 
-        <div className="flex-grow flex mt-6 w-full relative h-full min-h-0">
+        <div className="flex-grow flex mt-[-3px] w-full relative h-full min-h-0">
           {(page.columns || []).map((col, colIdx) => (
             <React.Fragment key={col.id}>
               <div 

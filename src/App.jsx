@@ -22,7 +22,7 @@ const VentaCompra          = lazy(() => import('./body/views/ventaCompra/VentaCo
 const Actividades          = lazy(() => import('./body/views/actividades/Actividades'));
 const Gastos               = lazy(() => import('./body/components/gastos/Gastos'));
 const Compras              = lazy(() => import('./body/views/ventaCompra/Compras'));
-const MenuPrint            = lazy(() => import('./body/components/Menu/MenuPrint'));
+const MenuPrintManager     = lazy(() => import('./body/components/Menu/MenuPrintManager'));
 const MenuHead             = lazy(() => import('./body/components/Menu/MenuHead'));
 const DiaResumen           = lazy(() => import('./body/views/ventaCompra/DiaResumen'));
 const MesResumen           = lazy(() => import('./body/views/ventaCompra/MesResumen'));
@@ -53,7 +53,7 @@ const ModeloProyecto       = lazy(() => import('./body/views/ventaCompra/ModeloP
 const GastosCalculadosMateriales = lazy(() => import('./body/views/ventaCompra/GastosCalculadosMateriales'));
 const ProductosFinanciero  = lazy(() => import('./body/views/ventaCompra/ProductosFinanciero'));
 const RecruitmentPrint      = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
-const MenuPrintHorizontal  = lazy(() => import('./body/components/Menu/MenuPrintHorizontal'));
+// MenuPrintHorizontal lazy import removed since both render MenuPrintManager
 
 
 
@@ -101,7 +101,7 @@ function App() {
             <Route path="/Actividades"                       element={<Actividades />} />
             <Route path="/Gastos"                            element={<Gastos />} />
             <Route path="/Compras"                           element={<Compras />} />
-            <Route path="/MenuPrint"                         element={<MenuPrint />} />
+            <Route path="/MenuPrint"                         element={<MenuPrintManager />} />
             <Route path="/MenuHead"                          element={<MenuHead />} />
             <Route path="/DiaResumen"                        element={<DiaResumen />} />
             <Route path="/DiaResumen/:date"                  element={<DiaResumen />} />
@@ -139,7 +139,7 @@ function App() {
             <Route path="/gastos-calculados"                 element={<GastosCalculadosMateriales />} />
             <Route path="/productosFinanciero"               element={<ProductosFinanciero />} />
             <Route path="/RecruitmentPrint"                  element={<RecruitmentPrint />} />
-            <Route path="/MenuPrintHorizontal"              element={<MenuPrintHorizontal />} />
+            <Route path="/MenuPrintHorizontal"              element={<MenuPrintManager />} />
 
 
             <Route path="*"                                  element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />

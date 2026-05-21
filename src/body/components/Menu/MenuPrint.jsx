@@ -16,7 +16,7 @@ import MenuPrintColumn from "./MenuPrint/MenuPrintColumn";
 import MenuPage from "./MenuPrint/MenuPage";
 import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 
-function MenuPrint() {
+function MenuPrint({ menuId = 1 }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [leng, setLeng] = useState(true);
@@ -84,7 +84,7 @@ function MenuPrint() {
 
   const fetchConfig = async () => {
     try {
-      const { data, error } = await supabase.from('menu_print_config').select('*').eq('id', 1);
+      const { data, error } = await supabase.from('menu_print_config').select('*').eq('id', menuId);
       if (error) {
         console.error("Error fetching config from table:", error);
         return;
@@ -98,7 +98,7 @@ function MenuPrint() {
           return img;
         });
         if (modifiedImages) {
-          supabase.from('menu_print_config').update({ images: loadedImages }).eq('id', 1).then();
+          supabase.from('menu_print_config').update({ images: loadedImages }).eq('id', menuId).then();
         }
         setPrintImages(loadedImages);
         setGroupDescriptions(config.group_descriptions || {});
@@ -137,7 +137,7 @@ function MenuPrint() {
         setPages(cleanedPages);
 
       } else {
-        await supabase.from('menu_print_config').insert([{ id: 1, images: [], group_descriptions: {}, show_icons: true }]);
+        await supabase.from('menu_print_config').insert([{ id: menuId, images: [], group_descriptions: {}, show_icons: true }]);
       }
     } catch (e) {
       console.error("Error fetching config:", e);
@@ -146,7 +146,7 @@ function MenuPrint() {
 
   const saveImagesConfig = async (newImages) => {
     try {
-      await supabase.from('menu_print_config').update({ images: newImages }).eq('id', 1);
+      await supabase.from('menu_print_config').update({ images: newImages }).eq('id', menuId);
     } catch (e) {
       console.error("Error saving images config:", e);
     }
@@ -156,7 +156,7 @@ function MenuPrint() {
     const nextState = !showIcons;
     setShowIcons(nextState);
     try {
-      await supabase.from('menu_print_config').update({ show_icons: nextState }).eq('id', 1);
+      await supabase.from('menu_print_config').update({ show_icons: nextState }).eq('id', menuId);
     } catch (e) {
       console.error("Error saving showIcons config:", e);
     }
@@ -165,7 +165,7 @@ function MenuPrint() {
   const saveGroupDescriptions = async (newDescriptions) => {
     setGroupDescriptions(newDescriptions);
     try {
-      await supabase.from('menu_print_config').update({ group_descriptions: newDescriptions }).eq('id', 1);
+      await supabase.from('menu_print_config').update({ group_descriptions: newDescriptions }).eq('id', menuId);
     } catch (e) {
       console.error("Error saving descriptions:", e);
     }
@@ -287,7 +287,7 @@ function MenuPrint() {
         __layout: { ...(groupDescriptions.__layout || {}), backgroundUrl: newUrl }
       };
       setGroupDescriptions(newDescriptions);
-      await supabase.from('menu_print_config').update({ group_descriptions: newDescriptions }).eq('id', 1);
+      await supabase.from('menu_print_config').update({ group_descriptions: newDescriptions }).eq('id', menuId);
 
     } catch (err) {
       console.error("Error uploading background:", err);

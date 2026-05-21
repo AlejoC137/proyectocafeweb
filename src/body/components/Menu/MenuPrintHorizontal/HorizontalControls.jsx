@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Globe, Palette, Eye, EyeOff, Printer, Save, Plus, Coffee } from "lucide-react";
 
 const HorizontalControls = ({
+  controlTopClass = "top-[64px]",
   handlePrint,
   leng,
   setLeng,
@@ -30,7 +31,7 @@ const HorizontalControls = ({
     : 1;
 
   return (
-    <div className="fixed top-[64px] left-0 w-full z-[100] bg-white/95 backdrop-blur-md p-4 shadow-md border-b border-zinc-200 flex flex-wrap items-center justify-center gap-4 print:hidden">
+    <div className={`fixed ${controlTopClass} left-0 w-full z-[100] bg-white/95 backdrop-blur-md p-4 shadow-md border-b border-zinc-200 flex flex-wrap items-center justify-center gap-4 print:hidden`}>
 
       <div className="flex items-center gap-2 border-r pr-4">
         <Button

@@ -13,7 +13,7 @@ import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
 import PrintCanvas from "./MenuPrintHorizontal/PrintCanvas";
 
-function MenuPrintHorizontal() {
+function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", containerPaddingClass = "pt-[180px]" }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,7 +73,7 @@ function MenuPrintHorizontal() {
   // Define functions before useEffect to avoid TDZ
   const fetchConfig = async () => {
     try {
-      const { data, error } = await supabase.from('menu_print_config').select('*').eq('id', 2);
+      const { data, error } = await supabase.from('menu_print_config').select('*').eq('id', menuId);
       if (error) {
         console.error("Error fetching config:", error);
         return;
@@ -99,7 +99,7 @@ function MenuPrintHorizontal() {
         if (layout.colors) setColors(prev => ({ ...prev, ...layout.colors }));
       } else {
         await supabase.from('menu_print_config').insert([{
-          id: 2,
+          id: menuId,
           images: [],
           group_descriptions: { __layout: { pages, pageSize, colors, showIcons } },
           show_icons: true
@@ -131,7 +131,7 @@ function MenuPrintHorizontal() {
         group_descriptions: updatedDescriptions,
         images: printImages,
         show_icons: showIcons
-      }).eq('id', 2);
+      }).eq('id', menuId);
     } catch (e) {
       console.error("Error saving config:", e);
     } finally {
@@ -149,7 +149,7 @@ function MenuPrintHorizontal() {
       };
       await supabase.from('menu_print_config').update({
         group_descriptions: updatedLayout
-      }).eq('id', 2);
+      }).eq('id', menuId);
     } catch (e) {
       console.error("Error saving descriptions:", e);
     } finally {
@@ -452,7 +452,7 @@ function MenuPrintHorizontal() {
       await supabase.from('menu_print_config').update({
         images: newImages,
         group_descriptions: updatedLayout
-      }).eq('id', 2);
+      }).eq('id', menuId);
     } catch (e) {
       console.error("Error saving images:", e);
     }
@@ -485,10 +485,11 @@ function MenuPrintHorizontal() {
   if (loading) return <div className="flex items-center justify-center h-screen font-black italic uppercase text-2xl animate-pulse">Cargando Editor...</div>;
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-zinc-100 pt-[180px] print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden">
+    <div className={`flex-1 w-full flex flex-col bg-zinc-100 ${containerPaddingClass} print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden`}>
       <HorizontalStyles width={pageSize.width} height={pageSize.height} unit={pageSize.unit} />
 
       <HorizontalControls
+        controlTopClass={controlTopClass}
         handlePrint={handlePrint}
         leng={leng}
         setLeng={(newLeng) => {

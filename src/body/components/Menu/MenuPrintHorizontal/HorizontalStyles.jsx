@@ -10,7 +10,7 @@ export const HorizontalStyles = ({ width, height, unit }) => (
         }
 
         /* Reset all ancestors of print area to simple blocks with zero margin/padding/bg */
-        html, body, #root, #root > div, .flex-1, main, .main-content {
+        html, body, #root, #root > div, #root > .flex-1, main, .main-content {
           margin: 0 !important;
           padding: 0 !important;
           display: block !important;
