@@ -3,10 +3,10 @@ import { useInstanceForm } from './useInstanceForm';
 import { useDatesField, usePagadoField } from './useJSONField';
 
 /**
- * Hook especializado para formularios de Work Issues
+ * Hook especializado para formularios de Comandas
  * Maneja la complejidad de fechas, pagos, procedimientos y estados
  */
-export const useWorkIssueForm = (initialData = {}, options = {}) => {
+export const useComandaForm = (initialData = {}, options = {}) => {
   const {
     includeAdvancedFields = true,
     validateProcedimientos = false
@@ -69,7 +69,7 @@ export const useWorkIssueForm = (initialData = {}, options = {}) => {
   }, [pagado]);
 
   // Función para obtener datos completos para guardar
-  const getWorkIssueData = useCallback(() => {
+  const getComandaData = useCallback(() => {
     return {
       ...form.formData,
       Dates: dates.stringifyValue || dates.value,
@@ -78,8 +78,8 @@ export const useWorkIssueForm = (initialData = {}, options = {}) => {
     };
   }, [form.formData, dates, pagado, procedimientos]);
 
-  // Validaciones específicas de work issues
-  const validateWorkIssue = useCallback(() => {
+  // Validaciones específicas de Comandas
+  const validateComanda = useCallback(() => {
     const errors = {};
     let isValid = true;
 
@@ -121,7 +121,7 @@ export const useWorkIssueForm = (initialData = {}, options = {}) => {
   }, [form, dates]);
 
   // Función para resetear work issue
-  const resetWorkIssue = useCallback(() => {
+  const resetComanda = useCallback(() => {
     form.resetForm();
     dates.updateValue({
       isued: new Date().toISOString(),
@@ -156,10 +156,10 @@ export const useWorkIssueForm = (initialData = {}, options = {}) => {
     updateProcedimiento,
     
     // Utilidades
-    getWorkIssueData,
-    validateWorkIssue,
+    getComandaData,
+    validateComanda,
     markAsCompleted,
-    resetWorkIssue,
+    resetComanda,
     
     // Estados derivados
     isCompleted: form.formData.Terminado,
@@ -170,7 +170,7 @@ export const useWorkIssueForm = (initialData = {}, options = {}) => {
 };
 
 /**
- * Categorías disponibles para work issues
+ * Categorías disponibles para Comandas
  */
 export const WORK_ISSUE_CATEGORIES = [
   'COCINA',
@@ -184,7 +184,7 @@ export const WORK_ISSUE_CATEGORIES = [
 ];
 
 /**
- * Estados específicos para work issues
+ * Estados específicos para Comandas
  */
 export const WORK_ISSUE_STATUS = {
   PENDING: 'PE',     // Pendiente

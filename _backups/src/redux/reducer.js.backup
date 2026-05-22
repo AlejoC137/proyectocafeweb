@@ -6,7 +6,7 @@ import {
     ITEMS,
     PRODUCCION,
     PROVEE,
-    WORKISUE,
+    Comanda,
     PROCEDE,
     COMPRAS,
     UPDATE_ACTIVE_TAB,
@@ -99,7 +99,7 @@ const initialState = {
     allRecetasMenu: [],
     allRecetasProduccion: [],
     allRecetasProcedimientos: [],
-    allWorkIsue: [],
+    allComanda: [],
     currentLeng: ESP,
     allProduccion: [],
     Proveedores: [],
@@ -180,8 +180,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allRecetasProcedimientos: action.payload };
                 case PROVEE:
                     return { ...state, Proveedores: action.payload };
-                case WORKISUE:
-                    return { ...state, allWorkIsue: action.payload };
+                case Comanda:
+                    return { ...state, allComanda: action.payload };
                 case VENTAS:
                     return { ...state, allVentas: action.payload };
                 case COMPRAS:

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useDebounce } from "../../hooks/useDebounce";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { deleteItem, updateItem, getRecepie } from "../../redux/actions";
-import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades, ACTIVO, INACTIVO } from "../../redux/actions-types";
+import { deleteItem, updateItem, getRecepie, createRecipeForProduct } from "../../redux/actions";
+import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades, ACTIVO, INACTIVO, MENU, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search, Save } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
 import CuidadoVariations from "./CuidadoVariations";
@@ -211,6 +211,22 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
   const handleDelete = async (item) => {
     if (window.confirm(`¿Seguro que quieres eliminar "${item.Nombre_del_producto || item.NombreES}"?`)) {
       await dispatch(deleteItem(item._id, currentType));
+    }
+  };
+
+  const handleCreateRecipe = (item) => {
+    if (window.confirm(`¿Seguro que quieres crear una receta para "${item.Nombre_del_producto || item.NombreES}"?`)) {
+      const productType = currentType === MenuItems ? 'Menu' : 'Produccion';
+      const recipeTable = productType === 'Menu' ? RECETAS_MENU : RECETAS_PRODUCCION;
+      const productTable = productType === 'Menu' ? MENU : PRODUCCION;
+
+      const baseRecipeData = {
+        legacyName: item.NombreES || item.Nombre_del_producto,
+        autor: "Sistema Automático",
+        revisor: "Pendiente",
+      };
+
+      dispatch(createRecipeForProduct(baseRecipeData, item._id, productTable, recipeTable));
     }
   };
 
@@ -593,6 +609,14 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
                     >
                       📕
                     </a>
+                  </Button>
+                )}
+                {(currentType === ProduccionInterna || currentType === MenuItems) && !item.Receta && (
+                  <Button onClick={() => handleCreateRecipe(item)}
+                    className="bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 text-xs h-6 flex items-center justify-center w-8"
+                    title="Añadir Receta"
+                  >
+                    ➕
                   </Button>
                 )}
 

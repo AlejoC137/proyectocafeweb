@@ -2,7 +2,7 @@
 
 ## 📖 Descripción
 
-La arquitectura Instance proporciona un sistema unificado y reutilizable para todos los componentes que manejan entidades de datos (products, staff, work issues, etc.) en el proyecto.
+La arquitectura Instance proporciona un sistema unificado y reutilizable para todos los componentes que manejan entidades de datos (products, staff, Comandas, etc.) en el proyecto.
 
 ## 🎯 Objetivos Logrados
 
@@ -125,7 +125,7 @@ function InventoryManager({ product }) {
 - `MenuInstanceCard` - Configurado para items de menú
 - `InventoryInstanceCard` - Configurado para inventario
 - `StaffInstanceCard` - Configurado para staff
-- `WorkIssueInstanceCard` - Configurado para work issues
+- `ComandaInstanceCard` - Configurado para Comandas
 
 ### Especiales
 - `CollapsibleInstanceCard` - Expandible/contraible

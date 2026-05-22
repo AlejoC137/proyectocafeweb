@@ -1,4 +1,4 @@
-import WorkIsueCreator from "./WorkIsueCreator";
+import ComandaCreator from "./ComandaCreator";
 
 
 import React, { useEffect, useState } from "react";
@@ -34,7 +34,7 @@ ProcedimientosCreator
     <div className="p-6 bg-white rounded-lg shadow-md mb-6">
 
           <RecepieOptionsProcedimientos />
-          <WorkIsueCreator />
+          <ComandaCreator />
           <ProcedimientosCreator />
  
     </div>

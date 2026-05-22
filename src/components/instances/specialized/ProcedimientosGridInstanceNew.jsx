@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { WorkIssueInstanceCard } from '../base/InstanceCard';
-import { useWorkIssueForm } from '../hooks/useWorkIssueForm';
+import { ComandaInstanceCard } from '../base/InstanceCard';
+import { useComandaForm } from '../hooks/useComandaForm';
 import { useInstanceActions } from '../hooks/useInstanceActions';
 import { Button } from '@/components/ui/button';
 import RecepieOptionsProcedimientos from '../../../body/components/recepieOptions/RecepieOptionsProcedimientos';
@@ -19,7 +19,7 @@ export function ProcedimientosGridInstanceNew({
   handleCreateReceta 
 }) {
   
-  // Usar hooks especializados para work issues (los procedimientos tienen estructura similar)
+  // Usar hooks especializados para Comandas (los procedimientos tienen estructura similar)
   const {
     formData,
     dates,
@@ -27,8 +27,8 @@ export function ProcedimientosGridInstanceNew({
     handleChange,
     handleDateChange,
     handlePagadoChange,
-    getWorkIssueData
-  } = useWorkIssueForm(item);
+    getComandaData
+  } = useComandaForm(item);
 
   const {
     handleUpdate,
@@ -42,7 +42,7 @@ export function ProcedimientosGridInstanceNew({
   // Función para guardar con datos formateados
   const onSave = async () => {
     const procedimientoData = {
-      ...getWorkIssueData(),
+      ...getComandaData(),
       tittle: formData.tittle, // Título específico de procedimientos
       Receta: formData.Receta
     };
@@ -206,7 +206,7 @@ export function ProcedimientosGridInstanceNew({
   );
 
   return (
-    <WorkIssueInstanceCard
+    <ComandaInstanceCard
       title={formData.tittle || "Procedimiento sin título"}
       subtitle={`${formData.Categoria || "Sin categoría"} - ${formData.Estado || "Sin estado"}`}
       data={item}
@@ -223,6 +223,6 @@ export function ProcedimientosGridInstanceNew({
       defaultExpanded={!formData.Terminado}
     >
       {procedimientoForm}
-    </WorkIssueInstanceCard>
+    </ComandaInstanceCard>
   );
 }

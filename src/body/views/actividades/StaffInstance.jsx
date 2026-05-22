@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { crearWorkIsue, actualizarWorkIsue, eliminarWorkIsue } from "../../../redux/actions-WorkIsue";
+import { crearComanda, actualizarComanda, eliminarComanda } from "../../../redux/actions-Comanda";
 import Pagar from "./Pagar";
-import WorkIsue from "./WorkE/WorkIsueExcelView";
+import Comanda from "./WorkE/ComandaExcelView";
 
 function StaffInstance({ staff, ventas, reloadVentas }) {
   const [formData, setFormData] = useState({
@@ -16,21 +16,21 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
     Procedimientos: "",
   });
 
-  const [workIsueSaved, setWorkIsueSaved] = useState(false);
+  const [ComandaSaved, setComandaSaved] = useState(false);
   const [buttonState, setButtonState] = useState("save");
   const [isMesaInUse, setIsMesaInUse] = useState(false);
   const [showPagarModal, setShowPagarModal] = useState(false);
-  const [workIsueId, setWorkIsueId] = useState(null);
+  const [ComandaId, setComandaId] = useState(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const existingWorkIsue = ventas.find(venta => venta.Ejecutor === staff._id && !venta.Terminado);
-    if (existingWorkIsue) {
-      setFormData(existingWorkIsue);
-      setWorkIsueSaved(true);
+    const existingComanda = ventas.find(venta => venta.Ejecutor === staff._id && !venta.Terminado);
+    if (existingComanda) {
+      setFormData(existingComanda);
+      setComandaSaved(true);
       setButtonState("done");
       setIsMesaInUse(true);
-      setWorkIsueId(existingWorkIsue._id);
+      setComandaId(existingComanda._id);
     }
   }, [ventas, staff._id]);
 
@@ -43,19 +43,19 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
     e.preventDefault();
     if (!window.confirm("¿Está seguro de que desea guardar esta tarea?")) return;
 
-    setWorkIsueSaved(true);
+    setComandaSaved(true);
     setButtonState("done");
     setIsMesaInUse(true);
 
     try {
-      const existingWorkIsue = ventas.find(venta => venta.Ejecutor === staff._id && !venta.Terminado);
-      if (existingWorkIsue) {
-        const updatedWorkIsue = await dispatch(actualizarWorkIsue(existingWorkIsue._id, formData));
-        setWorkIsueId(updatedWorkIsue[0]._id);
+      const existingComanda = ventas.find(venta => venta.Ejecutor === staff._id && !venta.Terminado);
+      if (existingComanda) {
+        const updatedComanda = await dispatch(actualizarComanda(existingComanda._id, formData));
+        setComandaId(updatedComanda[0]._id);
         alert("Tarea actualizada correctamente");
       } else {
-        const nuevaWorkIsue = await dispatch(crearWorkIsue(formData));
-        setWorkIsueId(nuevaWorkIsue._id);
+        const nuevaComanda = await dispatch(crearComanda(formData));
+        setComandaId(nuevaComanda._id);
         alert("Tarea creada correctamente");
       }
       reloadVentas();
@@ -77,9 +77,9 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
     if (!window.confirm("¿Está seguro de que desea eliminar esta tarea?")) return;
 
     try {
-      const existingWorkIsue = ventas.find(venta => venta.Ejecutor === staff._id && !venta.Terminado);
-      if (existingWorkIsue) {
-        await dispatch(eliminarWorkIsue(existingWorkIsue._id));
+      const existingComanda = ventas.find(venta => venta.Ejecutor === staff._id && !venta.Terminado);
+      if (existingComanda) {
+        await dispatch(eliminarComanda(existingComanda._id));
         setIsMesaInUse(false);
         alert("Tarea eliminada correctamente");
         reloadVentas();
@@ -96,7 +96,7 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
       Ejecutor: staff._id,
       Actividades: "",
     });
-    setWorkIsueSaved(false);
+    setComandaSaved(false);
     setButtonState("save");
   };
 
@@ -176,7 +176,7 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
           <p className="flex-grow border rounded p-1 text-sm">{staff.Contratacion ? "Sí" : "No"}</p>
         </div>
       </div> */}
-<WorkIsue workIsue={formData} />
+<Comanda Comanda={formData} />
 
       <div className="col-span-4 flex gap-2 items-end">
         <div className="flex items-center gap-2 flex-1">
@@ -210,18 +210,18 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
           </Button>
           <Button
             onClick={handlePagar}
-            disabled={!workIsueSaved}
+            disabled={!ComandaSaved}
             className={`w-[40px] bg-green-500 text-white text-sm ${
-              !workIsueSaved ? "opacity-50 cursor-not-allowed" : ""
+              !ComandaSaved ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             💸
           </Button>
           <Button
             onClick={handleEliminar}
-            disabled={!workIsueSaved}
+            disabled={!ComandaSaved}
             className={`w-[40px] bg-red-500 text-white text-sm ${
-              !workIsueSaved ? "opacity-50 cursor-not-allowed" : ""
+              !ComandaSaved ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             💥
@@ -230,7 +230,7 @@ function StaffInstance({ staff, ventas, reloadVentas }) {
       </div>
 
       {showPagarModal && (
-        <Pagar onClose={handleClosePagarModal} ventaId={workIsueId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
+        <Pagar onClose={handleClosePagarModal} ventaId={ComandaId} total={totalPago} onPaymentComplete={handlePaymentComplete} />
       )}
 
       <div className="col-span-4">

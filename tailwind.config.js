@@ -101,6 +101,12 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      // --- Sombras Neobrutalistas (MenuPrint) ---
+      boxShadow: {
+        'solid': '4px 4px 0px 0px rgba(0,0,0,1)',
+        'solid-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+        'solid-lg': '6px 6px 0px 0px rgba(0,0,0,1)',
+      },
       // --- Tamaños y Alturas Personalizadas ---
       width: {
         'custom-width1200px': '1200px',
@@ -115,6 +121,7 @@ module.exports = {
       },
       // --- Tipografías Personalizadas ---
       fontFamily: {
+        FirstBunny: ['First Bunny', 'sans-serif'],
         BobbyJones: ['Bobby Jones Regular', 'sans-serif'],
         LilitaOne: ['Lilita One', 'sans-serif'],
         SpaceGrotesk: ['Space Grotesk', 'sans-serif'],

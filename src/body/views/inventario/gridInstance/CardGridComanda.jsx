@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { CardGridWorkIsue_Instance } from "./CardGridWorkIsue_Instance";
+import { CardGridComanda_Instance } from "./CardGridComanda_Instance";
 import { copiarAlPortapapeles } from "../../../../redux/actions";
-import { AREAS, WorkIsue } from "../../../../redux/actions-types";
+import { AREAS, Comanda } from "../../../../redux/actions-types";
 
-export function CardGridWorkIsue() {
-  const allWorkIsue = useSelector((state) => state.allWorkIsue || []);
+export function CardGridComanda() {
+  const allComanda = useSelector((state) => state.allComanda || []);
   const dispatch = useDispatch();
   const globalExpandedGroups = useSelector((state) => state.expandedGroups);
 
-  const groupedWorkIsue = allWorkIsue.reduce((acc, workIsue) => {
-    const group = AREAS.includes(workIsue.Categoria) ? workIsue.Categoria : "SIN CATEGORÍA";
+  const groupedComanda = allComanda.reduce((acc, Comanda) => {
+    const group = AREAS.includes(Comanda.Categoria) ? Comanda.Categoria : "SIN CATEGORÍA";
     if (!acc[group]) acc[group] = [];
-    acc[group].push(workIsue);
+    acc[group].push(Comanda);
     return acc;
   }, {});
 
@@ -30,10 +30,10 @@ export function CardGridWorkIsue() {
     }));
   };
 
-  const filteredWorkIsue = Object.keys(groupedWorkIsue).reduce((acc, group) => {
-    const filteredGroup = groupedWorkIsue[group].filter(
-      (workIsue) =>
-        searchTerm === "" || (workIsue.Nombre && workIsue.Nombre.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredComanda = Object.keys(groupedComanda).reduce((acc, group) => {
+    const filteredGroup = groupedComanda[group].filter(
+      (Comanda) =>
+        searchTerm === "" || (Comanda.Nombre && Comanda.Nombre.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     if (filteredGroup.length > 0) {
       acc[group] = filteredGroup;
@@ -45,12 +45,12 @@ export function CardGridWorkIsue() {
     <div className="flex flex-col gap-2 ml-4 mr-4 ">
       <input
         type="text"
-        placeholder="Buscar WorkIsue..."
+        placeholder="Buscar Comanda..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="mb-4 p-2 border border-gray-300 rounded-md bg-white"
       />
-      {Object.keys(filteredWorkIsue)
+      {Object.keys(filteredComanda)
         .sort()
         .map((group) => (
           <div key={group}>
@@ -63,13 +63,13 @@ export function CardGridWorkIsue() {
                   {expandedGroups[group] ? "▲ " : "▼ "}
                 </span>
                 <span className="text-sm font-bold text-gray-700">
-                  {group.toUpperCase()} ({filteredWorkIsue[group].length})
+                  {group.toUpperCase()} ({filteredComanda[group].length})
                 </span>
               </button>
               <button
                 className="flex items-center justify-center w-8 h-8 mr-2 bg-green-500 text-white text-xs rounded-full hover:bg-green-600"
                 onClick={() => {
-                  dispatch(copiarAlPortapapeles(filteredWorkIsue[group], WorkIsue));
+                  dispatch(copiarAlPortapapeles(filteredComanda[group], Comanda));
                 }}
               >
                 📋
@@ -77,11 +77,11 @@ export function CardGridWorkIsue() {
             </div>
             {expandedGroups[group] && (
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredWorkIsue[group].map((workIsue, index) => (
-                  <CardGridWorkIsue_Instance
+                {filteredComanda[group].map((Comanda, index) => (
+                  <CardGridComanda_Instance
                     key={index}
-                    item={workIsue}
-                    currentType={WorkIsue}
+                    item={Comanda}
+                    currentType={Comanda}
                   />
                 ))}
               </div>

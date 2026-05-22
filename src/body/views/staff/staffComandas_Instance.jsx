@@ -1,9 +1,9 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateItem } from "../../../redux/actions";
-import { WORKISUE } from "../../../redux/actions-types";
+import { Comanda } from "../../../redux/actions-types";
 
-function StaffWorkIssues_Instance({ issue }) {
+function StaffComandas_Instance({ issue }) {
   const dispatch = useDispatch();
 
   // Acceder a los datos globales
@@ -58,7 +58,7 @@ function StaffWorkIssues_Instance({ issue }) {
 
   const handleIniciarTarea = async () => {
     if (!window.confirm("¿Estás seguro de que quieres marcar la tarea como finalizada?")) return;
-    await dispatch(updateItem(issue._id, { Terminado: true }, WORKISUE));
+    await dispatch(updateItem(issue._id, { Terminado: true }, Comanda));
     alert("Tarea marcada como finalizada.");
   };
 
@@ -134,4 +134,4 @@ function StaffWorkIssues_Instance({ issue }) {
   );
 }
 
-export default StaffWorkIssues_Instance;
+export default StaffComandas_Instance;

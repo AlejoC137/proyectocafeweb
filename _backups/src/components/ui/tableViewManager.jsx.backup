@@ -7,7 +7,7 @@ import {
   CATEGORIES,
   SUB_CATEGORIES,
   Staff,
-  WorkIsue,
+  Comanda,
   Procedimientos,
   MenuItems
 } from "../../redux/actions-types";
@@ -38,7 +38,7 @@ export function TableViewManager({ products, currentType }) {
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({});
 
-  // Función para manejar objetos anidados de forma segura (usada en WorkIsue)
+  // Función para manejar objetos anidados de forma segura (usada en Comanda)
   const parseNestedObject = (obj, fallback = {}) => {
     try {
       if (typeof obj === "string") {
@@ -113,8 +113,8 @@ export function TableViewManager({ products, currentType }) {
           acciones: { label: "Acciones", key: "acciones", default: true, fixed: true }
         };
       
-      // --- MODIFICACIÓN WORKISUE ---
-      case WorkIsue:
+      // --- MODIFICACIÓN Comanda ---
+      case Comanda:
         return {
           titulo: { label: "Título", key: "Tittle", default: true },
           categoria: { label: "Categoría", key: "Categoria", default: true },
@@ -217,7 +217,7 @@ export function TableViewManager({ products, currentType }) {
     switch(currentType) {
       case Staff:
         return [...new Set(products.map(p => p.Cargo).filter(Boolean))];
-      case WorkIsue:
+      case Comanda:
         return [...new Set(products.map(p => p.Categoria).filter(Boolean))];
       case Procedimientos:
         return [...new Set(products.map(p => p.Categoria).filter(Boolean))];
@@ -249,7 +249,7 @@ export function TableViewManager({ products, currentType }) {
     switch(currentType) {
       case Staff:
         return `${product.Nombre || ""} ${product.Apellido || ""}`;
-      case WorkIsue:
+      case Comanda:
         return `${product.Tittle || ""} ${product.Categoria || ""} ${product.Notas || ""}`; // Incluimos Categoria y Notas en búsqueda
       case Procedimientos:
         return product.tittle;
@@ -267,7 +267,7 @@ export function TableViewManager({ products, currentType }) {
     switch(currentType) {
       case Staff:
         return product.Cargo;
-      case WorkIsue:
+      case Comanda:
         return product.Categoria;
       case Procedimientos:
         return product.Categoria;
@@ -283,7 +283,7 @@ export function TableViewManager({ products, currentType }) {
   // Función para obtener el campo de estado
   const getStatusField = (product) => {
     switch(currentType) {
-        case WorkIsue:
+        case Comanda:
             // Convertir boolean 'Terminado' a string "Terminado" / "Pendiente"
             return product.Terminado ? "Terminado" : "Pendiente";
         case AGENDA:
@@ -297,8 +297,8 @@ export function TableViewManager({ products, currentType }) {
   const uniqueGrupos = getUniqueCategories();
   const uniqueSubGrupos = getUniqueSubGroups();
   const uniqueTipos = getUniqueTipos();
-  // Modificado para que los estados de WorkIsue sean "Terminado" y "Pendiente"
-  const uniqueEstados = currentType === WorkIsue 
+  // Modificado para que los estados de Comanda sean "Terminado" y "Pendiente"
+  const uniqueEstados = currentType === Comanda 
     ? ["Terminado", "Pendiente"]
     : [...new Set(products.map(p => p.Estado).filter(Boolean))];
 
@@ -336,9 +336,9 @@ export function TableViewManager({ products, currentType }) {
     let aValue;
     let bValue;
 
-    // --- MODIFICACIÓN SORTING WORKISUE ---
-    // Manejar ordenamiento de campos anidados de WorkIsue
-    if (currentType === WorkIsue && (sortColumn === "Dates.isued" || sortColumn === "Pagado.pagadoFull")) {
+    // --- MODIFICACIÓN SORTING Comanda ---
+    // Manejar ordenamiento de campos anidados de Comanda
+    if (currentType === Comanda && (sortColumn === "Dates.isued" || sortColumn === "Pagado.pagadoFull")) {
         if (sortColumn === "Dates.isued") {
             aValue = new Date(parseNestedObject(a.Dates, {isued: null}).isued || 0);
             bValue = new Date(parseNestedObject(b.Dates, {isued: null}).isued || 0);
@@ -356,7 +356,7 @@ export function TableViewManager({ products, currentType }) {
     if (sortColumn === "Rate" || sortColumn === "CC" || sortColumn === "Precio") {
       aValue = parseFloat(aValue) || 0;
       bValue = parseFloat(bValue) || 0;
-    } else if (sortColumn === "Dates" && currentType !== WorkIsue) { // Evitar doble manejo
+    } else if (sortColumn === "Dates" && currentType !== Comanda) { // Evitar doble manejo
       aValue = new Date(aValue);
       bValue = new Date(bValue);
     }
@@ -435,7 +435,7 @@ export function TableViewManager({ products, currentType }) {
       if (editedData.Rate !== undefined && (isNaN(parseFloat(editedData.Rate)) || parseFloat(editedData.Rate) < 0)) {
         errors.push('La tarifa debe ser un número válido mayor o igual a 0');
       }
-    } else if (currentType === WorkIsue) {
+    } else if (currentType === Comanda) {
       if (editedData.Tittle && editedData.Tittle.trim().length < 2) {
         errors.push('El título debe tener al menos 2 caracteres');
       }
@@ -489,9 +489,9 @@ export function TableViewManager({ products, currentType }) {
         }
       } 
       
-      // --- MODIFICACIÓN GUARDADO WORKISUE ---
-      else if (currentType === WorkIsue) {
-        // Para WorkIsue, manejar objetos JSON anidados
+      // --- MODIFICACIÓN GUARDADO Comanda ---
+      else if (currentType === Comanda) {
+        // Para Comanda, manejar objetos JSON anidados
         const originalItem = products.find(p => p._id === item._id);
 
         // 1. Manejar 'Dates'
@@ -904,9 +904,9 @@ export function TableViewManager({ products, currentType }) {
         
         return staffHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       
-      // --- MODIFICACIÓN WORKISUE HEADERS ---
-      case WorkIsue:
-        const workIssueHeaders = [
+      // --- MODIFICACIÓN Comanda HEADERS ---
+      case Comanda:
+        const ComandaHeaders = [
           { key: 'titulo', content: (
             <th key="titulo" className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-r border-gray-200">
               <button onClick={() => handleSort("Tittle")} className="bg-slate-100 text-gray-950 flex items-center gap-1 hover:text-blue-600">
@@ -969,7 +969,7 @@ export function TableViewManager({ products, currentType }) {
           )}
         ];
         
-        return workIssueHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
+        return ComandaHeaders.filter(header => visibleColumns[header.key]).map(header => header.content);
       // --- FIN MODIFICACIÓN ---
         
       case Procedimientos:
@@ -1578,8 +1578,8 @@ export function TableViewManager({ products, currentType }) {
         
         return staffCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       
-      // --- MODIFICACIÓN WORKISUE CELDAS ---
-      case WorkIsue: { 
+      // --- MODIFICACIÓN Comanda CELDAS ---
+      case Comanda: { 
         // Parsear objetos JSON anidados
         const datesData = parseNestedObject(item.Dates, { isued: "", finished: "", date_asigmente: [] });
         const pagadoData = parseNestedObject(item.Pagado, { pagadoFull: false });
@@ -1587,7 +1587,7 @@ export function TableViewManager({ products, currentType }) {
         const procedimientosData = parseNestedObject(item.Procedimientos, []);
 
 
-        const workIssueCells = [
+        const ComandaCells = [
           { key: 'titulo', content: (
             <td key="titulo" className="px-3 py-2 border-r border-gray-100 text-xs">
               {showEdit ? renderEditableCell(item, "Tittle") : 
@@ -1701,7 +1701,7 @@ export function TableViewManager({ products, currentType }) {
           )}
         ];
         
-        return workIssueCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
+        return ComandaCells.filter(cell => visibleColumns[cell.key]).map(cell => cell.content);
       } // Cerrar el case
       // --- FIN MODIFICACIÓN ---
         
@@ -1807,7 +1807,7 @@ export function TableViewManager({ products, currentType }) {
   // Función para renderizar botones de acción
   const renderActionButtons = (item, isEditing) => (
     <div className="flex gap-1">
-      {/* Botón de Receta: visible para MenuItems y Procedimientos (o WorkIsue si tiene receta) */}
+      {/* Botón de Receta: visible para MenuItems y Procedimientos (o Comanda si tiene receta) */}
       {(currentType === MenuItems || currentType === Procedimientos) && (
         <Button
           onClick={() => handleRecipeModal(item._id, item.Receta)}
@@ -1858,7 +1858,7 @@ export function TableViewManager({ products, currentType }) {
               onChange={(e) => setFilterGrupo(e.target.value)}
               className="border border-gray-300 bg-gray-100 text-gray-900 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">{currentType === WorkIsue ? "Todas las Categorías" : "Todos los Grupos"}</option>
+              <option value="">{currentType === Comanda ? "Todas las Categorías" : "Todos los Grupos"}</option>
               {uniqueGrupos.map(grupo => (
                 <option key={grupo} value={grupo}>{grupo}</option>
               ))}

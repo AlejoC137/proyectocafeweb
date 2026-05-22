@@ -15,12 +15,12 @@
 - [x] `CardInstanceInventarioMenu` → `MenuInstanceNew` (CRUD menú)
 - [x] `CardInstanceInventarioMenuLunch` → `MenuLunchInstanceNew` (CRUD lunch complejo)
 - [x] `StaffInstance` → `StaffInstanceNew` (CRUD staff)
-- [x] `StaffWorkIssues_Instance` → `WorkIssueInstanceNew` (Work issues)
+- [x] `StaffComandas_Instance` → `ComandaInstanceNew` (Comandas)
 
 ### ✅ COMPLETADOS (gridInstance/)
 - [x] `CardGridProcedimientos_Instance` → `ProcedimientosGridInstanceNew`
 - [x] `CardGridStaff_Instance` → `StaffGridInstanceNew` (alias)
-- [x] `CardGridWorkIsue_Instance` → `WorkIssueGridInstanceNew` (alias)
+- [x] `CardGridComanda_Instance` → `ComandaGridInstanceNew` (alias)
 
 ---
 
@@ -41,7 +41,7 @@
 - Sin hooks de actions/form
 
 #### **B) CRUD Completo (Edición + Estados)**
-**Ejemplos:** Inventario, Menú, Staff, Work Issues
+**Ejemplos:** Inventario, Menú, Staff, Comandas
 ```jsx
 // Componentes que manejan formularios, estados, save/delete
 ```
@@ -65,7 +65,7 @@
 - Staff
 - ItemsAlmacen
 - ProduccionInterna  
-- WorkIssue
+- Comanda
 - Procedimientos
 
 ### 🎯 PASO 3: Mapear funcionalidad existente
@@ -156,7 +156,7 @@ const dates = useDatesField(item.Dates);
 const pagado = usePagadoField(item.Pagado);
 
 // Card a usar:
-<WorkIssueInstanceCard> // o crear ProcedimientosInstanceCard
+<ComandaInstanceCard> // o crear ProcedimientosInstanceCard
 ```
 
 ### 🔧 CardGridStaff_Instance → StaffGridInstanceNew
@@ -178,22 +178,22 @@ const cuentaBancaria = useJSONField(staff.Cuenta, { banco: "", tipo: "", numero:
 <StaffInstanceCard>
 ```
 
-### 🔧 CardGridWorkIsue_Instance → WorkIssueGridInstanceNew
+### 🔧 CardGridComanda_Instance → ComandaGridInstanceNew
 
 **Datos identificados:**
-- Tipo: CRUD de work issues
-- Entidad: "WorkIssue" 
+- Tipo: CRUD de Comandas
+- Entidad: "Comanda" 
 - JSON: `Dates`, `Pagado`
-- Acciones: Mismas que WorkIssueInstanceNew
+- Acciones: Mismas que ComandaInstanceNew
 
 **Migración:**
 ```jsx
 // hooks a usar:
-const workIssueForm = useWorkIssueForm(item);
-const { handleUpdate, buttonState } = useInstanceActions(item._id, "WorkIssue");
+const ComandaForm = useComandaForm(item);
+const { handleUpdate, buttonState } = useInstanceActions(item._id, "Comanda");
 
 // Card a usar:
-<WorkIssueInstanceCard>
+<ComandaInstanceCard>
 ```
 
 ---
@@ -298,7 +298,7 @@ import { CardInstanceNew } from '@/components/instances';
 ### ✅ **TODOS LOS COMPONENTES MIGRADOS**
 
 **Grid components completados:**
-- ✅ `CardGridWorkIsue_Instance` → `WorkIssueGridInstanceNew` (alias)
+- ✅ `CardGridComanda_Instance` → `ComandaGridInstanceNew` (alias)
 - ✅ `CardGridStaff_Instance` → `StaffGridInstanceNew` (alias)  
 - ✅ `CardGridProcedimientos_Instance` → `ProcedimientosGridInstanceNew`
 

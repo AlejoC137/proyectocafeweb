@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search, Download, Plus,
   XCircle, ArrowUpDown, Trash2, ChevronUp, ChevronDown
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import PageLayout from '../../../../components/ui/page-layout';
+import PageLayout from '../../../../components/ui/page-layout.jsx';
 
 // Acciones y tipos
-import { getAllFromTable, actualizarWorkIsue, deleteWorkIsue } from '../../../../redux/actions-WorkIsue.js';
+import { getAllFromTable, actualizarComanda, deleteComanda } from '../../../../redux/actions-Comanda.js';
 
 // --- Constantes y Helpers (Necesarios para la UI de las propiedades) ---
 const ESTADOS = [
@@ -76,6 +77,7 @@ const COLUMNS_CONFIG = [
   
   // --- MODIFICACIÓN: Columnas de 'Dates' separadas ---
   { key: 'Dates.isued', label: 'Fecha Creación', width: 180, sortable: true, type: 'date' },
+  { key: 'Dates.EjecutionDate', label: 'Fecha Ejecución', width: 180, sortable: true, type: 'date' },
   { key: 'Dates.finished', label: 'Fecha Finalizado', width: 180, sortable: true, type: 'date' },
   
   // --- CAMBIO 1: Apuntar a 'date_repiting' en lugar de 'date_asigmente' ---
@@ -293,7 +295,7 @@ const EditableCell = ({ value, taskId, fieldKey, onSave, type = 'text', options 
 
 
 // --- Componente Principal ---
-const WorkIsueExcelView = () => {
+const ComandaExcelView = () => {
   const dispatch = useDispatch();
   
   // Estado para los datos crudos de la API
@@ -301,7 +303,8 @@ const WorkIsueExcelView = () => {
   const [staff, setStaff] = useState([]);
 
   // Estado para la UI
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('id') || '');
   const [sortConfig, setSortConfig] = useState({ key: 'Categoria', direction: 'ascending' });
 
   // Opciones dinámicas para selects
@@ -314,7 +317,7 @@ const WorkIsueExcelView = () => {
   // --- Data Fetching ---
   const fetchAllData = useCallback(async () => {
     const [tareasAction, staffAction] = await Promise.all([
-      dispatch(getAllFromTable('WorkIsue')),
+      dispatch(getAllFromTable('Comanda')),
       dispatch(getAllFromTable('Staff')),
     ]);
     if (tareasAction?.payload) setRawData(tareasAction.payload);
@@ -332,7 +335,7 @@ const WorkIsueExcelView = () => {
     return rawData.map(item => ({
       ...item,
       // Parsea los campos JSON string a objetos
-      // --- CAMBIO 2: Usar 'date_repiting' y añadir 'Ejecution' (de WorkIsueCreator) al valor por defecto ---
+      // --- CAMBIO 2: Usar 'date_repiting' y añadir 'Ejecution' (de ComandaCreator) al valor por defecto ---
       Dates: safeJsonParse(item.Dates, { isued: null, finished: null, Ejecution: "", date_repiting: [] }),
       Pagado: safeJsonParse(item.Pagado, { pagadoFull: false, adelanto: "NoAplica", susceptible: false }),
       Procedimientos: safeJsonParse(item.Procedimientos, []), // Espera un array
@@ -347,6 +350,7 @@ const WorkIsueExcelView = () => {
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
       aData = aData.filter(item => {
+        if (item._id && String(item._id).toLowerCase().includes(lowerSearch)) return true;
         // Busca en todas las claves definidas en las columnas
         return COLUMNS_CONFIG.some(col => {
           const value = getNestedValue(item, col.key);
@@ -433,7 +437,7 @@ const WorkIsueExcelView = () => {
     }
 
     // 5. Despachar la acción de actualización
-    await dispatch(actualizarWorkIsue(taskId, updateData));
+    await dispatch(actualizarComanda(taskId, updateData));
     
     // 6. Refrescar los datos para mostrar el cambio
     await fetchAllData();
@@ -444,7 +448,7 @@ const WorkIsueExcelView = () => {
    */
   const handleDeleteTask = async (taskId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
-      await dispatch(deleteWorkIsue(taskId));
+      await dispatch(deleteComanda(taskId));
       await fetchAllData(); // Refrescar
     }
   };
@@ -488,8 +492,8 @@ const WorkIsueExcelView = () => {
 
     // 3. Crear el libro y guardar
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'WorkIsues');
-    XLSX.writeFile(wb, 'WorkIsues_Export.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Comandas');
+    XLSX.writeFile(wb, 'Comandas_Export.xlsx');
   };
 
   /**
@@ -505,13 +509,13 @@ const WorkIsueExcelView = () => {
     return [];
   };
 
-  // Manejador para crear nuevo WorkIssue
-  const handleCreateWorkIssue = () => {
-    window.open("/WorkIsueCreator", "_blank");
+  // Manejador para crear nuevo Comanda
+  const handleCreateComanda = () => {
+    window.open("/ComandaCreator", "_blank");
   };
 
   return (
-    <PageLayout title="Work Issues - Vista Excel">
+    <PageLayout title="Comandas - Vista Excel">
       {/* --- Toolbar --- */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
@@ -534,11 +538,11 @@ const WorkIsueExcelView = () => {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={handleCreateWorkIssue}
+            onClick={handleCreateComanda}
             className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-md shadow-sm hover:bg-purple-700"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nuevo WorkIssue
+            Nuevo Comanda
           </button>
           <button
             onClick={handleExport}
@@ -642,4 +646,4 @@ const WorkIsueExcelView = () => {
   );
 };
 
-export default WorkIsueExcelView;
+export default ComandaExcelView;

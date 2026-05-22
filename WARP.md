@@ -41,7 +41,7 @@ The application uses Redux with Redux Thunk for global state management. The sto
 - `allProduccion` - Internal production items
 - `allProcedimientos` - Procedures/procedimientos
 - `allRecetasMenu`, `allRecetasProduccion`, `allRecetasProcedimientos` - Recipes for menu items, production, and procedures
-- `allWorkIsue` - Work issues/tasks
+- `allComanda` - Comandas/tasks
 - `allCompras` - Purchases
 - `Proveedores` - Suppliers/providers
 - `allAgenda` - Agenda/calendar items
@@ -58,7 +58,7 @@ Actions are split across multiple files by domain:
 - `actions-Staff.js` - Staff-related actions
 - `actions-Proveedores.js` - Provider/supplier actions
 - `actions-Procedimientos.js` - Procedure actions
-- `actions-WorkIsue.js` - Work issue/task actions
+- `actions-Comanda.js` - Work issue/task actions
 - `actions-VentasCompras.js` - Sales and purchases actions
 - `standaloneTaskActions.js` - Standalone task operations
 - `actions-types.js` - Constants for action types, table names, categories, units, etc.
@@ -76,7 +76,7 @@ The app uses React Router v6 with routes defined in `App.jsx`. Key routes includ
 - `/VentaCompra` - Sales/Purchase tracking
 - `/Proveedores` - Suppliers
 - `/Actividades` - Activities/tasks
-- `/WorkIsue` - Work issues (Excel view)
+- `/Comanda` - Comandas (Excel view)
 - `/CalculoNomina` - Payroll calculation
 - `/Gastos` - Expenses
 - `/Predict/:MenuItem` - Prediction for menu items
@@ -95,7 +95,7 @@ The app connects to Supabase via `src/config/supabaseClient.js`. Main tables:
 - `RecetasProcedimientos` - Recipe-procedure relationships
 - `Proveedores` - Suppliers
 - `Compras` - Purchases
-- `WorkIsue` - Work issues/tasks
+- `Comanda` - Comandas/tasks
 - `Agenda` - Calendar/agenda items
 
 ### Categories and Constants
@@ -148,7 +148,7 @@ src/
 
 **Recipe Management:** Complex recipe system with relationships between menu items, production items, and procedures. Recipes can be created, updated, and cost-calculated.
 
-**Work Issues/Tasks:** Excel-like view for managing tasks with staff assignments, dates, and notes.
+**Comandas/Tasks:** Excel-like view for managing tasks with staff assignments, dates, and notes.
 
 ## Development Guidelines
 

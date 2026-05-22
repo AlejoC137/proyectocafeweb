@@ -259,10 +259,10 @@ export const StaffInstanceCard = (props) => (
   />
 );
 
-export const WorkIssueInstanceCard = (props) => (
+export const ComandaInstanceCard = (props) => (
   <InstanceCard 
     {...props}
-    entityType="WorkIssue"
+    entityType="Comanda"
     showStatusButtons={true}
     variant="default"
   />

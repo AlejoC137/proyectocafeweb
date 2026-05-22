@@ -35,7 +35,7 @@ const pageTitles = {
   "ACCIONESRAPIDAS": { [ESP]: "Acciones Rápidas", [ENG]: "Quick Actions" },
   "PROVEEDORES": { [ESP]: "Proveedores", [ENG]: "Suppliers" },
   "CALCULONOMINA": { [ESP]: "Cálculo de Nómina", [ENG]: "Payroll Calculation" },
-  "WORKISUE": { [ESP]: "Tareas", [ENG]: "Tasks" },
+  "Comanda": { [ESP]: "Tareas", [ENG]: "Tasks" },
   "STAFF-MANAGER": { [ESP]: "Gestión de Empleados", [ENG]: "Employee Management" },
   "MODELOPROYECTO": { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" },
   "USERPORTAL": { [ESP]: "Portal de Usuario", [ENG]: "User Portal" },
@@ -46,7 +46,7 @@ const IconButton = React.forwardRef(({ children, onClick, className = '', ...pro
   <button
     ref={ref}
     onClick={onClick}
-    className={`p-1.5 rounded-lg shadow-sm transition-all duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}
+    className={`p-1.5 rounded-none border-2 border-black shadow-solid transition-all duration-150 ease-in-out hover:-translate-y-1 hover:shadow-solid-lg active:shadow-none active:translate-y-1 active:translate-x-1 focus:outline-none ${className}`}
     {...props}
   >
     {children}
@@ -106,7 +106,7 @@ export default function TopNav() {
 
   const allTabs = [
     { label: "Portal Staff", path: "/" },
-    { label: "Work Issues", path: "/WorkIsue" },
+    { label: "Comandas", path: "/Comanda" },
     { label: "Manager", path: "/Manager" },
     { label: "Inventario", path: "/Inventario" },
     { label: "Recetas", path: "/Recetas" },
@@ -128,7 +128,7 @@ export default function TopNav() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-md bg-cream-bg border-sage-green text-not-black">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-solid bg-cream-bg border-black text-gray-800">
       <div className="container flex items-center justify-between h-14 px-4">
 
         {/* Sección Izquierda/Central: Botón + Logo + Título */}
@@ -168,7 +168,7 @@ export default function TopNav() {
         <div className="flex items-center justify-end gap-2 shrink-0 pl-2">
           <button
             onClick={handleLanguageToggle}
-            className="px-2 py-1 rounded-md flex items-center gap-1.5 font-bold font-PlaywriteDE text-xs shadow-sm transition-all duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-terracotta-accent text-white"
+            className="px-2 py-1 border-2 border-black rounded-none flex items-center gap-1.5 font-bold font-PlaywriteDE text-xs shadow-solid transition-all duration-150 ease-in-out hover:-translate-y-1 hover:shadow-solid-lg active:shadow-none active:translate-y-1 active:translate-x-1 bg-terracotta-accent text-white"
           >
             <Languages className="h-3 w-3" />
             {currentLeng === ESP ? 'EN' : 'ES'}

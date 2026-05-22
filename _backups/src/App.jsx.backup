@@ -49,9 +49,9 @@ import MenuPrint from './body/components/Menu/MenuPrint';
 import MenuHead from './body/components/Menu/MenuHead';
 import StaffPortal from './body/views/staff/staffPortal.jsx';
 import CalculoNomina from './body/views/staff/CalculoNomina';
-import WorkIsueExcelView from './body/views/actividades/WorkE/WorkIsueExcelView.jsx';
+import ComandaExcelView from './body/views/actividades/WorkE/ComandaExcelView.jsx';
 import CalendarioProduccion from './body/views/actividades/CalendarioProduccion.jsx';
-import WorkIsueCreator from './body/views/actividades/WorkIsueCreator.jsx';
+import ComandaCreator from './body/views/actividades/ComandaCreator.jsx';
 import StaffCreator from './body/views/actividades/StaffCreator.jsx';
 import ItemsModal from './body/components/Items/ItemsModal.jsx';
 import StaffDetailView from './body/views/staff/StaffDetailView.jsx';
@@ -148,10 +148,10 @@ function App() {
           <Route path="/DiaResumen/:date" element={<DiaResumen />} />
           <Route path="/MesResumen" element={<MesResumen />} />
           <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
-          <Route path="/WorkIsue" element={<WorkIsueExcelView />} />
+          <Route path="/Comanda" element={<ComandaExcelView />} />
           <Route path="/CalendarioProduccion" element={<CalendarioProduccion />} />
           <Route path="/CalendarioProduccio" element={<CalendarioProduccion />} />
-          <Route path="/WorkIsueCreator" element={<WorkIsueCreator />} />
+          <Route path="/ComandaCreator" element={<ComandaCreator />} />
           <Route path="/Proveedores" element={<Proveedores />} />
           <Route path="/PagosProveedores" element={<PagosProveedores />} />
           <Route path="/StaffCreator" element={<StaffCreator />} />

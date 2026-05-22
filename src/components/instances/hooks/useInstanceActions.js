@@ -102,7 +102,7 @@ export const useInstanceActions = (itemId, entityType, options = {}) => {
       case 'ItemsAlmacen':
       case 'ProduccionInterna':
       case 'Procedimientos':
-      case 'WorkIssue':
+      case 'Comanda':
       default:
         return updateItem;
     }

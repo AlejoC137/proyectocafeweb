@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import StaffInstance from "./StaffInstance";
-// import { getAllFromTable } from "../../../redux/actions-WorkIsue";
+// import { getAllFromTable } from "../../../redux/actions-Comanda";
 import { STAFF } from "../../../redux/actions-types";
 import { getAllFromTable } from "../../../redux/actions-Proveedores";
 // getAllFromTable

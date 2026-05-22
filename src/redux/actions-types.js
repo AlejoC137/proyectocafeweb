@@ -27,7 +27,7 @@ export const MODEL = "Model";
 // Tablas en Supabase
 export const ITEMS = "ItemsAlmacen";
 export const MENU = "Menu";
-export const WORKISUE = "WorkIsue";
+export const Comanda = "Comanda";
 export const PRODUCCION = "ProduccionInterna";
 export const STAFF = "Staff";
 export const RECETAS_PRODUCCION = "RecetasProduccion";
@@ -215,7 +215,6 @@ export const MenuItems = "MenuItems"
 
 export const Staff = "Staff"
 export const Procedimientos = "Procedimientos"
-export const WorkIsue = "WorkIsue"
 
 // Acciones relacionadas con las recetas
 export const INSERT_RECETAS_SUCCESS = "INSERT_RECETAS_SUCCESS";  // Nueva acción para éxito al insertar recetas

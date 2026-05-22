@@ -51,37 +51,37 @@ export function crearItem(itemData, type, forId) {
   };
 }
 
-export function crearWorkIsue(workIsueData) {
+export function crearComanda(ComandaData) {
   
   return async (dispatch) => {
     try {
       // Generar un objeto base con UUID
-      const nuevoWorkIsue = {
+      const nuevoComanda = {
         _id: uuidv4(),
-        ...workIsueData,
+        ...ComandaData,
         Date: new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }), // Fecha y hora actual
-        Mesa: workIsueData.Mesa, // Agregar el campo Mesa
+        Mesa: ComandaData.Mesa, // Agregar el campo Mesa
       };
 
-      // Insertar el nuevo WorkIsue en Supabase
+      // Insertar el nuevo Comanda en Supabase
       const { data, error } = await supabase
-        .from("WorkIsue")
-        .insert([nuevoWorkIsue])
+        .from("Comanda")
+        .insert([nuevoComanda])
         .select();
 
       if (error) {
-        console.error("Error al crear el WorkIsue:", error);
-        throw new Error("No se pudo crear el WorkIsue");
+        console.error("Error al crear el Comanda:", error);
+        throw new Error("No se pudo crear el Comanda");
       }
 
       // Despachar la acción para actualizar el estado global
       dispatch({
-        type: "CREAR_WORKISUE_SUCCESS",
-        payload: data[0], // El nuevo WorkIsue creado
+        type: "CREAR_Comanda_SUCCESS",
+        payload: data[0], // El nuevo Comanda creado
       });
       return data[0];
     } catch (error) {
-      console.error("Error en la acción crearWorkIsue:", error);
+      console.error("Error en la acción crearComanda:", error);
       throw error;
     }
   };
@@ -123,56 +123,56 @@ export function crearCompra(compraData) {
   };
 }
 
-export function actualizarWorkIsue(workIsueId, updatedFields) {
+export function actualizarComanda(ComandaId, updatedFields) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue")
+        .from("Comanda")
         .update(updatedFields)
-        .eq("_id", workIsueId)
+        .eq("_id", ComandaId)
         .select();
 
       if (error) {
-        console.error('Error al actualizar el WorkIsue:', error);
+        console.error('Error al actualizar el Comanda:', error);
         return null;
       }
       return data;
     } catch (error) {
-      console.error('Error en la acción actualizarWorkIsue:', error);
+      console.error('Error en la acción actualizarComanda:', error);
     }
   };
 }
 
-export function eliminarWorkIsue(workIsueId) {
+export function eliminarComanda(ComandaId) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue")
+        .from("Comanda")
         .delete()
-        .eq("_id", workIsueId)
+        .eq("_id", ComandaId)
         .select();
 
       if (error) {
-        console.error('Error al eliminar el WorkIsue:', error);
+        console.error('Error al eliminar el Comanda:', error);
         return null;
       }
       return data;
     } catch (error) {
-      console.error('Error en la acción eliminarWorkIsue:', error);
+      console.error('Error en la acción eliminarComanda:', error);
     }
   };
 }
 
-export function actualizarPago(workIsueId, pagoInfo) {
+export function actualizarPago(ComandaId, pagoInfo) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue")
+        .from("Comanda")
         .update({
           Pagado: true,
           Pago_Info: pagoInfo,
         })
-        .eq("_id", workIsueId)
+        .eq("_id", ComandaId)
         .select();
 
       if (error) {

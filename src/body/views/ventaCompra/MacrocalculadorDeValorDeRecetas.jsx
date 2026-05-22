@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Calculator } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
+const MacrocalculadorDeValorDeRecetas = ({ onClose, preSelectedItems }) => {
     // --- Redux Data ---
     const allMenu = useSelector((state) => state.allMenu || []);
     const allProduccion = useSelector((state) => state.allProduccion || []);
@@ -92,7 +92,21 @@ const MacrocalculadorDeValorDeRecetas = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('menu'); // 'menu' | 'produccion'
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGroup, setSelectedGroup] = useState('');
-    const [selectedItems, setSelectedItems] = useState(new Map()); // ID -> batches (quantity)
+    const [selectedItems, setSelectedItems] = useState(() => {
+        if (preSelectedItems && Array.isArray(preSelectedItems)) {
+            const map = new Map();
+            preSelectedItems.forEach(item => {
+                if (item && item._id) {
+                    const rM = allRecetasMenu.find(r => r.forId === item._id);
+                    const rP = allRecetasProduccion.find(r => r.forId === item._id);
+                    const id = rM ? rM._id : (rP ? rP._id : item._id);
+                    map.set(id, item.batches || 1);
+                }
+            });
+            return map;
+        }
+        return new Map();
+    }); // ID -> batches (quantity)
     const [expandedIngredients, setExpandedIngredients] = useState(true);
 
     // --- Filtering ---

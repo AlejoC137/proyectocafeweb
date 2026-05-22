@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getAllFromTable, setCurrentStaff } from "../../../redux/actions";
-import { STAFF, WORKISUE } from "../../../redux/actions-types";
+import { STAFF, Comanda } from "../../../redux/actions-types";
 import StaffInstance from "./staffInstance";
 import StaffShift from "./staffShift";
-import StaffWorkIssues from "./staffWorkIssues";
+import StaffComandas from "./staffComandas";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import ActionButtonGroup from "../../../components/ui/action-button-group";
@@ -25,9 +25,15 @@ import {
   Calendar,
   CalendarDays,
   Wrench,
-  BarChart3
+  BarChart3,
+  BookOpen,
+  Store,
+  Ticket,
+  Barcode,
+  ShoppingCart,
+  Landmark
 } from "lucide-react";
-import WorkIsueStaff from "../actividades/WorkE/WorkIsueStaff";
+import ComandaStaff from "../actividades/WorkE/ComandaStaff";
 import Notas from "../actividades/WorkE/Notas";
 
 function StaffPortal() {
@@ -50,7 +56,7 @@ function StaffPortal() {
     const fetchData = async () => {
       try {
         await dispatch(getAllFromTable(STAFF));
-        await dispatch(getAllFromTable(WORKISUE));
+        await dispatch(getAllFromTable(Comanda));
         setLoading(false);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -107,82 +113,95 @@ function StaffPortal() {
   // Botones principales del sistema
   const systemButtons = [
     {
-      label: "Work Issues",
-      icon: "🔧",
-      onClick: () => navigate("/WorkIsue"),
-      variant: "default"
+      label: "Comandas",
+      icon: Wrench,
+      onClick: () => navigate("/Comanda"),
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Manager",
-      icon: "🧠",
+      icon: Brain,
       onClick: () => navigate("/Manager"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Inventario",
-      icon: "📦",
+      icon: Package,
       onClick: () => navigate("/Inventario"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Recetas",
-      icon: "📚",
+      icon: BookOpen,
       onClick: () => navigate("/Recetas"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
-      label: "Agenda Pruduccion",
-      icon: "📅",
+      label: "Agenda Prod.",
+      icon: Calendar,
       onClick: () => navigate("/CalendarioProduccio"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Menu Print",
-      icon: "🖨️",
+      icon: Printer,
       onClick: () => navigate("/MenuPrint"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Gastos",
-      icon: "💸",
+      icon: DollarSign,
       onClick: () => navigate("/Gastos"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Modelos",
-      icon: "🚩",
+      icon: Users,
       onClick: () => navigate("/Model"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Venta / Compra",
-      icon: "💵",
+      icon: CreditCard,
       onClick: () => navigate("/VentaCompra"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
-      label: "Eventos Manager",
-      icon: "🎟️",
+      label: "Eventos Mgr",
+      icon: CalendarDays,
       onClick: () => navigate("/Agenda"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Proveedores",
-      icon: "💁‍♀️",
+      icon: Store,
       onClick: () => navigate("/Proveedores"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
       label: "Eventos Offer",
-      icon: "🍿",
+      icon: Ticket,
       onClick: () => navigate("/EventosOffer"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     },
     {
-      label: "Codigos de Barra",
-      icon: "🏷️",
+      label: "Codigos Barra",
+      icon: Barcode,
       onClick: () => navigate("/Inventario/BarcodeManager"),
-      variant: "default"
+      variant: "default",
+      size: "xl"
     }
   ];
 
@@ -190,87 +209,98 @@ function StaffPortal() {
   const staffButtons = staffFound ? [
     {
       label: "Edit Info",
-      icon: "⚙️",
+      icon: Settings,
       onClick: () => setActiveView("instance"),
-      variant: "outline"
+      variant: "outline",
+      size: "lg"
     },
     {
       label: "Turnos",
-      icon: "⏲️",
+      icon: Clock,
       onClick: () => setActiveView("shift"),
-      variant: "outline"
+      variant: "outline",
+      size: "lg"
     },
     {
       label: "Compras",
-      icon: "💱",
+      icon: ShoppingCart,
       onClick: () => navigate("/Compras"),
-      variant: "outline"
+      variant: "outline",
+      size: "lg"
     },
     // Botones de administrador
     ...(staffFound.isAdmin ? [
       {
         label: "Gestión Usuarios",
-        icon: "👥",
+        icon: Users,
         onClick: () => navigate("/user-manager"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Staff Manager",
-        icon: "👥",
+        icon: Users,
         onClick: () => navigate("/staff-manager"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Nómina",
-        icon: "📊",
+        icon: BarChart3,
         onClick: handleGoToNomina,
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Pagos",
-        icon: "💸",
+        icon: DollarSign,
         onClick: () => navigate("/PagosProveedores"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Día",
-        icon: "📆",
+        icon: CalendarDays,
         onClick: () => navigate("/DiaResumen"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Financiero",
-        icon: "💰",
+        icon: Landmark,
         onClick: () => navigate("/productosFinanciero"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Almacén",
-        icon: "🏪",
+        icon: Store,
         onClick: () => navigate("/GestionAlmacen"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       },
       {
         label: "Mes",
-        icon: "📅",
+        icon: Calendar,
         onClick: () => navigate("/MesResumen"),
-        variant: "destructive"
+        variant: "destructive",
+        size: "lg"
       }
     ] : [])
   ] : [];
 
   return (
     <PageLayout loading={loading}>
-      {/* Contenedor principal FLEX que organiza las 3 columnas */}
-      <div className="flex flex-col lg:flex-row gap-4 pb-20 lg:pb-0">
+      {/* Contenedor principal GRID que organiza las 3 columnas de forma adaptativa */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 pb-20 lg:pb-0 max-w-[1600px] mx-auto">
 
         {/* --- COLUMNA 1 (a) --- */}
-        <div className="w-full lg:w-1/3">
-          <WorkIsueStaff />
+        <div className="w-full xl:col-span-3">
+          <ComandaStaff />
         </div>
 
         {/* --- COLUMNA 2 (b) --- */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-4">
+        <div className="w-full xl:col-span-6 flex flex-col gap-6">
           {/* Botones generales del sistema */}
           <ContentCard title="Acceso al Sistema">
             <ActionButtonGroup
@@ -354,7 +384,7 @@ function StaffPortal() {
         </div>
 
         {/* --- COLUMNA 3 (c) --- */}
-        <div className="w-full lg:w-1/3">
+        <div className="w-full xl:col-span-3">
           <Notas />
         </div>
 

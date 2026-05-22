@@ -13,12 +13,12 @@ function ActionButtonGroup({
   layout = "grid",
   className = "" 
 }) {
-  const layoutClasses = {
-    horizontal: "flex flex-wrap items-center gap-4",
-    vertical: "flex flex-col gap-3",
-    // CAMBIO 2: Simplificado para que siempre sean 2 columnas
-    grid: "grid grid-cols-2 gap-3"
-  };
+  const layoutClasses = {
+    horizontal: "flex flex-wrap items-center gap-4",
+    vertical: "flex flex-col gap-3",
+    // CAMBIO 2: Adaptativo para mejor visualización
+    grid: "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4"
+  };
 
   if (!buttons || buttons.length === 0) {
     return null;
@@ -38,8 +38,8 @@ function ActionButtonGroup({
           ...otherProps
         } = button;
 
-        // Ajustar el tamaño del icono según el tamaño del botón
-        const iconSize = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+        // Ajustar el tamaño del icono según el tamaño del botón
+        const iconSize = size === "xl" ? "h-8 w-8 mb-1" : size === "lg" ? "h-5 w-5" : "h-4 w-4";
 
         return (
           <Button

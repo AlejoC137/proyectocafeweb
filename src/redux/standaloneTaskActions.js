@@ -16,7 +16,7 @@ import supabase from "../config/supabaseClient";
 // 2. CONSTANTES Y CONFIGURACIONES
 // ========================================
 
-const TABLE_NAME = 'WorkIsue'; // Nombre de la tabla de tareas en Supabase
+const TABLE_NAME = 'Comanda'; // Nombre de la tabla de tareas en Supabase
 const ENTITY_NAME = 'tasks'; // Nombre de la entidad para los tipos de acción
 
 // Definimos los tipos de acciones directamente para no importarlos
@@ -34,7 +34,7 @@ const actionTypes = {
 
 // ========================================
 // 3. TRANSFORMADORES Y HELPERS DE TAREAS
-// (Adaptado desde WorkIsue_rows.csv)
+// (Adaptado desde Comanda_rows.csv)
 // ========================================
 
 /**

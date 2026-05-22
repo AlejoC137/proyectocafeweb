@@ -17,7 +17,7 @@ export {
   useInventoryForm,
   useMenuForm,
   useStaffForm,
-  useWorkIssueForm
+  useComandaForm
 } from './hooks/useInstanceForm';
 
 export {
@@ -61,7 +61,7 @@ export {
   InventoryInstanceCard,
   MenuInstanceCard,
   StaffInstanceCard,
-  WorkIssueInstanceCard
+  ComandaInstanceCard
 } from './base/InstanceCard';
 
 // ==================== COMPONENTES ESPECIALIZADOS ====================
@@ -76,7 +76,7 @@ export { InventoryInstanceNew } from './specialized/InventoryInstanceNew';
 // ==================== COMPONENTES CRUD COMPLEJOS (PHASE 3) ====================
 export { MenuInstanceNew } from './specialized/MenuInstanceNew';
 export { StaffInstanceNew, StaffGridInstanceNew } from './specialized/StaffInstanceNew';
-export { WorkIssueInstanceNew, WorkIssueGridInstanceNew } from './specialized/WorkIssueInstanceNew';
+export { ComandaInstanceNew, ComandaGridInstanceNew } from './specialized/ComandaInstanceNew';
 export { MenuLunchInstanceNew } from './specialized/MenuLunchInstanceNew';
 export { ProcedimientosGridInstanceNew } from './specialized/ProcedimientosGridInstanceNew';
 
@@ -143,7 +143,7 @@ export const ENTITY_CONFIGS = {
       'ER': 'No Disponible'
     }
   },
-  'WorkIssue': {
+  'Comanda': {
     showStatusButtons: true,
     variant: 'default',
     collapsible: true

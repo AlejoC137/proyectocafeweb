@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { WorkIssueInstanceCard } from '../base/InstanceCard';
-import { useWorkIssueForm, WORK_ISSUE_CATEGORIES } from '../hooks/useWorkIssueForm';
+import { ComandaInstanceCard } from '../base/InstanceCard';
+import { useComandaForm, WORK_ISSUE_CATEGORIES } from '../hooks/useComandaForm';
 import { useInstanceActions } from '../hooks/useInstanceActions';
 import { Button } from '@/components/ui/button';
 
 /**
- * Componente WorkIssueInstance refactorizado usando la nueva arquitectura
- * CRUD completo para work issues con manejo de fechas, procedimientos y pagos
+ * Componente ComandaInstance refactorizado usando la nueva arquitectura
+ * CRUD completo para Comandas con manejo de fechas, procedimientos y pagos
  */
-export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
+export function ComandaInstanceNew({ issue, viewMode = 'detailed' }) {
   const {
     formData,
     dates,
@@ -19,19 +19,19 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
     handleChange,
     handleDateChange,
     handlePagadoChange,
-    getWorkIssueData,
+    getComandaData,
     markAsCompleted,
     isCompleted,
     isPaid,
     hasAdvance
-  } = useWorkIssueForm(issue);
+  } = useComandaForm(issue);
 
   const {
     handleUpdate,
     handleDelete, 
     buttonState,
     canSave
-  } = useInstanceActions(issue._id, 'WorkIssue');
+  } = useInstanceActions(issue._id, 'Comanda');
 
   const allProcedimientos = useSelector((state) => state.allProcedimientos || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
@@ -40,8 +40,8 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
 
   // Función para guardar work issue
   const onSave = async () => {
-    const workIssueData = getWorkIssueData();
-    await handleUpdate(workIssueData);
+    const ComandaData = getComandaData();
+    await handleUpdate(ComandaData);
   };
 
   // Función para finalizar tarea
@@ -49,7 +49,7 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
     if (!window.confirm("¿Estás seguro de que quieres marcar la tarea como finalizada?")) return;
     
     markAsCompleted();
-    const completedData = getWorkIssueData();
+    const completedData = getComandaData();
     await handleUpdate(completedData);
   };
 
@@ -92,7 +92,7 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
   }
 
   // Header con información de fechas
-  const workIssueHeader = (
+  const ComandaHeader = (
     <div className="flex items-center gap-4">
       <span className="text-sm text-gray-600">
         Creado: {dates.value.isued?.split("T")[0] || ""}
@@ -266,7 +266,7 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
   ) : null;
 
   // Footer con acciones específicas
-  const workIssueFooter = (
+  const ComandaFooter = (
     <div className="flex gap-2 items-center">
       <Button
         onClick={() => setShowGeneralInfo(!showGeneralInfo)}
@@ -300,7 +300,7 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
   );
 
   return (
-    <WorkIssueInstanceCard
+    <ComandaInstanceCard
       title={formData.Tittle || "Sin título"}
       subtitle={`${formData.Categoria} - ${formData.Ejecutor}`}
       data={issue}
@@ -309,14 +309,14 @@ export function WorkIssueInstanceNew({ issue, viewMode = 'detailed' }) {
       onDelete={handleDelete}
       showActions={true}
       showStatusButtons={false}
-      headerSlot={workIssueHeader}
-      footerSlot={workIssueFooter}
+      headerSlot={ComandaHeader}
+      footerSlot={ComandaFooter}
       collapsible={true}
       defaultExpanded={!isCompleted}
       className={isCompleted ? 'bg-green-50 border-green-200' : ''}
     >
       {procedimientosSection}
       {editForm}
-    </WorkIssueInstanceCard>
+    </ComandaInstanceCard>
   );
 }

@@ -10,6 +10,56 @@ import { copyPromptToClipboard } from "../../../utils/prompts";
 import supabase from "../../../config/supabaseClient";
 import HorizontalGallery from "../Menu/MenuPrintHorizontal/HorizontalGallery";
 
+// ─── Render helpers ───────────────────────────────────────────────────────
+
+const InfoRow = ({ label, value, highlight = false }) => (
+  <div className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+    <span className="text-xs font-medium text-slate-500 w-1/2">{label}</span>
+    <span className={`text-xs font-semibold text-right ${highlight ? "text-blue-700 text-sm" : "text-slate-800"}`}>{value ?? "N/A"}</span>
+  </div>
+);
+
+const SectionCard = ({ title, icon: Icon, color = "blue", children }) => {
+  const colors = {
+    blue: "border-l-blue-500 bg-blue-50/30",
+    green: "border-l-emerald-500 bg-emerald-50/30",
+    amber: "border-l-amber-500 bg-amber-50/30",
+    purple: "border-l-purple-500 bg-purple-50/30",
+  };
+  const iconColors = { blue: "text-blue-500", green: "text-emerald-500", amber: "text-amber-500", purple: "text-purple-500" };
+  return (
+    <div className={`border-l-4 rounded-r-lg p-3 ${colors[color]}`}>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className={`h-3.5 w-3.5 ${iconColors[color]}`} />
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+};
+
+const FormField = ({ label, name, type = "text", isReadOnly = false, options = null, editableItem, handleChange, isSaving }) => {
+  const value = editableItem?.[name] ?? "";
+  return (
+    <div className="space-y-1">
+      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
+      {options ? (
+        <select name={name} value={value} onChange={handleChange} disabled={isSaving || isReadOnly}
+          className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:border-blue-400 disabled:opacity-50 disabled:bg-slate-100">
+          <option value="">Seleccionar...</option>
+          {options.map((opt) => (
+            <option key={opt._id || opt} value={opt._id || opt}>{opt.Nombre_Proveedor || opt}</option>
+          ))}
+        </select>
+      ) : (
+        <Input name={name} type={type} value={value} onChange={handleChange}
+          disabled={isSaving || isReadOnly} readOnly={isReadOnly}
+          className={`h-8 text-xs ${isReadOnly ? "bg-slate-100 text-slate-400" : ""}`} />
+      )}
+    </div>
+  );
+};
+
 const ItemsModal = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -375,55 +425,7 @@ const ItemsModal = () => {
     win.onload = () => { win.focus(); win.print(); };
   };
 
-  // ─── Render helpers ───────────────────────────────────────────────────────
-
-  const InfoRow = ({ label, value, highlight = false }) => (
-    <div className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-      <span className="text-xs font-medium text-slate-500 w-1/2">{label}</span>
-      <span className={`text-xs font-semibold text-right ${highlight ? "text-blue-700 text-sm" : "text-slate-800"}`}>{value ?? "N/A"}</span>
-    </div>
-  );
-
-  const SectionCard = ({ title, icon: Icon, color = "blue", children }) => {
-    const colors = {
-      blue: "border-l-blue-500 bg-blue-50/30",
-      green: "border-l-emerald-500 bg-emerald-50/30",
-      amber: "border-l-amber-500 bg-amber-50/30",
-      purple: "border-l-purple-500 bg-purple-50/30",
-    };
-    const iconColors = { blue: "text-blue-500", green: "text-emerald-500", amber: "text-amber-500", purple: "text-purple-500" };
-    return (
-      <div className={`border-l-4 rounded-r-lg p-3 ${colors[color]}`}>
-        <div className="flex items-center gap-2 mb-2">
-          <Icon className={`h-3.5 w-3.5 ${iconColors[color]}`} />
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{title}</h3>
-        </div>
-        {children}
-      </div>
-    );
-  };
-
-  const FormField = ({ label, name, type = "text", isReadOnly = false, options = null }) => {
-    const value = editableItem?.[name] ?? "";
-    return (
-      <div className="space-y-1">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
-        {options ? (
-          <select name={name} value={value} onChange={handleChange} disabled={isSaving || isReadOnly}
-            className="w-full h-8 px-2 text-xs border border-slate-200 rounded-md bg-white focus:outline-none focus:border-blue-400 disabled:opacity-50 disabled:bg-slate-100">
-            <option value="">Seleccionar...</option>
-            {options.map((opt) => (
-              <option key={opt._id || opt} value={opt._id || opt}>{opt.Nombre_Proveedor || opt}</option>
-            ))}
-          </select>
-        ) : (
-          <Input name={name} type={type} value={value} onChange={handleChange}
-            disabled={isSaving || isReadOnly} readOnly={isReadOnly}
-            className={`h-8 text-xs ${isReadOnly ? "bg-slate-100 text-slate-400" : ""}`} />
-        )}
-      </div>
-    );
-  };
+  // ─── Render helpers were moved outside ────────────────────────────────────────────────
 
   // ─── View mode content ────────────────────────────────────────────────────
 
@@ -529,40 +531,42 @@ const ItemsModal = () => {
 
   // ─── Edit mode content ────────────────────────────────────────────────────
 
-  const editContent = () => (
+  const editContent = () => {
+    const cp = { editableItem, handleChange, isSaving };
+    return (
     <div className="p-4 space-y-4">
       <SectionCard title="Información General" icon={Tag} color="blue">
         <div className="grid grid-cols-2 gap-3 mt-2">
-          <div className="col-span-2"><FormField label="Nombre del Producto" name="Nombre_del_producto" /></div>
-          <FormField label="Grupo" name="GRUPO" options={CATEGORIES} />
-          <FormField label="Estado" name="Estado" options={ESTATUS} />
-          <div className="col-span-2"><FormField label="Proveedor" name="Proveedor" options={proveedores} /></div>
+          <div className="col-span-2"><FormField {...cp} label="Nombre del Producto" name="Nombre_del_producto" /></div>
+          <FormField {...cp} label="Grupo" name="GRUPO" options={CATEGORIES} />
+          <FormField {...cp} label="Estado" name="Estado" options={ESTATUS} />
+          <div className="col-span-2"><FormField {...cp} label="Proveedor" name="Proveedor" options={proveedores} /></div>
         </div>
       </SectionCard>
 
       <SectionCard title="Costos e Inventario" icon={DollarSign} color="green">
         <div className="grid grid-cols-2 gap-3 mt-2">
-          <FormField label="Cantidad Base" name="CANTIDAD" type="number" />
-          <FormField label="Unidad" name="UNIDADES" options={unidades} />
-          <FormField label="Costo Total" name="COSTO" type="number" />
-          <FormField label="Factor COOR" name="COOR" type="number" />
-          <FormField label="Merma (%)" name="Merma" type="number" />
-          <FormField label="Precio Unitario" name="precioUnitario" isReadOnly />
+          <FormField {...cp} label="Cantidad Base" name="CANTIDAD" type="number" />
+          <FormField {...cp} label="Unidad" name="UNIDADES" options={unidades} />
+          <FormField {...cp} label="Costo Total" name="COSTO" type="number" />
+          <FormField {...cp} label="Factor COOR" name="COOR" type="number" />
+          <FormField {...cp} label="Merma (%)" name="Merma" type="number" />
+          <FormField {...cp} label="Precio Unitario" name="precioUnitario" isReadOnly />
         </div>
       </SectionCard>
 
       <SectionCard title="Control de Stock" icon={BarChart3} color="amber">
         <div className="grid grid-cols-3 gap-3 mt-2">
-          <FormField label="Mínimo" name="stock_minimo" type="number" />
-          <FormField label="Máximo" name="stock_maximo" type="number" />
-          <FormField label="Actual" name="stock_actual" type="number" />
+          <FormField {...cp} label="Mínimo" name="stock_minimo" type="number" />
+          <FormField {...cp} label="Máximo" name="stock_maximo" type="number" />
+          <FormField {...cp} label="Actual" name="stock_actual" type="number" />
         </div>
       </SectionCard>
 
       <SectionCard title="Ubicación Física" icon={MapPin} color="purple">
         <div className="grid grid-cols-2 gap-3 mt-2">
-          <FormField label="Almacenamiento" name="almacenamiento_ALMACENAMIENTO" options={BODEGA} />
-          <FormField label="Bodega" name="almacenamiento_BODEGA" options={BODEGA} />
+          <FormField {...cp} label="Almacenamiento" name="almacenamiento_ALMACENAMIENTO" options={BODEGA} />
+          <FormField {...cp} label="Bodega" name="almacenamiento_BODEGA" options={BODEGA} />
         </div>
       </SectionCard>
 
@@ -598,7 +602,8 @@ const ItemsModal = () => {
         </div>
       </SectionCard>
     </div>
-  );
+    );
+  };
 
   // ─── Render ───────────────────────────────────────────────────────────────
 

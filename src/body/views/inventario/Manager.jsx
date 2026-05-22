@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import { WORKISUE, Staff, WorkIsue, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems, AGENDA } from "../../../redux/actions-types";
+import { Comanda, Staff, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems, AGENDA } from "../../../redux/actions-types";
 import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapidasActividades";
 // Vistas tipo grid (cards)
-import { CardGridWorkIsue } from "./gridInstance/CardGridWorkIsue";
+import { CardGridComanda } from "./gridInstance/CardGridComanda";
 import { CardGridStaff } from "./gridInstance/CardGridStaff";
 import { CardGridProcedimientos } from "./gridInstance/CardGridProcedimientos";
 import { CardGridInventarioMenuLunch } from "@/components/ui/CardGridInventarioMenuLunch";
@@ -23,9 +23,10 @@ import {
   Wrench,
   Settings,
   Zap,
-  BarChart3
+  BarChart3,
+  Calendar
 } from "lucide-react";
-import WorkIsueExcelView from "../actividades/WorkE/WorkIsueExcelView";
+import ComandaExcelView from "../actividades/WorkE/ComandaExcelView";
 import ProcedimientoImportModal from "../ventaCompra/ProcedimientoImportModal";
 
 function Manager() {
@@ -39,7 +40,7 @@ function Manager() {
   // Redux selectors
   const AllProcedimientos = useSelector((state) => state.allProcedimientos || []);
   const AllStaff = useSelector((state) => state.allStaff || []);
-  const AllWorkIsue = useSelector((state) => state.allWorkIsue || []);
+  const AllComanda = useSelector((state) => state.allComanda || []);
   const recetas = useSelector((state) => state.allRecetasMenu || []);
   const showEdit = useSelector((state) => state.showEdit);
   const Menu = useSelector((state) => state.allMenu || []);
@@ -49,14 +50,14 @@ function Manager() {
   const filteredItems = useMemo(() => {
     const items = {
       [Staff]: AllStaff,
-      [WorkIsue]: AllWorkIsue,
+      [Comanda]: AllComanda,
       [Procedimientos]: AllProcedimientos,
       [MenuItems]: Menu,
       [AGENDA]: allAgenda,
     }[currentType];
 
     return Array.isArray(items) ? items : [];
-  }, [currentType, AllStaff, AllWorkIsue, AllProcedimientos, Menu]);
+  }, [currentType, AllStaff, AllComanda, AllProcedimientos, Menu]);
 
   useEffect(() => {
     if (currentType === MenuItems) {
@@ -68,7 +69,7 @@ function Manager() {
       try {
         await Promise.all([
           dispatch(getAllFromTable(PROVEE)),
-          dispatch(getAllFromTable(WORKISUE)),
+          dispatch(getAllFromTable(Comanda)),
           dispatch(getAllFromTable(STAFF)),
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(ITEMS)),
@@ -110,7 +111,7 @@ function Manager() {
     { type: MenuItems, label: "Menú", icon: "🗺️" },
     { type: Procedimientos, label: "Procedimientos", icon: "📝" },
     { type: Staff, label: "Staff", icon: "👩‍🚀" },
-    { type: WorkIsue, label: "Work Issues", icon: "🧹" },
+    { type: Comanda, label: "Comandas", icon: "🧹" },
     { type: AGENDA, label: "Eventos", icon: "📅" }
   ];
 
@@ -141,8 +142,8 @@ function Manager() {
     } else {
       // Vista tipo Cards (Grid original)
       switch (currentType) {
-        case WorkIsue:
-          return <CardGridWorkIsue currentType={currentType} />;
+        case Comanda:
+          return <CardGridComanda currentType={currentType} />;
         case Staff:
           return <CardGridStaff currentType={currentType} />;
         case MenuItems:
@@ -164,7 +165,7 @@ function Manager() {
     const total = filteredItems.length;
     const typeLabels = {
       [Staff]: "empleados",
-      [WorkIsue]: "work issues",
+      [Comanda]: "Comandas",
       [Procedimientos]: "procedimientos",
       [MenuItems]: "items del menú",
       [AGENDA]: "eventos"
@@ -219,7 +220,7 @@ function Manager() {
         <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
           <div className="flex items-center gap-2">
             {currentType === Staff && <Users className="text-amber-600" size={20} />}
-            {currentType === WorkIsue && <Wrench className="text-amber-600" size={20} />}
+            {currentType === Comanda && <Wrench className="text-amber-600" size={20} />}
             {currentType === Procedimientos && <FileText className="text-amber-600" size={20} />}
             {currentType === MenuItems && <UtensilsCrossed className="text-amber-600" size={20} />}
             <div>
@@ -267,7 +268,7 @@ function Manager() {
           ) : (
             <div className="text-center py-12 text-slate-500">
               {currentType === Staff && <Users size={48} className="mx-auto mb-4 opacity-50" />}
-              {currentType === WorkIsue && <Wrench size={48} className="mx-auto mb-4 opacity-50" />}
+              {currentType === Comanda && <Wrench size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === Procedimientos && <FileText size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === MenuItems && <UtensilsCrossed size={48} className="mx-auto mb-4 opacity-50" />}
               {currentType === AGENDA && <Calendar size={48} className="mx-auto mb-4 opacity-50" />}

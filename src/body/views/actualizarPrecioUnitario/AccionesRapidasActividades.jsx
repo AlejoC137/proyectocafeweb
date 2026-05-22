@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, actualizarPrecioUnitario, copiarAlPortapapeles, crearItem, crearProveedor } from "../../../redux/actions-Proveedores";
 import { ITEMS, PRODUCCION, AREAS, CATEGORIES, unidades, ItemsAlmacen, ProduccionInterna, MENU, } from "../../../redux/actions-types";
 import ProcedimientosCreator from "../actividades/ProcedimientosCreator";
-import WorkIsueCreator from "../actividades/WorkIsueCreator";
+import ComandaCreator from "../actividades/ComandaCreator";
 import StaffCreator from "../actividades/StaffCreator";
 
 function AccionesRapidasActividades({ currentType }) {
@@ -58,7 +58,7 @@ function AccionesRapidasActividades({ currentType }) {
   const [formVisible, setFormVisible] = useState(false);
   const [formProveedorVisible, setFormProveedorVisible] = useState(false);
   const [procedimientosFormVisible, setProcedimientosFormVisible] = useState(false);
-  const [workIsueFormVisible, setWorkIsueFormVisible] = useState(false);
+  const [ComandaFormVisible, setComandaFormVisible] = useState(false);
   const [staffFormVisible, setStaffFormVisible] = useState(false);
 
   const initialItemData = {
@@ -177,10 +177,10 @@ function AccionesRapidasActividades({ currentType }) {
       </button>
       {procedimientosFormVisible && <ProcedimientosCreator />}
 
-      <button onClick={() => setWorkIsueFormVisible(!workIsueFormVisible)} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
-        {workIsueFormVisible ? "Ocultar Formulario de WorkIsue" : "Mostrar Formulario de WorkIsue"}
+      <button onClick={() => setComandaFormVisible(!ComandaFormVisible)} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
+        {ComandaFormVisible ? "Ocultar Formulario de Comanda" : "Mostrar Formulario de Comanda"}
       </button>
-      {workIsueFormVisible && <WorkIsueCreator />}
+      {ComandaFormVisible && <ComandaCreator />}
 
       <a href="/StaffCreator" target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white px-4 py-2 rounded mt-4 inline-block text-center hover:bg-blue-600">
         Crear Nuevo Staff (Pestaña Nueva)

@@ -101,7 +101,7 @@ export const useAlmacenamientoField = (initialAlmacenamiento) => {
 };
 
 /**
- * Hook especializado para DATES (común en workissues)
+ * Hook especializado para DATES (común en Comandas)
  */
 export const useDatesField = (initialDates) => {
   const defaultDates = { 
@@ -113,7 +113,7 @@ export const useDatesField = (initialDates) => {
 };
 
 /**
- * Hook especializado para PAGADO (común en workissues)
+ * Hook especializado para PAGADO (común en Comandas)
  */
 export const usePagadoField = (initialPagado) => {
   const defaultPagado = { pagadoFull: false, adelanto: "NoAplica", susceptible: false };

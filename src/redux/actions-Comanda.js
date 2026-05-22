@@ -51,50 +51,50 @@ export function crearItem(itemData, type, forId) {
   };
 }
 
-export function crearWorkIsue(workIsueData) {
+export function crearComanda(ComandaData) {
   
   return async (dispatch) => {
     
     try {
       // Generar un objeto base con UUID
-      const nuevoWorkIsue = {
+      const nuevoComanda = {
         _id: uuidv4(),
-        ...workIsueData,
+        ...ComandaData,
         // --- CORRECCIÓN ---
         // Se elimina la línea 'Dates: ...'
-        // 'workIsueData' ya contiene el objeto 'Dates' completo 
-        // enviado desde WorkIsueCreator (incluyendo 'date_repiting').
+        // 'ComandaData' ya contiene el objeto 'Dates' completo 
+        // enviado desde ComandaCreator (incluyendo 'date_repiting').
       };
 
-      // Insertar el nuevo WorkIsue en Supabase
+      // Insertar el nuevo Comanda en Supabase
       const { data, error } = await supabase
-        .from("WorkIsue")
-        .insert([nuevoWorkIsue])
+        .from("Comanda")
+        .insert([nuevoComanda])
         .select();
 
       if (error) {
-        console.error("Error al crear el WorkIsue:", error);
-        throw new Error("No se pudo crear el WorkIsue");
+        console.error("Error al crear el Comanda:", error);
+        throw new Error("No se pudo crear el Comanda");
       }
 
       // Despachar la acción para actualizar el estado global
       dispatch({
-        type: "CREAR_WORKISUE_SUCCESS",
-        payload: data[0], // El nuevo WorkIsue creado
+        type: "CREAR_Comanda_SUCCESS",
+        payload: data[0], // El nuevo Comanda creado
       });
       return data[0];
     } catch (error) {
-      console.error("Error en la acción crearWorkIsue:", error);
+      console.error("Error en la acción crearComanda:", error);
       throw error;
     }
   };
 }
 
 // --- FUNCIÓN CORREGIDA (la que causa el error) ---
-export function deleteWorkIsue(itemId) {
+export function deleteComanda(itemId) {
   // 1. Se elimina el parámetro 'type'
-  // 2. Se define la tabla ('WorkIsue') directamente
-  const table = "WorkIsue"; 
+  // 2. Se define la tabla ('Comanda') directamente
+  const table = "Comanda"; 
   
   return async (dispatch) => {
     try {
@@ -157,57 +157,57 @@ export function crearCompra(compraData) {
   };
 }
 
-export function actualizarWorkIsue(workIsueId, updatedFields) {
+export function actualizarComanda(ComandaId, updatedFields) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue") // <-- CORREGIDO: Se añadió la tabla
+        .from("Comanda") // <-- CORREGIDO: Se añadió la tabla
         .update(updatedFields)
-        .eq("_id", workIsueId)
+        .eq("_id", ComandaId)
         .select();
 
       if (error) {
-        console.error('Error al actualizar el WorkIsue:', error);
+        console.error('Error al actualizar el Comanda:', error);
         return null;
       }
       return data;
     } catch (error) {
-      console.error('Error en la acción actualizarWorkIsue:', error);
+      console.error('Error en la acción actualizarComanda:', error);
     }
   };
 }
 
 // --- FUNCIÓN CORREGIDA (la duplicada) ---
-export function eliminarWorkIsue(workIsueId) {
+export function eliminarComanda(ComandaId) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue") // <-- CORREGIDO: Se añadió la tabla
+        .from("Comanda") // <-- CORREGIDO: Se añadió la tabla
         .delete()
-        .eq("_id", workIsueId)
+        .eq("_id", ComandaId)
         .select();
 
       if (error) {
-        console.error('Error al eliminar el WorkIsue:', error);
+        console.error('Error al eliminar el Comanda:', error);
         return null;
       }
       return data;
     } catch (error) {
-      console.error('Error en la acción eliminarWorkIsue:', error);
+      console.error('Error en la acción eliminarComanda:', error);
     }
   };
 }
 
-export function actualizarPago(workIsueId, pagoInfo) {
+export function actualizarPago(ComandaId, pagoInfo) {
   return async (dispatch) => {
     try {
       const { data, error } = await supabase
-        .from("WorkIsue") // <-- CORREGIDO: Se añadió la tabla
+        .from("Comanda") // <-- CORREGIDO: Se añadió la tabla
         .update({
           Pagado: true,
           Pago_Info: pagoInfo,
         })
-        .eq("_id", workIsueId)
+        .eq("_id", ComandaId)
         .select();
 
       if (error) {

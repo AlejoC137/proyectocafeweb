@@ -5,7 +5,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium font-PlaywriteDE transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium font-PlaywriteDE transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -37,10 +37,11 @@ const buttonVariants = cva(
         "produccion": "bg-white text-produccion-primary border border-produccion-primary hover:bg-produccion-primary hover:text-white",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "h-9 px-4 py-2 [&_svg]:size-4",
+        sm: "h-8 rounded-md px-3 text-xs [&_svg]:size-4",
+        lg: "h-10 rounded-md px-8 [&_svg]:size-4",
+        icon: "h-9 w-9 [&_svg]:size-4",
+        xl: "h-24 rounded-xl px-4 flex-col gap-2 [&_svg]:size-8 text-base font-semibold shadow-sm hover:shadow-md hover:-translate-y-1 transition-all",
       },
     },
     defaultVariants: {

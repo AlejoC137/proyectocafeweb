@@ -10,7 +10,7 @@ const STATUS_FILTERS = {
   'ItemsAlmacen': (statuses) => statuses.filter(status => status !== 'PP'),
   'Menu': (statuses) => statuses, // Todos los estados
   'Staff': (statuses) => statuses.filter(status => status !== 'PC'),
-  'WorkIssue': (statuses) => statuses.filter(status => status !== 'PC'),
+  'Comanda': (statuses) => statuses.filter(status => status !== 'PC'),
   'Procedimientos': (statuses) => statuses.filter(status => status !== 'PC'),
   'default': (statuses) => statuses
 };

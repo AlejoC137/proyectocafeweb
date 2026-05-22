@@ -9,8 +9,8 @@ import * as XLSX from 'xlsx';
 // Componentes locales
 import FormTask from './FormTask.jsx';
 // Acciones de Redux y Tipos
-import { getAllFromTable } from "../../../../redux/actions";
-import { addTask, deleteTask, updateTask } from "../../../../redux/standaloneTaskActions";
+import { getAllFromTable } from "../../../../redux/actions.js";
+import { addTask, deleteTask, updateTask } from "../../../../redux/standaloneTaskActions.js";
 import { AREAS } from '../../../../redux/actions-types.js';
 import ProcedimientoModal from '../../ventaCompra/ProcedimientoModal.jsx';
 
@@ -31,7 +31,7 @@ const columnHeaders = [
 ];
 
 // --- Componente Principal ---
-const WorkIsueStaff = () => {
+const ComandaStaff = () => {
     const dispatch = useDispatch();
     const [rawData, setRawData] = useState([]);
     const [staff, setStaff] = useState([]);
@@ -44,7 +44,7 @@ const WorkIsueStaff = () => {
     // --- Lógica de datos (sin cambios) ---
     const fetchAllData = useCallback(async () => {
         const [tareasAction, staffAction, ProcedimientoAction, RecetasProduccionAction] = await Promise.all([
-            dispatch(getAllFromTable("WorkIsue")),
+            dispatch(getAllFromTable("Comanda")),
             dispatch(getAllFromTable("Staff")),
             dispatch(getAllFromTable("RecetasProcedimientos")),
             dispatch(getAllFromTable("RecetasProduccion"))
@@ -216,11 +216,11 @@ const WorkIsueStaff = () => {
 
                                         {/* === INICIO: CELDA DE TÍTULO Y NOTAS === */}
                                         <div className="p-2 flex-1 break-words align-top flex flex-col gap-1">
-                                            {/* ===== TÍTULO DEL WORKISUE ===== */}
+                                            {/* ===== TÍTULO DEL Comanda ===== */}
                                             <span className="font-semibold text-slate-800 break-words">
                                                 {item.Tittle || "Sin Título"}
                                             </span>
-                                            {/* ===== NOTAS DEL WORKISUE ===== */}
+                                            {/* ===== NOTAS DEL Comanda ===== */}
                                             <StaticCell field="Notas" value={item.Notas} />
                                         </div>
                                         {/* === FIN: CELDA DE TÍTULO Y NOTAS === */}
@@ -251,4 +251,4 @@ const StaticCell = ({ field, value, type = 'text', options = [] }) => {
     // (si el valor es nulo, muestra "Sin Notas")
     return <div>{displayValue}</div>;
 };
-export default WorkIsueStaff;
+export default ComandaStaff;

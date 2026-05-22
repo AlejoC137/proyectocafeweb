@@ -174,7 +174,7 @@ Todos estos componentes **ya están optimizados** con la nueva UX:
 
 - 💾 `MenuInstanceNew` - Menús sin reload
 - 💾 `StaffInstanceNew` - Staff sin reload  
-- 💾 `WorkIssueInstanceNew` - Work issues sin reload
+- 💾 `ComandaInstanceNew` - Comandas sin reload
 - 💾 `InventoryInstanceNew` - Inventario sin reload
 - 💾 Todos los `*GridInstanceNew` - Grids optimizados
 

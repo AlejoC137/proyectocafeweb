@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import fondoImage from './assets/fondo.png';
 import TopNav from './components/ui/top-nav';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
@@ -27,9 +26,10 @@ const MenuHead             = lazy(() => import('./body/components/Menu/MenuHead'
 const DiaResumen           = lazy(() => import('./body/views/ventaCompra/DiaResumen'));
 const MesResumen           = lazy(() => import('./body/views/ventaCompra/MesResumen'));
 const AccionesRapidas      = lazy(() => import('./body/views/actualizarPrecioUnitario/AccionesRapidas'));
-const WorkIsueExcelView    = lazy(() => import('./body/views/actividades/WorkE/WorkIsueExcelView'));
+const ComandaExcelView    = lazy(() => import('./body/views/actividades/WorkE/ComandaExcelView'));
+const ComandaModal         = lazy(() => import('./body/components/Comanda/ComandaModal'));
 const CalendarioProduccion = lazy(() => import('./body/views/actividades/CalendarioProduccion'));
-const WorkIsueCreator      = lazy(() => import('./body/views/actividades/WorkIsueCreator'));
+const ComandaCreator      = lazy(() => import('./body/views/actividades/ComandaCreator'));
 const Proveedores          = lazy(() => import('./body/views/proveedores/Proveedores'));
 const PagosProveedores     = lazy(() => import('./body/views/proveedores/PagosProveedores'));
 const StaffCreator         = lazy(() => import('./body/views/actividades/StaffCreator'));
@@ -65,18 +65,7 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <div
-      className='flex w-full min-h-screen relative'
-      style={{
-        backgroundImage: `url(${fondoImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
-    >
-      <div className="absolute inset-0 bg-cream-bg/60 pointer-events-none z-0"></div>
-
+    <div className='flex w-full min-h-screen relative bg-cream-bg text-darker-on-cream font-sans'>
       <div className="relative z-10 w-full overflow-x-hidden min-h-screen flex flex-col">
         <TopNav />
         <ErrorBoundary section="Aplicación">
@@ -107,15 +96,16 @@ function App() {
             <Route path="/DiaResumen/:date"                  element={<DiaResumen />} />
             <Route path="/MesResumen"                        element={<MesResumen />} />
             <Route path="/AccionesRapidas"                   element={<AccionesRapidas />} />
-            <Route path="/WorkIsue"                          element={<WorkIsueExcelView />} />
+            <Route path="/Comanda"                          element={<ComandaExcelView />} />
             <Route path="/CalendarioProduccion"              element={<CalendarioProduccion />} />
             <Route path="/CalendarioProduccio"               element={<CalendarioProduccion />} />
-            <Route path="/WorkIsueCreator"                   element={<WorkIsueCreator />} />
+            <Route path="/ComandaCreator"                   element={<ComandaCreator />} />
             <Route path="/Proveedores"                       element={<Proveedores />} />
             <Route path="/PagosProveedores"                  element={<PagosProveedores />} />
             <Route path="/StaffCreator"                      element={<StaffCreator />} />
             <Route path="/receta/:id"                        element={<RecetaModal />} />
             <Route path="/item/:id"                          element={<ItemsModal />} />
+            <Route path="/comanda/:id"                       element={<ComandaModal />} />
             <Route path="/ProcedimientoModal/:id"            element={<ProcedimientoModal />} />
             <Route path="/evento/:id/:tab?"                  element={<AgendaModal />} />
             <Route path="/inscripcion/:id"                   element={<InscripcionEvento />} />

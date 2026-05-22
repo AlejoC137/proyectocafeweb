@@ -319,6 +319,28 @@ button:focus-visible {
 
 /* Clases globales para textos bold */
 @layer components {
+  /* Neobrutalist Styles (MenuPrint based) */
+  .menu-card {
+    @apply border-2 border-black bg-white rounded-md shadow-solid;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-card:hover {
+    @apply shadow-solid-lg -translate-y-1;
+  }
+
+  .btn-solid {
+    @apply border-2 border-black bg-white rounded-none shadow-solid font-PlaywriteDE font-medium px-4 py-2 text-black;
+    transition: all 0.15s ease;
+  }
+
+  .btn-solid:hover {
+    @apply bg-[#A5B8A1] text-white;
+  }
+  
+  .btn-solid:active {
+    @apply shadow-none translate-y-1 translate-x-1;
+  }
 
   p,
   span,

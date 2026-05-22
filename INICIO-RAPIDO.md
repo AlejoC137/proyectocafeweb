@@ -72,7 +72,7 @@ El archivo `.env` ya está configurado con las credenciales del proyecto origina
 
 ### **Vista Manager** - Centro de control modernizado
 - ✅ Dashboard con estadísticas en tiempo real
-- ✅ Navegación de categorías (Staff, WorkIssues, Procedimientos, Menú)
+- ✅ Navegación de categorías (Staff, Comandas, Procedimientos, Menú)
 - ✅ Iconografía Lucide React unificada
 - ✅ Estados vacíos informativos
 
