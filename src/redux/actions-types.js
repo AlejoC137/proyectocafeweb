@@ -47,6 +47,8 @@ export const DELETE_MODEL_SUCCESS = 'DELETE_MODEL_SUCCESS';
 
 export const USER_PREFERENCES = 'userPreferences';
 export const USER_MESSAGES = 'UserMessages';
+export const SET_VIEW_PREFERENCES = 'SET_VIEW_PREFERENCES';
+export const VIEW_PREFERENCES_TABLE = 'view_preferences';
 // Areas
 
 export const COCINA = 'COCINA'

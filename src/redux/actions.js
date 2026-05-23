@@ -18,6 +18,8 @@ import {
   AGENDA,
   ITEMS,
   SET_LANGUAGE,
+  SET_VIEW_PREFERENCES,
+  VIEW_PREFERENCES_TABLE,
   ESP,
   ENG,
   MenuItems,
@@ -1314,4 +1316,72 @@ export const getOtherExpenses = (subGrupo) => {
       // Si el SUB_GRUPO no tiene gastos asociados, devuelve un array vacío.
       return [];
   }
+};
+
+// --- VIEW PREFERENCES ACTIONS ---
+
+export const fetchViewPreferences = (userId) => {
+  return async (dispatch) => {
+    try {
+      const id = userId || 'default_user';
+      const { data, error } = await supabase
+        .from(VIEW_PREFERENCES_TABLE)
+        .select('preferences')
+        .eq('user_id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned, this is fine for new users
+          dispatch({ type: SET_VIEW_PREFERENCES, payload: {} });
+          return;
+        }
+        console.error("Error fetching view preferences:", error);
+        return;
+      }
+
+      if (data) {
+        dispatch({ type: SET_VIEW_PREFERENCES, payload: data.preferences || {} });
+      }
+    } catch (err) {
+      console.error("Failed to fetch view preferences", err);
+    }
+  };
+};
+
+export const updateViewPreference = (userId, moduleName, newPrefs) => {
+  return async (dispatch, getState) => {
+    try {
+      const id = userId || 'default_user';
+      const state = getState();
+      const currentPreferences = state.viewPreferences || {};
+      
+      const updatedModulePrefs = {
+        ...(currentPreferences[moduleName] || {}),
+        ...newPrefs
+      };
+      
+      const updatedPreferences = {
+        ...currentPreferences,
+        [moduleName]: updatedModulePrefs
+      };
+
+      // Disparar la actualizacion a redux inmediatamente (optimistic UI update)
+      dispatch({ type: SET_VIEW_PREFERENCES, payload: updatedPreferences });
+
+      // Upsert a supabase
+      const { error } = await supabase
+        .from(VIEW_PREFERENCES_TABLE)
+        .upsert({
+          user_id: id,
+          preferences: updatedPreferences
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error("Error updating view preferences in Supabase:", error);
+      }
+    } catch (err) {
+      console.error("Failed to update view preference", err);
+    }
+  };
 };

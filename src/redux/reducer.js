@@ -41,6 +41,7 @@ import {
     UPDATE_COMPRA_SUCCESS,
     USER_PREFERENCES, // Added USER_PREFERENCES
     USER_MESSAGES,
+    SET_VIEW_PREFERENCES,
 } from './actions-types';
 
 const initialState = {
@@ -123,6 +124,7 @@ const initialState = {
     modelsLoading: true,
     modelsError: null,
     // --- FIN: ADICIONES DE ESTADO PARA MODELOS ---
+    viewPreferences: {}, // Estado para las preferencias de vista del usuario activo
 };
 
 const reducer = (state = initialState, action) => {
@@ -198,11 +200,19 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allAgenda: action.payload };
                 case USER_PREFERENCES:
                     return { ...state, allUserPreferences: action.payload };
+                case SET_VIEW_PREFERENCES:
+                    return { ...state, viewPreferences: action.payload };
                 case USER_MESSAGES:
                     return { ...state, allUserMessages: action.payload };
                 default:
                     return state;
             }
+
+        case SET_VIEW_PREFERENCES:
+            return {
+                ...state,
+                viewPreferences: action.payload,
+            };
 
         case UPDATE_SELECTED_VALUE:
             return {

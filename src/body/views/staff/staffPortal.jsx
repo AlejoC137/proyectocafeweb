@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getAllFromTable, setCurrentStaff, addNota } from "../../../redux/actions";
+import { getAllFromTable, setCurrentStaff, fetchViewPreferences, addNota } from "../../../redux/actions";
 import { STAFF, Comanda } from "../../../redux/actions-types";
 import StaffInstance from "./staffInstance";
 import StaffShift from "./staffShift";
@@ -39,7 +39,8 @@ import {
   CheckCircle,
   Paperclip,
   Mic,
-  Check
+  Check,
+  LogOut
 } from "lucide-react";
 import ComandaStaff from "../actividades/WorkE/ComandaStaff";
 import Notas from "../actividades/WorkE/Notas";
@@ -72,6 +73,7 @@ function StaffPortal() {
         if (staff) {
           setStaffFound(staff);
           dispatch(setCurrentStaff(staff));
+          dispatch(fetchViewPreferences(staff._id));
         }
       }
     }
@@ -111,6 +113,7 @@ function StaffPortal() {
       }
       setStaffFound(staff);
       dispatch(setCurrentStaff(staff));
+      dispatch(fetchViewPreferences(staff._id));
       localStorage.setItem("staffFoundId", staff._id);
       setCcInput("");
       setPinInput("");
@@ -128,6 +131,15 @@ function StaffPortal() {
     setPropinaInput("");
   };
 
+  const handleLogout = () => {
+    setStaffFound(null);
+    dispatch(setCurrentStaff(null));
+    localStorage.removeItem("staffFoundId");
+    setActiveView(null);
+    setCcInput("");
+    setPinInput("");
+  };
+
   const handleGoToNomina = () => {
     navigate("/CalculoNomina");
   };
@@ -141,6 +153,7 @@ function StaffPortal() {
     if (staff) {
       setStaffFound(staff);
       dispatch(setCurrentStaff(staff));
+      dispatch(fetchViewPreferences(staff._id));
       localStorage.setItem("staffFoundId", staff._id);
     } else {
       setStaffFound(null);
@@ -253,6 +266,15 @@ function StaffPortal() {
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed flex items-center justify-center bg-primary-fixed-dim text-primary-stitch font-bold">
                 {staffFound ? staffFound.Nombre.charAt(0) : "A"}
               </div>
+              {staffFound && (
+                <button 
+                  onClick={handleLogout}
+                  className="ml-2 p-2 text-error hover:bg-error-container hover:text-error rounded-full transition-colors active:scale-95"
+                  title="Cerrar sesión"
+                >
+                  <LogOut size={20} />
+                </button>
+              )}
             </div>
           </div>
         </header>

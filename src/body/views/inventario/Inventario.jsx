@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
+import { getAllFromTable, resetExpandedGroups, toggleShowEdit, updateViewPreference } from "../../../redux/actions";
 import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, MenuItems, RECETAS_MENU, RECETAS_PRODUCCION } from "../../../redux/actions-types";
 import { CardGridInventario } from "@/components/ui/cardGridInventario";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
@@ -19,7 +19,15 @@ function Inventario() {
   const [loading, setLoading] = useState(true);
   const [currentType, setCurrentType] = useState(ItemsAlmacen);
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
-  const [viewMode, setViewMode] = useState("table"); // "cards" o "table"
+  
+  const currentStaff = useSelector((state) => state.currentStaff);
+  const viewPreferences = useSelector((state) => state.viewPreferences || {});
+  const inventarioPrefs = viewPreferences.inventario || {};
+  const viewMode = inventarioPrefs.viewMode || "table";
+
+  const handleSetViewMode = (mode) => {
+    dispatch(updateViewPreference(currentStaff?._id, "inventario", { viewMode: mode }));
+  };
 
   const Menu = useSelector((state) => state.allMenu || []);
   const Items = useSelector((state) => state.allItems || []);
@@ -105,7 +113,7 @@ function Inventario() {
         actions={
           <ViewToggle
             viewMode={viewMode}
-            onViewModeChange={setViewMode}
+            onViewModeChange={handleSetViewMode}
           />
         }
       >
