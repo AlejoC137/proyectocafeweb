@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { COMPRAS, MENU, PROVEE, RECETAS_MENU } from "../../../redux/actions-types";
+import { useDispatch, useSelector, useStore } from "react-redux";
+import { COMPRAS, MENU, PROVEE, RECETAS_MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
@@ -16,6 +16,7 @@ const getToday = () => {
 function DiaResumen() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const store = useStore();
   const { date } = useParams();
   const [loading, setLoading] = useState(true);
   const [ventas, setVentas] = useState([]);
@@ -64,6 +65,8 @@ function DiaResumen() {
           dispatch(getAllFromTable(MENU)),
           dispatch(getAllFromTable(RECETAS_MENU)),
           dispatch(getAllFromTable(COMPRAS)),
+          dispatch(getAllFromTable(ITEMS)),
+          dispatch(getAllFromTable(PRODUCCION)),
         ]);
 
 
@@ -187,10 +190,15 @@ function DiaResumen() {
           
           const updatedProductosVendidos = await Promise.all(productosArray.map(async (producto) => {
             if (producto.recetaId !== "N/A") {
-              const menuItem = allMenu.find((item) => item.uuid_receta === producto.recetaId);
+              const currentState = store.getState();
+              const currentAllMenu = currentState.allMenu;
+              const currentAllItems = currentState.allItems;
+              const currentAllProduccion = currentState.allProduccion;
+
+              const menuItem = currentAllMenu.find((item) => item.uuid_receta === producto.recetaId);
               if (menuItem) {
                 const recetaData = await getRecepie(menuItem.uuid_receta, "Recetas");
-                const trimmedRecepie = trimRecepie([...allItems, ...allProduccion], recetaData);
+                const trimmedRecepie = trimRecepie([...currentAllItems, ...currentAllProduccion], recetaData);
                 const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
                 return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
               }

@@ -93,7 +93,38 @@ export const toggleShowEdit = () => {
 
 // Acción para obtener todos los datos de una tabla
 export function getAllFromTable(Table) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    // Fetch all paginated for large tables
+    if (Table === 'Ventas' || Table === 'Compras') {
+      let allData = [];
+      let page = 0;
+      const pageSize = 1000;
+      while (true) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        let query = supabase.from(Table).select('*').range(from, to);
+        
+        // Optionally order by Date to keep things consistent
+        if (Table === 'Ventas' || Table === 'Compras') {
+            query = query.order('Date', { ascending: false });
+        }
+
+        let { data, error } = await query;
+        if (error) {
+          console.error(`Error fetching paginated ${Table}:`, error);
+          break;
+        }
+        if (data) allData = [...allData, ...data];
+        if (!data || data.length < pageSize) break;
+        page++;
+      }
+      return dispatch({
+        type: GET_ALL_FROM_TABLE,
+        payload: allData,
+        path: Table,
+      });
+    }
+
     let { data, error } = await supabase
       .from(Table)
       .select('*');
@@ -102,7 +133,6 @@ export function getAllFromTable(Table) {
       console.error(error);
       return null;
     }
-
 
     return dispatch({
       type: GET_ALL_FROM_TABLE,
@@ -1057,18 +1087,26 @@ export const createModelAction = (newModelData) => async (dispatch) => {
       .select()
       .single(); // Devuelve un solo objeto
 
-    if (error) throw error;
+    if (error) {
+        console.error("Supabase insert error details:", error);
+        throw error;
+    }
 
     // Asegurarse de que los costos estén parseados si es necesario
     if (data.costs && typeof data.costs === 'string') {
-      data.costs = JSON.parse(data.costs);
+      try {
+        data.costs = JSON.parse(data.costs);
+      } catch (e) {
+        console.error("Error parsing costs JSON:", e);
+      }
     }
 
     dispatch({ type: CREATE_MODEL_SUCCESS, payload: data });
+    alert("Modelo guardado correctamente.");
     return data; // Devuelve el modelo creado
   } catch (error) {
     console.error("Error creating model:", error);
-    // Aquí podrías despachar una acción de error si lo necesitas
+    alert(`Error al guardar: ${error.message}`);
     return null;
   }
 };
@@ -1090,12 +1128,16 @@ export const updateModelAction = (modelId, updatedData) => async (dispatch) => {
     if (error) throw error;
 
     if (data.costs && typeof data.costs === 'string') {
-      data.costs = JSON.parse(data.costs);
+      try {
+        data.costs = JSON.parse(data.costs);
+      } catch(e) { }
     }
 
     dispatch({ type: UPDATE_MODEL_SUCCESS, payload: data });
+    alert("Cambios guardados correctamente.");
   } catch (error) {
     console.error("Error updating model:", error);
+    alert(`Error al actualizar: ${error.message}`);
   }
 };
 

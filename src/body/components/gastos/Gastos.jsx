@@ -280,7 +280,7 @@ function Gastos() {
   };
 
   return (
-    <div className=" w-screen p-4 max-w-5xl mx-auto">
+    <div className="w-full p-4">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Registrar Gasto</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
 

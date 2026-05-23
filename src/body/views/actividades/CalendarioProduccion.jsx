@@ -338,6 +338,38 @@ function CalendarioProduccion() {
     );
   };
 
+  const getStaffOnShift = (dateStr) => {
+    if (!dateStr || dateStr === "Sin Fecha") return [];
+    const dateObj = new Date(dateStr + "T12:00:00");
+    const dayNamesObj = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+    const dayOfWeek = dayNamesObj[dateObj.getDay()];
+    
+    return allStaff.filter(staff => {
+      if (staff.Contratacion === false || staff.Contratacion === "false" || !staff.Nombre) return false;
+      let turnosSet = {};
+      if (typeof staff.TurnosSet === 'string' && staff.TurnosSet.trim().startsWith('{')) {
+          try { turnosSet = JSON.parse(staff.TurnosSet); } catch (e) {}
+      } else if (typeof staff.TurnosSet === 'object' && staff.TurnosSet !== null) {
+          turnosSet = staff.TurnosSet;
+      }
+      const schedule = turnosSet[dayOfWeek];
+      if (!schedule || schedule.descanso) return false;
+
+      if (schedule.biweekly && schedule.fechaInicio) {
+          const inicioDate = new Date(schedule.fechaInicio + "T12:00:00");
+          // Calculate difference in days using Monday as start of week maybe?
+          // Simpler: Just get diff in days and divide by 7
+          const diffTime = Math.abs(dateObj - inicioDate);
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const diffWeeks = Math.floor(diffDays / 7);
+          // If the week difference is odd, then it's an off week for this biweekly shift
+          if (diffWeeks % 2 !== 0) return false;
+      }
+
+      return true;
+    });
+  };
+
   return (
     <div className="h-[calc(100vh-4.5rem)] w-full bg-slate-200 p-2 overflow-hidden flex flex-col gap-2">
       
@@ -450,6 +482,11 @@ function CalendarioProduccion() {
                            <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold ${day.dateStr === new Date().toISOString().split('T')[0] ? "bg-blue-600 text-white" : "text-slate-600"}`}>
                              {day.day}
                            </span>
+                           <div className="flex gap-0.5">
+                             {getStaffOnShift(day.dateStr).map(staff => (
+                               <div key={staff._id} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: staff.Color || '#3b82f6' }} title={`${staff.Nombre} (Turno)`}></div>
+                             ))}
+                           </div>
                          </div>
                          <div className="flex-1 overflow-y-auto no-scrollbar space-y-px">
                            {day.events.map(renderEventCard)}
@@ -466,9 +503,14 @@ function CalendarioProduccion() {
              <div className="flex flex-col h-full">
                <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50 shrink-0">
                  {weekGrid.map((day, index) => (
-                   <div key={index} className="py-2 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest border-r border-slate-100 last:border-0 flex flex-col">
+                   <div key={index} className="py-2 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest border-r border-slate-100 last:border-0 flex flex-col items-center">
                      <span>{dayNames[index]}</span>
                      <span className={`text-xs mt-0.5 ${day.dateStr === new Date().toISOString().split('T')[0] ? "text-blue-600" : "text-slate-800"}`}>{day.day}</span>
+                     <div className="flex gap-0.5 mt-1 justify-center">
+                       {getStaffOnShift(day.dateStr).map(staff => (
+                         <div key={staff._id} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: staff.Color || '#3b82f6' }} title={`${staff.Nombre} (Turno)`}></div>
+                       ))}
+                     </div>
                    </div>
                  ))}
                </div>

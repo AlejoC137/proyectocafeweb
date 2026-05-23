@@ -1,15 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchEmployees, setEmployees } from '../../../redux/slices/employeeSlice';
 import { getAllFromTable } from '../../../redux/actions';
 import { STAFF } from '../../../redux/actions-types';
 import StaffTable from '../../components/staff/StaffTable';
-import { Users, Filter, Plus, DollarSign } from 'lucide-react';
+import StaffCalendarView from '../../components/staff/StaffCalendarView';
+import { Users, Filter, Plus, DollarSign, Calendar, List } from 'lucide-react';
 
 const StaffManager = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState('table'); // 'table' or 'calendar'
 
     // Select both the new slice state AND potentially legacy state if needed
     const { list: employees, loading, error } = useSelector((state) => state.employees || { list: [] });
@@ -42,7 +44,24 @@ const StaffManager = () => {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap justify-end">
+                        <div className="flex bg-gray-100 p-1 rounded-lg mr-2">
+                            <button 
+                                onClick={() => setViewMode('table')}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${viewMode === 'table' ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-500 hover:bg-gray-200'}`}
+                            >
+                                <List className="w-4 h-4" />
+                                Lista
+                            </button>
+                            <button 
+                                onClick={() => setViewMode('calendar')}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${viewMode === 'calendar' ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-500 hover:bg-gray-200'}`}
+                            >
+                                <Calendar className="w-4 h-4" />
+                                Horarios
+                            </button>
+                        </div>
+                        
                         <button className="flex items-center gap-2 px-3 py-1.5 border rounded-lg bg-white text-gray-600 hover:bg-gray-50 shadow-sm transition text-sm">
                             <Filter className="w-4 h-4" />
                             Filtros
@@ -77,8 +96,10 @@ const StaffManager = () => {
                             Error cargando empleados: {error}
                         </div>
                     </div>
-                ) : (
+                ) : viewMode === 'table' ? (
                     <StaffTable employees={employees.length > 0 ? employees : legacyStaff} />
+                ) : (
+                    <StaffCalendarView employees={employees.length > 0 ? employees : legacyStaff} />
                 )}
             </div>
         </div>

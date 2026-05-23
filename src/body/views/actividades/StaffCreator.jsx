@@ -129,7 +129,7 @@ const initialState = {
     tipo: "",
     numero: "",
   },
-  CC: 0,
+  CC: "",
   Celular: "",
   Direccion: "",
   infoContacto: {
@@ -272,7 +272,7 @@ function StaffCreator() {
           </style>
         </head>
         <body>
-          <div class="max-w-4xl mx-auto">
+          <div class="w-full">
             ${printContents}
             <div class="mt-12 pt-8 border-t border-gray-300 grid grid-cols-2 gap-12">
               <div class="text-center">
@@ -349,7 +349,7 @@ function StaffCreator() {
                   }
                 </select>
               </div>
-              <div><label className="text-sm font-medium">CC:</label><Input type="number" name="CC" value={formData.CC} onChange={handleSimpleChange} /></div>
+              <div><label className="text-sm font-medium">CC:</label><Input type="number" required name="CC" value={formData.CC} onChange={handleSimpleChange} /></div>
               <div><label className="text-sm font-medium">Celular:</label><Input name="Celular" value={formData.Celular} onChange={handleSimpleChange} /></div>
               <div><label className="text-sm font-medium">Dirección:</label><Input name="Direccion" value={formData.Direccion} onChange={handleSimpleChange} /></div>
               <div><label className="text-sm font-medium">Rate:</label><Input type="number" name="Rate" value={formData.Rate} onChange={handleSimpleChange} /></div>

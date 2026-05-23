@@ -12,6 +12,7 @@ import { clsx } from 'clsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getCurrentFortnightRange } from '../../../utils/dateUtils';
+import WeeklyTimeGrid from '../../components/staff/WeeklyTimeGrid';
 
 const StaffDetailView = () => {
     const { cc } = useParams();
@@ -134,6 +135,29 @@ const StaffDetailView = () => {
                     }
                 }
 
+                // Parse TurnosSet (Horario Base)
+                let turnosSet = {};
+                if (typeof found.TurnosSet === "object" && found.TurnosSet !== null) {
+                    turnosSet = found.TurnosSet;
+                } else if (typeof found.TurnosSet === "string" && found.TurnosSet.trim()) {
+                    try {
+                        turnosSet = JSON.parse(found.TurnosSet);
+                    } catch {
+                        turnosSet = {};
+                    }
+                }
+
+                // Default empty schedule template if not present
+                const defaultSchedule = {
+                    Lunes: { inicio: "08:00", fin: "16:00", descanso: false },
+                    Martes: { inicio: "08:00", fin: "16:00", descanso: false },
+                    Miercoles: { inicio: "08:00", fin: "16:00", descanso: false },
+                    Jueves: { inicio: "08:00", fin: "16:00", descanso: false },
+                    Viernes: { inicio: "08:00", fin: "16:00", descanso: false },
+                    Sabado: { inicio: "08:00", fin: "16:00", descanso: false },
+                    Domingo: { inicio: "08:00", fin: "16:00", descanso: true }
+                };
+
                 setFormData({
                     ...found,
                     Turnos: turnos,
@@ -142,7 +166,10 @@ const StaffDetailView = () => {
                     infoContacto: infoContacto || { nombreDeContacto: '', numeroDeContacto: '' },
                     isAdmin: found.isAdmin || false,
                     Show: found.Show !== false,
-                    Contratacion: found.Contratacion !== false
+                    Contratacion: found.Contratacion !== false,
+                    Codigo: found.Codigo || '',
+                    Color: found.Color || '#3b82f6',
+                    TurnosSet: Object.keys(turnosSet).length > 0 ? turnosSet : defaultSchedule
                 });
                 setLoading(false);
             } else {
@@ -179,7 +206,9 @@ const StaffDetailView = () => {
             const dataToSave = {
                 ...formData,
                 Cuenta: JSON.stringify(formData.Cuenta),
-                infoContacto: JSON.stringify(formData.infoContacto)
+                infoContacto: JSON.stringify(formData.infoContacto),
+                TurnosSet: JSON.stringify(formData.TurnosSet),
+                Codigo: parseInt(formData.Codigo) || null // Ensure it's Int4
             };
 
             dispatch(updateStaff(dataToSave));
@@ -217,8 +246,8 @@ const StaffDetailView = () => {
     }
 
     return (
-        <div className="min-h-screen w-screen bg-gray-50 p-4 md:p-8 font-SpaceGrotesk">
-            <div className="max-w-5xl mx-auto flex flex-col gap-6">
+        <div className="min-h-screen w-full bg-gray-50 p-4 md:p-8 font-SpaceGrotesk">
+            <div className="w-full flex flex-col gap-6">
 
                 {/* Top Navigation Bar */}
                 <div className="flex justify-between items-center">
@@ -352,6 +381,7 @@ const StaffDetailView = () => {
                             <Trigger value="profile" icon={User} label="Información General" />
                             <Trigger value="financial" icon={CreditCard} label="Datos Financieros" />
                             <Trigger value="history" icon={Calendar} label="Registro de Turnos" />
+                            <Trigger value="schedule" icon={Calendar} label="Horario Base" />
                         </Tabs.List>
 
                         <div className="flex-1 p-8">
@@ -376,13 +406,44 @@ const StaffDetailView = () => {
                                                         placeholder="Ingrese dirección completa"
                                                     />
                                                 </div>
+                                                <label className="text-sm font-bold text-gray-700 mt-2">Código (PIN de Acceso)</label>
+                                                <Input
+                                                    type="number"
+                                                    name="Codigo"
+                                                    value={formData.Codigo || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Ej: 1234"
+                                                />
+                                                <label className="text-sm font-bold text-gray-700 mt-2">Color del Staff</label>
+                                                <div className="flex items-center gap-2">
+                                                    <Input
+                                                        type="color"
+                                                        name="Color"
+                                                        value={formData.Color || '#3b82f6'}
+                                                        onChange={handleInputChange}
+                                                        className="w-12 h-10 p-1"
+                                                    />
+                                                    <span className="text-sm text-gray-500">Usado en Calendario de Producción</span>
+                                                </div>
                                             </div>
                                         ) : (
-                                            <InfoItem
-                                                label="Dirección"
-                                                value={formData.Direccion || 'No registrada'}
-                                                icon={MapPin}
-                                            />
+                                            <>
+                                                <InfoItem
+                                                    label="Dirección"
+                                                    value={formData.Direccion || 'No registrada'}
+                                                    icon={MapPin}
+                                                />
+                                                <div className="mt-4 flex gap-6">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Código (PIN)</span>
+                                                        <span className="text-lg font-bold text-slate-800">{formData.Codigo || 'No configurado'}</span>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Color</span>
+                                                        <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm mt-1" style={{ backgroundColor: formData.Color || '#3b82f6' }}></div>
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
 
@@ -688,6 +749,47 @@ const StaffDetailView = () => {
                                     >
                                         <Edit2 className="w-4 h-4" /> Editar Turnos
                                     </Button>
+                                </div>
+                            </Tabs.Content>
+                            
+                            <Tabs.Content value="schedule" className="outline-none space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <SectionTitle>Plantilla de Horario Base</SectionTitle>
+                                
+                                {(() => {
+                                    const weeklyHours = Object.values(formData.TurnosSet || {}).reduce((total, day) => {
+                                        if (day.descanso || !day.inicio || !day.fin) return total;
+                                        let h = parseFloat(calculateDuration(day.inicio, day.fin)) || 0;
+                                        return total + h;
+                                    }, 0);
+                                    const monthlyHours = (weeklyHours / 7) * 30; // Promedio de 30 días
+                                    
+                                    return (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col items-center justify-center">
+                                                <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mb-1">Horas Semanales</span>
+                                                <span className="text-3xl font-bold text-indigo-700">{weeklyHours.toFixed(1)} <span className="text-lg font-medium text-indigo-400">hrs</span></span>
+                                            </div>
+                                            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col items-center justify-center">
+                                                <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mb-1">Horas Mensuales (aprox)</span>
+                                                <span className="text-3xl font-bold text-indigo-700">{monthlyHours.toFixed(1)} <span className="text-lg font-medium text-indigo-400">hrs</span></span>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                <WeeklyTimeGrid 
+                                    schedule={formData.TurnosSet || {}} 
+                                    isEditing={isEditing} 
+                                    staffColor={formData.Color}
+                                    onChange={(newSchedule) => {
+                                        setFormData(prev => ({ ...prev, TurnosSet: newSchedule }));
+                                    }} 
+                                />
+                                <div className="bg-blue-50 p-4 border border-blue-100 rounded-xl flex items-center gap-3">
+                                    <AlertTriangle className="text-blue-500 w-5 h-5 shrink-0" />
+                                    <p className="text-sm text-blue-800">
+                                        Este horario base será utilizado en el <strong>Calendario de Producción</strong> para conocer la disponibilidad del personal en las diferentes estaciones.
+                                    </p>
                                 </div>
                             </Tabs.Content>
                         </div>

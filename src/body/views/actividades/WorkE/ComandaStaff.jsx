@@ -108,48 +108,48 @@ const ComandaStaff = () => {
     // --- FIN Lógica de datos ---
 
     return (
-        <div className="flex flex-col h-full font-sans">
-            <main className="flex-1 overflow-auto p-2">
-                <div className="border border-slate-200 rounded-lg overflow-hidden shadow-md bg-white text-sm">
+        <div className="flex flex-col h-full font-sans bg-transparent">
+            <main className="flex-1 overflow-auto p-1 sm:p-2">
+                <div className="border border-outline-variant rounded-lg overflow-hidden shadow-sm bg-surface-card text-body-sm">
 
                     {/* --- INICIO: NUEVO HEADER CON FLEXBOX --- */}
-                    <div className="flex bg-slate-100 border-b-2 border-slate-300 font-semibold text-xs text-slate-600 uppercase sticky top-0 z-20">
-                        <div className="px-4 py-3 w-[120px] shrink-0"> {/* Ancho Mínimo Fijo */}
-                            <button onClick={() => requestSort('Procedimientos')} className="flex items-center justify-center w-full gap-1.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-2 py-1.5 rounded shadow-sm text-xs transition-colors font-bold">
-                                Tarea <ArrowUpDown size={14} />
+                    <div className="flex bg-surface-main border-b border-outline-variant font-semibold text-[10px] text-on-surface-variant uppercase sticky top-0 z-20">
+                        <div className="px-2 py-2 w-[100px] shrink-0"> {/* Ancho Mínimo Fijo Reducido */}
+                            <button onClick={() => requestSort('Procedimientos')} className="flex items-center justify-center w-full gap-1 bg-surface-card text-on-surface border border-outline-variant hover:bg-surface-container px-1 py-1 rounded shadow-sm text-[10px] transition-colors font-bold">
+                                Tarea <ArrowUpDown size={12} />
                             </button>
                         </div>
-                        <div className="px-4 py-3 w-[120px] shrink-0"> {/* Ancho Mínimo Fijo */}
-                            <button onClick={() => requestSort('Ejecutor')} className="flex items-center justify-center w-full gap-1.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-2 py-1.5 rounded shadow-sm text-xs transition-colors font-bold">
-                                Ejecutor <ArrowUpDown size={14} />
+                        <div className="px-2 py-2 w-[100px] shrink-0"> {/* Ancho Mínimo Fijo Reducido */}
+                            <button onClick={() => requestSort('Ejecutor')} className="flex items-center justify-center w-full gap-1 bg-surface-card text-on-surface border border-outline-variant hover:bg-surface-container px-1 py-1 rounded shadow-sm text-[10px] transition-colors font-bold">
+                                Ejecutor <ArrowUpDown size={12} />
                             </button>
                         </div>
-                        <div className="px-4 py-3 flex-1"> {/* Espacio Flexible */}
-                            <button onClick={() => requestSort('Notas')} className="flex items-center gap-1.5 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-3 py-1.5 rounded shadow-sm text-xs transition-colors font-bold">
-                                Título / Notas <ArrowUpDown size={14} />
+                        <div className="px-2 py-2 flex-1"> {/* Espacio Flexible */}
+                            <button onClick={() => requestSort('Notas')} className="flex items-center gap-1 bg-surface-card text-on-surface border border-outline-variant hover:bg-surface-container px-2 py-1 rounded shadow-sm text-[10px] transition-colors font-bold">
+                                Título / Notas <ArrowUpDown size={12} />
                             </button>
                         </div>
                     </div>
                     {/* --- FIN: NUEVO HEADER --- */}
 
                     {/* --- INICIO: NUEVA LISTA DE TAREAS CON FLEXBOX --- */}
-                    <div className="divide-y divide-slate-200">
+                    <div className="divide-y divide-outline-variant">
                         {Object.keys(groupedAndSortedItems).sort().map(groupName => (
                             <div key={groupName}>
                                 {/* Fila de Grupo */}
-                                <div className="bg-slate-200/70 sticky top-[49px] z-10 cursor-pointer border-y border-slate-300" onClick={() => toggleGroup(groupName)}>
-                                    <div className="py-2 px-4 font-bold text-slate-700 flex items-center gap-2">
-                                        {collapsedGroups.has(groupName) ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-                                        {groupName} <span className='font-normal text-slate-600'>({groupedAndSortedItems[groupName].length})</span>
+                                <div className="bg-surface-container sticky top-[37px] z-10 cursor-pointer border-y border-outline-variant" onClick={() => toggleGroup(groupName)}>
+                                    <div className="py-1.5 px-3 font-bold text-primary-stitch flex items-center gap-1.5 text-xs">
+                                        {collapsedGroups.has(groupName) ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                                        {groupName} <span className='font-normal text-on-surface-variant'>({groupedAndSortedItems[groupName].length})</span>
                                     </div>
                                 </div>
 
                                 {/* Filas de Tareas */}
                                 {!collapsedGroups.has(groupName) && groupedAndSortedItems[groupName].map((item) => (
-                                    <div key={item._id} className='flex hover:bg-slate-50 border-b'>
+                                    <div key={item._id} className='flex hover:bg-surface-main border-b border-outline-variant/50'>
 
                                         {/* === INICIO: CELDA DE PROCEDIMIENTO (SIN TÍTULO) === */}
-                                        <div className="p-2 w-[120px] shrink-0 break-words align-top flex flex-col gap-1">
+                                        <div className="p-1.5 w-[100px] shrink-0 break-words align-top flex flex-col gap-1 text-[11px]">
                                             {(() => {
                                                 let parsedProcedimientos = [];
                                                 try {
@@ -199,7 +199,7 @@ const ComandaStaff = () => {
                                                             href={href}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-1 p-1 px-1.5 rounded-md font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 text-xs"
+                                                            className="inline-flex items-center gap-1 p-0.5 px-1 rounded font-medium text-action-blue hover:text-primary-stitch hover:bg-primary-fixed-dim text-[10px] leading-tight"
                                                             title={procedureName}
                                                         >
                                                             {icon} {`${procedureName}`}
@@ -210,18 +210,20 @@ const ComandaStaff = () => {
                                         </div>
                                         {/* === FIN: CELDA DE PROCEDIMIENTO === */}
 
-                                        <div className="p-2 w-[120px] shrink-0 break-words align-top">
+                                        <div className="p-1.5 w-[100px] shrink-0 break-words align-top text-[11px] text-on-surface">
                                             <StaticCell field="Ejecutor" value={item.Ejecutor} options={staff} type="select-staff" />
                                         </div>
 
                                         {/* === INICIO: CELDA DE TÍTULO Y NOTAS === */}
-                                        <div className="p-2 flex-1 break-words align-top flex flex-col gap-1">
+                                        <div className="p-1.5 flex-1 break-words align-top flex flex-col gap-0.5 text-[11px]">
                                             {/* ===== TÍTULO DEL Comanda ===== */}
-                                            <span className="font-semibold text-slate-800 break-words">
+                                            <span className="font-semibold text-on-surface break-words leading-tight">
                                                 {item.Tittle || "Sin Título"}
                                             </span>
                                             {/* ===== NOTAS DEL Comanda ===== */}
-                                            <StaticCell field="Notas" value={item.Notas} />
+                                            <div className="text-on-surface-variant leading-tight">
+                                                <StaticCell field="Notas" value={item.Notas} />
+                                            </div>
                                         </div>
                                         {/* === FIN: CELDA DE TÍTULO Y NOTAS === */}
                                     </div>
@@ -240,15 +242,13 @@ const ComandaStaff = () => {
 
 // --- Componente de Celda Estática (Solo Lectura) ---
 const StaticCell = ({ field, value, type = 'text', options = [] }) => {
-    let displayValue = value || (field === 'Notas' ? <span className="text-slate-400 italic">Sin Notas</span> : '-');
+    let displayValue = value || (field === 'Notas' ? <span className="text-outline italic">Sin Notas</span> : '-');
 
     if (type === 'select-staff') {
         const staffMember = options.find(s => s._id === value);
-        displayValue = staffMember ? staffMember.Nombre : <span className="text-slate-400 italic">Sin asignar</span>;
+        displayValue = staffMember ? staffMember.Nombre : <span className="text-outline italic">Sin asignar</span>;
     }
 
-    // El 'displayValue' para las notas ya está manejado arriba
-    // (si el valor es nulo, muestra "Sin Notas")
     return <div>{displayValue}</div>;
 };
 export default ComandaStaff;

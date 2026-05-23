@@ -23,6 +23,7 @@ function MesResumen() {
   const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion);
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) => state.allCompras);
+  const allVentas = useSelector((state) => state.allVentas);
 
   const { selectedMonth, selectedYear } = useMemo(() => {
     const selectedDate = new Date(hoy);
@@ -51,51 +52,8 @@ function MesResumen() {
           dispatch(getAllFromTable(RECETAS_MENU)),
           dispatch(getAllFromTable(RECETAS_PRODUCCION)),
           dispatch(getAllFromTable(COMPRAS)),
+          dispatch(getAllFromTable(VENTAS)),
         ]);
-
-        let allVentas = [];
-        let page = 0;
-        const pageSize = 1000; // El tamaño de cada lote que pedimos
-
-        // Bucle para pedir datos en lotes hasta que no haya más
-        while (true) {
-          const from = page * pageSize;
-          const to = from + pageSize - 1;
-
-          // Pedimos un lote de registros usando .range()
-          const { data, error } = await supabase
-            .from('Ventas')
-            .select('*')
-            .order('Date', { ascending: false })
-            .range(from, to);
-
-          if (error) throw error;
-
-          // Añadimos el lote de datos al array principal
-          if (data) {
-            allVentas = [...allVentas, ...data];
-          }
-
-          // Si el lote devuelto tiene menos de 1000, significa que es la última página.
-          if (!data || data.length < pageSize) {
-            break; // Salimos del bucle
-          }
-
-          // Si no, pasamos a la siguiente página para la próxima iteración
-          page++;
-        }
-
-        // Ahora 'allVentas' contiene absolutamente todos los registros de la tabla.
-        // Procedemos a filtrar el mes seleccionado en el navegador.
-        const ventasDelMes = allVentas.filter((venta) => {
-          const ventaDate = new Date(venta.Date);
-          return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
-        });
-
-        // Ordenamos y actualizamos el estado
-        ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-        setVentas(ventasDelMes);
-
       } catch (error) {
         console.error("Error al cargar todos los datos:", error);
       } finally {
@@ -105,6 +63,20 @@ function MesResumen() {
 
     fetchAllData();
   }, [dispatch, selectedMonth, selectedYear]);
+
+  // Filtrar ventas cuando allVentas cambie
+  useEffect(() => {
+    if (!allVentas || allVentas.length === 0) return;
+    
+    const ventasDelMes = allVentas.filter((venta) => {
+      if (!venta || !venta.Date) return false;
+      const ventaDate = new Date(venta.Date);
+      return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
+    });
+
+    ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+    setVentas(ventasDelMes);
+  }, [allVentas, selectedMonth, selectedYear]);
 
 
 

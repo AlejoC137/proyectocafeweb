@@ -111,29 +111,29 @@ const Notas = () => {
 
     // --- RENDERIZADO DEL COMPONENTE ---
     return (
-        <div className="flex flex-col h-full font-sans">
-            <main className="flex-1 overflow-auto p-2">
-                <div className="space-y-4 max-w-4xl mx-auto">
+        <div className="flex flex-col h-full font-sans bg-transparent">
+            <main className="flex-1 overflow-auto p-1 sm:p-2">
+                <div className="space-y-3 max-w-4xl mx-auto">
                     {/* Formulario de Creación */}
-                    <form onSubmit={handleCreateSubmit} className="bg-white p-3 rounded-lg border border-sky-300 shadow-sm">
+                    <form onSubmit={handleCreateSubmit} className="bg-surface-card p-2 rounded-lg border border-outline-variant shadow-sm flex flex-col gap-2">
                         <fieldset disabled={isLoading}>
                             <textarea
                                 name="content"
                                 value={newNota.content}
                                 onChange={e => setNewNota({ ...newNota, content: e.target.value })}
                                 placeholder="Escribe una nueva nota aquí..."
-                                className="w-full p-2 border rounded-md resize-y text-base"
-                                rows="3"
+                                className="w-full p-2 border border-outline-variant bg-surface-main rounded-md resize-y text-body-sm focus:ring-1 focus:ring-primary-stitch outline-none"
+                                rows="2"
                                 required
                             />
-                            <div className="mt-2 flex items-center gap-3">
+                            <div className="mt-2 flex items-center gap-2">
                                 <input
                                     type="text"
                                     name="de"
                                     value={newNota.de}
                                     onChange={e => setNewNota({ ...newNota, de: e.target.value })}
                                     placeholder="De:"
-                                    className="p-2 border rounded-md text-sm w-full flex-1"
+                                    className="p-1.5 border border-outline-variant bg-surface-main rounded-md text-xs w-full flex-1 focus:ring-1 focus:ring-primary-stitch outline-none"
                                     required
                                 />
                                 <input
@@ -142,11 +142,11 @@ const Notas = () => {
                                     value={newNota.para}
                                     onChange={e => setNewNota({ ...newNota, para: e.target.value })}
                                     placeholder="Para:"
-                                    className="p-2 border rounded-md text-sm w-full flex-1"
+                                    className="p-1.5 border border-outline-variant bg-surface-main rounded-md text-xs w-full flex-1 focus:ring-1 focus:ring-primary-stitch outline-none"
                                     required
                                 />
-                                <button type="submit" className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-sky-600 rounded-md hover:bg-sky-700 disabled:bg-slate-400">
-                                    <Plus size={16} />
+                                <button type="submit" className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs text-white bg-primary-stitch rounded-md hover:brightness-110 disabled:bg-surface-variant disabled:text-outline transition-all active:scale-95">
+                                    <Plus size={14} />
                                     <span>Nota</span>
                                 </button>
                             </div>
@@ -157,24 +157,24 @@ const Notas = () => {
                     {isLoading && <div className="text-center p-8">Cargando notas...</div>}
 
                     {!isLoading && notas.map((item) => (
-                        <div key={item._id} className={`bg-white border rounded-lg shadow-sm p-3 space-y-2 ${item.done ? 'opacity-60 bg-slate-50' : ''}`}>
-                            <div className="flex items-start gap-3">
+                        <div key={item._id} className={`bg-surface-card border border-outline-variant rounded-lg shadow-sm p-2 space-y-1.5 ${item.done ? 'opacity-50 bg-surface-container' : ''}`}>
+                            <div className="flex items-start gap-2">
                                 <input
                                     type="checkbox"
                                     checked={!!item.done}
                                     onChange={() => handleToggleDone(item._id, item.done)}
-                                    className="h-5 w-5 mt-1 shrink-0 cursor-pointer"
+                                    className="h-4 w-4 mt-0.5 shrink-0 cursor-pointer accent-primary-stitch"
                                 />
-                                <p className={`w-full text-base whitespace-pre-wrap ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
+                                <p className={`w-full text-body-sm whitespace-pre-wrap leading-tight ${item.done ? 'line-through text-outline' : 'text-on-surface'}`}>
                                     {item.content}
                                 </p>
-                                <button onClick={() => handleDelete(item._id)} className="bg-white text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 p-1.5 rounded-md shadow-sm transition-colors shrink-0">
-                                    <Trash2 size={18} />
+                                <button onClick={() => handleDelete(item._id)} className="text-outline hover:bg-error-container hover:text-error p-1 rounded-md transition-colors shrink-0">
+                                    <Trash2 size={16} />
                                 </button>
                             </div>
-                            <div className="pl-8 flex justify-between items-center text-xs text-slate-500">
-                                <span>De: <strong className="font-medium text-slate-600">{item.de}</strong></span>
-                                <span>Para: <strong className="font-medium text-slate-600">{item.para}</strong></span>
+                            <div className="pl-6 flex justify-between items-center text-[10px] text-on-surface-variant">
+                                <span>De: <strong className="font-medium text-on-surface">{item.de}</strong></span>
+                                <span>Para: <strong className="font-medium text-on-surface">{item.para}</strong></span>
                                 {/* CORREGIDO: Muestra la fecha usando created_at */}
                                 <span>{formatDate(item.created_at)}</span>
                             </div>

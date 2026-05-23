@@ -355,7 +355,7 @@ function AgendaFormPage() {
 
   return (
     <PageLayout title={isNewEvent ? "Nuevo Evento" : "Editar Evento"}>
-      <div className="max-w-[1200px] mx-auto">
+      <div className="w-full">
         <Card className="shadow-xl">
           <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
             <div className="flex items-center justify-between">

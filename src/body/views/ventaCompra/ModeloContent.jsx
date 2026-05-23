@@ -64,49 +64,25 @@ function ModeloContent({ targetMonth, targetYear }) {
         fetchMasters();
     }, [dispatch]);
 
-    // 1. Cargar Ventas con Paginación (Igual que MesResumen)
+    // 1. Cargar Ventas desde Redux y Filtrar
     useEffect(() => {
-        const fetchAllVentas = async () => {
-            setLoadingVentas(true);
-            try {
-                let allVentas = [];
-                let page = 0;
-                const pageSize = 1000;
+        setLoadingVentas(true);
+        try {
+            // Filtrar por Target Month/Year usando los datos ya cargados en Redux
+            const ventasDelMes = allVentas.filter((venta) => {
+                if (!venta || !venta.Date) return false;
+                const ventaDate = new Date(venta.Date);
+                return ventaDate.getMonth() === targetMonth && ventaDate.getFullYear() === targetYear;
+            });
 
-                while (true) {
-                    const from = page * pageSize;
-                    const to = from + pageSize - 1;
-                    const { data, error } = await supabase
-                        .from('Ventas')
-                        .select('*')
-                        .order('Date', { ascending: false })
-                        .range(from, to);
-
-                    if (error) throw error;
-                    if (data) allVentas = [...allVentas, ...data];
-                    if (!data || data.length < pageSize) break;
-                    page++;
-                }
-
-                // Filtrar por Target Month/Year
-                const ventasDelMes = allVentas.filter((venta) => {
-                    const ventaDate = new Date(venta.Date);
-                    return ventaDate.getMonth() === targetMonth && ventaDate.getFullYear() === targetYear;
-                });
-
-                ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-                setVentas(ventasDelMes);
-            } catch (error) {
-                console.error("Error al cargar ventas en ModeloContent:", error);
-            } finally {
-                setLoadingVentas(false);
-            }
-        };
-
-        if (allMenu.length > 0) { // Only fetch/process if masters are likely loading or loaded
-            fetchAllVentas();
+            ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+            setVentas(ventasDelMes);
+        } catch (error) {
+            console.error("Error al filtrar ventas en ModeloContent:", error);
+        } finally {
+            setLoadingVentas(false);
         }
-    }, [targetMonth, targetYear, allMenu.length]); // Depend on allMenu to retry if empty initially
+    }, [targetMonth, targetYear, allVentas]);
 
     // 2. Calcular Datos del Mes (Igual que MesResumen)
     const datosCalculadosDelMes = useMemo(() => {
@@ -590,7 +566,12 @@ function ModeloContent({ targetMonth, targetYear }) {
     };
 
     const handleSave = () => {
-        const dataStr = JSON.stringify(currentCosts);
+        const costsToSave = {
+            ...currentCosts,
+            linkedMonth: targetMonth,
+            linkedYear: targetYear
+        };
+        const dataStr = JSON.stringify(costsToSave);
 
         if (modelId) {
             dispatch(updateModelAction(modelId, { costs: dataStr }));
