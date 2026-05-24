@@ -21,13 +21,20 @@ function VentaCompra() {
   const [showClientForm, setShowClientForm] = useState(false);
 
   const fetchVentasDelDia = async () => {
-    const fecha = new Date().toISOString().split("T")[0];
-    const { data, error } = await supabase.functions.invoke("DateFilter", {
-      body: { fecha },
-    });
-    if (!error && data?.data?.items?.length) {
-      setVentasDelDia(data.data.items);
+    const currentDate = new Date();
+    const ADate = currentDate.toLocaleDateString("en-US", { timeZone: "America/Bogota" });
+
+    const { data, error } = await supabase
+      .from("Ventas")
+      .select("*")
+      .eq("Date", ADate)
+      .eq("Pagado", false)
+      .order("Time", { ascending: false });
+      
+    if (!error && data) {
+      setVentasDelDia(data);
     } else {
+      if (error) console.error("Error al obtener ventas activas:", error);
       setVentasDelDia([]);
     }
   };
@@ -115,7 +122,7 @@ function VentaCompra() {
         >
           {[...Array(6)].map((_, index) => {
             const mesaIndex = index + 1;
-            const ventaActual = ventasDelDia.find(v => v.Mesa === mesaIndex && !v.Pagado);
+            const ventaActual = ventasDelDia.find(v => Number(v.Mesa) === mesaIndex && !v.Pagado);
             return (
               <Mesa
                 key={`mesa-${mesaIndex}`}
