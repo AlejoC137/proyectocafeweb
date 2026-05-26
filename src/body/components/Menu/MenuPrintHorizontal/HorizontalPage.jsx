@@ -113,18 +113,27 @@ const HorizontalPage = ({
           padding: '1.5rem'
         }}
       >
-        <MenuPrintHeader colors={colors} leng={leng} />
+        <MenuPrintHeader 
+          colors={colors} 
+          leng={leng} 
+          title={page.title}
+          editMode={editMode}
+          onTitleChange={(newTitle) => commonProps.updatePageTitle && commonProps.updatePageTitle(pageIndex, newTitle)}
+        />
 
         <div className="flex-grow flex mt-[-3px] w-full relative h-full min-h-0">
           {(page.columns || []).map((col, colIdx) => (
             <React.Fragment key={col.id}>
               <div 
-                className={`flex flex-col min-w-0 transition-all duration-75 relative h-full ${
+                className={`flex flex-col min-w-0 transition-all duration-75 relative h-full border-[3px] rounded-[8px] p-2 bg-white/80 ${
                   selectedColumn?.pageIndex === pageIndex && selectedColumn?.colIdx === colIdx 
-                  ? 'ring-1 ring-blue-500/30 bg-blue-50/5' 
+                  ? 'ring-4 ring-blue-500/50' 
                   : ''
                 }`}
-                style={{ flex: col.flex || 1 }}
+                style={{ 
+                  flex: col.flex || 1,
+                  borderColor: colors.mainBorder,
+                }}
                 onClick={() => editMode && setSelectedColumn({ pageIndex, colIdx })}
               >
                 {editMode && (
@@ -260,8 +269,6 @@ const HorizontalPage = ({
             </div>
           </>
         )}
-
-        <MenuPrintFooter colors={colors} />
       </div>
     </div>
   );

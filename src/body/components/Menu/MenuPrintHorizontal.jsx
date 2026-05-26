@@ -301,6 +301,15 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     setTimeout(() => saveConfig(), 100);
   };
 
+  const updatePageTitle = (pageIndex, newTitle) => {
+    const newPages = JSON.parse(JSON.stringify(pages));
+    if (newPages[pageIndex]) {
+      newPages[pageIndex].title = newTitle;
+      setPages(newPages);
+      setTimeout(() => saveConfig(), 100);
+    }
+  };
+
   const deleteBlock = (blockId) => {
     if (!window.confirm("¿Eliminar este bloque?")) return;
     const newPages = JSON.parse(JSON.stringify(pages));
@@ -479,7 +488,8 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     setGroupDescriptions,
     saveGroupDescriptions,
     pagesCount: pages.length,
-    openGallery
+    openGallery,
+    updatePageTitle
   };
 
   if (loading) return <div className="flex items-center justify-center h-screen font-black italic uppercase text-2xl animate-pulse">Cargando Editor...</div>;

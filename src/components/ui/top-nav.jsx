@@ -39,6 +39,7 @@ const pageTitles = {
   "STAFF-MANAGER": { [ESP]: "Gestión de Empleados", [ENG]: "Employee Management" },
   "MODELOPROYECTO": { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" },
   "USERPORTAL": { [ESP]: "Portal de Usuario", [ENG]: "User Portal" },
+  "COTIZACIONES": { [ESP]: "Cotizaciones", [ENG]: "Quotes" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -124,7 +125,8 @@ export default function TopNav() {
     { label: "Pagos", path: "/PagosProveedores" },
     { label: "Día", path: "/DiaResumen" },
     { label: "Mes", path: "/MesResumen" },
-    { label: "Modelo Proyecto", path: "/ModeloProyecto" }
+    { label: "Modelo Proyecto", path: "/ModeloProyecto" },
+    { label: "Cotizaciones", path: "/Cotizaciones" }
   ];
 
   return (

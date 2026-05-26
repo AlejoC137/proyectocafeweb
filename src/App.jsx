@@ -55,8 +55,10 @@ const ProductosFinanciero  = lazy(() => import('./body/views/ventaCompra/Product
 const RecruitmentPrint      = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
 // MenuPrintHorizontal lazy import removed since both render MenuPrintManager
 
+const CotizacionesView       = lazy(() => import('./body/views/cotizaciones/CotizacionesView'));
 
-
+const ProyectoRadio          = lazy(() => import('./components/ProyectoRadio'));
+const RadioManager           = lazy(() => import('./components/RadioManager'));
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center text-white text-xl font-SpaceGrotesk font-light">Cargando...</div>
@@ -91,6 +93,7 @@ function App() {
             <Route path="/Gastos"                            element={<Gastos />} />
             <Route path="/Compras"                           element={<Compras />} />
             <Route path="/MenuPrint"                         element={<MenuPrintManager />} />
+            <Route path="/MenuPrint/:menuId"                 element={<MenuPrintManager />} />
             <Route path="/MenuHead"                          element={<MenuHead />} />
             <Route path="/DiaResumen"                        element={<DiaResumen />} />
             <Route path="/DiaResumen/:date"                  element={<DiaResumen />} />
@@ -130,7 +133,11 @@ function App() {
             <Route path="/productosFinanciero"               element={<ProductosFinanciero />} />
             <Route path="/RecruitmentPrint"                  element={<RecruitmentPrint />} />
             <Route path="/MenuPrintHorizontal"              element={<MenuPrintManager />} />
-
+            <Route path="/Radio"                             element={<ProyectoRadio />} />
+            <Route path="/radio"                             element={<ProyectoRadio />} />
+            <Route path="/RadioManager"                      element={<RadioManager />} />
+            <Route path="/radiomanager"                      element={<RadioManager />} />
+            <Route path="/Cotizaciones"                      element={<CotizacionesView />} />
 
             <Route path="*"                                  element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
           </Routes>

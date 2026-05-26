@@ -352,6 +352,15 @@ function MenuPrint({ menuId = 1 }) {
     });
   };
 
+  const updatePageTitle = (pageIndex, newTitle) => {
+    const newPages = JSON.parse(JSON.stringify(pages));
+    if (newPages[pageIndex]) {
+      newPages[pageIndex].title = newTitle;
+      setPages(newPages);
+      saveLayoutSizes({ pages: newPages });
+    }
+  };
+
   const moveBlock = (blockId, direction, pageIndex, columnId) => {
     const newPages = JSON.parse(JSON.stringify(pages));
     const currentPage = newPages[pageIndex];
@@ -458,7 +467,8 @@ function MenuPrint({ menuId = 1 }) {
     updateImageHeight,
     deleteBlock,
     openGallery,
-    pagesCount: pages.length
+    pagesCount: pages.length,
+    updatePageTitle
   };
 
   return (

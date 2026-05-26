@@ -5,10 +5,14 @@ import MenuPrintHorizontal from "./MenuPrintHorizontal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Coffee, Layers, Plus, Trash2, Edit, Check, X, Copy } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
 
 function MenuPrintManager() {
+  const { menuId: urlMenuId } = useParams();
+  const navigate = useNavigate();
+  const activeMenuId = urlMenuId ? Number(urlMenuId) : 2;
+
   const [menus, setMenus] = useState([]);
-  const [activeMenuId, setActiveMenuId] = useState(2); // default to horizontal menu
   const [loading, setLoading] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -18,10 +22,10 @@ function MenuPrintManager() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    fetchMenus();
+    fetchMenus(activeMenuId);
   }, []);
 
-  const fetchMenus = async () => {
+  const fetchMenus = async (currentActiveId = activeMenuId) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -57,9 +61,12 @@ function MenuPrintManager() {
       loadedMenus.sort((a, b) => a.id - b.id);
       setMenus(loadedMenus);
 
-      // If activeMenuId is not in the list, set to first one
-      if (!loadedMenus.some((m) => m.id === activeMenuId)) {
-        setActiveMenuId(loadedMenus[0]?.id || 2);
+      // If currentActiveId is not in the list, navigate to first one
+      if (!loadedMenus.some((m) => m.id === currentActiveId)) {
+        const fallbackId = loadedMenus[0]?.id || 2;
+        navigate(`/MenuPrint/${fallbackId}`, { replace: true });
+      } else if (!urlMenuId || Number(urlMenuId) !== currentActiveId) {
+        navigate(`/MenuPrint/${currentActiveId}`, { replace: true });
       }
     } catch (err) {
       console.error("Error loading menus list:", err);
@@ -154,8 +161,8 @@ function MenuPrintManager() {
 
       setShowCloneModal(false);
       setCloneName("");
-      setActiveMenuId(newId);
-      await fetchMenus();
+      navigate(`/MenuPrint/${newId}`);
+      await fetchMenus(newId);
     } catch (err) {
       console.error("Error cloning menu:", err);
       alert("Error al clonar el menú");
@@ -182,8 +189,8 @@ function MenuPrintManager() {
       const { error } = await supabase.from("menu_print_config").delete().eq("id", activeMenuId);
       if (error) throw error;
 
-      setActiveMenuId(2); // fallback to default horizontal menu
-      await fetchMenus();
+      navigate(`/MenuPrint/2`);
+      await fetchMenus(2);
     } catch (err) {
       console.error("Error deleting menu:", err);
       alert("Error al eliminar el menú");
@@ -264,7 +271,7 @@ function MenuPrintManager() {
               <button
                 key={m.id}
                 onClick={() => {
-                  setActiveMenuId(m.id);
+                  navigate(`/MenuPrint/${m.id}`);
                   setIsEditingName(false);
                 }}
                 className={`flex items-center gap-1.5 shrink-0 px-3.5 py-1.5 border-2 border-black font-black uppercase text-[10px] tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${

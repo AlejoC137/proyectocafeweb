@@ -61,25 +61,44 @@ const MenuPage = ({
         style={{ gridArea: '1 / 1 / 2 / 2' }}
       >
 
-        <MenuPrintHeader colors={colors} leng={leng} />
+        <MenuPrintHeader 
+          colors={colors} 
+          leng={leng} 
+          title={page.title}
+          editMode={editMode}
+          onTitleChange={(newTitle) => commonProps.updatePageTitle && commonProps.updatePageTitle(pageIndex, newTitle)}
+        />
 
         <div className="flex-grow grid gap-4 items-start h-full relative z-10" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
 
-          <MenuPrintColumn
-            blocks={page.left || []}
-            {...commonProps}
-            pageIndex={pageIndex}
-            columnId="left"
-          />
+          <div 
+            className="flex flex-col h-full border-[3px] rounded-[8px] p-2 bg-white/80" 
+            style={{ borderColor: colors.mainBorder }}
+          >
+            <MenuPrintColumn
+              blocks={page.left || []}
+              {...commonProps}
+              pageIndex={pageIndex}
+              columnId="left"
+            />
+          </div>
 
-          <MenuPrintColumn
-            blocks={page.center || []}
-            {...commonProps}
-            pageIndex={pageIndex}
-            columnId="center"
-          />
+          <div 
+            className="flex flex-col h-full border-[3px] rounded-[8px] p-2 bg-white/80" 
+            style={{ borderColor: colors.mainBorder }}
+          >
+            <MenuPrintColumn
+              blocks={page.center || []}
+              {...commonProps}
+              pageIndex={pageIndex}
+              columnId="center"
+            />
+          </div>
 
-          <div className="flex flex-col gap-3 relative">
+          <div 
+            className="flex flex-col gap-3 relative h-full border-[3px] rounded-[8px] p-2 bg-white/80"
+            style={{ borderColor: colors.mainBorder }}
+          >
             {editMode && (
               <div className="absolute -top-10 right-0 z-[60] print:hidden">
                 <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef} className="hidden" />
@@ -101,9 +120,6 @@ const MenuPage = ({
             />
           </div>
 
-        </div>
-
-        <MenuPrintFooter colors={colors} />
       </div>
 
     </div>
