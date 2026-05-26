@@ -30,7 +30,7 @@ ANTES de procesar cualquier información, debes hacerme la siguiente pregunta y 
     * **Lógica de Coincidencia:** Busca el ingrediente mencionado en el campo `Nombre_del_producto` de las listas.
         * **Si existe:** Extrae su `_id` y úsalo.
         * **Si no existe exacto:** Busca el equivalente técnico más cercano (ej: "Azúcar" -> "Azúcar blanca refinada").
-        * **Si no hay equivalente:** EXCLUYE el ingrediente de la lista de ítems (pero mantenlo mencionado en el texto del proceso).
+
 
 3.  **Formato de Cantidades (Objetos dentro de Objetos):**
     * Los campos de cantidad (`itemX_Cuantity_Units`) deben ser **STRINGS** que contengan un JSON válido.
