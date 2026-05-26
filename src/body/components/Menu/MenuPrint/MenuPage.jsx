@@ -119,9 +119,8 @@ const MenuPage = ({
               columnId="right"
             />
           </div>
-
+        </div>
       </div>
-
     </div>
   );
 };

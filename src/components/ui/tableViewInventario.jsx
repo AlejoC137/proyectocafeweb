@@ -496,7 +496,6 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
             return showEdit ? renderEditableCell(originalIndex, col.key, "select", Proveedores.map(p => ({ value: p._id, label: p.Nombre_Proveedor }))) : <span>{Proveedores.find(p => p._id === item.Proveedor)?.Nombre_Proveedor || 'N/A'}</span>;
 
           case 'unidades':
-          case 'unidades':
             if (showEdit) {
               return renderEditableCell(originalIndex, col.key, "select", unidades.map(u => ({ value: u, label: u })));
             }

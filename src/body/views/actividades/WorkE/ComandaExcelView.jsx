@@ -396,7 +396,7 @@ const ComandaExcelView = () => {
     
     // Comprobar si es un campo anidado (ej: "Dates.isued")
     if (fieldKey.includes('.')) {
-      const [parentKey, childKey] = fieldKey.split('.'); // "Dates", "isued"
+      let [parentKey, childKey] = fieldKey.split('.'); // "Dates", "isued"
       let childIndex = null;
       
       // Manejar arrays anidados (ej: "Procedimientos.0._tipo")
