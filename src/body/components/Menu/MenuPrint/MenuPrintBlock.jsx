@@ -127,11 +127,11 @@ const MenuPrintBlock = ({
     return (
       <div key={id} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
         {renderBlockControls(id, true)}
-        <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 rounded-t-[4px]" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+        <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
           {editMode ? (
             <input
-              className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full"
-              style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}
+              className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.4em]"
+              style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
               value={title}
               onChange={(e) => {
                 setGroupDescriptions(prev => ({ ...prev, [titleKey]: e.target.value }));
@@ -139,7 +139,7 @@ const MenuPrintBlock = ({
               onBlur={() => saveGroupDescriptions(groupDescriptions)}
             />
           ) : (
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
+            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
               {title}
             </h2>
           )}
@@ -167,10 +167,20 @@ const MenuPrintBlock = ({
       return (
         <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls(blockId, true)}
-          <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 rounded-t-[4px]" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
-              {!leng ? "Café" : "Coffee"}
-            </h2>
+          <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.1em]"
+                style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_${blockId}`] || (!leng ? "Café" : "Coffee")}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_${blockId}`] || (!leng ? "Café" : "Coffee")}
+              </h2>
+            )}
             {renderGroupDescription(blockId)}
           </div>
           <div className="p-2">
@@ -184,10 +194,20 @@ const MenuPrintBlock = ({
       return (
         <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls(blockId, true)}
-          <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 rounded-t-[4px]" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
-              {!leng ? "Bebidas" : "Drinks"}
-            </h2>
+          <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.1em]"
+                style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_${blockId}`] || (!leng ? "Bebidas" : "Drinks")}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_${blockId}`] || (!leng ? "Bebidas" : "Drinks")}
+              </h2>
+            )}
             {renderGroupDescription(blockId)}
           </div>
           <div className="p-2">
@@ -202,10 +222,20 @@ const MenuPrintBlock = ({
       return (
         <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls(blockId, true)}
-          <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 rounded-t-[4px]" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
-              {!leng ? "Alimentos" : "Food"}
-            </h2>
+          <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.1em]"
+                style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_${blockId}`] || (!leng ? "Alimentos" : "Food")}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_${blockId}`] || (!leng ? "Alimentos" : "Food")}
+              </h2>
+            )}
             {renderGroupDescription(blockId)}
           </div>
           <div className="p-2">
@@ -222,10 +252,20 @@ const MenuPrintBlock = ({
       return (
         <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls(blockId, true)}
-          <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 rounded-t-[4px]" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
-              {!leng ? "Adiciones" : "Extras"}
-            </h2>
+          <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.1em]"
+                style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_${blockId}`] || (!leng ? "Adiciones" : "Extras")}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_${blockId}`] || (!leng ? "Adiciones" : "Extras")}
+              </h2>
+            )}
             {renderGroupDescription(blockId)}
           </div>
           <div className="p-2">
@@ -262,10 +302,20 @@ const MenuPrintBlock = ({
       return (
         <div key="INFO" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
           {renderBlockControls("INFO", true)}
-          <div className="border-b-[2px] px-2 py-1 flex items-end gap-2 rounded-t-[4px]" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${colors.sizeCategory || 20}${colors.fontSizeUnit || 'px'}` }}>
-              {!leng ? "Más sobre el Menú" : "More About"}
-            </h2>
+          <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.1em]"
+                style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_INFO`] || (!leng ? "Más sobre el Menú" : "More About")}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_INFO`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_INFO`] || (!leng ? "Más sobre el Menú" : "More About")}
+              </h2>
+            )}
           </div>
           <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic" style={{ color: colors.itemComment }}>
             <MenuPrintInfo

@@ -1,5 +1,5 @@
 import React from "react";
-import MenuPrintHeader from "../MenuPrint/MenuPrintHeader";
+
 import MenuPrintFooter from "../MenuPrint/MenuPrintFooter";
 import MenuPrintColumn from "../MenuPrint/MenuPrintColumn";
 import { Button } from "@/components/ui/button";
@@ -113,13 +113,7 @@ const HorizontalPage = ({
           padding: '1.5rem'
         }}
       >
-        <MenuPrintHeader 
-          colors={colors} 
-          leng={leng} 
-          title={page.title}
-          editMode={editMode}
-          onTitleChange={(newTitle) => commonProps.updatePageTitle && commonProps.updatePageTitle(pageIndex, newTitle)}
-        />
+
 
         <div className="flex-grow flex mt-[-3px] w-full relative h-full min-h-0">
           {(page.columns || []).map((col, colIdx) => (

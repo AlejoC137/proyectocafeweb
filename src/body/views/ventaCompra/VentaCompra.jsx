@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Mesa from "./Mesa";
 import MesaBarra from "./MesaBarra";
 import ClientForm from "./ClientForm";
@@ -14,13 +14,21 @@ import { Eye, UtensilsCrossed, UserPlus } from "lucide-react";
 
 function VentaCompra() {
   const dispatch = useDispatch();
+  const allMenu = useSelector((state) => state.allMenu || []);
+  const allItems = useSelector((state) => state.allItems || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
+  const Proveedores = useSelector((state) => state.Proveedores || []);
+  const allUserPreferences = useSelector((state) => state.allUserPreferences || []);
+
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [ventasDelDia, setVentasDelDia] = useState([]);
   const [showGastos, setShowGastos] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
 
-  const fetchVentasDelDia = async () => {
+  const fetchVentasDelDia = async (showSyncIndicator = false) => {
+    if (showSyncIndicator === true) setIsSyncing(true);
     const currentDate = new Date();
     const ADate = currentDate.toLocaleDateString("en-US", { timeZone: "America/Bogota" });
 
@@ -37,19 +45,23 @@ function VentaCompra() {
       if (error) console.error("Error al obtener ventas activas:", error);
       setVentasDelDia([]);
     }
+    if (showSyncIndicator === true) setIsSyncing(false);
   };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        await Promise.all([
-          dispatch(getAllFromTable(MENU)),
-          dispatch(getAllFromTable(ITEMS)),
-          dispatch(getAllFromTable(PRODUCCION)),
-          dispatch(getAllFromTable(PROVEE)),
-          dispatch(getAllFromTable(USER_PREFERENCES)),
-        ]);
+        const promises = [];
+        if (allMenu.length === 0) promises.push(dispatch(getAllFromTable(MENU)));
+        if (allItems.length === 0) promises.push(dispatch(getAllFromTable(ITEMS)));
+        if (allProduccion.length === 0) promises.push(dispatch(getAllFromTable(PRODUCCION)));
+        if (Proveedores.length === 0) promises.push(dispatch(getAllFromTable(PROVEE)));
+        if (allUserPreferences.length === 0) promises.push(dispatch(getAllFromTable(USER_PREFERENCES)));
+        
+        if (promises.length > 0) {
+          await Promise.all(promises);
+        }
         await fetchVentasDelDia();
       } catch (error) {
         console.error("Error cargando datos iniciales:", error);
@@ -59,6 +71,7 @@ function VentaCompra() {
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
   if (loading) {
@@ -115,9 +128,17 @@ function VentaCompra() {
       </div>
 
       {/* --- Grid de Mesas --- */}
-      <div className="flex-grow min-h-[600px]">
+      <div className="flex-grow min-h-[600px] relative">
+        {isSyncing && (
+          <div className="absolute inset-0 bg-slate-100/50 backdrop-blur-[1px] z-50 flex items-center justify-center rounded-lg">
+            <div className="text-center bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+              <div className="h-10 w-10 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto"></div>
+              <p className="text-sm font-bold text-slate-700 mt-3">Sincronizando Comandas...</p>
+            </div>
+          </div>
+        )}
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full"
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full ${isSyncing ? 'opacity-60 pointer-events-none' : ''}`}
           style={{ gridAutoRows: 'minmax(0, 1fr)' }}
         >
           {[...Array(6)].map((_, index) => {
@@ -128,7 +149,7 @@ function VentaCompra() {
                 key={`mesa-${mesaIndex}`}
                 index={mesaIndex}
                 ventaActual={ventaActual}
-                onVentaChange={fetchVentasDelDia}
+                onVentaChange={() => fetchVentasDelDia(true)}
               />
             );
           })}
