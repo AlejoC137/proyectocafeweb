@@ -20,7 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Utensils,
-  MonitorPlay
+  MonitorPlay,
+  Link2,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -42,6 +44,7 @@ function Agenda() {
   const initialMonth = (year && month) ? `${year}-${month}` : new Date().toISOString().slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [attendeeCounts, setAttendeeCounts] = useState({});
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Cargar eventos y asistentes al montar
   useEffect(() => {
@@ -136,12 +139,6 @@ function Agenda() {
     navigate(`/Agenda/${y}/${m}`);
   };
 
-  const totalEventos = allAgenda.length;
-  const eventosHoy = allAgenda.filter((evento) => {
-    const hoy = new Date().toISOString().split("T")[0];
-    return evento.fecha === hoy;
-  }).length;
-
   // Filtrar eventos por mes seleccionado
   const eventosFiltrados = useMemo(() => {
     if (!selectedMonth) return allAgenda;
@@ -206,43 +203,14 @@ function Agenda() {
     });
   };
 
+  const handleCopyPublicLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/EventosOffer`);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   return (
     <PageLayout title="Agenda de Eventos">
-      {/* Estadísticas y controles */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-center gap-2">
-            <Calendar className="text-blue-600" size={20} />
-            <div>
-              <p className="text-sm text-blue-600">Total Eventos</p>
-              <p className="text-2xl font-bold text-blue-800">{totalEventos}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="text-green-600" size={20} />
-            <div>
-              <p className="text-sm text-green-600">Eventos Hoy</p>
-              <p className="text-2xl font-bold text-green-800">{eventosHoy}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="text-purple-600" size={20} />
-            <div>
-              <p className="text-sm text-purple-600">Este Mes</p>
-              <p className="text-2xl font-bold text-purple-800">
-                {eventosFiltrados.length}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Controles de vista y acciones */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div className="flex gap-2">
@@ -277,6 +245,14 @@ function Agenda() {
           >
             <Users size={18} />
             Aliados
+          </Button>
+          <Button
+            onClick={handleCopyPublicLink}
+            variant="outline"
+            className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+          >
+            {copiedLink ? <CheckCircle2 size={18} /> : <Link2 size={18} />}
+            {copiedLink ? "¡Copiado!" : "Link Público"}
           </Button>
         </div>
 
