@@ -378,7 +378,22 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                 <div className="pt-4 border-t mt-4">
                   <Label className="text-gray-700 font-semibold block mb-2">Cuentas de Instagram Asociadas</Label>
                   <div className="flex gap-2 mb-3">
-                    <input type="text" value={tempIG} onChange={(e) => setTempIG(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())} className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow" placeholder="Ej: @cafereserva" />
+                    <input 
+                      type="text" 
+                      value={tempIG} 
+                      onChange={(e) => setTempIG(e.target.value)} 
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())} 
+                      className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow" 
+                      placeholder="Ej: @cafereserva" 
+                      list="instagrams-list"
+                    />
+                    <datalist id="instagrams-list">
+                      {allAliados.filter(a => a.instagram).map(a => (
+                        <option key={a.id} value={a.instagram.startsWith('@') ? a.instagram : `@${a.instagram}`}>
+                          {a.nombre}
+                        </option>
+                      ))}
+                    </datalist>
                     <Button type="button" onClick={addInstagramHandle} className="bg-purple-600 hover:bg-purple-700 h-[46px] px-4"><Plus size={18} className="mr-1"/> Añadir</Button>
                   </div>
                   <div className="flex flex-wrap gap-2">

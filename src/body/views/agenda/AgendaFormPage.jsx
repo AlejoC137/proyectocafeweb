@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { crearItem, updateItem, getAllFromTable } from "@/redux/actions";
-import { AGENDA } from "@/redux/actions-types";
+import { AGENDA, ALIADOS } from "@/redux/actions-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ function AgendaFormPage() {
   const isNewEvent = id === "new";
   const [loading, setLoading] = useState(!isNewEvent);
   const [evento, setEvento] = useState(null);
+  const allAliados = useSelector((state) => state.allAliados) || [];
 
   // Obtener parámetros desde URL si existen
   const fechaDesdeURL = searchParams.get("fecha");
@@ -220,6 +221,10 @@ function AgendaFormPage() {
     fetchEvento();
   }, [id, isNewEvent, navigate]);
 
+  useEffect(() => {
+    dispatch(getAllFromTable(ALIADOS));
+  }, [dispatch]);
+
   
   useEffect(() => {
     if (!isNewEvent) {
@@ -253,6 +258,33 @@ function AgendaFormPage() {
       return;
     }
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, nombreCliente: value }));
+
+    const aliado = allAliados.find((a) => a.nombre.toLowerCase() === value.toLowerCase());
+    
+    if (aliado) {
+      setFormData((prev) => ({
+        ...prev,
+        aliado_id: aliado.id,
+        emailCliente: aliado.email || prev.emailCliente,
+        telefonoCliente: aliado.telefono || prev.telefonoCliente,
+      }));
+      if (aliado.instagram) {
+        const handle = aliado.instagram.trim().startsWith('@') ? aliado.instagram.trim() : `@${aliado.instagram.trim()}`;
+        setFormData((prev) => {
+          if (!prev.instagramsAliados.includes(handle)) {
+            return { ...prev, instagramsAliados: [...prev.instagramsAliados, handle] };
+          }
+          return prev;
+        });
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, aliado_id: null }));
+    }
   };
 
   const handleServicioToggle = (servicioKey) => {
@@ -375,8 +407,10 @@ function AgendaFormPage() {
       linkInscripcion: formData.linkInscripcion || "",
       infoAdicional: formData.infoAdicional || "",
       decripcion: formData.decripcion || "",
+      nombreCliente: formData.nombreCliente || "",
       emailCliente: formData.emailCliente || "",
       telefonoCliente: formData.telefonoCliente || "",
+      aliado_id: formData.aliado_id || null,
       numeroPersonas: parseInt(formData.numeroPersonas) || 1,
       instagramsAliados: formData.instagramsAliados || [],
       servicios: JSON.stringify(buildServiciosForSupabase(servicios)),
@@ -502,16 +536,26 @@ function AgendaFormPage() {
           <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl">
-                {isNewEvent ? "Crear Nuevo Evento" : `Editando: ${evento?.nombreES}`}
+                {isNewEvent ? "Crear Nuevo Evento" : `Editando: ${evento?.nombreES || evento?.nombre}`}
               </CardTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCancel}
-                className="text-white hover:bg-white/20"
-              >
-                <ArrowLeft size={24} />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSubmit}
+                  className="bg-white text-purple-600 hover:bg-gray-100 font-semibold shadow-sm"
+                >
+                  <Save size={18} className="mr-2" />
+                  {isNewEvent ? "Crear Evento" : "Guardar Cambios"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCancel}
+                  className="text-white hover:bg-white/20"
+                  title="Volver / Cancelar"
+                >
+                  <ArrowLeft size={24} />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
@@ -558,14 +602,46 @@ function AgendaFormPage() {
                     <Users className="text-blue-600" size={20} /> Información del Aliado / Organizador
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2"><Label>Nombre del Aliado</Label><input name="nombreCliente" type="text" value={formData.nombreCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                    <div className="space-y-2"><Label>Email del Aliado</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
-                    <div className="space-y-2"><Label>Teléfono del Aliado</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md" /></div>
+                    <div className="space-y-2 relative">
+                      <Label>Nombre del Aliado</Label>
+                      <input 
+                        name="nombreCliente" 
+                        type="text" 
+                        value={formData.nombreCliente} 
+                        onChange={handleNameChange} 
+                        className={`w-full p-2 border rounded-md outline-none transition-shadow ${formData.aliado_id ? 'border-purple-400 bg-purple-50 focus:ring-2 focus:ring-purple-500' : 'focus:ring-2 focus:ring-purple-500'}`} 
+                        placeholder="Escribe para buscar o ingresar uno nuevo..."
+                        list="aliados-list-page"
+                      />
+                      <datalist id="aliados-list-page">
+                        {allAliados.map(a => (
+                          <option key={a.id} value={a.nombre}>{a.categoria}</option>
+                        ))}
+                      </datalist>
+                      {formData.aliado_id && <p className="text-xs text-purple-600 mt-1 font-medium">✓ Aliado vinculado</p>}
+                    </div>
+                    <div className="space-y-2"><Label>Email del Aliado</Label><input name="emailCliente" type="email" value={formData.emailCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 outline-none" /></div>
+                    <div className="space-y-2"><Label>Teléfono del Aliado</Label><input name="telefonoCliente" type="tel" value={formData.telefonoCliente} onChange={handleInputChange} className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 outline-none" /></div>
                     
                     <div className="space-y-2 md:col-span-2">
                       <Label>Instagrams de los Aliados</Label>
                       <div className="flex gap-2 mb-2">
-                        <input type="text" value={tempIG} onChange={(e) => setTempIG(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())} className="flex-1 p-2 border rounded-md" placeholder="@usuario" />
+                        <input 
+                          type="text" 
+                          value={tempIG} 
+                          onChange={(e) => setTempIG(e.target.value)} 
+                          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())} 
+                          className="flex-1 p-2 border rounded-md" 
+                          placeholder="@usuario" 
+                          list="instagrams-list-page"
+                        />
+                        <datalist id="instagrams-list-page">
+                          {allAliados.filter(a => a.instagram).map(a => (
+                            <option key={a.id} value={a.instagram.startsWith('@') ? a.instagram : `@${a.instagram}`}>
+                              {a.nombre}
+                            </option>
+                          ))}
+                        </datalist>
                         <Button type="button" onClick={addInstagramHandle} variant="outline" className="border-blue-600 text-blue-600"><Plus size={16} /></Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -599,10 +675,7 @@ function AgendaFormPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 pt-4 border-t">
-                  <Button type="submit" className="text-white flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 transition"><Save size={18} className="mr-2" />{isNewEvent ? "Crear Evento" : "Guardar Cambios"}</Button>
-                  <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">Cancelar</Button>
-                </div>
+
               </form>
 
               {/* Columna Derecha: Configuración Extra */}
