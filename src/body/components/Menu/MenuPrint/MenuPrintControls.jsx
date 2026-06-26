@@ -9,6 +9,8 @@ const MenuPrintControls = ({
   setEditMode,
   toggleShowIcons,
   showIcons,
+  showItemDescriptions,
+  setShowItemDescriptions,
   showColorPanel,
   setShowColorPanel,
   showWebsiteBg,
@@ -43,6 +45,16 @@ const MenuPrintControls = ({
         </Button>
         <Button onClick={toggleShowIcons} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           {showIcons ? "🚫 Ocultar Iconos" : "👁️ Mostrar Iconos"}
+        </Button>
+        <Button 
+          onClick={() => {
+            const next = !showItemDescriptions;
+            setShowItemDescriptions(next);
+            saveLayoutSizes({ showItemDescriptions: next });
+          }} 
+          className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800"
+        >
+          {showItemDescriptions ? "📝 Ocultar Detalles" : "📝 Mostrar Detalles"}
         </Button>
         <Button onClick={() => setShowColorPanel(!showColorPanel)} className={`font-SpaceGrotesk font-medium ${showColorPanel ? 'bg-purple-600' : 'bg-black'} text-white hover:opacity-80 transition-colors`}>
           🎨 {showColorPanel ? "Cerrar Colores" : "Personalizar Colores"}

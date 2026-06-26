@@ -1,0 +1,3546 @@
+[
+  {
+    "_id": "0009b69c-39ad-457c-b7a5-818857c453fb",
+    "Date": 45748.999814814815,
+    "Total_Ingreso": 131500,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": "4",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      },
+      {
+        "NombreES": "Latte en hielo de espresso",
+        "Precio": 8500,
+        "quantity": "3",
+        "matches": [],
+        "Receta": "af19c51e-daeb-49de-b71b-14f693e32126",
+        "Foto": "https://drive.google.com/thumbnail?id=13ix9vBSZNWqID9N0SkqwAJ1WVdtJF-qT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": "3",
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-04-02T19:58:52.030Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:44:30 PM"
+  },
+  {
+    "_id": "000e6a60-2ab5-4b65-859a-c51e39857b7b",
+    "Date": 45779.999814814815,
+    "Total_Ingreso": 60000,
+    "Tip": 5000,
+    "Productos": [
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Aeropress",
+        "Precio": 7000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "d116d943-ec72-4561-a6cf-d79fbd918832",
+        "Foto": "https://drive.google.com/thumbnail?id=16feLXEMiSc__A4qX6_-LsWMCnELyjWn7&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tarta Basca",
+        "Precio": 14000,
+        "quantity": "1.5",
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-05-03T21:19:17.335Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "2:42:12 PM"
+  },
+  {
+    "_id": "00107256-e3a8-44a8-a06a-cd59fc712efa",
+    "Date": 45734.999814814815,
+    "Total_Ingreso": 15000,
+    "Productos": [
+      {
+        "NombreES": "Cold brew clÃ¡sico",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "43f61af8-3f23-4dfe-ba81-10e133ba5a18",
+        "Foto": "https://drive.google.com/thumbnail?id=17j2qiTUKzW8cgKP1PqJqS9DOVSHU_lx1&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Galletas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=13bozO9EXdWgndtpKKBYv5mIbhe5qUDO2&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-19T19:40:52.332Z",
+      "recibido": 20000,
+      "entregado": 0
+    },
+    "Time": "1:25:05 PM"
+  },
+  {
+    "_id": "0025e825-71f1-438e-9dd1-21b8002e9695",
+    "Date": 45820.999814814815,
+    "Total_Ingreso": 56000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Desayuno americano",
+        "Precio": 20000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "ea57e97f-cd6e-48bd-996d-d60aaf0522e4",
+        "Foto": "https://drive.google.com/thumbnail?id=137jfKGoAACkBcl4953S_-9mdl-NVxK3t&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Palito de Queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "55b9f6c5-3091-4ad7-88f3-2465ff080a7d",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-13T15:05:03.158Z",
+      "recibido": 100000,
+      "entregado": 0
+    },
+    "Time": "9:59:30 AM"
+  },
+  {
+    "_id": "002be31a-fbcd-4452-b959-5341d72b7330",
+    "Date": 45917.999814814815,
+    "Total_Ingreso": 38000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "a25a7ed6-5fde-4c0d-907f-e9f777660f8b",
+        "NombreES": "Guandolo clÃ¡sico",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "1309580c-bce2-434a-8e90-57bc2762c4ff"
+      },
+      {
+        "id": "d9f463dd-585b-487a-831c-5a5ae5b8a159",
+        "NombreES": "Tostadas de aguacate y huevo",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "22cae1e2-39bd-4121-a9c5-453057d06b92"
+      },
+      {
+        "id": "c6aad56a-f421-4fa9-a789-a394bff64282",
+        "NombreES": "Moca-chino",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "b6d2d8f0-79e5-4158-b3a4-ffbf3a486b90"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-09-18T23:02:51.874Z",
+      "recibido": 38000,
+      "entregado": 0
+    },
+    "Time": "5:39:15 PM"
+  },
+  {
+    "_id": "004fc33e-7dcb-4d80-9672-ba2b44bf00c2",
+    "Date": 45720.999814814815,
+    "Total_Ingreso": 55000,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Desayuno americano",
+        "Precio": 20000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "ea57e97f-cd6e-48bd-996d-d60aaf0522e4",
+        "Foto": "https://drive.google.com/thumbnail?id=137jfKGoAACkBcl4953S_-9mdl-NVxK3t&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Chocolate caliente",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "70aa12b3-483e-4c7d-bfff-3a8b0ba53615",
+        "Foto": "https://drive.google.com/thumbnail?id=12k8hWeRU0BRQKAW-yq1N0l-gB_j-JT7b&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-05T13:49:36.472Z",
+      "recibido": 550000,
+      "entregado": 0
+    },
+    "Time": "8:25:50 AM"
+  },
+  {
+    "_id": "005915bf-34fd-4a62-ba35-b6db935b6da5",
+    "Date": 45742.999814814815,
+    "Total_Ingreso": 63200,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": "3",
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Chocolate caliente",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "70aa12b3-483e-4c7d-bfff-3a8b0ba53615",
+        "Foto": "https://drive.google.com/thumbnail?id=12k8hWeRU0BRQKAW-yq1N0l-gB_j-JT7b&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Adicion Leche Almendras",
+        "Precio": 2000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Croisant Jamon y Queso",
+        "Precio": 12500,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a",
+        "Foto": null
+      },
+      {
+        "NombreES": "Jugo de Naranja",
+        "Precio": 9200,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "130fffe0-a93c-406a-b13a-01f5942383ca",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-03-27T16:25:58.284Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:16:27 AM"
+  },
+  {
+    "_id": "005c6f93-9dec-49fb-b124-b130cc9c13d1",
+    "Date": 45757.999814814815,
+    "Total_Ingreso": 3000,
+    "Productos": [
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-11T19:37:49.056Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "2:37:43 PM"
+  },
+  {
+    "_id": "006f942a-0c1a-4c93-a06f-f27f2c4631b3",
+    "Date": 45747.999814814815,
+    "Total_Ingreso": 20000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "AdiciÃ³n de arroz",
+        "Precio": 5000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Adicion de Huevos",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "cc177900-8686-476e-af5b-127e23809e37",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-02T00:46:25.984Z",
+      "recibido": 20000,
+      "entregado": 0
+    },
+    "Time": "7:36:33 PM"
+  },
+  {
+    "_id": "00b8ee77-6963-4f5c-b7df-6d94d3117527",
+    "Date": 45711.999814814815,
+    "Total_Ingreso": 36000,
+    "Productos": [
+      {
+        "NombreES": "Desayuno americano",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "ea57e97f-cd6e-48bd-996d-d60aaf0522e4",
+        "Foto": "https://drive.google.com/thumbnail?id=137jfKGoAACkBcl4953S_-9mdl-NVxK3t&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-24T18:15:15.036Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:19:44 PM"
+  },
+  {
+    "_id": "00d7cc2c-077f-4838-96f7-610b66947411",
+    "Date": 45676.999814814815,
+    "Total_Ingreso": 40000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 20000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Cliente": "ANA",
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-01-20T20:26:31.860Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:56:59 AM"
+  },
+  {
+    "_id": "00d82770-d78b-40d4-9093-968841239971",
+    "Date": 45672.999814814815,
+    "Total_Ingreso": 11000,
+    "Productos": [
+      {
+        "NombreES": "Jugos de frutas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "8d9aad32-242c-4809-854d-fb92d4e2d939",
+        "Foto": "https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Pilsen, Ã¡guila & poker",
+        "Precio": 5000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000"
+      },
+      {
+        "id": "",
+        "NombreES": "",
+        "Precio": 0,
+        "quantity": 1,
+        "matches": []
+      }
+    ],
+    "Cliente": "PAREJA OJOS CLAROS",
+    "Pagado": "true",
+    "Mesa": 6,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-01-16T21:51:22.370Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "4:14:42 PM"
+  },
+  {
+    "_id": "00eaa851-51be-4f71-92e8-c4801cb69be7",
+    "Date": 45841.999814814815,
+    "Total_Ingreso": 14500,
+    "Productos": [
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Coca Cola 400 ml",
+        "Precio": 5500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-07-04T23:15:59.825Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "6:15:53 PM"
+  },
+  {
+    "_id": "00eaf531-15ec-4224-b66c-c2cebab15d49",
+    "Date": 45917.999814814815,
+    "Total_Ingreso": 78000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "daf9f710-9715-4b93-b23e-d5196097ed3d",
+        "NombreES": "Almuerzo",
+        "Precio": 22000,
+        "quantity": 3,
+        "matches": [],
+        "Receta": null
+      },
+      {
+        "id": "875b2807-33f0-4851-a5dd-e47c37e1541d",
+        "NombreES": "Torta Red Velvet",
+        "Precio": 12000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-09-18T18:20:12.741Z",
+      "recibido": 100000,
+      "entregado": 22000
+    },
+    "Time": "1:08:23 PM"
+  },
+  {
+    "_id": "00f8c762-9483-4130-b2c6-9f0d1c8ba7a5",
+    "Date": 45699.999814814815,
+    "Total_Ingreso": 77500,
+    "Productos": [
+      {
+        "NombreES": "Palito de Queso",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Desayuno americano",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "ea57e97f-cd6e-48bd-996d-d60aaf0522e4",
+        "Foto": "https://drive.google.com/thumbnail?id=137jfKGoAACkBcl4953S_-9mdl-NVxK3t&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "SÃ¡nduche de pollo ",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "a2dd8bef-8e45-4a0c-a957-672bbe5f6ae8",
+        "Foto": "https://drive.google.com/thumbnail?id=14jauOCvNYO2HUNV3d9kaBjZMKVSMtG_3&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "TÃ© chai latte",
+        "Precio": 10000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "cba05045-135f-46fd-9d74-1c5496ccba1e",
+        "Foto": "https://drive.google.com/thumbnail?id=171fATH58EPwz6YE8IDlWJfxlz7gQ7dPh&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Jugos de frutas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "8d9aad32-242c-4809-854d-fb92d4e2d939",
+        "Foto": "https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Cold brew clÃ¡sico",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "43f61af8-3f23-4dfe-ba81-10e133ba5a18",
+        "Foto": "https://drive.google.com/thumbnail?id=17j2qiTUKzW8cgKP1PqJqS9DOVSHU_lx1&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Agua en Botella Con Gas",
+        "Precio": 3500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-13T00:57:55.028Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "7:56:51 PM"
+  },
+  {
+    "_id": "00fda9b3-a0fa-4e94-b6f4-c7202a249717",
+    "Date": 45720.999814814815,
+    "Total_Ingreso": 44000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-05T20:02:00.759Z",
+      "recibido": 100000,
+      "entregado": 0
+    },
+    "Time": "1:52:39 PM"
+  },
+  {
+    "_id": "00fddcf9-78a7-4064-9687-9171f7e1f337",
+    "Date": 45797.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-05-21T21:04:55.312Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "4:04:46 PM"
+  },
+  {
+    "_id": "010a5989-4ec8-4529-a002-792fa2a82106",
+    "Date": 45748.999814814815,
+    "Total_Ingreso": 28000,
+    "Tip": 3000,
+    "Productos": [
+      {
+        "NombreES": "Pilsen, Ã¡guila & poker",
+        "Precio": 5000,
+        "quantity": "5",
+        "matches": [],
+        "Receta": "09d85a75-bf25-4c21-a556-9b392f433a7d",
+        "Foto": "https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000"
+      }
+    ],
+    "Cliente": "mauricio exmono",
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-03T00:56:22.601Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "12:54:10 PM"
+  },
+  {
+    "_id": "010f9e4e-e5e7-4189-b2c1-17e219964bc8",
+    "Date": 45712.999814814815,
+    "Total_Ingreso": 26000,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tinto",
+        "Precio": 4500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "f6b22292-c67e-4876-b098-64d7aaf12f9c",
+        "Foto": null
+      },
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Pan Bola 45",
+        "Precio": 2000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Adicion Arepa",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Adicion Queso Mozzarella",
+        "Precio": 4000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-25T15:16:26.263Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "10:15:47 AM"
+  },
+  {
+    "_id": "0112f146-db4d-4033-b9d4-c419d00b6be5",
+    "Date": 45709.999814814815,
+    "Total_Ingreso": 31500,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tostadas de aguacate y huevo",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "22cae1e2-39bd-4121-a9c5-453057d06b92",
+        "Foto": "https://drive.google.com/thumbnail?id=14vwqTnm3e9iRQ-FiZ9kTk7R_0UNWsikZ&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Agua en Botella Con Gas",
+        "Precio": 3500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-22T15:24:25.028Z",
+      "recibido": 100000,
+      "entregado": 0
+    },
+    "Time": "10:23:18 AM"
+  },
+  {
+    "_id": "01144c53-ffb7-41cb-a47e-d42406e67979",
+    "Date": 45822.999814814815,
+    "Total_Ingreso": 7500,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-06-15T15:23:59.072Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "10:10:55 AM"
+  },
+  {
+    "_id": "011fecb8-7516-4d3e-bd3b-5e097d2ab301",
+    "Date": 45720.999814814815,
+    "Total_Ingreso": 21500,
+    "Productos": [
+      {
+        "NombreES": "Pan de masa madre",
+        "Precio": 2500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "b67e5df7-e6ca-43cf-a9d1-190a694fd613",
+        "Foto": null
+      },
+      {
+        "NombreES": "Adicion Queso Mozzarella",
+        "Precio": 4000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-06T00:03:26.275Z",
+      "recibido": 100000,
+      "entregado": 0
+    },
+    "Time": "6:49:09 PM"
+  },
+  {
+    "_id": "0124c76d-6f83-4685-b8fb-e6857411dd14",
+    "Date": 45742.999814814815,
+    "Total_Ingreso": 26500,
+    "Productos": [
+      {
+        "NombreES": "Adicion de Huevos",
+        "Precio": 7000,
+        "quantity": "0.5",
+        "matches": [],
+        "Receta": "cc177900-8686-476e-af5b-127e23809e37",
+        "Foto": null
+      },
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Adicion Arepa",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Adicion Queso Mozzarella",
+        "Precio": 4000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 5,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-27T23:59:44.806Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "6:58:54 PM"
+  },
+  {
+    "_id": "012590c5-1cfc-4358-b38f-fbe8504d428a",
+    "Date": 45747.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Cliente": "juliana",
+    "Pagado": "true",
+    "Mesa": 5,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-04-01T20:59:32.569Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "1:19:38 PM"
+  },
+  {
+    "_id": "01369ea7-7a93-470a-84d6-6817d0b918d0",
+    "Date": 45882.999814814815,
+    "Total_Ingreso": 37500,
+    "Productos": [
+      {
+        "NombreES": "Adicion Michelado",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Pilsen, Ã¡guila & poker",
+        "Precio": 5000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "09d85a75-bf25-4c21-a556-9b392f433a7d",
+        "Foto": "https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Milo",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "3c4ed275-1c40-44c5-8bbe-e6c2eef2d933",
+        "Foto": null
+      },
+      {
+        "NombreES": "Croisant Jamon y Queso",
+        "Precio": 12500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a",
+        "Foto": null
+      },
+      {
+        "NombreES": "Croissant de queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "2bac2938-6e4d-47a9-a829-dcf2459a13ef",
+        "Foto": "https://drive.google.com/thumbnail?id=13E74OeYcWg7XEy9U3fFyD34TNLtSQNHO&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-08-14T22:58:48.332Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "5:58:21 PM"
+  },
+  {
+    "_id": "013d5f8b-d95b-42c8-a153-3f6cabd3b1d4",
+    "Date": 45730.999814814815,
+    "Total_Ingreso": 21500,
+    "Productos": [
+      {
+        "NombreES": "Pie de manzana",
+        "Precio": 14000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=1Az6kUgHQb4qMKXnPBBSDYqVCBB1kzrPt&sz=w1000-h1000\n"
+      },
+      {
+        "NombreES": "Tinto",
+        "Precio": 4500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "f6b22292-c67e-4876-b098-64d7aaf12f9c",
+        "Foto": null
+      },
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-15T21:54:34.779Z",
+      "recibido": 25000,
+      "entregado": 0
+    },
+    "Time": "4:53:03 PM"
+  },
+  {
+    "_id": "014526c2-595f-46d8-8f6d-38c7608ef82d",
+    "Date": 45811.999814814815,
+    "Total_Ingreso": 27000,
+    "Productos": [
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "V60",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "a9309ddc-c3ac-46c1-bb28-78995220ef0a",
+        "Foto": "https://drive.google.com/thumbnail?id=16ga-U3tWUT2dlKQUq3GTGHdDg9mlOnut&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-04T17:17:58.712Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "10:09:23 AM"
+  },
+  {
+    "_id": "014d20ed-0ed6-405b-8410-bdc935d29810",
+    "Date": 45708.999814814815,
+    "Total_Ingreso": 44000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 6,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-21T18:58:44.465Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "1:58:35 PM"
+  },
+  {
+    "_id": "0153b923-7f05-472c-b48f-06e3c1e0c6b3",
+    "Date": 45692.999814814815,
+    "Total_Ingreso": 40000,
+    "Productos": [
+      {
+        "NombreES": "Croisant Jamon y Queso",
+        "Precio": 11000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a",
+        "Foto": null
+      },
+      {
+        "NombreES": "Soda limÃ³n & romero",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14QbAOiTVGkSva9qwpKej8Es766a4T41e&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Pilsen, Ã¡guila & poker",
+        "Precio": 5000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "09d85a75-bf25-4c21-a556-9b392f433a7d",
+        "Foto": "https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Club colombia",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "50ab11c1-4191-4e9a-a608-78d35dec7230",
+        "Foto": "https://drive.google.com/thumbnail?id=13N2KT3mrGWKaR567myGVCX7RObjeT2ro&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-02-05T23:44:19.731Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "5:53:59 PM"
+  },
+  {
+    "_id": "017635d3-d229-4916-89ba-5eced4648294",
+    "Date": 45928.999814814815,
+    "Total_Ingreso": 8000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "ef95421c-8f25-43aa-b3cd-71ba458dcd83",
+        "NombreES": "Soda clÃ¡sica",
+        "Precio": 4000,
+        "quantity": 2,
+        "matches": [],
+        "Receta": "c2d562ae-e4c9-4927-a053-c2b4c5e08806"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-09-29T22:39:37.096Z",
+      "recibido": 10000,
+      "entregado": 2000
+    },
+    "Time": "5:39:26 PM"
+  },
+  {
+    "_id": "017a929e-b381-4a23-9848-b1abe6bbb553",
+    "Date": 45929.999814814815,
+    "Total_Ingreso": 36500,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "d22d532e-df54-4401-908e-117c96b70e38",
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 3,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e"
+      },
+      {
+        "id": "8f3a5514-a3ca-4c96-8636-497e4b306ee6",
+        "NombreES": "Galletas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null
+      },
+      {
+        "id": "fb88202b-b0a9-4d30-8588-c800093ab3f3",
+        "NombreES": "Croissant de queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "2bac2938-6e4d-47a9-a829-dcf2459a13ef"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-09-30T23:46:04.334Z",
+      "recibido": 50000,
+      "entregado": 13500
+    },
+    "Time": "5:15:09 PM"
+  },
+  {
+    "_id": "018002bb-a37d-4df8-84d4-da92ff9a46d8",
+    "Date": 45693.999814814815,
+    "Total_Ingreso": 91000,
+    "Productos": [
+      {
+        "NombreES": "Bowl de yogurt & frutos rojos",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "CERVEZA ARTESANAL",
+        "Precio": 16000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Espresso",
+        "Precio": 5500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "296b20c8-d5c4-45e8-81b6-f795fd9b3bdb",
+        "Foto": "https://drive.google.com/thumbnail?id=1342eqjZjKk7TIzOzS63WUu37Ukb4fBGz&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tostadas de aguacate y huevo",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "22cae1e2-39bd-4121-a9c5-453057d06b92",
+        "Foto": "https://drive.google.com/thumbnail?id=14vwqTnm3e9iRQ-FiZ9kTk7R_0UNWsikZ&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Desayuno americano",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "ea57e97f-cd6e-48bd-996d-d60aaf0522e4",
+        "Foto": "https://drive.google.com/thumbnail?id=137jfKGoAACkBcl4953S_-9mdl-NVxK3t&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-06T17:34:27.263Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:33:20 PM"
+  },
+  {
+    "_id": "0184ef52-fce0-436d-91bf-c09b234fcadf",
+    "Date": 45759.999814814815,
+    "Total_Ingreso": 36000,
+    "Productos": [
+      {
+        "NombreES": "Croisant Jamon y Queso",
+        "Precio": 12500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a",
+        "Foto": null
+      },
+      {
+        "NombreES": "Soda limÃ³n & romero",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14QbAOiTVGkSva9qwpKej8Es766a4T41e&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tinto",
+        "Precio": 4500,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "f6b22292-c67e-4876-b098-64d7aaf12f9c",
+        "Foto": null
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-04-13T17:17:45.367Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:05:36 PM"
+  },
+  {
+    "_id": "018c967a-a498-4f8c-9e27-6d3771ee8303",
+    "Date": 45897.999814814815,
+    "Total_Ingreso": 14000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "fb88202b-b0a9-4d30-8588-c800093ab3f3",
+        "NombreES": "Croissant de queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "2bac2938-6e4d-47a9-a829-dcf2459a13ef"
+      },
+      {
+        "id": "3f5d73af-70a9-4ce2-862c-bf8caf450c99",
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-08-29T17:15:43.747Z",
+      "recibido": 14000,
+      "entregado": 0
+    },
+    "Time": "12:04:38 PM"
+  },
+  {
+    "_id": "018cd3b0-9191-493e-b202-6fab171fdef9",
+    "Date": 45855.999814814815,
+    "Total_Ingreso": 13500,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Galletas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=13bozO9EXdWgndtpKKBYv5mIbhe5qUDO2&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-07-18T19:03:18.536Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "2:02:27 PM"
+  },
+  {
+    "_id": "019d4f5e-40eb-43bb-bae4-b28ce787b1e2",
+    "Date": 45680.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-01-24T21:11:27.424Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "4:10:39 PM"
+  },
+  {
+    "_id": "01ae4242-adcd-4145-9d18-020c87e810a8",
+    "Date": 45816.999814814815,
+    "Total_Ingreso": 45000,
+    "Productos": [
+      {
+        "NombreES": "Palito de Queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "55b9f6c5-3091-4ad7-88f3-2465ff080a7d",
+        "Foto": null
+      },
+      {
+        "NombreES": "SÃ¡nduche de pollo ",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "a2dd8bef-8e45-4a0c-a957-672bbe5f6ae8",
+        "Foto": "https://drive.google.com/thumbnail?id=14jauOCvNYO2HUNV3d9kaBjZMKVSMtG_3&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-06-10T00:21:46.781Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "6:49:05 PM"
+  },
+  {
+    "_id": "01bafa27-5af0-4907-a7c6-67ac8c90de43",
+    "Date": 45705.999814814815,
+    "Total_Ingreso": 33000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Torta de zanahoria",
+        "Precio": 13000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "e52d2c8e-11a4-4199-a80b-bb001cb6f0d3",
+        "Foto": "https://drive.google.com/thumbnail?id=14yqDXLBGP5s7g87lQIj9iTa7R2MFUcjB&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Torta de banano y chocolate",
+        "Precio": 12000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=153U_H5x5NfnQybSlbyRxt9ALG_J2YkD5&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-18T21:26:31.102Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "4:09:31 PM"
+  },
+  {
+    "_id": "01bb0840-d78d-4d33-98ea-dfea222856f7",
+    "Date": 45855.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-07-18T18:38:25.606Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "1:38:19 PM"
+  },
+  {
+    "_id": "01c490aa-6a9b-43c1-984e-09ed4d7b1f4c",
+    "Date": 45810.999814814815,
+    "Total_Ingreso": 10000,
+    "Productos": [
+      {
+        "NombreES": "Soda frutos rojos",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "d12f9886-5f4f-4da8-ba4c-675c1dc41192",
+        "Foto": "https://drive.google.com/thumbnail?id=14RhblcK4pH4xrL741hQgMWj0nOrfx2ei&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-03T21:41:26.834Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "4:23:12 PM"
+  },
+  {
+    "_id": "01cff4e8-d359-406b-92a9-8ce7fa736df3",
+    "Date": 45805.999814814815,
+    "Total_Ingreso": 39000,
+    "Productos": [
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": "1",
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tarta Basca",
+        "Precio": 14000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-05-29T20:14:33.344Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "3:13:35 PM"
+  },
+  {
+    "_id": "01e4c2a7-1dd9-4617-af72-dfc14c003221",
+    "Date": 45855.999814814815,
+    "Total_Ingreso": 49500,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Palito de Queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "55b9f6c5-3091-4ad7-88f3-2465ff080a7d",
+        "Foto": null
+      },
+      {
+        "NombreES": "Huevos revueltos pericos",
+        "Precio": 19000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "1b50551d-4cdd-4f59-afcb-4e2644742a9c",
+        "Foto": "https://drive.google.com/thumbnail?id=14BNxp-LhToaEoeSJoZoSKkUSwMJq9JK-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Guandolo jengibre",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "e93c1a5e-d771-4d1b-b48c-38df99aebb2f",
+        "Foto": "https://drive.google.com/thumbnail?id=13bWSkystLXwKHS5f9SWsa1zl8O0Ot2HV&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 5,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-07-19T00:01:52.260Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "7:00:00 PM"
+  },
+  {
+    "_id": "01e9c821-701b-4c2f-910b-9375e7745556",
+    "Date": 45747.999814814815,
+    "Total_Ingreso": 56500,
+    "Productos": [
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Huevos revueltos 2 quesos",
+        "Precio": 19000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "63c583d3-b920-4700-b53a-7cabd79cf4a1",
+        "Foto": "https://drive.google.com/thumbnail?id=14BNxp-LhToaEoeSJoZoSKkUSwMJq9JK-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Agua en Botella Con Gas",
+        "Precio": 3500,
+        "quantity": "3",
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Rollo de canela",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14vp7k3GN0Ja4TEGy_wlfXUIHRxznYABB&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-04-01T16:59:55.563Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:39:24 AM"
+  },
+  {
+    "_id": "020cffab-0d2a-4674-a97d-0aeec38eb5ba",
+    "Date": 45851.999814814815,
+    "Total_Ingreso": 14000,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Palito de Queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "55b9f6c5-3091-4ad7-88f3-2465ff080a7d",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-07-15T00:55:54.199Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "7:55:47 PM"
+  },
+  {
+    "_id": "0218cda7-e80d-4271-9c9f-0a748e4e0d10",
+    "Date": 45767.999814814815,
+    "Total_Ingreso": 22500,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Pan de masa madre",
+        "Precio": 2500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "b67e5df7-e6ca-43cf-a9d1-190a694fd613",
+        "Foto": null
+      },
+      {
+        "NombreES": "Adicion Queso Mozzarella",
+        "Precio": 4000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-22T00:31:09.160Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "7:29:46 PM"
+  },
+  {
+    "_id": "021abbeb-6c10-41ba-870d-c126f0521394",
+    "Date": 45811.999814814815,
+    "Total_Ingreso": 6000,
+    "Productos": [
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-04T15:48:22.500Z",
+      "recibido": 6000,
+      "entregado": 0
+    },
+    "Time": "10:09:07 AM"
+  },
+  {
+    "_id": "021c34bd-8c96-4ff5-a23c-067dc77d87cc",
+    "Date": 45698.999814814815,
+    "Total_Ingreso": 13000,
+    "Productos": [
+      {
+        "NombreES": "Pan de chocolate",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "73ae57ca-2dc4-4fd2-9058-c47cfde8ef58",
+        "Foto": "https://drive.google.com/thumbnail?id=13G2G_6bTpCGvLoNE4ALma0t8CjZ9uTFN&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "V60",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "a9309ddc-c3ac-46c1-bb28-78995220ef0a",
+        "Foto": "https://drive.google.com/thumbnail?id=16ga-U3tWUT2dlKQUq3GTGHdDg9mlOnut&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-11T21:56:42.511Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "4:10:30 PM"
+  },
+  {
+    "_id": "021e7bb1-620f-44e5-882b-2471f1fb96ca",
+    "Date": 45723.999814814815,
+    "Total_Ingreso": 8000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 6,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-03-08T17:38:52.419Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:38:46 PM"
+  },
+  {
+    "_id": "02296367-4514-412c-8dab-893176eef6a2",
+    "Date": 45753.999814814815,
+    "Total_Ingreso": 44000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-04-07T18:29:50.625Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "1:29:08 PM"
+  },
+  {
+    "_id": "02324e80-d0bd-46ef-9c01-453daeaecb6c",
+    "Date": 45890.999814814815,
+    "Total_Ingreso": 34000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "ffe5d477-f546-47cf-aec7-18d61f6362e5",
+        "NombreES": "Milo",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "3c4ed275-1c40-44c5-8bbe-e6c2eef2d933"
+      },
+      {
+        "id": "61116301-6ab8-4092-a4f8-db91adb1bd05",
+        "NombreES": "Tostadas francesas",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null
+      },
+      {
+        "id": "89f999a0-c7e7-466e-bf9a-da0a3d1ec15d",
+        "NombreES": "Agua en Botella Sin Gas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-08-22T18:44:29.740Z",
+      "recibido": 34000,
+      "entregado": 0
+    },
+    "Time": "10:14:46 AM"
+  },
+  {
+    "_id": "023803a7-39e9-485b-99bd-22da8c45f8c8",
+    "Date": 45686.999814814815,
+    "Total_Ingreso": 22500,
+    "Productos": [
+      {
+        "NombreES": "Pan de masa madre",
+        "Precio": 2500,
+        "quantity": "9",
+        "matches": [],
+        "Receta": "b67e5df7-e6ca-43cf-a9d1-190a694fd613",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-01-30T23:42:09.361Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "6:42:01 PM"
+  },
+  {
+    "_id": "023d50bd-d53b-4511-bc7c-f7ded11a389b",
+    "Date": 45725.999814814815,
+    "Total_Ingreso": 66000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": "3",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-03-10T19:40:05.020Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "2:39:52 PM"
+  },
+  {
+    "_id": "024ba1c2-34eb-434b-b3fa-b361b42b060c",
+    "Date": 45679.999814814815,
+    "Total_Ingreso": 28500,
+    "Productos": [
+      {
+        "NombreES": "Latte en hielo de espresso",
+        "Precio": 8500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "af19c51e-daeb-49de-b71b-14f693e32126",
+        "Foto": "https://drive.google.com/thumbnail?id=13ix9vBSZNWqID9N0SkqwAJ1WVdtJF-qT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      }
+    ],
+    "Cliente": "SEÃORA SHORTS",
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-01-23T17:22:08.042Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:27:07 AM"
+  },
+  {
+    "_id": "025eba93-37d3-4a71-981e-c7f4c9533fc8",
+    "Date": 45788.999814814815,
+    "Total_Ingreso": 198000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": "5",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      },
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Torta chocolate & moras",
+        "Precio": 14000,
+        "quantity": "4",
+        "matches": [],
+        "Receta": "b0fc742d-c32a-426c-8351-030b208cbe2f",
+        "Foto": "https://lh3.googleusercontent.com/d/1Az_n0fWrBcwbB2CAtjD0l0Gfp0Dyz6ke=w1000-h1000"
+      },
+      {
+        "NombreES": "Jugos de frutas",
+        "Precio": 6000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "8d9aad32-242c-4809-854d-fb92d4e2d939",
+        "Foto": "https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-05-12T21:47:50.291Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "3:06:14 PM"
+  },
+  {
+    "_id": "026a9746-d142-4918-980c-e2ed2f7cb2d9",
+    "Date": 45832.999814814815,
+    "Total_Ingreso": 8000,
+    "Productos": [
+      {
+        "NombreES": "Pan Bola 90",
+        "Precio": 4000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": null,
+        "Foto": ""
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-25T18:45:12.121Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "1:44:49 PM"
+  },
+  {
+    "_id": "026aaca2-fff5-4d52-bb9e-debf8b1e6119",
+    "Date": 45928.999814814815,
+    "Total_Ingreso": 24000,
+    "Tip": 2000,
+    "Productos": [
+      {
+        "id": "056cf3b1-c18d-439b-b05d-74e583525903",
+        "NombreES": "SÃ¡nduche de pollo ",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "a2dd8bef-8e45-4a0c-a957-672bbe5f6ae8"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-09-29T21:51:43.825Z",
+      "recibido": 24000,
+      "entregado": 0
+    },
+    "Time": "3:56:16 PM"
+  },
+  {
+    "_id": "02762831-adab-4e18-8517-1930e942a90c",
+    "Date": 45697.999814814815,
+    "Total_Ingreso": 10000,
+    "Productos": [
+      {
+        "NombreES": "Palito de Queso",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Agua en Botella Sin Gas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 6,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-10T23:03:28.965Z",
+      "recibido": 20000,
+      "entregado": 0
+    },
+    "Time": "6:03:18 PM"
+  },
+  {
+    "_id": "027cabe0-ac4c-41d1-b779-f5a7644b5aca",
+    "Date": 45753.999814814815,
+    "Total_Ingreso": 48500,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Huevos revueltos pericos",
+        "Precio": 19000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "1b50551d-4cdd-4f59-afcb-4e2644742a9c",
+        "Foto": "https://drive.google.com/thumbnail?id=14BNxp-LhToaEoeSJoZoSKkUSwMJq9JK-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-04-08T00:52:51.819Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "7:51:55 PM"
+  },
+  {
+    "_id": "027f9d22-adcd-4370-a4f1-ab56197f7f6d",
+    "Date": 45721.999814814815,
+    "Total_Ingreso": 15000,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-07T00:13:52.747Z",
+      "recibido": 20000,
+      "entregado": 0
+    },
+    "Time": "6:46:43 PM"
+  },
+  {
+    "_id": "028c560b-3783-4b07-a975-86c01d574bd8",
+    "Date": 45673.999814814815,
+    "Total_Ingreso": 53000,
+    "Productos": [
+      {
+        "NombreES": "Soda frutos rojos",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "d12f9886-5f4f-4da8-ba4c-675c1dc41192",
+        "Foto": "https://drive.google.com/thumbnail?id=14RhblcK4pH4xrL741hQgMWj0nOrfx2ei&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "SÃ¡nduche de pollo ",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "a2dd8bef-8e45-4a0c-a957-672bbe5f6ae8",
+        "Foto": "https://drive.google.com/thumbnail?id=14jauOCvNYO2HUNV3d9kaBjZMKVSMtG_3&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "SÃ¡nduche pepperoni",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14jt0hinWH04q6Tl_RvcTXnWhRU1QDfrW&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-01-17T14:47:27.549Z",
+      "recibido": 55000,
+      "entregado": 0
+    },
+    "Time": "9:01:54 AM"
+  },
+  {
+    "_id": "028d8dc3-be89-4b92-a24f-83678c9b387d",
+    "Date": 45686.999814814815,
+    "Total_Ingreso": 26000,
+    "Productos": [
+      {
+        "NombreES": "Jugos de frutas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "8d9aad32-242c-4809-854d-fb92d4e2d939",
+        "Foto": "https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "SÃ¡nduche capresse",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-01-30T22:01:50.040Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "5:01:35 PM"
+  },
+  {
+    "_id": "0298634d-e72b-4ee5-946e-14bdfe610236",
+    "Date": 45709.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-22T18:38:07.632Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "1:38:00 PM"
+  },
+  {
+    "_id": "0299c431-76bf-4986-947c-40e5eba4ce34",
+    "Date": 45723.999814814815,
+    "Total_Ingreso": 26000,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": "1",
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 6,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-03-08T17:51:38.886Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:50:51 PM"
+  },
+  {
+    "_id": "029b6dff-699b-4059-bc31-65962fc543c7",
+    "Date": 45900.999814814815,
+    "Total_Ingreso": 140000,
+    "Tip": 11000,
+    "Productos": [
+      {
+        "id": "81f0ece1-869a-4daa-8048-68876f8c7a56",
+        "NombreES": "Huevos revueltos pericos",
+        "Precio": 19000,
+        "quantity": 3,
+        "matches": [],
+        "Receta": "1b50551d-4cdd-4f59-afcb-4e2644742a9c"
+      },
+      {
+        "id": "205c9730-8e4b-4d57-a077-329daacb0399",
+        "NombreES": "Palito de Queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "55b9f6c5-3091-4ad7-88f3-2465ff080a7d"
+      },
+      {
+        "id": "17f1446c-08f5-419e-9e78-26586ebeb14b",
+        "NombreES": "Adicion Arepa",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null
+      },
+      {
+        "id": "4cc2a3e9-4c26-4bdf-b2b7-3f83efd609fc",
+        "NombreES": "AdiciÃ³n Hogao",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "74dc2d14-84bf-493d-9565-7e41967973e1"
+      },
+      {
+        "id": "fb88202b-b0a9-4d30-8588-c800093ab3f3",
+        "NombreES": "Croissant de queso",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "2bac2938-6e4d-47a9-a829-dcf2459a13ef"
+      },
+      {
+        "id": "f2a90bbe-1ca3-4537-9747-171066130ca6",
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 4,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247"
+      },
+      {
+        "id": "083ac46f-23d3-45e7-8821-1d664249982a",
+        "NombreES": "Chocolate caliente",
+        "Precio": 9000,
+        "quantity": 2,
+        "matches": [],
+        "Receta": "70aa12b3-483e-4c7d-bfff-3a8b0ba53615"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-09-01T14:50:59.397Z",
+      "recibido": 140000,
+      "entregado": 0
+    },
+    "Time": "9:32:45 AM"
+  },
+  {
+    "_id": "02a3306f-0b72-4126-a59a-302283a62ad4",
+    "Date": 45748.999814814815,
+    "Total_Ingreso": 10000,
+    "Productos": [
+      {
+        "NombreES": "Pilsen, Ã¡guila & poker",
+        "Precio": 5000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "09d85a75-bf25-4c21-a556-9b392f433a7d",
+        "Foto": "https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-02T14:41:51.422Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "9:41:27 AM"
+  },
+  {
+    "_id": "02ad0ca0-e839-4912-9bbf-16adeb7a7bc1",
+    "Date": 45733.999814814815,
+    "Total_Ingreso": 36500,
+    "Productos": [
+      {
+        "NombreES": "Latte espuma de cafÃ©",
+        "Precio": 10000,
+        "quantity": "1",
+        "matches": [],
+        "Receta": "1edf9b5c-e6db-4764-8194-2fee75fb1543",
+        "Foto": "https://drive.google.com/thumbnail?id=145pVTlR7ztzWhgBn3TSTaTSP-lq81yFW&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": "1",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      },
+      {
+        "NombreES": "Tinto",
+        "Precio": 4500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "f6b22292-c67e-4876-b098-64d7aaf12f9c",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-03-18T22:26:38.518Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:32:12 PM"
+  },
+  {
+    "_id": "02d1a68e-b4e1-4317-89b9-7e88e1a5c409",
+    "Date": 45715.999814814815,
+    "Total_Ingreso": 6000,
+    "Productos": [
+      {
+        "NombreES": "Americano frÃ­o",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "6decaecd-16eb-413f-a3bb-6630838581b0",
+        "Foto": "https://drive.google.com/thumbnail?id=129dEVlWMuaJ-xQbvl8vFmGqnQUKjbWD6&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 5,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-28T16:54:07.861Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "11:30:53 AM"
+  },
+  {
+    "_id": "02e193f3-0dd5-4c6f-a633-51d967635d14",
+    "Date": 45874.999814814815,
+    "Total_Ingreso": 44000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-08-06T19:05:30.046Z",
+      "recibido": 100000,
+      "entregado": 0
+    },
+    "Time": "2:05:21 PM"
+  },
+  {
+    "_id": "02e27abc-10d5-4995-966a-967d55c32257",
+    "Date": 45928.999814814815,
+    "Total_Ingreso": 36000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "f2a90bbe-1ca3-4537-9747-171066130ca6",
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 2,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247"
+      },
+      {
+        "id": "cb4cba82-764f-4b71-8d19-33fd93453ec2",
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 5,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-09-29T15:56:02.959Z",
+      "recibido": 36000,
+      "entregado": 0
+    },
+    "Time": "10:16:38 AM"
+  },
+  {
+    "_id": "02e4b94c-98ce-425c-8ddf-d11835126cec",
+    "Date": 45710.999814814815,
+    "Total_Ingreso": 8000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-23T17:42:01.027Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "12:41:29 PM"
+  },
+  {
+    "_id": "02fb0ff5-8439-4ca0-9735-290ae48297b6",
+    "Date": 45810.999814814815,
+    "Total_Ingreso": 6000,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-03T15:43:58.083Z",
+      "recibido": 10000,
+      "entregado": 0
+    },
+    "Time": "10:43:50 AM"
+  },
+  {
+    "_id": "03096c29-99d3-4971-91d4-0622d2e6826d",
+    "Date": 45678.999814814815,
+    "Total_Ingreso": 21000,
+    "Tip": 2000,
+    "Productos": [
+      {
+        "NombreES": "Pilsen, Ã¡guila & poker",
+        "Precio": 5000,
+        "quantity": "3",
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14Bu4LSSlVKW5lr_HbdEjkrJJ8udkXISA&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Soda clÃ¡sica",
+        "Precio": 4000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "c2d562ae-e4c9-4927-a053-c2b4c5e08806",
+        "Foto": "https://drive.google.com/thumbnail?id=14UQhR7gqAd2wV5B7L0PhXccAv7Le4_3u&sz=w1000-h1000"
+      }
+    ],
+    "Cliente": "pareja",
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-01-22T23:50:11.396Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "5:13:49 PM"
+  },
+  {
+    "_id": "031fa9f4-1b15-4a4d-8a9a-3ee440826859",
+    "Date": 45811.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-04T18:07:19.367Z",
+      "recibido": 22000,
+      "entregado": 0
+    },
+    "Time": "1:07:14 PM"
+  },
+  {
+    "_id": "032b522e-30de-4f10-bbde-d501d7d14244",
+    "Date": 45775.999814814815,
+    "Total_Ingreso": 28000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Pancakes huevo & tocino ",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "cac69545-6096-4fb0-837e-84b27dd8acd8",
+        "Foto": "https://drive.google.com/thumbnail?id=14Dz-EuTtNG9_9ettdtBAYwc3Wh0syvCY&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-04-29T16:39:01.225Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:37:39 AM"
+  },
+  {
+    "_id": "032fd68a-9e66-4b59-b3f1-aff9b7f22844",
+    "Date": 45770.999814814815,
+    "Total_Ingreso": 6000,
+    "Productos": [
+      {
+        "NombreES": "Jugos de frutas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "8d9aad32-242c-4809-854d-fb92d4e2d939",
+        "Foto": "https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Transferencia",
+      "hora": "2025-04-24T15:58:04.243Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "10:57:47 AM"
+  },
+  {
+    "_id": "033b1b2f-56d5-4db3-9385-c14221a8f945",
+    "Date": 45775.999814814815,
+    "Total_Ingreso": 9000,
+    "Productos": [
+      {
+        "NombreES": "Chocolate caliente",
+        "Precio": 9000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "70aa12b3-483e-4c7d-bfff-3a8b0ba53615",
+        "Foto": "https://drive.google.com/thumbnail?id=12k8hWeRU0BRQKAW-yq1N0l-gB_j-JT7b&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-29T22:02:16.539Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "3:58:34 PM"
+  },
+  {
+    "_id": "0341f6ab-7203-4b03-b3f8-f4e069fed4ac",
+    "Date": 45840.999814814815,
+    "Total_Ingreso": 16000,
+    "Productos": [
+      {
+        "NombreES": "Torta de zanahoria",
+        "Precio": 13000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "e52d2c8e-11a4-4199-a80b-bb001cb6f0d3",
+        "Foto": "https://drive.google.com/thumbnail?id=14yqDXLBGP5s7g87lQIj9iTa7R2MFUcjB&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-07-03T23:04:30.430Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "5:48:49 PM"
+  },
+  {
+    "_id": "0346ec23-c165-4cc0-bfad-174a0d7b10f9",
+    "Date": 45848.999814814815,
+    "Total_Ingreso": 72500,
+    "Productos": [
+      {
+        "NombreES": "Croissant de queso",
+        "Precio": 7000,
+        "quantity": "3",
+        "matches": [],
+        "Receta": "2bac2938-6e4d-47a9-a829-dcf2459a13ef",
+        "Foto": "https://drive.google.com/thumbnail?id=13E74OeYcWg7XEy9U3fFyD34TNLtSQNHO&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Croisant Jamon y Queso",
+        "Precio": 12500,
+        "quantity": "3",
+        "matches": [],
+        "Receta": "d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a",
+        "Foto": null
+      },
+      {
+        "NombreES": "Tarta Basca",
+        "Precio": 14000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-07-11T21:46:53.773Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "3:47:38 PM"
+  },
+  {
+    "_id": "0352b10e-ffdb-42a1-beb8-a6562e3ed3ce",
+    "Date": 45904.999814814815,
+    "Total_Ingreso": 46500,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "99611378-cd50-44a1-8dbf-580af18e50ef",
+        "NombreES": "FrappÃ©",
+        "Precio": 12000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "b999774e-473d-460a-992b-db7f0b674d6a"
+      },
+      {
+        "id": "59af62cd-9011-4c1c-b4bd-a966c1a584ba",
+        "NombreES": "Croisant Jamon y Queso",
+        "Precio": 12500,
+        "quantity": 2,
+        "matches": [],
+        "Receta": "d33bb9fd-eccb-41bd-bcde-c1c6a3ea5c5a"
+      },
+      {
+        "id": "d22d532e-df54-4401-908e-117c96b70e38",
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e"
+      },
+      {
+        "id": "322a5ab2-bc86-4e0d-8f6a-d6362bdc869a",
+        "NombreES": "Adicion Leche Almendras",
+        "Precio": 2000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-09-05T22:09:54.279Z",
+      "recibido": 50000,
+      "entregado": 3500
+    },
+    "Time": "5:08:14 PM"
+  },
+  {
+    "_id": "036ba29f-88f3-43f9-92fc-2d4542ed780a",
+    "Date": 45696.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "TÃ© chai latte",
+        "Precio": 10000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "cba05045-135f-46fd-9d74-1c5496ccba1e",
+        "Foto": "https://drive.google.com/thumbnail?id=171fATH58EPwz6YE8IDlWJfxlz7gQ7dPh&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Adicion Leche Almendras",
+        "Precio": 2000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-09T19:17:08.858Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "2:17:00 PM"
+  },
+  {
+    "_id": "036cfcd3-28e3-42e2-b913-844ec62bd79f",
+    "Date": 45783.999814814815,
+    "Total_Ingreso": 41000,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Bombom",
+        "Precio": 7000,
+        "quantity": "4",
+        "matches": [],
+        "Receta": "306b473f-85bc-40f5-a1c1-77ea4ed577ca",
+        "Foto": "https://drive.google.com/thumbnail?id=12bitzHA54OYSnBFvVWS0pC0tZUrxIh7h&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Espresso",
+        "Precio": 5500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "296b20c8-d5c4-45e8-81b6-f795fd9b3bdb",
+        "Foto": "https://drive.google.com/thumbnail?id=1342eqjZjKk7TIzOzS63WUu37Ukb4fBGz&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-05-07T19:19:30.670Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "2:18:46 PM"
+  },
+  {
+    "_id": "036ecbf4-58b9-478b-ab5f-9cd9b20ea08d",
+    "Date": 45717.999814814815,
+    "Total_Ingreso": 9000,
+    "Productos": [
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Agua en Botella Sin Gas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-03-02T16:41:06.104Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:40:50 AM"
+  },
+  {
+    "_id": "036feaab-fcf6-49d1-8dbd-cea4048c566e",
+    "Date": 45699.999814814815,
+    "Total_Ingreso": 31500,
+    "Productos": [
+      {
+        "NombreES": "Huevos shakshukas",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "df879ac8-8d81-4381-8194-438d3b20062b",
+        "Foto": "https://drive.google.com/thumbnail?id=13ly72tvOsDiZXoXYFkVtGtjg4loZWdpT&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Espresso",
+        "Precio": 5500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "296b20c8-d5c4-45e8-81b6-f795fd9b3bdb",
+        "Foto": "https://drive.google.com/thumbnail?id=1342eqjZjKk7TIzOzS63WUu37Ukb4fBGz&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Adicion Aguacate",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "ffaf45b8-2d47-4a27-ab46-14787858c8a4",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-12T22:04:09.083Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "5:03:15 PM"
+  },
+  {
+    "_id": "03721d34-66f8-4859-8046-76906ce4272d",
+    "Date": 45680.999814814815,
+    "Total_Ingreso": 42000,
+    "Productos": [
+      {
+        "NombreES": "Tostadas de aguacate y huevo",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "22cae1e2-39bd-4121-a9c5-453057d06b92",
+        "Foto": "https://drive.google.com/thumbnail?id=14vwqTnm3e9iRQ-FiZ9kTk7R_0UNWsikZ&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "SÃ¡nduche pepperoni",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14jt0hinWH04q6Tl_RvcTXnWhRU1QDfrW&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-01-24T17:25:36.745Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "11:17:21 AM"
+  },
+  {
+    "_id": "03748e39-f833-4b8c-9767-c4f42590d844",
+    "Date": 45743.999814814815,
+    "Total_Ingreso": 74000,
+    "Productos": [
+      {
+        "NombreES": "Jugos de frutas",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "8d9aad32-242c-4809-854d-fb92d4e2d939",
+        "Foto": "https://drive.google.com/thumbnail?id=13kQAHaLQK4bBfAJho4SjnXhXn1lJ0FWf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      },
+      {
+        "NombreES": "Malteada de cafÃ©",
+        "Precio": 19000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "1e81978a-d926-4621-a564-fc542ea8f896",
+        "Foto": "https://drive.google.com/thumbnail?id=140XCuz_FedXqGOOgqxeTfTs4FlXrZQ-b&sz=w1000-h1000"
+      }
+    ],
+    "Cliente": "SEÃORA",
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-03-28T21:52:44.105Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "1:02:22 PM"
+  },
+  {
+    "_id": "037d4e8b-fd9f-4f0f-b9fa-40e1584f4916",
+    "Date": 45802.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-05-26T23:43:44.018Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "6:43:37 PM"
+  },
+  {
+    "_id": "037d9e4d-9181-4dd9-9f12-9ee7e498e834",
+    "Date": 45868.999814814815,
+    "Total_Ingreso": 20000,
+    "Productos": [
+      {
+        "NombreES": "Tarta Basca",
+        "Precio": 14000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-07-31T23:27:01.073Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "5:37:27 PM"
+  },
+  {
+    "_id": "03849fa8-71dd-4e34-a5b1-1346b7a59da1",
+    "Date": 45887.999814814815,
+    "Total_Ingreso": 6500,
+    "Tip": -1000,
+    "Productos": [
+      {
+        "NombreES": "Tinto",
+        "Precio": 4500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "f6b22292-c67e-4876-b098-64d7aaf12f9c",
+        "Foto": null
+      },
+      {
+        "NombreES": "AromÃ¡ticas",
+        "Precio": 3000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "751ce050-0832-4408-ba99-8b2af4ddd35c",
+        "Foto": "https://drive.google.com/thumbnail?id=179lMvFYu7Bx9lrwXzE_YzWlUP5IE9rf4&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-08-19T22:18:32.395Z",
+      "recibido": 100000,
+      "entregado": 0
+    },
+    "Time": "5:18:23 PM"
+  },
+  {
+    "_id": "038a45b6-ee14-4727-919e-0d3e9cabb479",
+    "Date": 45763.999814814815,
+    "Total_Ingreso": 7500,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-17T17:32:05.998Z",
+      "recibido": 7500,
+      "entregado": 0
+    },
+    "Time": "12:31:45 PM"
+  },
+  {
+    "_id": "0393577f-0cb0-42fe-a3fa-397958b6a483",
+    "Date": 45824.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 5,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-06-17T21:58:57.951Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "4:58:46 PM"
+  },
+  {
+    "_id": "03a31a3b-7815-44f2-aa97-1727496020dd",
+    "Date": 45900.999814814815,
+    "Total_Ingreso": 176000,
+    "Tip": 0,
+    "Productos": [
+      {
+        "id": "daf9f710-9715-4b93-b23e-d5196097ed3d",
+        "NombreES": "Almuerzo",
+        "Precio": 22000,
+        "quantity": 8,
+        "matches": [],
+        "Receta": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-09-02T00:34:17.922Z",
+      "recibido": 176000,
+      "entregado": 0
+    },
+    "Time": "7:34:12 PM"
+  },
+  {
+    "_id": "03a3f6c5-f3bc-4a2f-abf1-d7c3239a20cd",
+    "Date": 45692.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "Menu",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-02-05T18:12:52.070Z",
+      "recibido": 22000,
+      "entregado": 0
+    },
+    "Time": "1:12:45 PM"
+  },
+  {
+    "_id": "03e3ed6d-2129-4f77-ae3e-98b8d7aea3eb",
+    "Date": 45750.999814814815,
+    "Total_Ingreso": 35500,
+    "Tip": -4000,
+    "Productos": [
+      {
+        "NombreES": "Pie de manzana",
+        "Precio": 16000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=1Az6kUgHQb4qMKXnPBBSDYqVCBB1kzrPt&sz=w1000-h1000\n"
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": "1",
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 4,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-04-04T23:17:52.355Z",
+      "recibido": 50000,
+      "entregado": 0
+    },
+    "Time": "5:40:09 PM"
+  },
+  {
+    "_id": "03ee14a4-5c7b-4a83-bdab-7ea1705b97ea",
+    "Date": 45680.999814814815,
+    "Total_Ingreso": 196500,
+    "Tip": -10000,
+    "Productos": [
+      {
+        "NombreES": "SÃ¡nduche de pollo ",
+        "Precio": 22000,
+        "quantity": "5",
+        "matches": [],
+        "Receta": "a2dd8bef-8e45-4a0c-a957-672bbe5f6ae8",
+        "Foto": "https://drive.google.com/thumbnail?id=14jauOCvNYO2HUNV3d9kaBjZMKVSMtG_3&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "SÃ¡nduche pepperoni",
+        "Precio": 20000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=14jt0hinWH04q6Tl_RvcTXnWhRU1QDfrW&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Chorizo y Mote",
+        "Precio": 19000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "52bd9ee4-ac6f-4997-b266-ea61e3858647",
+        "Foto": "https://drive.google.com/thumbnail?id=13xzpKD4PTi5-WzAIdg3LS8lpDBD7EeH1&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": "5",
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Americano frÃ­o",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "6decaecd-16eb-413f-a3bb-6630838581b0",
+        "Foto": "https://drive.google.com/thumbnail?id=129dEVlWMuaJ-xQbvl8vFmGqnQUKjbWD6&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Jugo de Naranja",
+        "Precio": 8000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "130fffe0-a93c-406a-b13a-01f5942383ca",
+        "Foto": null
+      },
+      {
+        "NombreES": "Americano",
+        "Precio": 6000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "29b92e76-3d68-4e38-a814-f841ea6e411d",
+        "Foto": "https://drive.google.com/thumbnail?id=125z7FsXw1T5F-5yMe5mNhU6eezN-5b-r&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-01-25T01:16:14.887Z",
+      "recibido": 200000,
+      "entregado": 0
+    },
+    "Time": "8:08:26 PM"
+  },
+  {
+    "_id": "03f8adf6-cd41-47c2-9b2f-919211d14403",
+    "Date": 45695.999814814815,
+    "Total_Ingreso": 31000,
+    "Productos": [
+      {
+        "NombreES": "Latte",
+        "Precio": 8000,
+        "quantity": "2",
+        "matches": [],
+        "Receta": "fef3ffe8-e787-4acf-a3e0-9f288aeb2247",
+        "Foto": "https://drive.google.com/thumbnail?id=16eJkiyv2PchZcQwRmfc1duKsliIt-gGf&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Adicion Leche Almendras",
+        "Precio": 2000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      },
+      {
+        "NombreES": "Torta de zanahoria",
+        "Precio": 13000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "e52d2c8e-11a4-4199-a80b-bb001cb6f0d3",
+        "Foto": "https://drive.google.com/thumbnail?id=14yqDXLBGP5s7g87lQIj9iTa7R2MFUcjB&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-02-08T17:38:53.176Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:32:36 PM"
+  },
+  {
+    "_id": "0402e1a3-afc5-4255-85b9-a3be6fe7b740",
+    "Date": 45863.999814814815,
+    "Total_Ingreso": 22000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 3,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-07-26T20:44:29.217Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:43:31 PM"
+  },
+  {
+    "_id": "040b1037-cc32-4391-9beb-ab8304b3f0e3",
+    "Date": 45856.999814814815,
+    "Total_Ingreso": 66500,
+    "Productos": [
+      {
+        "NombreES": "Chorizo y Mote",
+        "Precio": 19000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "52bd9ee4-ac6f-4997-b266-ea61e3858647",
+        "Foto": "https://drive.google.com/thumbnail?id=13xzpKD4PTi5-WzAIdg3LS8lpDBD7EeH1&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tostadas francesas",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": null,
+        "Foto": "https://drive.google.com/thumbnail?id=15a7ESrjMzHa5TaehGLsFJR14vtVIkwnP&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Bombom",
+        "Precio": 7000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "306b473f-85bc-40f5-a1c1-77ea4ed577ca",
+        "Foto": "https://drive.google.com/thumbnail?id=12bitzHA54OYSnBFvVWS0pC0tZUrxIh7h&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Coca Cola 400 ml",
+        "Precio": 5500,
+        "quantity": "2",
+        "matches": [],
+        "Receta": null,
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-07-19T15:30:24.719Z",
+      "recibido": 70000,
+      "entregado": 0
+    },
+    "Time": "8:51:45 AM"
+  },
+  {
+    "_id": "0410365d-d465-4fdb-8f0c-600c98768cab",
+    "Date": 45733.999814814815,
+    "Total_Ingreso": 12000,
+    "Productos": [
+      {
+        "NombreES": "Capuchino",
+        "Precio": 7500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "60f5928f-6218-459e-a024-ef2ae4ca4e1e",
+        "Foto": "https://drive.google.com/thumbnail?id=12sUJr9DxvjwIfEhwWSjAjyfdjrTEmh9-&sz=w1000-h1000"
+      },
+      {
+        "NombreES": "Tinto",
+        "Precio": 4500,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "f6b22292-c67e-4876-b098-64d7aaf12f9c",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Efectivo",
+      "hora": "2025-03-18T14:10:51.377Z",
+      "recibido": 20000,
+      "entregado": 0
+    },
+    "Time": "8:36:20 AM"
+  },
+  {
+    "_id": "042d074f-fba9-430c-9530-eeb2fa2d27ab",
+    "Date": 45800.999814814815,
+    "Total_Ingreso": 20000,
+    "Tip": -2000,
+    "Productos": [
+      {
+        "NombreES": "MenÃº del dÃ­a",
+        "Precio": 22000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "10a387ce-3c39-4a98-8464-05ad9c06570b",
+        "Foto": null
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 1,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-05-24T17:51:43.070Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "12:51:09 PM"
+  },
+  {
+    "_id": "04608e30-f83e-4296-85f7-02107c812d00",
+    "Date": 45803.999814814815,
+    "Total_Ingreso": 25000,
+    "Productos": [
+      {
+        "NombreES": "Madre Monte",
+        "Precio": 15000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "644c2747-4853-4bd2-92d1-7901800bfd50",
+        "Foto": null
+      },
+      {
+        "NombreES": "TÃ© chai latte",
+        "Precio": 10000,
+        "quantity": 1,
+        "matches": [],
+        "Receta": "cba05045-135f-46fd-9d74-1c5496ccba1e",
+        "Foto": "https://drive.google.com/thumbnail?id=171fATH58EPwz6YE8IDlWJfxlz7gQ7dPh&sz=w1000-h1000"
+      }
+    ],
+    "Pagado": "true",
+    "Mesa": 2,
+    "Pago_Info": {
+      "metodo": "Tarjeta",
+      "hora": "2025-05-27T14:53:59.835Z",
+      "recibido": 0,
+      "entregado": 0
+    },
+    "Time": "9:13:45 AM"
+  }
+]

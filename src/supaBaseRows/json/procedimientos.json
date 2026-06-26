@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "1dff09b7-d3e4-44ac-b1ff-3d913eef571e",
+    "DescripcionGeneral": "Para la correcta limpieza, desfieccion, fumigacion y mantenimiento de las mesas ",
+    "Categoria": "MESAS",
+    "Receta": "1dff09b7-d3e4-44ac-b1ff-3d913eef571e",
+    "tittle": "Limpieza de Mesas"
+  },
+  {
+    "_id": "5371e8d0-3229-4bb3-bffc-601e97e132d0",
+    "DescripcionGeneral": "por el cual se define la limpieza cotidiana del molino de cafÃ© y en casos de atasco ",
+    "Categoria": "CAFE",
+    "Receta": "5371e8d0-3229-4bb3-bffc-601e97e132d0",
+    "tittle": "Limpieza de Molino SAGE"
+  },
+  {
+    "_id": "89ea4d10-57ee-4b9a-941e-2e9107cd4ec4",
+    "DescripcionGeneral": "Para la correcta limpieza y desinfecciÃ³n de la mÃ¡quina de espresso.",
+    "Categoria": "CAFE",
+    "Receta": "89ea4d10-57ee-4b9a-941e-2e9107cd4ec4",
+    "tittle": "Limpieza y desinfecciÃ³n mÃ¡quina de esspreso"
+  },
+  {
+    "_id": "cfaf879f-dfae-4902-86af-367954cd0850",
+    "DescripcionGeneral": "El cual debe  ser leÃ­do y aprendido para el correcto manejo de ",
+    "Categoria": "COCINA",
+    "Receta": "cfaf879f-dfae-4902-86af-367954cd0850",
+    "tittle": "Lavado de neveras"
+  }
+]

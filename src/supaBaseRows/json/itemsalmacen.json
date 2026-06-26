@@ -1,0 +1,5707 @@
+[
+  {
+    "Nombre_del_producto": "Breva",
+    "CANTIDAD": 6,
+    "COSTO": 2000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "00cd9b6b-8c28-475d-beaa-e5d190d45a86",
+    "precioUnitario": 364,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Platano Verde",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "018f2746-6d2d-47e6-9d7b-d872017a417b",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "PezuÃ±a",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 9000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "035a8a13-d70b-4662-a17b-06512bc6d71d",
+    "precioUnitario": 9.83,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Semillas de girasol",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "1",
+      "maximo": "1",
+      "actual": "1"
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "05b4243d-e766-4dfa-b71b-649810f79423",
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "CANASTA_INFERIOR_COCINA",
+      "BODEGA": "CANASTA_INFERIOR_COCINA"
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "LAGARTO",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 30060,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "06864278-788a-4ab5-a4f3-271ecb93151c",
+    "precioUnitario": 32.83,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Granola",
+    "Area": "COCINA",
+    "CANTIDAD": 950,
+    "UNIDADES": "gr",
+    "COSTO": 12350,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "071644bd-9b9e-45ab-8792-2dbfe7fa44eb",
+    "precioUnitario": 14.2,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Queso feta",
+    "Area": "COCINA",
+    "CANTIDAD": 680,
+    "UNIDADES": "gr",
+    "COSTO": 41900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "09007b29-02dc-4a7e-9050-0478d75fc929",
+    "precioUnitario": 67.29,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pan Masa Madre Molde",
+    "Area": "COCINA",
+    "CANTIDAD": 10,
+    "UNIDADES": "un",
+    "COSTO": 16000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "PANADERIA",
+    "_id": "0a21d35a-695a-4be0-9afd-17354327fb27",
+    "precioUnitario": 1747.2,
+    "Proveedor": "d64ec06b-d178-4c14-a586-09093068bba6",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 10,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Ajo en Polvo",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "gr",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "0b57baf7-cd09-4c7f-a025-95be1c3ac7c0",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Agraz",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 15000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "0d975b58-eeb2-424e-8f8e-999804865e2e",
+    "precioUnitario": 32.76,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Miga de galleta",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 27700,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "0f2ddb36-2b70-4845-8c57-e8a142829afa",
+    "precioUnitario": 30.25,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "PIERNA ECONOMICA",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 18900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "0faf1b62-cff5-47c2-86ed-e7b4ff88746b",
+    "precioUnitario": 20.64,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Papa Capira",
+    "Area": "COCINA",
+    "CANTIDAD": 3000,
+    "UNIDADES": "gr",
+    "COSTO": 16000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "10dae854-9027-4b52-8530-afe73d637480",
+    "precioUnitario": 5.82,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Albaricoque",
+    "CANTIDAD": 150,
+    "UNIDADES": "gr",
+    "COSTO": 10000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "11cb13d3-eb12-415c-93d6-89a0e3c20104",
+    "precioUnitario": 72.8,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pelicula Alimento Chicle",
+    "Area": "COCINA",
+    "CANTIDAD": 200,
+    "UNIDADES": "NaN",
+    "COSTO": 13529,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "11d000ca-a9ca-43a1-bd29-7794907df0d9",
+    "precioUnitario": 73.87,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Le Brown",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "MARCA": [],
+    "_id": "126488b4-2b90-4972-bf8f-ac0a161e7427",
+    "Proveedor": "f0420472-ac96-4547-8e26-efa8878d4f44",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Club Dorada",
+    "CANTIDAD": 1,
+    "COSTO": 2500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "ENLATADOS",
+    "MARCA": [],
+    "_id": "1335a840-0102-4f70-904e-0709b8d5cd96",
+    "precioUnitario": 2730,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Crema de Queso",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 38000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 200
+    },
+    "GRUPO": "LACTEO",
+    "_id": "1370a860-f736-4ba1-9a2a-512e05dec5d4",
+    "precioUnitario": 82.99,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Clavo olor",
+    "Area": "COCINA",
+    "CANTIDAD": 10,
+    "UNIDADES": "gr",
+    "COSTO": 1850,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "13e0c964-81ba-47eb-8b75-afbad39d8c0b",
+    "precioUnitario": 202.02,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Peperoni",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 16950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "145227e1-73f6-4051-a2af-6086ff9f232d",
+    "precioUnitario": 37.02,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Contramuslos",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "MARCA": [],
+    "_id": "14bd5938-6484-48f6-b634-f66f18ba5346",
+    "precioUnitario": 0,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "Disponible"
+  },
+  {
+    "Nombre_del_producto": "Mozarrella de bufala",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 21400,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "14e37b66-d47a-429e-a42f-99cd64687185",
+    "precioUnitario": 46.74,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Arepa Mote Exito",
+    "Area": "COCINA",
+    "CANTIDAD": 5,
+    "UNIDADES": "un",
+    "COSTO": 2800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GUARNICION",
+    "_id": "1556fcf5-56c4-4967-a40e-7396547344bb",
+    "precioUnitario": 611.52,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pepino",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 940,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "15a9e237-6e12-4ca2-a38e-c1ed017252da",
+    "precioUnitario": 2.05,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Harina de trigo Multiproposito",
+    "Area": "COCINA",
+    "CANTIDAD": 2500,
+    "UNIDADES": "gr",
+    "COSTO": 11950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "HARINAS",
+    "_id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "precioUnitario": 5.22,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Mango TOMMY",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 4000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "17dadda9-824e-495f-8d7c-5eca5d57b312",
+    "precioUnitario": 4.37,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Sal de Cebolla",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "17f84f54-f8af-44f0-84ca-df81f9cfca50",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Tapa Domo Perf",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 10378,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "18060e52-bffd-4082-adcf-3cf7d527fa91",
+    "precioUnitario": 226.66,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Zuccinni",
+    "Area": "COCINA",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 3000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "188fcff0-c0b6-4b67-a5b2-9ec1392650a3",
+    "precioUnitario": 3276,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Carne de cerdo",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 24600,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "1af69413-b7b9-49c2-ad36-893245749aed",
+    "precioUnitario": 26.86,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Arroz Blanco Crudo Diana Premium",
+    "Area": "COCINA",
+    "CANTIDAD": 2500,
+    "UNIDADES": "gr",
+    "COSTO": 14350,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "1c05cd48-f587-4f8b-9381-8b1383d1c2fd",
+    "precioUnitario": 6.27,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Canela Molida Tarro",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 400,
+    "UNIDADES": "gr",
+    "COSTO": 14950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "1c380f12-f343-4cca-b6a0-f2622f478ce4",
+    "precioUnitario": 40.81,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Queso Tajado Mozeralla",
+    "Area": "COCINA",
+    "CANTIDAD": 2000,
+    "UNIDADES": "gr",
+    "COSTO": 53400,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "1d70ef99-118d-4e6b-86f6-d11ca096be9d",
+    "precioUnitario": 29.16,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "SAL - MESA",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 3000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "precioUnitario": 3.28,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Queso Crema",
+    "Area": "COCINA",
+    "CANTIDAD": 400,
+    "UNIDADES": "gr",
+    "COSTO": 9490,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "500",
+      "maximo": "1000",
+      "actual": "1000"
+    },
+    "GRUPO": "LACTEO",
+    "_id": "2124a1a6-35b1-4440-9703-5c125181e6ad",
+    "precioUnitario": 25.91,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Crema de Leche Alpina Maxilitro",
+    "Area": "COCINA",
+    "CANTIDAD": 1100,
+    "UNIDADES": "ml",
+    "COSTO": 21900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "21b4dd2f-13eb-41af-a531-6a2f3b3bfb82",
+    "precioUnitario": 21.74,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Lulo",
+    "Area": "COCINA",
+    "CANTIDAD": 3000,
+    "UNIDADES": "gr",
+    "COSTO": 19000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "2242e3ef-09d6-4782-b5b9-0d561734e59c",
+    "precioUnitario": 6.92,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Pimenton",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 5500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "22b81ee3-356c-4770-8799-f81a7a536ad9",
+    "precioUnitario": 6.01,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Mandarina",
+    "Area": "COCINA",
+    "CANTIDAD": 5000,
+    "UNIDADES": "NaN",
+    "COSTO": 21000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "24898605-beda-47eb-8e98-f73e9311348c",
+    "precioUnitario": 4.59,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Mayoneza",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "25fe2461-cd60-47b6-af89-9436a363c397",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Apio",
+    "Area": "COCINA",
+    "CANTIDAD": 1200,
+    "UNIDADES": "gr",
+    "COSTO": 950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "27ceb302-4860-4530-91ed-4db48f4255a7",
+    "precioUnitario": 0.86,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Esencia vainilla",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "ml",
+    "COSTO": 9650,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "precioUnitario": 21.08,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Helado",
+    "Area": "COCINA",
+    "CANTIDAD": 4000,
+    "UNIDADES": "NaN",
+    "COSTO": 86000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "2814aebd-7069-4d7b-b1b1-dc8da5ca518f",
+    "precioUnitario": 23.48,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "PROMEDIO DE FRUTAS",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 7000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "287ed2a7-cd85-4b7d-a3a1-745d5da074aa",
+    "precioUnitario": 7.64,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Nuez Mozcada",
+    "Area": "COCINA",
+    "CANTIDAD": 85,
+    "UNIDADES": "gr",
+    "COSTO": 4050,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "291c4af0-a23a-4d03-9c87-fe56f16eb600",
+    "precioUnitario": 52.03,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Leche Condenzada",
+    "Area": "COCINA",
+    "CANTIDAD": 900,
+    "UNIDADES": "ml",
+    "COSTO": 2950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "29cba610-5751-4b8c-9a9e-8083b012dfee",
+    "precioUnitario": 3.58,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Polvo de hornear",
+    "Area": "COCINA",
+    "CANTIDAD": 100,
+    "UNIDADES": "gr",
+    "COSTO": 8500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "29f6a690-c5eb-497b-aa8f-d354d0feeae1",
+    "precioUnitario": 92.82,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Levadura Seca",
+    "CANTIDAD": 80,
+    "UNIDADES": "gr",
+    "COSTO": 950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "2abb6983-2dcb-4180-a4bc-5961876aa2c6",
+    "precioUnitario": 12.97,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Perejil",
+    "CANTIDAD": 100,
+    "UNIDADES": "gr",
+    "COSTO": 3280,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "2c5e2e97-e9bb-4d48-b047-a51a69a41711",
+    "precioUnitario": 35.82,
+    "Proveedor": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Agua",
+    "CANTIDAD": 1000,
+    "UNIDADES": "li",
+    "COSTO": 7000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "precioUnitario": 7.64,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Jabon de manos",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LIMPIEZA",
+    "MARCA": [],
+    "_id": "2ca2e6c2-0638-471a-9355-d3f16dcc39c5",
+    "Proveedor": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Gulupa",
+    "CANTIDAD": 3000,
+    "UNIDADES": "gr",
+    "COSTO": 12000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "2cbf5046-b015-404e-bcba-6f8d11c0a8a4",
+    "precioUnitario": 4.37,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Palito de queso_",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 3900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "PANADERIA",
+    "MARCA": [],
+    "_id": "2f3cc28d-9019-4ba7-9790-24ef23dc849a",
+    "precioUnitario": 4258.8,
+    "Proveedor": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Bebida de almendras",
+    "Area": "COCINA",
+    "CANTIDAD": 5676,
+    "UNIDADES": "ml",
+    "COSTO": 71900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "2fcfc05b-6325-40b4-be66-64536d4a2c79",
+    "precioUnitario": 13.83,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Splenda",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "un",
+    "COSTO": 105238,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DOTACION",
+    "_id": "322e86d2-3c74-4074-a231-9d8a09f26e31",
+    "precioUnitario": 114.92,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Garbanzo",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 4800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "324f5616-d141-4289-9abc-5fee75f1765f",
+    "precioUnitario": 10.48,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Sirope de Naple",
+    "Area": "COCINA",
+    "CANTIDAD": 480,
+    "UNIDADES": "ml",
+    "COSTO": 9250,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "32b97d24-c0d7-4ebc-8e19-16310d26c82a",
+    "precioUnitario": 21.04,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Mayo Ajo",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "3486bab5-b2fb-4237-b01f-2040d07c0410",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Crema Chintilli",
+    "Area": "COCINA",
+    "CANTIDAD": 43,
+    "UNIDADES": "srv",
+    "COSTO": 21900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "34e885ae-95fd-4ffb-b124-7b8453ee1802",
+    "precioUnitario": 556.16,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Caja Torta 40X40x15",
+    "Area": "COCINA",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 1000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "35f7ae78-8fea-4724-bf59-e09953fb41dd",
+    "precioUnitario": 1092,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Mezclador",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "un",
+    "COSTO": 6800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "37692897-81c3-4a8c-91c8-c606357e21a0",
+    "precioUnitario": 14.85,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Puerro Fresco",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 7000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "38fe9d82-a3f9-4a4d-9506-4ea255cce4c4",
+    "precioUnitario": 15.29,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Vinagre Blanco",
+    "Area": "COCINA",
+    "CANTIDAD": 3000,
+    "UNIDADES": "ml",
+    "COSTO": 16950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "39ae2d90-e97d-4e25-8d63-817d3a7c3f3c",
+    "precioUnitario": 6.17,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Cemilla de Mostaza Amarilla",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "3a4bc7b9-0f3a-4ead-95e0-fdf673cde129",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "ESPINAZO",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 9000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "3af52444-529d-403e-ba53-0a6226043b18",
+    "precioUnitario": 9.83,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Filtro de papel",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 500,
+    "UNIDADES": "un",
+    "COSTO": 40000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "6",
+      "maximo": "50",
+      "actual": "0"
+    },
+    "GRUPO": "CAFE",
+    "_id": "3b39c5da-d4da-4764-9b1c-728b83f6eeff",
+    "precioUnitario": 87.36,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Vino blanco",
+    "Area": "COCINA",
+    "CANTIDAD": 750,
+    "UNIDADES": "ml",
+    "COSTO": 14950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "3bcae7a0-7215-4825-ae98-303421c519ec",
+    "precioUnitario": 21.77,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Paprika",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "3d63ef98-f1a2-4e53-a862-cbac7c4382d8",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Croisant de Queso_",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 3900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "PANADERIA",
+    "MARCA": [],
+    "_id": "421ecfa3-2f7e-4eaf-93c5-acefa01d8074",
+    "precioUnitario": 4258.8,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Seedpack Blonda 25,8",
+    "Area": "COCINA",
+    "CANTIDAD": 5,
+    "UNIDADES": "un",
+    "COSTO": 3529,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "43065f4f-00ed-4b36-9412-ac32c853c7b9",
+    "precioUnitario": 770.73,
+    "Proveedor": "936c422f-7c4d-44e4-808a-296610925ed4",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Color",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "43dd15ce-6697-4213-9bb5-3db38eeaf6f1",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Pasta de tomate",
+    "Area": "COCINA",
+    "CANTIDAD": 200,
+    "UNIDADES": "gr",
+    "COSTO": 6350,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "200",
+      "maximo": "1000",
+      "actual": "0"
+    },
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "454c13b9-f64b-40e7-87bb-3dc8d7ee461c",
+    "precioUnitario": 34.67,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pan Ciabata",
+    "Area": "COCINA",
+    "CANTIDAD": 12,
+    "UNIDADES": "un",
+    "COSTO": 40800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "PANADERIA",
+    "_id": "4675d04f-ad5a-4697-8fe0-6a12717025af",
+    "precioUnitario": 3712.8,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Morrillo de res",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 13950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "46947cbd-b578-4abf-94b9-69c6e9d373e7",
+    "precioUnitario": 30.47,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Banano",
+    "Area": "COCINA",
+    "CANTIDAD": 14,
+    "UNIDADES": "un",
+    "COSTO": 8000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "469a57d6-509e-42d1-8eee-2930e56ef712",
+    "precioUnitario": 624,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Servilleta Cafeteria",
+    "Area": "COCINA",
+    "CANTIDAD": 400,
+    "UNIDADES": "un",
+    "COSTO": 6723,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": 18.48825,
+    "GRUPO": "DESECHABLES",
+    "_id": "499b5594-6306-455f-8be1-3d559604358f",
+    "precioUnitario": 18.35,
+    "Proveedor": "936c422f-7c4d-44e4-808a-296610925ed4",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "CAFE VEGA",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 2500,
+    "UNIDADES": "gr",
+    "COSTO": 100000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CAFE",
+    "_id": "4b3a585d-a55a-4314-9a79-283e28be6198",
+    "precioUnitario": 43.68,
+    "ALMACENAMIENTO": {
+      "BODEGA": "NO_APLICA",
+      "ALMACENAMIENTO": "NO_APLICA"
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Cilantro",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "4c49d3c5-4dd4-4cfc-a0d0-97a1cdbce53f",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "COSTILLA CERDO",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 24900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "4cded9e5-c7a6-4227-b06c-859c1e4e99d8",
+    "precioUnitario": 27.19,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Queso Parmesano Alpina",
+    "Area": "COCINA",
+    "CANTIDAD": 453,
+    "UNIDADES": "gr",
+    "COSTO": 38000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "4da69aba-2631-4129-98c3-0c2cc6d933d3",
+    "precioUnitario": 91.6,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Hielo",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 3000,
+    "UNIDADES": "gr",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "503f05fa-fc9b-4618-9824-b0c4b7cf65ef",
+    "precioUnitario": 2.18,
+    "Proveedor": "4463dd9f-f085-4ccc-9b61-ec28cf332153",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Sazon Completo",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "50621a54-16b2-4dbb-b8f4-983e275320ed",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Carne de hamburguesa",
+    "Area": "COCINA",
+    "CANTIDAD": 10,
+    "UNIDADES": "un",
+    "COSTO": 10000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "5066c337-926c-40db-85e1-9b8d7c32ca29",
+    "precioUnitario": 1092,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Lychee",
+    "CANTIDAD": 1,
+    "COSTO": 1500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "5145654e-bd05-4d8e-9726-dc35b9b84ea4",
+    "precioUnitario": 1638,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Mandarina DesHidratada",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 80,
+    "UNIDADES": "gr",
+    "COSTO": 10000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "51e2a51f-fe88-40b4-a792-2316ec447ece",
+    "precioUnitario": 136.5,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "TÃ MATCHA",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "51e6cf21-04b3-4df9-b5c2-651e68f55e78",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pasas",
+    "Area": "COCINA",
+    "CANTIDAD": 200,
+    "UNIDADES": "gr",
+    "COSTO": 3550,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "52933ed9-2f05-4405-9acb-77f42597bca0",
+    "precioUnitario": 19.38,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Cerveza Nacional",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 2300,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "ENLATADOS",
+    "MARCA": [],
+    "_id": "54521c02-198f-4521-a30c-19a179c02cf2",
+    "precioUnitario": 2511.6,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Cafiza",
+    "CANTIDAD": 600,
+    "COSTO": 100000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LIMPIEZA",
+    "MARCA": [],
+    "_id": "545fecf6-b583-49eb-8cc0-94d432fef015",
+    "precioUnitario": 182,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Chiles Dulces",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "56f914cc-2889-483d-876d-9bf5898f7d73",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "aceitunas negras",
+    "Area": "COCINA",
+    "CANTIDAD": 340,
+    "UNIDADES": "gr",
+    "COSTO": 17300,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "57c7945c-619e-43c8-928c-d946e8777928",
+    "precioUnitario": 55.56,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Brocoli",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "5821e4a7-bf3e-48d5-9f91-0bf49c864720",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Queso costeÃ±o",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 24000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "58879328-e7ad-4dac-a538-f68bd75ee49e",
+    "precioUnitario": 26.21,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Comino Semilla",
+    "Area": "COCINA",
+    "CANTIDAD": 125,
+    "UNIDADES": "gr",
+    "COSTO": 12100,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "5a8816ec-5600-4884-b087-79b8dd9df8db",
+    "precioUnitario": 105.71,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Goma Xantana",
+    "CANTIDAD": 100,
+    "UNIDADES": "gr",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "5b893f29-cbc2-493a-8d94-284091fce359",
+    "precioUnitario": 65.52,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Tomillo",
+    "Area": "COCINA",
+    "CANTIDAD": 20,
+    "UNIDADES": "gr",
+    "COSTO": 1490,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "5cf218d4-0c47-4748-bae1-958902140c31",
+    "precioUnitario": 81.35,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Almendra",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "NaN",
+    "COSTO": 25900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "5fe7355b-0e2d-4f84-ab28-854cabecd6cb",
+    "precioUnitario": 56.57,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pepino Rellenar",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "62384e9b-82e0-4ba4-a0ee-996943cfa7d9",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Cebolla roja",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 2250,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "629b5d23-89e7-414d-abc9-2021781fab2f",
+    "precioUnitario": 4.91,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "EMPELLA",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "62f70840-12e8-4152-8cc0-472b2bb95294",
+    "precioUnitario": 6.55,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Maracuya",
+    "Area": "COCINA",
+    "CANTIDAD": 4000,
+    "UNIDADES": "gr",
+    "COSTO": 15000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "63250da9-b597-49bd-a411-efff8fd1dd7e",
+    "precioUnitario": 4.1,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "TABLA",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 334000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "63aa9b12-8f0b-44c5-9074-de8cf88d64cc",
+    "precioUnitario": 364.73,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Papa Criolla",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "63b41c58-f17e-4d9d-a2f1-83a256e52ce3",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Azucar morena",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 4850,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "63fc02c1-a3df-4995-a036-134528cedc8b",
+    "precioUnitario": 5.3,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Berenjena",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 1800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "676ff440-e3a3-415c-b2d7-726f2d3a267b",
+    "precioUnitario": 3.93,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "POSTA",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 27000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "6a6a8b62-e052-42af-8dcf-60a8184e721c",
+    "precioUnitario": 29.48,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Vino Tinto",
+    "Area": "COCINA",
+    "CANTIDAD": 750,
+    "UNIDADES": "gr",
+    "COSTO": 22000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "6c6662cd-9cb4-4a15-ba0e-e34d40f37b20",
+    "precioUnitario": 32.03,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "AGUA GAS BRISA PET 600ML",
+    "CANTIDAD": 24,
+    "UNIDADES": "un",
+    "COSTO": 32000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "6d6f34d8-5bfd-434a-9976-ca0021eee74c",
+    "precioUnitario": 1456,
+    "Proveedor": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Coca Cola Zero 400 ml",
+    "CANTIDAD": 12,
+    "UNIDADES": "un",
+    "COSTO": 28800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "6",
+      "maximo": "24",
+      "actual": "6"
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "6d8b632d-d9e8-4968-9bed-5c12cedf9ec0",
+    "precioUnitario": 2620.8,
+    "Proveedor": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pitillo CaÃ±a de Azucar",
+    "Area": "COCINA",
+    "CANTIDAD": 200,
+    "UNIDADES": "un",
+    "COSTO": 13109,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "6dfdaa4f-765e-47f9-a55a-0b727605b0ee",
+    "precioUnitario": 71.58,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "SAL - COCINA",
+    "Area": "COCINA",
+    "CANTIDAD": 465,
+    "UNIDADES": "gr",
+    "COSTO": 4000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "precioUnitario": 9.39,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Misuna Morada",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 12500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "6eabde0b-8d9a-4555-818f-2d99d62c9f6b",
+    "precioUnitario": 27.3,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Cidra",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 2000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "72452133-3a11-4e62-895d-cb6fedc1bc05",
+    "precioUnitario": 2184,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0.1,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Papaya",
+    "Area": "COCINA",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": "2300"
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "72b3e136-059f-4495-87ec-a4e8c8f4ace8",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Mantequilla",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 16650,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "precioUnitario": 36.36,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Achiota",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "766119b8-f3b6-4036-9ec3-c0c1f054a1dc",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Sandia",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "7729354f-269e-46fe-9001-07d10a0d1c13",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "AGUA NATURAL BRISA PET 600ML",
+    "CANTIDAD": 24,
+    "UNIDADES": "un",
+    "COSTO": 32000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "77c39312-3586-4d28-b582-c7f7d2e58d55",
+    "precioUnitario": 1456,
+    "Proveedor": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "CAFE LUCUS",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 2500,
+    "UNIDADES": "gr",
+    "COSTO": 161700,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "200",
+      "maximo": "2500",
+      "actual": "2000"
+    },
+    "GRUPO": "CAFE",
+    "_id": "789b3603-5bac-4a97-9afa-9a57a4cf42ff",
+    "precioUnitario": 70.63,
+    "Proveedor": "78a7a9f3-1c11-4622-bf2c-6f16c140d217",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "CANASTA_INFERIOR_BARRA",
+      "BODEGA": "CANASTA_INFERIOR_BARRA"
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Yogurt Griego",
+    "Area": "COCINA",
+    "CANTIDAD": 942,
+    "UNIDADES": "gr",
+    "COSTO": 34900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "79f14bfd-73a5-4db1-9ab8-e02dfb6b23e7",
+    "precioUnitario": 40.46,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Tomillo Molido",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "7af1d4b4-3cbe-4aad-9555-637ffe722a0d",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Leche entera",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 5400,
+    "UNIDADES": "ml",
+    "COSTO": 18690,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "7b9e1e0b-d5d4-4853-8142-44b520be00c2",
+    "precioUnitario": 3.78,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Ajos en Aceite",
+    "Area": "COCINA",
+    "CANTIDAD": 907,
+    "UNIDADES": "NaN",
+    "COSTO": 32900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "7c426294-b5d7-453a-904d-0777d38ab6ab",
+    "precioUnitario": 39.61,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Tomate Uvalina",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 5000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "7d44f4ea-01e1-4992-a28d-a12f2b95fafc",
+    "precioUnitario": 5.46,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pechuga",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 11900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "7ef9d1de-9a29-49cb-8b84-98f9c5de4918",
+    "precioUnitario": 25.99,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Croisant de jamon y queso_",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 7200,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "PANADERIA",
+    "MARCA": [],
+    "_id": "7f2b2f81-9253-40c8-b951-cf171132d16f",
+    "precioUnitario": 7862.4,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Tomate riÃ±on",
+    "Area": "COCINA",
+    "CANTIDAD": 900,
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "7fb5b488-32cf-4ada-964c-60657b9800ef",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Tomate Chonto",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 4000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "80881b71-9886-4c57-b136-f2e0ff70fcde",
+    "precioUnitario": 4.37,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Naranja Tangelo",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 6400,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "600",
+      "maximo": "10000",
+      "actual": "10000"
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "80b4dbbf-281d-4c78-a54b-b520055c4eb0",
+    "precioUnitario": 6.99,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Aguacate",
+    "Area": "COCINA",
+    "CANTIDAD": 4,
+    "UNIDADES": "srv",
+    "COSTO": 5000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "818e1345-bc56-4211-b881-9c847d5040d5",
+    "precioUnitario": 1365,
+    "Proveedor": "0b3d5315-95cf-4ebf-a7a5-585d512e3fdb",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Rugula",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "gr",
+    "COSTO": 24000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "82137c85-21d9-453a-be27-84a34afe1705",
+    "precioUnitario": 104.83,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Habichuela",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "822b3e24-5cf1-4cc7-aec7-0989eb37e753",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Laurel Molido",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "8451a002-c3c5-42a4-b912-8d585d10fdd1",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "TÃ FRUTOS VERDES",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "84dba199-c0f6-4240-8095-a89b55bd16bc",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Tapa Blanca 7oz",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 8151,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "85ab4aaa-37e8-4b5b-878f-b3b38d115e98",
+    "precioUnitario": 178.02,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "CAFE LIOFILIZADO",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 95,
+    "UNIDADES": "gr",
+    "COSTO": 12000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "100",
+      "maximo": "5000",
+      "actual": "300"
+    },
+    "GRUPO": "CAFE",
+    "_id": "8a791f8b-b790-4f2b-97ed-66cbed589e25",
+    "precioUnitario": 137.94,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Panela Bloque",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 4000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "8d33b839-f1e9-4ba8-b8c1-8b889e3d9a86",
+    "precioUnitario": 8.74,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Tomate Enlatado",
+    "Area": "COCINA",
+    "CANTIDAD": 2900,
+    "UNIDADES": "gr",
+    "COSTO": 37900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "ENLATADOS",
+    "_id": "92169e81-4500-4176-9179-8ff0e028b3cf",
+    "precioUnitario": 14.27,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Chocolate cobertura",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 72750,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "946b8026-99ec-40c9-8c0d-323eaa9d601b",
+    "precioUnitario": 79.44,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Jamon Sanduche",
+    "Area": "COCINA",
+    "CANTIDAD": 24,
+    "UNIDADES": "un",
+    "COSTO": 13460,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "96c35796-1620-435b-aa89-2fdaaec69d11",
+    "precioUnitario": 612.43,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Leche en polvo",
+    "Area": "COCINA",
+    "CANTIDAD": 380,
+    "UNIDADES": "gr",
+    "COSTO": 15400,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "97078d2c-a430-4b33-8f64-3cc34302716f",
+    "precioUnitario": 44.25,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Frijol Verde desgranado",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 12000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "9722df04-a999-4b7d-9512-79ea86804f76",
+    "precioUnitario": 13.1,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0.05
+  },
+  {
+    "Nombre_del_producto": "Flor de jamaica",
+    "Area": "COCINA",
+    "CANTIDAD": 25,
+    "UNIDADES": "gr",
+    "COSTO": 6760,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "98512cf7-5a91-4d50-8dbb-ceec70f6bb64",
+    "precioUnitario": 295.28,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Arandanos Azules",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 38000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "99c28780-3c91-4def-97d0-34cd35607630",
+    "precioUnitario": 82.99,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "ReducciÃ³n de balsamico",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "gr",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "9ad5058d-e999-4dd3-b4d5-3b48639827fc",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Samilla de Cilantro",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "9c19d879-d5c5-4236-9911-61b642a29c49",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Vasos 9oz",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "9dec061f-a2fb-4d5c-92ec-03f71d2f9284",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Jamon Cerrano",
+    "Area": "COCINA",
+    "CANTIDAD": 80,
+    "UNIDADES": "gr",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "9e5c329f-73fd-4767-afb7-7d512182c757",
+    "precioUnitario": 81.9,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Yuca",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 2300,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "9eb249c9-d185-4bfe-84b9-e07506b3969c",
+    "precioUnitario": 2.51,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "LimÃ³n Mandarino",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 5000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "100",
+      "maximo": "5000",
+      "actual": "2800"
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "a097bc81-9893-47bc-a648-4d77ba9b64a3",
+    "precioUnitario": 5.46,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Ajo",
+    "Area": "COCINA",
+    "CANTIDAD": 270,
+    "UNIDADES": "gr",
+    "COSTO": 1900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "precioUnitario": 7.68,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Tapa Bowl 32oz",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 21765,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "a2fc9c71-0ac2-431a-b3bf-e59769e1513e",
+    "precioUnitario": 475.35,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Azucar Glass",
+    "CANTIDAD": 2500,
+    "COSTO": 16750,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "a35685c0-c6fb-4992-b446-0150f0888acb",
+    "precioUnitario": 7.32,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Aromatica",
+    "Area": "COCINA",
+    "CANTIDAD": 20,
+    "UNIDADES": "un",
+    "COSTO": 12000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "a4421b45-b37f-4257-88df-9ff23232b3ea",
+    "precioUnitario": 655.2,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Lechuga",
+    "CANTIDAD": 200,
+    "UNIDADES": "gr",
+    "COSTO": 2140,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "a5372f56-7be5-40ad-a625-25988413d25d",
+    "precioUnitario": 11.68,
+    "Proveedor": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pollo Pechuga Fileteada",
+    "Area": "COCINA",
+    "CANTIDAD": 105,
+    "UNIDADES": "gr",
+    "COSTO": 3200,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "a5690e68-dc0a-433e-b089-4b0528e02dcb",
+    "precioUnitario": 33.28,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Chorizo espaÃ±ol",
+    "Area": "COCINA",
+    "CANTIDAD": 16,
+    "UNIDADES": "un",
+    "COSTO": 7800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "a68c5aac-c430-49cf-bd5c-9803ab8aba24",
+    "precioUnitario": 532.35,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "REFRIGERACION_COCINA",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Film Stretch 15 cm",
+    "Area": "COCINA",
+    "CANTIDAD": 300,
+    "UNIDADES": "NaN",
+    "COSTO": 10756,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "a68d54d4-444b-450a-9edf-8e43dbd9d68c",
+    "precioUnitario": 39.15,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Nachos",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 12900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GUARNICION",
+    "_id": "a6d61552-9c57-4bca-8d47-d3af20082478",
+    "precioUnitario": 28.17,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Ron caldas",
+    "Area": "COCINA",
+    "CANTIDAD": 750,
+    "UNIDADES": "ml",
+    "COSTO": 48800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "a6f95545-33f1-4940-b399-6ddf70008283",
+    "precioUnitario": 71.05,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Curcuma",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "a7410018-be11-4758-80be-7c2f7726aa91",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Chocolate ( Cocoa en polvo) Cordillera",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 70950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "a80d58f3-b569-4dc6-bd9f-1e1202f66d9e",
+    "precioUnitario": 77.48,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Semillas De Calabaza",
+    "CANTIDAD": 200,
+    "UNIDADES": "gr",
+    "COSTO": 10800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "a8546963-486f-4e3a-86db-6d8011561a1d",
+    "precioUnitario": 58.97,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Nuez Brasil",
+    "CANTIDAD": 125,
+    "UNIDADES": "gr",
+    "COSTO": 4500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "a8657a77-dfbb-485f-a753-935a15e7d795",
+    "precioUnitario": 39.31,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Romero",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "gr",
+    "COSTO": 4170,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "a91ad977-7e06-438c-be13-81f186d83215",
+    "precioUnitario": 91.07,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "PIERNA PULPA",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 20900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "a9540f7d-335d-452c-8268-4101ed65f682",
+    "precioUnitario": 22.82,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Quesito",
+    "Area": "COCINA",
+    "CANTIDAD": 480,
+    "UNIDADES": "gr",
+    "COSTO": 8390,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "a9a36935-b223-40de-9c3f-6154a00ad053",
+    "precioUnitario": 19.09,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Curry Mazala",
+    "Area": "COCINA",
+    "CANTIDAD": 100,
+    "UNIDADES": "NaN",
+    "COSTO": 50000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "ab7e8025-bbd2-472a-9915-287b64420469",
+    "precioUnitario": 546,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Laurel Hoja",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 5000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "abab507d-161f-42b0-b372-33214d15be2f",
+    "precioUnitario": 109.2,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Chorizo campesino",
+    "Area": "COCINA",
+    "CANTIDAD": 12,
+    "UNIDADES": "un",
+    "COSTO": 16000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CARNICO",
+    "_id": "ac1918d6-3a8c-48fc-a086-a138ece6230c",
+    "precioUnitario": 1456,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Coliflor",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "acee7a7d-ac5f-4b9e-93d9-f3573a4f11eb",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Limon Tahiti",
+    "Area": "COCINA",
+    "CANTIDAD": 31000,
+    "UNIDADES": "gr",
+    "COSTO": 14000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "ae87e7d4-ad0a-4d3d-b0bd-9705a3279b85",
+    "precioUnitario": 0.49,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Bowl 32 oz",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 29370,
+    "COOR": 1.1,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "b09ae884-ef76-430b-8dff-5b3970af8b39",
+    "precioUnitario": 671.99,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "ChampiÃ±ones",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "gr",
+    "COSTO": 8800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "b1f10710-29bf-461d-af5f-0ef169ceab1a",
+    "precioUnitario": 38.44,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Member's Selection Mezcla en Polvo Sabor a TÃ© FrÃ­o con LimÃ³n",
+    "CANTIDAD": 3000,
+    "UNIDADES": "gr",
+    "COSTO": 32900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "b2b17470-4b45-4937-9d2d-2e9a6f999d49",
+    "precioUnitario": 11.98,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Calabacin",
+    "Area": "COCINA",
+    "CANTIDAD": 1,
+    "UNIDADES": "NaN",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "b7db998d-6f7c-41ba-92a7-0e50ff4dac6d",
+    "precioUnitario": 6552,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Frijoles Verdes en Vaina",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "b80ef946-13b4-4952-9a40-881e41aaafa1",
+    "precioUnitario": 6.55,
+    "Proveedor": "0b3d5315-95cf-4ebf-a7a5-585d512e3fdb",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0.25
+  },
+  {
+    "Nombre_del_producto": "Salsa Napolitana",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "b8c4e400-19dc-4841-9baf-b90110ea1ea1",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Yucarina",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "HARINAS",
+    "_id": "b91e8ba7-f1db-448e-953c-69649b90d961",
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Aceite vegetal de soya",
+    "Area": "COCINA",
+    "CANTIDAD": 2700,
+    "UNIDADES": "ml",
+    "COSTO": 23990,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "precioUnitario": 9.7,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Panela Pulverizada",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 6000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "ba9fb4d5-99bf-4911-b9dc-ad7c7576c8f7",
+    "precioUnitario": 13.1,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Chocolate Salsa Corona",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 250,
+    "UNIDADES": "gr",
+    "COSTO": 12100,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "baeb8e5f-fa29-43c2-9fb8-d59df7a990e5",
+    "precioUnitario": 52.85,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0.05
+  },
+  {
+    "Nombre_del_producto": "Jengibre Molido Seco",
+    "CANTIDAD": 200,
+    "UNIDADES": "gr",
+    "COSTO": 5000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "bb1e5765-e0a7-4782-837a-6fe138fc6dee",
+    "precioUnitario": 27.3,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Caldo deshidratado",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "ml",
+    "COSTO": 4450,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "bc073248-f282-4c8b-a3c2-ccd5104ef2b0",
+    "precioUnitario": 4.86,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Fresa (Jugo)",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 3500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "bdc783a6-812f-4391-bda0-89dfd97dd0e9",
+    "precioUnitario": 3.82,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "TÃ MANZANILLA, MIEL Y JENGIBRE",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "bdcf25b4-962a-4cc1-afff-9c683b263b0b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Levadura Masa Madre",
+    "CANTIDAD": 50,
+    "UNIDADES": "gr",
+    "COSTO": 10000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "100",
+      "maximo": "500",
+      "actual": "0"
+    },
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "MARCA": [],
+    "_id": "c07eddd6-cdfe-436a-9ac5-b6db7f0f980a",
+    "precioUnitario": 218.4,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Bicarbonato de sodio",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 7250,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "c0fb6117-783d-4c7f-ab7e-decee06b82fb",
+    "precioUnitario": 7.92,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Vaso 7 oz papel",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 8740,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "c1072f73-43c8-4476-bc8d-c3d7fa43f91b",
+    "precioUnitario": 190.88,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Milo",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 1600,
+    "UNIDADES": "gr",
+    "COSTO": 58900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "100",
+      "maximo": "2500",
+      "actual": "600"
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "c1752614-7232-4f3f-adcd-746c725c2b53",
+    "precioUnitario": 40.2,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "BODEGA": "CANASTA_INFERIOR_EMPACADO",
+      "ALMACENAMIENTO": "REPISA_DESPACHO"
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Arepa",
+    "Area": "COCINA",
+    "CANTIDAD": 5,
+    "UNIDADES": "un",
+    "COSTO": 2250,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GUARNICION",
+    "_id": "c31a9142-dea7-4422-b687-7dcc1e463b43",
+    "precioUnitario": 491.4,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Pimienta Negra",
+    "Area": "COCINA",
+    "CANTIDAD": 70,
+    "UNIDADES": "gr",
+    "COSTO": 12000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "precioUnitario": 187.2,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Cebolla blanca",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 3500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "c68e02b0-6f86-409b-b92f-6b9389f98c79",
+    "precioUnitario": 3.82,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Tomate de Arbol",
+    "CANTIDAD": 1300,
+    "UNIDADES": "gr",
+    "COSTO": 8000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "cb22f46e-42bb-4fb8-8f5e-15f21ffb39fd",
+    "precioUnitario": 6.72,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Queso azul",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 55000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "cb725f4f-7201-486f-90fc-d3459e7d4ad7",
+    "precioUnitario": 60.06,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Mayo Picante",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "cc00b87d-c881-48a6-9604-55dd679ea89e",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Jengibre Fresco",
+    "CANTIDAD": 3000,
+    "UNIDADES": "gr",
+    "COSTO": 5000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "ccff3929-f50c-40d0-8ef3-e5757f53a93a",
+    "precioUnitario": 1.82,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Manzana Verde",
+    "Area": "COCINA",
+    "CANTIDAD": 1360,
+    "UNIDADES": "gr",
+    "COSTO": 15900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "cdb8cd55-be75-4348-a0d5-0c23abdbf3e4",
+    "precioUnitario": 12.77,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "TE VERDE",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "cdc22e13-42a0-4a74-b26e-97da966c9ce0",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Moras",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 4500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "ce33f90f-1184-4a39-badf-3437e1edaaec",
+    "precioUnitario": 9.83,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Te Negro Helado",
+    "Area": "COCINA",
+    "CANTIDAD": 600,
+    "UNIDADES": "gr",
+    "COSTO": 21100,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "ceb98940-845d-44b6-99be-ff41606e5086",
+    "precioUnitario": 38.4,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "CaÃ±Ã³n De Cerdo",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 23900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "MARCA": [],
+    "_id": "ceca9f13-2696-46b2-867e-0f25fd9c5500",
+    "precioUnitario": 26.1,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Albahaca",
+    "CANTIDAD": 5000,
+    "UNIDADES": "gr",
+    "COSTO": 8000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "cff02a5a-5242-437b-bd37-0237df9d3df2",
+    "precioUnitario": 1.75,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Espinaca",
+    "Area": "COCINA",
+    "CANTIDAD": 30,
+    "UNIDADES": "gr",
+    "COSTO": 1600,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "d0b2b668-16bb-4fd9-8dd0-27f77afe2c0f",
+    "precioUnitario": 58.24,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Lenteja",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 3600,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "d30116fc-5be2-4712-926e-7de7507073eb",
+    "precioUnitario": 7.86,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Especia Chai",
+    "Area": "COCINA",
+    "CANTIDAD": 35,
+    "UNIDADES": "gr",
+    "COSTO": 32000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": 10,
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "d34b6662-32fe-4168-a4a4-458bbfc477a8",
+    "precioUnitario": 998.4,
+    "Proveedor": "d64dcdb9-4a0c-4885-9ca9-7d6a565b4e8b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Anis estrellado",
+    "Area": "COCINA",
+    "CANTIDAD": 20,
+    "UNIDADES": "gr",
+    "COSTO": 3190,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "d47a7bff-b274-43de-be52-f24b4bbe616e",
+    "precioUnitario": 174.17,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Tocineta de cerdo Ahumado",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "un",
+    "COSTO": 23000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "d4b37f34-7d6c-40c2-8313-9612d5603d8a",
+    "precioUnitario": 25.12,
+    "Proveedor": "80d9f3fa-e25b-4dd6-86e5-40dba660b228",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Soda Swiper",
+    "Area": "COCINA",
+    "CANTIDAD": 30,
+    "UNIDADES": "un",
+    "COSTO": 62500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "5",
+      "maximo": "30",
+      "actual": "6"
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "d519abaa-ff80-407e-9a7c-56c2e6127016",
+    "precioUnitario": 2275,
+    "Proveedor": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "REFRIGERACION_BEBIDAS",
+      "BODEGA": "CANASTA_INFERIOR_COCINA"
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Puerro Crocante",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "NaN",
+    "COSTO": 42000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "d57df22f-13ef-4724-bc85-3fe68caca757",
+    "precioUnitario": 183.46,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Harina de trigo (Fortificada)",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 2200,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "HARINAS",
+    "_id": "d7967890-35c1-43b2-81b9-a20f55caf910",
+    "precioUnitario": 4.8,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Pastel Boring Queso Versalles",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 3700,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "PANADERIA",
+    "MARCA": [],
+    "_id": "d8e800e6-80b7-4924-bb66-139718f2d239",
+    "precioUnitario": 4040.4,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Crema de Mani",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "da33355c-770a-4226-9f06-ee437cf8fadd",
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "YEAST DRY",
+    "Area": "COCINA",
+    "CANTIDAD": 80,
+    "UNIDADES": "gr",
+    "COSTO": 8100,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "dc085abc-8054-4af9-b805-9d842b980651",
+    "precioUnitario": 110.56,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Papel Aluminio",
+    "Area": "COCINA",
+    "CANTIDAD": 100,
+    "UNIDADES": "NaN",
+    "COSTO": 30000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "dc2ba3a8-b141-4e7b-975c-6333ff2e2034",
+    "precioUnitario": 327.6,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "yeast frash",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 5600,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "dc7f3815-62c9-481a-ad94-9bd12a2e13a4",
+    "precioUnitario": 12.23,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Fresas",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 7000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "dc8cf03b-7cdb-4909-b0b0-92e1c6b15bbf",
+    "precioUnitario": 15.29,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "TÃ VERDE",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "dc97285f-1c53-4da6-abd1-f7f043118623",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Linaza",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "dd243b26-f1a9-427b-9d59-f8163176bb01",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Platano Maduro",
+    "Area": "COCINA",
+    "CANTIDAD": 2580,
+    "UNIDADES": "NaN",
+    "COSTO": 10700,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "de64146e-43a1-47aa-a855-32538c22ce08",
+    "precioUnitario": 4.53,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Vaso WAU 12oz trasluc",
+    "Area": "COCINA",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 14370,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "df4418dc-3ab8-41fb-8d55-241cc4682091",
+    "precioUnitario": 313.84,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Caja Pizza Cuad 30x30x4",
+    "Area": "COCINA",
+    "CANTIDAD": 5,
+    "UNIDADES": "un",
+    "COSTO": 6302,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "df74277f-1372-48d0-938c-3a301f1127a1",
+    "precioUnitario": 1376.36,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "ArÃ¡ndanos deshidratados",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 17950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "df7655da-0eec-49f4-b87e-4f5a43736750",
+    "precioUnitario": 39.2,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Queso Holandes",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "gr",
+    "COSTO": 25000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "dffd645c-9121-4df7-82e1-cdae6ce37753",
+    "precioUnitario": 109.2,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Naranja DesHidratada",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 80,
+    "UNIDADES": "gr",
+    "COSTO": 10000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e0dc6027-d0e1-414d-a555-bbe395ab0150",
+    "precioUnitario": 136.5,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "BOLSA PAPEL #60",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 24800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "MARCA": [],
+    "_id": "e2e193c9-fceb-4aa1-9ca7-83d3b7bb7761",
+    "precioUnitario": 541.63,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Leche deslactozada",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 5400,
+    "UNIDADES": "ml",
+    "COSTO": 18690,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "e335c3ee-97b7-474b-8a84-d8fac7030e31",
+    "precioUnitario": 3.78,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Vinagre balsamico",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "ml",
+    "COSTO": 10000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e3cb8b70-7af0-4e49-aece-8de97350b48d",
+    "precioUnitario": 43.68,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Vinagre de frutas",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e3d91d0d-6dc1-4564-a19c-1e525abb6e1d",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Crema agria",
+    "Area": "COCINA",
+    "CANTIDAD": 400,
+    "UNIDADES": "gr",
+    "COSTO": 10950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "e41c8657-0f86-468a-8e24-3db5b8298093",
+    "precioUnitario": 29.89,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Aceite de oliva",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "ml",
+    "COSTO": 39940,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e62fe796-9ca2-41a7-a1f0-55d3a9ce99f4",
+    "precioUnitario": 43.61,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "COSTILLA",
+    "Area": "COCINA",
+    "CANTIDAD": 980,
+    "UNIDADES": "gr",
+    "COSTO": 22500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "e727b81c-abe2-4525-b08c-855347be938a",
+    "precioUnitario": 25.07,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "NA"
+  },
+  {
+    "Nombre_del_producto": "Chiles Picantes",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "e7678df1-ed71-46a9-9438-50f40d67794d",
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Oregano",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e7829abe-b198-4594-bfdc-61d70026edb8",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Levadura Fresca",
+    "CANTIDAD": 500,
+    "COSTO": 6900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "MARCA": [],
+    "_id": "e7cf2454-12db-44b8-93a3-df6a31b8d777",
+    "precioUnitario": 15.07,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Huevo",
+    "Area": "COCINA",
+    "CANTIDAD": 30,
+    "UNIDADES": "un",
+    "COSTO": 14400,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "precioUnitario": 524.16,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Vinagre de manzana",
+    "Area": "COCINA",
+    "CANTIDAD": 500,
+    "UNIDADES": "ml",
+    "COSTO": 13550,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e9601ff9-806d-4cc0-8966-24ffd00ef5f1",
+    "precioUnitario": 29.59,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Coriandro semilla",
+    "Area": "COCINA",
+    "CANTIDAD": 125,
+    "UNIDADES": "gr",
+    "COSTO": 7100,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "e9edfd5b-966b-412e-9cd7-57f3bb34aa32",
+    "precioUnitario": 62.03,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Cemilla de Mostaza Negra",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "ea615e07-9512-4dce-af86-aaf2f01fae7b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Muchacho",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "MARCA": [],
+    "_id": "eac2c533-f226-4e90-8252-ad5d9eeb7fb5",
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Servilletas Resto",
+    "CANTIDAD": 50,
+    "UNIDADES": "un",
+    "COSTO": 5950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "MARCA": [],
+    "_id": "ebad1aed-e6d9-4812-a9cf-cc5ffbfa4b03",
+    "precioUnitario": 129.95,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Avena Hojuela",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 6650,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "MARCA": [],
+    "_id": "ebda8286-11db-430c-b5e0-c54e05e1dfe6",
+    "precioUnitario": 7.26,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Azucar blanca",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 4850,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "precioUnitario": 5.3,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "Semillas de chia",
+    "Area": "COCINA",
+    "CANTIDAD": 100,
+    "UNIDADES": "gr",
+    "COSTO": 5110,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "ec3aca5f-62a0-4ea0-a37a-778b95ddf2e4",
+    "precioUnitario": 55.8,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "TOCINO BARRIGUERO",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 26600,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "eeaea957-ee62-4c3a-87f3-44cd9de38e46",
+    "precioUnitario": 29.05,
+    "Proveedor": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Parmegiano",
+    "Area": "COCINA",
+    "CANTIDAD": 453,
+    "UNIDADES": "gr",
+    "COSTO": 35000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "LACTEO",
+    "_id": "ef33110e-8deb-4ce7-a3b9-2e3ce35aeed1",
+    "precioUnitario": 84.37,
+    "Proveedor": "27940d9d-369e-4d0d-84ed-59714451e4c2",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Cloro - Pato King Gel",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LIMPIEZA",
+    "MARCA": [],
+    "_id": "f106a69f-13ae-45ee-93c1-5825abd27bd3",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Fecula maiz (maizena)",
+    "Area": "COCINA",
+    "CANTIDAD": 720,
+    "UNIDADES": "gr",
+    "COSTO": 20690,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "HARINAS",
+    "_id": "f277032c-ad99-42aa-97ce-504c725498e9",
+    "precioUnitario": 31.38,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Chile Hojelas",
+    "Area": "COCINA",
+    "CANTIDAD": "NaN",
+    "UNIDADES": "NaN",
+    "COSTO": "NaN",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "f28d8b6f-1ba5-404e-9d09-37044a890ce3",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Miel de abeja",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 500,
+    "UNIDADES": "NaN",
+    "COSTO": 18850,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "f37b23a5-bac9-4e89-8dc1-87d516ab5cb9",
+    "precioUnitario": 41.17,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Pasta plana",
+    "Area": "COCINA",
+    "CANTIDAD": 250,
+    "UNIDADES": "gr",
+    "COSTO": 4950,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "HARINAS",
+    "_id": "f514d3e9-79c7-43c0-b52d-6cf32f2cc895",
+    "precioUnitario": 21.62,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Zanahoria",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 2140,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "f6d7369b-9595-4c38-b505-17b5f0e0ab81",
+    "precioUnitario": 2.34,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Lata tomates pelados",
+    "Area": "COCINA",
+    "CANTIDAD": 2890,
+    "UNIDADES": "gr",
+    "COSTO": 24900,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "ENLATADOS",
+    "_id": "f7db9af6-8ea1-4bcc-8b98-6516d7a87999",
+    "precioUnitario": 9.41,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    }
+  },
+  {
+    "Nombre_del_producto": "PiÃ±a Oro miel",
+    "Area": "COCINA",
+    "CANTIDAD": 2000,
+    "UNIDADES": "gr",
+    "COSTO": 9800,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "_id": "f8df28f8-b71d-404e-bbc3-6aa77e04b786",
+    "precioUnitario": 5.35,
+    "Proveedor": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Arveja",
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "VERDURAS_FRUTAS",
+    "MARCA": [],
+    "_id": "f94caa82-012b-4977-8e72-dc2665adb4a6",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "PC"
+  },
+  {
+    "Nombre_del_producto": "Azucar Papeleta",
+    "Area": "CAFE_BEBIDAS",
+    "CANTIDAD": 200,
+    "UNIDADES": "un",
+    "COSTO": 6500,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": 0,
+      "maximo": 0,
+      "actual": 0
+    },
+    "GRUPO": "DESECHABLES",
+    "_id": "f9bc7971-3120-46d6-b966-866bfb4f6b41",
+    "precioUnitario": 35.49,
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Salsa de soya",
+    "Area": "COCINA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 21250,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONDIMENTOS_ESPECIAS_ADITIVOS",
+    "_id": "fa9594dc-c450-48de-b055-d4ab7c8ac30f",
+    "precioUnitario": 23.21,
+    "Proveedor": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  },
+  {
+    "Nombre_del_producto": "Coca Cola Normal 400 ml",
+    "CANTIDAD": 12,
+    "UNIDADES": "un",
+    "COSTO": 30000,
+    "COOR": 1.05,
+    "FECHA_ACT": 45931.79148148148,
+    "STOCK": {
+      "minimo": "6",
+      "maximo": "24",
+      "actual": "6"
+    },
+    "GRUPO": "BEBIDAS",
+    "MARCA": [],
+    "_id": "fe275320-de63-4fd7-9199-5e4ad19332a3",
+    "precioUnitario": 2730,
+    "Proveedor": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "ALMACENAMIENTO": {
+      "ALMACENAMIENTO": "REFRIGERACION_BEBIDAS",
+      "BODEGA": ""
+    },
+    "Merma": 0,
+    "Estado": "OK"
+  }
+]

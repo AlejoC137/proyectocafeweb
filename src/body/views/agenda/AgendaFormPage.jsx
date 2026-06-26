@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Users, ArrowLeft, Save, Plus, X, ImageIcon, UploadCloud, Trash2, FileText } from "lucide-react";
+import { Calendar, Users, ArrowLeft, Save, Plus, X, ImageIcon, UploadCloud, Trash2, FileText, Copy, CheckCircle2, MessageSquare } from "lucide-react";
+import { MESSAGE_TEMPLATES } from "@/utils/messageTemplates";
 import supabase from "@/config/supabaseClient";
 import PageLayout from "../../../components/ui/page-layout";
 
@@ -17,12 +18,14 @@ function AgendaFormPage() {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   
+  const [realId, setRealId] = useState(id);
   const isNewEvent = id === "new";
   const [loading, setLoading] = useState(!isNewEvent);
   const [evento, setEvento] = useState(null);
 
-  // Obtener fecha desde URL si existe
+  // Obtener parámetros desde URL si existen
   const fechaDesdeURL = searchParams.get("fecha");
+  const aliadoIdDesdeURL = searchParams.get("aliado_id");
 
   // Dynamic Form Builder State
   const [preguntas, setPreguntas] = useState([]);
@@ -33,6 +36,20 @@ function AgendaFormPage() {
 
   // Instagram Aliados State
   const [tempIG, setTempIG] = useState("");
+
+  // Inscripciones Data
+  const [attendees, setAttendees] = useState([]);
+  const [loadingAttendees, setLoadingAttendees] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Attendees Edit State
+  const [editingAttendeeId, setEditingAttendeeId] = useState(null);
+  const [editAttendeeData, setEditAttendeeData] = useState({});
+
+  // Messaging State
+  const [messageForm, setMessageForm] = useState({ title: "", content: "", type: "reminder" });
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [showMassiveMessage, setShowMassiveMessage] = useState(false);
 
   // Estado principal del formulario
   const [formData, setFormData] = useState({
@@ -52,6 +69,7 @@ function AgendaFormPage() {
     emailCliente: "",
     numeroPersonas: 1,
     instagramsAliados: [],
+    aliado_id: aliadoIdDesdeURL || null,
   });
 
   // Estado para servicios
@@ -69,10 +87,28 @@ function AgendaFormPage() {
       
       setLoading(true);
       try {
+        let resolveId = id;
+        if (id.length < 36) {
+          const { data: allIds, error: idsErr } = await supabase.from(AGENDA).select('_id');
+          if (idsErr) throw idsErr;
+
+          const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(id.toLowerCase()));
+          if (match) {
+            resolveId = match._id;
+            setRealId(match._id);
+          } else {
+            throw new Error(`No se encontró un evento que coincida con el ID corto: ${id}`);
+          }
+        }
+
+        if (resolveId.length < 36) {
+          throw new Error("Invalid UUID format resolved");
+        }
+
         const { data, error } = await supabase
           .from(AGENDA)
           .select("*")
-          .eq("_id", id)
+          .eq("_id", resolveId)
           .single();
 
         if (error) throw error;
@@ -103,6 +139,8 @@ function AgendaFormPage() {
           nombreEN: data.nombreEN || "",
           decripcion: data.decripcion || data.descripcion || "",
           instagramsAliados: Array.isArray(data.instagramsAliados) ? data.instagramsAliados : (data.instagramsAliados ? [data.instagramsAliados] : []),
+          estado: data.estado || "pendiente",
+          aliado_id: data.aliado_id || null,
         });
 
         const parseServiciosToState = (raw) => {
@@ -181,6 +219,31 @@ function AgendaFormPage() {
 
     fetchEvento();
   }, [id, isNewEvent, navigate]);
+
+  
+  useEffect(() => {
+    if (!isNewEvent) {
+      setLoadingAttendees(true);
+      const fetchAttendees = async () => {
+        let resolveId = realId;
+        if (resolveId.length < 36) {
+          const { data: allIds } = await supabase.from(AGENDA).select('_id');
+          const match = allIds?.find(e => e._id && e._id.toString().toLowerCase().startsWith(resolveId.toLowerCase()));
+          if (match) {
+            resolveId = match._id;
+            setRealId(resolveId);
+          }
+        }
+
+        if (resolveId.length >= 36) {
+          const { data, error } = await supabase.from('attendees').select('*').eq('evento_id', resolveId);
+          if (!error && data) setAttendees(data);
+        }
+        setLoadingAttendees(false);
+      };
+      fetchAttendees();
+    }
+  }, [id, isNewEvent, realId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -325,7 +388,7 @@ function AgendaFormPage() {
         await dispatch(crearItem(eventoData, AGENDA));
         alert("Evento creado exitosamente");
       } else {
-        await dispatch(updateItem(id, eventoData, AGENDA));
+        await dispatch(updateItem(realId, eventoData, AGENDA));
         alert("Evento actualizado exitosamente");
       }
       
@@ -335,6 +398,85 @@ function AgendaFormPage() {
       console.error("Error al guardar evento:", error);
       alert("Error al guardar el evento");
     }
+  };
+
+  
+  const updatePaymentStatus = async (attendeeId, checked) => {
+    const newStatus = checked ? 'pagado' : 'pendiente';
+    const { error } = await supabase.from('attendees').update({ estado_pago: newStatus }).eq('id', attendeeId);
+    if (!error) setAttendees(prev => prev.map(a => a.id === attendeeId ? { ...a, estado_pago: newStatus } : a));
+  };
+  const copyInscriptionLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/inscripcion/${id}`);
+    setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000);
+  };
+  const startEditAttendee = (a) => {
+    setEditingAttendeeId(a.id);
+    setEditAttendeeData({ nombre: a.nombre, email: a.email, telefono: a.telefono });
+  };
+  const saveEditAttendee = async (aid) => {
+    const { error } = await supabase.from('attendees').update(editAttendeeData).eq('id', aid);
+    if (!error) {
+      setAttendees(prev => prev.map(a => a.id === aid ? { ...a, ...editAttendeeData } : a));
+      setEditingAttendeeId(null);
+    } else {
+      alert("Error al actualizar asistente");
+    }
+  };
+  const deleteAttendee = async (aid) => {
+    if (window.confirm("¿Estás seguro que deseas eliminar permanentemente a este asistente?")) {
+      const { error } = await supabase.from('attendees').delete().eq('id', aid);
+      if (!error) {
+        setAttendees(prev => prev.filter(a => a.id !== aid));
+      } else {
+        alert("Error al eliminar asistente");
+      }
+    }
+  };
+
+  const handleWhatsAppMessage = (a) => {
+    if (!a || !a.telefono) {
+      alert("El asistente no tiene un número de teléfono registrado.");
+      return;
+    }
+
+    let content = "";
+    if (typeof messageForm.content === 'function') {
+      content = messageForm.content(
+        a.nombre,
+        formData.nombreES,
+        formData.fecha,
+        formData.horaInicio,
+        formData.horaFinal,
+        formData.valor,
+        formData.decripcion,
+        formData.infoAdicional,
+        formData.instagramsAliados,
+        formData.linkInscripcion,
+        formData.autores
+      );
+    } else {
+      content = (messageForm.content || "")
+        .replace(/{nombre}/g, a.nombre)
+        .replace(/{evento}/g, formData.nombreES)
+        .replace(/{fecha}/g, formData.fecha)
+        .replace(/{hora}/g, formData.horaInicio)
+        .replace(/{horaFin}/g, formData.horaFinal)
+        .replace(/{valor}/g, formData.valor)
+        .replace(/{descripcion}/g, formData.decripcion)
+        .replace(/{info}/g, formData.infoAdicional)
+        .replace(/{aliados}/g, formData.instagramsAliados?.join(', ') || "")
+        .replace(/{link}/g, formData.linkInscripcion || "")
+        .replace(/{autores}/g, formData.autores || "");
+    }
+
+    const textToEncode = content || `Hola ${a.nombre}, te escribimos de Proyecto Café para recordarte el evento ${formData.nombreES}, el día ${formData.fecha} a las ${formData.horaInicio} en Proyecto Café.`;
+    const fullText = encodeURIComponent(textToEncode);
+
+    let phone = String(a.telefono).replace(/\D/g, '');
+    if (phone.length === 10) phone = '57' + phone;
+
+    window.open(`https://wa.me/${phone}?text=${fullText}`, "_blank");
   };
 
   const handleCancel = () => {
@@ -542,6 +684,168 @@ function AgendaFormPage() {
                   <div className="space-y-2"><Label>Información Adicional (Interna)</Label><textarea name="infoAdicional" value={formData.infoAdicional} onChange={handleInputChange} className="w-full p-2 border rounded-md" rows="3" /></div>
                 </div>
               </div>
+
+              {/* UI DE INSCRIPCIONES (Añadido en la parte inferior) */}
+              {!isNewEvent && (
+                <div className="col-span-1 lg:col-span-2 space-y-6 mt-8 pt-8 border-t border-gray-200">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-xl font-bold">Asistentes Inscritos</h3>
+                      <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">Total: {attendees.length}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setShowMassiveMessage(!showMassiveMessage)}
+                        variant={showMassiveMessage ? "secondary" : "default"}
+                        className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                      >
+                        <MessageSquare size={18} /> Redactar WhatsApp
+                      </Button>
+                      <Button type="button" onClick={copyInscriptionLink} className="flex items-center gap-2 text-sm bg-[#ff6600] text-white hover:bg-[#e65c00] transition shadow-md px-5 py-2 rounded-xl font-semibold">
+                        {copiedLink ? <CheckCircle2 size={18} /> : <Copy size={18} />} {copiedLink ? "¡Copiado!" : "Copiar Enlace Público"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {showMassiveMessage && (
+                    <div className="p-6 bg-green-50 border border-green-200 rounded-2xl animate-in slide-in-from-top-2">
+                      <h4 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5" /> Preparar Comunicación WhatsApp
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div className="space-y-1">
+                            <Label>Contenido del Mensaje</Label>
+                            <textarea
+                              placeholder="Escribe el mensaje para los asistentes..."
+                              value={typeof messageForm.content === 'function' ? messageForm.content('{nombre}', formData.nombreES, formData.fecha, formData.horaInicio, formData.horaFinal, formData.valor, formData.decripcion, formData.infoAdicional, formData.instagramsAliados, formData.linkInscripcion, formData.autores) : messageForm.content}
+                              onChange={(e) => setMessageForm({ ...messageForm, content: e.target.value })}
+                              className="w-full p-2 border rounded-md text-sm bg-white min-h-[120px]"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <Label>Plantillas Rápidas</Label>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setMessageForm({
+                                title: MESSAGE_TEMPLATES.EVENT_REMINDER.title,
+                                content: MESSAGE_TEMPLATES.EVENT_REMINDER.content,
+                                type: "reminder"
+                              })}
+                              className="border-green-200 text-green-700 hover:bg-green-100"
+                            >
+                              Recordatorio de Evento
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setMessageForm({
+                                title: MESSAGE_TEMPLATES.EVENT.title,
+                                content: MESSAGE_TEMPLATES.EVENT.content,
+                                type: "announcement"
+                              })}
+                              className="border-green-200 text-green-700 hover:bg-green-100"
+                            >
+                              Anuncio Gral
+                            </Button>
+                          </div>
+                          <div className="bg-white p-4 rounded-xl border border-green-100 mt-4">
+                            <p className="text-xs text-gray-500">
+                              <b>Instrucciones:</b> El mensaje redactado arriba se enviará cuando hagas clic en el icono de WhatsApp al lado de cada asistente en la tabla de abajo.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {loadingAttendees ? (
+                    <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div></div>
+                  ) : attendees.length === 0 ? (
+                    <div className="text-center p-12 bg-gray-50 border rounded-lg">
+                      <Users className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                      <h4 className="text-lg font-medium text-gray-900">Aún no hay inscripciones</h4>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border rounded-xl shadow-sm">
+                      <table className="w-full min-w-[800px] text-sm text-left">
+                        <thead className="bg-gray-100/80 text-gray-700 uppercase text-xs border-b">
+                          <tr>
+                            <th className="px-4 py-3">Nombre</th>
+                            <th className="px-4 py-3">Contacto</th>
+                            <th className="px-4 py-3">Respuestas & Extra</th>
+                            <th className="px-4 py-3 text-center">Pago</th>
+                            <th className="px-4 py-3 text-center">Mensaje</th>
+                            <th className="px-4 py-3 text-center">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attendees.map((a) => {
+                            const isEditing = editingAttendeeId === a.id;
+                            return (
+                              <tr key={a.id} className={`border-b hover:bg-gray-50 ${isEditing ? 'bg-blue-50' : ''}`}>
+                                <td className="px-4 py-3 align-top">
+                                  {isEditing ? <input value={editAttendeeData.nombre} onChange={(e) => setEditAttendeeData({ ...editAttendeeData, nombre: e.target.value })} className="border p-1 w-full text-sm rounded" /> : <p className="font-medium text-gray-900">{a.nombre}</p>}
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  {isEditing ? (
+                                    <div className="space-y-1">
+                                      <input value={editAttendeeData.email} onChange={(e) => setEditAttendeeData({ ...editAttendeeData, email: e.target.value })} className="border p-1 w-full text-sm rounded mb-1" placeholder="Email" />
+                                      <input value={editAttendeeData.telefono || ''} onChange={(e) => setEditAttendeeData({ ...editAttendeeData, telefono: e.target.value })} className="border p-1 w-full text-sm rounded" placeholder="Teléfono" />
+                                    </div>
+                                  ) : (
+                                    <div className="flex flex-col gap-1">
+                                      <a href={`mailto:${a.email}`} className="text-blue-600 hover:underline">{a.email}</a>
+                                      {a.telefono && <span className="text-gray-500">{a.telefono}</span>}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 align-top text-gray-600">
+                                  {a.respuestas_personalizadas && Object.keys(a.respuestas_personalizadas).length > 0 ? (
+                                    <div className="space-y-1">
+                                      {Object.entries(a.respuestas_personalizadas).map(([k, v]) => (
+                                        <p key={k} className="text-xs border-b pb-1 last:border-0"><span className="font-medium text-gray-800">{k}:</span> {v}</p>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400 italic text-xs">Sin respuestas</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 align-top text-center">
+                                  <label className="flex items-center justify-center cursor-pointer">
+                                    <Checkbox checked={a.estado_pago === 'pagado'} onCheckedChange={(checked) => updatePaymentStatus(a.id, checked)} />
+                                  </label>
+                                </td>
+                                <td className="px-4 py-3 align-top text-center">
+                                  <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-100 hover:text-green-800" onClick={() => handleWhatsAppMessage(a)} title="Enviar WhatsApp al número registrado">
+                                    <MessageSquare size={18} />
+                                  </Button>
+                                </td>
+                                <td className="px-4 py-3 align-top text-center">
+                                  <div className="flex justify-center items-center gap-2">
+                                    {isEditing ? (
+                                      <Button size="sm" variant="default" onClick={() => saveEditAttendee(a.id)} className="bg-blue-600 hover:bg-blue-700">Guardar</Button>
+                                    ) : (
+                                      <Button size="sm" variant="ghost" onClick={() => startEditAttendee(a)} className="text-blue-600 hover:bg-blue-50">Editar</Button>
+                                    )}
+                                    <Button size="sm" variant="ghost" onClick={() => deleteAttendee(a.id)} className="text-red-500 hover:bg-red-50 hover:text-red-700">
+                                      <Trash2 size={16} />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           </CardContent>
         </Card>

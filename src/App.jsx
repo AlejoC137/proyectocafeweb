@@ -36,7 +36,6 @@ const StaffCreator         = lazy(() => import('./body/views/actividades/StaffCr
 const RecetaModal          = lazy(() => import('./body/views/ventaCompra/RecetaModal'));
 const ItemsModal           = lazy(() => import('./body/components/Items/ItemsModal'));
 const ProcedimientoModal   = lazy(() => import('./body/views/ventaCompra/ProcedimientoModal'));
-const AgendaModal          = lazy(() => import('./body/views/agenda/AgendaModal'));
 const InscripcionEvento    = lazy(() => import('./body/views/agenda/InscripcionEvento'));
 const AgendaFormPage       = lazy(() => import('./body/views/agenda/AgendaFormPage'));
 const Predict              = lazy(() => import('./body/views/ventaCompra/Predict'));
@@ -56,6 +55,9 @@ const RecruitmentPrint      = lazy(() => import('./body/components/Menu/Recruitm
 // MenuPrintHorizontal lazy import removed since both render MenuPrintManager
 
 const CotizacionesView       = lazy(() => import('./body/views/cotizaciones/CotizacionesView'));
+const AliadosManager         = lazy(() => import('./body/views/aliados/AliadosManager'));
+const AliadoRegistrationForm = lazy(() => import('./body/views/aliados/AliadoRegistrationForm'));
+const AliadoPortal           = lazy(() => import('./body/views/aliados/AliadoPortal'));
 
 const ProyectoRadio          = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager           = lazy(() => import('./components/RadioManager'));
@@ -110,7 +112,7 @@ function App() {
             <Route path="/item/:id"                          element={<ItemsModal />} />
             <Route path="/comanda/:id"                       element={<ComandaModal />} />
             <Route path="/ProcedimientoModal/:id"            element={<ProcedimientoModal />} />
-            <Route path="/evento/:id/:tab?"                  element={<AgendaModal />} />
+            <Route path="/evento/:id/:tab?"                  element={<AgendaFormPage />} />
             <Route path="/inscripcion/:id"                   element={<InscripcionEvento />} />
             <Route path="/agendaForm/:id"                   element={<AgendaFormPage />} />
             <Route path="/Predict/:MenuItem"                 element={<Predict />} />
@@ -138,6 +140,9 @@ function App() {
             <Route path="/RadioManager"                      element={<RadioManager />} />
             <Route path="/radiomanager"                      element={<RadioManager />} />
             <Route path="/Cotizaciones"                      element={<CotizacionesView />} />
+            <Route path="/Aliados"                           element={<AliadosManager />} />
+            <Route path="/RegistroAliado"                    element={<AliadoRegistrationForm />} />
+            <Route path="/PortalAliado"                      element={<AliadoPortal />} />
 
             <Route path="*"                                  element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
           </Routes>

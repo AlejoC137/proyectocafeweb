@@ -72,12 +72,12 @@ function Agenda() {
 
   const handleEditEvento = (evento) => {
     // Navegar al modal con el ID corto del evento y la pestaña inicial
-    navigate(`/evento/${evento._id.substring(0, 8)}/detalles`);
+    navigate(`/agendaForm/${evento._id.substring(0, 8)}`);
   };
 
   const handleViewEvento = (evento) => {
     // Navegar al modal para ver detalles
-    navigate(`/evento/${evento._id.substring(0, 8)}/detalles`);
+    navigate(`/agendaForm/${evento._id.substring(0, 8)}`);
   };
 
   const handleDeleteEvento = async (evento) => {
@@ -269,6 +269,14 @@ function Agenda() {
           >
             <Calendar size={18} />
             Tarjetas
+          </Button>
+          <Button
+            onClick={() => navigate("/Aliados")}
+            variant="outline"
+            className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+          >
+            <Users size={18} />
+            Aliados
           </Button>
         </div>
 

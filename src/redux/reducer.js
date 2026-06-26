@@ -26,6 +26,7 @@ import {
     ADD_ORDER_ITEM,
     RECETAS_PROCEDIMIENTOS,
     AGENDA,
+    ALIADOS,
     ESP,
     ENG,
     SET_LANGUAGE,
@@ -91,6 +92,7 @@ const initialState = {
     },
 
     allAgenda: [],
+    allAliados: [],
     allStaff: [],
     showEdit: false,
     allMenu: [],
@@ -198,6 +200,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allProcedimientos: action.payload };
                 case AGENDA:
                     return { ...state, allAgenda: action.payload };
+                case ALIADOS:
+                    return { ...state, allAliados: action.payload };
                 case USER_PREFERENCES:
                     return { ...state, allUserPreferences: action.payload };
                 case SET_VIEW_PREFERENCES:

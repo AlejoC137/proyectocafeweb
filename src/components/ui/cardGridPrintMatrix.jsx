@@ -109,7 +109,7 @@ const formatPrice = (precio) => {
     return precio;
 };
 
-function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons, colors }) {
+function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons, colors, showItemDescriptions = true, blockId, groupDescriptions = {} }) {
     const dispatch = useDispatch();
     const [localIngredients, setLocalIngredients] = React.useState(Array.isArray(product.IngredientesBasicos) ? product.IngredientesBasicos : []);
 
@@ -167,10 +167,20 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
         setActiveSlot(null);
     };
 
+    const showLine = colors?.showItemLines !== false;
+    const lineStyle = colors?.itemLineStyle || 'solid';
+    const lineWidth = colors?.itemLineWidth || 1;
+    const borderBottomStyle = showLine ? `${lineWidth}px ${lineStyle} ${colors?.gridBorder || 'rgba(0,0,0,0.1)'}` : 'none';
+
+    const priceAlign = groupDescriptions?.[`${blockId}_priceAlign`] || colors?.priceAlign || 'right';
+    const priceGap = groupDescriptions?.[`${blockId}_priceGap`] ?? colors?.priceGap ?? 5;
+    const containerClass = priceAlign === 'left' ? 'flex justify-start items-baseline' : 'flex justify-between items-baseline gap-2';
+    const containerStyle = priceAlign === 'left' ? { gap: `${priceGap}px` } : {};
+
     return (
-        <div className="pb-0.5 group relative flex flex-col" style={{ borderBottom: `1px solid ${colors?.gridBorder || 'rgba(0,0,0,0.1)'}` }}>
-            <div className="flex justify-between items-baseline gap-2">
-                <div className="flex items-start gap-1 flex-grow min-w-0">
+        <div className="pb-0.5 group relative flex flex-col" style={{ borderBottom: borderBottomStyle }}>
+            <div className={containerClass} style={containerStyle}>
+                <div className={`flex items-start gap-1 min-w-0 ${priceAlign === 'right' ? 'flex-grow' : ''}`}>
                     {editMode && (
                         <div className="flex items-center gap-1 print:hidden pt-0.5">
                             <input
@@ -271,7 +281,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
             </div>
 
             {/* Comentario en una nueva línea que puede ocupar todo el ancho */}
-            {!editMode && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
+            {!editMode && showItemDescriptions && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
                 <div className="italic font-normal normal-case tracking-normal leading-tight w-full" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}` }}>
                     {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
                 </div>
@@ -289,10 +299,12 @@ export function CardGridPrintMatrix({
     columns = 2,
     editMode = false,
     showIcons = true,
+    showItemDescriptions = true,
     colors,
     groupDescriptions,
     saveGroupDescriptions,
-    excludeKey
+    excludeKey,
+    blockId
 }) {
     const [activeSlot, setActiveSlot] = React.useState(null);
 
@@ -359,7 +371,6 @@ export function CardGridPrintMatrix({
                         </span>
                     </button>
                 )}
-                <div className="flex-grow border-b-[2px] ml-2 h-0" style={{ borderColor: isExcluded ? '#a1a1aa' : colors?.categoryBorder }}></div>
             </div>
 
             {!isExcluded && (
@@ -374,6 +385,9 @@ export function CardGridPrintMatrix({
                             setActiveSlot={setActiveSlot}
                             showIcons={showIcons}
                             colors={colors}
+                            showItemDescriptions={showItemDescriptions}
+                            blockId={blockId}
+                            groupDescriptions={groupDescriptions}
                         />
                     ))}
                 </div>

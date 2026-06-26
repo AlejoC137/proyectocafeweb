@@ -1,0 +1,2763 @@
+[
+  {
+    "_id": "02352761-63f5-4029-a569-4cb07d534dc8",
+    "forId": "cf554caf-dfcb-4edb-a935-81d1f830d962",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45693.79148148148,
+    "proces1": "En una olla grande, aÃ±adir la leche y la harina, empezar a cocinar a fuego medio-alto batiendo constantemente con batidor de globo ",
+    "proces2": "Al empezar a espesar poner el fuego medio-bajo y cambiar el batidor a una espÃ¡tula asegurÃ¡ndose que no queden residuos en el fondo para evitar que se quemen y ahÃºmen la mezcla ",
+    "proces3": "Dejar hasta ebulliciÃ³n o formaciÃ³n de burbujas y bajar del fuego, pasar la mezcla a una bandeja plana y esparcir ",
+    "proces4": "Se lleva la bandeja a la nevera y estarÃ¡ lista una vez que tenga una consistencia gelatinosa y pueda despegarse sola de la bandeja ",
+    "item1_Id": "d7967890-35c1-43b2-81b9-a20f55caf910",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "7b9e1e0b-d5d4-4853-8142-44b520be00c2",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "720",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Zhnag Yhong"
+  },
+  {
+    "_id": "044bbdb5-1b84-42c6-b452-d19848c659ce",
+    "forId": "0cef00d3-5e33-4ed6-a41f-7f29ca5bf9a2",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45886.79148148148,
+    "item1_Id": "ceca9f13-2696-46b2-867e-0f25fd9c5500",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2500",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "a8657a77-dfbb-485f-a753-935a15e7d795",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "11cb13d3-eb12-415c-93d6-89a0e3c20104",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "a8546963-486f-4e3a-86db-6d8011561a1d",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "gr"
+      }
+    },
+    "producto_interno1_Id": "02690850-49f9-44fe-932b-e96291ede1a0",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "legacyName": "CaÃ±Ã³n relleno de frutos secos"
+  },
+  {
+    "_id": "09954c8e-1948-43b2-bf8c-638386f97ae7",
+    "forId": "7e3d6cdb-e0a9-41f5-a096-f42f6cdebb9e",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45722.79148148148,
+    "item1_Id": "629b5d23-89e7-414d-abc9-2021781fab2f",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "600",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "0.25",
+        "units": "li"
+      }
+    },
+    "item3_Id": "39ae2d90-e97d-4e25-8d63-817d3a7c3f3c",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1250",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Cebolla Encurtida"
+  },
+  {
+    "_id": "0ddbc35e-8e86-4a86-9dd0-d8203e9a4b11",
+    "forId": "2a834f55-1e6b-415c-bad4-34215dec37ab",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45885.79148148148,
+    "item1_Id": "287ed2a7-cd85-4b7d-a3a1-745d5da074aa",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1000",
+        "units": "NaN"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "li"
+      }
+    },
+    "item3_Id": "503f05fa-fc9b-4618-9824-b0c4b7cf65ef",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3000",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Jugo Almuerzo"
+  },
+  {
+    "_id": "0e09267a-97ae-409f-9588-a48eff42ee75",
+    "forId": "2e5c8f24-ed69-4f2f-a388-4a28c5ad3307",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45683.79148148148,
+    "item1_Id": "7b9e1e0b-d5d4-4853-8142-44b520be00c2",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "ml"
+      }
+    },
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Leche Cortada"
+  },
+  {
+    "_id": "106df8a6-600e-4c4f-9061-9624d30c2672",
+    "forId": "533b3931-b286-410e-9c7a-a8742ba41737",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45886.79148148148,
+    "item1_Id": "3af52444-529d-403e-ba53-0a6226043b18",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3000",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "c68e02b0-6f86-409b-b92f-6b9389f98c79",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "400",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "f6d7369b-9595-4c38-b505-17b5f0e0ab81",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "198",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "27ceb302-4860-4530-91ed-4db48f4255a7",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "454c13b9-f64b-40e7-87bb-3dc8d7ee461c",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "35",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "e9601ff9-806d-4cc0-8966-24ffd00ef5f1",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "ml"
+      }
+    },
+    "item7_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "6",
+        "units": "li"
+      }
+    },
+    "item8_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "7",
+        "units": "gr"
+      }
+    },
+    "item9_Id": "abab507d-161f-42b0-b372-33214d15be2f",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "NaN"
+      }
+    },
+    "item10_Id": "7af1d4b4-3cbe-4aad-9555-637ffe722a0d",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "NaN"
+      }
+    },
+    "item11_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item11_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Caldo de Carne"
+  },
+  {
+    "_id": "11f19d51-105a-4a1f-a848-30fa46cf22b5",
+    "forId": "fb27f80d-2df5-40d9-8837-b390c1b07df0",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45677.79148148148,
+    "item1_Id": "7b9e1e0b-d5d4-4853-8142-44b520be00c2",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1700",
+        "units": "ml"
+      }
+    },
+    "item2_Id": "21b4dd2f-13eb-41af-a531-6a2f3b3bfb82",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "240",
+        "units": "ml"
+      }
+    },
+    "item3_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "NaN"
+      }
+    },
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "75",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Queso Ricotta"
+  },
+  {
+    "_id": "202999b9-98bc-44c4-b49a-a1fd33534daf",
+    "forId": "94a61874-3a91-457e-b0e4-d9b49da5e6c3",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45887.79148148148,
+    "item1_Id": "10dae854-9027-4b52-8530-afe73d637480",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1000",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "21b4dd2f-13eb-41af-a531-6a2f3b3bfb82",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "ml"
+      }
+    },
+    "item3_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "a91ad977-7e06-438c-be13-81f186d83215",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "5cf218d4-0c47-4748-bae1-958902140c31",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "291c4af0-a23a-4d03-9c87-fe56f16eb600",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Pure de papa"
+  },
+  {
+    "_id": "2a410360-7931-4f2e-9c8c-cd38bcdcbeaa",
+    "forId": "2902683e-275f-4f09-9a1d-b41c70a03f66",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "1800",
+      "unidades": "ml"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45839.79148148148,
+    "proces1": "Moler 190 g el cafÃ© Vega en molienda molienda gruesa.",
+    "proces2": "Buscar un filtro fino de tela y purgarlo con agua caliente, para retirar impurezas y temperarlo.",
+    "proces3": "Verter el cafÃ© molido dentro del filtro previamente purgado, realizar una pre infusiÃ³n con agua caliente con 400 ml y durante 20 minutos.",
+    "proces4": "DespuÃ©s de la preinfusiÃ³n, verter el restante de los 2L de agua (agua frÃ­a).",
+    "proces5": "Finalmente, dejarlo extraer por 24 h en un lugar seco y con poca luz. ",
+    "item1_Id": "789b3603-5bac-4a97-9afa-9a57a4cf42ff",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "190",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2",
+        "units": "li"
+      }
+    },
+    "legacyName": "COLD BREW BASE",
+    "UNIDADES": "ml"
+  },
+  {
+    "_id": "348528e4-69b6-4939-9320-97a2919e36e8",
+    "forId": "64b3992f-e9a3-419d-970f-2ec9d1c3c5b2",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45705.79148148148,
+    "item1_Id": "1370a860-f736-4ba1-9a2a-512e05dec5d4",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "907",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "6",
+        "units": "un"
+      }
+    },
+    "item4_Id": "21b4dd2f-13eb-41af-a531-6a2f3b3bfb82",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "480",
+        "units": "ml"
+      }
+    },
+    "item5_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "6",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "ml"
+      }
+    },
+    "item7_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "42",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Cheese Cake Basco"
+  },
+  {
+    "_id": "44f7f9c2-8c3e-4808-a3f1-f284f671d23e",
+    "forId": "3f738377-e48e-4dcc-aebc-2e67b40a3157",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45779.79148148148,
+    "producto_interno1_Id": "02690850-49f9-44fe-932b-e96291ede1a0",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "480",
+        "units": "gr"
+      }
+    },
+    "producto_interno2_Id": "65b390c5-3395-4505-b981-16e885ca2856",
+    "producto_interno2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "350",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Pie de Manzana Completo"
+  },
+  {
+    "_id": "5f566a87-019d-4eea-9d91-e935e313f9ee",
+    "forId": "c36fac2e-1e6c-405b-857a-07dc96181ba4",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45685.79148148148,
+    "item1_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "14",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "360",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "603",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "a80d58f3-b569-4dc6-bd9f-1e1202f66d9e",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "142",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "c0fb6117-783d-4c7f-ab7e-decee06b82fb",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "9.2",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "6.1",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "un"
+      }
+    },
+    "item8_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "118",
+        "units": "ml"
+      }
+    },
+    "producto_interno1_Id": "78ccabc2-4a2c-4626-b4e0-b767dab95cf5",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "341",
+        "units": "NaN"
+      }
+    },
+    "legacyName": "Torta de Chocolate Bruce"
+  },
+  {
+    "_id": "5fba19b6-59de-48e6-b299-4c2a15ec11d4",
+    "forId": "cdad3871-12fd-4506-b362-7279ccda40bb",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45886.79148148148,
+    "item1_Id": "e62fe796-9ca2-41a7-a1f0-55d3a9ce99f4",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "ml"
+      }
+    },
+    "item2_Id": "c68e02b0-6f86-409b-b92f-6b9389f98c79",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "900",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "291c4af0-a23a-4d03-9c87-fe56f16eb600",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "7af1d4b4-3cbe-4aad-9555-637ffe722a0d",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "NaN"
+      }
+    },
+    "item6_Id": "abab507d-161f-42b0-b372-33214d15be2f",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "NaN"
+      }
+    },
+    "item7_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "18",
+        "units": "gr"
+      }
+    },
+    "item9_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "item10_Id": "3bcae7a0-7215-4825-ae98-303421c519ec",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": "175",
+        "units": "ml"
+      }
+    },
+    "item11_Id": "1370a860-f736-4ba1-9a2a-512e05dec5d4",
+    "item11_Cuantity_Units": {
+      "metric": {
+        "cuantity": "225",
+        "units": "gr"
+      }
+    },
+    "producto_interno1_Id": "24bb7c6d-9dbe-48de-a612-8639f27e1aa8",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "producto_interno2_Id": "533b3931-b286-410e-9c7a-a8742ba41737",
+    "producto_interno2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1500",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Sopa de cebolla francesa "
+  },
+  {
+    "_id": "6130f1e8-4d83-433e-9abb-784e5ebeac37",
+    "forId": "872383c2-cb52-456f-bdc9-9c62442c3692",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45684.79148148148,
+    "proces1": "Bertir los ingredientes en una olla muy grande , los suficiente para que la mantequilla pueda espumar sin regarse ",
+    "proces2": "Calentar fuego medio alto  revolviendo cada 5mimjtoa para asegurar un tueste  homogÃ©neo ",
+    "item1_Id": "a8657a77-dfbb-485f-a753-935a15e7d795",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "250",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "5fe7355b-0e2d-4f84-ab28-854cabecd6cb",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "250",
+        "units": "NaN"
+      }
+    },
+    "item3_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Nueces Tostadas en Mantequilla "
+  },
+  {
+    "_id": "61b62b81-3b62-4d54-9b2b-66487f2feb40",
+    "forId": "d7d01528-ee4a-4762-ab9c-d0b48639ff2f",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45887.79148148148,
+    "proces1": "Usando guantes y con cuidado de no tocar la cara u otras Ã¡reas sensibles, quitarle el tallo y las semillas a los chiles.",
+    "proces2": "Preparar los demÃ¡s ingredientes cortados en troncos gruesos.",
+    "proces3": "Preparar la salmuera uniendo la sal, el azÃºcar , el agua y las demÃ¡s especias en Ã©l frasco, separando la mitad del lÃ­quido antes de poner los chiles y los otros ingredientes,  para terminar de llenar ",
+    "proces4": "Tapar bien pero eructando todos los dÃ­as hasta, durante aproximadamente 2 semanas ",
+    "item1_Id": "e7678df1-ed71-46a9-9438-50f40d67794d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "225",
+        "units": null
+      }
+    },
+    "item2_Id": "56f914cc-2889-483d-876d-9bf5898f7d73",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "700",
+        "units": null
+      }
+    },
+    "item3_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "180",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "98512cf7-5a91-4d50-8dbb-ceec70f6bb64",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "9",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "180",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "160",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "li"
+      }
+    },
+    "item9_Id": "629b5d23-89e7-414d-abc9-2021781fab2f",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item10_Id": "22b81ee3-356c-4770-8799-f81a7a536ad9",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Salsa Picante Lactofementada"
+  },
+  {
+    "_id": "66224264-c392-44a6-b4f9-14e92a23b76f",
+    "forId": "dece5372-21d1-41b2-b53e-5fa30aebe67f",
+    "rendimiento": {
+      "porcion": "12",
+      "cantidad": "12",
+      "unidades": "un"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45879.79148148148,
+    "proces1": "Derretir la mantequilla en una olla grande, una vez derretida pero sin espumar , apagar y dejar enfriar",
+    "proces2": "Unir todos los ingredientes secos en un bowl y revolver para tener una mezcla homogÃ©nea",
+    "proces3": "Con la mantequilla a temperatura ambiente revolver todos los ingredientes hasta que todos los secos queden bien hidratados.",
+    "item1_Id": "1c380f12-f343-4cca-b6a0-f2622f478ce4",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "8",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "0f2ddb36-2b70-4845-8c57-e8a142829afa",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "ba9fb4d5-99bf-4911-b9dc-ad7c7576c8f7",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "59",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Relleno Rollo de Canela",
+    "UNIDADES": "un",
+    "ProcessTime": 2
+  },
+  {
+    "_id": "67c5b32c-e86b-499d-9cf4-ee29f8435f72",
+    "forId": "c4bae2d2-11be-4680-8712-c3125c7b1537",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45689.79148148148,
+    "proces1": "Verter el agua, el vinagre y el azÃºcar en una olla grande y sin devolver, dejar cocinar a fuego medio alto con la tapa puesta",
+    "proces2": "Pasados 10 minutos revolver no mÃ¡s de 5 a 10 segundos para homogeneizar la mezcla y hacer esto cada 10 minutos ",
+    "proces3": "Cuando la mezcla empiece a tornarse Ã¡mbar en las esquinas , revolver hasta que toda la mezcla obtenga el color deseado y cambiar el calor a bajo bajo.",
+    "proces4": "Agregar la mantequilla de manera gradual en cubos, y revolver hasta homogeneizar ",
+    "proces5": "Luego agregar la crema de leche y la sal y revolver hasta obtener la consistencia deseada ",
+    "proces6": "Dejar enfriar por lo menos 20 minutos en la olla, para evitar accidentes, dado que la mezcla es muy caliente y daÃ±ina para la piel, una vez reposado se puede transferir a un frasco de vidrio con tapa debidamente etiquetado.",
+    "item1_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "400",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "0.12",
+        "units": "li"
+      }
+    },
+    "item3_Id": "39ae2d90-e97d-4e25-8d63-817d3a7c3f3c",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "15",
+        "units": "NaN"
+      }
+    },
+    "item4_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "80",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "21b4dd2f-13eb-41af-a531-6a2f3b3bfb82",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "240",
+        "units": "ml"
+      }
+    },
+    "item6_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Caramelo"
+  },
+  {
+    "_id": "6957bf1f-4748-4fc0-8dac-5a03b4a5bbc9",
+    "forId": "b4c5fab7-4243-469b-93df-3dd1b38b14f9",
+    "rendimiento": {
+      "porcion": "2,5",
+      "cantidad": "2100",
+      "unidades": "Gr"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45721.79148148148,
+    "item1_Id": "2124a1a6-35b1-4440-9703-5c125181e6ad",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "446",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "892",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "a35685c0-c6fb-4992-b446-0150f0888acb",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "315",
+        "units": null
+      }
+    },
+    "item4_Id": "5b893f29-cbc2-493a-8d94-284091fce359",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "0",
+        "units": "gr"
+      }
+    },
+    "producto_interno1_Id": "78ccabc2-4a2c-4626-b4e0-b767dab95cf5",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "446",
+        "units": "NaN"
+      }
+    },
+    "legacyName": "Yogurt ButterCream",
+    "UNIDADES": "Gr"
+  },
+  {
+    "_id": "7046980a-98d7-4365-bb69-3c7fa100c43e",
+    "forId": "d3c23ce6-667b-4548-8674-1905524d5ded",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45885.79148148148,
+    "item1_Id": "eeaea957-ee62-4c3a-87f3-44cd9de38e46",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5000",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "250",
+        "units": "ml"
+      }
+    },
+    "item3_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "49",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Tocino Frito Cazuela"
+  },
+  {
+    "_id": "7381a721-6038-4777-b155-8187f8b74dde",
+    "forId": "7cc65031-8221-444a-a548-5000e6d30aec",
+    "rendimiento": {
+      "porcion": "1",
+      "cantidad": "1",
+      "unidades": "LITRO"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45672.79148148148,
+    "proces1": "Juntar todos los ingredientes en una olla.",
+    "proces2": "Integrarlos primero en frio, para lograr una base mÃ¡s estable.",
+    "proces3": "DespuÃ©s llevarlos al fuego hasta que la mezcla comience a llegar a punto de ebulliciÃ³n.",
+    "proces4": "Una vez en punto de ebulliciÃ³n, bajar el fuego al mÃ­nimo por 15 m.",
+    "proces5": "Dejar enfriar, envasar y marcar.",
+    "proces6": "El tarro grande se guarda en el enfriador y el tarro chiquito en la secciÃ³n de especias de la zona de cafÃ©s.",
+    "item1_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "li"
+      }
+    },
+    "item2_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "250",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "NaN"
+      }
+    },
+    "legacyName": "JARABE DE VAINILLA",
+    "UNIDADES": "LITRO"
+  },
+  {
+    "_id": "791b665f-8b81-4f2b-af9a-607dc29e38b5",
+    "forId": "6a653d73-c078-4f33-a7a8-9ae2bcb47096",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45825.79148148148,
+    "proces1": "Precalienta el horno a 175â¯Â°C (350â¯Â°F).",
+    "proces2": "Unta generosamente con mantequilla tres moldes para pastel de 23 cm (9â) de diÃ¡metro. Espolvorea una cucharada de harina en cada molde y sacude para cubrir bien el fondo y los lados, Coloca una hoja redonda de papel pergamino en el fondo de cada molde.",
+    "proces3": "En un tazÃ³n grande, bate juntos los ingredientes secos: harina, azÃºcar, cacao en polvo, polvo para hornear, bicarbonato de sodio, sal",
+    "proces4": "En otro tazÃ³n, mezcla los ingredientes lÃ­quidos: suero de leche (buttermilk), huevos, aceite vegetal",
+    "proces5": "Agrega los ingredientes lÃ­quidos a los secos y bate hasta obtener una mezcla homogÃ©nea.",
+    "proces6": "Reparte la mezcla de manera uniforme entre los tres moldes.\nHornea durante 30â35 minutos o hasta que al insertar un palillo, este salga limpio.\n\nColoca los moldes sobre rejillas y deja enfriar durante al menos 30 minutos.\n\nDesmolda con cuidado y deja que los pasteles se enfrÃ­en completamente sobre las rejillas.",
+    "item1_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "260",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "NaN"
+      }
+    },
+    "item3_Id": "c0fb6117-783d-4c7f-ab7e-decee06b82fb",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "7.2",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "29f6a690-c5eb-497b-aa8f-d354d0feeae1",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "6",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "a80d58f3-b569-4dc6-bd9f-1e1202f66d9e",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "80",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "789b3603-5bac-4a97-9afa-9a57a4cf42ff",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "42",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "15",
+        "units": "NaN"
+      }
+    },
+    "item8_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "7",
+        "units": "un"
+      }
+    },
+    "item9_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "180",
+        "units": "ml"
+      }
+    },
+    "item10_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": "450",
+        "units": "gr"
+      }
+    },
+    "item11_Id": "ce33f90f-1184-4a39-badf-3437e1edaaec",
+    "item11_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1000",
+        "units": "gr"
+      }
+    },
+    "producto_interno1_Id": "512a1760-5bc4-4ea5-a8eb-f9f76d2d2871",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "675",
+        "units": "gr"
+      }
+    },
+    "producto_interno2_Id": "2e5c8f24-ed69-4f2f-a388-4a28c5ad3307",
+    "producto_interno2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "370",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Torta Chocolate y Moras"
+  },
+  {
+    "_id": "7945c52c-7b9f-4e5f-9bc0-a9eef02ebdbd",
+    "forId": "02690850-49f9-44fe-932b-e96291ede1a0",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45751.79148148148,
+    "item1_Id": "cdb8cd55-be75-4348-a0d5-0c23abdbf3e4",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1100",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "ae87e7d4-ad0a-4d3d-b0bd-9705a3279b85",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "180",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "e9601ff9-806d-4cc0-8966-24ffd00ef5f1",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "90",
+        "units": "ml"
+      }
+    },
+    "item4_Id": "63fc02c1-a3df-4995-a036-134528cedc8b",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "1c380f12-f343-4cca-b6a0-f2622f478ce4",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "9",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "291c4af0-a23a-4d03-9c87-fe56f16eb600",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3.5",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "a6f95545-33f1-4940-b399-6ddf70008283",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "200",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Relleno Manzana Pie"
+  },
+  {
+    "_id": "7d19f154-6a65-44cd-a487-663dc32278c6",
+    "forId": "2d0ea853-8f24-41cb-ae40-d06a6504efe2",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45921.79148148148,
+    "proces1": "Con el jengibre molido, se debe dejar reposando en un litro de agua caliente durante 15 minutos.",
+    "proces2": "Agregar el agua infusionada con jengibre, el jengibre y el azÃºcar dentro de la licuadora.",
+    "proces3": "Licuar todos los ingredientes juntos durante 5 minutos. ",
+    "proces4": "Colar toda la mezcla con el colador de malla fina.",
+    "proces5": "Finalmente, almacenar en un recipiente seco y limpio, y etiquetar.",
+    "item1_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": 500,
+        "units": "gr"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "li"
+      }
+    },
+    "item3_Id": "bb1e5765-e0a7-4782-837a-6fe138fc6dee",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "legacyName": "JARABE JENGIBRE"
+  },
+  {
+    "_id": "860d54fe-648c-42df-b37b-5e5ff8936df8",
+    "forId": "ef6050a1-be9e-418f-ab14-93cf1b69f896",
+    "rendimiento": {
+      "porcion": "10",
+      "cantidad": "1500",
+      "unidades": "gr"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45858.79148148148,
+    "proces1": "Tatemar los pimentones en una fuego abierto o asador de carbon, quemandolos hasta quedar totalmente negros , y luego , derjarlos sudando en un recipiente tapado , una vez frios se pueden pelar con auga en un cuenco grande , tratando de no ",
+    "proces2": "mientras los pimentones se tateman , cocina los tomantes hasta que la cascara se rompa , luego , pelarlos y guardar las piles para procesar y colar , aÃ±adiendo el liquido resultante junto con los tomates picados en cuadros grandos , recerbar ",
+    "proces3": "picar las cebollas en julianas de 2 mm de ancho ",
+    "item1_Id": "5a8816ec-5600-4884-b087-79b8dd9df8db",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "e9edfd5b-966b-412e-9cd7-57f3bb34aa32",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "22b81ee3-356c-4770-8799-f81a7a536ad9",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "340",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "e62fe796-9ca2-41a7-a1f0-55d3a9ce99f4",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "ml"
+      }
+    },
+    "item6_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "NaN"
+      }
+    },
+    "item7_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "629b5d23-89e7-414d-abc9-2021781fab2f",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "gr"
+      }
+    },
+    "item9_Id": "80881b71-9886-4c57-b136-f2e0ff70fcde",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "800",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Salsa Shakshukas",
+    "UNIDADES": "gr"
+  },
+  {
+    "_id": "8d471c41-c1a1-43c4-af73-d57d47876ce2",
+    "forId": "6d6c6c29-2760-4c98-972a-97c1366ad280",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45672.79148148148,
+    "proces1": "SegÃºn el rendimiento deseado, agregar de todos los ingredientes la misma cantidad al bowl de vidrio.",
+    "proces2": "Batir con movimientos envolventes usando la batidora de mano e integrar bien la mezcla.",
+    "proces3": "Se finaliza cuando la espuma haya aumentado considerablemente su volumen, sea firme y se generen picos rectos de espuma en la punta de la batidora.",
+    "proces4": "Se envasa en un recipiente, se marca y se guarda en la nevera de cafÃ©.",
+    "item1_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "li"
+      }
+    },
+    "legacyName": "ESPUMA DE CAFE"
+  },
+  {
+    "_id": "941cf171-0ecd-48f0-9b46-1ce8de3bcb19",
+    "forId": "a182d9bd-ea65-45fa-b3bb-28ba2060187c",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "costo": "null",
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45931.79148148148,
+    "proces1": "Hacer mice on place de Los ingredientes, mÃ¡s detalles despuÃ©s ",
+    "proces2": "Preparar moldes ",
+    "proces3": "Precalentar el horno an350f o 180c ",
+    "proces4": "Integrar, zanahoria rallada, gengubre rallado, leche cortada y vainilla , dejar aparte ",
+    "proces5": "En un bowl aparte , se siernen y se combinan todos los ingredientes secos , usar batidor de mano para homogeneizar la mezcla \n",
+    "proces6": "En el Bowl final de la mascla , aÃ±adir los azÃºcares y los huevos , batiendo con globo , hasta alcanzar ribbon o moÃ±o , luego vertir el aceite al hilo hasta hemuksificar la mescla y manteniendo el punto de ribbon ",
+    "proces7": "Cambiando de gancho a lo de revÃ³lver , y agregar 8 en partes alternando entre secos y hÃºmedos , (primeros y Ãºltimos secos )",
+    "proces8": "DespuÃ©s de tener todos los ingredientes integrados, aÃ±adir nueces y revolver solo hasta convinar",
+    "proces9": "Bertir 750 gramos de mescla en cada molde , hornear por 30 minutos y dejar enfriar para armar la torta ",
+    "item1_Id": "f6d7369b-9595-4c38-b505-17b5f0e0ab81",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": 908,
+        "units": "gr"
+      }
+    },
+    "item2_Id": "ccff3929-f50c-40d0-8ef3-e5757f53a93a",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": 14,
+        "units": "gr"
+      }
+    },
+    "item3_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": 16,
+        "units": "NaN"
+      }
+    },
+    "item4_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": 650,
+        "units": "gr"
+      }
+    },
+    "item5_Id": "1c380f12-f343-4cca-b6a0-f2622f478ce4",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": 12,
+        "units": "gr"
+      }
+    },
+    "item6_Id": "29f6a690-c5eb-497b-aa8f-d354d0feeae1",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": 16,
+        "units": "gr"
+      }
+    },
+    "item7_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": 12,
+        "units": "NaN"
+      }
+    },
+    "item8_Id": "c0fb6117-783d-4c7f-ab7e-decee06b82fb",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": 12,
+        "units": "gr"
+      }
+    },
+    "item9_Id": "bb1e5765-e0a7-4782-837a-6fe138fc6dee",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": 4,
+        "units": "gr"
+      }
+    },
+    "item10_Id": "d34b6662-32fe-4168-a4a4-458bbfc477a8",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": 2,
+        "units": "gr"
+      }
+    },
+    "item11_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item11_Cuantity_Units": {
+      "metric": {
+        "cuantity": 8,
+        "units": "un"
+      }
+    },
+    "item12_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item12_Cuantity_Units": {
+      "metric": {
+        "cuantity": 300,
+        "units": "gr"
+      }
+    },
+    "item13_Id": "63fc02c1-a3df-4995-a036-134528cedc8b",
+    "item13_Cuantity_Units": {
+      "metric": {
+        "cuantity": 300,
+        "units": "gr"
+      }
+    },
+    "item14_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item14_Cuantity_Units": {
+      "metric": {
+        "cuantity": 452,
+        "units": "ml"
+      }
+    },
+    "producto_interno1_Id": "2e5c8f24-ed69-4f2f-a388-4a28c5ad3307",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": 480,
+        "units": "ml"
+      }
+    },
+    "producto_interno2_Id": "872383c2-cb52-456f-bdc9-9c62442c3692",
+    "producto_interno2_Cuantity_Units": {
+      "metric": {
+        "cuantity": 300,
+        "units": "gr"
+      }
+    },
+    "producto_interno3_Id": "b4c5fab7-4243-469b-93df-3dd1b38b14f9",
+    "producto_interno3_Cuantity_Units": {
+      "metric": {
+        "cuantity": 1625,
+        "units": "gr"
+      }
+    },
+    "legacyName": "Torta de Zanahoria",
+    "ProcessTime": 0
+  },
+  {
+    "_id": "992df281-4219-4e62-8ff2-d404071a3e6d",
+    "forId": "c090a7ed-c177-4906-901f-1de7a7a89ed6",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45644.79148148148,
+    "item1_Id": "80881b71-9886-4c57-b136-f2e0ff70fcde",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1000",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "c68e02b0-6f86-409b-b92f-6b9389f98c79",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Hogao"
+  },
+  {
+    "_id": "999349a8-ab25-402c-a6ba-7e829860114d",
+    "forId": "2d0ea853-8f24-41cb-ae40-d06a6504efe2",
+    "rendimiento": {
+      "porcion": "1",
+      "cantidad": "1",
+      "unidades": "LITRO"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45676.79148148148,
+    "item1_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "400",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "li"
+      }
+    },
+    "legacyName": "JARABE JENGIBRE",
+    "UNIDADES": "LITRO"
+  },
+  {
+    "_id": "9c6b9a5a-722e-42be-82b9-eaff1eb4b054",
+    "forId": "2629627f-021d-474b-a8f9-9c100f8e9445",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45685.79148148148,
+    "item1_Id": "cff02a5a-5242-437b-bd37-0237df9d3df2",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "400",
+        "units": null
+      }
+    },
+    "item2_Id": "ef33110e-8deb-4ce7-a3b9-2e3ce35aeed1",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "5fe7355b-0e2d-4f84-ab28-854cabecd6cb",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "120",
+        "units": "NaN"
+      }
+    },
+    "item4_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "NaN"
+      }
+    },
+    "item6_Id": "e62fe796-9ca2-41a7-a1f0-55d3a9ce99f4",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "400",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Pesto"
+  },
+  {
+    "_id": "a34061d7-c06f-461b-9bdb-264fe16778c7",
+    "forId": "512a1760-5bc4-4ea5-a8eb-f9f76d2d2871",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45677.79148148148,
+    "item1_Id": "946b8026-99ec-40c9-8c0d-323eaa9d601b",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "226",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "7b9e1e0b-d5d4-4853-8142-44b520be00c2",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "240",
+        "units": "ml"
+      }
+    },
+    "item3_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "17",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "NaN"
+      }
+    },
+    "item6_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "un"
+      }
+    },
+    "item7_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "284",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "20",
+        "units": "NaN"
+      }
+    },
+    "legacyName": "ButterCream Suizo de Chocolate"
+  },
+  {
+    "_id": "a8e85d44-315f-4974-8c9f-82954793736b",
+    "forId": "c6c43d77-4beb-4214-93eb-9921ad748874",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45885.79148148148,
+    "item1_Id": "b80ef946-13b4-4952-9a40-881e41aaafa1",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "6000",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "f6d7369b-9595-4c38-b505-17b5f0e0ab81",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "600",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "72452133-3a11-4e62-895d-cb6fedc1bc05",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "un"
+      }
+    },
+    "item4_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "li"
+      }
+    },
+    "legacyName": "Frijoles Verdes "
+  },
+  {
+    "_id": "ac88f7d5-882b-472e-a29d-8357fb484eff",
+    "forId": "0442d928-a0b5-49d8-9820-bdaac45203c8",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45699.79148148148,
+    "proces1": "Precalentar el horno a 175Â°C. Engrasar dos moldes de 8Â½x4Â½\" con aceite en spray y forrar con papel pergamino, dejando un margen en los lados largos.",
+    "proces2": "En un tazÃ³n mediano, mezclar la harina, el bicarbonato de sodio y la sal.",
+    "proces3": "En un tazÃ³n grande, batir con batidora elÃ©ctrica el azÃºcar morena, el mascarpone (o yogur/crema agria) y la mantequilla hasta obtener una mezcla ligera y esponjosa (aprox. 4 minutos).",
+    "proces4": "Agregar los huevos uno a uno, batiendo bien despuÃ©s de cada adiciÃ³n y raspando los lados del tazÃ³n cuando sea necesario.",
+    "proces5": "Reducir la velocidad y aÃ±adir los ingredientes secos, mezclando solo hasta integrar.",
+    "proces6": "Incorporar los bananos triturados y mezclar hasta integrar. Agregar el chocolate y/o nueces si se utilizan.",
+    "proces7": "Verter la mezcla en los moldes preparados y alisar la parte superior.",
+    "proces8": "Hornear durante 60-65 minutos o hasta que un palillo insertado en el centro salga limpio.",
+    "proces9": "Dejar enfriar en el molde por 1 hora antes de desmoldar.",
+    "item1_Id": "d7967890-35c1-43b2-81b9-a20f55caf910",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "376",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "7",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "63fc02c1-a3df-4995-a036-134528cedc8b",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "400",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "un"
+      }
+    },
+    "item5_Id": "469a57d6-509e-42d1-8eee-2930e56ef712",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "8",
+        "units": "un"
+      }
+    },
+    "item6_Id": "946b8026-99ec-40c9-8c0d-323eaa9d601b",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "120",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "a8657a77-dfbb-485f-a753-935a15e7d795",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "120",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "112",
+        "units": "gr"
+      }
+    },
+    "producto_interno1_Id": "78ccabc2-4a2c-4626-b4e0-b767dab95cf5",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "160",
+        "units": "NaN"
+      }
+    },
+    "legacyName": "Torta Banano"
+  },
+  {
+    "_id": "ad6e9aec-0be2-412e-a152-b2ac8759b133",
+    "forId": "9788167f-8f4c-4805-bfec-75df2764834d",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45885.79148148148,
+    "item1_Id": "de64146e-43a1-47aa-a855-32538c22ce08",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1000",
+        "units": "NaN"
+      }
+    },
+    "item2_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Platanitos fritos"
+  },
+  {
+    "_id": "b13b257b-ccdb-4f0b-822e-d66e41e4b5ea",
+    "forId": "69d72ca2-6ed2-4cb9-9323-4a8cce85e275",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45677.79148148148,
+    "item1_Id": "ce33f90f-1184-4a39-badf-3437e1edaaec",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "dc8cf03b-7cdb-4909-b0b0-92e1c6b15bbf",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "99c28780-3c91-4def-97d0-34cd35607630",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": ".200",
+        "units": "li"
+      }
+    },
+    "item5_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "39ae2d90-e97d-4e25-8d63-817d3a7c3f3c",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Frutos Rojos"
+  },
+  {
+    "_id": "b2bf5ebc-8ca3-4fc7-a963-0ec8c9a427a7",
+    "forId": "dece5372-21d1-41b2-b53e-5fa30aebe67f",
+    "rendimiento": {
+      "porcion": "12",
+      "cantidad": "12",
+      "unidades": "un"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45879.79148148148,
+    "proces1": "Derretir la mantequilla en una olla grande, una vez derretida pero sin espumar , apagar y dejar enfriar",
+    "proces2": "Unir todos los ingredientes secos en un bowl y revolver para tener una mezcla homogÃ©nea",
+    "proces3": "Con la mantequilla a temperatura ambiente revolver todos los ingredientes hasta que todos los secos queden bien hidratados.",
+    "item1_Id": "1c380f12-f343-4cca-b6a0-f2622f478ce4",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "8",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "0f2ddb36-2b70-4845-8c57-e8a142829afa",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "ba9fb4d5-99bf-4911-b9dc-ad7c7576c8f7",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "59",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Relleno Rollo de Canela",
+    "UNIDADES": "un",
+    "ProcessTime": 2
+  },
+  {
+    "_id": "b5b9ccd0-85a7-4530-90a2-779d21074da2",
+    "forId": "8b9a49c8-a023-44c3-a0e2-11d326f57588",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45887.79148148148,
+    "item1_Id": "a5372f56-7be5-40ad-a625-25988413d25d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "80881b71-9886-4c57-b136-f2e0ff70fcde",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "240",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "818e1345-bc56-4211-b881-9c847d5040d5",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "srv"
+      }
+    },
+    "producto_interno1_Id": "7e3d6cdb-e0a9-41f5-a096-f42f6cdebb9e",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "50",
+        "units": "gr"
+      }
+    },
+    "producto_interno2_Id": "39263e15-4111-4137-9e24-eebd0b612d53",
+    "producto_interno2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "125",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Ensalada Generica"
+  },
+  {
+    "_id": "bd721250-e96e-4c42-95ed-d6fa37d407ab",
+    "forId": "3dfb1f64-9cb6-410a-86a6-3c7af3c2f552",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45755.79148148148,
+    "item1_Id": "63fc02c1-a3df-4995-a036-134528cedc8b",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "0.2",
+        "units": "un"
+      }
+    },
+    "producto_interno1_Id": "65b390c5-3395-4505-b981-16e885ca2856",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "120",
+        "units": "gr"
+      }
+    },
+    "producto_interno2_Id": "02690850-49f9-44fe-932b-e96291ede1a0",
+    "producto_interno2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "80",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Pie de Manzana Individual"
+  },
+  {
+    "_id": "c23058b7-1696-4b3b-adf3-ae93e5f161c9",
+    "forId": "1f044127-5cf0-4026-a078-1fd73cdf0390",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45741.79148148148,
+    "proces1": "Precalienta el horno (190Â°C). Distribuye la avena sobre una bandeja para hornear con borde y tuÃ©stala hasta que estÃ© ligeramente dorada, aproximadamente 6 minutos. Deja enfriar ligeramente",
+    "proces2": " En un recipiente mediano, bate la harina de uso mÃºltiple, sal kosher ,bicarbonato de sodio, canela molida y nuez moscada reciÃ©n molida las nueces e incorpora la avena enfriada.",
+    "proces3": "Con una batidora elÃ©ctrica a velocidad media, bate la mantequilla sin sal a temperatura ambiente, la azÃºcar morena y el azÃºcar granulada en un tazÃ³n grande. Raspa los lados del tazÃ³n y mezcla hasta que estÃ© suave y esponjoso, de 3 a 4 minutos. Agrega el huevo a temperatura ambiente, reducciÃ³n de sazonador de manzana o miel y el  extracto o pasta de vainilla. Bate hasta que se incorpore, aproximadamente 1 minuto. Reduce la velocidad al mÃ­nimo; aÃ±ade la mezcla de harina y pasas. ContinÃºa mezclando, raspando los lados y el fondo del tazÃ³n, hasta que estÃ© combinado. Deja reposar a temperatura ambiente por al menos 1 hora para que la avena se hidrate.",
+    "proces4": "Precalienta el horno a (175Â°C). Forra 2 bandejas para hornear con papel encerado. Forma bolitas de 55 gramos dejando 5 cm entre cada galleta.",
+    "proces5": "Hornea las galletas, rotando las bandejas a la mitad del tiempo, hasta que los bordes estÃ©n dorados y firmes, pero los centros sigan suaves, de 15 a 20 minutos. DÃ©jalas reposar en las bandejas durante 10 minutos, luego transfiÃ©relas a rejillas de enfriamiento y dÃ©jalas enfriar completamente.",
+    "item1_Id": "ebda8286-11db-430c-b5e0-c54e05e1dfe6",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "350",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "245",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "NaN"
+      }
+    },
+    "item4_Id": "29f6a690-c5eb-497b-aa8f-d354d0feeae1",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "1c380f12-f343-4cca-b6a0-f2622f478ce4",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "291c4af0-a23a-4d03-9c87-fe56f16eb600",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "d34b6662-32fe-4168-a4a4-458bbfc477a8",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "335",
+        "units": "gr"
+      }
+    },
+    "item9_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "315",
+        "units": "gr"
+      }
+    },
+    "item10_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2",
+        "units": "un"
+      }
+    },
+    "item11_Id": "f37b23a5-bac9-4e89-8dc1-87d516ab5cb9",
+    "item11_Cuantity_Units": {
+      "metric": {
+        "cuantity": "85",
+        "units": "NaN"
+      }
+    },
+    "item12_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item12_Cuantity_Units": {
+      "metric": {
+        "cuantity": "16",
+        "units": "NaN"
+      }
+    },
+    "item13_Id": "52933ed9-2f05-4405-9acb-77f42597bca0",
+    "item13_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item14_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item14_Cuantity_Units": {
+      "metric": {
+        "cuantity": "200",
+        "units": "li"
+      }
+    },
+    "producto_interno1_Id": "872383c2-cb52-456f-bdc9-9c62442c3692",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "200",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Galletas de Avena"
+  },
+  {
+    "_id": "c7ce94cb-92a9-402a-b4af-745ccc2aee8f",
+    "forId": "d7d01528-ee4a-4762-ab9c-d0b48639ff2f",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45887.79148148148,
+    "item1_Id": "e7678df1-ed71-46a9-9438-50f40d67794d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "225",
+        "units": null
+      }
+    },
+    "item2_Id": "56f914cc-2889-483d-876d-9bf5898f7d73",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "700",
+        "units": null
+      }
+    },
+    "item3_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "98512cf7-5a91-4d50-8dbb-ceec70f6bb64",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "90",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "80",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "2",
+        "units": "li"
+      }
+    },
+    "legacyName": "Salsa Picante Lactofementada"
+  },
+  {
+    "_id": "ca80e3de-8f00-4f20-95c8-c672bc3558e3",
+    "forId": "4c3e40be-d28b-43b4-9b89-54c68f364c22",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45871.79148148148,
+    "proces1": "Derretir la mantequilla ",
+    "proces2": "Agregar todos los ingredientes a la licuadora por 2 minutos, luego dejar reposar por mÃ­nimo 1 hora ",
+    "proces3": "En una sartÃ©n antiaderente debidamente pre calentado , a fue medio alto, verter una 1/3 de copa por cada crepe o segun sea la preparacion , esparciendo por toda la superficie la mezcla, inclinando la paila o ayudado por un espatula ",
+    "proces4": "dejar cocinar sin tocar, por 1 minuto o hasta que los bordes esten crocantes y cafe claro , voltear rapidamente y cocinar por medio minuto en la otra cara , ",
+    "proces5": "guardar en un trapo mientras se enfria,",
+    "item1_Id": "d7967890-35c1-43b2-81b9-a20f55caf910",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "135",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "un"
+      }
+    },
+    "item4_Id": "27fff81a-e6c0-468a-aaed-d2e1c5aa0fa0",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": "ml"
+      }
+    },
+    "item5_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "55",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "7b9e1e0b-d5d4-4853-8142-44b520be00c2",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "551",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Masa Crepe",
+    "ProcessTime": 8
+  },
+  {
+    "_id": "cb1b753c-6bd9-4f3c-a350-4ca6e3f641b6",
+    "forId": "4c950656-6191-4440-983e-65413d05ede2",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "1",
+      "unidades": "Litro"
+    },
+    "costo": "null",
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45931.79148148148,
+    "proces1": "Verter en una olla las cantidades indicadas de agua caliente, azÃºcar y romero.",
+    "proces2": "Dejar reducir la mezcla previa a fuego medio-alto durante 15 m.",
+    "proces3": "Luego dejar otros 15 m a fuego bajo.",
+    "proces4": "Retirar el jarabe y dejar reposar hasta llegar a temperatura ambiente.",
+    "proces5": "Una vez el jarabe se encuentre a temperatura ambiente, agregar el zumo de limÃ³n e integrar revolviendo.",
+    "item1_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": 1,
+        "units": "li"
+      }
+    },
+    "item2_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": 500,
+        "units": "gr"
+      }
+    },
+    "item3_Id": "ae87e7d4-ad0a-4d3d-b0bd-9705a3279b85",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": 500,
+        "units": "gr"
+      }
+    },
+    "item4_Id": "a91ad977-7e06-438c-be13-81f186d83215",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": 250,
+        "units": "gr"
+      }
+    },
+    "legacyName": "JARABE ROMERO Y LIMÃN TAHITÃ",
+    "UNIDADES": "Litro",
+    "ProcessTime": 20
+  },
+  {
+    "_id": "d3f9acf7-fd60-4d2f-b404-26be4a301e17",
+    "forId": "46e95ffc-ab5f-4b19-aa20-54b5eaa06182",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "1000",
+      "unidades": "ml"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45779.79148148148,
+    "proces1": "Juntar todos los ingredientes en una olla.",
+    "proces2": "Primero agregar los ingredientes en seco (chai. Canela y azÃºcar).",
+    "proces3": "Agregar agua caliente a los ingredientes en seco.",
+    "proces4": "DespuÃ©s llevarlos al fuego, hasta que la mezcla llegue al punto de ebulliciÃ³n.",
+    "proces5": "Una vez en punto de ebulliciÃ³n, bajar el fuego al mÃ­nimo.",
+    "proces6": "Y, dejar el jarabe en fuego bajo por 15 min.",
+    "proces7": "Colar la flor de jamaica del lÃ­quido (jarabe) y repetir el proceso de nuevo",
+    "item1_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "900",
+        "units": "li"
+      }
+    },
+    "item2_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "d47a7bff-b274-43de-be52-f24b4bbe616e",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "9",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "13e0c964-81ba-47eb-8b75-afbad39d8c0b",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1.5",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "d34b6662-32fe-4168-a4a4-458bbfc477a8",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "25",
+        "units": "gr"
+      }
+    },
+    "legacyName": "JARABE FLOR DE JAMAICA",
+    "UNIDADES": "ml"
+  },
+  {
+    "_id": "d4a86134-2fbf-4da9-8c2a-d6d1b2399583",
+    "forId": "65b390c5-3395-4505-b981-16e885ca2856",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45698.79148148148,
+    "proces1": "en el procesador de alimentos Vertir la sal , el azucar y la harina, luego pulsar varias veces para homogeneisar la harina , ",
+    "proces2": "con la cuchilla de rallar , previamente enfriada , rallar la mantequilla congelada , esta debe estar cortada en barras ",
+    "proces3": "luego que toda la mantequilla se ralle aÃ±adro el agua lo mas fria posible se vierte de apocos entre 60 y 120 ml de agua en hielo , hasta que la mesacla esta lijeramente hidratada , como arena humeda ,",
+    "proces4": "luego tranferir a superficie de trabajo , y moldear ",
+    "proces5": "refrigerar por lo menos 30 minutos y sacar para volver a formar y usar ",
+    "item1_Id": "1742cfce-a9f8-4ad3-b616-d760e1b70be1",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "370",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "63fc02c1-a3df-4995-a036-134528cedc8b",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "15",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "7",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "260",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "li"
+      }
+    },
+    "item6_Id": "503f05fa-fc9b-4618-9824-b0c4b7cf65ef",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Base Pie"
+  },
+  {
+    "_id": "e0662ba6-5dc9-4f3d-8737-5da3c2b7ae2b",
+    "forId": "5f6dc8ba-0218-4467-b5ac-7d921ad4bf71",
+    "rendimiento": {
+      "porcion": "1 LITRO",
+      "cantidad": "1",
+      "unidades": "LITRO"
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45676.79148148148,
+    "proces1": "Verter en una olla las cantidades indicadas de agua caliente y panela (esta Ãºltima puede ser granulada o trozos completos)",
+    "proces2": "Dejar reducir la mezcla previa a fuego medio-alto durante 15 m",
+    "proces3": "Luego dejar otros 15 m a fuego bajo",
+    "proces4": "Retirar el jarabe del fuego y dejar reposar hasta llegar a temperatura ambiente",
+    "proces5": "Una vez el jarabe se encuentre a temperatura ambiente, agregar el zumo de naranja e integrar revolviendo ",
+    "proces6": "Finalmente sumergir las cascaras de naranja al jarabe ya finalizado",
+    "item1_Id": "80b4dbbf-281d-4c78-a54b-b520055c4eb0",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "600",
+        "units": "NaN"
+      }
+    },
+    "item2_Id": "ba9fb4d5-99bf-4911-b9dc-ad7c7576c8f7",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "500",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "800",
+        "units": "li"
+      }
+    },
+    "item4_Id": "0faf1b62-cff5-47c2-86ed-e7b4ff88746b",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Jarabe de Naranja y Panela",
+    "UNIDADES": "LITRO"
+  },
+  {
+    "_id": "e68cf37d-beb1-4088-8542-a3b4ddd95135",
+    "forId": "39263e15-4111-4137-9e24-eebd0b612d53",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45887.79148148148,
+    "item1_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "gr"
+      }
+    },
+    "item3_Id": "e62fe796-9ca2-41a7-a1f0-55d3a9ce99f4",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "55",
+        "units": "ml"
+      }
+    },
+    "item4_Id": "80b4dbbf-281d-4c78-a54b-b520055c4eb0",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "60",
+        "units": "NaN"
+      }
+    },
+    "producto_interno1_Id": "107eb960-26fa-4adf-b6bc-7de5bf5c09aa",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "5",
+        "units": null
+      }
+    },
+    "legacyName": "Vinagreta de naranja"
+  },
+  {
+    "_id": "ef730bef-76d9-49f4-ba3c-8fbc7281abab",
+    "forId": "d7d01528-ee4a-4762-ab9c-d0b48639ff2f",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45887.79148148148,
+    "proces1": "Usando guantes y con cuidado de no tocar la cara u otras Ã¡reas sensibles, quitarle el tallo y las semillas a los chiles.",
+    "proces2": "Preparar los demÃ¡s ingredientes cortados en troncos gruesos.",
+    "proces3": "Preparar la salmuera uniendo la sal, el azÃºcar , el agua y las demÃ¡s especias en Ã©l frasco, separando la mitad del lÃ­quido antes de poner los chiles y los otros ingredientes,  para terminar de llenar ",
+    "proces4": "Tapar bien pero eructando todos los dÃ­as hasta, durante aproximadamente 2 semanas ",
+    "proces5": "Sacar del frasco , procesar y separar material mÃ¡s grueso , almacenar, etiquetado y en un lugar frÃ­o ",
+    "item1_Id": "e7678df1-ed71-46a9-9438-50f40d67794d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "225",
+        "units": null
+      }
+    },
+    "item2_Id": "56f914cc-2889-483d-876d-9bf5898f7d73",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "700",
+        "units": null
+      }
+    },
+    "item3_Id": "a2a3dc1a-34cc-4d7b-9fbc-8d61b7e2068b",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "120",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "98512cf7-5a91-4d50-8dbb-ceec70f6bb64",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "4",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "c4bd69ae-4872-49db-b2e5-7f514b40175d",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "9",
+        "units": "gr"
+      }
+    },
+    "item6_Id": "1de141db-86c1-44c3-afa3-c391e641321c",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "180",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "160",
+        "units": "gr"
+      }
+    },
+    "item8_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item8_Cuantity_Units": {
+      "metric": {
+        "cuantity": "3",
+        "units": "li"
+      }
+    },
+    "item9_Id": "629b5d23-89e7-414d-abc9-2021781fab2f",
+    "item9_Cuantity_Units": {
+      "metric": {
+        "cuantity": "300",
+        "units": "gr"
+      }
+    },
+    "item10_Id": "22b81ee3-356c-4770-8799-f81a7a536ad9",
+    "item10_Cuantity_Units": {
+      "metric": {
+        "cuantity": "100",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Salsa Picante Lactofementada"
+  },
+  {
+    "_id": "f8a7d50c-31e2-4afa-8790-2c07bb136409",
+    "forId": "e668df03-1f26-40d1-91af-7bb98a1d318d",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45885.79148148148,
+    "item1_Id": "1c05cd48-f587-4f8b-9381-8b1383d1c2fd",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "190",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "0.5",
+        "units": "li"
+      }
+    },
+    "item3_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "8",
+        "units": "gr"
+      }
+    },
+    "item4_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "ml"
+      }
+    },
+    "legacyName": "Arroz Blanco Cocinado"
+  },
+  {
+    "_id": "fba28b68-4dda-495f-be46-214cb41f3c48",
+    "forId": "24bb7c6d-9dbe-48de-a612-8639f27e1aa8",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45693.79148148148,
+    "proces1": "En el bowl final ponemos la harina, huevos, azÃºcar, sal, aceite y tangzhong (ojooo, todos los ingredientes deben estar previamente refrigerados) ",
+    "proces2": "Procedemos a batir con gancho hasta conseguir una mezcla homogÃ©nea ",
+    "proces3": "Empezamos a verter poco a poco la mantequilla mientras se estÃ¡ batiendo   Hasta que pase la âprueba de la ventanaâ",
+    "proces4": "A la masa final, se le hacen dobleces y se pone en un recipiente hermÃ©tico lo suficientemente grande para que pueda crecer entre el doble y triple de su tamaÃ±o, dejando fermentar de 8 a 36 horas ",
+    "proces5": "Pasado este tiempo se procede a hacer las formaciones de pan que se puedan necesitar ",
+    "proces6": "Se dejan leudar aproximadamente 2 horas por cada 100 gramos a 500 gramos, y por cada 100g mÃ¡s, una hora adicional ",
+    "item1_Id": "d7967890-35c1-43b2-81b9-a20f55caf910",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1470",
+        "units": "gr"
+      }
+    },
+    "item2_Id": "e885259a-746a-41b0-8354-5b72f9a837b5",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "12",
+        "units": "un"
+      }
+    },
+    "item3_Id": "ba61c4e0-54cb-4b6e-a892-ac964e518c80",
+    "item3_Cuantity_Units": {
+      "metric": {
+        "cuantity": "90",
+        "units": "ml"
+      }
+    },
+    "item4_Id": "ebfef608-1e9f-4229-9c1f-ec7d8d790594",
+    "item4_Cuantity_Units": {
+      "metric": {
+        "cuantity": "150",
+        "units": "gr"
+      }
+    },
+    "item5_Id": "6ea51224-266d-4bde-b882-5c0b2b095b7f",
+    "item5_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": "NaN"
+      }
+    },
+    "item6_Id": "746d4f86-bde8-46a7-a582-e6dc4d4b38e4",
+    "item6_Cuantity_Units": {
+      "metric": {
+        "cuantity": "339",
+        "units": "gr"
+      }
+    },
+    "item7_Id": "e7cf2454-12db-44b8-93a3-df6a31b8d777",
+    "item7_Cuantity_Units": {
+      "metric": {
+        "cuantity": "27",
+        "units": null
+      }
+    },
+    "producto_interno1_Id": "cf554caf-dfcb-4edb-a935-81d1f830d962",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "800",
+        "units": "gr"
+      }
+    },
+    "legacyName": "Pan ZhanYong"
+  }
+]

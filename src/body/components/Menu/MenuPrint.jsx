@@ -24,6 +24,7 @@ function MenuPrint({ menuId = 1 }) {
   const [editMode, setEditMode] = useState(false);
   const [showColorPanel, setShowColorPanel] = useState(false);
   const [showIcons, setShowIcons] = useState(true);
+  const [showItemDescriptions, setShowItemDescriptions] = useState(true);
   const menuData = useSelector((state) => state.allMenu);
 
   const [printImages, setPrintImages] = useState([]);
@@ -105,6 +106,7 @@ function MenuPrint({ menuId = 1 }) {
         setShowIcons(config.show_icons ?? true);
 
         const layout = config.group_descriptions?.__layout || {};
+        setShowItemDescriptions(layout.showItemDescriptions ?? true);
         setPhotosWidth(layout.photosWidth ?? 210);
         setPhotosWidthUnit(layout.photosWidthUnit ?? 'px');
         setLeftColRatio(layout.leftColRatio ?? 50);
@@ -344,6 +346,7 @@ function MenuPrint({ menuId = 1 }) {
       websiteBgOpacity,
       colors,
       backgroundUrl,
+      showItemDescriptions,
       ...updates
     };
     saveGroupDescriptions({
@@ -456,6 +459,7 @@ function MenuPrint({ menuId = 1 }) {
     saveLayoutSizes,
     menuData,
     showIcons,
+    showItemDescriptions,
     qrScale,
     setQrScale,
     printImages,
@@ -483,6 +487,8 @@ function MenuPrint({ menuId = 1 }) {
         setEditMode={setEditMode}
         toggleShowIcons={toggleShowIcons}
         showIcons={showIcons}
+        showItemDescriptions={showItemDescriptions}
+        setShowItemDescriptions={setShowItemDescriptions}
         showColorPanel={showColorPanel}
         setShowColorPanel={setShowColorPanel}
         showWebsiteBg={showWebsiteBg}

@@ -1,0 +1,92 @@
+[
+  {
+    "_id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user1@example.com",
+    "phone": 1234567890,
+    "name": "Juan PÃ©rez",
+    "address": "Calle 123 #45-67, Apt 101",
+    "password": "hashed_password_1",
+    "loyalty_points": 120,
+    "redeemed_points": 50,
+    "ordered_lunches": [
+      {
+        "notes": "Sin cebolla",
+        "dueDate": "2025-04-01",
+        "entregado": false
+      },
+      {
+        "notes": "Extra salsa",
+        "dueDate": "2025-04-02",
+        "entregado": true
+      }
+    ],
+    "purchase_history": [
+      {
+        "date": "2025-03-25",
+        "total": 15000
+      },
+      {
+        "date": "2025-03-26",
+        "total": 18000
+      }
+    ],
+    "userPreferences": {
+      "Alergies": {
+        "Gluten": true
+      },
+      "primeDiet": [
+        "Vegetarian",
+        "HighProtein"
+      ],
+      "noComo": [
+        "Cebolla"
+      ],
+      "meGusta": [
+        "Cebolla"
+      ],
+      "Picante": 2,
+      "Notas": "Prefiero comidas sin mucha grasa"
+    }
+  },
+  {
+    "_id": "6b1b5b3e-3c56-4f6e-9f38-2a3c07a5cffe",
+    "email": "user2@example.com",
+    "phone": 987654321,
+    "name": "Ana GÃ³mez",
+    "address": "Avenida 456 #78-90, Apt 202",
+    "password": "hashed_password_2",
+    "loyalty_points": 200,
+    "redeemed_points": 80,
+    "ordered_lunches": [
+      {
+        "notes": "Doble porciÃ³n",
+        "dueDate": "2025-04-03",
+        "entregado": false
+      }
+    ],
+    "purchase_history": [
+      {
+        "date": "2025-03-20",
+        "total": 20000
+      },
+      {
+        "date": "2025-03-22",
+        "total": 22000
+      }
+    ],
+    "userPreferences": {
+      "Alergies": {
+        "Nuts": true,
+        "shellFish": true
+      },
+      "primeDiet": [
+        "Vegan"
+      ],
+      "noComo": [
+        "Pimientos"
+      ],
+      "Picante": 1,
+      "Notas": "Sin condimentos fuertes"
+    }
+  }
+]

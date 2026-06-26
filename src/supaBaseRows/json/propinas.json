@@ -1,0 +1,470 @@
+[
+  {
+    "_id": "027bc1d6-3907-40e3-b3a2-983a1a5a0287",
+    "tiempo": 46059.49574615741,
+    "cantidad": 2250,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "08447a6f-8a06-4165-b016-03093c8ec851",
+    "tiempo": 46056.546118819446,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "0b1b49e9-af52-43e8-a9ac-c4537e704433",
+    "tiempo": 46063.39419092592,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "0b762918-2f1f-4e90-9e50-531387d9928b",
+    "tiempo": 46066.41159451389,
+    "cantidad": 1500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "10e5cb92-33c3-47b3-a6d3-9ff3dc9b69d8",
+    "tiempo": 46067.535966157404,
+    "cantidad": 2000,
+    "metodo_pago": "transferencia"
+  },
+  {
+    "_id": "17d33108-4c1c-4319-b042-05b5ed110deb",
+    "tiempo": 46065.37146582176,
+    "cantidad": 5000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "1878f389-07a1-45a6-b052-60bba5d92f87",
+    "tiempo": 46064.506253391206,
+    "cantidad": 9000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "1a25cc5e-6ea8-4eda-9b9e-a454bdea5ec1",
+    "tiempo": 46063.74527037037,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "1b9f90f2-b1d2-49dd-a8e8-0a03e12e8ab0",
+    "tiempo": 46059.33632434028,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "1cb80943-ceb1-436a-8428-2e2ce58d982b",
+    "tiempo": 46059.53118546296,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "2013fec2-f54c-4bca-8ab7-9a237092f369",
+    "tiempo": 46059.37013927083,
+    "cantidad": 5000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "202834ee-aa79-4e67-94a4-4dde89b834f0",
+    "tiempo": 46056.669006516204,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "2040d71f-fce4-41fa-8d38-c60d3ced2888",
+    "tiempo": 46055.61648881945,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "2929bf45-4701-41d4-88b4-166e979d6611",
+    "tiempo": 46066.52936664352,
+    "cantidad": 8400,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "29a9cf4c-8c65-4bbd-9b66-46722bba7271",
+    "tiempo": 46058.448109386576,
+    "cantidad": 4200,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "2afe2b13-0437-45f4-bcd6-e95327f38a8e",
+    "tiempo": 46065.55508871528,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "2ea7f99c-01e3-4277-8464-fcedb288a0fe",
+    "tiempo": 46066.56496326389,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "2edc2d64-8adb-413f-8c1b-0e62cb2dbbc1",
+    "tiempo": 46067.748721585645,
+    "cantidad": 2500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "34930ef8-6c6f-43f0-a64c-30b93a1d56a1",
+    "tiempo": 46064.786787847224,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "3597e4ef-c8fb-4618-8adf-b56e9d596d65",
+    "tiempo": 46065.54358936343,
+    "cantidad": 1500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "36217a42-9db8-4cae-812b-8122463bc1ca",
+    "tiempo": 46066.487663391206,
+    "cantidad": 7000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "36e34c4d-42b3-4148-81e1-1dd3f3576f5b",
+    "tiempo": 46062.35300484954,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "39c34415-5493-41c4-a5c3-01328eeea97b",
+    "tiempo": 46058.70537457176,
+    "cantidad": 4900,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "3dbf78f3-d04d-4002-a802-07c28dfbc353",
+    "tiempo": 46062.48048828704,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "41b6d17b-72d4-4954-a263-3e4df19f826a",
+    "tiempo": 46062.532361921294,
+    "cantidad": 10000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "47650398-a0a0-4f11-b020-2ee7adbad4a9",
+    "tiempo": 46063.39592943287,
+    "cantidad": 3000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "4e72d656-7d0b-49ed-865f-43e487e62f56",
+    "tiempo": 46066.61937755787,
+    "cantidad": 11000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "5256b520-90e6-4130-85b2-c816dcab45aa",
+    "tiempo": 46058.63942474537,
+    "cantidad": 10000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "5c7706f3-3cca-4a09-b94e-dd9d18ddf7b7",
+    "tiempo": 46066.35944891204,
+    "cantidad": 9500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "5d859743-fe78-4950-9e95-415155294a6c",
+    "tiempo": 46055.330074895835,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "5f77feec-10e8-43c8-aa44-e647495d0645",
+    "tiempo": 46063.53063429398,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "607e6129-8917-4e58-a421-b3a5d37dbb01",
+    "tiempo": 46057.35517672454,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "6197b2ab-9341-45cf-b759-1e6bb70203c0",
+    "tiempo": 46063.788120543984,
+    "cantidad": 5500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "63cbb7b0-700c-482b-8027-31319774fb7c",
+    "tiempo": 46059.47880517361,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "647ae752-7804-41e9-93ef-edff77e97667",
+    "tiempo": 46066.63292447916,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "64feeef9-e954-47e7-a1a3-60b7c8172048",
+    "tiempo": 46064.57386763889,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "6fa54afe-ee69-4330-9548-a2209fec2465",
+    "tiempo": 46058.57796256944,
+    "cantidad": 3500,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "733746c8-070a-4a48-bf7c-ea70ca70a5ff",
+    "tiempo": 46057.42567197917,
+    "cantidad": 2800,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "7650b5cc-dc5c-4d6f-9a26-6bfe81b319f9",
+    "tiempo": 46059.56721019676,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "79efda68-ea51-44db-80b4-9c5835a22bd9",
+    "tiempo": 46057.42219399306,
+    "cantidad": 2800,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "7eec2eda-fba6-4821-a874-d7409f8d682c",
+    "tiempo": 46067.713262453704,
+    "cantidad": 5500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "84209d59-26ff-4a33-84cc-86ed67b30450",
+    "tiempo": 46064.48746648148,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "8449704f-776b-40ff-90eb-99144c987b74",
+    "tiempo": 46062.4639155787,
+    "cantidad": 5400,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "92c8f3db-845e-4924-a02e-7af66ba5f818",
+    "tiempo": 46064.438892175924,
+    "cantidad": 5550,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "9357ac5c-f2b5-4a85-ab4b-80b7a7c4ed70",
+    "tiempo": 46055.508838622685,
+    "cantidad": 2500,
+    "metodo_pago": "transferencia"
+  },
+  {
+    "_id": "9482c5bb-77d1-477d-bf20-ed97de7b938b",
+    "tiempo": 46063.473113935186,
+    "cantidad": 2500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "96a1c06d-d049-4e40-8c4f-3e679510d6f6",
+    "tiempo": 46058.44835197917,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "a032d274-97b9-45ed-b8bf-89e21691767f",
+    "tiempo": 46056.47945533565,
+    "cantidad": 2500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "a08b6645-3913-47dc-92cf-9565b7618e28",
+    "tiempo": 46064.380748599535,
+    "cantidad": 4300,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "a1aa13f5-90e1-4aeb-8394-0f65510c27d5",
+    "tiempo": 46063.45762710648,
+    "cantidad": 3700,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "a2f83ed2-8db7-4ea8-9212-926e52ccf4d1",
+    "tiempo": 46065.68688386574,
+    "cantidad": 6800,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "a5800325-1546-4e5e-b185-ae1ee7b13e99",
+    "tiempo": 46059.36574336806,
+    "cantidad": 6750,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "a74c9b21-c69a-494e-b049-2b1d0f99ecb9",
+    "tiempo": 46062.68872760417,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "aadf7914-f413-4be1-aa23-242eb6edc1bd",
+    "tiempo": 46065.81938871528,
+    "cantidad": 7000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "b1189649-23ae-4e6d-98f5-e09eba355e2b",
+    "tiempo": 46062.37745252315,
+    "cantidad": 500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "b1958c77-ac3c-4198-9257-c5fe07cf915e",
+    "tiempo": 46058.55550326389,
+    "cantidad": 7000,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "b1dd5b7c-7a4b-46f9-ab25-ca4446bc3fde",
+    "tiempo": 46055.415436967596,
+    "cantidad": 6200,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "b6683379-f372-4c1f-99e5-db39d64947a4",
+    "tiempo": 46062.50204177084,
+    "cantidad": 2500,
+    "metodo_pago": "transferencia"
+  },
+  {
+    "_id": "b7fa97f6-78e8-4f0f-97b2-255df83a1acc",
+    "tiempo": 46064.65026177083,
+    "cantidad": 6500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "ca4cc204-362c-49d5-8592-caed261a889d",
+    "tiempo": 46064.51535210648,
+    "cantidad": 2500,
+    "metodo_pago": "transferencia"
+  },
+  {
+    "_id": "cd2e32f3-c0cf-4631-87ca-c96ea398e96e",
+    "tiempo": 46059.38389884259,
+    "cantidad": 2700,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "cdfd7fce-4a6d-47d9-8d93-fe0fa114263b",
+    "tiempo": 46065.552679340275,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "d32abb07-76e6-4220-acd8-8cea4abeb4c2",
+    "tiempo": 46063.36803092593,
+    "cantidad": 4550,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "d9b0a8a6-d5e6-4836-895d-2952246d7b29",
+    "tiempo": 46065.342742326386,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "d9c0745b-0828-4644-944b-c7cba6ed103f",
+    "tiempo": 46065.470900486114,
+    "cantidad": 5550,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "db7ea623-b0f5-4596-8490-52a877f656f5",
+    "tiempo": 46056.3374290162,
+    "cantidad": 1500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "ddd09545-1d76-453a-a95c-ae3f9275a2f4",
+    "tiempo": 46064.78687849537,
+    "cantidad": 2000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "e0098a2b-0e94-48ca-a4f5-54d1b327fa23",
+    "tiempo": 46064.390767627316,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "e01fb794-7568-4e75-8460-338ea4b98255",
+    "tiempo": 46066.48760700232,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "e0e49707-5e3c-49cd-a41a-9e9b1b1a5e9c",
+    "tiempo": 46062.36737396991,
+    "cantidad": 5250,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "e8ef5919-4af5-468d-a0d4-d3b3c400e157",
+    "tiempo": 46067.488649942126,
+    "cantidad": 5000,
+    "metodo_pago": "transferencia"
+  },
+  {
+    "_id": "e9eedd9b-df48-4b10-a8ec-7535ff93adef",
+    "tiempo": 46059.4236671875,
+    "cantidad": 8000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "eb28785f-26e9-4190-96ea-0429f97fafea",
+    "tiempo": 46057.465142685185,
+    "cantidad": 5000,
+    "metodo_pago": "tarjeta"
+  },
+  {
+    "_id": "f0af1f9d-2cf4-4b5c-8adb-25e97ee955d6",
+    "tiempo": 46056.78644409722,
+    "cantidad": 1000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "f89591a8-e924-4ab8-9d1f-f459d1b3dcdb",
+    "tiempo": 46067.72683164352,
+    "cantidad": 5000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "fc4a3475-f8ee-427a-a366-47772d9507b3",
+    "tiempo": 46065.424439560185,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "fc70775a-9d31-41c9-814b-39fa34b5aecd",
+    "tiempo": 46055.667646608796,
+    "cantidad": 6500,
+    "metodo_pago": "efectivo"
+  },
+  {
+    "_id": "fe94926f-8eb0-4a2c-b1ed-71a91cfb48d9",
+    "tiempo": 46066.78458533565,
+    "cantidad": 4000,
+    "metodo_pago": "efectivo"
+  }
+]

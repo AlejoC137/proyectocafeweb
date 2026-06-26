@@ -1,0 +1,517 @@
+[
+  {
+    "_id": "0fea040a-8891-450a-aea8-03e8687b5c2d",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "fecha": "2025-08-05",
+        "horaInicio": "10:29",
+        "horaCierre": "14:34"
+      },
+      {
+        "fecha": "2025-08-06",
+        "horaInicio": "14:02",
+        "horaCierre": "18:02"
+      },
+      {
+        "fecha": "2025-08-13",
+        "horaInicio": "14:03",
+        "horaCierre": "18:20"
+      },
+      {
+        "fecha": "2025-08-20",
+        "horaInicio": "14:01",
+        "horaCierre": "18:03"
+      },
+      {
+        "fecha": "2025-08-22",
+        "horaInicio": "13:58",
+        "horaCierre": "19:18"
+      },
+      {
+        "fecha": "2025-08-26",
+        "horaInicio": "14:03",
+        "horaCierre": "18:04"
+      },
+      {
+        "fecha": "2025-08-27",
+        "horaInicio": "14:09",
+        "horaCierre": "17:57"
+      },
+      {
+        "fecha": "2025-09-01",
+        "horaInicio": "15:04",
+        "horaCierre": "15:33"
+      },
+      {
+        "fecha": "2025-09-04",
+        "horaInicio": "08:05",
+        "horaCierre": "12:21"
+      },
+      {
+        "fecha": "2025-09-06",
+        "horaInicio": "09:33",
+        "horaCierre": "14:03"
+      },
+      {
+        "fecha": "2025-09-10",
+        "horaInicio": "14:04",
+        "horaCierre": "18:19"
+      },
+      {
+        "fecha": "2025-09-11",
+        "horaInicio": "08:06",
+        "horaCierre": "14:28"
+      }
+    ],
+    "Nombre": "Paula Alejandra",
+    "Apellido": "Naranjo Torres",
+    "Cargo": "AUX_PRODUCCION",
+    "Cuenta": "{\n    banco: \"Bancolombia\",\n    tipo: \"Ahorros\",\n    numero: \"31747824111\"\n  }",
+    "Rate": 10000,
+    "Show": "true",
+    "CC": 1020805061,
+    "Contratacion": "true",
+    "isAdmin": "false",
+    "Celular": 3143654345,
+    "infoContacto": "{\n    nombreDeContacto: \"Yasmin Torres\",\n    numeroDeContacto: \"3165368649\"\n  }",
+    "Direccion": "Calle 35#65d-74"
+  },
+  {
+    "_id": "47987701-d92e-4d89-bb0b-6b6bc320d502",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "fecha": "2025-07-30",
+        "horaInicio": "01:31",
+        "horaCierre": "01:32"
+      }
+    ],
+    "Nombre": "Margarita",
+    "Apellido": "Aguirre",
+    "Cargo": "MANAGER",
+    "Cuenta": "{\n    banco: \"Bancolombia\",\n    tipo: \"Ahorros\",\n    numero: \"55100022761\"\n  }",
+    "Rate": 2000,
+    "Show": "true",
+    "CC": 32015048,
+    "Contratacion": "true",
+    "isAdmin": "true",
+    "Celular": 3008085906,
+    "infoContacto": "{\n    nombreDeContacto: \"Diego PatiÃ±o\",\n    numeroDeContacto: \"3163744456\"\n  }",
+    "Direccion": "Transversal 35A #65D-48"
+  },
+  {
+    "_id": "54a37bb8-bd75-4617-bfc7-c09d6acfcfbc",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "turnoDate": "2025-09-01",
+        "horaInicio": "09:05",
+        "horaSalida": "19:30"
+      },
+      {
+        "turnoDate": "2025-09-03",
+        "horaInicio": "08:30",
+        "horaSalida": "14:30"
+      },
+      {
+        "turnoDate": "2025-09-08",
+        "horaInicio": "08:46",
+        "horaSalida": "18:29"
+      },
+      {
+        "turnoDate": "2025-09-09",
+        "horaInicio": "11:59",
+        "horaSalida": "16:32"
+      },
+      {
+        "turnoDate": "2025-09-10",
+        "horaInicio": "08:15",
+        "horaSalida": "14:51"
+      },
+      {
+        "turnoDate": "2025-09-11",
+        "horaInicio": "13:09",
+        "horaSalida": "20:12"
+      },
+      {
+        "turnoDate": "2025-09-15",
+        "horaInicio": "09:10",
+        "horaSalida": "22:14"
+      },
+      {
+        "turnoDate": "2025-09-04",
+        "horaInicio": "12:00",
+        "horaSalida": "18:45"
+      },
+      {
+        "fecha": "2025-09-17",
+        "horaInicio": "08:20",
+        "horaCierre": "15:24"
+      },
+      {
+        "fecha": "2025-09-18",
+        "horaInicio": "11:03",
+        "horaCierre": "08:48"
+      },
+      {
+        "fecha": "2025-09-19",
+        "horaInicio": "08:48",
+        "horaCierre": "18:39"
+      },
+      {
+        "fecha": "2025-09-22",
+        "horaInicio": "11:31",
+        "horaCierre": "06:31"
+      },
+      {
+        "fecha": "2025-09-23",
+        "horaInicio": "13:46",
+        "horaCierre": "21:00"
+      },
+      {
+        "fecha": "2025-09-24",
+        "horaInicio": "11:01",
+        "horaCierre": "20:12"
+      },
+      {
+        "fecha": "2025-09-29",
+        "horaInicio": "10:26",
+        "horaCierre": "14:55"
+      },
+      {
+        "fecha": "2025-09-30",
+        "horaInicio": "14:55",
+        "horaCierre": "12:35"
+      },
+      {
+        "fecha": "2025-10-01",
+        "horaInicio": "12:35",
+        "horaCierre": "19:35"
+      }
+    ],
+    "Nombre": "Juan Diego",
+    "Apellido": "Jaramillo",
+    "Cargo": "BARISTA",
+    "Rate": 8999,
+    "Show": "true",
+    "CC": 1037636617,
+    "Contratacion": "true",
+    "isAdmin": "false",
+    "Celular": 3168683805,
+    "infoContacto": "{\n    nombreDeContacto: \"Karen\",\n    numeroDeContacto: \"3197465227\"\n  }",
+    "Direccion": "Km 3 Vereda San Miguel parte alta, Guarne, Antioquia"
+  },
+  {
+    "_id": "9a4901fe-c07b-43bc-9401-2fb832482bda",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "turnoDate": "2025-08-19",
+        "horaInicio": "07:30",
+        "horaSalida": "18:26"
+      },
+      {
+        "turnoDate": "2025-08-23",
+        "horaInicio": "08:05",
+        "horaSalida": "18:27"
+      },
+      {
+        "turnoDate": "2025-08-26",
+        "horaInicio": "07:59",
+        "horaSalida": "18:07"
+      },
+      {
+        "turnoDate": "2025-08-29",
+        "horaInicio": "08:09",
+        "horaSalida": "18:14"
+      },
+      {
+        "turnoDate": "2025-08-30",
+        "horaInicio": "07:57",
+        "horaSalida": "18:14"
+      },
+      {
+        "turnoDate": "2025-08-16",
+        "horaInicio": "08:00",
+        "horaSalida": "18:00"
+      },
+      {
+        "fecha": "2025-09-02",
+        "horaInicio": "08:02",
+        "horaCierre": "18:15"
+      },
+      {
+        "fecha": "2025-09-05",
+        "horaInicio": "07:58",
+        "horaCierre": "18:12"
+      },
+      {
+        "fecha": "2025-09-06",
+        "horaInicio": "07:58",
+        "horaCierre": "18:40"
+      },
+      {
+        "fecha": "2025-09-09",
+        "horaInicio": "07:59",
+        "horaCierre": "18:50"
+      },
+      {
+        "fecha": "2025-09-12",
+        "horaInicio": "07:59",
+        "horaCierre": "17:59"
+      },
+      {
+        "fecha": "2025-09-13",
+        "horaInicio": "07:56",
+        "horaCierre": "18:05"
+      },
+      {
+        "fecha": "2025-09-15",
+        "horaInicio": "07:59",
+        "horaCierre": "18:05"
+      },
+      {
+        "fecha": "2025-09-17",
+        "horaInicio": "11:28",
+        "horaCierre": "16:33"
+      },
+      {
+        "fecha": "2025-09-23",
+        "horaInicio": "07:57",
+        "horaCierre": "false"
+      }
+    ],
+    "Nombre": "Isabela Maria",
+    "Apellido": "Acevedo Alvarez",
+    "Cargo": "AUX_PRODUCCION",
+    "Cuenta": "{\n    banco: \"Bancolombia\",\n    tipo: \"Nequi\",\n    numero: \"3022225880\"\n  }",
+    "Rate": 8000,
+    "Show": "true",
+    "CC": 43904848,
+    "Contratacion": "true",
+    "isAdmin": "false",
+    "Celular": 3022225880,
+    "infoContacto": "{\n    nombreDeContacto: \"Socorro Alvarez\",\n    numeroDeContacto: \"3017574485\"\n  }",
+    "Direccion": "Carrera 91d  Calla 72-159 casa134 ur robledales "
+  },
+  {
+    "_id": "a05ced63-a2a6-4afb-956a-b661fcc8c3da",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "turnoDate": "2025-09-17",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-18",
+        "horaInicio": "10:00",
+        "horaSalida": "16:11"
+      },
+      {
+        "turnoDate": "2025-09-19",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-20",
+        "horaInicio": "07:30",
+        "horaSalida": "17:30"
+      },
+      {
+        "turnoDate": "2025-09-22",
+        "horaInicio": "07:30",
+        "horaSalida": "16:00"
+      },
+      {
+        "turnoDate": "2025-09-23",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-24",
+        "horaInicio": "19:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-25",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-26",
+        "horaInicio": "07:30",
+        "horaSalida": "17:30"
+      },
+      {
+        "turnoDate": "2025-09-28",
+        "horaInicio": "09:00",
+        "horaSalida": "12:30"
+      },
+      {
+        "turnoDate": "2025-09-28",
+        "horaInicio": "09:00",
+        "horaSalida": "12:30"
+      },
+      {
+        "turnoDate": "2025-09-29",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-30",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      },
+      {
+        "turnoDate": "2025-09-27",
+        "horaInicio": "07:30",
+        "horaSalida": "16:30"
+      }
+    ],
+    "Nombre": "Liliam",
+    "Apellido": "Perez",
+    "Cargo": "COCINERO",
+    "Cuenta": "{\n    banco: \"Bancolombia\",\n    tipo: \"Nequi\",\n    numero: \"3025679639\"\n  }",
+    "Rate": 9000,
+    "Show": "true",
+    "CC": 22222222,
+    "Contratacion": "true",
+    "isAdmin": "false",
+    "Celular": 3147215667,
+    "infoContacto": "{\n    nombreDeContacto: \"NA\",\n    numeroDeContacto: \"NA\"\n  }",
+    "Direccion": 22222222222
+  },
+  {
+    "_id": "d8aed182-352a-40a5-9434-e7413a79197e",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "turnoDate": "2025-09-04",
+        "horaInicio": "09:18",
+        "horaSalida": "22:48"
+      },
+      {
+        "turnoDate": "2025-09-09",
+        "horaInicio": "20:03",
+        "horaSalida": "22:37"
+      },
+      {
+        "turnoDate": "2025-09-10",
+        "horaInicio": "20:10",
+        "horaSalida": "21:46"
+      },
+      {
+        "turnoDate": "2025-09-01",
+        "horaInicio": "12:00",
+        "horaSalida": "19:46"
+      },
+      {
+        "turnoDate": "2025-09-11",
+        "horaInicio": "12:56",
+        "horaSalida": "19:53"
+      },
+      {
+        "turnoDate": "2025-09-15",
+        "horaInicio": "12:50",
+        "horaSalida": "20:09"
+      },
+      {
+        "turnoDate": "2025-09-08",
+        "horaInicio": "19:50",
+        "horaSalida": "10:30"
+      },
+      {
+        "fecha": "2025-09-18",
+        "horaInicio": "08:22",
+        "horaCierre": "18:44"
+      }
+    ],
+    "Nombre": "Samantha",
+    "Apellido": "Gallego",
+    "Cargo": "AUX_PRODUCCION",
+    "Cuenta": "{\n    banco: \"Bancolombia\",\n    tipo: \"Ahorros\",\n    numero: \"00928392023\"\n  }",
+    "Rate": 10000,
+    "Show": "true",
+    "CC": 1007436970,
+    "Contratacion": "true",
+    "isAdmin": "false",
+    "Celular": 3004727113,
+    "infoContacto": "{\n    nombreDeContacto: \"Marcela Trujillo\",\n    numeroDeContacto: \"3215706078\"\n  }",
+    "Direccion": "Calle 48 #94-65"
+  },
+  {
+    "_id": "e4255612-cf7f-4e26-ba67-085b1565ecd1",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "turnoDate": "2025-09-22",
+        "horaInicio": "07:47",
+        "horaSalida": "16:16"
+      },
+      {
+        "turnoDate": "2025-09-23",
+        "horaInicio": "08:04",
+        "horaSalida": "11:55"
+      },
+      {
+        "turnoDate": "2025-09-24",
+        "horaInicio": "08:25",
+        "horaSalida": "16:31"
+      },
+      {
+        "turnoDate": "2025-09-29",
+        "horaInicio": "07:57",
+        "horaSalida": "16:26"
+      },
+      {
+        "turnoDate": "2025-09-30",
+        "horaInicio": "07:52",
+        "horaSalida": "12:10"
+      },
+      {
+        "turnoDate": "2025-09-25",
+        "horaInicio": "07:50",
+        "horaSalida": "12:10"
+      }
+    ],
+    "Nombre": "Juliana",
+    "Apellido": "Montoya MuÃ±oz",
+    "Cargo": "COCINERO",
+    "Cuenta": "{\n    banco: \"Bancolombia\",\n    tipo: \"Ahorros\",\n    numero: \"24000006220\"\n  }",
+    "Rate": 6500,
+    "Show": "true",
+    "CC": 1001686053,
+    "Contratacion": "true",
+    "isAdmin": "false",
+    "Celular": 3113857130,
+    "infoContacto": "{\n    nombreDeContacto: \"Gilma MuÃ±oz Zapata\",\n    numeroDeContacto: \"3136087468\"\n  }",
+    "Direccion": "Calle 51 #72-07"
+  },
+  {
+    "_id": "e79e1d25-bc07-4b57-a970-7dfa0ea48c0b",
+    "Turno_State": "false",
+    "Turnos": [
+      {
+        "turnoDate": "2025-07-30",
+        "horaInicio": "22:28",
+        "horaSalida": "23:28"
+      },
+      {
+        "turnoDate": "2025-07-30",
+        "horaInicio": "23:22",
+        "horaSalida": "23:32"
+      }
+    ],
+    "Nombre": "Diego",
+    "Apellido": "PatiÃ±o",
+    "Cargo": "MANAGER",
+    "Rate": 1000,
+    "Show": "true",
+    "CC": 1035869114,
+    "Contratacion": "false",
+    "isAdmin": "true",
+    "Celular": 3008214593
+  }
+]

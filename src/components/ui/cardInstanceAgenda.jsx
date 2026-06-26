@@ -8,7 +8,7 @@ export const CardInstanceAgenda = memo(function CardInstanceAgenda({ product, on
   const navigate = useNavigate();
 
   const handleViewEvento = () => {
-    navigate(`/evento/${product._id}`);
+    navigate(`/agendaForm/${product._id}`);
   };
 
   return (

@@ -233,7 +233,9 @@ function Mesa({ index, ventaActual, onVentaChange }) {
       <div className="px-2 py-1  border-b border-slate-100 flex justify-between items-center bg-slate-50">
         <div className="flex  border-red-500 items-center gap-2">
           <span className={`h-2.5 w-2.5 rounded-full ${isMesaInUse ? 'bg-green-500' : 'bg-slate-300'}`}></span>
-          <h2 className="text-base font-bold text-slate-700">Mesa {index}</h2>
+          <h2 className="text-base font-bold text-slate-700">
+            {index >= 100 ? (isMesaInUse ? (formData.Cliente || `Cuenta ${index}`) : "+ Nueva Cuenta") : `Mesa ${index}`}
+          </h2>
         </div>
         <div className="w-1/2 flex flex-col gap-1">
           <div className="relative">

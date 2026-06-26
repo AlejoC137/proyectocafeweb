@@ -23,6 +23,8 @@ function VentaCompra() {
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [ventasDelDia, setVentasDelDia] = useState([]);
+  const [ventasLargas, setVentasLargas] = useState([]);
+  const [activeTab, setActiveTab] = useState("diarias");
   const [showGastos, setShowGastos] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
@@ -35,15 +37,18 @@ function VentaCompra() {
     const { data, error } = await supabase
       .from("Ventas")
       .select("*")
-      .eq("Date", ADate)
       .eq("Pagado", false)
       .order("Time", { ascending: false });
       
     if (!error && data) {
-      setVentasDelDia(data);
+      const diarias = data.filter(v => Number(v.Mesa) < 100 && v.Date === ADate);
+      const largas = data.filter(v => Number(v.Mesa) >= 100);
+      setVentasDelDia(diarias);
+      setVentasLargas(largas);
     } else {
       if (error) console.error("Error al obtener ventas activas:", error);
       setVentasDelDia([]);
+      setVentasLargas([]);
     }
     if (showSyncIndicator === true) setIsSyncing(false);
   };
@@ -127,6 +132,22 @@ function VentaCompra() {
         {showClientForm && <div className="animate-in slide-in-from-top-2 duration-300"><ClientForm onClose={() => setShowClientForm(false)} /></div>}
       </div>
 
+      {/* --- Pestañas --- */}
+      <div className="flex border-b border-slate-200 mb-2 shrink-0">
+        <button
+          onClick={() => setActiveTab("diarias")}
+          className={`px-4 py-2 font-bold transition-colors ${activeTab === "diarias" ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
+        >
+          Mesas Diarias
+        </button>
+        <button
+          onClick={() => setActiveTab("largas")}
+          className={`px-4 py-2 font-bold transition-colors ${activeTab === "largas" ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
+        >
+          Cuentas Largas
+        </button>
+      </div>
+
       {/* --- Grid de Mesas --- */}
       <div className="flex-grow min-h-[600px] relative">
         {isSyncing && (
@@ -137,23 +158,46 @@ function VentaCompra() {
             </div>
           </div>
         )}
-        <div
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full ${isSyncing ? 'opacity-60 pointer-events-none' : ''}`}
-          style={{ gridAutoRows: 'minmax(0, 1fr)' }}
-        >
-          {[...Array(6)].map((_, index) => {
-            const mesaIndex = index + 1;
-            const ventaActual = ventasDelDia.find(v => Number(v.Mesa) === mesaIndex && !v.Pagado);
-            return (
+        {activeTab === "diarias" ? (
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full ${isSyncing ? 'opacity-60 pointer-events-none' : ''}`}
+            style={{ gridAutoRows: 'minmax(0, 1fr)' }}
+          >
+            {[...Array(6)].map((_, index) => {
+              const mesaIndex = index + 1;
+              const ventaActual = ventasDelDia.find(v => Number(v.Mesa) === mesaIndex && !v.Pagado);
+              return (
+                <Mesa
+                  key={`mesa-${mesaIndex}`}
+                  index={mesaIndex}
+                  ventaActual={ventaActual}
+                  onVentaChange={() => fetchVentasDelDia(true)}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full ${isSyncing ? 'opacity-60 pointer-events-none' : ''}`}
+            style={{ gridAutoRows: 'minmax(0, 1fr)' }}
+          >
+            {ventasLargas.map((ventaActual) => (
               <Mesa
-                key={`mesa-${mesaIndex}`}
-                index={mesaIndex}
+                key={`mesa-larga-${ventaActual.Mesa}`}
+                index={Number(ventaActual.Mesa)}
                 ventaActual={ventaActual}
                 onVentaChange={() => fetchVentasDelDia(true)}
               />
-            );
-          })}
-        </div>
+            ))}
+            {/* Always show one empty slot for a new cuenta larga */}
+            <Mesa
+              key={`mesa-larga-new`}
+              index={ventasLargas.length > 0 ? Math.max(...ventasLargas.map(v => Number(v.Mesa))) + 1 : 101}
+              ventaActual={null}
+              onVentaChange={() => fetchVentasDelDia(true)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

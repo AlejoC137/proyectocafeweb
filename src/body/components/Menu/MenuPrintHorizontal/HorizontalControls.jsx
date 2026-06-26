@@ -20,6 +20,8 @@ const HorizontalControls = ({
   isSaving,
   showIcons,
   setShowIcons,
+  showItemDescriptions,
+  setShowItemDescriptions,
   addPage,
   selectedColumn,
   setSelectedColumn,
@@ -68,6 +70,14 @@ const HorizontalControls = ({
         >
           <Coffee size={16} />
           {showIcons ? "Ocultar Iconos" : "Mostrar Iconos"}
+        </Button>
+
+        <Button
+          variant={showItemDescriptions ? "default" : "outline"}
+          onClick={() => setShowItemDescriptions(!showItemDescriptions)}
+          className="h-10 gap-2"
+        >
+          {showItemDescriptions ? "📝 Ocultar Detalles" : "📝 Mostrar Detalles"}
         </Button>
       </div>
 

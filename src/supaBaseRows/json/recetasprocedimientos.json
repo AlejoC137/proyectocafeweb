@@ -1,0 +1,132 @@
+[
+  {
+    "_id": "1dff09b7-d3e4-44ac-b1ff-3d913eef571e",
+    "forId": "1dff09b7-d3e4-44ac-b1ff-3d913eef571e",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45831.79148148148,
+    "proces1": "Retirar todos los platos, baseso , cubiertos y cualquier otro elemento que deba ser lavado o pueda estorbar en la limpieza",
+    "proces2": "disparar dos veces con el spray de citronela ",
+    "legacyName": "Sin nombre"
+  },
+  {
+    "_id": "5371e8d0-3229-4bb3-bffc-601e97e132d0",
+    "forId": "5371e8d0-3229-4bb3-bffc-601e97e132d0",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "costo": {
+      "vIB": null,
+      "pIB": null,
+      "vCMP": 0,
+      "pCMPInicial": 0.35,
+      "pCMPReal": null,
+      "PPVii": 0,
+      "costoTiempo": null
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45839.79148148148,
+    "proces1": "Sacar todo el cafÃ© de la tolva y retÃ­rala del molino",
+    "proces2": "Volcar todo el cafÃ© restante del molino en un recipiente aparte ",
+    "proces3": "Retirar las cuchillas superiores y con la brocha retirar todo el polvo de cafÃ© de ambas cuchillas (superior que es la pieza que se retira y la inferior que son las fijas)",
+    "proces4": "Garantizar que los seguros de la cuchilla superior queden bien limpios y libres de polvo",
+    "proces5": "Armar de nuevo el molino y la tolva teniendo en cuenta los respectivos seguros queden en su lugar",
+    "legacyName": "Sin nombre",
+    "ProcessTime": 10
+  },
+  {
+    "_id": "89ea4d10-57ee-4b9a-941e-2e9107cd4ec4",
+    "forId": "89ea4d10-57ee-4b9a-941e-2e9107cd4ec4",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "costo": {
+      "vIB": null,
+      "pIB": null,
+      "vCMP": null,
+      "pCMPInicial": 0.35,
+      "pCMPReal": null,
+      "PPVii": null,
+      "costoTiempo": null
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45874.79148148148,
+    "item1_Id": "545fecf6-b583-49eb-8cc0-94d432fef015",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "30",
+        "units": null
+      }
+    },
+    "item2_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item2_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "li"
+      }
+    },
+    "legacyName": "Sin nombre"
+  },
+  {
+    "_id": "cfaf879f-dfae-4902-86af-367954cd0850",
+    "forId": "cfaf879f-dfae-4902-86af-367954cd0850",
+    "rendimiento": {
+      "porcion": "",
+      "cantidad": "",
+      "unidades": ""
+    },
+    "costo": {
+      "vIB": null,
+      "pIB": null,
+      "vCMP": 49,
+      "pCMPInicial": 0.35,
+      "pCMPReal": 0.32,
+      "PPVii": 153,
+      "costoTiempo": null
+    },
+    "autor": "Autor por defecto",
+    "revisor": "Revisor por defecto",
+    "actualizacion": 45831.79148148148,
+    "proces1": "Desconectar de la fuente de electricidad.",
+    "proces2": "Retirar todos los productos alimenticios o de bebidas, y todos aquellos productos con alto riesgo de descomposiciÃ³n. Deben guardarse en otra nevera o cubrirse con un trapo grueso para mantener la cadena de frÃ­o lo mÃ¡s posible. Estos productos son: lÃ¡cteos, cÃ¡rnicos, hielo, entre otros.\t",
+    "proces3": "Retirar todos los entrepaÃ±os y piezas mÃ³viles, y dejarlos aparte para lavado en un Pozuelo.\t",
+    "proces4": "Pasar un trapo seco por todas las superficies para retirar toda la suciedad gruesa.",
+    "proces5": "En un recipiente de plÃ¡stico, combinar el jabÃ³n y agua.\t",
+    "proces6": "Con una esponja humedecida en la mezcla, restregar todas las superficies para retirar toda la suciedad fina y los pegotes.\t",
+    "proces7": "Enjuagar con agua y retirar el exceso.\t",
+    "proces8": "En otro recipiente, mezclar el desinfectante segÃºn las especificaciones del fabricante.\t",
+    "proces9": "Usando guantes, humedecer un trapo en la mezcla del desinfectante, escurrirlo y pasarlo por todas las superficies.\t",
+    "proces10": "Dejar secar al aire.\t",
+    "proces11": "Repetir los pasos del 4 al 10 con los entrepaÃ±os y partes mÃ³viles",
+    "proces12": "Ingresar todos los entrepaÃ±os y partes mÃ³viles.",
+    "proces13": "Ingresar todos los productos alimenticios, lavando con agua y jabÃ³n aquellos productos que puedan tener derrames en la superficie del envase o bolsa.",
+    "proces14": "Retirar todos los productos que se consideren de rotaciÃ³n, esto se determina al revisar el rÃ³tulo, su fecha y el estado mismo del producto",
+    "proces15": "Llenar el formato de limpieza y desinfecciÃ³n correspondiente.",
+    "item1_Id": "2c8c89ed-3f0d-4a1d-a6a4-36c1f2c3fc3d",
+    "item1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "1",
+        "units": "li"
+      }
+    },
+    "producto_interno1_Id": "2e5c8f24-ed69-4f2f-a388-4a28c5ad3307",
+    "producto_interno1_Cuantity_Units": {
+      "metric": {
+        "cuantity": "10",
+        "units": "ml"
+      }
+    },
+    "legacyName": "test"
+  }
+]

@@ -22,6 +22,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
   const [showColorPanel, setShowColorPanel] = useState(false);
   const menuData = useSelector((state) => state.allMenu);
   const [showIcons, setShowIcons] = useState(true);
+  const [showItemDescriptions, setShowItemDescriptions] = useState(true);
   const [showBlockSelector, setShowBlockSelector] = useState(null); // { pageIndex, colIdx }
 
   const [printImages, setPrintImages] = useState([]);
@@ -95,13 +96,14 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
         if (layout.qrScale) setQrScale(layout.qrScale);
         if (layout.showIcons !== undefined) setShowIcons(layout.showIcons);
+        if (layout.showItemDescriptions !== undefined) setShowItemDescriptions(layout.showItemDescriptions);
         if (layout.leng !== undefined) setLeng(layout.leng);
         if (layout.colors) setColors(prev => ({ ...prev, ...layout.colors }));
       } else {
         await supabase.from('menu_print_config').insert([{
           id: menuId,
           images: [],
-          group_descriptions: { __layout: { pages, pageSize, colors, showIcons } },
+          group_descriptions: { __layout: { pages, pageSize, colors, showIcons, showItemDescriptions } },
           show_icons: true
         }]);
       }
@@ -119,6 +121,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         colors,
         qrScale,
         showIcons,
+        showItemDescriptions,
         leng
       };
 
@@ -145,7 +148,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     try {
       const updatedLayout = {
         ...updated,
-        __layout: { ...(updated.__layout || {}), pages, pageSize, colors, qrScale, showIcons, leng }
+        __layout: { ...(updated.__layout || {}), pages, pageSize, colors, qrScale, showIcons, showItemDescriptions, leng }
       };
       await supabase.from('menu_print_config').update({
         group_descriptions: updatedLayout
@@ -456,7 +459,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     try {
       const updatedLayout = {
         ...groupDescriptions,
-        __layout: { ...(groupDescriptions.__layout || {}), pages, pageSize, colors, qrScale, showIcons, leng }
+        __layout: { ...(groupDescriptions.__layout || {}), pages, pageSize, colors, qrScale, showIcons, showItemDescriptions, leng }
       };
       await supabase.from('menu_print_config').update({
         images: newImages,
@@ -474,6 +477,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     leng,
     menuData,
     showIcons,
+    showItemDescriptions,
     qrScale,
     setQrScale,
     printImages,
@@ -516,6 +520,8 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         isSaving={isSaving}
         showIcons={showIcons}
         setShowIcons={setShowIcons}
+        showItemDescriptions={showItemDescriptions}
+        setShowItemDescriptions={setShowItemDescriptions}
         addPage={addPage}
         selectedColumn={selectedColumn}
         setSelectedColumn={setSelectedColumn}

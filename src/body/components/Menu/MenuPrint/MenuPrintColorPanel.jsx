@@ -101,9 +101,77 @@ const MenuPrintColorPanel = ({ colors, setColors, saveLayoutSizes, setShowColorP
               {[
                 { id: 'itemName', label: 'Nombres', desc: 'Texto item' },
                 { id: 'itemPrice', label: 'Precios', desc: 'Valor item' },
-                { id: 'itemComment', label: 'Comentarios', desc: 'Descrip.' },
-                { id: 'gridBorder', label: 'Divisores', desc: 'Sep. items' }
+                { id: 'itemComment', label: 'Comentarios', desc: 'Descrip.' }
               ].map(col => <ColorSelector key={col.id} col={col} colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />)}
+            </div>
+            <div className="mt-2 flex flex-col gap-1.5 p-1.5 rounded border border-black/5 bg-zinc-50">
+              <h5 className="text-[9px] font-black uppercase text-gray-500">Línea Divisoria</h5>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <label className="flex items-center gap-1 text-[9px] font-bold cursor-pointer">
+                  <input type="checkbox" checked={colors.showItemLines !== false} onChange={e => {
+                    const c = { ...colors, showItemLines: e.target.checked };
+                    setColors(c);
+                    saveLayoutSizes({ colors: c });
+                  }} className="cursor-pointer" />
+                  MOSTRAR
+                </label>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] font-bold">COLOR:</span>
+                  <input type="color" className="w-5 h-5 border border-black p-0 rounded-sm cursor-pointer" value={colors.gridBorder ? colors.gridBorder.substring(0,7) : '#000000'} onChange={e => {
+                    const c = { ...colors, gridBorder: e.target.value };
+                    setColors(c);
+                    saveLayoutSizes({ colors: c });
+                  }} />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] font-bold">GROSOR:</span>
+                  <input type="number" min="0.5" max="5" step="0.5" className="w-10 h-5 text-center text-[9px] border border-black rounded-sm p-0" value={colors.itemLineWidth || 1} onChange={e => {
+                    const c = { ...colors, itemLineWidth: Number(e.target.value) };
+                    setColors(c);
+                    saveLayoutSizes({ colors: c });
+                  }} />
+                  <span className="text-[8px] font-mono text-gray-400">px</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] font-bold">ESTILO:</span>
+                  <select className="h-5 text-[9px] border border-black rounded-sm bg-white" value={colors.itemLineStyle || 'solid'} onChange={e => {
+                    const c = { ...colors, itemLineStyle: e.target.value };
+                    setColors(c);
+                    saveLayoutSizes({ colors: c });
+                  }}>
+                    <option value="solid">Sólido</option>
+                    <option value="dashed">Guiones</option>
+                    <option value="dotted">Puntos</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="mt-2 flex flex-col gap-1.5 p-1.5 rounded border border-black/5 bg-zinc-50">
+              <h5 className="text-[9px] font-black uppercase text-gray-500">Posición del Precio</h5>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] font-bold">ALINEACIÓN:</span>
+                  <select className="h-5 text-[9px] border border-black rounded-sm bg-white" value={colors.priceAlign || 'right'} onChange={e => {
+                    const c = { ...colors, priceAlign: e.target.value };
+                    setColors(c);
+                    saveLayoutSizes({ colors: c });
+                  }}>
+                    <option value="right">A la Derecha (Extremo)</option>
+                    <option value="left">Junto al Texto</option>
+                  </select>
+                </div>
+                {colors.priceAlign === 'left' && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] font-bold">DISTANCIA:</span>
+                    <input type="number" min="0" max="100" step="1" className="w-10 h-5 text-center text-[9px] border border-black rounded-sm p-0" value={colors.priceGap ?? 5} onChange={e => {
+                      const c = { ...colors, priceGap: Number(e.target.value) };
+                      setColors(c);
+                      saveLayoutSizes({ colors: c });
+                    }} />
+                    <span className="text-[8px] font-mono text-gray-400">px</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

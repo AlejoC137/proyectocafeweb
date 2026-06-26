@@ -1,0 +1,5764 @@
+[
+  {
+    "Date": 45635.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "008ce943-8984-42b4-87ff-67366ba7a972",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45698.999814814815,
+    "Valor": 122100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Alejandro",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "016c7bc0-91ae-47a7-9109-0fab677cc4a7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 29600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "01724f60-1eb1-46e9-8418-1acfe7263f50",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 412792,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "035e8159-bc66-4c73-8bb6-d2daf915e8ed",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 57530,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "03bf8d18-c5f9-42b2-ae1e-e01e69ae1073",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 96698,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "03c6a571-5ab8-4907-b0fc-330c427a7874",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45640.999814814815,
+    "Valor": 39200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "0523accc-38b5-47e8-b2fd-a5ef0fcc8839",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 60800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "05789789-01d2-49f3-9c9e-49c5b8ef84f1",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 63600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "060cf210-9b9f-4395-a53a-007fed4863a3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "071538c0-0bdd-4d61-a478-36497ff28d66",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 57590,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "0780ac30-b4f7-4422-9fd9-1e389964cd1f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 119000,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "07c5d4b9-78fb-40db-9cdb-95f2657c37ad",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45819.999814814815,
+    "Valor": 57200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "07e30884-cd19-4e15-9c00-185b0e2ee771",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 217300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "0928c63e-9ece-408b-ab11-de4e9ab8fbf6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 65550,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "09883cdc-ba07-4945-a886-b6d01513f677",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28850,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "098c90b0-ddfc-4f19-b5f7-a8ccc65276c2",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "09f8acad-00b2-4c07-a758-919bd3631590",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 25649,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "0a7dae59-eea1-4045-8f84-73a056cf0ae3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 25080,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "0a8e8839-2fe2-4901-90a2-3d06f36e10eb",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 29496,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "0af34c4d-6e3c-42b0-b054-c528bb3695e5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45796.999814814815,
+    "Valor": 483353,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "0b8bed2f-3511-44bc-88f8-6d8f4b00c0bc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 27000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "61637791-2d45-4a1f-8039-1e2d0e4f178a",
+    "_id": "0b99934a-13cd-43d5-8a46-47baed5e1f23",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45813.999814814815,
+    "Valor": 189384,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "0c22d1d4-dd22-4676-bc0a-0ef0bf71545f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 5490,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "0db25991-b67f-4e55-bec2-c0b6f3942737",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 18990,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "0ecdee5a-f1d5-4713-bfa2-9b3bd0e7af94",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45649.999814814815,
+    "Valor": 19511,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "0f410e24-2358-459b-8a3a-8b13e20cca22",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 65150,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "0f885955-e8e4-4121-8e06-309905259032",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 64500,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "0fbdc181-5616-4dfe-8489-18a334543c17",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 177327,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "107fdc6b-27be-40bc-91c4-fdff3d167a67",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45761.999814814815,
+    "Valor": 62500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "11811e4f-9f9a-4aba-862d-7ed0bd794492",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 23750,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "1231585b-2037-409e-89f2-a1619a58ec6e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 91900,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "12f7112e-c324-4ede-bcf4-962ade0502d9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 886471,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "13130292-05f7-4066-905d-1823df72db2f",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 35008,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "136bad87-a750-4620-9d77-0118bb1fb922",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 122100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "14a23d2e-4b79-4066-86d2-2584d2b86864",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 447106,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "14bcd62a-8480-48cc-b0aa-375e20c4ab54",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 116450,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "14daba79-72d4-4780-b3a2-2971abe3d80e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 19990,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "15d0fc56-0e90-42ab-8a82-12f85dfc8743",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 39140,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "16027373-575a-4333-b06e-aef03db82600",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 67790,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "170235d6-0f93-4ba2-9a62-1fdc4b1c1fbc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 31000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "181a82d3-b120-4dcc-b2aa-4b4acbbae5e5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 59350,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "18511f88-893f-44c4-a540-d0f83cdca43f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 4600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "198628f9-8763-44fd-a538-825292414fec",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 39200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "19ae4ca0-eada-4699-8cda-c453e1486ea5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 24050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "A",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "1a8bd6eb-bfb7-470b-832c-cd53740d0b3f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 20050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "1bab7583-a2ee-4f76-8210-b7fa721bce50",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 222155,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "1d08ef01-b160-4cac-a739-22d70b995122",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 21330,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "1d231d74-7bc0-4ed9-80e6-dd34d74cc8ca",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 82550,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "1d30d715-7e36-4343-a969-bcfcdc3d4215",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 14500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "1d56e965-d9c7-403f-92cf-f6b6aa31a74b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 163880,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "1f27af6a-d599-4338-8b29-350a13c0f0af",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 35010,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "15d9dd3f-ce5b-4d73-ae68-2067725abdd2",
+    "_id": "1f69cb76-c8e0-4ec4-bdff-6b2f7f9ef93e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 238788,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "1faca05b-2513-4049-9a8a-b02ac7c75af1",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 168490,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "07afef02-d753-4a70-9f72-854f2d970884",
+    "_id": "1faf1d5c-6ec8-4e08-97c5-58e733834f06",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45795.999814814815,
+    "Valor": 20000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "4463dd9f-f085-4ccc-9b61-ec28cf332153",
+    "_id": "203d51c5-fde6-49ad-9c2f-62174e27e127",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 11000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "20c5a3da-66d4-433b-9d9c-5379d518f4f6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 1035121,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "20cb36b0-e9cc-462d-a58f-fc3dd194c7a6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 9650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Sam",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "2117bd76-c695-44d1-83f3-f109a8ce42cb",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45813.999814814815,
+    "Valor": 12000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "4463dd9f-f085-4ccc-9b61-ec28cf332153",
+    "_id": "21812205-96e5-4a93-94a4-e5b19fe96227",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 5980,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "21edf815-6b75-4655-8222-ec04c5e382bf",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 7500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "22cc9e44-a320-47a4-832d-9edfdb987317",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 6990,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "22de4087-431d-4b37-9e31-c08b903fbdd1",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45774.999814814815,
+    "Valor": 139950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "24fded0f-0704-4e7a-82ed-83f65eaff863",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 80400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "251c48a3-8e26-4b79-8c77-f892ca93ad81",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45642.999814814815,
+    "Valor": 24800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "258dd3b0-ef06-4866-94d5-ad08ca9d55d8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45697.999814814815,
+    "Valor": 20000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Alejandro",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "0b3d5315-95cf-4ebf-a7a5-585d512e3fdb",
+    "_id": "25b935a0-db31-4117-b161-928d61ed3446",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 340800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "26a60e10-9a15-4d6f-9f5a-653feef7930a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45656.999814814815,
+    "Valor": 65700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "ffe9771f-2f20-4bc1-a8c0-893e494ecac5",
+    "_id": "26daf43e-22fe-4faf-9a46-b37e42d601b3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 334635,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "26edbecd-dde3-4ac9-96a4-71deedfe0a46",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45649.999814814815,
+    "Valor": 50774,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "270699b7-d880-4b29-9d7a-5b8049bff856",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 70775,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "28eebffd-5acc-4a3b-af3e-3200a6716695",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45663.999814814815,
+    "Valor": 4200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "293e1f2a-de3c-482c-a925-5654f96c97f5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45630.999814814815,
+    "Valor": 13950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "2aa04984-a7f2-42dc-98d1-63fb882352c5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 371000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "2af1bbce-fe72-4ce4-a429-8c285ebce69f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45903.999814814815,
+    "Valor": 50500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "2b95dd68-4cb2-43fa-98df-462b725c0b6b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45753.999814814815,
+    "Valor": 25080,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "2dd67182-327d-4050-99e1-21a6b55ca5d8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 35850,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "2e0197f4-ab3b-45ea-8d38-752c888393a9",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 51720,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "15d9dd3f-ce5b-4d73-ae68-2067725abdd2",
+    "_id": "2e3aa294-42d7-4bb1-97dd-ed289332eef5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "2e550923-0f7b-47c2-aae6-9cbb5f4e7702",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45788.999814814815,
+    "Valor": 28241,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "2efec62d-20ee-49cc-a66a-15d91749a50f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28000,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "2f50c370-e31f-44e8-85bb-4fac293df54e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 121200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "2f94f78b-9b6d-4dac-b4ee-1d9fb49486c5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 9800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "302b532c-feff-4ed3-894d-7622f16c8517",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 71200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "30a076f7-0c94-44b3-be7c-b96b674280ec",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45583.999814814815,
+    "Valor": 49950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "319529ba-ef0d-404d-be60-3c3a78b56adb",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45769.999814814815,
+    "Valor": 10000000000000000,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "15d9dd3f-ce5b-4d73-ae68-2067725abdd2",
+    "_id": "31fa852f-55b7-41ac-abec-e300615fe5fa",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 8050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "32166e88-f62d-4cf1-80ea-70463fa68760",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 5400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7f99c83d-3f4d-4455-8116-224c168c54da",
+    "_id": "323d51b7-3f17-457b-b7b5-e23dc6bab52f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 97800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "324383a1-2b22-4296-81eb-c08673eb9314",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "326b0ad9-d984-448b-9ffa-e21e63a93c46",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45670.999814814815,
+    "Valor": 28350,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "32d202e6-e37e-4c7b-96c6-d8ab7fd81318",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 16600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "33648662-f4f8-4297-8a22-ea435b2c87dc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 4352,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "33693464-bc80-4142-80f0-6cae3d1ab6cc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 47100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "33ca204f-ec9e-48d4-8c75-4e3af1d1c1a0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 1047178,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "347be04b-4d6c-4a86-ac09-0bcaaa90adc0",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 84100,
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "36733895-d0ce-4fcc-8e79-cc8ba7fbe8fd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 25000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "367a2c54-7b9c-4712-b830-302582b005dd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45771.999814814815,
+    "Valor": 60400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "36890b6d-f0e9-46f7-a491-2249fa07d1da",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45814.999814814815,
+    "Valor": 8900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "36cbf890-ab94-441f-861a-5f0f28bd574a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45776.999814814815,
+    "Valor": 44550,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "370f029d-8c56-48ab-b192-02a33029e01a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45664.999814814815,
+    "Valor": 121300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "38641ab7-f49f-4cdb-9fd6-45263b62e11b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 95932,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "389edd88-18e1-462c-9cad-cc4cd0ab0d85",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45652.999814814815,
+    "Valor": 27000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "38a44f42-7086-4627-bffd-52686c5de6b2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 38300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "A",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "38c8dbf8-29a6-4f03-a61b-d08eda797228",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "3c99dabd-3c98-426e-bf9a-bafbad479601",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 29100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "3c9e40dd-e8a4-4b47-baa2-8ff8267cabd0",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 47500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "3cfffef2-1ee8-4cc1-adf4-d4a0505486d6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 10780,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "3da5cc3b-04f5-489e-bc0b-2a9afaf1a00b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45775.999814814815,
+    "Valor": 88200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "3daf2056-f005-4e2e-91c4-f5420c09a73f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 10000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "07afef02-d753-4a70-9f72-854f2d970884",
+    "_id": "40fd0410-f6e3-43c3-b3f2-ac919d097408",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 100750,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "417b2793-6a2e-4563-8e14-6e668aa6f471",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 58950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "429eba7b-3022-4a4c-b104-c6b25a6f63c8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 34800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4366c37c-934b-4ac6-8bef-5c420ed006b5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 274402,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "43c6673b-68ff-4efe-9bf7-6d279c15e19c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 5600,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "44e42b10-3c64-4470-8eea-f39f672d4596",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45813.999814814815,
+    "Valor": 496200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "4521fa16-50f6-41ca-9aba-8220a06202bf",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 11700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "457397a1-fb46-4e88-87ec-bce9dcb45ec3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 81220,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "46797d9b-279b-4368-9c1c-8da56f475ce4",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45672.999814814815,
+    "Valor": 138000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "80d9f3fa-e25b-4dd6-86e5-40dba660b228",
+    "_id": "46c70c6c-d559-452f-b577-582ce20e6086",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 50850,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "46cc72f2-0d9c-449e-b63d-51a3c7f5ab19",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45776.999814814815,
+    "Valor": 22950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "be1c83ad-47ee-4edc-b66b-d9e15a5e2a36",
+    "_id": "46f69ea6-292a-41b5-8c98-1303a35c5883",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 56270,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "474c670b-ad2a-49b6-8631-716a62680c35",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 48819,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "47ddf0d0-4f19-4df2-bd17-c2b6966bfeb8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 13800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "488ea40a-07f8-4fc3-868e-2082a450a1bd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 190700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "49640833-25b1-45d4-8ce3-101ff89f9af0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 17890,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "49706d7a-7405-4ff9-9c5c-6ab86bf29222",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 31100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "499c6f5c-7aa0-475c-a992-52e3849f9394",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 99047,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "4a278d4b-15e1-4092-bc5a-d11b9243ca81",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 18850,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4ada1b3c-ee06-4c82-bda5-d68d9ac44626",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 30550,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "4afb7705-02c8-4f2e-8f8f-f4b7da750680",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45704.999814814815,
+    "Valor": 163880,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "Diego Alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4b6bc0f2-4b15-4262-a530-4f06f9a085e7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45813.999814814815,
+    "Valor": 10000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "61637791-2d45-4a1f-8039-1e2d0e4f178a",
+    "_id": "4bc236e8-aa40-4c59-95a6-486fa8b491bf",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 9900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4c25c88f-900e-4c39-a79d-0eb4084fe6a6",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 276568,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "4d968cc1-2aae-4307-8a45-e121373b65ed",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 51588,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "4d98dd8f-b375-4d44-8cd6-478a34e1373b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 59250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4e01b828-fc52-406b-a53f-c0c60e8d8872",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45800.999814814815,
+    "Valor": 54700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4ef168f9-520e-400b-9a32-7e9597460cce",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 241480,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "4f965baf-0416-44f2-bc18-2092fd265f3b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 65200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "4faa773b-1e0f-4045-8a5e-46ed97777e85",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 81250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "503c1927-7f5a-42fe-bf57-70e3483497b5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 57501,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "50cefedb-a56c-4b5a-84bc-a41688eab0c7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 7690,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "5118006b-e4f3-4711-b0be-51f688678cf0",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45654.999814814815,
+    "Valor": 55600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "513b2ef5-d70b-4245-beac-9e60f995a067",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 126500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "515189e0-d96b-4947-8bbe-8a6c19d33717"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 14500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "529e40cd-b109-4d1d-85b7-eabd5d97754f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 4480,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "52c5f0e1-3755-4552-9e81-8708ab58b364",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 78800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "52e66cc5-7d09-4c14-bac5-0fad32bd6270",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 36050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "530fc314-bbcc-4ea2-b318-22acae05c63c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 25600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "53c05612-2b44-4a67-a59c-57f9b6672861",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45821.999814814815,
+    "Valor": 88200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "53d316e3-a877-433e-867e-3bc0bc44e004",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 9870,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "542fdaed-fd39-4e18-ae85-4210745b0d24",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45702.999814814815,
+    "Valor": 97800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Alejandro ",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "54cf117b-80f9-4931-bc75-cf6f9b87f131",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 222155,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "553c267c-05ff-427f-a1dd-22b3fcbc13c0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 66400,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "61637791-2d45-4a1f-8039-1e2d0e4f178a",
+    "_id": "556c53f4-4c3a-434f-a5e5-29390de1dba7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 29820,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "560caaf6-9816-4a61-b6c9-0cfa930ae027",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45787.999814814815,
+    "Valor": 47650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "56f56855-a44d-43ca-83ce-a874280062d1",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 42800,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "57011706-8137-4d51-b4e0-91c7523c376c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45707.999814814815,
+    "Valor": 126500,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Juan",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "578e7ddd-74b9-448b-b6f7-c95b20bd39ef",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 28000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "A",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "57cc28d3-6cf9-4755-af0a-1626ed9039fd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 49150,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "5823bad6-b928-4e30-b557-14e4783adaa3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 2980,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "58941a08-2a5e-4b76-b1b3-c81d96ec3e15",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 78800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "59792e1e-5ecc-4938-addf-ddd00e495ffd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45818.999814814815,
+    "Valor": 3800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "5aee9a25-3962-4394-8ef8-1b434b189bb0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45782.999814814815,
+    "Valor": 19200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "5b923232-964e-499a-ae66-39693db3bee7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 104400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "5d133e5b-d619-4a58-a96d-845df578c2f7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 895074,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "5d8734b4-258f-44ba-9bd0-611aa6470a81",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 12150,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "5d92c790-8551-43ca-ac89-debe87de338c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 138000,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "5e549597-3685-44b8-8952-00464af1dc1c",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 169575,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "07afef02-d753-4a70-9f72-854f2d970884",
+    "_id": "5e870c49-5eef-4f1d-b73c-ce235c9372f6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 82750,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "6055a263-2270-4bf7-9063-22fffb77376e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 55740,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "385be326-4bb9-441e-8468-bad1d9898d18",
+    "_id": "62de968d-fbbd-4d8d-9bfe-9ab98cfc572c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 49400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "640b43d5-6465-4ddc-a3ee-e2c5a2a3a401",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 76581,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "64b767dc-7b11-462a-915b-32aa2dc3f501",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 50250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "65d99513-3515-4e23-969e-cad0bea5b0e2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45734.999814814815,
+    "Valor": 147950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "679b1cdf-cd56-4f9f-8b63-3ed565d41436",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 41650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "67b35194-2b8d-4d59-ae4c-8653c49aa043",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 631200,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "67d7b0bb-5d00-4391-be4a-68313f051da8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 67600,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "67e5ba39-74d7-4b9c-95a8-d07f78ebf6ab",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45900.999814814815,
+    "Valor": 21450,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Alejandro",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "68703a28-7dd4-4c38-989c-7d08386a49f2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 26570,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "sam",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "69a21a93-86d6-41a3-be7f-7a35f95ace7b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 19267,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "6a331467-0c6b-43e9-a85e-2e314abb0fec",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 62000,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "6b3ad0ef-1fd9-4649-b02f-c1e4e2a7f202",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 29600,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "6b593d81-6b11-471a-902e-212aa0d7f433",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 48111,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "6bcf028e-ea95-43ab-9203-efa1be6f1712",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45784.999814814815,
+    "Valor": 147250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "6d268e89-b39e-4451-825a-2f7239d3703d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 15320,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "6dc26606-d4ac-48c5-943e-c648be875e61",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 13800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "6f252313-3016-4cad-ac9d-40fa29040ef5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 28322,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "15d9dd3f-ce5b-4d73-ae68-2067725abdd2",
+    "_id": "70a2fd4b-2a7f-43da-b341-8f708b29f974",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 6700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "71805c44-eeba-42aa-bba9-9aca1df0a7ca",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 17150,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "72b13562-31fc-41c5-91d9-011da4a09c79",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 16900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "73063cba-b6cf-4ab8-9818-d0cee6634e49",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 19100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "734b4064-8855-4fdb-86b0-1d95493e9c0c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 67400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "74b66d0c-33a2-4f90-ac5d-1967c989fc2e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 14057,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "74c7a4db-6411-4a48-8b53-9df96891e524",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45795.999814814815,
+    "Valor": 29400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "75d1de8b-08cd-488a-9619-2ee7f479c69c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45693.999814814815,
+    "Valor": 209000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "Alejandro",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "76f5ce8b-b0b1-4437-a7a8-97a40fe9635b"
+  },
+  {
+    "Date": 45637.999814814815,
+    "Valor": 1900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "777a5850-d5d5-40c9-84fd-240e452927af",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 5350,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "77b42032-bbeb-47d9-9643-6e7b1eb4818f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 74340,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "780cd807-7db9-495c-bedd-b7364a5efb08",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 108630,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "7889135f-e32e-46e4-9362-9849dfcad2ee",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 96000,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "79177887-53f2-4378-ade5-28e089266859",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 126600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "7c271ea1-05b1-4052-959a-b70bad5f6182",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 21950,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "7d36be11-b492-4260-a806-7d784ecdf1bd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 75600,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "7e609b2b-6840-4202-91c2-3c2273865c1a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45811.999814814815,
+    "Valor": 150350,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "7f71c7f5-d8d0-4c75-8d87-f4404e225815",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 49950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "81164099-7fa3-40de-8af6-7e278885046c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45641.999814814815,
+    "Valor": 64000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "822bd2b6-78ad-481f-9c16-e32b71220924",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45648.999814814815,
+    "Valor": 73800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "8391c279-4e53-4e5f-9c47-2f804b2e63da",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45779.999814814815,
+    "Valor": 37046,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "15d9dd3f-ce5b-4d73-ae68-2067725abdd2",
+    "_id": "83b585db-0b81-4694-a7ad-b5b9f10113ee",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 22950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "83c193df-fe4f-4543-8a16-8771ab67a35c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 52400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "A",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "85b9b51a-9d97-4b33-aed5-b9937441a735",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45784.999814814815,
+    "Valor": 137900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "85d6d23a-4c13-4817-b2c2-cd74f6791ec9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 88200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "8825e9a9-b657-44e1-a990-77c4ce24279f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 136057,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "88f32629-7c72-4c29-9f71-aa73b46fb61e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45788.999814814815,
+    "Valor": 108983,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "8a0c6a70-67db-460b-bc20-2b49ed76ca22",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 4195,
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "8ad092cc-3088-45f2-afc7-74f239c84160",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 44750,
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "8add6cc5-cc52-4dc4-b92b-8b23ecafdb9d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 96840,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "8b13aa7d-cc12-489a-aa5d-4e96cdd299ba",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45818.999814814815,
+    "Valor": 66300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "8b31268c-296a-49f4-ac40-92be72cdb6ef",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 22990,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "8b6d45ed-4508-4bed-afd9-dab46190b54c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45817.999814814815,
+    "Valor": 91900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "8c8a50ca-4759-4027-970d-f99bd0b44a68",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 219250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "8d1c08ce-9772-4ff7-a4c6-ec12e50101bd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45734.999814814815,
+    "Valor": 80400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "90886136-2017-44cd-ad05-552a4d93da43",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 44650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "90f5eecc-aced-4a51-9fe9-b2b9c9ddd800",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 129700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "90ff9b5e-f66b-4525-a68a-651640ebd990",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 35550,
+    "MedioDeCompra": "COMPRA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "9104fafa-7b25-49d9-8bcf-5a46d7063fa5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 138250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "91d24856-e0af-4cbd-af5c-e0a024014f5d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 29300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "91e7ad9b-1da6-4b04-817a-1b3608f18ec8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 15800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "9291199b-5c8d-4050-a7ca-3b961f19d8e4",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45651.999814814815,
+    "Valor": 28400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "61637791-2d45-4a1f-8039-1e2d0e4f178a",
+    "_id": "930150cb-8af1-473a-af12-e5f40d1c0df9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 11400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "A",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "931c969c-a2e8-4980-9f15-f3c31d3c7143",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 902175,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "93ab6974-cc47-4406-b7b5-81d3ddee84e0",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 131400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "80d9f3fa-e25b-4dd6-86e5-40dba660b228",
+    "_id": "93da4b13-7767-432e-908e-edf5f49396f8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 42000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "93e1fc30-bc0a-4c66-9ee8-c26f427880db",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "942e2a7c-601a-43f8-864c-d35c20eca0e3",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 17420,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "94b58e0d-43d2-4949-a2ab-e98ba823213f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 57600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "9522f61a-f3e0-49e7-a399-f09f5d4a4fdc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 6800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "9621aba5-8aa9-459f-b86a-453cb0584ce2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45797.999814814815,
+    "Valor": 41180,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "96ca9953-92be-467c-b2bc-6bdefdf9715b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 25450,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "98688a79-85e3-4c75-9e5f-80c25d812df6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 13950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "98c1091b-4fd1-4562-8eac-f2ff984305c0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45900.999814814815,
+    "Valor": 68700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "Alejandro",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "9988d0b5-0fe0-4040-a36c-7f963ea3010f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45636.999814814815,
+    "Valor": 92500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "99baeea6-e215-4beb-92b3-5e01aa8ef117",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45806.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "99be30ed-ec78-444f-ba4e-a011bd452673",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 22750,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "99eb636a-d092-4d10-962f-c221acc04a9a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 6990,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "9b75b638-b95d-41cc-98e1-7f7d4bd73f2f",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45812.999814814815,
+    "Valor": 570063,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "9c0b23b6-64fd-43b3-8710-e9ae25a9fee2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 79562,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "9c9e71fd-ef1e-4f87-99e8-57ea40554ae5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 57430,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "9cf567ff-5aeb-4699-8b16-bd9e9dfeda1a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 72600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "9d2b423c-ac42-44cd-9cca-e3c72b7bd7ac",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 45600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Comprador": "Alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "9e5be4a3-1210-4520-8e2d-f25bdabf2763",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 90000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "9ef2f86d-651d-43cc-92dc-9cf56b389342",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45642.999814814815,
+    "Valor": 63200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "9f4a1f4a-c8ef-4083-99fd-84d828d1c6bc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45676.999814814815,
+    "Valor": 8960,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "9fbfe6a8-948c-4cfd-8f25-2e3cdd7ec28a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 11757,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "a1cce29b-0c50-4792-bbec-eca94eb5e4e6",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45820.999814814815,
+    "Valor": 162800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "a1f5a199-4443-4e80-a5c1-941f4cae25c4",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 3710,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "a2139b33-0f68-41f9-b937-355e49e7781b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "a22e2d01-3796-4afd-bdeb-7057320cb085",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45784.999814814815,
+    "Valor": 138000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "80d9f3fa-e25b-4dd6-86e5-40dba660b228",
+    "_id": "a2404268-dc9a-47c8-8630-4b4c2c8b7d6c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "a37467e5-b4ca-4623-ba14-3f5dbc33e9a0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 328107,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "a3d1055a-4f99-4deb-87cf-36f9099b5357",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 7500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "isabella",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "a40b6c55-0616-4549-a61f-3715ff0c61fd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 15600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "a4470a94-9a8b-43c3-beb9-cdd670050e63",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 13900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "a62f7db6-1cae-4618-b94d-da3e2793cd67",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 31200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "a6f1ae97-8c09-4d5c-b9f0-7b0c7f780031",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45649.999814814815,
+    "Valor": 78932,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "be1c83ad-47ee-4edc-b66b-d9e15a5e2a36",
+    "_id": "a758b077-6f35-4a74-b079-3fe9abbf19bb",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 16950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "a7c75b9a-3123-4321-b7ed-4866677408e9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 41300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "a7cc37fa-53c1-4e0e-84e5-846fd3ab1cf0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 67100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "a7e3c0f7-acb3-4f57-b26d-2237862baec6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 78800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "a907c8cf-1d24-4391-be60-1c551f5fcfdd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 71950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "a9b132ed-8807-47bf-83a2-ff0214641586",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 48885,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "aaef258f-0b25-4201-a407-2e33bf4239da",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 17500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "aaf4ae86-4f1d-44dd-b59e-df6eef720cb3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 171300,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "ab991e4b-b145-4809-a270-42c29f51b28f",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 285666,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "abd4cfdb-1ee6-4a60-b505-c9c952857457",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 80300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ac209324-d5e0-46e8-bc5f-721ee20dd466",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 11757,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "acbab004-820a-4834-aec8-4b588bccbfc6",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 40850,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ad7884d5-e018-45ba-aa34-a5ff346d921e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45776.999814814815,
+    "Valor": 94600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ae0aef8a-2a53-45e3-ace2-63e6b0e6dcff",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 8729,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "ae6faa94-7ad2-46b0-96ca-d9075e24a6c9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 33300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "af7f6aaf-6a46-4510-b0f1-9028030776a3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 194500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "afec1085-e47b-4e9c-b505-fc0445e0c3e1",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45643.999814814815,
+    "Valor": 336000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "b076062c-139d-457d-b98a-1e76801a9c9d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "b07953f4-2c0d-4ccd-8549-e1d96844cf73",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45771.999814814815,
+    "Valor": 22400,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "b1ce48e0-671e-4406-bcab-787ea8c9e287",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45643.999814814815,
+    "Valor": 38780,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "b208195a-15d9-45cb-8226-22ee59883354",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45670.999814814815,
+    "Valor": 37980,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "b21252c1-d353-4dc5-a32f-874c170c7d00",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 12000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "b392c1b5-7f2e-4caa-9439-23c8522e564c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 240166,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "b5c7e727-0af1-44ef-8c0f-8aeade31dfad",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 31000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "b71dfb99-7d29-465e-bf51-0f6d455c8bf7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45642.999814814815,
+    "Valor": 190058,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "b77e5060-fbc1-4984-ab25-0066ad28742b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 30150,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "b8117e37-202e-425a-a8a9-c2ed868b3b2d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 52800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "b896aade-301a-4a0f-aa1f-065da74feb16",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 22950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "b93dad68-327d-4859-8802-5097a92179cf",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45636.999814814815,
+    "Valor": 60650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ba281919-2732-498d-9228-485fe3d97c77",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 371000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "ba7394f4-cf75-4e32-8cd1-ff40ec89e239",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45637.999814814815,
+    "Valor": 38000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "bbe6b215-2c05-422d-9341-f602cbb7c999",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 88200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "bbeb62a1-496e-4b2a-b064-1f4126ede128",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 45300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "bc0e17dd-6cb0-4820-b5af-055f4bbb2e46",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45649.999814814815,
+    "Valor": 22400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "bc8e579e-54c9-4918-bdbd-5379c410fad7",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 126030,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "bcc06095-731f-4842-a348-ee77fd5d7539",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45698.999814814815,
+    "Valor": 455782,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Margarita",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "bd4ccd5f-d996-4bd6-879d-64e67383b304",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 22950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "be201b30-4539-4ffe-b6ae-3f5d8a678c45",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 344271,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "be520459-26db-4cb1-9131-36336479f5ef",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 886471,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "be6c13d0-932d-4827-b5a8-e9c8cf7d14c0",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 11757,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "bed82874-8c4c-426f-a401-e9ee4d0a2e80",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 86400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "bf337b86-30bc-40fb-a38d-5a38b362e0f9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45656.999814814815,
+    "Valor": 66450,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "c0a25bc6-7355-441d-b273-6585c2474d41",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 27950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "c0d8445d-72a8-4abd-8087-888b9b481a86",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45642.999814814815,
+    "Valor": 11250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "c180d96e-1ec8-450c-8421-8f25bdea061c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45772.999814814815,
+    "Valor": 29900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "c1e622da-ccf6-43fe-b11c-3a886aa0602b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45634.999814814815,
+    "Valor": 148000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "c2b310b6-04ee-40d9-97e2-8873579fb131",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 959916,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "c2ce51c6-6083-4095-8708-3b2c49e36751",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 7800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "c4c72342-6434-4e03-960d-99d786cd2c40",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 57600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "c58c6572-0784-471d-ac22-d3caaf86a1f6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45806.999814814815,
+    "Valor": 138000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "80d9f3fa-e25b-4dd6-86e5-40dba660b228",
+    "_id": "c6f5a2f6-7024-417c-993f-21992b4de4cd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 29600,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "c702f157-01d8-4598-bced-12116525e858",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 387576,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "c7538774-6b2a-412e-9fa0-55b25b4bc865",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45656.999814814815,
+    "Valor": 10699,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "ffe9771f-2f20-4bc1-a8c0-893e494ecac5",
+    "_id": "c777c0bd-4a26-4243-9343-52de958d83a2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45810.999814814815,
+    "Valor": 87700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "c900447b-fd43-44bf-9901-95673ffa3cc5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45629.999814814815,
+    "Valor": 76050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "c921b6d1-aeef-455d-91f7-cb8e5e65d087",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 54780,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "cb1b21c4-29b9-4f0d-be87-dc910e70e46b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45821.999814814815,
+    "Valor": 30950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "cbe8fb8b-77bd-4f3b-a1ce-9c4f2b86697c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45820.999814814815,
+    "Valor": 3749,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "ccf0b20e-d9d0-40f3-af69-6c7216b3f50d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45666.999814814815,
+    "Valor": 24600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ccfe4888-56d5-412e-ae45-661792bacd6e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 62650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "cd25535f-2dda-432e-8d25-4c9335b62dc5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 31150,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "ce74dc60-3c3d-4b99-baee-81d76e2be16f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 135200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ceb17054-f781-4636-a555-94f70942e787",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45800.999814814815,
+    "Valor": 13050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "d1a8d029-7e38-4507-bf2f-41d202653f9d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45645.999814814815,
+    "Valor": 33400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "d24463ed-4dcc-490a-a6f1-53876e56315e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45779.999814814815,
+    "Valor": 61100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "d44b0f78-30b7-48bc-b591-725cd44be12a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45670.999814814815,
+    "Valor": 130800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "d5ede259-87d3-435a-83bb-e74bcd9f1f8a",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 27900,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "d61160e9-c568-49b6-820a-4e23366ff8d8",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45775.999814814815,
+    "Valor": 31700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "d649422e-5937-4620-a0cf-2b62f5c9440d",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45802.999814814815,
+    "Valor": 362400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "d69dde7f-f9ca-4e87-8813-71ab3aa3b1a6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 55650,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "d7115882-b7ff-4829-98bf-2e8d12c8ab5b",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 14450,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "d82c0104-13b7-4310-bf9a-af9d2f51c09f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 7960,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "d876f88a-f274-46d0-ab32-966bed8d87c8",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45804.999814814815,
+    "Valor": 55200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "d959bafe-fc8a-4066-99ca-a87fe2deafff",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 5015,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "samantha",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "dc86d20f-cc83-4713-bbe6-661208014280",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45642.999814814815,
+    "Valor": 49400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "dd4aa5a7-5fbc-4280-8b03-d747521c87da",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45815.999814814815,
+    "Valor": 54680,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "de717695-3303-437d-9167-af454255ceb0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45811.999814814815,
+    "Valor": 43950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "de791ee5-076a-45e8-9b16-58895772395d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45663.999814814815,
+    "Valor": 171997,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "dfe28080-cded-4f42-b708-bf130d53de7e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 31250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "e009437c-15dc-4182-b282-36aa0e4f03f3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 125400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "80d9f3fa-e25b-4dd6-86e5-40dba660b228",
+    "_id": "e024ef14-724e-45a1-a3c0-4ccd7c64b6ae",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45645.999814814815,
+    "Valor": 19400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e05b00ef-a78c-420e-a0ae-4906c1b8ef15",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45812.999814814815,
+    "Valor": 37980,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "e071dd1b-dea4-496e-a6ff-f3c5f5b55766",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 15950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "e0cfa3ec-df91-4d6d-a36d-9b2ecc1ae718",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 9500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e19353fb-59e4-4980-89bf-66d68d1b8e8e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45788.999814814815,
+    "Valor": 28241,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "e1cd4a19-55b2-4870-ad56-d141b38f8f53",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 1120,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "e1e60280-f7be-4f47-adc3-4f37ef6f874f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 12900,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e1fd0cf8-6fe5-435e-90bb-6e3354efe854",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 28500,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "e2a15c83-cfce-479f-80dc-7401f6585ad3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45699.999814814815,
+    "Valor": 9650,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Comprador": "Samantha",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e467fc26-d13c-4b3c-b019-a3a6e5cc9475",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 22635,
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "e47f82cf-f9d4-4967-8fe1-eebc302d4731",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 53234,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "e494fce6-6783-4e18-a672-4f6963b24a51",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45670.999814814815,
+    "Valor": 30300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "e4ac7e25-511d-4f4d-9a22-3d9f5682295c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 76850,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e5392001-d398-4be0-ae3a-4389657c9df3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 20100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e583f9d7-c77d-4b17-966a-fa7322a1df28",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 1053116,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "e5ee0243-9984-43e8-91aa-2acdf39bcbf9",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 81200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "e6978c46-4c03-433f-8bf4-899039839439",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45771.999814814815,
+    "Valor": 19050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "e697ae03-ef4e-4f7c-9056-ce18d8010d53",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 22855,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "bf50a92f-d7c4-46c4-97fc-3d674731ed04",
+    "_id": "e70e98b1-84ba-4402-91b7-4448c561808d",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45643.999814814815,
+    "Valor": 68600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "e7fb41f1-0561-4dcc-9c2c-de0b98028dab",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 63960,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e95bcfc7-9b72-4b5e-ab0d-f3af5eb3c8ff",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45645.999814814815,
+    "Valor": 69600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "e99e2317-eb15-470d-af2d-c6ba5a7b10c6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 33750,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "e9cdb192-55d3-4807-80e1-b7924eaf8b31",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 21300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "eb78c1b6-476a-4cf8-9c2a-01d581ef74e6",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45776.999814814815,
+    "Valor": 44137,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "eb80cd55-1cb7-4852-8db0-44b8f53447dc",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45727.999814814815,
+    "Valor": 147300,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "ALEJANDRO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "ebc07579-f21b-414f-87c1-075b43479158",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 23500,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ebe6c1b4-228b-41eb-ab61-497c453d102c",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45769.999814814815,
+    "Valor": 139350,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ed3e272f-603e-453e-b207-59220cf0f638",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45818.999814814815,
+    "Valor": 88200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "ed7bcfdd-1ce5-4fc4-9d4d-df0482aef4b3",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45665.999814814815,
+    "Valor": 161700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "78a7a9f3-1c11-4622-bf2c-6f16c140d217",
+    "_id": "ed8a0e73-d00e-4fc3-8b2f-4f97eb4d419f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 8970,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "edb2d577-1d9d-4bc2-a41f-75ab903b5ad2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45753.999814814815,
+    "Valor": 47500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ef485abf-87b2-459c-a3cb-964b739eef79",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45639.999814814815,
+    "Valor": 950,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "ef7a1d25-4251-46bd-af02-761493febc6d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 88700,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "efea319a-8a22-48cd-aace-097c727120b0",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 30700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "f0975ea7-8219-469e-baab-c4246a9d9b1d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 9520,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "f11c84b5-dcc5-4638-8bb3-71a1466a3f4e",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45762.999814814815,
+    "Valor": 79347,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "fcd60be2-1814-4d67-b8e2-09d9bb98c936",
+    "_id": "f1461573-528c-4bd4-8ecc-4e5c03b8c0eb",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45664.999814814815,
+    "Valor": 120216,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "f14baa24-bbe5-40ab-bb17-3a78c2877f35",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45676.999814814815,
+    "Valor": 120050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f1716c16-2b93-4c5b-9902-f23d058f3187",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 87250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f18dae15-d0f4-4ac7-ae89-82134c4c9299",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 4500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f249335c-6de6-4591-bf45-2e484288a25f",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 24800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f26549d3-ce85-4127-8838-f67332f4fffd",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 31550,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "7935f9e6-2a57-4390-8c07-d3db259fe0d7",
+    "_id": "f34739d0-5b77-4d51-b9c7-c9196ad7dc0f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45769.999814814815,
+    "Valor": 58000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "61637791-2d45-4a1f-8039-1e2d0e4f178a",
+    "_id": "f34806a9-8a9d-431f-8a56-d8b4cf9f16eb",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 154700,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f369e034-65b5-4ba7-983a-fc2608a4ab44",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 49250,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f44c92b9-bc4e-49fd-8191-1495e85c796f",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 902175,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "c71e75e4-92d0-4293-8f27-66abc5292fc9",
+    "_id": "f4a725a2-5034-4230-82c1-624593ae5f8e",
+    "Concepto": "SITIO"
+  },
+  {
+    "Date": 45671.999814814815,
+    "Valor": 22400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "f4fec5c8-82c5-41dd-9ce0-84c98df79ae5",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 67450,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "a",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f633a0b2-123a-481c-b7e3-aa1f68195917",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 65000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "48fabbbe-5d2c-4f7d-a3a8-811de5695420",
+    "_id": "f6a3fcb5-70db-415f-ad19-9802295836ba",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 57600,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "QR",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "7c6d41b8-5eaa-4792-aa1e-07dff61bb921",
+    "_id": "f6bd7aae-2032-46c4-a5c2-d5621a9da21a",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45768.999814814815,
+    "Valor": 169575,
+    "MedioDeCompra": "PEDIDO",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "07afef02-d753-4a70-9f72-854f2d970884",
+    "_id": "f6dc8ca8-bd05-4a82-9a3e-6cc3c38861a4",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 48117,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "f81d045e-cecc-4731-a0b3-b6fdb8d8583c",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45751.999814814815,
+    "Valor": 47100,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "f8e367bd-9e71-4c1d-bc62-80f78b30b95d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45769.999814814815,
+    "Valor": 165400,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "f902d481-02a6-4d1a-973e-feb50b435cf9",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 23940,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "10764f6e-7040-4e85-8a29-e3553150c934",
+    "_id": "f9e20f9c-7ae7-4298-a913-e8ef980e13b2",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 306000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "CAFE",
+    "Proveedor_Id": "1dbf980f-fa0d-4c9d-8ac0-6664dc7c1318",
+    "_id": "f9e94b10-f78e-4f74-880a-a61c2d838a91",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45746.999814814815,
+    "Valor": 19050,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d",
+    "_id": "fa033c57-9211-42e1-ba67-abd481000ccf",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 23500,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "f080ad98-583f-49bd-adc3-447e27c727ef",
+    "_id": "fb92d283-c436-4bd7-a937-e516f15e3e80",
+    "Concepto": "NOMINA"
+  },
+  {
+    "Date": 45765.999814814815,
+    "Valor": 25200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "fc85999d-818a-40a3-90a6-4811d1a57bac",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45732.999814814815,
+    "Valor": 12600,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "TARJETA",
+    "Comprador": "alejandro",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "fd811556-1c64-4a05-b900-0c2fa02d8222",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45813.999814814815,
+    "Valor": 200000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "61637791-2d45-4a1f-8039-1e2d0e4f178a",
+    "_id": "fddb0498-3c94-4390-a27e-239baa5d33b1",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45714.999814814815,
+    "Valor": 44200,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": false,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "3f8b3eaf-cfdb-43f7-98bf-ca5b1d3fa75b",
+    "_id": "fded30db-ec17-4da7-8e32-a7c673bdb968",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45761.999814814815,
+    "Valor": 58800,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b0ae9f45-a64e-4ad3-b11f-32eb17986cba",
+    "_id": "fe260eb9-4c35-4e3d-b48b-a8ce247bed2d",
+    "Concepto": "INSUMOS"
+  },
+  {
+    "Date": 45794.999814814815,
+    "Valor": 28000,
+    "MedioDeCompra": "COMPRA",
+    "MedioDePago": "EFECTIVO",
+    "Pagado": {
+      "pagadoFull": true,
+      "adelanto": "NoAplica"
+    },
+    "Categoria": "COCINA",
+    "Proveedor_Id": "b78472f1-c43c-4b08-804b-3abfe4f7c217",
+    "_id": "ff6c7f81-bcdd-4a9d-8201-9a566fe805ed",
+    "Concepto": "INSUMOS"
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "2ea02bc3-6fa3-4485-b90e-01bb82db96e6",
+    "fecha": 45645.79148148148,
+    "horaInicio": "03:00 PM",
+    "horaFinal": "07:00 PM",
+    "nombreES": "Taller de Cocina Internacional",
+    "autores": "Chef MarÃ­a LÃ³pez",
+    "valor": 90000,
+    "bannerIMG": "https://via.placeholder.com/600x300?text=Taller+Cocina",
+    "linkInscripcion": "https://www.eventbrite.com/e/taller-de-cocina-internacional",
+    "infoAdicional": "Aprende recetas de cocina italiana, japonesa y mexicana en un taller prÃ¡ctico.",
+    "nombreEN": "International Cooking Workshop"
+  },
+  {
+    "_id": "34b963f7-6cb2-4eb5-a114-c0dfd2b0217a",
+    "fecha": 45635.79148148148,
+    "horaInicio": "08:00 AM",
+    "horaFinal": "12:00 PM",
+    "nombreES": "MaratÃ³n Anual de Emprendedores",
+    "autores": "AsociaciÃ³n de JÃ³venes Empresarios",
+    "valor": "Entrada Libre",
+    "bannerIMG": "https://via.placeholder.com/600x300?text=MaratÃ³n+Emprendedores",
+    "linkInscripcion": "https://www.eventbrite.com/e/maraton-anual-de-emprendedores",
+    "infoAdicional": "Un evento para conectar emprendedores y promover ideas innovadoras.",
+    "nombreEN": "Annual Entrepreneurs' Marathon"
+  },
+  {
+    "_id": "3c2c5e3b-d9e3-4db6-b248-74f383fb9f13",
+    "fecha": 45630.79148148148,
+    "horaInicio": "10:00 AM",
+    "horaFinal": "02:00 PM",
+    "nombreES": "Seminario de InnovaciÃ³n TecnolÃ³gica",
+    "autores": "Dr. Juan PÃ©rez, Ing. Ana GarcÃ­a",
+    "valor": 50000,
+    "bannerIMG": "https://via.placeholder.com/600x300?text=Seminario+TecnologÃ­a",
+    "linkInscripcion": "https://www.eventbrite.com/e/seminario-innovacion-tecnologica",
+    "infoAdicional": "ExploraciÃ³n de las Ãºltimas tendencias tecnolÃ³gicas e impacto en la industria.",
+    "nombreEN": "Technological Innovation Seminar"
+  },
+  {
+    "_id": "4b99ad32-05f8-419a-bb7f-cc00d8f27053",
+    "fecha": 45647.79148148148,
+    "horaInicio": "09:00 AM",
+    "horaFinal": "05:00 PM",
+    "nombreES": "Hackathon de Desarrollo de Software",
+    "autores": "TechLab Colombia",
+    "valor": "Entrada Libre",
+    "bannerIMG": "https://via.placeholder.com/600x300?text=Hackathon+Software",
+    "linkInscripcion": "https://www.eventbrite.com/e/hackathon-desarrollo-software",
+    "infoAdicional": "Compite con otros desarrolladores para resolver desafÃ­os de programaciÃ³n.",
+    "nombreEN": "Software Development Hackathon"
+  }
+]

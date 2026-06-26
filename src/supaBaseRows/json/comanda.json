@@ -1,0 +1,16 @@
+[
+  {
+    "entregableType": "COCINA",
+    "task_description": "Limpiar Neveras",
+    "status": "Pendiente",
+    "notes": "Sin Notas",
+    "Progress": 0,
+    "Priority": "Media",
+    "dates": {
+      "assignDate": "29/09/2025",
+      "dueDate": "05/08/2025",
+      "logs": []
+    },
+    "Responsable": "Isabela Maria"
+  }
+]

@@ -1,0 +1,797 @@
+[
+  {
+    "Nombre_del_producto": "Relleno Manzana Pie",
+    "Estado": "PP",
+    "CANTIDAD": 1100,
+    "UNIDADES": "gr",
+    "COSTO": 37000,
+    "FECHA_ACT": 45755.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "02690850-49f9-44fe-932b-e96291ede1a0",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "7945c52c-7b9f-4e5f-9bc0-a9eef02ebdbd",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Torta Banano",
+    "Estado": "PP",
+    "CANTIDAD": 2,
+    "UNIDADES": "un",
+    "COSTO": 29000,
+    "FECHA_ACT": 45698.79148148148,
+    "GRUPO": "REPOSTERIA",
+    "_id": "0442d928-a0b5-49d8-9820-bdaac45203c8",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "ac88f7d5-882b-472e-a29d-8357fb484eff"
+  },
+  {
+    "Nombre_del_producto": "JARABE FLOR DE JAMAICA",
+    "Estado": "OK",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 25705.12,
+    "COOR": 1,
+    "FECHA_ACT": 45641.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "BEBIDAS",
+    "_id": "05390836-060c-4570-a947-4b75e86d199d",
+    "precioUnitario": 26.73,
+    "Receta": "d3f9acf7-fd60-4d2f-b404-26be4a301e17"
+  },
+  {
+    "Nombre_del_producto": "CaÃ±Ã³n relleno de frutos secos y manzana",
+    "Estado": "Disponible",
+    "CANTIDAD": 2500,
+    "UNIDADES": "gr",
+    "COSTO": 68000,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "0cef00d3-5e33-4ed6-a41f-7f29ca5bf9a2",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "044bbdb5-1b84-42c6-b452-d19848c659ce",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Mostaza fermentada ",
+    "Estado": "PP",
+    "FECHA_ACT": 45755.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "107eb960-26fa-4adf-b6bc-7de5bf5c09aa",
+    "MARCA": [],
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Galletas de Avena",
+    "Estado": "PP",
+    "CANTIDAD": 24,
+    "UNIDADES": "un",
+    "COSTO": 42000,
+    "FECHA_ACT": 45879.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "1f044127-5cf0-4026-a078-1fd73cdf0390",
+    "precioUnitario": 0,
+    "Area": "COCINA",
+    "MARCA": [],
+    "Proveedor": [],
+    "Receta": "c23058b7-1696-4b3b-adf3-ae93e5f161c9",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Pan Brioche Tangzhong",
+    "Estado": "PP",
+    "CANTIDAD": 2900,
+    "UNIDADES": "gr",
+    "COSTO": 31000,
+    "COOR": 1,
+    "FECHA_ACT": 45831.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "PANADERIA",
+    "_id": "24bb7c6d-9dbe-48de-a612-8639f27e1aa8",
+    "precioUnitario": 11.12,
+    "Receta": "fba28b68-4dda-495f-be46-214cb41f3c48",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Pesto",
+    "Estado": "OK",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 36313,
+    "FECHA_ACT": 45672.79148148148,
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "2629627f-021d-474b-a8f9-9c100f8e9445",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "9c6b9a5a-722e-42be-82b9-eaff1eb4b054"
+  },
+  {
+    "Nombre_del_producto": "COLD BREW BASE",
+    "Estado": "PP",
+    "CANTIDAD": 1500,
+    "UNIDADES": "ml",
+    "COSTO": 9859.58,
+    "COOR": 1,
+    "FECHA_ACT": 45902.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CAFE",
+    "_id": "2902683e-275f-4f09-9a1d-b41c70a03f66",
+    "precioUnitario": 6.84,
+    "Receta": "2a410360-7931-4f2e-9c8c-cd38bcdcbeaa",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Jugo Almuerzo",
+    "Estado": "Disponible",
+    "CANTIDAD": 8000,
+    "UNIDADES": "ml",
+    "COSTO": 14000,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "2a834f55-1e6b-415c-bad4-34215dec37ab",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "0ddbc35e-8e86-4a86-9dd0-d8203e9a4b11",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "JARABE JENGIBRE",
+    "Estado": "OK",
+    "CANTIDAD": 1000,
+    "UNIDADES": "ml",
+    "COSTO": 6000,
+    "FECHA_ACT": 45921.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "2d0ea853-8f24-41cb-ae40-d06a6504efe2",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "7d19f154-6a65-44cd-a487-663dc32278c6",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Leche Cortada",
+    "Estado": "OK",
+    "CANTIDAD": 1050,
+    "UNIDADES": "ml",
+    "COSTO": 3500,
+    "FECHA_ACT": 45923.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "LACTEO",
+    "_id": "2e5c8f24-ed69-4f2f-a388-4a28c5ad3307",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Vinagreta de naranja",
+    "Estado": "Disponible",
+    "CANTIDAD": 125,
+    "UNIDADES": "gr",
+    "COSTO": 3000,
+    "FECHA_ACT": 45887.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "_id": "39263e15-4111-4137-9e24-eebd0b612d53",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "e68cf37d-beb1-4088-8542-a3b4ddd95135",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Pie de Manzana Individual",
+    "Estado": "PP",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 5200,
+    "FECHA_ACT": 45755.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "3dfb1f64-9cb6-410a-86a6-3c7af3c2f552",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Pie de Manzana Completo",
+    "Estado": "Disponible",
+    "CANTIDAD": 1,
+    "UNIDADES": "un",
+    "COSTO": 30000,
+    "FECHA_ACT": 45779.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "3f738377-e48e-4dcc-aebc-2e67b40a3157",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "44f7f9c2-8c3e-4808-a3f1-f284f671d23e",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "SIROPE DE CHAI",
+    "Estado": "OK",
+    "CANTIDAD": 380,
+    "UNIDADES": "ml",
+    "COSTO": 35000,
+    "COOR": 1,
+    "FECHA_ACT": 45779.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "BEBIDAS",
+    "_id": "46e95ffc-ab5f-4b19-aa20-54b5eaa06182",
+    "precioUnitario": 95.79,
+    "Receta": "d3f9acf7-fd60-4d2f-b404-26be4a301e17",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Masa Crepe",
+    "Estado": "Disponible",
+    "CANTIDAD": 16,
+    "UNIDADES": "un",
+    "COSTO": 8500,
+    "FECHA_ACT": 45879.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "4c3e40be-d28b-43b4-9b89-54c68f364c22",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "ca80e3de-8f00-4f20-95c8-c672bc3558e3"
+  },
+  {
+    "Nombre_del_producto": "JARABE ROMERO Y LIMÃN TAHITÃ",
+    "Estado": "NA",
+    "CANTIDAD": 1000,
+    "UNIDADES": "ml",
+    "COSTO": 27000,
+    "FECHA_ACT": 45677.79148148148,
+    "GRUPO": "BEBIDAS",
+    "_id": "4c950656-6191-4440-983e-65413d05ede2",
+    "precioUnitario": 0,
+    "MARCA": []
+  },
+  {
+    "Nombre_del_producto": "ButterCream Suizo de Chocolate",
+    "Estado": "PP",
+    "CANTIDAD": 750,
+    "UNIDADES": "gr",
+    "COSTO": 27000,
+    "FECHA_ACT": 45677.79148148148,
+    "GRUPO": "REPOSTERIA",
+    "_id": "512a1760-5bc4-4ea5-a8eb-f9f76d2d2871",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "a34061d7-c06f-461b-9bdb-264fe16778c7"
+  },
+  {
+    "Nombre_del_producto": "Caldo de Carne",
+    "Estado": "Disponible",
+    "CANTIDAD": 3500,
+    "UNIDADES": "ml",
+    "COSTO": 37000,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "_id": "533b3931-b286-410e-9c7a-a8742ba41737",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Cebolla caramelizada",
+    "Estado": "PP",
+    "CANTIDAD": 300,
+    "UNIDADES": "NaN",
+    "COSTO": 4736.75,
+    "COOR": 1,
+    "FECHA_ACT": 45630.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "5d707712-4f05-4945-815e-b493d46b1c11",
+    "precioUnitario": 16.42
+  },
+  {
+    "Nombre_del_producto": "Jarabe de Naranja y Panela",
+    "Estado": "OK",
+    "CANTIDAD": 1000,
+    "UNIDADES": "ml",
+    "COSTO": 16000,
+    "FECHA_ACT": 45672.79148148148,
+    "GRUPO": "BEBIDAS",
+    "_id": "5f6dc8ba-0218-4467-b5ac-7d921ad4bf71",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "e0662ba6-5dc9-4f3d-8737-5da3c2b7ae2b"
+  },
+  {
+    "Nombre_del_producto": "Cheese Cake Basco",
+    "Estado": "OK",
+    "CANTIDAD": 2,
+    "UNIDADES": "un",
+    "COSTO": 90900,
+    "FECHA_ACT": 45755.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "64b3992f-e9a3-419d-970f-2ec9d1c3c5b2",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Base Pie",
+    "Estado": "PP",
+    "CANTIDAD": 700,
+    "UNIDADES": "gr",
+    "COSTO": 11000,
+    "FECHA_ACT": 45698.79148148148,
+    "GRUPO": "REPOSTERIA",
+    "_id": "65b390c5-3395-4505-b981-16e885ca2856",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "d4a86134-2fbf-4da9-8c2a-d6d1b2399583"
+  },
+  {
+    "Nombre_del_producto": "Frutos Rojos",
+    "Estado": "OK",
+    "CANTIDAD": 1800,
+    "UNIDADES": "gr",
+    "COSTO": 31000,
+    "FECHA_ACT": 45677.79148148148,
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "69d72ca2-6ed2-4cb9-9323-4a8cce85e275",
+    "precioUnitario": 0,
+    "MARCA": []
+  },
+  {
+    "Nombre_del_producto": "Torta Chocolate y Moras",
+    "Estado": "PP",
+    "CANTIDAD": 1.5,
+    "UNIDADES": "un",
+    "COSTO": 56000,
+    "FECHA_ACT": 45825.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "6a653d73-c078-4f33-a7a8-9ae2bcb47096",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "791b665f-8b81-4f2b-af9a-607dc29e38b5",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "ESPUMA DE CAFE",
+    "Estado": "OK",
+    "CANTIDAD": 245,
+    "UNIDADES": "NaN",
+    "COSTO": 6524.84,
+    "COOR": 1,
+    "FECHA_ACT": 45630.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "CAFE",
+    "_id": "6d6c6c29-2760-4c98-972a-97c1366ad280",
+    "precioUnitario": 27.7,
+    "Receta": "8d471c41-c1a1-43c4-af73-d57d47876ce2"
+  },
+  {
+    "Nombre_del_producto": "Yogurt Griego Interno",
+    "Estado": "OK",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 24444.24,
+    "COOR": 1,
+    "FECHA_ACT": 45630.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "78ccabc2-4a2c-4626-b4e0-b767dab95cf5",
+    "precioUnitario": 25.42
+  },
+  {
+    "Nombre_del_producto": "JARABE DE VAINILL",
+    "Estado": "OK",
+    "CANTIDAD": 1000,
+    "UNIDADES": "li",
+    "COSTO": 4000,
+    "FECHA_ACT": 45643.79148148148,
+    "STOCK": 1000,
+    "GRUPO": "BEBIDAS",
+    "_id": "7cc65031-8221-444a-a548-5000e6d30aec",
+    "precioUnitario": 0,
+    "Area": "BARRA",
+    "MARCA": [],
+    "Proveedor": [],
+    "Receta": "7381a721-6038-4777-b155-8187f8b74dde"
+  },
+  {
+    "Nombre_del_producto": "Cebolla Encurtida",
+    "Estado": "OK",
+    "CANTIDAD": 600,
+    "UNIDADES": "gr",
+    "COSTO": 10000,
+    "FECHA_ACT": 45722.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "7e3d6cdb-e0a9-41f5-a096-f42f6cdebb9e",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "09954c8e-1948-43b2-bf8c-638386f97ae7"
+  },
+  {
+    "Nombre_del_producto": "Nueces Tostadas en Mantequilla ",
+    "Estado": "PP",
+    "CANTIDAD": 870,
+    "UNIDADES": "gr",
+    "COSTO": 42500,
+    "FECHA_ACT": 45684.79148148148,
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "872383c2-cb52-456f-bdc9-9c62442c3692",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "6130f1e8-4d83-433e-9abb-784e5ebeac37"
+  },
+  {
+    "Nombre_del_producto": "Ensalada Generica",
+    "Estado": "Disponible",
+    "CANTIDAD": 680,
+    "UNIDADES": "gr",
+    "COSTO": 8500,
+    "FECHA_ACT": 45887.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "_id": "8b9a49c8-a023-44c3-a0e2-11d326f57588",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "b5b9ccd0-85a7-4530-90a2-779d21074da2",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Pure de papa",
+    "Estado": "Disponible",
+    "CANTIDAD": 1400,
+    "UNIDADES": "gr",
+    "COSTO": 15300,
+    "FECHA_ACT": 45887.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "_id": "94a61874-3a91-457e-b0e4-d9b49da5e6c3",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Tomate Confi",
+    "Estado": "OK",
+    "CANTIDAD": 500,
+    "UNIDADES": "NaN",
+    "COSTO": 40568.56,
+    "COOR": 1,
+    "FECHA_ACT": 45630.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "9581acfe-bf5a-4a16-b2a1-e650fe7b24e9",
+    "precioUnitario": 84.38
+  },
+  {
+    "Nombre_del_producto": "Platanitos fritos",
+    "Estado": "PP",
+    "CANTIDAD": 850,
+    "UNIDADES": "gr",
+    "COSTO": 9300,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "ADICIONES",
+    "_id": "9788167f-8f4c-4805-bfec-75df2764834d",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "ad6e9aec-0be2-412e-a152-b2ac8759b133",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Torta de Zanahoria",
+    "Estado": "PP",
+    "CANTIDAD": 2.5,
+    "UNIDADES": "un",
+    "COSTO": 100000,
+    "FECHA_ACT": 45902.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": "1"
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "a182d9bd-ea65-45fa-b3bb-28ba2060187c",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "941cf171-0ecd-48f0-9b46-1ce8de3bcb19",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Yogurt ButterCream",
+    "Estado": "PP",
+    "CANTIDAD": 900,
+    "UNIDADES": "gr",
+    "COSTO": 26000,
+    "FECHA_ACT": 45683.79148148148,
+    "GRUPO": "REPOSTERIA",
+    "_id": "b4c5fab7-4243-469b-93df-3dd1b38b14f9",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "6957bf1f-4748-4fc0-8dac-5a03b4a5bbc9"
+  },
+  {
+    "Nombre_del_producto": "Hogao",
+    "Estado": "PP",
+    "CANTIDAD": 1000,
+    "UNIDADES": "NaN",
+    "COSTO": 9829.25,
+    "COOR": 1,
+    "FECHA_ACT": 45644.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "c090a7ed-c177-4906-901f-1de7a7a89ed6",
+    "precioUnitario": 10.22,
+    "Receta": "992df281-4219-4e62-8ff2-d404071a3e6d"
+  },
+  {
+    "Nombre_del_producto": "Torta de Chocolate Bruce",
+    "Estado": "PP",
+    "CANTIDAD": 1.5,
+    "UNIDADES": "un",
+    "COSTO": 34000,
+    "FECHA_ACT": 45685.79148148148,
+    "GRUPO": "REPOSTERIA",
+    "_id": "c36fac2e-1e6c-405b-857a-07dc96181ba4",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "5f566a87-019d-4eea-9d91-e935e313f9ee"
+  },
+  {
+    "Nombre_del_producto": "Caramelo",
+    "Estado": "PP",
+    "CANTIDAD": 850,
+    "UNIDADES": "NaN",
+    "COSTO": 10000,
+    "COOR": 1,
+    "FECHA_ACT": 45672.79148148148,
+    "STOCK": "NaN",
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "c4bae2d2-11be-4680-8712-c3125c7b1537",
+    "precioUnitario": 12.24,
+    "Receta": "67c5b32c-e86b-499d-9cf4-ee29f8435f72"
+  },
+  {
+    "Nombre_del_producto": "Frijoles Verdes ",
+    "Estado": "Disponible",
+    "CANTIDAD": 9000,
+    "UNIDADES": "gr",
+    "COSTO": 57000,
+    "FECHA_ACT": 45885.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "_id": "c6c43d77-4beb-4214-93eb-9921ad748874",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "a8e85d44-315f-4974-8c9f-82954793736b",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Sopa de cebolla francesa ",
+    "Estado": "Disponible",
+    "CANTIDAD": 1800,
+    "UNIDADES": "gr",
+    "COSTO": 49000,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "_id": "cdad3871-12fd-4506-b362-7279ccda40bb",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "5fba19b6-59de-48e6-b299-4c2a15ec11d4",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Tangzhong",
+    "Estado": "OK",
+    "CANTIDAD": 800,
+    "UNIDADES": "gr",
+    "COSTO": 3200,
+    "FECHA_ACT": 45683.79148148148,
+    "GRUPO": "PANADERIA",
+    "_id": "cf554caf-dfcb-4edb-a935-81d1f830d962",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "02352761-63f5-4029-a569-4cb07d534dc8"
+  },
+  {
+    "Nombre_del_producto": "Tocino Frito Cazuela",
+    "Estado": "Disponible",
+    "CANTIDAD": 2500,
+    "UNIDADES": "gr",
+    "COSTO": 150000,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CARNICO",
+    "_id": "d3c23ce6-667b-4548-8674-1905524d5ded",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "7046980a-98d7-4365-bb69-3c7fa100c43e",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Salsa Picante Lactofementada",
+    "Estado": "Disponible",
+    "FECHA_ACT": 45887.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "d7d01528-ee4a-4762-ab9c-d0b48639ff2f",
+    "MARCA": [],
+    "Receta": "ef730bef-76d9-49f4-ba3c-8fbc7281abab",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Relleno Rollo de Canela",
+    "Estado": "PP",
+    "CANTIDAD": 220,
+    "UNIDADES": "gr",
+    "COSTO": 8500,
+    "FECHA_ACT": 45879.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "REPOSTERIA",
+    "_id": "dece5372-21d1-41b2-b53e-5fa30aebe67f",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "66224264-c392-44a6-b4f9-14e92a23b76f",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Arroz Blanco Cocinado",
+    "Estado": "Disponible",
+    "CANTIDAD": 180,
+    "UNIDADES": "gr",
+    "COSTO": 1300,
+    "FECHA_ACT": 45886.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "GRANOS_CEREALES",
+    "_id": "e668df03-1f26-40d1-91af-7bb98a1d318d",
+    "precioUnitario": 0,
+    "MARCA": [],
+    "Receta": "f8a7d50c-31e2-4afa-8790-2c07bb136409",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Salsa Shakshukas",
+    "Estado": "PP",
+    "CANTIDAD": 1000,
+    "UNIDADES": "gr",
+    "COSTO": 7696,
+    "COOR": 1,
+    "FECHA_ACT": 45879.79148148148,
+    "STOCK": {
+      "minimo": "",
+      "maximo": "",
+      "actual": ""
+    },
+    "GRUPO": "CONCERVAS_FERMENTOS_PRECOCIDOS",
+    "_id": "ef6050a1-be9e-418f-ab14-93cf1b69f896",
+    "precioUnitario": 8,
+    "Receta": "860d54fe-648c-42df-b37b-5e5ff8936df8",
+    "Merma": 0
+  },
+  {
+    "Nombre_del_producto": "Queso Ricotta",
+    "Estado": "PP",
+    "CANTIDAD": 500,
+    "UNIDADES": "gr",
+    "COSTO": 12000,
+    "FECHA_ACT": 45688.79148148148,
+    "GRUPO": "LACTEO",
+    "_id": "fb27f80d-2df5-40d9-8837-b390c1b07df0",
+    "precioUnitario": 0,
+    "MARCA": []
+  }
+]
