@@ -136,7 +136,7 @@ function AliadoRegistrationForm() {
                                                 <h4 className="font-bold text-blue-800 leading-tight">Con Ánimo de Lucro</h4>
                                             </div>
                                             <p className="text-xs text-blue-900 flex-1">
-                                                Eventos comerciales y talleres. Manejamos un modelo de <strong>división de ingresos (60% Aliado / 40% Café)</strong>. Ideal para experiencias de alto valor (+$80.000 COP) o con consumo mínimo garantizado.
+                                                Eventos comerciales y talleres. Manejamos un modelo de <strong>división de ingresos (% a definir)</strong>. Ideal para experiencias de alto valor o con consumo mínimo garantizado.
                                             </p>
                                         </div>
                                         <div className="bg-green-50 p-5 rounded-2xl border border-green-100 flex flex-col items-start gap-3 shadow-sm">
