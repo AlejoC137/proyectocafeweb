@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LunchModal } from "@/components/ui/CardGridInventarioMenuLunch";
 import MenuLunchImportModal from "../actualizarPrecioUnitario/MenuLunchImportModal";
-import { crearItem } from "@/redux/actions-Proveedores";
+import { crearItem, updateItem } from "@/redux/actions-Proveedores";
 import { TARDEO } from "@/redux/actions-types";
 
 function CalendarioProduccion() {
@@ -48,25 +48,37 @@ function CalendarioProduccion() {
   const [creatorInitialDate, setCreatorInitialDate] = useState(null);
 
   const [isLunchModalOpen, setIsLunchModalOpen] = useState(false);
+  const [lunchToEdit, setLunchToEdit] = useState(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleSaveLunch = async (nombreES, compLunchData, productId) => {
       const finalCompLunchData = compLunchData ? JSON.stringify(compLunchData) : null;
-      const newProduct = {
-          NombreES: nombreES,
-          SUB_GRUPO: TARDEO_ALMUERZO,
-          Comp_Lunch: finalCompLunchData,
-          Precio: 22000,
-          GRUPO: TARDEO,
-          Estado: "Activo",
-      };
       try {
-          await dispatch(crearItem(newProduct, MENU));
-          await dispatch(getAllFromTable(MENU));
-          alert('✅ ¡Almuerzo creado con éxito!');
+          if (productId) {
+              const updatedData = {
+                  NombreES: nombreES,
+                  Comp_Lunch: finalCompLunchData,
+              };
+              await dispatch(updateItem(productId, updatedData, MENU));
+              await dispatch(getAllFromTable(MENU));
+              alert('✅ ¡Almuerzo actualizado con éxito!');
+          } else {
+              const newProduct = {
+                  NombreES: nombreES,
+                  SUB_GRUPO: TARDEO_ALMUERZO,
+                  Comp_Lunch: finalCompLunchData,
+                  Precio: 22000,
+                  GRUPO: TARDEO,
+                  Estado: "Activo",
+              };
+              await dispatch(crearItem(newProduct, MENU));
+              await dispatch(getAllFromTable(MENU));
+              alert('✅ ¡Almuerzo creado con éxito!');
+          }
           setIsLunchModalOpen(false);
+          setLunchToEdit(null);
       } catch (error) {
-          alert('❌ Error al crear el almuerzo.');
+          alert('❌ Error al guardar el almuerzo.');
           console.error(error);
       }
   };
@@ -298,7 +310,7 @@ function CalendarioProduccion() {
         <div 
           key={`alm_${alm._id}`} 
           className="rounded-md px-2 py-1 border-l-[3px] bg-orange-50/80 border-orange-400 hover:bg-orange-100 transition-colors shadow-sm mb-1 group relative cursor-pointer"
-          onClick={(e) => { e.stopPropagation(); navigate(`/receta/${alm.Receta}`); }}
+          onClick={(e) => { e.stopPropagation(); setLunchToEdit(alm); setIsLunchModalOpen(true); }}
         >
           <p className="truncate font-semibold text-[10px] text-slate-800 leading-tight">🍲 {alm.NombreES}</p>
           <div className="flex items-center justify-between mt-0.5">
@@ -350,7 +362,7 @@ function CalendarioProduccion() {
         <div 
           key={`alm_${alm._id}_left`} 
           className="rounded-lg p-3 border-l-4 bg-orange-50 hover:bg-orange-100 cursor-pointer border-orange-400 shadow-sm flex flex-col gap-1 transition-all"
-          onClick={() => navigate(`/receta/${alm.Receta}`)}
+          onClick={() => { setLunchToEdit(alm); setIsLunchModalOpen(true); }}
         >
           <div className="flex items-start justify-between">
             <p className="font-bold text-xs text-slate-800">🍲 Almuerzo: {alm.NombreES}</p>
@@ -462,7 +474,7 @@ function CalendarioProduccion() {
             <button onClick={() => setIsImportModalOpen(true)} className="flex items-center gap-1.5 px-3 h-8 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Importar menú desde JSON usando IA">
               <Sparkles size={14} /> Importar JSON
             </button>
-            <button onClick={() => setIsLunchModalOpen(true)} className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Crear nuevo Almuerzo">
+            <button onClick={() => { setLunchToEdit(null); setIsLunchModalOpen(true); }} className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Crear nuevo Almuerzo">
               <UtensilsCrossed size={14} /> Nuevo Almuerzo
             </button>
           </div>
@@ -578,7 +590,7 @@ function CalendarioProduccion() {
                    >
                      <div className="flex-1 overflow-y-auto p-1.5 no-scrollbar space-y-1">
                        {day.events.map((event) => (
-                          <div key={`${event.type}_${event.item._id}_wk`} className={`rounded-md p-1.5 border-l-[3px] shadow-sm flex flex-col gap-0.5 cursor-pointer hover:opacity-80 transition-opacity ${event.type === 'almuerzo' ? 'bg-orange-50 border-orange-400 hover:bg-orange-100' : (event.item.Terminado ? 'bg-emerald-50 border-emerald-400 hover:bg-emerald-100' : 'bg-blue-50 border-blue-400 hover:bg-blue-100')}`} onClick={(e) => { e.stopPropagation(); if (event.type === 'Comanda') { handleViewComanda(event.item); } else if (event.type === 'almuerzo') { navigate(`/receta/${event.item.Receta}`); } }}>
+                          <div key={`${event.type}_${event.item._id}_wk`} className={`rounded-md p-1.5 border-l-[3px] shadow-sm flex flex-col gap-0.5 cursor-pointer hover:opacity-80 transition-opacity ${event.type === 'almuerzo' ? 'bg-orange-50 border-orange-400 hover:bg-orange-100' : (event.item.Terminado ? 'bg-emerald-50 border-emerald-400 hover:bg-emerald-100' : 'bg-blue-50 border-blue-400 hover:bg-blue-100')}`} onClick={(e) => { e.stopPropagation(); if (event.type === 'Comanda') { handleViewComanda(event.item); } else if (event.type === 'almuerzo') { setLunchToEdit(event.item); setIsLunchModalOpen(true); } }}>
                             <p className="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2">
                               {event.type === 'almuerzo' ? `🍲 ${event.item.NombreES}` : event.item.Tittle}
                             </p>
@@ -610,7 +622,7 @@ function CalendarioProduccion() {
                        const isAlmuerzo = event.type === 'almuerzo';
                        const item = event.item;
                        return (
-                         <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { if (isAlmuerzo) { navigate(`/receta/${item.Receta}`); } else { handleViewComanda(item); } }}>
+                         <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { if (isAlmuerzo) { setLunchToEdit(item); setIsLunchModalOpen(true); } else { handleViewComanda(item); } }}>
                            <td className="p-3 font-semibold text-slate-800">{isAlmuerzo ? `🍲 ${item.NombreES}` : (item.Tittle || "Sin título")}</td>
                            <td className="p-3 font-medium text-slate-600">{event.dateKey}</td>
                            <td className="p-3 text-slate-500">{isAlmuerzo ? "Almuerzo" : (item.Categoria || "-")}</td>
@@ -642,9 +654,9 @@ function CalendarioProduccion() {
 
       <LunchModal
           isOpen={isLunchModalOpen}
-          onClose={() => setIsLunchModalOpen(false)}
+          onClose={() => { setIsLunchModalOpen(false); setLunchToEdit(null); }}
           onSave={handleSaveLunch}
-          productToEdit={null}
+          productToEdit={lunchToEdit}
       />
       {isImportModalOpen && (
           <MenuLunchImportModal
