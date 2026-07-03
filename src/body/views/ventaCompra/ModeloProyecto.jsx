@@ -129,16 +129,12 @@ const ModeloProyecto = () => {
                                         return false;
                                     });
 
-                                    // Ventas reales (Parseo MM/DD/AAAA)
+                                    // Ventas reales
                                     const hasSales = allVentas && allVentas.some(v => {
-                                        if (!v.Date) return false;
-                                        const parts = v.Date.split('/');
-                                        if (parts.length !== 3) return false;
-                                        const rawMonth = parseInt(parts[0], 10);
-                                        const parsedYear = parseInt(parts[2], 10);
-                                        if (isNaN(rawMonth) || isNaN(parsedYear)) return false;
-                                        const normalizedMonth = rawMonth > 11 ? rawMonth - 1 : rawMonth;
-                                        return normalizedMonth === monthIndex && parsedYear === year;
+                                        if (!v || !v.Date) return false;
+                                        const ventaDate = new Date(v.Date);
+                                        if (isNaN(ventaDate.getTime())) return false;
+                                        return ventaDate.getMonth() === monthIndex && ventaDate.getFullYear() === year;
                                     });
 
                                     const isSelected = selectedDate.month === monthIndex && selectedDate.year === year;
