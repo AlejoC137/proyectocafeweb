@@ -361,32 +361,24 @@ const ModeloProyecto = () => {
 
             if (!almuerzoHoy) continue;
 
-            const ventasHoy = allVentas.filter(venta => {
-                if (!venta || !venta.Date || !venta.Pagado) return false;
-                const vDate = new Date(venta.Date);
-                const localDateStr = `${vDate.getFullYear()}-${String(vDate.getMonth() + 1).padStart(2, '0')}-${String(vDate.getDate()).padStart(2, '0')}`;
-                return localDateStr === dateString;
-            });
-
             let cantidadVendida = 0;
             let totalIngreso = 0;
 
-            ventasHoy.forEach(v => {
-                if (!v.Productos) return;
-                try {
-                    const productos = JSON.parse(v.Productos);
-                    productos.forEach(p => {
-                        if (p.NombreES === almuerzoHoy.NombreES) {
-                            const qty = parseFloat(p.quantity || 0);
-                            cantidadVendida += qty;
-
-                            let price = parseFloat(p.price || p.valor || p.precio || 0);
-                            if (price === 0) price = parseFloat(almuerzoHoy.Precio || 22000);
-                            totalIngreso += price * qty;
+            try {
+                const compLunchObj = typeof almuerzoHoy.Comp_Lunch === 'string' ? JSON.parse(almuerzoHoy.Comp_Lunch) : almuerzoHoy.Comp_Lunch;
+                if (compLunchObj && Array.isArray(compLunchObj.lista)) {
+                    compLunchObj.lista.forEach(version => {
+                        if (version && Array.isArray(version.list)) {
+                            cantidadVendida += version.list.length;
                         }
                     });
-                } catch (e) {}
-            });
+                }
+            } catch (e) {
+                console.error("Error al parsear pedidos de Comp_Lunch para descarga masiva:", e);
+            }
+
+            const precioVenta = parseFloat(almuerzoHoy.Precio || 22000);
+            totalIngreso = cantidadVendida * precioVenta;
 
             let recetaValor = 0;
             if (almuerzoHoy.Receta) {
