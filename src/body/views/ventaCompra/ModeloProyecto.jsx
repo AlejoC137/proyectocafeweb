@@ -428,6 +428,27 @@ const ModeloProyecto = () => {
 
         const margenGeneral = totalSalesVal > 0 ? ((totalSalesVal - totalCostVal) / totalSalesVal) * 100 : 0;
 
+        // Generar consolidado agrupado por menú
+        const groups = {};
+        stats.forEach(item => {
+            if (!groups[item.nombre]) {
+                groups[item.nombre] = {
+                    nombre: item.nombre,
+                    diasServido: 0,
+                    cantidad: 0,
+                    ingreso: 0,
+                    costoTotal: 0,
+                    utilidad: 0
+                };
+            }
+            groups[item.nombre].diasServido += 1;
+            groups[item.nombre].cantidad += item.cantidad;
+            groups[item.nombre].ingreso += item.ingreso;
+            groups[item.nombre].costoTotal += item.costoTotal;
+            groups[item.nombre].utilidad += item.utilidad;
+        });
+        const groupedStats = Object.values(groups).sort((a, b) => b.cantidad - a.cantidad);
+
         let text = `# INFORME DE ALMUERZOS: ${monthsNames[monthIndex].toUpperCase()} ${year}\n`;
         text += `Generado el: ${new Date().toLocaleString()}\n\n`;
         text += `## RESUMEN OPERATIVO\n`;
@@ -438,12 +459,22 @@ const ModeloProyecto = () => {
         text += `- **Margen Promedio:** ${margenGeneral.toFixed(1)}%\n`;
         text += `- **Almuerzo Estrella:** ${topLunchName} (${topLunchQty} vendidos)\n\n`;
 
+        text += `## CONSOLIDADO MENSUAL (AGRUPADO POR NOMBRE)\n`;
+        text += `| Menú / Almuerzo | Días Servido | Cant. | Ingreso Venta | Costo Producción | Utilidad Neta | Margen |\n`;
+        text += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+        groupedStats.forEach(item => {
+            const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
+            text += `| ${item.nombre} | ${item.diasServido} | ${item.cantidad} | ${item.ingreso.toLocaleString('es-CO')} | ${item.costoTotal.toLocaleString('es-CO')} | ${item.utilidad.toLocaleString('es-CO')} | ${itemMargen.toFixed(1)}% |\n`;
+        });
+        text += `\n`;
+
         text += `## DESGLOSE DIARIO DE ALMUERZOS\n`;
         text += `| Día | Menú Programado | Cant. | Ingreso Venta | Costo Producción | Utilidad Neta | Margen |\n`;
         text += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
         stats.forEach(item => {
-            const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
-            text += `| ${String(item.dia).padStart(2, '0')} | ${item.nombre} | ${item.cantidad} | ${item.ingreso.toLocaleString('es-CO')} | ${item.costoTotal.toLocaleString('es-CO')} | ${item.utilidad.toLocaleString('es-CO')} | ${itemMargen.toFixed(1)}% |\n`;
+            const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 105 : 0; // Ajustado
+            const realMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
+            text += `| ${String(item.dia).padStart(2, '0')} | ${item.nombre} | ${item.cantidad} | ${item.ingreso.toLocaleString('es-CO')} | ${item.costoTotal.toLocaleString('es-CO')} | ${item.utilidad.toLocaleString('es-CO')} | ${realMargen.toFixed(1)}% |\n`;
         });
 
         return text;

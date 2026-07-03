@@ -158,6 +158,29 @@ const AnalisisAlmuerzo = () => {
         };
     }, [almuerzosDelMes, allVentas, allRecetasMenu, allRecetasProduccion, selectedMonth, selectedYear]);
 
+    // Agrupación de almuerzos por nombre durante el mes
+    const groupedStats = useMemo(() => {
+        const groups = {};
+        lunchStats.stats.forEach(item => {
+            if (!groups[item.nombre]) {
+                groups[item.nombre] = {
+                    nombre: item.nombre,
+                    diasServido: 0,
+                    cantidad: 0,
+                    ingreso: 0,
+                    costoTotal: 0,
+                    utilidad: 0
+                };
+            }
+            groups[item.nombre].diasServido += 1;
+            groups[item.nombre].cantidad += item.cantidad;
+            groups[item.nombre].ingreso += item.ingreso;
+            groups[item.nombre].costoTotal += item.costoTotal;
+            groups[item.nombre].utilidad += item.utilidad;
+        });
+        return Object.values(groups).sort((a, b) => b.cantidad - a.cantidad);
+    }, [lunchStats.stats]);
+
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
         doc.setFontSize(14);
@@ -172,8 +195,32 @@ const AnalisisAlmuerzo = () => {
         doc.text(`Margen General: ${lunchStats.margenGeneral.toFixed(1)}%`, 15, currentY + 24);
         doc.text(`Almuerzo Estrella: ${lunchStats.topLunch}`, 15, currentY + 30);
 
-        currentY += 42;
-        doc.text(`DESGLOSE POR DÍA:`, 15, currentY);
+        currentY += 40;
+        doc.text(`RESUMEN CONSOLIDADO (AGRUPADO POR MENÚ):`, 15, currentY);
+        currentY += 8;
+
+        doc.setFontSize(8);
+        doc.text(`Nombre Almuerzo                                  | Días | Cant. | Ingresos      | Costo Total   | Utilidad`, 15, currentY);
+        doc.line(15, currentY + 2, 195, currentY + 2);
+        currentY += 6;
+
+        groupedStats.forEach(item => {
+            if (currentY > 280) {
+                doc.addPage();
+                currentY = 15;
+            }
+            const paddedName = item.nombre.padEnd(45, ' ').substring(0, 45);
+            doc.text(`${paddedName} | ${String(item.diasServido).padStart(4, ' ')} | ${String(item.cantidad).padStart(5, ' ')} | ${item.ingreso.toLocaleString('es-CO').padStart(13, ' ')} | ${item.costoTotal.toLocaleString('es-CO').padStart(13, ' ')} | ${item.utilidad.toLocaleString('es-CO').padStart(13, ' ')}`, 15, currentY);
+            currentY += 5;
+        });
+
+        currentY += 12;
+        if (currentY > 260) {
+            doc.addPage();
+            currentY = 15;
+        }
+        doc.setFontSize(10);
+        doc.text(`DESGLOSE DIARIO DETALLADO:`, 15, currentY);
         currentY += 8;
 
         doc.setFontSize(8);
@@ -346,6 +393,73 @@ const AnalisisAlmuerzo = () => {
                                 <tr>
                                     <td colSpan="7" className="text-center py-10 text-slate-400">
                                         No se encontraron almuerzos programados o ventas para este mes.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+            </div>
+
+            {/* Consolidado Mensual Agrupado */}
+            <div className="bg-white rounded-2xl border shadow-sm overflow-hidden mt-6">
+                <div className="p-5 border-b bg-slate-50 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-700">Consolidado Mensual por Menú (Agrupado por Nombre)</h3>
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                        {groupedStats.length} menús diferentes
+                    </span>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 text-sm">
+                        <thead className="bg-slate-50/50">
+                            <tr>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-left">Menú / Almuerzo</th>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-center">Días Servido</th>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-center">Cant. Vendida</th>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-right">Ingresos Totales</th>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-right">Costo Total</th>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-right">Utilidad Neta</th>
+                                <th className="py-3 px-4 font-bold text-slate-500 text-center">Margen %</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {groupedStats.map((item, index) => {
+                                const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
+                                return (
+                                    <tr key={index} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="py-3.5 px-4 font-semibold text-slate-800">
+                                            {item.nombre}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-center font-bold text-slate-600">
+                                            {item.diasServido}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-center font-bold text-slate-700">
+                                            {item.cantidad}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-right font-bold text-green-600">
+                                            {item.ingreso.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-right font-semibold text-slate-500">
+                                            {item.costoTotal.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-right font-bold text-slate-800">
+                                            {item.utilidad.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-center">
+                                            <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
+                                                itemMargen >= 50 ? 'bg-green-50 text-green-700 border border-green-150' : 
+                                                itemMargen >= 30 ? 'bg-blue-50 text-blue-700 border border-blue-150' : 
+                                                'bg-yellow-50 text-yellow-700 border border-yellow-150'
+                                            }`}>
+                                                {itemMargen.toFixed(1)}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {groupedStats.length === 0 && (
+                                <tr>
+                                    <td colSpan="7" className="text-center py-10 text-slate-400">
+                                        No hay datos agrupados para mostrar.
                                     </td>
                                 </tr>
                             )}
