@@ -30,6 +30,7 @@ function VentaCompra() {
   const [showGastos, setShowGastos] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [extraCuentas, setExtraCuentas] = useState(1);
 
   const fetchVentasDelDia = async (showSyncIndicator = false) => {
     if (showSyncIndicator === true) setIsSyncing(true);
@@ -41,7 +42,7 @@ function VentaCompra() {
       .select("*")
       .eq("Pagado", false)
       .order("Time", { ascending: false });
-      
+
     if (!error && data) {
       const diarias = data.filter(v => Number(v.Mesa) < 100 && v.Date === ADate);
       const largas = data.filter(v => Number(v.Mesa) >= 100);
@@ -65,7 +66,7 @@ function VentaCompra() {
         if (allProduccion.length === 0) promises.push(dispatch(getAllFromTable(PRODUCCION)));
         if (Proveedores.length === 0) promises.push(dispatch(getAllFromTable(PROVEE)));
         if (allUserPreferences.length === 0) promises.push(dispatch(getAllFromTable(USER_PREFERENCES)));
-        
+
         if (promises.length > 0) {
           await Promise.all(promises);
         }
@@ -127,7 +128,7 @@ function VentaCompra() {
         </Button>
 
         <Button
-          onClick={() => navigate('/consumoAdmin')}
+          onClick={() => navigate('/consumo')}
           className="gap-2 h-10 border-2 font-bold w-full sm:w-auto bg-white border-slate-300 text-slate-600 hover:border-amber-500 hover:text-amber-800"
         >
           <Coffee size={18} />
@@ -143,19 +144,26 @@ function VentaCompra() {
       </div>
 
       {/* --- Pestañas --- */}
-      <div className="flex border-b border-slate-200 mb-2 shrink-0">
-        <button
-          onClick={() => setActiveTab("diarias")}
-          className={`px-4 py-2 font-bold transition-colors ${activeTab === "diarias" ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
-        >
-          Mesas Diarias
-        </button>
-        <button
-          onClick={() => setActiveTab("largas")}
-          className={`px-4 py-2 font-bold transition-colors ${activeTab === "largas" ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
-        >
-          Cuentas Largas
-        </button>
+      <div className="flex border-b border-slate-200 mb-2 shrink-0 justify-between items-center">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("diarias")}
+            className={`px-4 py-2 font-bold transition-colors ${activeTab === "diarias" ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
+          >
+            Mesas Diarias
+          </button>
+          <button
+            onClick={() => { setActiveTab("largas"); setExtraCuentas(1); }}
+            className={`px-4 py-2 font-bold transition-colors ${activeTab === "largas" ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-500 hover:text-slate-700"}`}
+          >
+            Cuentas Largas
+          </button>
+        </div>
+        {activeTab === "largas" && (
+          <Button onClick={() => setExtraCuentas(prev => prev + 1)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-8 text-sm px-3">
+            + Nueva Cuenta Larga
+          </Button>
+        )}
       </div>
 
       {/* --- Grid de Mesas --- */}
@@ -199,13 +207,21 @@ function VentaCompra() {
                 onVentaChange={() => fetchVentasDelDia(true)}
               />
             ))}
-            {/* Always show one empty slot for a new cuenta larga */}
-            <Mesa
-              key={`mesa-larga-new`}
-              index={ventasLargas.length > 0 ? Math.max(...ventasLargas.map(v => Number(v.Mesa))) + 1 : 101}
-              ventaActual={null}
-              onVentaChange={() => fetchVentasDelDia(true)}
-            />
+            {/* Show empty slots for new cuentas largas */}
+            {Array.from({ length: extraCuentas }).map((_, idx) => {
+              const newIndex = ventasLargas.length > 0 ? Math.max(...ventasLargas.map(v => Number(v.Mesa))) + 1 + idx : 101 + idx;
+              return (
+                <Mesa
+                  key={`mesa-larga-new-${idx}`}
+                  index={newIndex}
+                  ventaActual={null}
+                  onVentaChange={() => {
+                    fetchVentasDelDia(true);
+                    setExtraCuentas(1); // Reset back to 1 after saving a new one
+                  }}
+                />
+              );
+            })}
           </div>
         )}
       </div>
