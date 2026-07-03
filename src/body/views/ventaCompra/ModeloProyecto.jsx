@@ -480,6 +480,199 @@ const ModeloProyecto = () => {
         return text;
     };
 
+    const generateGrandConsolidatedReport = (selectedMonths) => {
+        let totalIngresosGeneral = 0;
+        let totalCostosGeneral = 0;
+        let totalUtilidadGeneral = 0;
+        let totalComprasGeneral = 0;
+        let totalPersonalGeneral = 0;
+        let totalFijosGeneral = 0;
+        let totalImpuestosGeneral = 0;
+        let totalOtrosGeneral = 0;
+
+        let totalLunchesGeneral = 0;
+        let totalIngresosLunchGeneral = 0;
+        let totalCostosLunchGeneral = 0;
+        const lunchPopularityGeneral = {};
+
+        selectedMonths.forEach(({ year, monthIndex }) => {
+            // -- Calcular ingresos del mes --
+            const ventasMes = allVentas.filter((venta) => {
+                if (!venta || !venta.Date) return false;
+                const ventaDate = new Date(venta.Date);
+                return ventaDate.getMonth() === monthIndex && ventaDate.getFullYear() === year;
+            });
+
+            let totalIngreso = 0;
+            ventasMes.forEach((venta) => {
+                if (venta.Pagado) {
+                    totalIngreso += parseFloat(venta.Total_Ingreso || 0);
+                }
+            });
+            totalIngresosGeneral += totalIngreso;
+
+            // -- Calcular costos del mes --
+            const comprasMes = allCompras.filter((compra) => {
+                const compraDate = new Date(compra.Date);
+                const dLocal = new Date(compraDate.valueOf() + compraDate.getTimezoneOffset() * 60000);
+                return dLocal.getMonth() === monthIndex && dLocal.getFullYear() === year;
+            });
+            const totalComprasReales = comprasMes.reduce((acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0), 0);
+
+            const savedModel = models.find(m => {
+                const mMonth = m.costs?.linkedMonth !== undefined ? m.costs.linkedMonth : m.month;
+                const mYear = m.costs?.linkedYear !== undefined ? m.costs.linkedYear : m.year;
+                return (mMonth == monthIndex && mYear == year) || m.name === `Contabilidad ${monthsNames[monthIndex]} ${year}`;
+            });
+
+            let costs = { compras: totalComprasReales, personal: 0, fijos: 0, impuestos: totalIngreso * 0.08, otros: 0 };
+            if (savedModel && savedModel.costs) {
+                try {
+                    const costsData = typeof savedModel.costs === 'string' ? JSON.parse(savedModel.costs) : savedModel.costs;
+                    const calculateTotal = (items, type) => {
+                        if (!items) return 0;
+                        if (type === 'impuestos') {
+                            return items.reduce((acc, item) => {
+                                const val = item.type === 'percentage' ? (totalIngreso * (item.rate || 0) / 100) : (item.isAnnual ? (item.value || 0) / 12 : (item.value || 0));
+                                return acc + val;
+                            }, 0);
+                        }
+                        if (type === 'personal') {
+                            return items.reduce((acc, item) => {
+                                const val = item.totalValue !== undefined ? item.totalValue : ((item.weeklyHours || 0) * (item.hourlyRate || 0) * 4.33);
+                                return acc + val;
+                            }, 0);
+                        }
+                        return items.reduce((acc, item) => acc + Number(item.value || 0), 0);
+                    };
+
+                    costs.compras = calculateTotal(costsData.compras) || totalComprasReales;
+                    costs.personal = calculateTotal(costsData.personal, 'personal');
+                    costs.fijos = calculateTotal(costsData.fijos);
+                    costs.impuestos = calculateTotal(costsData.impuestos || (costsData.impuesto ? JSON.parse(costsData.impuesto).impuestos : []), 'impuestos') || (totalIngreso * 0.08);
+                    costs.otros = calculateTotal(costsData.otros);
+                } catch (e) {}
+            }
+
+            totalComprasGeneral += costs.compras;
+            totalPersonalGeneral += costs.personal;
+            totalFijosGeneral += costs.fijos;
+            totalImpuestosGeneral += costs.impuestos;
+            totalOtrosGeneral += costs.otros;
+
+            const totalCostos = costs.compras + costs.personal + costs.fijos + costs.impuestos + costs.otros;
+            totalCostosGeneral += totalCostos;
+
+            // -- Calcular almuerzos del mes --
+            const almuerzosMes = allMenu.filter(item => {
+                if (item.SUB_GRUPO !== 'TARDEO_ALMUERZO') return false;
+                try {
+                    const compLunch = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+                    const dates = compLunch?.fechasSeleccionadas || [];
+                    const singleDate = compLunch?.fecha?.fecha;
+                    const allDates = [...dates];
+                    if (singleDate) allDates.push(singleDate);
+                    return allDates.some(dateStr => {
+                        const d = new Date(dateStr + 'T00:00:00');
+                        return d.getMonth() === monthIndex && d.getFullYear() === year;
+                    });
+                } catch (e) { return false; }
+            });
+
+            const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const almuerzoHoy = almuerzosMes.find(item => {
+                    try {
+                        const compLunch = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+                        const dates = compLunch?.fechasSeleccionadas || [];
+                        const singleDate = compLunch?.fecha?.fecha;
+                        return dates.includes(dateString) || singleDate === dateString;
+                    } catch (e) { return false; }
+                });
+
+                if (!almuerzoHoy) continue;
+
+                let cantidadVendida = 0;
+                try {
+                    const compLunchObj = typeof almuerzoHoy.Comp_Lunch === 'string' ? JSON.parse(almuerzoHoy.Comp_Lunch) : almuerzoHoy.Comp_Lunch;
+                    if (compLunchObj && Array.isArray(compLunchObj.lista)) {
+                        compLunchObj.lista.forEach(version => {
+                            if (version && Array.isArray(version.list)) {
+                                cantidadVendida += version.list.length;
+                            }
+                        });
+                    }
+                } catch (e) {}
+
+                const precioVenta = parseFloat(almuerzoHoy.Precio || 22000);
+                const ingresoVenta = cantidadVendida * precioVenta;
+
+                let recetaValor = 0;
+                if (almuerzoHoy.Receta) {
+                    const recetaData = allRecetasMenu.find(r => r._id === almuerzoHoy.Receta) || allRecetasProduccion.find(r => r._id === almuerzoHoy.Receta);
+                    if (recetaData && recetaData.costo) {
+                        try {
+                            const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
+                            if (typeof costData === 'number') {
+                                recetaValor = costData;
+                            } else if (costData) {
+                                recetaValor = (Number(costData.vCMP) || 0) + (Number(costData.vCMO) || 0);
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                totalLunchesGeneral += cantidadVendida;
+                totalIngresosLunchGeneral += ingresoVenta;
+                totalCostosLunchGeneral += (recetaValor * cantidadVendida);
+
+                if (cantidadVendida > 0) {
+                    lunchPopularityGeneral[almuerzoHoy.NombreES] = (lunchPopularityGeneral[almuerzoHoy.NombreES] || 0) + cantidadVendida;
+                }
+            }
+        });
+
+        totalUtilidadGeneral = totalIngresosGeneral - totalCostosGeneral;
+        const margenGeneral = totalIngresosGeneral > 0 ? (totalUtilidadGeneral / totalIngresosGeneral) * 100 : 0;
+        const margenLunchGeneral = totalIngresosLunchGeneral > 0 ? ((totalIngresosLunchGeneral - totalCostosLunchGeneral) / totalIngresosLunchGeneral) * 100 : 0;
+
+        const sortedLunches = Object.entries(lunchPopularityGeneral).sort((a, b) => b[1] - a[1]);
+
+        let text = `# RESUMEN CONSOLIDADO MULTI-MENSUAL\n`;
+        text += `Generado el: ${new Date().toLocaleString()}\n`;
+        text += `Meses consolidados: ${selectedMonths.map(sm => `${monthsNames[sm.monthIndex]} ${sm.year}`).join(', ')}\n\n`;
+
+        text += `## 1. RESUMEN FINANCIERO TOTAL CONSOLIDADO\n`;
+        text += `- **Ingresos Totales:** ${totalIngresosGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Costos Totales:** ${totalCostosGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Utilidad Neta General:** ${totalUtilidadGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Margen de Utilidad Promedio:** ${margenGeneral.toFixed(1)}%\n\n`;
+
+        text += `### DETALLE DE COSTOS GENERALES CONSOLIDADOS\n`;
+        text += `- **Compras / Insumos:** ${totalComprasGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Personal / Nómina:** ${totalPersonalGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Costos Fijos:** ${totalFijosGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Impuestos:** ${totalImpuestosGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Otros:** ${totalOtrosGeneral.toLocaleString('es-CO')}\n\n`;
+
+        text += `## 2. RENTABILIDAD TOTAL DE ALMUERZOS\n`;
+        text += `- **Total Almuerzos Vendidos:** ${totalLunchesGeneral}\n`;
+        text += `- **Ingresos por Almuerzos:** ${totalIngresosLunchGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Costo de Producción Almuerzos:** ${totalCostosLunchGeneral.toLocaleString('es-CO')}\n`;
+        text += `- **Utilidad Neta Almuerzos:** ${(totalIngresosLunchGeneral - totalCostosLunchGeneral).toLocaleString('es-CO')}\n`;
+        text += `- **Margen Promedio Almuerzos:** ${margenLunchGeneral.toFixed(1)}%\n\n`;
+
+        text += `### CONSOLIDADO ACUMULADO DE PLATOS VENDIDOS\n`;
+        text += `| Menú / Almuerzo | Cantidad Total Vendida |\n`;
+        text += `| :--- | :--- |\n`;
+        sortedLunches.forEach(([name, qty]) => {
+            text += `| ${name} | ${qty} |\n`;
+        });
+
+        return text;
+    };
+
     const handleDownloadBulk = async (type = 'pdf') => {
         if (selectedMonths.length === 0) {
             alert("Por favor, selecciona al menos un mes.");
@@ -490,6 +683,19 @@ const ModeloProyecto = () => {
         try {
             const jszip = await loadJSZip();
             const zip = new jszip();
+
+            // Generar el Reporte Consolidado Acumulado de todos los meses seleccionados
+            const grandConsolidatedReport = generateGrandConsolidatedReport(selectedMonths);
+            if (type === 'md') {
+                zip.file(`00_resumen_consolidado_total.md`, grandConsolidatedReport);
+            } else {
+                const docConsolidated = new jsPDF();
+                docConsolidated.setFontSize(9);
+                const linesConsolidated = docConsolidated.splitTextToSize(grandConsolidatedReport, 180);
+                docConsolidated.text(linesConsolidated, 15, 15);
+                const consolidatedBuffer = docConsolidated.output('arraybuffer');
+                zip.file(`00_resumen_consolidado_total.pdf`, consolidatedBuffer);
+            }
 
             selectedMonths.forEach(({ year, monthIndex }) => {
                 const reportContent = generateDetailedReport(year, monthIndex);
