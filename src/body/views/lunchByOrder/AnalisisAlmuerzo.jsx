@@ -8,7 +8,39 @@ import { jsPDF } from 'jspdf';
 
 const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
-// Clasificar tipos de proteína basados en el nombre
+// Parseador de fechas ultra seguro y libre de desfases de zonas horarias
+const parseDateYearAndMonth = (dateStr) => {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const cleanStr = dateStr.trim();
+    
+    // Formato YYYY-MM-DD
+    if (cleanStr.includes('-')) {
+        const parts = cleanStr.split('-');
+        if (parts[0].length === 4) {
+            return { year: parseInt(parts[0], 10), month: parseInt(parts[1], 10) - 1, day: parseInt(parts[2], 10) };
+        } else if (parts[2]?.length === 4) { // DD-MM-YYYY
+            return { year: parseInt(parts[2], 10), month: parseInt(parts[1], 10) - 1, day: parseInt(parts[0], 10) };
+        }
+    } 
+    // Formato DD/MM/YYYY o YYYY/MM/DD
+    else if (cleanStr.includes('/')) {
+        const parts = cleanStr.split('/');
+        if (parts[2]?.length === 4) {
+            return { year: parseInt(parts[2], 10), month: parseInt(parts[1], 10) - 1, day: parseInt(parts[0], 10) };
+        } else if (parts[0].length === 4) {
+            return { year: parseInt(parts[0], 10), month: parseInt(parts[1], 10) - 1, day: parseInt(parts[2], 10) };
+        }
+    }
+    
+    // Fallback nativo
+    const d = new Date(cleanStr + 'T12:00:00');
+    if (!isNaN(d.getTime())) {
+        return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
+    }
+    return null;
+};
+
+// Clasificador de tipos de proteína
 const getProteinType = (name) => {
     const n = name.toUpperCase();
     if (n.includes('POLLO') || n.includes('CHICKEN') || n.includes('MILANESA')) return 'POLLO';
@@ -22,7 +54,6 @@ const AnalisisAlmuerzo = () => {
     const navigate = useNavigate();
 
     // Redux selectors
-    const allVentas = useSelector(state => state.allVentas || []);
     const allMenu = useSelector(state => state.allMenu || []);
     const allRecetasMenu = useSelector(state => state.allRecetasMenu || []);
     const allRecetasProduccion = useSelector(state => state.allRecetasProduccion || []);
@@ -30,10 +61,9 @@ const AnalisisAlmuerzo = () => {
     // Local states
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [activeTab, setActiveTab] = useState("mensual"); // "mensual" | "anual"
+    const [activeTab, setActiveTab] = useState("mensual");
 
     useEffect(() => {
-        dispatch(getAllFromTable(VENTAS));
         dispatch(getAllFromTable(MENU));
         dispatch(getAllFromTable(RECETAS_MENU));
         dispatch(getAllFromTable(RECETAS_PRODUCCION));
@@ -52,8 +82,8 @@ const AnalisisAlmuerzo = () => {
                 if (singleDate) allDates.push(singleDate);
 
                 return allDates.some(dateStr => {
-                    const d = new Date(dateStr + 'T00:00:00');
-                    return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+                    const parsed = parseDateYearAndMonth(dateStr);
+                    return parsed && parsed.month === selectedMonth && parsed.year === selectedYear;
                 });
             } catch (e) {
                 return false;
@@ -98,9 +128,7 @@ const AnalisisAlmuerzo = () => {
                         }
                     });
                 }
-            } catch (e) {
-                console.error("Error al parsear pedidos de Comp_Lunch:", e);
-            }
+            } catch (e) {}
 
             const precioVenta = parseFloat(almuerzoHoy.Precio || 22000);
             totalIngreso = cantidadVendida * precioVenta;
@@ -185,7 +213,7 @@ const AnalisisAlmuerzo = () => {
         return Object.values(groups).sort((a, b) => b.cantidad - a.cantidad);
     }, [lunchStats.stats]);
 
-    // --- CÁLCULO DE VISTA ANUAL / TENDENCIAS ---
+    // --- CÁLCULO DE VISTA ANUAL ---
     const annualStats = useMemo(() => {
         const monthlyTrend = Array.from({ length: 12 }, (_, i) => ({
             month: monthsNames[i].substring(0, 3),
@@ -197,10 +225,10 @@ const AnalisisAlmuerzo = () => {
         }));
 
         const proteinSummary = {
-            POLLO: { nombre: 'Pollo', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#38bdf8' },
-            CERDO: { nombre: 'Cerdo', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#fbbf24' },
-            RES: { nombre: 'Res / Carne', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#f87171' },
-            OTROS: { nombre: 'Otros / Veggie', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#34d399' }
+            POLLO: { nombre: 'Pollo', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#0ea5e9' },
+            CERDO: { nombre: 'Cerdo', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#f59e0b' },
+            RES: { nombre: 'Res / Carne', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#ef4444' },
+            OTROS: { nombre: 'Otros / Veggie', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#10b981' }
         };
 
         const topMenus = {};
@@ -215,8 +243,8 @@ const AnalisisAlmuerzo = () => {
                 if (singleDate) allDates.push(singleDate);
 
                 return allDates.some(dateStr => {
-                    const d = new Date(dateStr + 'T00:00:00');
-                    return d.getFullYear() === selectedYear;
+                    const parsed = parseDateYearAndMonth(dateStr);
+                    return parsed && parsed.year === selectedYear;
                 });
             } catch (e) {
                 return false;
@@ -225,20 +253,8 @@ const AnalisisAlmuerzo = () => {
 
         almuerzosDelAnio.forEach(item => {
             let cantidadVendida = 0;
-            try {
-                const compLunchObj = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
-                if (compLunchObj && Array.isArray(compLunchObj.lista)) {
-                    compLunchObj.lista.forEach(version => {
-                        if (version && Array.isArray(version.list)) {
-                            cantidadVendida += version.list.length;
-                        }
-                    });
-                }
-            } catch (e) {}
-
             const precioVenta = parseFloat(item.Precio || 22000);
-            const ingresoVenta = cantidadVendida * precioVenta;
-
+            
             let recetaValor = 0;
             if (item.Receta) {
                 const recetaData = allRecetasMenu.find(r => r._id === item.Receta) || allRecetasProduccion.find(r => r._id === item.Receta);
@@ -253,25 +269,43 @@ const AnalisisAlmuerzo = () => {
                     } catch (e) {}
                 }
             }
-            const costoTotal = recetaValor * cantidadVendida;
-            const utilidad = ingresoVenta - costoTotal;
 
             try {
-                const compLunch = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
-                const dateStr = compLunch?.fecha?.fecha || compLunch?.fechasSeleccionadas?.[0];
-                if (dateStr) {
-                    const d = new Date(dateStr + 'T00:00:00');
-                    const mIdx = d.getMonth();
-                    if (mIdx >= 0 && mIdx < 12) {
-                        monthlyTrend[mIdx].cantidad += cantidadVendida;
-                        monthlyTrend[mIdx].ingreso += ingresoVenta;
-                        monthlyTrend[mIdx].costo += costoTotal;
-                        monthlyTrend[mIdx].utilidad += utilidad;
-                    }
+                const compLunchObj = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+                if (compLunchObj && Array.isArray(compLunchObj.lista)) {
+                    compLunchObj.lista.forEach(version => {
+                        if (version && Array.isArray(version.list)) {
+                            // Usamos la fecha de la versión o fallback a la fecha del menú
+                            const dateStr = version.date || compLunchObj.fecha?.fecha || compLunchObj.fechasSeleccionadas?.[0];
+                            if (dateStr) {
+                                const parsedDate = parseDateYearAndMonth(dateStr);
+                                if (parsedDate && parsedDate.year === selectedYear) {
+                                    const qty = version.list.length;
+                                    cantidadVendida += qty;
+
+                                    const val = qty * precioVenta;
+                                    const cost = recetaValor * qty;
+                                    const util = val - cost;
+
+                                    const mIdx = parsedDate.month;
+                                    if (mIdx >= 0 && mIdx < 12) {
+                                        monthlyTrend[mIdx].cantidad += qty;
+                                        monthlyTrend[mIdx].ingreso += val;
+                                        monthlyTrend[mIdx].costo += cost;
+                                        monthlyTrend[mIdx].utilidad += util;
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
             } catch (e) {}
 
             const protein = getProteinType(item.NombreES);
+            const ingresoVenta = cantidadVendida * precioVenta;
+            const costoTotal = recetaValor * cantidadVendida;
+            const utilidad = ingresoVenta - costoTotal;
+
             proteinSummary[protein].cantidad += cantidadVendida;
             proteinSummary[protein].ingreso += ingresoVenta;
             proteinSummary[protein].costo += costoTotal;
@@ -292,7 +326,6 @@ const AnalisisAlmuerzo = () => {
         };
     }, [allMenu, allRecetasMenu, allRecetasProduccion, selectedYear]);
 
-    // -- GENERACIÓN DE PDF MENSUAL --
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
         doc.setFontSize(14);
@@ -326,34 +359,9 @@ const AnalisisAlmuerzo = () => {
             currentY += 5;
         });
 
-        currentY += 12;
-        if (currentY > 260) {
-            doc.addPage();
-            currentY = 15;
-        }
-        doc.setFontSize(10);
-        doc.text(`DESGLOSE DIARIO DETALLADO:`, 15, currentY);
-        currentY += 8;
-
-        doc.setFontSize(8);
-        doc.text(`Día   | Nombre Almuerzo                                  | Cant. | Ingresos      | Costo Total   | Utilidad`, 15, currentY);
-        doc.line(15, currentY + 2, 195, currentY + 2);
-        currentY += 6;
-
-        lunchStats.stats.forEach(item => {
-            if (currentY > 280) {
-                doc.addPage();
-                currentY = 15;
-            }
-            const paddedName = item.nombre.padEnd(45, ' ').substring(0, 45);
-            doc.text(`${String(item.dia).padStart(2, '0')}    | ${paddedName} | ${String(item.cantidad).padStart(5, ' ')} | ${item.ingreso.toLocaleString('es-CO').padStart(13, ' ')} | ${item.costoTotal.toLocaleString('es-CO').padStart(13, ' ')} | ${item.utilidad.toLocaleString('es-CO').padStart(13, ' ')}`, 15, currentY);
-            currentY += 5;
-        });
-
         doc.save(`analisis_almuerzos_${monthsNames[selectedMonth].toLowerCase()}_${selectedYear}.pdf`);
     };
 
-    // --- DETALLES DE ESCALA PARA GRÁFICOS SVG ---
     const maxMonthlyQty = Math.max(...annualStats.monthlyTrend.map(m => m.cantidad), 1);
     const maxTopLunchQty = Math.max(...annualStats.topMenus.map(m => m.cantidad), 1);
     const totalProteinQty = annualStats.proteinSummary.reduce((acc, p) => acc + p.cantidad, 0) || 1;
@@ -375,7 +383,6 @@ const AnalisisAlmuerzo = () => {
                     </div>
                 </div>
 
-                {/* Controles de Selección */}
                 <div className="flex items-center gap-2 flex-wrap">
                     {activeTab === "mensual" ? (
                         <div className="flex bg-white border rounded-xl p-1 shadow-sm items-center">
@@ -620,40 +627,51 @@ const AnalisisAlmuerzo = () => {
                 <div className="space-y-6">
                     {/* Fila superior de gráficos */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Tendencia mensual (SVG Line/Bar Chart) */}
+                        {/* Tendencia mensual (SVG Line Chart) */}
                         <div className="bg-white p-5 rounded-2xl border shadow-sm lg:col-span-2">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-bold text-slate-700 flex items-center gap-2">
                                     <TrendingUp className="w-5 h-5 text-emerald-600" /> Tendencia Mensual de Ventas ({selectedYear})
                                 </h3>
                             </div>
-                            {/* Gráfico SVG de barras de tendencia */}
-                            <div className="relative w-full h-[220px] flex items-end justify-between px-4 pb-6 pt-4 border-b border-l">
-                                {annualStats.monthlyTrend.map((m, idx) => {
-                                    const percentHeight = (m.cantidad / maxMonthlyQty) * 100;
-                                    return (
-                                        <div key={idx} className="flex flex-col items-center group flex-1">
-                                            {/* Tooltip */}
-                                            <div className="absolute bottom-[200px] bg-slate-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition shadow pointer-events-none z-50">
-                                                {m.cantidad} platos (${m.ingreso.toLocaleString('es-CO')})
-                                            </div>
-                                            {/* Barra */}
-                                            <div 
-                                                style={{ height: `${Math.max(percentHeight, 4)}%` }} 
-                                                className="w-[60%] max-w-[32px] bg-emerald-500 hover:bg-emerald-600 rounded-t-md transition-all cursor-pointer shadow-sm relative"
-                                            ></div>
-                                            {/* Nombre de mes */}
-                                            <span className="text-[9px] font-bold text-slate-500 uppercase mt-2">{m.month}</span>
-                                        </div>
-                                    );
-                                })}
+                            <div className="relative w-full h-[220px] bg-slate-50/50 rounded-xl p-2 border">
+                                <svg viewBox="0 0 500 200" className="w-full h-full">
+                                    {/* Grid Lines */}
+                                    <line x1="30" y1="20" x2="480" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="30" y1="60" x2="480" y2="60" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="30" y1="100" x2="480" y2="100" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="30" y1="140" x2="480" y2="140" stroke="#f1f5f9" strokeWidth="1" />
+                                    <line x1="30" y1="170" x2="480" y2="170" stroke="#cbd5e1" strokeWidth="1.5" />
+                                    
+                                    {/* Draw Bars */}
+                                    {annualStats.monthlyTrend.map((m, idx) => {
+                                        const x = 45 + idx * 37;
+                                        const barHeight = maxMonthlyQty > 0 ? (m.cantidad / maxMonthlyQty) * 130 : 0;
+                                        const y = 170 - barHeight;
+                                        return (
+                                            <g key={idx} className="group cursor-pointer">
+                                                <rect 
+                                                    x={x - 10} 
+                                                    y={y} 
+                                                    width="20" 
+                                                    height={Math.max(barHeight, 3)} 
+                                                    fill="#10b981" 
+                                                    rx="3" 
+                                                    className="transition-all hover:fill-emerald-600" 
+                                                />
+                                                <text x={x} y="185" fontSize="8" fontWeight="bold" fill="#64748b" textAnchor="middle">{m.month}</text>
+                                                <text x={x} y={y - 5} fontSize="8" fontWeight="bold" fill="#0f172a" textAnchor="middle" className="opacity-0 group-hover:opacity-100 transition-opacity">{m.cantidad}</text>
+                                            </g>
+                                        );
+                                    })}
+                                </svg>
                             </div>
                         </div>
 
-                        {/* Distribución por proteína (Donut/Radial Chart) */}
+                        {/* Distribución por proteína (Progress Breakdown) */}
                         <div className="bg-white p-5 rounded-2xl border shadow-sm">
                             <h3 className="font-bold text-slate-700 flex items-center gap-2 mb-4">
-                                <PieChart className="w-5 h-5 text-blue-600" /> Distribución por Proteína
+                                <PieChart className="w-5 h-5 text-blue-600" /> Distribución por Proteína ({selectedYear})
                             </h3>
                             <div className="space-y-4">
                                 {annualStats.proteinSummary.map((p, idx) => {
@@ -661,7 +679,10 @@ const AnalisisAlmuerzo = () => {
                                     return (
                                         <div key={idx} className="space-y-1">
                                             <div className="flex justify-between text-xs font-bold text-slate-600">
-                                                <span>{p.nombre}</span>
+                                                <span className="flex items-center gap-1.5">
+                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }}></span>
+                                                    {p.nombre}
+                                                </span>
                                                 <span>{p.cantidad} platos ({percentage.toFixed(1)}%)</span>
                                             </div>
                                             <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
@@ -677,12 +698,12 @@ const AnalisisAlmuerzo = () => {
                         </div>
                     </div>
 
-                    {/* Fila inferior de gráficos (Top Menus y Tabla de Proteína) */}
+                    {/* Fila inferior de gráficos */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Top 8 Almuerzos del Año */}
+                        {/* Top 8 Almuerzos */}
                         <div className="bg-white p-5 rounded-2xl border shadow-sm">
                             <h3 className="font-bold text-slate-700 flex items-center gap-2 mb-4">
-                                <Award className="w-5 h-5 text-amber-600" /> Top 8 Menús Más Vendidos del Año
+                                <Award className="w-5 h-5 text-amber-600" /> Top 8 Menús Más Vendidos
                             </h3>
                             <div className="space-y-3">
                                 {annualStats.topMenus.map((m, idx) => {
@@ -691,16 +712,19 @@ const AnalisisAlmuerzo = () => {
                                         <div key={idx} className="flex items-center gap-3">
                                             <span className="w-5 text-xs font-bold text-slate-400 text-right">{idx + 1}.</span>
                                             <span className="w-1/3 text-xs font-bold text-slate-700 truncate">{m.nombre}</span>
-                                            <div className="flex-grow bg-slate-150 h-5 rounded overflow-hidden flex items-center">
+                                            <div className="flex-grow bg-slate-100 h-5 rounded overflow-hidden flex items-center">
                                                 <div 
                                                     style={{ width: `${percentWidth}%` }} 
-                                                    className="h-full bg-amber-500/80 hover:bg-amber-500 rounded-r transition-all"
+                                                    className="h-full bg-amber-400/80 hover:bg-amber-400 rounded-r transition-all"
                                                 ></div>
                                             </div>
                                             <span className="w-16 text-xs font-black text-slate-600 text-right">{m.cantidad} platos</span>
                                         </div>
                                     );
                                 })}
+                                {annualStats.topMenus.length === 0 && (
+                                    <p className="text-center text-slate-400 py-10 text-xs">No hay datos de menú para mostrar.</p>
+                                )}
                             </div>
                         </div>
 
