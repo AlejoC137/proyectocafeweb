@@ -20,15 +20,16 @@ function ComandaCreator({ initialFecha, isModal, onClose }) {
   );
   const allProduccion = useSelector((state) => state.allProduccion || []);
   
-  const fechaDesdeURL = initialFecha || searchParams.get("fecha");
+  const arrayFechas = Array.isArray(initialFecha) ? initialFecha : (initialFecha ? [initialFecha] : (searchParams.get("fecha") ? [searchParams.get("fecha")] : []));
+  const fechaDesdeURL = arrayFechas.length > 0 ? arrayFechas[0] : "";
+  const initialDateRepiting = arrayFechas.length > 1 ? arrayFechas.slice(1).map(d => d.split("T")[0]) : [];
 
-  // --- ESTADO INICIAL MODIFICADO ---
   // Adaptado a la nueva estructura: { isued, EjecutionDate, date_repiting }
   const [formData, setFormData] = useState({
     Dates: {
       isued: new Date().toISOString(),
       EjecutionDate: fechaDesdeURL ? fechaDesdeURL.split("T")[0] : "", // Fecha principal
-      date_repiting: [], // Array de repeticiones, inicia vacío
+      date_repiting: initialDateRepiting, // Array de repeticiones
     },
     Terminado: false,
     Pagado: { pagadoFull: false, adelanto: "NoAplica", susceptible: false },
