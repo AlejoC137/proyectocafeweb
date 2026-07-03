@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { COMPRAS, ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION } from "../../../redux/actions-types";
+import { COMPRAS, ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION, VENTAS, CONSUMO_STAFF } from "../../../redux/actions-types";
 import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
 import supabase from "../../../config/supabaseClient";
 import { recetaMariaPaula } from "../../../redux/calcularReceta";
@@ -24,6 +24,7 @@ function MesResumen() {
   const allProduccion = useSelector((state) => state.allProduccion);
   const allCompras = useSelector((state) => state.allCompras);
   const allVentas = useSelector((state) => state.allVentas);
+  const allConsumoStaff = useSelector((state) => state.allConsumoStaff || []);
 
   const { selectedMonth, selectedYear } = useMemo(() => {
     const selectedDate = new Date(hoy);
@@ -53,6 +54,7 @@ function MesResumen() {
           dispatch(getAllFromTable(RECETAS_PRODUCCION)),
           dispatch(getAllFromTable(COMPRAS)),
           dispatch(getAllFromTable(VENTAS)),
+          dispatch(getAllFromTable(CONSUMO_STAFF)),
         ]);
       } catch (error) {
         console.error("Error al cargar todos los datos:", error);
@@ -158,6 +160,44 @@ function MesResumen() {
       })
       .reduce((acc, compra) => acc + parseFloat(compra.Valor || 0), 0);
 
+    // Calcular el total consumido por el staff en costo de producción
+    const consumosDelMes = allConsumoStaff.filter((c) => {
+      if (!c || !c.Date) return false;
+      const cDate = new Date(c.Date);
+      return cDate.getMonth() === selectedMonth && cDate.getFullYear() === selectedYear;
+    });
+
+    let totalConsumoCosto = 0;
+    consumosDelMes.forEach((consumo) => {
+      if (!consumo.Productos) return;
+      try {
+        const productos = typeof consumo.Productos === 'string' ? JSON.parse(consumo.Productos) : consumo.Productos;
+        productos.forEach((p) => {
+          const cantidad = parseFloat(p.quantity || 0);
+          const menuItem = allMenu.find((m) => m.NombreES === p.NombreES);
+          if (menuItem && menuItem.Receta) {
+            const receta = allRecetasMenu.find(r => r._id === menuItem.Receta) || allRecetasProduccion.find(r => r._id === menuItem.Receta);
+            if (receta && receta.costo) {
+              try {
+                const costData = typeof receta.costo === 'string' ? JSON.parse(receta.costo) : receta.costo;
+                let cCost = 0;
+                if (typeof costData === 'number') {
+                  cCost = costData;
+                } else if (costData) {
+                  cCost = (Number(costData.vCMP) || 0) + (Number(costData.vCMO) || 0);
+                }
+                totalConsumoCosto += cCost * cantidad;
+              } catch (err) {
+                console.warn("Error parsing recipe cost", err);
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Error parsing consumo.Productos", err);
+      }
+    });
+
     return {
       totalIngreso: total,
       totalTip: tipTotal,
@@ -166,9 +206,10 @@ function MesResumen() {
       totalTransferencia: transferencia,
       productosVendidos,
       totalCompras,
+      totalConsumoStaff: totalConsumoCosto,
       totalProductosVendidos: productosVendidos.reduce((acc, p) => acc + p.cantidad, 0),
     };
-  }, [ventas, allCompras, allMenu, selectedMonth, selectedYear]);
+  }, [ventas, allCompras, allMenu, allConsumoStaff, allRecetasMenu, allRecetasProduccion, selectedMonth, selectedYear]);
 
   useEffect(() => {
     if (datosCalculadosDelMes.productosVendidos.length === 0 || !allItems.length || !allMenu.length) {
@@ -289,6 +330,7 @@ function MesResumen() {
         totalTransferencia={datosCalculadosDelMes.totalTransferencia}
         totalCompras={datosCalculadosDelMes.totalCompras}
         cantidadDeDias={ventas}
+        totalConsumoStaff={datosCalculadosDelMes.totalConsumoStaff}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">

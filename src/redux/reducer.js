@@ -19,6 +19,7 @@ import {
     TODAYS_MENU,
     SCRAP,
     VENTAS,
+    CONSUMO_STAFF,
     RECETAS_MENU,
     RECETAS_PRODUCCION,
     TOGGLE_SHOW_EDIT,
@@ -98,6 +99,7 @@ const initialState = {
     allMenu: [],
     allItems: [],
     allVentas: [],
+    allConsumoStaff: [],
     allProcedimientos: [],
     allRecetasMenu: [],
     allRecetasProduccion: [],
@@ -188,6 +190,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allComanda: action.payload };
                 case VENTAS:
                     return { ...state, allVentas: action.payload };
+                case CONSUMO_STAFF:
+                    return { ...state, allConsumoStaff: action.payload };
                 case COMPRAS:
                     return { ...state, allCompras: action.payload };
                 case MENU:

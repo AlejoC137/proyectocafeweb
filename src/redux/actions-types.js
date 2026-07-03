@@ -290,6 +290,7 @@ export const BODEGA = [
 ];
 
 export const VENTAS = 'Ventas'
+export const CONSUMO_STAFF = 'ConsumoStaff'
 
 export const SMMV_COL_2026_HORA = 8337
 export const SMMV_COL_2026_MINU = SMMV_COL_2026_HORA / 60

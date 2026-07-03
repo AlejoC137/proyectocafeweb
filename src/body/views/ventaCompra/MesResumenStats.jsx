@@ -19,7 +19,8 @@ const MesResumenStats = ({
   totalEfectivo,
   totalTransferencia,
   totalCompras,
-  cantidadDeDias
+  cantidadDeDias,
+  totalConsumoStaff = 0
 }) => {
   const ventas = Array.isArray(cantidadDeDias) ? cantidadDeDias : [];
   const fechasUnicas = new Set(ventas.map(venta => venta.Date));
@@ -53,6 +54,7 @@ const MesResumenStats = ({
         {/* Costos */}
         <StatCard title="Costo Directo" value={formatNumber(totalCostoDirecto)} colorClass="text-red-600" />
         <StatCard title="Compras Reales" value={formatNumber(totalCompras)} colorClass="text-red-600" />
+        <StatCard title="Consumo Staff" value={formatNumber(totalConsumoStaff)} colorClass="text-red-500" />
         <StatCard title="Impoconsumo (8%)" value={formatNumber(totalIngreso * 0.08)} colorClass="text-red-500" />
 
         {/* Otros */}

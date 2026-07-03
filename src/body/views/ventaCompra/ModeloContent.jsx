@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateModelAction, createModelAction, getAllFromTable, trimRecepie } from '../../../redux/actions';
-import { STAFF, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
+import { STAFF, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, CONSUMO_STAFF } from '../../../redux/actions-types';
 import supabase from "../../../config/supabaseClient";
 import MesResumenStats from './MesResumenStats';
 import ProductosVendidosRentabilidad from './ProductosVendidosRentabilidad';
@@ -33,6 +33,7 @@ function ModeloContent({ targetMonth, targetYear }) {
 
     const allVentas = useSelector(state => state.allVentas);
     const allCompras = useSelector(state => state.allCompras);
+    const allConsumoStaff = useSelector(state => state.allConsumoStaff || []);
     const models = useSelector(state => state.models);
     const allStaff = useSelector(state => state.allStaff);
     const allMenu = useSelector(state => state.allMenu); // Added for new logic
@@ -58,7 +59,8 @@ function ModeloContent({ targetMonth, targetYear }) {
                 dispatch(getAllFromTable(PRODUCCION)),
                 dispatch(getAllFromTable(RECETAS_MENU)),
                 dispatch(getAllFromTable(RECETAS_PRODUCCION)),
-                dispatch(getAllFromTable(STAFF))
+                dispatch(getAllFromTable(STAFF)),
+                dispatch(getAllFromTable(CONSUMO_STAFF))
             ]);
         };
         fetchMasters();
@@ -158,6 +160,44 @@ function ModeloContent({ targetMonth, targetYear }) {
             })
             .reduce((acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0), 0);
 
+        // Calcular el total consumido por el staff en costo de producción
+        const consumosDelMes = allConsumoStaff.filter((c) => {
+            if (!c || !c.Date) return false;
+            const cDate = new Date(c.Date);
+            return cDate.getMonth() === targetMonth && cDate.getFullYear() === targetYear;
+        });
+
+        let totalConsumoCosto = 0;
+        consumosDelMes.forEach((consumo) => {
+            if (!consumo.Productos) return;
+            try {
+                const productos = typeof consumo.Productos === 'string' ? JSON.parse(consumo.Productos) : consumo.Productos;
+                productos.forEach((p) => {
+                    const cantidad = parseFloat(p.quantity || 0);
+                    const menuItem = allMenu.find((m) => m.NombreES === p.NombreES);
+                    if (menuItem && menuItem.Receta) {
+                        const receta = allRecetasMenu.find(r => r._id === menuItem.Receta) || allRecetasProduccion.find(r => r._id === menuItem.Receta);
+                        if (receta && receta.costo) {
+                            try {
+                                const costData = typeof receta.costo === 'string' ? JSON.parse(receta.costo) : receta.costo;
+                                let cCost = 0;
+                                if (typeof costData === 'number') {
+                                    cCost = costData;
+                                } else if (costData) {
+                                    cCost = (Number(costData.vCMP) || 0) + (Number(costData.vCMO) || 0);
+                                }
+                                totalConsumoCosto += cCost * cantidad;
+                            } catch (err) {
+                                console.warn("Error parsing recipe cost", err);
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Error parsing consumo.Productos", err);
+            }
+        });
+
         return {
             totalIngreso: total,
             totalTip: tipTotal,
@@ -167,8 +207,9 @@ function ModeloContent({ targetMonth, targetYear }) {
             totalProductosVendidos: productosVendidos.reduce((acc, p) => acc + p.cantidad, 0),
             productosVendidos,
             totalCompras,
+            totalConsumoStaff: totalConsumoCosto,
         };
-    }, [ventas, allCompras, allMenu, targetMonth, targetYear]);
+    }, [ventas, allCompras, allMenu, allConsumoStaff, allRecetasMenu, allRecetasProduccion, targetMonth, targetYear]);
 
     // 3. Obtener/Calcular Rentabilidad de Productos (Igual que MesResumen.jsx)
     const [recetaDetailsMap, setRecetaDetailsMap] = useState({});
@@ -717,6 +758,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                                     totalTransferencia={datosCalculadosDelMes.totalTransferencia}
                                     totalCompras={datosCalculadosDelMes.totalCompras}
                                     cantidadDeDias={ventas}
+                                    totalConsumoStaff={datosCalculadosDelMes.totalConsumoStaff}
                                 />
                             </div>
 
