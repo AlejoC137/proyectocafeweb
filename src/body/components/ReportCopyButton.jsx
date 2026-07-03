@@ -24,12 +24,48 @@ const ReportCopyButton = ({ title, data, type }) => {
             text += `- **Utilidad Neta:** ${data.utility.toLocaleString('es-CO')}\n`;
             text += `- **Margen:** ${data.margin.toFixed(1)}%\n\n`;
 
+            if (data.stats) {
+                text += `## RESUMEN DEL MES (OPERATIVO)\n`;
+                text += `- **Promedio Diario:** ${data.stats.promedioDiario.toLocaleString('es-CO')}\n`;
+                text += `- **Ventas en Efectivo:** ${data.stats.efectivo.toLocaleString('es-CO')}\n`;
+                text += `- **Ventas con Tarjeta:** ${data.stats.tarjeta.toLocaleString('es-CO')}\n`;
+                text += `- **Transferencias:** ${data.stats.transferencia.toLocaleString('es-CO')}\n`;
+                text += `- **Compras Reales:** ${data.stats.comprasReales.toLocaleString('es-CO')}\n`;
+                text += `- **Propinas:** ${data.stats.propina.toLocaleString('es-CO')}\n\n`;
+            }
+
+            if (data.productos && data.productos.length > 0) {
+                text += `## PRODUCTOS VENDIDOS\n`;
+                text += `| Producto | Cantidad | Costo Unitario | Ingreso Total | Costo Total | Ganancia | Margen |\n`;
+                text += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+                data.productos.forEach(p => {
+                    const costoUnit = p.recetaValor || 0;
+                    const ganancia = p.totalUtilidad || 0;
+                    const margenProd = p.totalIngreso > 0 ? (ganancia / p.totalIngreso) * 100 : 0;
+                    text += `| ${p.nombre} | ${p.cantidad} | ${costoUnit.toLocaleString('es-CO')} | ${p.totalIngreso.toLocaleString('es-CO')} | ${p.totalCosto.toLocaleString('es-CO')} | ${ganancia.toLocaleString('es-CO')} | ${margenProd.toFixed(1)}% |\n`;
+                });
+                text += `\n`;
+            }
+
             text += `### DETALLE DE COSTOS\n`;
             text += `- **Compras:** ${data.costs.compras.toLocaleString('es-CO')}\n`;
             text += `- **Personal:** ${data.costs.personal.toLocaleString('es-CO')}\n`;
             text += `- **Fijos:** ${data.costs.fijos.toLocaleString('es-CO')}\n`;
             text += `- **Impuestos:** ${data.costs.impuestos.toLocaleString('es-CO')}\n`;
             text += `- **Otros:** ${data.costs.otros.toLocaleString('es-CO')}\n`;
+        }
+        else if (type === 'gastos-materiales') {
+            const total = data.reduce((acc, curr) => acc + curr.totalCost, 0);
+            text += `## EXPLOSIÓN DE INSUMOS\n`;
+            text += `- **Total Ingredientes Diferentes:** ${data.length}\n`;
+            text += `- **Costo Estimado Global:** ${total.toLocaleString('es-CO')}\n\n`;
+
+            text += `### DESGLOSE DE MATERIALES\n`;
+            text += `| Ingrediente | Cantidad Total | Unidad | Costo Estimado |\n`;
+            text += `| :--- | :--- | :--- | :--- |\n`;
+            data.forEach(item => {
+                text += `| ${item.name} | ${item.totalQuantity.toLocaleString('es-CO', {maximumFractionDigits: 2})} | ${item.unit} | ${item.totalCost > 0 ? item.totalCost.toLocaleString('es-CO') : '0'} |\n`;
+            });
         }
         else if (type === 'generic') {
             text += `${data}\n`;

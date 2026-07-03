@@ -579,8 +579,6 @@ function ModeloContent({ targetMonth, targetYear }) {
         } else {
             const modelName = `Contabilidad ${monthsNames[targetMonth]} ${targetYear}`;
             dispatch(createModelAction({
-                month: targetMonth,
-                year: targetYear,
                 name: modelName,
                 costs: dataStr
             }));
@@ -735,7 +733,29 @@ function ModeloContent({ targetMonth, targetYear }) {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {(!ventas || ventas.length === 0) && !modelId ? (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md">
+                                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                    <span className="text-3xl">🗂️</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Sin datos cargados</h3>
+                                <p className="text-gray-500 mb-4 text-sm">
+                                    No se encontraron ventas para <b>{monthsNames[targetMonth]} {targetYear}</b> ni existe una hoja de costos guardada.
+                                </p>
+                                <p className="text-xs text-gray-400 mb-6 bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-left leading-relaxed">
+                                    💡 Si la información aún está cargando, aparecerá aquí automáticamente. Para iniciar una proyección vacía sin ventas reales, presiona el botón.
+                                </p>
+                                <button
+                                    onClick={handleSave}
+                                    className="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full"
+                                >
+                                    Crear Hoja Manualmente
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                         <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
                             <div className="flex justify-between items-center mb-1">
                                 <h3 className="font-bold text-gray-700 text-xs">Compras / Insumos</h3>
@@ -818,6 +838,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                             </div>
                         </section>
                     </div>
+                    )}
                 </div>
             </div>
             <PurchasesModal
@@ -841,7 +862,16 @@ function ModeloContent({ targetMonth, targetYear }) {
                         otros: totals.otros
                     },
                     utility: utilidadNeta,
-                    margin: margen
+                    margin: margen,
+                    stats: {
+                        efectivo: datosCalculadosDelMes.totalEfectivo,
+                        tarjeta: datosCalculadosDelMes.totalTarjeta * 0.97,
+                        transferencia: datosCalculadosDelMes.totalTransferencia,
+                        comprasReales: datosCalculadosDelMes.totalCompras,
+                        propina: datosCalculadosDelMes.totalTip,
+                        promedioDiario: new Set(ventas.map(v => v.Date)).size > 0 ? realIncome / new Set(ventas.map(v => v.Date)).size : 0
+                    },
+                    productos: productosVendidosConReceta
                 }}
             />
         </div>

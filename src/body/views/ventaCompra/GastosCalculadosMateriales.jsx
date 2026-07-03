@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, ChefHat } from 'lucide-react';
 import { formatCurrency } from './ModelComponents';
+import ReportCopyButton from '../../components/ReportCopyButton';
 
 const GastosCalculadosMateriales = () => {
     const location = useLocation();
@@ -191,6 +192,11 @@ const GastosCalculadosMateriales = () => {
                     ))}
                 </div>
             </div>
+            <ReportCopyButton 
+                title={`Gastos Materiales ${monthName} ${year}`}
+                type="gastos-materiales"
+                data={aggregatedIngredients}
+            />
         </div>
     );
 };
