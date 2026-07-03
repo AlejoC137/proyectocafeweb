@@ -59,6 +59,7 @@ const CotizacionesView       = lazy(() => import('./body/views/cotizaciones/Coti
 const AliadosManager         = lazy(() => import('./body/views/aliados/AliadosManager'));
 const AliadoRegistrationForm = lazy(() => import('./body/views/aliados/AliadoRegistrationForm'));
 const AliadoPortal           = lazy(() => import('./body/views/aliados/AliadoPortal'));
+const AnalisisAlmuerzo       = lazy(() => import('./body/views/lunchByOrder/AnalisisAlmuerzo'));
 
 const ProyectoRadio          = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager           = lazy(() => import('./components/RadioManager'));
@@ -133,6 +134,7 @@ function App() {
             <Route path="/ModeloProyecto"                    element={<ModeloProyecto />} />
             <Route path="/ModeloProyecto/:year/:month"       element={<ModeloProyecto />} />
             <Route path="/consumo"                           element={<ConsumoStaffView />} />
+            <Route path="/AnalisisAlmuerzo"                  element={<AnalisisAlmuerzo />} />
             <Route path="/gastos-calculados"                 element={<GastosCalculadosMateriales />} />
             <Route path="/productosFinanciero"               element={<ProductosFinanciero />} />
             <Route path="/RecruitmentPrint"                  element={<RecruitmentPrint />} />

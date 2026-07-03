@@ -535,6 +535,12 @@ function CalendarioProduccion() {
               <Sparkles size={14} /> Importar JSON
             </button>
             <button 
+              onClick={() => navigate('/AnalisisAlmuerzo')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-emerald-600 rounded-md text-xs font-semibold shadow-sm transition-all"
+            >
+              📈 Análisis Almuerzos
+            </button>
+            <button 
               onClick={() => setIsLunchModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 rounded-md text-xs font-semibold shadow-sm transition-all"
             >

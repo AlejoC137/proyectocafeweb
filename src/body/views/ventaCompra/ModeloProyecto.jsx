@@ -318,6 +318,145 @@ const ModeloProyecto = () => {
         return text;
     };
 
+    const generateLunchReportText = (year, monthIndex) => {
+        // Filtrar almuerzos programados del mes
+        const almuerzosMes = allMenu.filter(item => {
+            if (item.SUB_GRUPO !== 'TARDEO_ALMUERZO') return false;
+            try {
+                const compLunch = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+                const dates = compLunch?.fechasSeleccionadas || [];
+                const singleDate = compLunch?.fecha?.fecha;
+                const allDates = [...dates];
+                if (singleDate) allDates.push(singleDate);
+
+                return allDates.some(dateStr => {
+                    const d = new Date(dateStr + 'T00:00:00');
+                    return d.getMonth() === monthIndex && d.getFullYear() === year;
+                });
+            } catch (e) {
+                return false;
+            }
+        });
+
+        const stats = [];
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        let totalVentasQty = 0;
+        let totalSalesVal = 0;
+        let totalCostVal = 0;
+        const popularityMap = {};
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateString = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            const almuerzoHoy = almuerzosMes.find(item => {
+                try {
+                    const compLunch = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+                    const dates = compLunch?.fechasSeleccionadas || [];
+                    const singleDate = compLunch?.fecha?.fecha;
+                    return dates.includes(dateString) || singleDate === dateString;
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            if (!almuerzoHoy) continue;
+
+            const ventasHoy = allVentas.filter(venta => {
+                if (!venta || !venta.Date || !venta.Pagado) return false;
+                const vDate = new Date(venta.Date);
+                const localDateStr = `${vDate.getFullYear()}-${String(vDate.getMonth() + 1).padStart(2, '0')}-${String(vDate.getDate()).padStart(2, '0')}`;
+                return localDateStr === dateString;
+            });
+
+            let cantidadVendida = 0;
+            let totalIngreso = 0;
+
+            ventasHoy.forEach(v => {
+                if (!v.Productos) return;
+                try {
+                    const productos = JSON.parse(v.Productos);
+                    productos.forEach(p => {
+                        if (p.NombreES === almuerzoHoy.NombreES) {
+                            const qty = parseFloat(p.quantity || 0);
+                            cantidadVendida += qty;
+
+                            let price = parseFloat(p.price || p.valor || p.precio || 0);
+                            if (price === 0) price = parseFloat(almuerzoHoy.Precio || 22000);
+                            totalIngreso += price * qty;
+                        }
+                    });
+                } catch (e) {}
+            });
+
+            let recetaValor = 0;
+            if (almuerzoHoy.Receta) {
+                const recetaData = allRecetasMenu.find(r => r._id === almuerzoHoy.Receta) || allRecetasProduccion.find(r => r._id === almuerzoHoy.Receta);
+                if (recetaData && recetaData.costo) {
+                    try {
+                        const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
+                        if (typeof costData === 'number') {
+                            recetaValor = costData;
+                        } else if (costData) {
+                            recetaValor = (Number(costData.vCMP) || 0) + (Number(costData.vCMO) || 0);
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            const costoTotal = recetaValor * cantidadVendida;
+            const utilidad = totalIngreso - costoTotal;
+
+            totalVentasQty += cantidadVendida;
+            totalSalesVal += totalIngreso;
+            totalCostVal += costoTotal;
+
+            if (cantidadVendida > 0) {
+                popularityMap[almuerzoHoy.NombreES] = (popularityMap[almuerzoHoy.NombreES] || 0) + cantidadVendida;
+            }
+
+            stats.push({
+                fecha: dateString,
+                dia: day,
+                nombre: almuerzoHoy.NombreES,
+                cantidad: cantidadVendida,
+                ingreso: totalIngreso,
+                costoTotal: costoTotal,
+                utilidad: utilidad
+            });
+        }
+
+        let topLunchName = "N/A";
+        let topLunchQty = 0;
+        Object.entries(popularityMap).forEach(([name, qty]) => {
+            if (qty > topLunchQty) {
+                topLunchQty = qty;
+                topLunchName = name;
+            }
+        });
+
+        const margenGeneral = totalSalesVal > 0 ? ((totalSalesVal - totalCostVal) / totalSalesVal) * 100 : 0;
+
+        let text = `# INFORME DE ALMUERZOS: ${monthsNames[monthIndex].toUpperCase()} ${year}\n`;
+        text += `Generado el: ${new Date().toLocaleString()}\n\n`;
+        text += `## RESUMEN OPERATIVO\n`;
+        text += `- **Almuerzos Vendidos:** ${totalVentasQty}\n`;
+        text += `- **Ingresos Totales:** ${totalSalesVal.toLocaleString('es-CO')}\n`;
+        text += `- **Costo Producción:** ${totalCostVal.toLocaleString('es-CO')}\n`;
+        text += `- **Utilidad Neta:** ${(totalSalesVal - totalCostVal).toLocaleString('es-CO')}\n`;
+        text += `- **Margen Promedio:** ${margenGeneral.toFixed(1)}%\n`;
+        text += `- **Almuerzo Estrella:** ${topLunchName} (${topLunchQty} vendidos)\n\n`;
+
+        text += `## DESGLOSE DIARIO DE ALMUERZOS\n`;
+        text += `| Día | Menú Programado | Cant. | Ingreso Venta | Costo Producción | Utilidad Neta | Margen |\n`;
+        text += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+        stats.forEach(item => {
+            const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
+            text += `| ${String(item.dia).padStart(2, '0')} | ${item.nombre} | ${item.cantidad} | ${item.ingreso.toLocaleString('es-CO')} | ${item.costoTotal.toLocaleString('es-CO')} | ${item.utilidad.toLocaleString('es-CO')} | ${itemMargen.toFixed(1)}% |\n`;
+        });
+
+        return text;
+    };
+
     const handleDownloadBulk = async (type = 'pdf') => {
         if (selectedMonths.length === 0) {
             alert("Por favor, selecciona al menos un mes.");
@@ -331,11 +470,14 @@ const ModeloProyecto = () => {
 
             selectedMonths.forEach(({ year, monthIndex }) => {
                 const reportContent = generateDetailedReport(year, monthIndex);
+                const lunchContent = generateLunchReportText(year, monthIndex);
                 const fileNameBase = `informe_${monthsNames[monthIndex].toLowerCase()}_${year}`;
+                const fileLunchBase = `analisis_almuerzos_${monthsNames[monthIndex].toLowerCase()}_${year}`;
 
                 if (type === 'md') {
                     // Agregar archivo markdown al ZIP
                     zip.file(`${fileNameBase}.md`, reportContent);
+                    zip.file(`${fileLunchBase}.md`, lunchContent);
                 } else {
                     // Generar PDF y cargarlo en formato binario al ZIP
                     const doc = new jsPDF();
@@ -344,6 +486,14 @@ const ModeloProyecto = () => {
                     doc.text(lines, 15, 15);
                     const pdfBuffer = doc.output('arraybuffer');
                     zip.file(`${fileNameBase}.pdf`, pdfBuffer);
+
+                    // Generar PDF del reporte de almuerzos
+                    const docLunch = new jsPDF();
+                    docLunch.setFontSize(9);
+                    const linesLunch = docLunch.splitTextToSize(lunchContent, 180);
+                    docLunch.text(linesLunch, 15, 15);
+                    const pdfLunchBuffer = docLunch.output('arraybuffer');
+                    zip.file(`${fileLunchBase}.pdf`, pdfLunchBuffer);
                 }
             });
 
