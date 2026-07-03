@@ -21,12 +21,19 @@ const initialState = {
   acompanante: { nombre: "", descripcion: "" },
   ensalada: { nombre: "", descripcion: "" },
   bebida: { nombre: "", descripcion: "" },
-  lista: []
+  lista: [],
+  parentId: ""
 };
 
-function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
+function FormularioMenuAlmuerzo({ onMenuChange, initialData, availableLunches = [], currentProductId = null }) {
   
-  const [form, setForm] = useState(initialData ? initialData : initialState);
+  const [form, setForm] = useState(() => {
+    let loadedData = initialData ? { ...initialData } : { ...initialState };
+    if (loadedData.fecha?.fecha && (!loadedData.fechasSeleccionadas || loadedData.fechasSeleccionadas.length === 0)) {
+      loadedData.fechasSeleccionadas = [loadedData.fecha.fecha];
+    }
+    return loadedData;
+  });
 
   useEffect(() => {
     // Si viene con una fecha singular de un registro antiguo, la ponemos en el arreglo
@@ -34,7 +41,13 @@ function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
     if (loadedData.fecha?.fecha && (!loadedData.fechasSeleccionadas || loadedData.fechasSeleccionadas.length === 0)) {
       loadedData.fechasSeleccionadas = [loadedData.fecha.fecha];
     }
-    setForm(loadedData);
+    
+    setForm(prevForm => {
+      if (JSON.stringify(prevForm) === JSON.stringify(loadedData)) {
+        return prevForm;
+      }
+      return loadedData;
+    });
   }, [initialData]);
 
   const onMenuChangeRef = useRef(onMenuChange);
@@ -103,6 +116,29 @@ function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
                </div>
              </div>
           )}
+        </div>
+
+        {/* Relación de Platos Hermanos / Variación */}
+        <div className="bg-gray-50 rounded-md p-4 border">
+          <h3 className="text-lg font-semibold mb-1 text-gray-600">Relación de Variación (Platos Hermanos)</h3>
+          <p className="text-xs text-gray-500 mb-3">Si este almuerzo es una variación de otro (ej. otra versión de "Arroz con Pollo"), selecciona el plato base para agruparlos en el catálogo.</p>
+          <label className="flex flex-col font-medium text-gray-700">
+            Plato Base / Principal:
+            <select
+              className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
+              value={form.parentId || ""}
+              onChange={(e) => setForm(prev => ({ ...prev, parentId: e.target.value }))}
+            >
+              <option value="">-- Este es un plato base independiente --</option>
+              {availableLunches
+                .filter(item => item._id !== currentProductId)
+                .map(item => (
+                  <option key={item._id} value={item._id}>
+                    {item.NombreES}
+                  </option>
+                ))}
+            </select>
+          </label>
         </div>
 
         {categorias.map(({ key, label }) => (

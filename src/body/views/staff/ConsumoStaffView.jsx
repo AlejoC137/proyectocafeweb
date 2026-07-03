@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { getAllFromTable, crearItem } from '../../../redux/actions';
 import { STAFF, MENU } from '../../../redux/actions-types';
-import { Coffee, User, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Coffee, User, Plus, Trash2, CheckCircle, Search, Calendar, ArrowLeft } from 'lucide-react';
+import PageLayout from '../../../components/ui/page-layout';
 
 const ConsumoStaffView = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     
     // Selectores de Redux
     const allStaff = useSelector((state) => state.allStaff || []);
@@ -14,7 +17,12 @@ const ConsumoStaffView = () => {
 
     // Estados locales
     const [selectedStaffId, setSelectedStaffId] = useState('');
-    const [selectedProductId, setSelectedProductId] = useState('');
+    const [searchItemTerm, setSearchItemTerm] = useState('');
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0, 16);
+    });
     const [quantity, setQuantity] = useState(1);
     const [consumedItems, setConsumedItems] = useState([]);
     const [message, setMessage] = useState(null);
@@ -33,7 +41,7 @@ const ConsumoStaffView = () => {
         }
     }, [currentStaff]);
 
-    // Filtrar menú para mostrar solo productos válidos
+    // Opciones para el datalist
     const menuOptions = useMemo(() => {
         return allMenu
             .filter(item => item.NombreES)
@@ -41,10 +49,13 @@ const ConsumoStaffView = () => {
     }, [allMenu]);
 
     const handleAddItem = () => {
-        if (!selectedProductId) return;
+        if (!searchItemTerm) return;
         
-        const product = allMenu.find(item => item._id === selectedProductId);
-        if (!product) return;
+        const product = allMenu.find(item => item.NombreES === searchItemTerm);
+        if (!product) {
+            setMessage({ type: 'error', text: 'El producto ingresado no existe en el menú.' });
+            return;
+        }
 
         // Verificar si ya está en la lista para sumarle cantidad
         const existingIndex = consumedItems.findIndex(item => item._id === product._id);
@@ -65,8 +76,9 @@ const ConsumoStaffView = () => {
         }
 
         // Reset inputs
-        setSelectedProductId('');
+        setSearchItemTerm('');
         setQuantity(1);
+        setMessage(null);
     };
 
     const handleRemoveItem = (index) => {
@@ -91,7 +103,7 @@ const ConsumoStaffView = () => {
             // Formatear datos de consumo
             const consumoData = {
                 staff_id: selectedStaffId,
-                Date: new Date().toISOString(), // Fecha en formato ISO completo
+                Date: new Date(selectedDate).toISOString(), // Fecha seleccionada en formato ISO completo
                 Productos: JSON.stringify(consumedItems.map(item => ({
                     NombreES: item.NombreES,
                     quantity: item.quantity,
@@ -113,123 +125,164 @@ const ConsumoStaffView = () => {
         }
     };
 
+    const headerActions = (
+        <button 
+            onClick={() => navigate(-1)} 
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 shadow-sm transition-all text-sm font-semibold"
+        >
+            <ArrowLeft className="w-4 h-4" />
+            Volver
+        </button>
+    );
+
     return (
-        <div className="p-6 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl mt-10 font-sans border border-gray-100">
-            <h2 className="text-3xl font-extrabold text-slate-800 mb-6 flex items-center gap-3">
-                <Coffee className="w-8 h-8 text-amber-500" />
-                Registrar Consumo Personal
-            </h2>
+        <PageLayout 
+            title={
+                <span className="flex items-center gap-3">
+                    <Coffee className="w-8 h-8 text-amber-500" />
+                    Registrar Consumo Personal
+                </span>
+            } 
+            actions={headerActions}
+        >
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8 animate-fade-in w-full max-w-4xl mx-auto">
+                {message && (
+                    <div className={`p-4 mb-6 rounded-xl border text-sm font-medium flex items-center gap-2 ${
+                        message.type === 'success' 
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                            : 'bg-red-50 border-red-200 text-red-700'
+                    }`}>
+                        <CheckCircle className="w-4 h-4" />
+                        {message.text}
+                    </div>
+                )}
 
-            {message && (
-                <div className={`p-4 mb-6 rounded-xl border text-sm font-medium ${
-                    message.type === 'success' 
-                        ? 'bg-green-50 border-green-200 text-green-700' 
-                        : 'bg-red-50 border-red-200 text-red-700'
-                }`}>
-                    {message.text}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Selector de Staff */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
-                        <User className="w-4 h-4 text-slate-500" />
-                        ¿Quién consume?
-                    </label>
-                    <select
-                        value={selectedStaffId}
-                        onChange={(e) => setSelectedStaffId(e.target.value)}
-                        disabled={!!currentStaff}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-60 text-slate-800 transition"
-                        required
-                    >
-                        <option value="">Selecciona tu nombre...</option>
-                        {allStaff.map((staff) => (
-                            <option key={staff._id} value={staff._id}>
-                                {staff.Nombre} {staff.Apellido || ''}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <hr className="border-slate-100" />
-
-                {/* Buscador/Añadidor de Items */}
-                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
-                    <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Añadir Productos</h3>
-                    <div className="flex flex-col md:flex-row gap-3">
-                        <div className="flex-1">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Selector de Staff */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <User className="w-4 h-4 text-slate-500" />
+                                ¿Quién consume?
+                            </label>
                             <select
-                                value={selectedProductId}
-                                onChange={(e) => setSelectedProductId(e.target.value)}
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 transition"
+                                value={selectedStaffId}
+                                onChange={(e) => setSelectedStaffId(e.target.value)}
+                                disabled={!!currentStaff}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-60 text-slate-800 transition"
+                                required
                             >
-                                <option value="">Selecciona un producto del menú...</option>
-                                {menuOptions.map((item) => (
-                                    <option key={item._id} value={item._id}>
-                                        {item.NombreES}
+                                <option value="">Selecciona tu nombre...</option>
+                                {allStaff
+                                    .filter(staff => staff.Contratacion !== false && staff.Contratacion !== "false")
+                                    .map((staff) => (
+                                    <option key={staff._id} value={staff._id}>
+                                        {staff.Nombre} {staff.Apellido || ''}
                                     </option>
                                 ))}
                             </select>
                         </div>
-                        <div className="w-full md:w-28">
+
+                        {/* Selector de Fecha */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-slate-500" />
+                                ¿Cuándo se consumió?
+                            </label>
                             <input
-                                type="number"
-                                min="1"
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 transition"
-                                placeholder="Cant."
+                                type="datetime-local"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 transition"
+                                required
                             />
                         </div>
-                        <button
-                            type="button"
-                            onClick={handleAddItem}
-                            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Añadir
-                        </button>
                     </div>
-                </div>
 
-                {/* Items Añadidos */}
-                {consumedItems.length > 0 && (
-                    <div className="space-y-3">
-                        <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Productos Seleccionados</h3>
-                        <div className="border border-slate-100 rounded-xl divide-y divide-slate-100 overflow-hidden">
-                            {consumedItems.map((item, index) => (
-                                <div key={item._id} className="flex justify-between items-center p-4 bg-white hover:bg-slate-50 transition">
-                                    <div className="flex items-center gap-3">
-                                        <span className="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">
-                                            {item.quantity}x
-                                        </span>
-                                        <span className="font-medium text-slate-800">{item.NombreES}</span>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveItem(index)}
-                                        className="text-red-500 hover:text-red-700 p-1 transition"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            ))}
+                    <hr className="border-slate-100" />
+
+                    {/* Buscador/Añadidor de Items */}
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                        <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Añadir Productos al Consumo</h3>
+                        
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    list="menu-options-datalist"
+                                    placeholder="Escribe para buscar y seleccionar producto..."
+                                    value={searchItemTerm}
+                                    onChange={(e) => setSearchItemTerm(e.target.value)}
+                                    className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 transition shadow-sm"
+                                />
+                                <datalist id="menu-options-datalist">
+                                    {menuOptions.map((item) => (
+                                        <option key={item._id} value={item.NombreES} />
+                                    ))}
+                                </datalist>
+                            </div>
+                            <div className="w-full md:w-32">
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 transition shadow-sm"
+                                    placeholder="Cant."
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddItem}
+                                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Añadir
+                            </button>
                         </div>
                     </div>
-                )}
 
-                <button
-                    type="submit"
-                    disabled={loading || consumedItems.length === 0}
-                    className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition text-lg"
-                >
-                    <CheckCircle className="w-5 h-5" />
-                    {loading ? 'Registrando...' : 'Confirmar y Guardar Consumo'}
-                </button>
-            </form>
-        </div>
+                    {/* Items Añadidos */}
+                    {consumedItems.length > 0 && (
+                        <div className="space-y-3 animate-fade-in">
+                            <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Productos Seleccionados</h3>
+                            <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden bg-slate-50">
+                                {consumedItems.map((item, index) => (
+                                    <div key={item._id} className="flex justify-between items-center p-4 bg-white hover:bg-slate-50 transition">
+                                        <div className="flex items-center gap-4">
+                                            <span className="bg-amber-100 text-amber-800 text-sm font-extrabold px-3 py-1 rounded-full border border-amber-200">
+                                                {item.quantity}x
+                                            </span>
+                                            <span className="font-medium text-slate-800 text-lg">{item.NombreES}</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveItem(index)}
+                                            className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Eliminar producto"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="pt-6 mt-6 border-t border-slate-100">
+                        <button
+                            type="submit"
+                            disabled={loading || consumedItems.length === 0}
+                            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all text-lg"
+                        >
+                            <CheckCircle className="w-6 h-6" />
+                            {loading ? 'Registrando...' : 'Confirmar y Guardar Consumo'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </PageLayout>
     );
 };
 

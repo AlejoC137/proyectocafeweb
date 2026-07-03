@@ -10,10 +10,12 @@ import supabase from "../../../config/supabaseClient";
 import MenuDelDiaPrint from "./MenuDelDiaPrint";
 import Propina from "./Propina";
 import { Button } from "@/components/ui/button";
-import { Eye, UtensilsCrossed, UserPlus } from "lucide-react";
+import { Eye, UtensilsCrossed, UserPlus, Coffee } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function VentaCompra() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const allMenu = useSelector((state) => state.allMenu || []);
   const allItems = useSelector((state) => state.allItems || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
@@ -122,6 +124,14 @@ function VentaCompra() {
         >
           <UserPlus size={18} />
           {showClientForm ? "Ocultar Registro" : "Nuevo Cliente"}
+        </Button>
+
+        <Button
+          onClick={() => navigate('/consumoAdmin')}
+          className="gap-2 h-10 border-2 font-bold w-full sm:w-auto bg-white border-slate-300 text-slate-600 hover:border-amber-500 hover:text-amber-800"
+        >
+          <Coffee size={18} />
+          Registrar Consumo
         </Button>
       </div>
 

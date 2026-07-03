@@ -10,7 +10,8 @@ import {
   Staff,
   Comanda,
   Procedimientos,
-  MenuItems
+  MenuItems,
+  AGENDA
 } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search } from "lucide-react";
 import { parseCompLunch, safeJsonStringify } from "../../utils/jsonUtils";

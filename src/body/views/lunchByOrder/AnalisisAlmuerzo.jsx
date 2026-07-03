@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllFromTable } from '../../../redux/actions';
+import { getAllFromTable, createRecipeForProduct } from '../../../redux/actions';
 import { updateItem } from '../../../redux/actions-Proveedores';
 import { VENTAS, MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
-import { ArrowLeft, Calendar, FileText, Download, TrendingUp, Award, DollarSign, PieChart, BarChart2, BookOpen, Edit } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Download, TrendingUp, Award, DollarSign, PieChart, BarChart2, BookOpen, Edit, Plus, Pencil, Search, List, ChevronUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { LunchModal } from '../../../components/ui/CardGridInventarioMenuLunch';
@@ -64,7 +64,117 @@ const AnalisisAlmuerzo = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [activeTab, setActiveTab] = useState("mensual");
+    
+    // Search boxes
+    const [searchTermMonthly, setSearchTermMonthly] = useState("");
+    const [searchTermAnnual, setSearchTermAnnual] = useState("");
+    const [searchTermCatalog, setSearchTermCatalog] = useState("");
 
+    // Catalog sorting
+    const [sortColumnCatalog, setSortColumnCatalog] = useState("NombreES");
+    const [sortDirectionCatalog, setSortDirectionCatalog] = useState("asc");
+
+    const handleSortCatalog = (column) => {
+        if (sortColumnCatalog === column) {
+            setSortDirectionCatalog(sortDirectionCatalog === "asc" ? "desc" : "asc");
+        } else {
+            setSortColumnCatalog(column);
+            setSortDirectionCatalog("asc");
+        }
+    };
+
+    const getSortIcon = (column) => {
+        if (sortColumnCatalog !== column) return <ChevronDown className="w-3 h-3 opacity-30" />;
+        return sortDirectionCatalog === "asc" ? <ChevronUp className="w-3 h-3 text-emerald-600" /> : <ChevronDown className="w-3 h-3 text-emerald-600" />;
+    };
+    // Catalog expansion state
+    const [expandedCatalogGroups, setExpandedCatalogGroups] = useState({});
+
+    const toggleExpandGroup = (id) => {
+        setExpandedCatalogGroups(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
+
+    const isGroupExpanded = (id) => {
+        if (searchTermCatalog.trim() !== "") return true;
+        return !!expandedCatalogGroups[id];
+    };
+
+    // Bulk selection and relation states
+    const [selectedCatalogIds, setSelectedCatalogIds] = useState([]);
+    const [isRelateModalOpen, setIsRelateModalOpen] = useState(false);
+    const [chosenParentId, setChosenParentId] = useState("");
+
+    const handleToggleSelectCatalog = (id) => {
+        setSelectedCatalogIds(prev => {
+            if (prev.includes(id)) {
+                return prev.filter(x => x !== id);
+            } else {
+                return [...prev, id];
+            }
+        });
+    };
+
+    const handleOpenRelateModal = () => {
+        if (selectedCatalogIds.length < 2) {
+            alert("Por favor selecciona al menos 2 platos para relacionar.");
+            return;
+        }
+        setChosenParentId(selectedCatalogIds[0]);
+        setIsRelateModalOpen(true);
+    };
+
+    const handleConfirmRelation = async () => {
+        if (!chosenParentId) return;
+        try {
+            const otherIds = selectedCatalogIds.filter(id => id !== chosenParentId);
+            
+            for (const childId of otherIds) {
+                const childItem = allMenu.find(item => item._id === childId);
+                if (childItem) {
+                    let comp = {};
+                    try {
+                        comp = childItem.Comp_Lunch 
+                            ? (typeof childItem.Comp_Lunch === 'string' ? JSON.parse(childItem.Comp_Lunch) : childItem.Comp_Lunch)
+                            : {};
+                    } catch (e) {
+                        comp = {};
+                    }
+                    comp.parentId = chosenParentId;
+                    
+                    await dispatch(updateItem(childId, {
+                        Comp_Lunch: JSON.stringify(comp)
+                    }, MENU));
+                }
+            }
+            
+            const parentItem = allMenu.find(item => item._id === chosenParentId);
+            if (parentItem) {
+                let comp = {};
+                try {
+                    comp = parentItem.Comp_Lunch 
+                        ? (typeof parentItem.Comp_Lunch === 'string' ? JSON.parse(parentItem.Comp_Lunch) : parentItem.Comp_Lunch)
+                        : {};
+                } catch (e) {
+                    comp = {};
+                }
+                delete comp.parentId;
+                await dispatch(updateItem(chosenParentId, {
+                    Comp_Lunch: JSON.stringify(comp)
+                }, MENU));
+            }
+
+            await dispatch(getAllFromTable(MENU));
+            alert("✅ ¡Platos relacionados con éxito!");
+            setSelectedCatalogIds([]);
+            setIsRelateModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            alert("❌ Error al relacionar los platos.");
+        }
+    };
     // Modal del creador
     const [isLunchModalOpen, setIsLunchModalOpen] = useState(false);
     const [lunchToEdit, setLunchToEdit] = useState(null);
@@ -101,6 +211,21 @@ const AnalisisAlmuerzo = () => {
         } catch (error) {
             alert('❌ Error al guardar el almuerzo.');
             console.error(error);
+        }
+    };
+
+    // Crear y asociar receta nueva para un plato
+    const handleCreateRecipe = async (productId, productName) => {
+        if (window.confirm(`¿Deseas crear y asociar una nueva receta para "${productName}"?`)) {
+            const baseRecipeData = {
+                legacyName: productName,
+                autor: "Sistema Automático",
+                revisor: "Pendiente",
+            };
+            await dispatch(createRecipeForProduct(baseRecipeData, productId, MENU, RECETAS_MENU));
+            await dispatch(getAllFromTable(MENU));
+            await dispatch(getAllFromTable(RECETAS_MENU));
+            alert('✅ ¡Receta creada con éxito! Haz clic en "Receta" para editarla.');
         }
     };
 
@@ -250,6 +375,21 @@ const AnalisisAlmuerzo = () => {
         return Object.values(groups).sort((a, b) => b.cantidad - a.cantidad);
     }, [lunchStats.stats]);
 
+    // Filtrar tablas mensuales por el buscador
+    const filteredLunchStats = useMemo(() => {
+        const lower = searchTermMonthly.toLowerCase();
+        return lunchStats.stats.filter(item => 
+            (item.nombre || "").toLowerCase().includes(lower)
+        );
+    }, [lunchStats.stats, searchTermMonthly]);
+
+    const filteredGroupedStats = useMemo(() => {
+        const lower = searchTermMonthly.toLowerCase();
+        return groupedStats.filter(item => 
+            (item.nombre || "").toLowerCase().includes(lower)
+        );
+    }, [groupedStats, searchTermMonthly]);
+
     // --- CÁLCULO DE VISTA ANUAL ---
     const annualStats = useMemo(() => {
         const monthlyTrend = Array.from({ length: 12 }, (_, i) => ({
@@ -312,6 +452,7 @@ const AnalisisAlmuerzo = () => {
                 if (compLunchObj && Array.isArray(compLunchObj.lista)) {
                     compLunchObj.lista.forEach(version => {
                         if (version && Array.isArray(version.list)) {
+                            // Usamos la fecha de la versión o fallback a la fecha del menú
                             const dateStr = version.date || compLunchObj.fecha?.fecha || compLunchObj.fechasSeleccionadas?.[0];
                             if (dateStr) {
                                 const parsedDate = parseDateYearAndMonth(dateStr);
@@ -347,13 +488,19 @@ const AnalisisAlmuerzo = () => {
             proteinSummary[protein].costo += costoTotal;
             proteinSummary[protein].utilidad += utilidad;
 
-            topMenus[item.NombreES] = (topMenus[item.NombreES] || 0) + cantidadVendida;
+            if (!topMenus[item.NombreES]) {
+                topMenus[item.NombreES] = {
+                    nombre: item.NombreES,
+                    cantidad: 0,
+                    originalItem: item
+                };
+            }
+            topMenus[item.NombreES].cantidad += cantidadVendida;
         });
 
-        const sortedTopMenus = Object.entries(topMenus)
-            .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-            .sort((a, b) => b.cantidad - a.cantidad)
-            .slice(0, 8);
+        // Retornamos todos los menús ordenados por venta sin limitar a 8
+        const sortedTopMenus = Object.values(topMenus)
+            .sort((a, b) => b.cantidad - a.cantidad);
 
         return {
             monthlyTrend,
@@ -361,6 +508,112 @@ const AnalisisAlmuerzo = () => {
             topMenus: sortedTopMenus
         };
     }, [allMenu, allRecetasMenu, allRecetasProduccion, selectedYear]);
+
+    // Filtrar ranking anual por el buscador
+    const filteredAnnualTopMenus = useMemo(() => {
+        const lower = searchTermAnnual.toLowerCase();
+        return annualStats.topMenus.filter(item => 
+            (item.nombre || "").toLowerCase().includes(lower)
+        );
+    }, [annualStats.topMenus, searchTermAnnual]);
+
+    // --- CÁLCULO DE VISTA CATÁLOGO COMPLETO ---
+    const catalogItems = useMemo(() => {
+        return allMenu
+            .filter(item => item.SUB_GRUPO === 'TARDEO_ALMUERZO')
+            .sort((a, b) => (a.NombreES || "").localeCompare(b.NombreES || ""));
+    }, [allMenu]);
+
+    const getParentId = (item) => {
+        try {
+            if (!item?.Comp_Lunch) return null;
+            const comp = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+            return comp?.parentId || null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const groupedCatalogItems = useMemo(() => {
+        const lower = searchTermCatalog.toLowerCase();
+        
+        // 1. Separar platos base de variaciones
+        const baseItems = [];
+        const variations = [];
+
+        catalogItems.forEach(item => {
+            const pId = getParentId(item);
+            if (pId) {
+                const parentExists = catalogItems.some(b => b._id === pId);
+                if (parentExists) {
+                    variations.push(item);
+                } else {
+                    baseItems.push(item); // Huérfanos se tratan como base
+                }
+            } else {
+                baseItems.push(item);
+            }
+        });
+
+        // 2. Agrupar variaciones por parentId
+        const variationsByParent = {};
+        variations.forEach(v => {
+            const pId = getParentId(v);
+            if (!variationsByParent[pId]) variationsByParent[pId] = [];
+            variationsByParent[pId].push(v);
+        });
+
+        // 3. Crear estructura de grupos
+        let groups = baseItems.map(base => {
+            const vars = variationsByParent[base._id] || [];
+            return {
+                baseItem: base,
+                variations: vars
+            };
+        });
+
+        // 4. Filtrar por término de búsqueda (aplica a base o variaciones)
+        if (lower) {
+            groups = groups.filter(g => {
+                const baseMatches = (g.baseItem.NombreES || "").toLowerCase().includes(lower);
+                const anyVarMatches = g.variations.some(v => (v.NombreES || "").toLowerCase().includes(lower));
+                return baseMatches || anyVarMatches;
+            });
+            // Si hay término de búsqueda, filtramos las variaciones del grupo que no coincidan
+            groups = groups.map(g => {
+                const baseMatches = (g.baseItem.NombreES || "").toLowerCase().includes(lower);
+                if (baseMatches) return g;
+                return {
+                    ...g,
+                    variations: g.variations.filter(v => (v.NombreES || "").toLowerCase().includes(lower))
+                };
+            });
+        }
+
+        // 5. Ordenar grupos por la columna de ordenamiento del plato base
+        groups.sort((a, b) => {
+            let aVal, bVal;
+            if (sortColumnCatalog === "protein") {
+                aVal = getProteinType(a.baseItem.NombreES);
+                bVal = getProteinType(b.baseItem.NombreES);
+            } else if (sortColumnCatalog === "Precio") {
+                aVal = parseFloat(a.baseItem.Precio || 22000);
+                bVal = parseFloat(b.baseItem.Precio || 22000);
+            } else if (sortColumnCatalog === "Receta") {
+                aVal = a.baseItem.Receta ? 1 : 0;
+                bVal = b.baseItem.Receta ? 1 : 0;
+            } else {
+                aVal = (a.baseItem.NombreES || "").toLowerCase();
+                bVal = (b.baseItem.NombreES || "").toLowerCase();
+            }
+
+            if (aVal < bVal) return sortDirectionCatalog === "asc" ? -1 : 1;
+            if (aVal > bVal) return sortDirectionCatalog === "asc" ? 1 : -1;
+            return 0;
+        });
+
+        return groups;
+    }, [catalogItems, searchTermCatalog, sortColumnCatalog, sortDirectionCatalog]);
 
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
@@ -441,7 +694,7 @@ const AnalisisAlmuerzo = () => {
                                 ))}
                             </select>
                         </div>
-                    ) : (
+                    ) : activeTab === "anual" ? (
                         <div className="flex bg-white border rounded-xl p-1 shadow-sm items-center">
                             <span className="text-xs font-bold text-slate-400 px-2">Año:</span>
                             <select
@@ -454,12 +707,12 @@ const AnalisisAlmuerzo = () => {
                                 ))}
                             </select>
                         </div>
-                    )}
+                    ) : null}
 
                     {activeTab === "mensual" && (
                         <button
                             onClick={handleDownloadPDF}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow animate-fade-in"
                         >
                             <Download className="w-4 h-4" />
                             Descargar PDF
@@ -481,6 +734,12 @@ const AnalisisAlmuerzo = () => {
                     className={`pb-3 font-bold text-sm transition-all relative ${activeTab === "anual" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-slate-500 hover:text-slate-700"}`}
                 >
                     📈 Tendencias y Proteínas (Anual)
+                </button>
+                <button
+                    onClick={() => setActiveTab("catalogo")}
+                    className={`pb-3 font-bold text-sm transition-all relative ${activeTab === "catalogo" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                    📋 Catálogo de Platos (Todos)
                 </button>
             </div>
 
@@ -531,11 +790,23 @@ const AnalisisAlmuerzo = () => {
 
                     {/* Tabla Detallada por Día */}
                     <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                        <div className="p-5 border-b bg-slate-50 flex items-center justify-between">
+                        <div className="p-5 border-b bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                             <h3 className="font-bold text-slate-700">Bitácora Diaria del Almuerzo</h3>
-                            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                                Margen Promedio: {lunchStats.margenGeneral.toFixed(1)}%
-                            </span>
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <div className="relative w-full md:w-60">
+                                    <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar por nombre..."
+                                        value={searchTermMonthly}
+                                        onChange={(e) => setSearchTermMonthly(e.target.value)}
+                                        className="w-full pl-8 pr-3 py-1 border rounded-lg text-xs focus:outline-none focus:border-emerald-500 bg-white"
+                                    />
+                                </div>
+                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 whitespace-nowrap">
+                                    Margen Promedio: {lunchStats.margenGeneral.toFixed(1)}%
+                                </span>
+                            </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-100 text-sm">
@@ -552,18 +823,40 @@ const AnalisisAlmuerzo = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {lunchStats.stats.map((item, index) => {
+                                    {filteredLunchStats.map((item, index) => {
                                         const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
                                         return (
                                             <tr key={index} className="hover:bg-slate-50/80 transition-colors">
                                                 <td className="py-3.5 px-4 font-bold text-slate-600">
                                                     {String(item.dia).padStart(2, '0')}
                                                 </td>
-                                                <td className="py-3.5 px-4 font-semibold text-slate-800">
-                                                    {item.nombre}
+                                                <td className="py-3.5 px-4 text-left font-semibold text-slate-800">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{item.nombre}</span>
+                                                        <button 
+                                                            onClick={() => { setLunchToEdit(item.originalItem); setIsLunchModalOpen(true); }}
+                                                            className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all"
+                                                            title="Editar datos del ítem del almuerzo"
+                                                        >
+                                                            <Pencil size={11} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td className="py-3.5 px-4 text-center font-bold text-slate-700">
-                                                    {item.cantidad}
+                                                    {item.originalItem?.Comp_Lunch ? (
+                                                        <div className="flex items-center justify-center gap-1.5">
+                                                            <span>{item.cantidad}</span>
+                                                            <button 
+                                                                onClick={() => navigate(`/CalendarioProduccion`)}
+                                                                className="p-0.5 text-[9px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border rounded"
+                                                                title="Ver/Editar listado de clientes en el Calendario"
+                                                            >
+                                                                Clientes
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span>{item.cantidad}</span>
+                                                    )}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-right font-bold text-green-600">
                                                     {item.ingreso.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
@@ -589,17 +882,23 @@ const AnalisisAlmuerzo = () => {
                                                             <button 
                                                                 onClick={() => navigate(`/receta/${item.originalItem.Receta}`)}
                                                                 className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-md transition-all"
-                                                                title="Ir a la Receta de este almuerzo"
+                                                                title="Editar la receta de este almuerzo"
                                                             >
                                                                 <BookOpen size={10} /> Receta
                                                             </button>
                                                         ) : (
-                                                            <span className="text-[10px] text-slate-400 font-bold px-2.5">Sin Receta</span>
+                                                            <button
+                                                                onClick={() => handleCreateRecipe(item.originalItem._id, item.originalItem.NombreES)}
+                                                                className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-255 hover:bg-emerald-100 rounded-md transition-all"
+                                                                title="Crear y asociar receta a este plato"
+                                                            >
+                                                                <Plus size={10} /> Crear Receta
+                                                            </button>
                                                         )}
                                                         <button 
                                                             onClick={() => { setLunchToEdit(item.originalItem); setIsLunchModalOpen(true); }}
                                                             className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-md transition-all"
-                                                            title="Editar componentes en el Creador"
+                                                            title="Componer componentes del menú"
                                                         >
                                                             <Edit size={10} /> Creador
                                                         </button>
@@ -608,10 +907,10 @@ const AnalisisAlmuerzo = () => {
                                             </tr>
                                         );
                                     })}
-                                    {lunchStats.stats.length === 0 && (
+                                    {filteredLunchStats.length === 0 && (
                                         <tr>
                                             <td colSpan="8" className="text-center py-10 text-slate-400">
-                                                No se encontraron almuerzos programados o ventas para este mes.
+                                                No se encontraron almuerzos para los filtros aplicados.
                                             </td>
                                         </tr>
                                     )}
@@ -625,7 +924,7 @@ const AnalisisAlmuerzo = () => {
                         <div className="p-5 border-b bg-slate-50 flex items-center justify-between">
                             <h3 className="font-bold text-slate-700">Consolidado Mensual por Menú (Agrupado por Nombre)</h3>
                             <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                                {groupedStats.length} menús diferentes
+                                {filteredGroupedStats.length} menús diferentes
                             </span>
                         </div>
                         <div className="overflow-x-auto">
@@ -643,12 +942,21 @@ const AnalisisAlmuerzo = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {groupedStats.map((item, index) => {
+                                    {filteredGroupedStats.map((item, index) => {
                                         const itemMargen = item.ingreso > 0 ? (item.utilidad / item.ingreso) * 100 : 0;
                                         return (
                                             <tr key={index} className="hover:bg-slate-50/80 transition-colors">
-                                                <td className="py-3.5 px-4 font-semibold text-slate-800">
-                                                    {item.nombre}
+                                                <td className="py-3.5 px-4 font-semibold text-slate-800 text-left">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{item.nombre}</span>
+                                                        <button 
+                                                            onClick={() => { setLunchToEdit(item.originalItem); setIsLunchModalOpen(true); }}
+                                                            className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all"
+                                                            title="Editar componentes en el creador"
+                                                        >
+                                                            <Pencil size={11} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td className="py-3.5 px-4 text-center font-bold text-slate-600">
                                                     {item.diasServido}
@@ -684,7 +992,12 @@ const AnalisisAlmuerzo = () => {
                                                                 <BookOpen size={10} /> Receta
                                                             </button>
                                                         ) : (
-                                                            <span className="text-[10px] text-slate-400 font-bold px-2.5">Sin Receta</span>
+                                                            <button
+                                                                onClick={() => handleCreateRecipe(item.originalItem._id, item.originalItem.NombreES)}
+                                                                className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-250 hover:bg-emerald-100 rounded-md transition-all"
+                                                            >
+                                                                <Plus size={10} /> Crear Receta
+                                                            </button>
                                                         )}
                                                         <button 
                                                             onClick={() => { setLunchToEdit(item.originalItem); setIsLunchModalOpen(true); }}
@@ -702,7 +1015,7 @@ const AnalisisAlmuerzo = () => {
                         </div>
                     </div>
                 </>
-            ) : (
+            ) : activeTab === "anual" ? (
                 // --- VISTA ANUAL Y GRÁFICOS DE TENDENCIAS ---
                 <div className="space-y-6">
                     {/* Fila superior de gráficos */}
@@ -780,29 +1093,69 @@ const AnalisisAlmuerzo = () => {
 
                     {/* Fila inferior de gráficos */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Top 8 Almuerzos */}
-                        <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                            <h3 className="font-bold text-slate-700 flex items-center gap-2 mb-4">
-                                <Award className="w-5 h-5 text-amber-600" /> Top 8 Menús Más Vendidos
-                            </h3>
-                            <div className="space-y-3">
-                                {annualStats.topMenus.map((m, idx) => {
+                        {/* Ranking Completo de Menús */}
+                        <div className="bg-white p-5 rounded-2xl border shadow-sm flex flex-col">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                                <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                                    <Award className="w-5 h-5 text-amber-600" /> Ranking de Menús Vendidos ({selectedYear})
+                                </h3>
+                                <div className="relative w-full md:w-48">
+                                    <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Filtrar por nombre..."
+                                        value={searchTermAnnual}
+                                        onChange={(e) => setSearchTermAnnual(e.target.value)}
+                                        className="w-full pl-8 pr-3 py-1 border rounded-lg text-xs focus:outline-none focus:border-emerald-500 bg-white"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+                                {filteredAnnualTopMenus.map((m, idx) => {
                                     const percentWidth = (m.cantidad / maxTopLunchQty) * 100;
                                     return (
-                                        <div key={idx} className="flex items-center gap-3">
-                                            <span className="w-5 text-xs font-bold text-slate-400 text-right">{idx + 1}.</span>
-                                            <span className="w-1/3 text-xs font-bold text-slate-700 truncate">{m.nombre}</span>
+                                        <div key={idx} className="flex items-center gap-3 hover:bg-slate-50 p-1.5 rounded-lg transition">
+                                            <span className="w-6 text-xs font-bold text-slate-450 text-right">{idx + 1}.</span>
+                                            <span className="w-1/4 text-xs font-semibold text-slate-800 truncate" title={m.nombre}>{m.nombre}</span>
                                             <div className="flex-grow bg-slate-100 h-5 rounded overflow-hidden flex items-center">
                                                 <div 
                                                     style={{ width: `${percentWidth}%` }} 
                                                     className="h-full bg-amber-400/80 hover:bg-amber-400 rounded-r transition-all"
                                                 ></div>
                                             </div>
-                                            <span className="w-16 text-xs font-black text-slate-600 text-right">{m.cantidad} platos</span>
+                                            <span className="w-16 text-xs font-black text-slate-650 text-right">{m.cantidad} platos</span>
+                                            
+                                            {/* Action buttons inside final annual report list */}
+                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                                {m.originalItem?.Receta ? (
+                                                    <button 
+                                                        onClick={() => navigate(`/receta/${m.originalItem.Receta}`)}
+                                                        className="px-2 py-0.5 text-[9px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border rounded"
+                                                        title="Ver/Editar Receta"
+                                                    >
+                                                        Receta
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleCreateRecipe(m.originalItem._id, m.nombre)}
+                                                        className="px-2 py-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border rounded"
+                                                        title="Crear Receta"
+                                                    >
+                                                        + Receta
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={() => { setLunchToEdit(m.originalItem); setIsLunchModalOpen(true); }}
+                                                    className="px-2 py-0.5 text-[9px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border rounded"
+                                                    title="Editar componentes en el Creador"
+                                                >
+                                                    Creador
+                                                </button>
+                                            </div>
                                         </div>
                                     );
                                 })}
-                                {annualStats.topMenus.length === 0 && (
+                                {filteredAnnualTopMenus.length === 0 && (
                                     <p className="text-center text-slate-400 py-10 text-xs">No hay datos de menú para mostrar.</p>
                                 )}
                             </div>
@@ -862,6 +1215,266 @@ const AnalisisAlmuerzo = () => {
                         </div>
                     </div>
                 </div>
+            ) : null}
+
+            {/* --- VISTA TABLA DE TODOS LOS PLATOS (CATÁLOGO) --- */}
+            {activeTab === "catalogo" && (
+                <div className="bg-white rounded-2xl border shadow-sm overflow-hidden animate-fade-in">
+                    <div className="p-5 border-b bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <h3 className="font-bold text-slate-700">Catálogo General de Platos de Almuerzo</h3>
+                            <p className="text-xs text-slate-500">Listado maestro de todos los almuerzos registrados en el sistema.</p>
+                        </div>
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            {selectedCatalogIds.length >= 2 && (
+                                <button
+                                    onClick={handleOpenRelateModal}
+                                    className="text-white font-black px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2 animate-fade-in shadow-sm select-none"
+                                    style={{ backgroundColor: '#D22B2B' }}
+                                >
+                                    🔗 RELACIONAR ({selectedCatalogIds.length})
+                                </button>
+                            )}
+                            <div className="relative w-full md:w-72">
+                                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar plato por nombre..."
+                                    value={searchTermCatalog}
+                                    onChange={(e) => setSearchTermCatalog(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-100 text-sm">
+                            <thead className="bg-slate-50/50">
+                                <tr>
+                                    <th className="w-12 py-3 px-4 text-center select-none"></th>
+                                    <th 
+                                        className="py-3 px-4 font-bold text-slate-500 text-left cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                        onClick={() => handleSortCatalog("NombreES")}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            Nombre del Almuerzo {getSortIcon("NombreES")}
+                                        </div>
+                                    </th>
+                                    <th 
+                                        className="py-3 px-4 font-bold text-slate-500 text-left cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                        onClick={() => handleSortCatalog("protein")}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            Proteína {getSortIcon("protein")}
+                                        </div>
+                                    </th>
+                                    <th 
+                                        className="py-3 px-4 font-bold text-slate-500 text-right cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                        onClick={() => handleSortCatalog("Precio")}
+                                    >
+                                        <div className="flex items-center justify-end gap-1">
+                                            Precio Base {getSortIcon("Precio")}
+                                        </div>
+                                    </th>
+                                    <th 
+                                        className="py-3 px-4 font-bold text-slate-500 text-center cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                        onClick={() => handleSortCatalog("Receta")}
+                                    >
+                                        <div className="flex items-center justify-center gap-1">
+                                            Estado Receta {getSortIcon("Receta")}
+                                        </div>
+                                    </th>
+                                    <th className="py-3 px-4 font-bold text-slate-500 text-center select-none">Gestión / Enlaces</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {groupedCatalogItems.map((group, groupIndex) => {
+                                    const item = group.baseItem;
+                                    const hasVariations = group.variations.length > 0;
+                                    const expanded = isGroupExpanded(item._id);
+                                    
+                                    const protein = getProteinType(item.NombreES);
+                                    const proteinColors = {
+                                        POLLO: 'bg-sky-50 text-sky-700 border-sky-100',
+                                        CERDO: 'bg-amber-50 text-amber-700 border-amber-100',
+                                        RES: 'bg-red-50 text-red-700 border-red-100',
+                                        OTROS: 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                    };
+
+                                    return (
+                                        <React.Fragment key={item._id || groupIndex}>
+                                            {/* Fila del Plato Base */}
+                                            <tr className="hover:bg-slate-50/80 transition-colors font-medium">
+                                                <td className="py-3.5 px-4 text-center">
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={selectedCatalogIds.includes(item._id)}
+                                                        onChange={() => handleToggleSelectCatalog(item._id)}
+                                                        className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="py-3.5 px-4 text-left text-slate-800">
+                                                    <div className="flex items-center gap-2">
+                                                        {hasVariations && (
+                                                            <button 
+                                                                onClick={() => toggleExpandGroup(item._id)}
+                                                                className="p-1 hover:bg-slate-100 rounded text-slate-500 flex items-center justify-center transition-all"
+                                                                title={expanded ? "Colapsar variaciones" : "Ver variaciones hermanos"}
+                                                            >
+                                                                {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                                            </button>
+                                                        )}
+                                                        <span className="font-semibold">{item.NombreES}</span>
+                                                        {hasVariations && (
+                                                            <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded-full">
+                                                                {group.variations.length} {group.variations.length === 1 ? 'hermano' : 'hermanos'}
+                                                            </span>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => { setLunchToEdit(item); setIsLunchModalOpen(true); }}
+                                                            className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all"
+                                                            title="Editar nombre y componentes del menú"
+                                                        >
+                                                            <Pencil size={11} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3.5 px-4 text-left">
+                                                    <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${proteinColors[protein] || 'bg-slate-50'}`}>
+                                                        {protein}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3.5 px-4 text-right font-bold text-slate-700">
+                                                    {parseFloat(item.Precio || 22000).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                                </td>
+                                                <td className="py-3.5 px-4 text-center">
+                                                    {item.Receta ? (
+                                                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                                            Vinculada
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                                                            Sin Vincular
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3.5 px-4 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        {item.Receta ? (
+                                                            <button 
+                                                                onClick={() => navigate(`/receta/${item.Receta}`)}
+                                                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-lg transition-all"
+                                                            >
+                                                                <BookOpen size={12} /> Receta
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleCreateRecipe(item._id, item.NombreES)}
+                                                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-250 hover:bg-emerald-100 rounded-lg transition-all"
+                                                            >
+                                                                <Plus size={12} /> Crear Receta
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => { setLunchToEdit(item); setIsLunchModalOpen(true); }}
+                                                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-lg transition-all"
+                                                        >
+                                                            <Edit size={12} /> Creador
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            {/* Filas de Variaciones (Hermanos) */}
+                                            {expanded && group.variations.map((v, vIndex) => {
+                                                const vProtein = getProteinType(v.NombreES);
+                                                return (
+                                                    <tr key={v._id || vIndex} className="bg-slate-50/50 hover:bg-slate-100/70 transition-colors border-l-4 border-l-emerald-500/30">
+                                                        <td className="py-2.5 px-4 text-center">
+                                                            <input 
+                                                                type="checkbox"
+                                                                checked={selectedCatalogIds.includes(v._id)}
+                                                                onChange={() => handleToggleSelectCatalog(v._id)}
+                                                                className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                                                            />
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-left pl-10 text-slate-700">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-slate-400 font-bold text-xs select-none">↳</span>
+                                                                <span className="italic">{v.NombreES}</span>
+                                                                <span className="text-[9px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                                                    variación
+                                                                </span>
+                                                                <button 
+                                                                    onClick={() => { setLunchToEdit(v); setIsLunchModalOpen(true); }}
+                                                                    className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all"
+                                                                    title="Editar nombre y componentes de la variación"
+                                                                >
+                                                                    <Pencil size={11} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-left">
+                                                            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full border ${proteinColors[vProtein] || 'bg-slate-50'}`}>
+                                                                {vProtein}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-right font-medium text-slate-600">
+                                                            {parseFloat(v.Precio || 22000).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-center">
+                                                            {v.Receta ? (
+                                                                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
+                                                                    Vinculada
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[11px] font-bold text-red-400 bg-red-50 px-2 py-0.5 rounded border border-red-150">
+                                                                    Sin Vincular
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-center">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                {v.Receta ? (
+                                                                    <button 
+                                                                        onClick={() => navigate(`/receta/${v.Receta}`)}
+                                                                        className="flex items-center gap-1 px-2.5 py-1 text-xs text-blue-700 bg-blue-50/50 hover:bg-blue-100 rounded-md transition-all border border-blue-200/50"
+                                                                    >
+                                                                        <BookOpen size={11} /> Receta
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleCreateRecipe(v._id, v.NombreES)}
+                                                                        className="flex items-center gap-1 px-2.5 py-1 text-xs text-emerald-700 bg-emerald-50/50 hover:bg-emerald-100 rounded-md transition-all border border-emerald-200/50"
+                                                                    >
+                                                                        <Plus size={11} /> Crear Receta
+                                                                    </button>
+                                                                )}
+                                                                <button 
+                                                                    onClick={() => { setLunchToEdit(v); setIsLunchModalOpen(true); }}
+                                                                    className="flex items-center gap-1 px-2.5 py-1 text-xs text-amber-700 bg-amber-50/50 hover:bg-amber-100 rounded-md transition-all border border-amber-200/50"
+                                                                >
+                                                                    <Edit size={11} /> Creador
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </React.Fragment>
+                                    );
+                                })}
+                                {groupedCatalogItems.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" className="text-center py-12 text-slate-400">
+                                            No se encontraron platos en el catálogo.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             )}
 
             {/* Modal Unificado del Creador de Almuerzos */}
@@ -871,6 +1484,53 @@ const AnalisisAlmuerzo = () => {
                 onSave={handleSaveLunch}
                 productToEdit={lunchToEdit}
             />
+
+            {/* Modal para elegir el Plato Maestro entre los seleccionados */}
+            {isRelateModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-fade-in flex flex-col">
+                        <h2 className="text-xl font-bold text-slate-800 mb-2">Relacionar Platos Hermanos</h2>
+                        <p className="text-sm text-slate-500 mb-4">
+                            Has seleccionado {selectedCatalogIds.length} platos. Por favor elige cuál de ellos será el **Plato Base / Maestro** principal:
+                        </p>
+                        <div className="space-y-2 max-h-60 overflow-y-auto mb-6 pr-1">
+                            {selectedCatalogIds.map(id => {
+                                const item = allMenu.find(x => x._id === id);
+                                return (
+                                    <label 
+                                        key={id} 
+                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${chosenParentId === id ? 'border-emerald-500 bg-emerald-50 text-emerald-850 font-semibold shadow-sm' : 'border-slate-200 hover:bg-slate-50 text-slate-700'}`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="chosenParentId"
+                                            value={id}
+                                            checked={chosenParentId === id}
+                                            onChange={() => setChosenParentId(id)}
+                                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                                        />
+                                        <span>{item?.NombreES || "Plato sin nombre"}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4 border-t">
+                            <button 
+                                onClick={() => setIsRelateModalOpen(false)} 
+                                className="bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-sm transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={handleConfirmRelation} 
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-sm transition-all shadow-sm"
+                            >
+                                Confirmar Relación
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -3,7 +3,7 @@ import { getAllFromTable } from "../../redux/actions";
 
 import React, { useState, useEffect } from "react";
 import { CardInstanceInventarioMenuLunch } from "./CardInstanceInventarioMenuLunch";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { MENU, TARDEO_ALMUERZO, TARDEO } from "../../redux/actions-types";
 import AccionesRapidasMenuLunch from "../../body/views/actualizarPrecioUnitario/AccionesRapidasMenuLunch";
 import FormularioMenuAlmuerzo from "../../body/views/actualizarPrecioUnitario/FormularioMenuAlmuerzo";
@@ -41,6 +41,9 @@ export const LunchModal = ({ isOpen, onClose, onSave, productToEdit, initialDate
     const [nombreES, setNombreES] = useState('');
     const [compLunchData, setCompLunchData] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    const allMenu = useSelector((state) => state.allMenu || []);
+    const availableLunches = allMenu.filter(item => item.SUB_GRUPO === 'TARDEO_ALMUERZO');
 
     useEffect(() => {
         if (isOpen) {
@@ -113,6 +116,8 @@ export const LunchModal = ({ isOpen, onClose, onSave, productToEdit, initialDate
                     <FormularioMenuAlmuerzo
                         initialData={initialData}
                         onMenuChange={setCompLunchData}
+                        availableLunches={availableLunches}
+                        currentProductId={productToEdit?._id}
                     />
                 </div>
                 <div className="flex justify-end gap-4 p-4 border-t bg-gray-50">

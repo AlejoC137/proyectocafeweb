@@ -123,13 +123,12 @@ function RecepieOptionsMenu({ product, Receta , currentType, onSaveReceta, onCre
       try {
         const recetaPayload = {
           _id: Receta ? Receta._id : crypto.randomUUID(),
-          legacyName: legacyName || "Sin nombre",
+          legacyName: legacyName || product?.NombreES || "Sin nombre",
           costo:costoDirecto,
           ProcessTime:processTime,
           rendimiento: JSON.stringify(rendimiento),
           forId: product._id,
           autor,
-          legacyName:product.NombreES,
           revisor,
           // actualizacion: new Date().toISOString(),
           ...mapItemsToPayload(recetaItems),

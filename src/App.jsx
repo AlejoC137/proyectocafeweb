@@ -53,6 +53,7 @@ const GastosCalculadosMateriales = lazy(() => import('./body/views/ventaCompra/G
 const ProductosFinanciero  = lazy(() => import('./body/views/ventaCompra/ProductosFinanciero'));
 const RecruitmentPrint      = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
 const ConsumoStaffView      = lazy(() => import('./body/views/staff/ConsumoStaffView'));
+const ConsumoAdminView      = lazy(() => import('./body/views/staff/ConsumoAdminView'));
 // MenuPrintHorizontal lazy import removed since both render MenuPrintManager
 
 const CotizacionesView       = lazy(() => import('./body/views/cotizaciones/CotizacionesView'));
@@ -134,6 +135,7 @@ function App() {
             <Route path="/ModeloProyecto"                    element={<ModeloProyecto />} />
             <Route path="/ModeloProyecto/:year/:month"       element={<ModeloProyecto />} />
             <Route path="/consumo"                           element={<ConsumoStaffView />} />
+            <Route path="/consumoAdmin"                      element={<ConsumoAdminView />} />
             <Route path="/AnalisisAlmuerzo"                  element={<AnalisisAlmuerzo />} />
             <Route path="/gastos-calculados"                 element={<GastosCalculadosMateriales />} />
             <Route path="/productosFinanciero"               element={<ProductosFinanciero />} />

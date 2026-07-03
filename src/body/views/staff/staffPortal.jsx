@@ -40,7 +40,8 @@ import {
   Paperclip,
   Mic,
   Check,
-  LogOut
+  LogOut,
+  Coffee
 } from "lucide-react";
 import ComandaStaff from "../actividades/WorkE/ComandaStaff";
 import Notas from "../actividades/WorkE/Notas";
@@ -214,7 +215,8 @@ function StaffPortal() {
       { label: "Día", icon: CalendarDays, onClick: () => navigate("/DiaResumen") },
       { label: "Financiero", icon: Landmark, onClick: () => navigate("/productosFinanciero") },
       { label: "Almacén", icon: Store, onClick: () => navigate("/GestionAlmacen") },
-      { label: "Mes", icon: Calendar, onClick: () => navigate("/MesResumen") }
+      { label: "Mes", icon: Calendar, onClick: () => navigate("/MesResumen") },
+      { label: "Consumo", icon: Coffee, onClick: () => navigate("/consumoAdmin") }
     ] : [])
   ] : [];
 
