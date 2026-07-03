@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllFromTable } from '../../../redux/actions';
+import { updateItem } from '../../../redux/actions-Proveedores';
 import { VENTAS, MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
-import { ArrowLeft, Calendar, FileText, Download, TrendingUp, Award, DollarSign, PieChart, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Download, TrendingUp, Award, DollarSign, PieChart, BarChart2, BookOpen, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
+import { LunchModal } from '../../../components/ui/CardGridInventarioMenuLunch';
 
 const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -63,11 +65,44 @@ const AnalisisAlmuerzo = () => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [activeTab, setActiveTab] = useState("mensual");
 
+    // Modal del creador
+    const [isLunchModalOpen, setIsLunchModalOpen] = useState(false);
+    const [lunchToEdit, setLunchToEdit] = useState(null);
+
     useEffect(() => {
         dispatch(getAllFromTable(MENU));
         dispatch(getAllFromTable(RECETAS_MENU));
         dispatch(getAllFromTable(RECETAS_PRODUCCION));
     }, [dispatch]);
+
+    // Guardar cambios del almuerzo en el creador
+    const handleSaveLunch = async (nombreES, compLunchData, productId) => {
+        try {
+            if (productId) {
+                const fechaStr = compLunchData?.fechasSeleccionadas?.[0] || compLunchData?.fecha?.fecha;
+                const diaSemana = fechaStr ? new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' }) : '';
+                const compParaFecha = {
+                    ...compLunchData,
+                    fechasSeleccionadas: fechaStr ? [fechaStr] : [],
+                    fecha: { fecha: fechaStr, dia: diaSemana }
+                };
+                const finalCompLunchData = JSON.stringify(compParaFecha);
+                
+                const updatedData = {
+                    NombreES: nombreES,
+                    Comp_Lunch: finalCompLunchData,
+                };
+                await dispatch(updateItem(productId, updatedData, MENU));
+                await dispatch(getAllFromTable(MENU));
+                alert('✅ ¡Almuerzo actualizado con éxito!');
+            }
+            setIsLunchModalOpen(false);
+            setLunchToEdit(null);
+        } catch (error) {
+            alert('❌ Error al guardar el almuerzo.');
+            console.error(error);
+        }
+    };
 
     // --- CÁLCULO DE VISTA MENSUAL ---
     const almuerzosDelMes = useMemo(() => {
@@ -167,7 +202,8 @@ const AnalisisAlmuerzo = () => {
                 ingreso: totalIngreso,
                 costoUnitario: recetaValor,
                 costoTotal: costoTotal,
-                utilidad: utilidad
+                utilidad: utilidad,
+                originalItem: almuerzoHoy
             });
         }
 
@@ -201,7 +237,8 @@ const AnalisisAlmuerzo = () => {
                     cantidad: 0,
                     ingreso: 0,
                     costoTotal: 0,
-                    utilidad: 0
+                    utilidad: 0,
+                    originalItem: item.originalItem
                 };
             }
             groups[item.nombre].diasServido += 1;
@@ -275,7 +312,6 @@ const AnalisisAlmuerzo = () => {
                 if (compLunchObj && Array.isArray(compLunchObj.lista)) {
                     compLunchObj.lista.forEach(version => {
                         if (version && Array.isArray(version.list)) {
-                            // Usamos la fecha de la versión o fallback a la fecha del menú
                             const dateStr = version.date || compLunchObj.fecha?.fecha || compLunchObj.fechasSeleccionadas?.[0];
                             if (dateStr) {
                                 const parsedDate = parseDateYearAndMonth(dateStr);
@@ -512,6 +548,7 @@ const AnalisisAlmuerzo = () => {
                                         <th className="py-3 px-4 font-bold text-slate-500 text-right">Costo Producción</th>
                                         <th className="py-3 px-4 font-bold text-slate-500 text-right">Utilidad Neta</th>
                                         <th className="py-3 px-4 font-bold text-slate-500 text-center">Margen %</th>
+                                        <th className="py-3 px-4 font-bold text-slate-500 text-center">Gestión / Enlaces</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -546,12 +583,34 @@ const AnalisisAlmuerzo = () => {
                                                         {itemMargen.toFixed(1)}%
                                                     </span>
                                                 </td>
+                                                <td className="py-3.5 px-4 text-center">
+                                                    <div className="flex items-center justify-center gap-1.5">
+                                                        {item.originalItem?.Receta ? (
+                                                            <button 
+                                                                onClick={() => navigate(`/receta/${item.originalItem.Receta}`)}
+                                                                className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-md transition-all"
+                                                                title="Ir a la Receta de este almuerzo"
+                                                            >
+                                                                <BookOpen size={10} /> Receta
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-[10px] text-slate-400 font-bold px-2.5">Sin Receta</span>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => { setLunchToEdit(item.originalItem); setIsLunchModalOpen(true); }}
+                                                            className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-md transition-all"
+                                                            title="Editar componentes en el Creador"
+                                                        >
+                                                            <Edit size={10} /> Creador
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         );
                                     })}
                                     {lunchStats.stats.length === 0 && (
                                         <tr>
-                                            <td colSpan="7" className="text-center py-10 text-slate-400">
+                                            <td colSpan="8" className="text-center py-10 text-slate-400">
                                                 No se encontraron almuerzos programados o ventas para este mes.
                                             </td>
                                         </tr>
@@ -580,6 +639,7 @@ const AnalisisAlmuerzo = () => {
                                         <th className="py-3 px-4 font-bold text-slate-500 text-right">Costo Total</th>
                                         <th className="py-3 px-4 font-bold text-slate-500 text-right">Utilidad Neta</th>
                                         <th className="py-3 px-4 font-bold text-slate-500 text-center">Margen %</th>
+                                        <th className="py-3 px-4 font-bold text-slate-500 text-center">Gestión / Enlaces</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -613,6 +673,26 @@ const AnalisisAlmuerzo = () => {
                                                     }`}>
                                                         {itemMargen.toFixed(1)}%
                                                     </span>
+                                                </td>
+                                                <td className="py-3.5 px-4 text-center">
+                                                    <div className="flex items-center justify-center gap-1.5">
+                                                        {item.originalItem?.Receta ? (
+                                                            <button 
+                                                                onClick={() => navigate(`/receta/${item.originalItem.Receta}`)}
+                                                                className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-md transition-all"
+                                                            >
+                                                                <BookOpen size={10} /> Receta
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-[10px] text-slate-400 font-bold px-2.5">Sin Receta</span>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => { setLunchToEdit(item.originalItem); setIsLunchModalOpen(true); }}
+                                                            className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-md transition-all"
+                                                        >
+                                                            <Edit size={10} /> Creador
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -783,6 +863,14 @@ const AnalisisAlmuerzo = () => {
                     </div>
                 </div>
             )}
+
+            {/* Modal Unificado del Creador de Almuerzos */}
+            <LunchModal
+                isOpen={isLunchModalOpen}
+                onClose={() => { setIsLunchModalOpen(false); setLunchToEdit(null); }}
+                onSave={handleSaveLunch}
+                productToEdit={lunchToEdit}
+            />
         </div>
     );
 };
