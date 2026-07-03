@@ -14,6 +14,7 @@ const ModeloProyecto = () => {
     // Consumimos el estado de Redux
     const models = useSelector(state => state.models);
     const allVentas = useSelector(state => state.allVentas);
+    const allCompras = useSelector(state => state.allCompras || []);
     const loading = useSelector(state => state.modelsLoading);
 
     // Estado Local: Fecha seleccionada
