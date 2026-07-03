@@ -236,6 +236,7 @@ export function procesarRecetaYEnviarASupabase() {
         recetaParaSupabase.autor = receta.escrito || null;
         recetaParaSupabase.revisor = receta.revisado || null;
         recetaParaSupabase.actualizacion = receta.actualizacion || new Date().toISOString();
+        recetaParaSupabase.fuentes = receta.fuentes || [];
 
         // Mapear notas a nota1, nota2, ..., nota10
         if (receta.notas && Array.isArray(receta.notas)) {

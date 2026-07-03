@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllFromTable, createRecipeForProduct } from '../../../redux/actions';
 import { updateItem } from '../../../redux/actions-Proveedores';
 import { VENTAS, MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
-import { ArrowLeft, Calendar, FileText, Download, TrendingUp, Award, DollarSign, PieChart, BarChart2, BookOpen, Edit, Plus, Pencil, Search, List, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Download, TrendingUp, Award, DollarSign, PieChart, BarChart2, BookOpen, Edit, Plus, Pencil, Search, List, ChevronUp, ChevronDown, Settings, ArrowDownToLine } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { LunchModal } from '../../../components/ui/CardGridInventarioMenuLunch';
@@ -43,11 +43,19 @@ const parseDateYearAndMonth = (dateStr) => {
 };
 
 // Clasificador de tipos de proteína
-const getProteinType = (name) => {
+const getProteinType = (item) => {
+    try {
+        const comp = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
+        if (comp?.proteina_clasificacion) return comp.proteina_clasificacion;
+    } catch(e) {}
+
+    const name = item?.NombreES || "";
     const n = name.toUpperCase();
     if (n.includes('POLLO') || n.includes('CHICKEN') || n.includes('MILANESA')) return 'POLLO';
     if (n.includes('CERDO') || n.includes('COSTILLA') || n.includes('CAÑON') || n.includes('CAÑÓN') || n.includes('LECHONA') || n.includes('TOCINETA')) return 'CERDO';
     if (n.includes('RES') || n.includes('CARNE') || n.includes('GOULASH') || n.includes('LOMO') || n.includes('BIFE') || n.includes('ASADO') || n.includes('PECHO') || n.includes('ALBONDIGAS') || n.includes('ALBÓNDIGAS')) return 'RES';
+    if (n.includes('PESCADO') || n.includes('SALMON') || n.includes('SALMÓN') || n.includes('TRUCHA') || n.includes('MOJARRA') || n.includes('ATUN') || n.includes('ATÚN') || n.includes('BAGRE')) return 'PESCADO';
+    if (n.includes('VEGETARIANO') || n.includes('VEGANO') || n.includes('VEGGIE') || n.includes('LENTEJA') || n.includes('GARBANZO') || n.includes('SOYA') || n.includes('TOFU')) return 'VEGETARIANO';
     return 'OTROS';
 };
 
@@ -62,6 +70,193 @@ const AnalisisAlmuerzo = () => {
 
     // Local states
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    
+    // Inline editing states
+    const [showEdit, setShowEdit] = useState(false);
+    const [editableMenu, setEditableMenu] = useState([]);
+    const originalMenuRef = useRef([]);
+    const savingMap = useRef(new Map());
+
+    // Column visibility state
+    const defaultColumns = {
+        DescripcionES: false,
+        proteina: true,
+        Precio: true,
+        Receta: true,
+        entrada_nombre: false, entrada_desc: false,
+        proteina_nombre: false, proteina_desc: false,
+        proteina_opcion_2_nombre: false, proteina_opcion_2_desc: false,
+        carbohidrato_nombre: false, carbohidrato_desc: false,
+        acompanante_nombre: false, acompanante_desc: false,
+        ensalada_nombre: false, ensalada_desc: false,
+        bebida_nombre: false, bebida_desc: false
+    };
+
+    const [visibleColumns, setVisibleColumns] = useState(() => {
+        const saved = localStorage.getItem('lunchCatalogColumns');
+        if (saved) {
+            try { return { ...defaultColumns, ...JSON.parse(saved) }; } catch(e) {}
+        }
+        return defaultColumns;
+    });
+
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+    const toggleColumn = (col) => {
+        setVisibleColumns(prev => {
+            const next = { ...prev, [col]: !prev[col] };
+            localStorage.setItem('lunchCatalogColumns', JSON.stringify(next));
+            return next;
+        });
+    };
+
+    useEffect(() => {
+        setEditableMenu(allMenu);
+        originalMenuRef.current = JSON.parse(JSON.stringify(allMenu));
+    }, [allMenu]);
+
+    // Helpers for auto-save
+    const enqueueSaveForProduct = useCallback((productId, payload) => {
+        if (!productId || !payload || Object.keys(payload).length === 0) return;
+        const entry = savingMap.current.get(productId) || { inFlight: false, pending: null };
+
+        if (entry.inFlight) {
+            entry.pending = { ...(entry.pending || {}), ...payload };
+            savingMap.current.set(productId, entry);
+            return;
+        }
+
+        entry.inFlight = true;
+        savingMap.current.set(productId, entry);
+
+        const processLoop = async (initialPayload) => {
+            let payloadToSend = initialPayload;
+            while (payloadToSend) {
+                try {
+                    await dispatch(updateItem(productId, payloadToSend, MENU));
+                    
+                    const edited = editableMenu.find(p => p._id === productId);
+                    if (edited) {
+                        const idx = originalMenuRef.current.findIndex(p => p._id === productId);
+                        if (idx !== -1) {
+                            originalMenuRef.current[idx] = JSON.parse(JSON.stringify(edited));
+                        }
+                    }
+
+                    const currentEntry = savingMap.current.get(productId) || { inFlight: false, pending: null };
+                    if (currentEntry.pending) {
+                        payloadToSend = currentEntry.pending;
+                        currentEntry.pending = null;
+                        savingMap.current.set(productId, currentEntry);
+                    } else {
+                        currentEntry.inFlight = false;
+                        savingMap.current.set(productId, currentEntry);
+                        payloadToSend = null;
+                    }
+                } catch (err) {
+                    const currentEntry = savingMap.current.get(productId) || { inFlight: false, pending: null };
+                    currentEntry.inFlight = false;
+                    currentEntry.pending = null;
+                    savingMap.current.set(productId, currentEntry);
+
+                    const orig = originalMenuRef.current.find(p => p._id === productId);
+                    if (orig) {
+                        setEditableMenu(prev => prev.map(p => p._id === productId ? JSON.parse(JSON.stringify(orig)) : p));
+                    }
+                    console.error("Error saving item", productId, err);
+                    alert(`❌ Falló al guardar. Se revirtió al último estado guardado.`);
+                    break;
+                }
+            }
+        };
+
+        processLoop(payload);
+    }, [dispatch, editableMenu]);
+
+    const handleBlur = useCallback((productId) => {
+        const item = editableMenu.find(p => p._id === productId);
+        if (!item) return;
+        const original = originalMenuRef.current.find(p => p._id === productId);
+        if (!original) return;
+        
+        const payload = {};
+        if (item.NombreES !== original.NombreES) payload.NombreES = item.NombreES;
+        if (item.Precio !== original.Precio) payload.Precio = item.Precio;
+        
+        // Check proteina inside Comp_Lunch
+        if (item.Comp_Lunch !== original.Comp_Lunch) {
+            payload.Comp_Lunch = item.Comp_Lunch;
+        }
+
+        if (Object.keys(payload).length > 0) {
+            enqueueSaveForProduct(productId, payload);
+        }
+    }, [editableMenu, enqueueSaveForProduct]);
+
+    const handleChange = (productId, field, value) => {
+        setEditableMenu(prev => prev.map(p => {
+            if (p._id !== productId) return p;
+            const updated = { ...p };
+            
+            if (field === 'proteina') {
+                let comp = {};
+                try { comp = updated.Comp_Lunch ? (typeof updated.Comp_Lunch === 'string' ? JSON.parse(updated.Comp_Lunch) : updated.Comp_Lunch) : {}; } catch(e) {}
+                comp.proteina_clasificacion = value;
+                updated.Comp_Lunch = JSON.stringify(comp);
+            } else if (field.startsWith('Comp_Lunch.')) {
+                const parts = field.split('.'); 
+                let comp = {};
+                try { comp = updated.Comp_Lunch ? (typeof updated.Comp_Lunch === 'string' ? JSON.parse(updated.Comp_Lunch) : updated.Comp_Lunch) : {}; } catch(e) {}
+                
+                if (!comp[parts[1]]) comp[parts[1]] = {};
+                comp[parts[1]][parts[2]] = value;
+                
+                updated.Comp_Lunch = JSON.stringify(comp);
+            } else {
+                updated[field] = value;
+            }
+            return updated;
+        }));
+    };
+
+    const handleFillDown = (baseItem, field, variations) => {
+        if (!variations || variations.length === 0) return;
+        
+        let valueToPropagate = null;
+        if (field === 'proteina') {
+            valueToPropagate = getProteinType(baseItem);
+        } else if (field.startsWith('Comp_Lunch.')) {
+            const parts = field.split('.');
+            let comp = {};
+            try { comp = baseItem.Comp_Lunch ? (typeof baseItem.Comp_Lunch === 'string' ? JSON.parse(baseItem.Comp_Lunch) : baseItem.Comp_Lunch) : {}; } catch(e) {}
+            valueToPropagate = comp[parts[1]]?.[parts[2]] || '';
+        } else {
+            valueToPropagate = baseItem[field] || '';
+        }
+
+        if (!window.confirm(`¿Estás seguro de propagar el valor a las ${variations.length} variaciones?`)) return;
+
+        variations.forEach(v => {
+            handleChange(v._id, field, valueToPropagate);
+            const payload = {};
+            if (field === 'proteina' || field.startsWith('Comp_Lunch.')) {
+                let comp = {};
+                try { comp = v.Comp_Lunch ? (typeof v.Comp_Lunch === 'string' ? JSON.parse(v.Comp_Lunch) : v.Comp_Lunch) : {}; } catch(e) {}
+                
+                if (field === 'proteina') {
+                    comp.proteina_clasificacion = valueToPropagate;
+                } else {
+                    const parts = field.split('.');
+                    if (!comp[parts[1]]) comp[parts[1]] = {};
+                    comp[parts[1]][parts[2]] = valueToPropagate;
+                }
+                payload.Comp_Lunch = JSON.stringify(comp);
+            } else {
+                payload[field] = valueToPropagate;
+            }
+            enqueueSaveForProduct(v._id, payload);
+        });
+    };
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [activeTab, setActiveTab] = useState("mensual");
     
@@ -106,6 +301,9 @@ const AnalisisAlmuerzo = () => {
     const [selectedCatalogIds, setSelectedCatalogIds] = useState([]);
     const [isRelateModalOpen, setIsRelateModalOpen] = useState(false);
     const [chosenParentId, setChosenParentId] = useState("");
+    const [draggedItemId, setDraggedItemId] = useState(null);
+    const [draggedItemParentId, setDraggedItemParentId] = useState(null);
+    const [dragOverId, setDragOverId] = useState(null);
 
     const handleToggleSelectCatalog = (id) => {
         setSelectedCatalogIds(prev => {
@@ -147,6 +345,8 @@ const AnalisisAlmuerzo = () => {
                     await dispatch(updateItem(childId, {
                         Comp_Lunch: JSON.stringify(comp)
                     }, MENU));
+                    // Small delay to prevent Supabase connection limits
+                    await new Promise(resolve => setTimeout(resolve, 150));
                 }
             }
             
@@ -175,6 +375,194 @@ const AnalisisAlmuerzo = () => {
             alert("❌ Error al relacionar los platos.");
         }
     };
+
+    const handleUnlinkRelation = async () => {
+        if (selectedCatalogIds.length === 0) return;
+        if (!window.confirm(`¿Estás seguro de que deseas desvincular ${selectedCatalogIds.length} plato(s)? Ya no serán considerados variaciones y pasarán a ser platos base independientes.`)) return;
+
+        try {
+            let changesMade = false;
+            for (const childId of selectedCatalogIds) {
+                const childItem = allMenu.find(item => item._id === childId);
+                if (childItem) {
+                    let comp = {};
+                    try {
+                        comp = childItem.Comp_Lunch 
+                            ? (typeof childItem.Comp_Lunch === 'string' ? JSON.parse(childItem.Comp_Lunch) : childItem.Comp_Lunch)
+                            : {};
+                    } catch (e) {
+                        comp = {};
+                    }
+                    if (comp.parentId) {
+                        delete comp.parentId;
+                        await dispatch(updateItem(childId, {
+                            Comp_Lunch: JSON.stringify(comp)
+                        }, MENU));
+                        changesMade = true;
+                        // Small delay to prevent Supabase connection limits
+                        await new Promise(resolve => setTimeout(resolve, 150));
+                    }
+                }
+            }
+            if (changesMade) {
+                await dispatch(getAllFromTable(MENU));
+                alert("✅ ¡Platos desvinculados con éxito!");
+            } else {
+                alert("ℹ️ Ninguno de los platos seleccionados estaba vinculado a otro plato.");
+            }
+            setSelectedCatalogIds([]);
+        } catch (error) {
+            console.error(error);
+            alert("❌ Error al desvincular los platos.");
+        }
+    };
+
+    // --- DRAG AND DROP HANDLERS ---
+    const handleDragStart = (e, item, parentId = null) => {
+        setDraggedItemId(item._id);
+        setDraggedItemParentId(parentId);
+        setDragOverId(null);
+    };
+
+    const handleDragOverTable = (e, targetId) => {
+        e.preventDefault();
+        if (draggedItemId && draggedItemId !== targetId && dragOverId !== targetId) {
+            setDragOverId(targetId);
+        }
+    };
+
+    const handleDragLeaveTable = (e, targetId) => {
+        e.preventDefault();
+        if (dragOverId === targetId) {
+            setDragOverId(null);
+        }
+    };
+
+    const handleDropToLink = async (e, targetParentId) => {
+        e.preventDefault();
+        
+        let itemsToMove = [];
+        if (draggedItemId) {
+             if (selectedCatalogIds.includes(draggedItemId)) {
+                 itemsToMove = selectedCatalogIds.filter(id => id !== targetParentId);
+             } else {
+                 itemsToMove = draggedItemId === targetParentId ? [] : [draggedItemId];
+             }
+        }
+        
+        if (itemsToMove.length === 0) {
+            setDraggedItemId(null);
+            setDraggedItemParentId(null);
+            setDragOverId(null);
+            return;
+        }
+
+        try {
+            let changes = 0;
+            for (const id of itemsToMove) {
+                const childItem = allMenu.find(item => item._id === id);
+                if (!childItem) continue;
+                
+                let comp = {};
+                try {
+                    comp = childItem.Comp_Lunch 
+                        ? (typeof childItem.Comp_Lunch === 'string' ? JSON.parse(childItem.Comp_Lunch) : childItem.Comp_Lunch)
+                        : {};
+                } catch (err) {
+                    comp = {};
+                }
+                
+                if (comp.parentId === targetParentId) continue;
+                
+                comp.parentId = targetParentId;
+                await dispatch(updateItem(id, {
+                    Comp_Lunch: JSON.stringify(comp)
+                }, MENU));
+                changes++;
+                // Small delay to prevent Supabase connection limits
+                await new Promise(resolve => setTimeout(resolve, 150));
+            }
+
+            if (changes > 0) {
+                const parentItem = allMenu.find(item => item._id === targetParentId);
+                if (parentItem) {
+                    let parentComp = {};
+                    try {
+                        parentComp = parentItem.Comp_Lunch 
+                            ? (typeof parentItem.Comp_Lunch === 'string' ? JSON.parse(parentItem.Comp_Lunch) : parentItem.Comp_Lunch)
+                            : {};
+                    } catch (err) {
+                        parentComp = {};
+                    }
+                    if (parentComp.parentId) {
+                        delete parentComp.parentId;
+                        await dispatch(updateItem(targetParentId, {
+                            Comp_Lunch: JSON.stringify(parentComp)
+                        }, MENU));
+                    }
+                }
+
+                await dispatch(getAllFromTable(MENU));
+                alert(`✅ ¡${changes} plato(s) relacionado(s) con éxito!`);
+                setSelectedCatalogIds([]);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("❌ Error al relacionar los platos.");
+        } finally {
+            setDraggedItemId(null);
+            setDraggedItemParentId(null);
+            setDragOverId(null);
+        }
+    };
+
+    const handleDropToUnlink = async (e) => {
+        e.preventDefault();
+        if (!draggedItemId || !draggedItemParentId) {
+            setDraggedItemId(null);
+            setDraggedItemParentId(null);
+            setDragOverId(null);
+            return;
+        }
+
+        try {
+            const childItem = allMenu.find(item => item._id === draggedItemId);
+            if (childItem) {
+                let comp = {};
+                try {
+                    comp = childItem.Comp_Lunch 
+                        ? (typeof childItem.Comp_Lunch === 'string' ? JSON.parse(childItem.Comp_Lunch) : childItem.Comp_Lunch)
+                        : {};
+                } catch (err) {
+                    comp = {};
+                }
+                if (comp.parentId) {
+                    delete comp.parentId;
+                    await dispatch(updateItem(draggedItemId, {
+                        Comp_Lunch: JSON.stringify(comp)
+                    }, MENU));
+                    
+                    await dispatch(getAllFromTable(MENU));
+                    alert("✅ ¡Plato desvinculado con éxito!");
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            alert("❌ Error al desvincular el plato.");
+        }
+        
+        setDraggedItemId(null);
+        setDraggedItemParentId(null);
+        setDragOverId(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedItemId(null);
+        setDraggedItemParentId(null);
+        setDragOverId(null);
+    };
+    // ------------------------------
+
     // Modal del creador
     const [isLunchModalOpen, setIsLunchModalOpen] = useState(false);
     const [lunchToEdit, setLunchToEdit] = useState(null);
@@ -405,7 +793,9 @@ const AnalisisAlmuerzo = () => {
             POLLO: { nombre: 'Pollo', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#0ea5e9' },
             CERDO: { nombre: 'Cerdo', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#f59e0b' },
             RES: { nombre: 'Res / Carne', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#ef4444' },
-            OTROS: { nombre: 'Otros / Veggie', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#10b981' }
+            PESCADO: { nombre: 'Pescado', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#8b5cf6' },
+            VEGETARIANO: { nombre: 'Vegetariano', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#84cc16' },
+            OTROS: { nombre: 'Otros', cantidad: 0, ingreso: 0, costo: 0, utilidad: 0, color: '#10b981' }
         };
 
         const topMenus = {};
@@ -478,7 +868,7 @@ const AnalisisAlmuerzo = () => {
                 }
             } catch (e) {}
 
-            const protein = getProteinType(item.NombreES);
+            const protein = getProteinType(item);
             const ingresoVenta = cantidadVendida * precioVenta;
             const costoTotal = recetaValor * cantidadVendida;
             const utilidad = ingresoVenta - costoTotal;
@@ -519,10 +909,10 @@ const AnalisisAlmuerzo = () => {
 
     // --- CÁLCULO DE VISTA CATÁLOGO COMPLETO ---
     const catalogItems = useMemo(() => {
-        return allMenu
+        return editableMenu
             .filter(item => item.SUB_GRUPO === 'TARDEO_ALMUERZO')
             .sort((a, b) => (a.NombreES || "").localeCompare(b.NombreES || ""));
-    }, [allMenu]);
+    }, [editableMenu]);
 
     const getParentId = (item) => {
         try {
@@ -594,8 +984,8 @@ const AnalisisAlmuerzo = () => {
         groups.sort((a, b) => {
             let aVal, bVal;
             if (sortColumnCatalog === "protein") {
-                aVal = getProteinType(a.baseItem.NombreES);
-                bVal = getProteinType(b.baseItem.NombreES);
+                aVal = getProteinType(a.baseItem);
+                bVal = getProteinType(b.baseItem);
             } else if (sortColumnCatalog === "Precio") {
                 aVal = parseFloat(a.baseItem.Precio || 22000);
                 bVal = parseFloat(b.baseItem.Precio || 22000);
@@ -614,6 +1004,29 @@ const AnalisisAlmuerzo = () => {
 
         return groups;
     }, [catalogItems, searchTermCatalog, sortColumnCatalog, sortDirectionCatalog]);
+
+    const handleToggleSelectAllCatalog = () => {
+        const allVisibleIds = groupedCatalogItems.flatMap(g => [g.baseItem._id, ...g.variations.map(v => v._id)]);
+        if (selectedCatalogIds.length === allVisibleIds.length && allVisibleIds.length > 0) {
+            setSelectedCatalogIds([]);
+        } else {
+            setSelectedCatalogIds(allVisibleIds);
+        }
+    };
+
+    const handleExpandAllCatalog = () => {
+        const allExpanded = {};
+        groupedCatalogItems.forEach(group => {
+            if (group.variations.length > 0) {
+                allExpanded[group.baseItem._id] = true;
+            }
+        });
+        setExpandedCatalogGroups(allExpanded);
+    };
+
+    const handleCollapseAllCatalog = () => {
+        setExpandedCatalogGroups({});
+    };
 
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
@@ -649,6 +1062,60 @@ const AnalisisAlmuerzo = () => {
         });
 
         doc.save(`analisis_almuerzos_${monthsNames[selectedMonth].toLowerCase()}_${selectedYear}.pdf`);
+    };
+
+    const RenderEditableCell = ({ item, field, isBase, hasVariations, variations, type = 'text', options = [], className="" }) => {
+        const isComp = field.startsWith('Comp_Lunch.');
+        let val = '';
+        if (field === 'proteina') {
+            val = getProteinType(item);
+        } else if (isComp) {
+            const parts = field.split('.');
+            let comp = {};
+            try { comp = item.Comp_Lunch ? (typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch) : {}; } catch(e) {}
+            val = comp[parts[1]]?.[parts[2]] || '';
+        } else {
+            val = item[field] || '';
+        }
+
+        return (
+            <td className={`py-2 px-4 ${className}`}>
+                <div className="flex items-center gap-1 w-full relative group min-w-[120px]">
+                    {showEdit ? (
+                        type === 'select' ? (
+                            <select
+                                className="w-full px-2 py-1 text-xs font-bold border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                value={val}
+                                onChange={(e) => handleChange(item._id, field, e.target.value)}
+                                onBlur={() => handleBlur(item._id)}
+                            >
+                                <option value="">--</option>
+                                {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                            </select>
+                        ) : (
+                            <input 
+                                type={type} 
+                                className="w-full px-2 py-1 text-xs border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                value={val}
+                                onChange={(e) => handleChange(item._id, field, e.target.value)}
+                                onBlur={() => handleBlur(item._id)}
+                            />
+                        )
+                    ) : (
+                        <span className="truncate block w-full text-xs text-slate-600">{val}</span>
+                    )}
+                    {showEdit && isBase && hasVariations && (
+                        <button 
+                            onClick={() => handleFillDown(item, field, variations)}
+                            className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded transition-all absolute -right-5 z-10 shadow-sm border border-blue-200"
+                            title="Propagar a variaciones"
+                        >
+                            <ArrowDownToLine size={12} />
+                        </button>
+                    )}
+                </div>
+            </td>
+        );
     };
 
     const maxMonthlyQty = Math.max(...annualStats.monthlyTrend.map(m => m.cantidad), 1);
@@ -1226,6 +1693,36 @@ const AnalisisAlmuerzo = () => {
                             <p className="text-xs text-slate-500">Listado maestro de todos los almuerzos registrados en el sistema.</p>
                         </div>
                         <div className="flex items-center gap-3 w-full md:w-auto">
+                            <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200 mr-2 shadow-inner">
+                                <button 
+                                    onClick={handleExpandAllCatalog} 
+                                    className="px-2 py-1 text-xs font-bold text-slate-600 hover:bg-white hover:text-slate-800 rounded transition-all flex items-center gap-1" 
+                                    title="Expandir todas las variaciones"
+                                >
+                                    <ChevronDown size={14} /> <span className="hidden md:inline">Expandir</span>
+                                </button>
+                                <button 
+                                    onClick={handleCollapseAllCatalog} 
+                                    className="px-2 py-1 text-xs font-bold text-slate-600 hover:bg-white hover:text-slate-800 rounded transition-all flex items-center gap-1" 
+                                    title="Contraer todas las variaciones"
+                                >
+                                    <ChevronUp size={14} /> <span className="hidden md:inline">Contraer</span>
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setShowEdit(!showEdit)}
+                                className={`font-bold px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2 shadow-sm select-none ${showEdit ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-inner' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                            >
+                                {showEdit ? "✏️ Editando..." : "✏️ Modo Edición"}
+                            </button>
+                            {selectedCatalogIds.length >= 1 && (
+                                <button
+                                    onClick={handleUnlinkRelation}
+                                    className="text-slate-700 bg-white border border-slate-300 font-bold px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2 animate-fade-in shadow-sm hover:bg-slate-50 select-none"
+                                >
+                                    ⛓️‍💥 DESVINCULAR ({selectedCatalogIds.length})
+                                </button>
+                            )}
                             {selectedCatalogIds.length >= 2 && (
                                 <button
                                     onClick={handleOpenRelateModal}
@@ -1245,13 +1742,50 @@ const AnalisisAlmuerzo = () => {
                                     className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white"
                                 />
                             </div>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowColumnMenu(!showColumnMenu)}
+                                    className="p-2 border rounded-xl bg-white hover:bg-slate-50 transition-all text-slate-500"
+                                    title="Configurar columnas"
+                                >
+                                    <Settings size={18} />
+                                </button>
+                                {showColumnMenu && (
+                                    <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                                        <div className="p-3 bg-slate-50 border-b font-bold text-slate-700 text-sm">
+                                            Columnas Visibles
+                                        </div>
+                                        <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+                                            {Object.keys(defaultColumns).map(col => (
+                                                <label key={col} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer text-xs font-medium text-slate-600">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={visibleColumns[col]} 
+                                                        onChange={() => toggleColumn(col)} 
+                                                        className="w-3.5 h-3.5 text-emerald-600 rounded border-slate-300"
+                                                    />
+                                                    {col.replace(/_/g, ' ')}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
                         <table className="min-w-full divide-y divide-slate-100 text-sm">
-                            <thead className="bg-slate-50/50">
+                            <thead className="bg-slate-50/90 backdrop-blur-sm sticky top-0 z-20 shadow-sm">
                                 <tr>
-                                    <th className="w-12 py-3 px-4 text-center select-none"></th>
+                                    <th className="w-12 py-3 px-4 text-center select-none">
+                                        <input 
+                                            type="checkbox"
+                                            checked={groupedCatalogItems.length > 0 && selectedCatalogIds.length === groupedCatalogItems.reduce((acc, g) => acc + 1 + g.variations.length, 0)}
+                                            onChange={handleToggleSelectAllCatalog}
+                                            className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                                            title="Seleccionar todos los visibles"
+                                        />
+                                    </th>
                                     <th 
                                         className="py-3 px-4 font-bold text-slate-500 text-left cursor-pointer hover:bg-slate-100 select-none transition-all"
                                         onClick={() => handleSortCatalog("NombreES")}
@@ -1260,30 +1794,51 @@ const AnalisisAlmuerzo = () => {
                                             Nombre del Almuerzo {getSortIcon("NombreES")}
                                         </div>
                                     </th>
-                                    <th 
-                                        className="py-3 px-4 font-bold text-slate-500 text-left cursor-pointer hover:bg-slate-100 select-none transition-all"
-                                        onClick={() => handleSortCatalog("protein")}
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            Proteína {getSortIcon("protein")}
-                                        </div>
-                                    </th>
-                                    <th 
-                                        className="py-3 px-4 font-bold text-slate-500 text-right cursor-pointer hover:bg-slate-100 select-none transition-all"
-                                        onClick={() => handleSortCatalog("Precio")}
-                                    >
-                                        <div className="flex items-center justify-end gap-1">
-                                            Precio Base {getSortIcon("Precio")}
-                                        </div>
-                                    </th>
-                                    <th 
-                                        className="py-3 px-4 font-bold text-slate-500 text-center cursor-pointer hover:bg-slate-100 select-none transition-all"
-                                        onClick={() => handleSortCatalog("Receta")}
-                                    >
-                                        <div className="flex items-center justify-center gap-1">
-                                            Estado Receta {getSortIcon("Receta")}
-                                        </div>
-                                    </th>
+                                    {visibleColumns.DescripcionES && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[200px]">Descripción</th>}
+                                    {visibleColumns.proteina && (
+                                        <th 
+                                            className="py-3 px-4 font-bold text-slate-500 text-left cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                            onClick={() => handleSortCatalog("protein")}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                Proteína {getSortIcon("protein")}
+                                            </div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.Precio && (
+                                        <th 
+                                            className="py-3 px-4 font-bold text-slate-500 text-right cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                            onClick={() => handleSortCatalog("Precio")}
+                                        >
+                                            <div className="flex items-center justify-end gap-1">
+                                                Precio {getSortIcon("Precio")}
+                                            </div>
+                                        </th>
+                                    )}
+                                    {visibleColumns.entrada_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Entrada</th>}
+                                    {visibleColumns.entrada_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Entrada (Desc)</th>}
+                                    {visibleColumns.proteina_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Proteína Principal</th>}
+                                    {visibleColumns.proteina_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Proteína (Desc)</th>}
+                                    {visibleColumns.proteina_opcion_2_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Opción 2</th>}
+                                    {visibleColumns.proteina_opcion_2_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Opción 2 (Desc)</th>}
+                                    {visibleColumns.carbohidrato_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Carbohidrato</th>}
+                                    {visibleColumns.carbohidrato_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Carbohidrato (Desc)</th>}
+                                    {visibleColumns.acompanante_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Acompañante</th>}
+                                    {visibleColumns.acompanante_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Acompañante (Desc)</th>}
+                                    {visibleColumns.ensalada_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Ensalada</th>}
+                                    {visibleColumns.ensalada_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Ensalada (Desc)</th>}
+                                    {visibleColumns.bebida_nombre && <th className="py-3 px-4 font-bold text-slate-500 text-left">Bebida</th>}
+                                    {visibleColumns.bebida_desc && <th className="py-3 px-4 font-bold text-slate-500 text-left min-w-[150px]">Bebida (Desc)</th>}
+                                    {visibleColumns.Receta && (
+                                        <th 
+                                            className="py-3 px-4 font-bold text-slate-500 text-center cursor-pointer hover:bg-slate-100 select-none transition-all"
+                                            onClick={() => handleSortCatalog("Receta")}
+                                        >
+                                            <div className="flex items-center justify-center gap-1">
+                                                Estado Receta {getSortIcon("Receta")}
+                                            </div>
+                                        </th>
+                                    )}
                                     <th className="py-3 px-4 font-bold text-slate-500 text-center select-none">Gestión / Enlaces</th>
                                 </tr>
                             </thead>
@@ -1293,18 +1848,34 @@ const AnalisisAlmuerzo = () => {
                                     const hasVariations = group.variations.length > 0;
                                     const expanded = isGroupExpanded(item._id);
                                     
-                                    const protein = getProteinType(item.NombreES);
+                                    const protein = getProteinType(item);
                                     const proteinColors = {
                                         POLLO: 'bg-sky-50 text-sky-700 border-sky-100',
                                         CERDO: 'bg-amber-50 text-amber-700 border-amber-100',
                                         RES: 'bg-red-50 text-red-700 border-red-100',
+                                        PESCADO: 'bg-violet-50 text-violet-700 border-violet-100',
+                                        VEGETARIANO: 'bg-lime-50 text-lime-700 border-lime-100',
                                         OTROS: 'bg-emerald-50 text-emerald-700 border-emerald-100'
                                     };
 
                                     return (
                                         <React.Fragment key={item._id || groupIndex}>
                                             {/* Fila del Plato Base */}
-                                            <tr className="hover:bg-slate-50/80 transition-colors font-medium">
+                                            <tr 
+                                                className={`transition-all duration-200 font-medium ${
+                                                    draggedItemId === item._id 
+                                                        ? 'opacity-40 bg-slate-200' 
+                                                        : dragOverId === item._id 
+                                                            ? 'bg-emerald-100 ring-2 ring-inset ring-emerald-500' 
+                                                            : 'hover:bg-slate-50/80'
+                                                }`}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, item, null)}
+                                                onDragEnd={handleDragEnd}
+                                                onDragOver={(e) => handleDragOverTable(e, item._id)}
+                                                onDragLeave={(e) => handleDragLeaveTable(e, item._id)}
+                                                onDrop={(e) => handleDropToLink(e, item._id)}
+                                            >
                                                 <td className="py-3.5 px-4 text-center">
                                                     <input 
                                                         type="checkbox"
@@ -1324,30 +1895,122 @@ const AnalisisAlmuerzo = () => {
                                                                 {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                                             </button>
                                                         )}
-                                                        <span className="font-semibold">{item.NombreES}</span>
+                                                        {showEdit ? (
+                                                            <div className="flex items-center gap-1 w-full relative group min-w-[150px]">
+                                                                <input 
+                                                                    type="text" 
+                                                                    className="w-full px-2 py-1 text-sm border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                    value={item.NombreES || ''}
+                                                                    onChange={(e) => handleChange(item._id, 'NombreES', e.target.value)}
+                                                                    onBlur={() => handleBlur(item._id)}
+                                                                />
+                                                                {hasVariations && (
+                                                                    <button 
+                                                                        onClick={() => handleFillDown(item, 'NombreES', group.variations)}
+                                                                        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded transition-all absolute -right-5 z-10 shadow-sm border border-blue-200"
+                                                                        title="Propagar a variaciones"
+                                                                    >
+                                                                        <ArrowDownToLine size={12} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="font-semibold">{item.NombreES}</span>
+                                                        )}
                                                         {hasVariations && (
-                                                            <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded-full">
+                                                            <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
                                                                 {group.variations.length} {group.variations.length === 1 ? 'hermano' : 'hermanos'}
                                                             </span>
                                                         )}
-                                                        <button 
-                                                            onClick={() => { setLunchToEdit(item); setIsLunchModalOpen(true); }}
-                                                            className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all"
-                                                            title="Editar nombre y componentes del menú"
-                                                        >
-                                                            <Pencil size={11} />
-                                                        </button>
+                                                        {!showEdit && (
+                                                            <button 
+                                                                onClick={() => { setLunchToEdit(item); setIsLunchModalOpen(true); }}
+                                                                className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all flex-shrink-0"
+                                                                title="Editar nombre y componentes del menú"
+                                                            >
+                                                                <Pencil size={11} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
-                                                <td className="py-3.5 px-4 text-left">
-                                                    <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${proteinColors[protein] || 'bg-slate-50'}`}>
-                                                        {protein}
-                                                    </span>
+                                                {visibleColumns.DescripcionES && <RenderEditableCell item={item} field="DescripcionES" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.proteina && (
+                                                    <td className="py-3.5 px-4 text-left">
+                                                    {showEdit ? (
+                                                        <div className="flex items-center gap-1 w-full relative group">
+                                                            <select
+                                                                className="w-full px-2 py-1 text-xs font-bold border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                value={protein}
+                                                                onChange={(e) => handleChange(item._id, 'proteina', e.target.value)}
+                                                                onBlur={() => handleBlur(item._id)}
+                                                            >
+                                                                <option value="POLLO">POLLO</option>
+                                                                <option value="CERDO">CERDO</option>
+                                                                <option value="RES">RES</option>
+                                                                <option value="PESCADO">PESCADO</option>
+                                                                <option value="VEGETARIANO">VEGETARIANO</option>
+                                                                <option value="OTROS">OTROS</option>
+                                                            </select>
+                                                            {hasVariations && (
+                                                                <button 
+                                                                    onClick={() => handleFillDown(item, 'proteina', group.variations)}
+                                                                    className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded transition-all absolute -right-5 z-10 shadow-sm border border-blue-200"
+                                                                    title="Propagar a variaciones"
+                                                                >
+                                                                    <ArrowDownToLine size={12} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${proteinColors[protein] || 'bg-slate-50'}`}>
+                                                            {protein}
+                                                        </span>
+                                                    )}
                                                 </td>
-                                                <td className="py-3.5 px-4 text-right font-bold text-slate-700">
-                                                    {parseFloat(item.Precio || 22000).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
+                                                )}
+                                                {visibleColumns.Precio && (
+                                                    <td className="py-3.5 px-4 text-right font-bold text-slate-700">
+                                                    {showEdit ? (
+                                                        <div className="flex items-center gap-1 w-full relative group">
+                                                            <input 
+                                                                type="number" 
+                                                                className="w-24 px-2 py-1 text-sm border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500 text-right"
+                                                                value={item.Precio || ''}
+                                                                onChange={(e) => handleChange(item._id, 'Precio', e.target.value)}
+                                                                onBlur={() => handleBlur(item._id)}
+                                                            />
+                                                            {hasVariations && (
+                                                                <button 
+                                                                    onClick={() => handleFillDown(item, 'Precio', group.variations)}
+                                                                    className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded transition-all absolute -right-5 z-10 shadow-sm border border-blue-200"
+                                                                    title="Propagar a variaciones"
+                                                                >
+                                                                    <ArrowDownToLine size={12} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        parseFloat(item.Precio || 22000).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+                                                    )}
                                                 </td>
-                                                <td className="py-3.5 px-4 text-center">
+                                                )}
+                                                {visibleColumns.entrada_nombre && <RenderEditableCell item={item} field="Comp_Lunch.entrada.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.entrada_desc && <RenderEditableCell item={item} field="Comp_Lunch.entrada.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.proteina_nombre && <RenderEditableCell item={item} field="Comp_Lunch.proteina.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.proteina_desc && <RenderEditableCell item={item} field="Comp_Lunch.proteina.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.proteina_opcion_2_nombre && <RenderEditableCell item={item} field="Comp_Lunch.proteina_opcion_2.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.proteina_opcion_2_desc && <RenderEditableCell item={item} field="Comp_Lunch.proteina_opcion_2.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.carbohidrato_nombre && <RenderEditableCell item={item} field="Comp_Lunch.carbohidrato.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.carbohidrato_desc && <RenderEditableCell item={item} field="Comp_Lunch.carbohidrato.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.acompanante_nombre && <RenderEditableCell item={item} field="Comp_Lunch.acompanante.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.acompanante_desc && <RenderEditableCell item={item} field="Comp_Lunch.acompanante.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.ensalada_nombre && <RenderEditableCell item={item} field="Comp_Lunch.ensalada.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.ensalada_desc && <RenderEditableCell item={item} field="Comp_Lunch.ensalada.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.bebida_nombre && <RenderEditableCell item={item} field="Comp_Lunch.bebida.nombre" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+                                                {visibleColumns.bebida_desc && <RenderEditableCell item={item} field="Comp_Lunch.bebida.descripcion" isBase={true} hasVariations={hasVariations} variations={group.variations} />}
+
+                                                {visibleColumns.Receta && (
+                                                    <td className="py-3.5 px-4 text-center">
                                                     {item.Receta ? (
                                                         <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                                             Vinculada
@@ -1358,15 +2021,27 @@ const AnalisisAlmuerzo = () => {
                                                         </span>
                                                     )}
                                                 </td>
+                                                )}
                                                 <td className="py-3.5 px-4 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
+                                                    <div className="flex items-center justify-center gap-2 relative group">
                                                         {item.Receta ? (
-                                                            <button 
-                                                                onClick={() => navigate(`/receta/${item.Receta}`)}
-                                                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-lg transition-all"
-                                                            >
-                                                                <BookOpen size={12} /> Receta
-                                                            </button>
+                                                            <div className="relative flex items-center">
+                                                                <button 
+                                                                    onClick={() => navigate(`/receta/${item.Receta}`)}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-lg transition-all"
+                                                                >
+                                                                    <BookOpen size={12} /> Receta
+                                                                </button>
+                                                                {hasVariations && (
+                                                                    <button 
+                                                                        onClick={() => handleFillDown(item, 'Receta', group.variations)}
+                                                                        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded transition-all absolute -left-6 z-10 shadow-sm border border-blue-200"
+                                                                        title="Propagar receta a variaciones"
+                                                                    >
+                                                                        <ArrowDownToLine size={12} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         ) : (
                                                             <button
                                                                 onClick={() => handleCreateRecipe(item._id, item.NombreES)}
@@ -1387,9 +2062,24 @@ const AnalisisAlmuerzo = () => {
 
                                             {/* Filas de Variaciones (Hermanos) */}
                                             {expanded && group.variations.map((v, vIndex) => {
-                                                const vProtein = getProteinType(v.NombreES);
+                                                const vProtein = getProteinType(v);
                                                 return (
-                                                    <tr key={v._id || vIndex} className="bg-slate-50/50 hover:bg-slate-100/70 transition-colors border-l-4 border-l-emerald-500/30">
+                                                    <tr 
+                                                        key={v._id || vIndex} 
+                                                        className={`transition-all duration-200 border-l-4 ${
+                                                            draggedItemId === v._id 
+                                                                ? 'opacity-40 bg-slate-200 border-l-slate-400' 
+                                                                : dragOverId === v._id 
+                                                                    ? 'bg-emerald-100 ring-2 ring-inset ring-emerald-500 border-l-emerald-600' 
+                                                                    : 'bg-slate-50/50 hover:bg-slate-100/70 border-l-emerald-500/30'
+                                                        }`}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, v, item._id)}
+                                                        onDragEnd={handleDragEnd}
+                                                        onDragOver={(e) => handleDragOverTable(e, v._id)}
+                                                        onDragLeave={(e) => handleDragLeaveTable(e, v._id)}
+                                                        onDrop={(e) => handleDropToLink(e, item._id)}
+                                                    >
                                                         <td className="py-2.5 px-4 text-center">
                                                             <input 
                                                                 type="checkbox"
@@ -1401,28 +2091,87 @@ const AnalisisAlmuerzo = () => {
                                                         <td className="py-2.5 px-4 text-left pl-10 text-slate-700">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-slate-400 font-bold text-xs select-none">↳</span>
-                                                                <span className="italic">{v.NombreES}</span>
-                                                                <span className="text-[9px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                                                {showEdit ? (
+                                                                    <input 
+                                                                        type="text" 
+                                                                        className="w-full px-2 py-1 text-sm border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500 italic"
+                                                                        value={v.NombreES || ''}
+                                                                        onChange={(e) => handleChange(v._id, 'NombreES', e.target.value)}
+                                                                        onBlur={() => handleBlur(v._id)}
+                                                                    />
+                                                                ) : (
+                                                                    <span className="italic">{v.NombreES}</span>
+                                                                )}
+                                                                <span className="text-[9px] bg-emerald-50 border border-emerald-100 text-emerald-600 font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap">
                                                                     variación
                                                                 </span>
-                                                                <button 
-                                                                    onClick={() => { setLunchToEdit(v); setIsLunchModalOpen(true); }}
-                                                                    className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all"
-                                                                    title="Editar nombre y componentes de la variación"
-                                                                >
-                                                                    <Pencil size={11} />
-                                                                </button>
+                                                                {!showEdit && (
+                                                                    <button 
+                                                                        onClick={() => { setLunchToEdit(v); setIsLunchModalOpen(true); }}
+                                                                        className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-all flex-shrink-0"
+                                                                        title="Editar nombre y componentes de la variación"
+                                                                    >
+                                                                        <Pencil size={11} />
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </td>
-                                                        <td className="py-2.5 px-4 text-left">
-                                                            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full border ${proteinColors[vProtein] || 'bg-slate-50'}`}>
-                                                                {vProtein}
-                                                            </span>
+                                                        {visibleColumns.DescripcionES && <RenderEditableCell item={v} field="DescripcionES" isBase={false} />}
+                                                        {visibleColumns.proteina && (
+                                                            <td className="py-2.5 px-4 text-left">
+                                                                {showEdit ? (
+                                                                    <select
+                                                                        className="w-full px-2 py-1 text-[11px] font-bold border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                        value={vProtein}
+                                                                        onChange={(e) => handleChange(v._id, 'proteina', e.target.value)}
+                                                                        onBlur={() => handleBlur(v._id)}
+                                                                    >
+                                                                        <option value="POLLO">POLLO</option>
+                                                                        <option value="CERDO">CERDO</option>
+                                                                        <option value="RES">RES</option>
+                                                                        <option value="PESCADO">PESCADO</option>
+                                                                        <option value="VEGETARIANO">VEGETARIANO</option>
+                                                                        <option value="OTROS">OTROS</option>
+                                                                    </select>
+                                                                ) : (
+                                                                    <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full border ${proteinColors[vProtein] || 'bg-slate-50'}`}>
+                                                                        {vProtein}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.Precio && (
+                                                            <td className="py-2.5 px-4 text-right font-medium text-slate-600">
+                                                            {showEdit ? (
+                                                                <input 
+                                                                    type="number" 
+                                                                    className="w-24 px-2 py-1 text-sm border rounded bg-white shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-500 text-right"
+                                                                    value={v.Precio || ''}
+                                                                    onChange={(e) => handleChange(v._id, 'Precio', e.target.value)}
+                                                                    onBlur={() => handleBlur(v._id)}
+                                                                />
+                                                            ) : (
+                                                                parseFloat(v.Precio || 22000).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+                                                            )}
                                                         </td>
-                                                        <td className="py-2.5 px-4 text-right font-medium text-slate-600">
-                                                            {parseFloat(v.Precio || 22000).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
-                                                        </td>
-                                                        <td className="py-2.5 px-4 text-center">
+                                                        )}
+                                                        {visibleColumns.entrada_nombre && <RenderEditableCell item={v} field="Comp_Lunch.entrada.nombre" isBase={false} />}
+                                                        {visibleColumns.entrada_desc && <RenderEditableCell item={v} field="Comp_Lunch.entrada.descripcion" isBase={false} />}
+                                                        {visibleColumns.proteina_nombre && <RenderEditableCell item={v} field="Comp_Lunch.proteina.nombre" isBase={false} />}
+                                                        {visibleColumns.proteina_desc && <RenderEditableCell item={v} field="Comp_Lunch.proteina.descripcion" isBase={false} />}
+                                                        {visibleColumns.proteina_opcion_2_nombre && <RenderEditableCell item={v} field="Comp_Lunch.proteina_opcion_2.nombre" isBase={false} />}
+                                                        {visibleColumns.proteina_opcion_2_desc && <RenderEditableCell item={v} field="Comp_Lunch.proteina_opcion_2.descripcion" isBase={false} />}
+                                                        {visibleColumns.carbohidrato_nombre && <RenderEditableCell item={v} field="Comp_Lunch.carbohidrato.nombre" isBase={false} />}
+                                                        {visibleColumns.carbohidrato_desc && <RenderEditableCell item={v} field="Comp_Lunch.carbohidrato.descripcion" isBase={false} />}
+                                                        {visibleColumns.acompanante_nombre && <RenderEditableCell item={v} field="Comp_Lunch.acompanante.nombre" isBase={false} />}
+                                                        {visibleColumns.acompanante_desc && <RenderEditableCell item={v} field="Comp_Lunch.acompanante.descripcion" isBase={false} />}
+                                                        {visibleColumns.ensalada_nombre && <RenderEditableCell item={v} field="Comp_Lunch.ensalada.nombre" isBase={false} />}
+                                                        {visibleColumns.ensalada_desc && <RenderEditableCell item={v} field="Comp_Lunch.ensalada.descripcion" isBase={false} />}
+                                                        {visibleColumns.bebida_nombre && <RenderEditableCell item={v} field="Comp_Lunch.bebida.nombre" isBase={false} />}
+                                                        {visibleColumns.bebida_desc && <RenderEditableCell item={v} field="Comp_Lunch.bebida.descripcion" isBase={false} />}
+                                                        
+                                                        {visibleColumns.Receta && (
+                                                            <td className="py-2.5 px-4 text-center">
                                                             {v.Receta ? (
                                                                 <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150">
                                                                     Vinculada
@@ -1433,6 +2182,7 @@ const AnalisisAlmuerzo = () => {
                                                                 </span>
                                                             )}
                                                         </td>
+                                                        )}
                                                         <td className="py-2.5 px-4 text-center">
                                                             <div className="flex items-center justify-center gap-2">
                                                                 {v.Receta ? (
@@ -1529,6 +2279,23 @@ const AnalisisAlmuerzo = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Dropzone for Unlink (Floating) */}
+            {draggedItemId && draggedItemParentId && (
+                <div 
+                    className={`fixed bottom-10 left-1/2 transform -translate-x-1/2 px-10 py-4 rounded-2xl shadow-2xl font-bold z-50 text-center transition-all duration-300 cursor-pointer flex items-center gap-3 text-lg ${
+                        dragOverId === 'UNLINK_ZONE' 
+                            ? 'bg-red-500 text-white scale-110 shadow-red-500/50' 
+                            : 'bg-red-100 border-2 border-dashed border-red-500 text-red-700 hover:bg-red-200 animate-bounce'
+                    }`}
+                    onDragOver={(e) => handleDragOverTable(e, 'UNLINK_ZONE')}
+                    onDragLeave={(e) => handleDragLeaveTable(e, 'UNLINK_ZONE')}
+                    onDrop={handleDropToUnlink}
+                >
+                    <span className={dragOverId === 'UNLINK_ZONE' ? 'animate-pulse' : ''}>🗑️</span>
+                    <span>Suelta aquí para DESVINCULAR de su grupo</span>
                 </div>
             )}
         </div>

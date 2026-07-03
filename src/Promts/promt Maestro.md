@@ -49,6 +49,7 @@ Usa este esquema (basado en `Recetas_rows.csv`):
 {
   "legacyName": "Nombre de la Receta",
   "emplatado": "Descripción del recipiente y presentación final",
+  "fuentes": ["url1", "url2"],
   "rendimiento": "{\"porcion\":1,\"cantidad\":<CANTIDAD_TOTAL>,\"unidades\":\"<UNIDAD>\"}",
   "nota1": "Nota técnica o tip (si aplica)",
   "nota2": "...",
@@ -75,6 +76,7 @@ Usa este esquema (basado en `Recetas Produccion_rows.csv`):
 ```json
 {
   "legacyName": "Nombre de la Producción",
+  "fuentes": ["url1", "url2"],
   "rendimiento": "{\"porcion\":1,\"cantidad\":<CANTIDAD_TOTAL>,\"unidades\":\"<UNIDAD>\"}",
   "proces1": "Texto del paso 1...",
   "proces2": "Texto del paso 2...",

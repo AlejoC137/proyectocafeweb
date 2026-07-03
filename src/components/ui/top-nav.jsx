@@ -112,6 +112,7 @@ export default function TopNav() {
     { label: "Inventario", path: "/Inventario" },
     { label: "Recetas", path: "/Recetas" },
     { label: "Agenda Produccion", path: "/CalendarioProduccio" },
+    { label: "Análisis Almuerzos", path: "/AnalisisAlmuerzo" },
     { label: "Menu Print", path: "/MenuPrint" },
     { label: "Gastos", path: "/Gastos" },
     { label: "Modelos", path: "/Model" },

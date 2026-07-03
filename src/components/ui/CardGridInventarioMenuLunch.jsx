@@ -118,6 +118,7 @@ export const LunchModal = ({ isOpen, onClose, onSave, productToEdit, initialDate
                         onMenuChange={setCompLunchData}
                         availableLunches={availableLunches}
                         currentProductId={productToEdit?._id}
+                        nombreES={nombreES}
                     />
                 </div>
                 <div className="flex justify-end gap-4 p-4 border-t bg-gray-50">

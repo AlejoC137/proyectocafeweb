@@ -14,6 +14,7 @@ const categorias = [
 const initialState = {
   fechasSeleccionadas: [], // Nuevo arreglo para fechas múltiples
   fecha: { dia: "", fecha: "" }, // Mantener retrocompatibilidad por ahora
+  proteina_clasificacion: "", // POLLO, CERDO, RES, OTROS
   entrada: { nombre: "", descripcion: "" },
   proteina: { nombre: "", descripcion: "" },
   proteina_opcion_2: { nombre: "", descripcion: "" },
@@ -25,7 +26,7 @@ const initialState = {
   parentId: ""
 };
 
-function FormularioMenuAlmuerzo({ onMenuChange, initialData, availableLunches = [], currentProductId = null }) {
+function FormularioMenuAlmuerzo({ onMenuChange, initialData, availableLunches = [], currentProductId = null, nombreES = "" }) {
   
   const [form, setForm] = useState(() => {
     let loadedData = initialData ? { ...initialData } : { ...initialState };
@@ -116,6 +117,43 @@ function FormularioMenuAlmuerzo({ onMenuChange, initialData, availableLunches = 
                </div>
              </div>
           )}
+        </div>
+
+        {/* Clasificación de Proteína */}
+        <div className="bg-gray-50 rounded-md p-4 border">
+          <h3 className="text-lg font-semibold mb-1 text-gray-600">Clasificación Principal</h3>
+          <p className="text-xs text-gray-500 mb-3">Define la categoría de proteína para reportes y análisis (POLLO, CERDO, RES, OTROS).</p>
+          <div className="flex flex-col md:flex-row items-end gap-4">
+            <label className="flex flex-col font-medium text-gray-700 flex-grow w-full md:w-auto">
+              Proteína Principal:
+              <select
+                className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
+                value={form.proteina_clasificacion || ""}
+                onChange={(e) => setForm(prev => ({ ...prev, proteina_clasificacion: e.target.value }))}
+              >
+                <option value="">-- Seleccionar / Otro --</option>
+                <option value="POLLO">POLLO</option>
+                <option value="CERDO">CERDO</option>
+                <option value="RES">RES</option>
+                <option value="OTROS">OTROS</option>
+              </select>
+            </label>
+            <button
+              onClick={() => {
+                const n = (nombreES || "").toUpperCase();
+                let tipo = 'OTROS';
+                if (n.includes('POLLO') || n.includes('CHICKEN') || n.includes('MILANESA')) tipo = 'POLLO';
+                else if (n.includes('CERDO') || n.includes('COSTILLA') || n.includes('CAÑON') || n.includes('CAÑÓN') || n.includes('LECHONA') || n.includes('TOCINETA')) tipo = 'CERDO';
+                else if (n.includes('RES') || n.includes('CARNE') || n.includes('GOULASH') || n.includes('LOMO') || n.includes('BIFE') || n.includes('ASADO') || n.includes('PECHO') || n.includes('ALBONDIGAS') || n.includes('ALBÓNDIGAS')) tipo = 'RES';
+                
+                setForm(prev => ({ ...prev, proteina_clasificacion: tipo }));
+              }}
+              type="button"
+              className="w-full md:w-auto bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300 font-bold py-2 px-4 rounded transition-colors h-[42px]"
+            >
+              Inferir del Nombre
+            </button>
+          </div>
         </div>
 
         {/* Relación de Platos Hermanos / Variación */}

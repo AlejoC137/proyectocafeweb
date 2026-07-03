@@ -29,9 +29,9 @@ const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, on
           onChange={(e) => onNameChange(index, e.target.value, source)}
           className="flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-400 min-w-0" />
         {item.item_Id && onNavigate && (
-          <button onClick={() => onNavigate(item.item_Id)} title="Ver ítem"
+          <button onClick={() => onNavigate(item.item_Id)} title={source === "Produccion" ? "Ver Receta" : "Ver ítem"}
             className="flex-shrink-0 w-7 h-7 bg-blue-50 hover:bg-blue-100 rounded text-sm flex items-center justify-center transition-colors">
-            📦
+            {source === "Produccion" ? "📕" : "📦"}
           </button>
         )}
         <button onClick={() => onRemove(index, source)}
@@ -164,8 +164,69 @@ const EmplatadoEditor = ({ value, onSave, isEditable, placeholder, disabled }) =
   return (
     <div className="group relative border border-transparent hover:border-slate-200 rounded-lg p-1 transition-all">
       {isJson
-        ? <div className="space-y-1">{steps.map((s, i) => <div key={i} className="flex gap-2 text-xs"><span className="font-bold text-slate-400 min-w-[16px]">{i + 1}.</span><span>{s.proceso}</span></div>)}{steps.length === 0 && <span className="text-slate-400 italic text-xs">Sin pasos.</span>}</div>
-        : <div className="text-xs whitespace-pre-wrap">{rawText || <span className="text-slate-400 italic">{placeholder}</span>}</div>}
+        ? <div className="space-y-1">{steps.map((s, i) => <div key={i} className="flex gap-2 text-xs"><span className="font-bold text-slate-400 min-w-[16px]">{i + 1}.</span><span className="text-slate-700">{s.proceso}</span></div>)}{steps.length === 0 && <span className="text-slate-400 italic text-xs">Sin pasos.</span>}</div>
+        : <div className="text-xs whitespace-pre-wrap text-slate-700">{rawText || <span className="text-slate-400 italic">{placeholder}</span>}</div>}
+      <button onClick={() => setIsEditing(true)}
+        className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-200 shadow-sm rounded p-0.5 text-[10px]">✏️</button>
+    </div>
+  );
+};
+
+// ─── FuentesEditor ───────────────────────────────────────────────────────────
+const FuentesEditor = ({ fuentes = [], onSave, isEditable, disabled }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [links, setLinks] = useState([]);
+
+  useEffect(() => {
+    setLinks(Array.isArray(fuentes) ? fuentes : []);
+  }, [fuentes, isEditing]);
+
+  const handleSave = () => { onSave(links); setIsEditing(false); };
+  const handleAdd = () => setLinks([...links, ""]);
+  const handleUpdate = (i, v) => { const l = [...links]; l[i] = v; setLinks(l); };
+  const handleRemove = (i) => setLinks(links.filter((_, idx) => idx !== i));
+
+  if (!isEditable) {
+    return (
+      <div className="space-y-1">
+        {links.map((link, i) => (
+          <div key={i} className="flex gap-2 text-xs items-center overflow-hidden">
+            <span className="font-bold text-slate-400 min-w-[16px]">🔗</span>
+            <a href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline truncate block w-full" title={link}>{link}</a>
+          </div>
+        ))}
+        {links.length === 0 && <span className="text-slate-400 italic text-xs">Sin fuentes.</span>}
+      </div>
+    );
+  }
+
+  if (isEditing) {
+    return (
+      <div className="space-y-2 border border-slate-200 p-2 rounded-lg bg-white mt-1">
+        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-slate-500 uppercase">Editando Fuentes</span><button onClick={() => setIsEditing(false)} className="text-red-500 text-xs">✕</button></div>
+        {links.map((link, i) => (
+          <div key={i} className="flex gap-1.5 items-center">
+            <input type="text" className="flex-1 p-1.5 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-400" value={link} onChange={(e) => handleUpdate(i, e.target.value)} placeholder="https://..." />
+            <button onClick={() => handleRemove(i)} className="text-red-400 hover:text-red-600 p-1 flex-shrink-0">🗑</button>
+          </div>
+        ))}
+        <button onClick={handleAdd} className="w-full text-xs text-slate-500 border border-dashed border-slate-300 rounded py-1 hover:bg-slate-50">+ Agregar Link</button>
+        <div className="flex justify-end"><Button size="sm" onClick={handleSave} disabled={disabled} className="bg-green-600 text-white hover:bg-green-700 h-7 text-xs">Guardar</Button></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="group relative border border-transparent hover:border-slate-200 rounded-lg p-1 transition-all">
+      <div className="space-y-1">
+        {links.map((link, i) => (
+          <div key={i} className="flex gap-2 text-xs items-center overflow-hidden">
+            <span className="font-bold text-slate-400 min-w-[16px]">🔗</span>
+            <span className="text-slate-700 truncate block w-full">{link}</span>
+          </div>
+        ))}
+        {links.length === 0 && <span className="text-slate-400 italic text-xs">Sin fuentes.</span>}
+      </div>
       <button onClick={() => setIsEditing(true)}
         className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-200 shadow-sm rounded p-0.5 text-[10px]">✏️</button>
     </div>
@@ -865,7 +926,14 @@ function RecetaModal({ item, onClose }) {
                         onQuantityChange={handleQuantityChange} onRemove={handleRemoveIngredient}
                         onSync={handleSyncIngredient} onMove={handleMoveItem}
                         isFirst={i === 0} isLast={i === editableProduccion.length - 1}
-                        onNavigate={(itemId) => navigate(`/item/${itemId}`)} />
+                        onNavigate={(itemId) => {
+                          const itemData = buscarPorId(itemId);
+                          if (itemData && itemData.Receta) {
+                            navigate(`/receta/${itemData.Receta}`);
+                          } else {
+                            navigate(`/item/${itemId}`);
+                          }
+                        }} />
                     ))}
                     <button onClick={() => addIngredient("Produccion")}
                       className="w-full py-1.5 text-xs text-blue-600 border border-dashed border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1">
@@ -986,6 +1054,19 @@ function RecetaModal({ item, onClose }) {
                       </div>
                     )
                   )}
+                </div>
+              </div>
+
+              {/* Fuentes */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3 mt-4">Fuentes</h3>
+                <div className="pl-2">
+                  <FuentesEditor 
+                    fuentes={receta.fuentes || []} 
+                    onSave={(v) => updateField({ fuentes: v })} 
+                    isEditable={permanentEditMode} 
+                    disabled={isUpdating} 
+                  />
                 </div>
               </div>
             </div>
