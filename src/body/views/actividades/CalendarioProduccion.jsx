@@ -18,8 +18,14 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  UtensilsCrossed,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LunchModal } from "@/components/ui/CardGridInventarioMenuLunch";
+import MenuLunchImportModal from "../actualizarPrecioUnitario/MenuLunchImportModal";
+import { crearItem } from "@/redux/actions-Proveedores";
+import { TARDEO } from "@/redux/actions-types";
 
 function CalendarioProduccion() {
   const dispatch = useDispatch();
@@ -40,6 +46,30 @@ function CalendarioProduccion() {
 
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [creatorInitialDate, setCreatorInitialDate] = useState(null);
+
+  const [isLunchModalOpen, setIsLunchModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  const handleSaveLunch = async (nombreES, compLunchData, productId) => {
+      const finalCompLunchData = compLunchData ? JSON.stringify(compLunchData) : null;
+      const newProduct = {
+          NombreES: nombreES,
+          SUB_GRUPO: TARDEO_ALMUERZO,
+          Comp_Lunch: finalCompLunchData,
+          Precio: 22000,
+          GRUPO: TARDEO,
+          Estado: "Activo",
+      };
+      try {
+          await dispatch(crearItem(newProduct, MENU));
+          await dispatch(getAllFromTable(MENU));
+          alert('✅ ¡Almuerzo creado con éxito!');
+          setIsLunchModalOpen(false);
+      } catch (error) {
+          alert('❌ Error al crear el almuerzo.');
+          console.error(error);
+      }
+  };
 
   // Cargar eventos al montar el componente
   useEffect(() => {
@@ -265,9 +295,18 @@ function CalendarioProduccion() {
           proteina = compLunchData?.proteina?.nombre || 'N/A';
       } catch (error) {}
       return (
-        <div key={`alm_${alm._id}`} className="rounded-md px-2 py-1 border-l-[3px] bg-orange-50/80 border-orange-400 hover:bg-orange-100 transition-colors shadow-sm mb-1">
+        <div 
+          key={`alm_${alm._id}`} 
+          className="rounded-md px-2 py-1 border-l-[3px] bg-orange-50/80 border-orange-400 hover:bg-orange-100 transition-colors shadow-sm mb-1 group relative cursor-pointer"
+          onClick={(e) => { e.stopPropagation(); navigate(`/receta/${alm.Receta}`); }}
+        >
           <p className="truncate font-semibold text-[10px] text-slate-800 leading-tight">🍲 {alm.NombreES}</p>
-          <p className="truncate text-[9px] text-slate-500 leading-tight">🥩 {proteina}</p>
+          <div className="flex items-center justify-between mt-0.5">
+            <p className="truncate text-[9px] text-slate-500 leading-tight">🥩 {proteina}</p>
+            <button className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600">
+              <Eye size={10} />
+            </button>
+          </div>
         </div>
       );
     }
@@ -308,9 +347,16 @@ function CalendarioProduccion() {
           proteina = compLunchData?.proteina?.nombre || 'N/A';
       } catch (error) {}
       return (
-        <div key={`alm_${alm._id}_left`} className="rounded-lg p-3 border-l-4 bg-orange-50 border-orange-400 shadow-sm flex flex-col gap-1">
+        <div 
+          key={`alm_${alm._id}_left`} 
+          className="rounded-lg p-3 border-l-4 bg-orange-50 hover:bg-orange-100 cursor-pointer border-orange-400 shadow-sm flex flex-col gap-1 transition-all"
+          onClick={() => navigate(`/receta/${alm.Receta}`)}
+        >
           <div className="flex items-start justify-between">
             <p className="font-bold text-xs text-slate-800">🍲 Almuerzo: {alm.NombreES}</p>
+            <button className="text-slate-400 hover:text-blue-600 p-1">
+              <Eye size={12} />
+            </button>
           </div>
           <p className="text-[11px] font-medium text-slate-600">🥩 {proteina}</p>
           <span className="inline-block mt-1 bg-orange-100 text-orange-700 text-[9px] font-bold px-2 py-0.5 rounded-full w-max uppercase tracking-wider">Manager</span>
@@ -410,6 +456,15 @@ function CalendarioProduccion() {
             <button onClick={() => setViewMode("calendar")} className={`px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold transition-all ${viewMode === "calendar" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Mes</button>
             <button onClick={() => setViewMode("week")} className={`px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold transition-all ${viewMode === "week" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Semana</button>
             <button onClick={() => setViewMode("table")} className={`px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold transition-all ${viewMode === "table" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Tabla</button>
+          </div>
+
+          <div className="flex items-center gap-1 ml-2 pl-2 border-l border-slate-200">
+            <button onClick={() => setIsImportModalOpen(true)} className="flex items-center gap-1.5 px-3 h-8 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Importar menú desde JSON usando IA">
+              <Sparkles size={14} /> Importar JSON
+            </button>
+            <button onClick={() => setIsLunchModalOpen(true)} className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Crear nuevo Almuerzo">
+              <UtensilsCrossed size={14} /> Nuevo Almuerzo
+            </button>
           </div>
 
           <Button size="sm" onClick={() => handleCreateComanda()} className="h-8 ml-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm text-xs font-bold gap-1 border-0">
@@ -523,8 +578,7 @@ function CalendarioProduccion() {
                    >
                      <div className="flex-1 overflow-y-auto p-1.5 no-scrollbar space-y-1">
                        {day.events.map((event) => (
-                          // Variante un poco más grande del renderEventCard para la semana
-                          <div key={`${event.type}_${event.item._id}_wk`} className={`rounded-md p-1.5 border-l-[3px] shadow-sm flex flex-col gap-0.5 ${event.type === 'almuerzo' ? 'bg-orange-50 border-orange-400' : (event.item.Terminado ? 'bg-emerald-50 border-emerald-400' : 'bg-blue-50 border-blue-400')}`} onClick={(e) => { e.stopPropagation(); if (event.type === 'Comanda') handleViewComanda(event.item); }}>
+                          <div key={`${event.type}_${event.item._id}_wk`} className={`rounded-md p-1.5 border-l-[3px] shadow-sm flex flex-col gap-0.5 cursor-pointer hover:opacity-80 transition-opacity ${event.type === 'almuerzo' ? 'bg-orange-50 border-orange-400 hover:bg-orange-100' : (event.item.Terminado ? 'bg-emerald-50 border-emerald-400 hover:bg-emerald-100' : 'bg-blue-50 border-blue-400 hover:bg-blue-100')}`} onClick={(e) => { e.stopPropagation(); if (event.type === 'Comanda') { handleViewComanda(event.item); } else if (event.type === 'almuerzo') { navigate(`/receta/${event.item.Receta}`); } }}>
                             <p className="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2">
                               {event.type === 'almuerzo' ? `🍲 ${event.item.NombreES}` : event.item.Tittle}
                             </p>
@@ -556,7 +610,7 @@ function CalendarioProduccion() {
                        const isAlmuerzo = event.type === 'almuerzo';
                        const item = event.item;
                        return (
-                         <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => !isAlmuerzo && handleViewComanda(item)}>
+                         <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { if (isAlmuerzo) { navigate(`/receta/${item.Receta}`); } else { handleViewComanda(item); } }}>
                            <td className="p-3 font-semibold text-slate-800">{isAlmuerzo ? `🍲 ${item.NombreES}` : (item.Tittle || "Sin título")}</td>
                            <td className="p-3 font-medium text-slate-600">{event.dateKey}</td>
                            <td className="p-3 text-slate-500">{isAlmuerzo ? "Almuerzo" : (item.Categoria || "-")}</td>
@@ -585,6 +639,19 @@ function CalendarioProduccion() {
           )}
         </DialogContent>
       </Dialog>
+
+      <LunchModal
+          isOpen={isLunchModalOpen}
+          onClose={() => setIsLunchModalOpen(false)}
+          onSave={handleSaveLunch}
+          productToEdit={null}
+      />
+      {isImportModalOpen && (
+          <MenuLunchImportModal
+              onClose={() => setIsImportModalOpen(false)}
+              onSuccess={() => dispatch(getAllFromTable(MENU))}
+          />
+      )}
     </div>
   );
 }

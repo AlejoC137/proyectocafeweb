@@ -37,7 +37,7 @@ const ViewToggle = ({ viewMode, onViewModeChange }) => {
 };
 
 // --- Modal Unificado para Crear y Editar Almuerzos ---
-const LunchModal = ({ isOpen, onClose, onSave, productToEdit }) => {
+export const LunchModal = ({ isOpen, onClose, onSave, productToEdit }) => {
     const [nombreES, setNombreES] = useState('');
     const [compLunchData, setCompLunchData] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
