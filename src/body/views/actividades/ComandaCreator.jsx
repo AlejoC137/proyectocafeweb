@@ -7,7 +7,8 @@ import { STAFF, PROCEDE, AREAS, PRODUCCION } from "../../../redux/actions-types"
 import { Input } from "@/components/ui/input";
 import { crearProcedimiento } from "../../../redux/actions-Procedimientos";
 import { crearComanda } from "../../../redux/actions-Comanda";
-import { X, Plus } from "lucide-react";
+import { X, Plus, CalendarDays } from "lucide-react";
+import MultiDatePicker from "../../../components/ui/MultiDatePicker";
 
 function ComandaCreator({ initialFecha, isModal, onClose }) {
   const dispatch = useDispatch();
@@ -408,46 +409,33 @@ function ComandaCreator({ initialFecha, isModal, onClose }) {
                 </div>
 
                 {/* Lista de fechas */}
-                {formData.Dates.date_repiting.length > 0 && (
+                {formData.Dates.date_repiting.length > 0 && recurrence.frequency !== "none" && (
                   <div className="space-y-3 mb-2">
                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                       Fechas programadas ({formData.Dates.date_repiting.length})
                     </p>
-                    {formData.Dates.date_repiting.map((dateStr, index) => (
-                      <div key={index} className="flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <input
-                          type="date"
-                          readOnly={recurrence.frequency !== "none"}
-                          className={`flex-1 px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-slate-700 ${
-                            recurrence.frequency !== "none" ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"
-                          }`}
-                          value={dateStr.split("T")[0]}
-                          onChange={(e) => handleRepitingDateChange(index, e.target.value)}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={recurrence.frequency !== "none"}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full h-10 w-10 shrink-0 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-                          onClick={() => handleRemoveDate(index)}
-                        >
-                          <X size={18} />
-                        </Button>
-                      </div>
-                    ))}
+                    <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                      {formData.Dates.date_repiting.map((dateStr, index) => (
+                        <span key={index} className="px-2 py-1 bg-white text-slate-600 text-xs rounded-md shadow-sm border border-slate-200">
+                          {dateStr.split("T")[0]}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
                 {recurrence.frequency === "none" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-4 border-dashed border-2 border-slate-300 text-slate-600 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50/50 w-full rounded-xl transition-all duration-200"
-                    onClick={handleAddDate}
-                  >
-                    <Plus size={16} className="mr-2" /> Añadir Fecha Manual
-                  </Button>
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <CalendarDays size={14} /> Seleccionar fechas manualmente
+                    </p>
+                    <div className="flex justify-center bg-slate-50 p-4 border border-slate-200 rounded-xl">
+                      <MultiDatePicker 
+                        selectedDates={formData.Dates.date_repiting.map(d => typeof d === 'string' ? d.split("T")[0] : d)} 
+                        onChange={(dates) => setFormData(prev => ({ ...prev, Dates: { ...prev.Dates, date_repiting: dates } }))}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

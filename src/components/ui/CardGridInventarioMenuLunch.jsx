@@ -286,21 +286,33 @@ export function CardGridInventarioMenuLunch({ products, showEdit }) {
     };
 
     const handleSaveLunch = async (nombreES, compLunchData, productId) => {
-        const finalCompLunchData = compLunchData ? JSON.stringify(compLunchData) : null;
-
         if (modalState.mode === 'create') {
-            const newProduct = {
-                NombreES: nombreES,
-                SUB_GRUPO: TARDEO_ALMUERZO,
-                Comp_Lunch: finalCompLunchData,
-                Precio: 22000,
-                GRUPO: TARDEO,
-                Estado: "Activo",
-            };
+            const fechas = compLunchData?.fechasSeleccionadas?.length > 0 
+                ? compLunchData.fechasSeleccionadas 
+                : [compLunchData?.fecha?.fecha || new Date().toISOString().split('T')[0]];
+
             try {
-                await dispatch(crearItem(newProduct, MENU));
+                for (const fechaStr of fechas) {
+                    const diaSemana = new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' });
+                    const compParaFecha = {
+                        ...compLunchData,
+                        fechasSeleccionadas: [fechaStr],
+                        fecha: { fecha: fechaStr, dia: diaSemana }
+                    };
+                    const finalCompLunchData = JSON.stringify(compParaFecha);
+                    
+                    const newProduct = {
+                        NombreES: nombreES,
+                        SUB_GRUPO: TARDEO_ALMUERZO,
+                        Comp_Lunch: finalCompLunchData,
+                        Precio: 22000,
+                        GRUPO: TARDEO,
+                        Estado: "Activo",
+                    };
+                    await dispatch(crearItem(newProduct, MENU));
+                }
                 await dispatch(getAllFromTable(MENU));
-                alert('✅ ¡Almuerzo creado con éxito!');
+                alert(`✅ ¡Almuerzo(s) creado(s) con éxito! (${fechas.length} fechas)`);
                 handleCloseModal();
             } catch (error) {
                 alert('❌ Error al crear el almuerzo.');
@@ -308,6 +320,16 @@ export function CardGridInventarioMenuLunch({ products, showEdit }) {
                 throw error;
             }
         } else if (modalState.mode === 'edit') {
+            // En modo edición solo actualizamos la primera fecha seleccionada para evitar duplicar/romper IDs
+            const fechaStr = compLunchData?.fechasSeleccionadas?.[0] || compLunchData?.fecha?.fecha;
+            const diaSemana = fechaStr ? new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' }) : '';
+            const compParaFecha = {
+                ...compLunchData,
+                fechasSeleccionadas: fechaStr ? [fechaStr] : [],
+                fecha: { fecha: fechaStr, dia: diaSemana }
+            };
+            const finalCompLunchData = JSON.stringify(compParaFecha);
+
             const updatedData = {
                 NombreES: nombreES,
                 Comp_Lunch: finalCompLunchData,

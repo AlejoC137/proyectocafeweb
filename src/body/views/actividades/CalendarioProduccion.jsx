@@ -52,9 +52,17 @@ function CalendarioProduccion() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleSaveLunch = async (nombreES, compLunchData, productId) => {
-      const finalCompLunchData = compLunchData ? JSON.stringify(compLunchData) : null;
       try {
           if (productId) {
+              const fechaStr = compLunchData?.fechasSeleccionadas?.[0] || compLunchData?.fecha?.fecha;
+              const diaSemana = fechaStr ? new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' }) : '';
+              const compParaFecha = {
+                  ...compLunchData,
+                  fechasSeleccionadas: fechaStr ? [fechaStr] : [],
+                  fecha: { fecha: fechaStr, dia: diaSemana }
+              };
+              const finalCompLunchData = JSON.stringify(compParaFecha);
+              
               const updatedData = {
                   NombreES: nombreES,
                   Comp_Lunch: finalCompLunchData,
@@ -63,17 +71,31 @@ function CalendarioProduccion() {
               await dispatch(getAllFromTable(MENU));
               alert('✅ ¡Almuerzo actualizado con éxito!');
           } else {
-              const newProduct = {
-                  NombreES: nombreES,
-                  SUB_GRUPO: TARDEO_ALMUERZO,
-                  Comp_Lunch: finalCompLunchData,
-                  Precio: 22000,
-                  GRUPO: TARDEO,
-                  Estado: "Activo",
-              };
-              await dispatch(crearItem(newProduct, MENU));
+              const fechas = compLunchData?.fechasSeleccionadas?.length > 0 
+                  ? compLunchData.fechasSeleccionadas 
+                  : [compLunchData?.fecha?.fecha || new Date().toISOString().split('T')[0]];
+
+              for (const fechaStr of fechas) {
+                  const diaSemana = new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' });
+                  const compParaFecha = {
+                      ...compLunchData,
+                      fechasSeleccionadas: [fechaStr],
+                      fecha: { fecha: fechaStr, dia: diaSemana }
+                  };
+                  const finalCompLunchData = JSON.stringify(compParaFecha);
+                  
+                  const newProduct = {
+                      NombreES: nombreES,
+                      SUB_GRUPO: TARDEO_ALMUERZO,
+                      Comp_Lunch: finalCompLunchData,
+                      Precio: 22000,
+                      GRUPO: TARDEO,
+                      Estado: "Activo",
+                  };
+                  await dispatch(crearItem(newProduct, MENU));
+              }
               await dispatch(getAllFromTable(MENU));
-              alert('✅ ¡Almuerzo creado con éxito!');
+              alert(`✅ ¡Almuerzo(s) creado(s) con éxito! (${fechas.length} fechas)`);
           }
           setIsLunchModalOpen(false);
           setLunchToEdit(null);

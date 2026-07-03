@@ -1,126 +1,140 @@
 import React, { useState, useEffect, useRef } from "react";
+import MultiDatePicker from "../../../components/ui/MultiDatePicker";
 
 const categorias = [
-  { key: "entrada", label: "Entrada" },
-  { key: "proteina", label: "Proteína" },
-  { key: "proteina_opcion_2", label: "Opción 2" },
-  { key: "carbohidrato", label: "Carbohidrato" },
-  { key: "acompanante", label: "Acompañante" },
-  { key: "ensalada", label: "Ensalada" },
-  { key: "bebida", label: "Bebida" },
-];  
+  { key: "entrada", label: "Entrada" },
+  { key: "proteina", label: "Proteína" },
+  { key: "proteina_opcion_2", label: "Opción 2" },
+  { key: "carbohidrato", label: "Carbohidrato" },
+  { key: "acompanante", label: "Acompañante" },
+  { key: "ensalada", label: "Ensalada" },
+  { key: "bebida", label: "Bebida" },
+];  
 
 const initialState = {
-  fecha: { dia: "", fecha: "" },
-  entrada: { nombre: "", descripcion: "" },
-  proteina: { nombre: "", descripcion: "" },
-  proteina_opcion_2: { nombre: "", descripcion: "" },
-  carbohidrato: { nombre: "", descripcion: "" },
-  acompanante: { nombre: "", descripcion: "" },
-  ensalada: { nombre: "", descripcion: "" },
-  bebida: { nombre: "", descripcion: "" },
-  lista: []
+  fechasSeleccionadas: [], // Nuevo arreglo para fechas múltiples
+  fecha: { dia: "", fecha: "" }, // Mantener retrocompatibilidad por ahora
+  entrada: { nombre: "", descripcion: "" },
+  proteina: { nombre: "", descripcion: "" },
+  proteina_opcion_2: { nombre: "", descripcion: "" },
+  carbohidrato: { nombre: "", descripcion: "" },
+  acompanante: { nombre: "", descripcion: "" },
+  ensalada: { nombre: "", descripcion: "" },
+  bebida: { nombre: "", descripcion: "" },
+  lista: []
 };
 
 function FormularioMenuAlmuerzo({ onMenuChange, initialData }) {
-  
-  const [form, setForm] = useState(initialData ? initialData : initialState);
+  
+  const [form, setForm] = useState(initialData ? initialData : initialState);
 
-  useEffect(() => {
-    setForm(initialData ? initialData : initialState);
-  }, [initialData]);
+  useEffect(() => {
+    // Si viene con una fecha singular de un registro antiguo, la ponemos en el arreglo
+    let loadedData = initialData ? { ...initialData } : { ...initialState };
+    if (loadedData.fecha?.fecha && (!loadedData.fechasSeleccionadas || loadedData.fechasSeleccionadas.length === 0)) {
+      loadedData.fechasSeleccionadas = [loadedData.fecha.fecha];
+    }
+    setForm(loadedData);
+  }, [initialData]);
 
-  // --- INICIO DE LA CORRECCIÓN ---
+  const onMenuChangeRef = useRef(onMenuChange);
+  useEffect(() => {
+    onMenuChangeRef.current = onMenuChange;
+  });
 
-  // Usamos una ref para guardar la referencia más reciente de la función onMenuChange.
-  // Esto evita que el useEffect se ejecute cada vez que el componente padre
-  // se renderiza y crea una nueva instancia de la función.
-  const onMenuChangeRef = useRef(onMenuChange);
-  useEffect(() => {
-    onMenuChangeRef.current = onMenuChange;
-  });
+  useEffect(() => {
+    if (onMenuChangeRef.current) {
+      onMenuChangeRef.current(form);
+    }
+  }, [form]);
 
-  // Este efecto ahora solo depende de 'form'. Cuando 'form' cambia,
-  // llama a la versión más reciente de la función guardada en la ref.
-  // Esto rompe el ciclo infinito de renderizado.
-  useEffect(() => {
-    if (onMenuChangeRef.current) {
-      onMenuChangeRef.current(form);
-    }
-  }, [form]);
+  const handleCategoryChange = (categoria, campo, valor) => {
+    setForm((prev) => ({
+      ...prev,
+      [categoria]: {
+        ...prev[categoria],
+        [campo]: valor,
+      },
+    }));
+  };
 
-  // --- FIN DE LA CORRECCIÓN ---
+  const handleFechasMultiplesChange = (nuevasFechas) => {
+    setForm(prev => {
+      // Mantenemos retrocompatibilidad con la primera fecha si existe
+      const primeraFecha = nuevasFechas.length > 0 ? nuevasFechas[0] : "";
+      const diaSemana = primeraFecha 
+        ? new Date(primeraFecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' })
+        : '';
+        
+      return {
+        ...prev,
+        fechasSeleccionadas: nuevasFechas,
+        fecha: {
+          fecha: primeraFecha,
+          dia: diaSemana
+        }
+      };
+    });
+  };
+  
+  return (
+    <div className="bg-white p-6">
+      <div className="space-y-6">
+        
+        <div className="bg-gray-50 rounded-md p-4 border flex flex-col md:flex-row gap-6 items-start">
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-gray-600">Fechas del Menú</h3>
+            <p className="text-xs text-gray-500 mb-3 max-w-[280px]">Selecciona uno o más días. Se creará/actualizará un almuerzo independiente para cada fecha seleccionada.</p>
+            <MultiDatePicker 
+              selectedDates={form.fechasSeleccionadas || []} 
+              onChange={handleFechasMultiplesChange} 
+            />
+          </div>
+          
+          {form.fechasSeleccionadas?.length > 0 && (
+             <div className="flex-1">
+               <h4 className="text-sm font-bold text-gray-700 mb-2">Fechas Seleccionadas ({form.fechasSeleccionadas.length}):</h4>
+               <div className="flex flex-wrap gap-2">
+                 {form.fechasSeleccionadas.map(f => (
+                   <span key={f} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md font-medium border border-blue-200">
+                     {f}
+                   </span>
+                 ))}
+               </div>
+             </div>
+          )}
+        </div>
 
-  const handleCategoryChange = (categoria, campo, valor) => {
-    setForm((prev) => ({
-      ...prev,
-      [categoria]: {
-        ...prev[categoria],
-        [campo]: valor,
-      },
-    }));
-  };
-
-  const handleFechaChange = (e) => {
-    const nuevaFecha = e.target.value;
-    const diaSemana = nuevaFecha 
-      ? new Date(nuevaFecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' })
-      : '';
-    setForm(prev => ({
-      ...prev,
-      fecha: {
-        fecha: nuevaFecha,
-        dia: diaSemana
-      }
-    }));
-  };
-
-  const fechaMenu = form?.fecha?.fecha || '';
-  
-  return (
-    <div className="bg-white p-6">
-      <div className="space-y-6">
-        
-        <div className="bg-gray-50 rounded-md p-4 border">
-            <h3 className="text-lg font-semibold mb-3 text-gray-600">Fecha del Menú</h3>
-            <input
-              type="date"
-              className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white w-full md:w-1/2"
-              value={fechaMenu} 
-              onChange={handleFechaChange}
-            />
-        </div>
-
-        {categorias.map(({ key, label }) => (
-          <div key={key} className="bg-gray-50 rounded-md p-4 border">
-            <h3 className="text-lg font-semibold mb-3 text-gray-600">{label}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="flex flex-col font-medium text-gray-700">
-                Nombre:
-                <input
-                  type="text"
-                  className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
-                  value={form?.[key]?.nombre || ''}
-                  onChange={(e) => handleCategoryChange(key, "nombre", e.target.value)}
-                  placeholder={`Nombre de ${label.toLowerCase()}`}
-                />
-              </label>
-              <label className="flex flex-col font-medium text-gray-700">
-                Descripción:
-                <textarea
-                  className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
-                  value={form?.[key]?.descripcion || ''}
-                  onChange={(e) => handleCategoryChange(key, "descripcion", e.target.value)}
-                  placeholder={`Descripción de ${label.toLowerCase()}`}
-                  rows={2}
-                />
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+        {categorias.map(({ key, label }) => (
+          <div key={key} className="bg-gray-50 rounded-md p-4 border">
+            <h3 className="text-lg font-semibold mb-3 text-gray-600">{label}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="flex flex-col font-medium text-gray-700">
+                Nombre:
+                <input
+                  type="text"
+                  className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
+                  value={form?.[key]?.nombre || ''}
+                  onChange={(e) => handleCategoryChange(key, "nombre", e.target.value)}
+                  placeholder={`Nombre de ${label.toLowerCase()}`}
+                />
+              </label>
+              <label className="flex flex-col font-medium text-gray-700">
+                Descripción:
+                <textarea
+                  className="border border-gray-300 rounded px-3 py-2 mt-1 bg-white"
+                  value={form?.[key]?.descripcion || ''}
+                  onChange={(e) => handleCategoryChange(key, "descripcion", e.target.value)}
+                  placeholder={`Descripción de ${label.toLowerCase()}`}
+                  rows={2}
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default FormularioMenuAlmuerzo;
