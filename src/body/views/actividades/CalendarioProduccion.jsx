@@ -39,10 +39,10 @@ function CalendarioProduccion() {
     new Date().toISOString().slice(0, 7)
   );
   
-  // Nuevo estado para el Panel Izquierdo (Día Permanente)
-  const [selectedDayForPanel, setSelectedDayForPanel] = useState(
+  // Nuevo estado para el Panel Izquierdo y selección múltiple
+  const [selectedDates, setSelectedDates] = useState([
     new Date().toISOString().split('T')[0]
-  );
+  ]);
 
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [creatorInitialDate, setCreatorInitialDate] = useState(null);
@@ -121,8 +121,10 @@ function CalendarioProduccion() {
     fetchData();
   }, [dispatch]);
 
-  const handleCreateComanda = (fecha = null) => {
-    setCreatorInitialDate(fecha);
+  const handleCreateComanda = () => {
+    // Tomamos todas las fechas menos "Sin Fecha" (o la manejamos como array vacio)
+    const validDates = selectedDates.filter(d => d !== "Sin Fecha");
+    setCreatorInitialDate(validDates.length > 0 ? validDates : null);
     setIsCreatorOpen(true);
   };
 
@@ -145,11 +147,12 @@ function CalendarioProduccion() {
   };
 
   const handlePrevMonth = () => {
-    if (viewMode === "week" && selectedDayForPanel !== "Sin Fecha") {
-      const date = new Date(selectedDayForPanel + "T12:00:00");
+    const currentMainDate = selectedDates.length > 0 ? selectedDates[selectedDates.length - 1] : "Sin Fecha";
+    if (viewMode === "week" && currentMainDate !== "Sin Fecha") {
+      const date = new Date(currentMainDate + "T12:00:00");
       date.setDate(date.getDate() - 7);
       const newDateStr = date.toISOString().split("T")[0];
-      setSelectedDayForPanel(newDateStr);
+      setSelectedDates([newDateStr]);
       setSelectedMonth(newDateStr.slice(0, 7));
     } else {
       changeMonth(-1);
@@ -157,11 +160,12 @@ function CalendarioProduccion() {
   };
 
   const handleNextMonth = () => {
-    if (viewMode === "week" && selectedDayForPanel !== "Sin Fecha") {
-      const date = new Date(selectedDayForPanel + "T12:00:00");
+    const currentMainDate = selectedDates.length > 0 ? selectedDates[selectedDates.length - 1] : "Sin Fecha";
+    if (viewMode === "week" && currentMainDate !== "Sin Fecha") {
+      const date = new Date(currentMainDate + "T12:00:00");
       date.setDate(date.getDate() + 7);
       const newDateStr = date.toISOString().split("T")[0];
-      setSelectedDayForPanel(newDateStr);
+      setSelectedDates([newDateStr]);
       setSelectedMonth(newDateStr.slice(0, 7));
     } else {
       changeMonth(1);
@@ -171,7 +175,24 @@ function CalendarioProduccion() {
   const handleToday = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     setSelectedMonth(todayStr.slice(0, 7));
-    setSelectedDayForPanel(todayStr);
+    setSelectedDates([todayStr]);
+  };
+
+  const toggleDateSelection = (dateStr) => {
+    if (dateStr === "Sin Fecha") {
+      setSelectedDates(["Sin Fecha"]);
+      return;
+    }
+    setSelectedDates(prev => {
+      if (prev.includes("Sin Fecha")) {
+        return [dateStr];
+      }
+      if (prev.includes(dateStr)) {
+        const newDates = prev.filter(d => d !== dateStr);
+        return newDates.length > 0 ? newDates : [dateStr];
+      }
+      return [...prev, dateStr];
+    });
   };
 
   const getEventDates = (Comanda) => {
@@ -299,10 +320,11 @@ function CalendarioProduccion() {
     return days;
   }, [selectedMonth, eventosPorFecha]);
 
-  // Generar cuadrícula SEMANA (basada en el selectedDayForPanel)
+  // Generar cuadrícula SEMANA (basada en el último selectedDates)
   const weekGrid = useMemo(() => {
-    if (!selectedDayForPanel || selectedDayForPanel === "Sin Fecha") return [];
-    const dateObj = new Date(selectedDayForPanel + "T12:00:00"); // forzar mediodía para evitar saltos de zona horaria
+    const currentMainDate = selectedDates.length > 0 ? selectedDates[selectedDates.length - 1] : "Sin Fecha";
+    if (!currentMainDate || currentMainDate === "Sin Fecha") return [];
+    const dateObj = new Date(currentMainDate + "T12:00:00"); // forzar mediodía para evitar saltos de zona horaria
     const dayOfWeek = dateObj.getDay();
     const startDate = new Date(dateObj);
     startDate.setDate(dateObj.getDate() - dayOfWeek); // Ir al domingo
@@ -315,10 +337,26 @@ function CalendarioProduccion() {
       days.push({ day: current.getDate(), dateStr: dateStr, events: eventosPorFecha[dateStr] || [] });
     }
     return days;
-  }, [selectedDayForPanel, eventosPorFecha]);
+  }, [selectedDates, eventosPorFecha]);
 
   // Eventos del día seleccionado para el Panel Izquierdo
-  const selectedDayEvents = selectedDayForPanel === "Sin Fecha" ? (eventosPorFecha["Sin Fecha"] || []) : (eventosPorFecha[selectedDayForPanel] || []);
+  const selectedDayEvents = useMemo(() => {
+    if (selectedDates.length === 0) return [];
+    const events = [];
+    selectedDates.forEach(dateStr => {
+      const dayEvts = dateStr === "Sin Fecha" ? (eventosPorFecha["Sin Fecha"] || []) : (eventosPorFecha[dateStr] || []);
+      events.push(...dayEvts);
+    });
+    const uniqueEvents = new Map();
+    events.forEach(event => uniqueEvents.set(`${event.type}_${event.item._id}`, event));
+    
+    // Sort by type: almuerzo first, then Comanda
+    return Array.from(uniqueEvents.values()).sort((a, b) => {
+      if (a.type === 'almuerzo' && b.type !== 'almuerzo') return -1;
+      if (a.type !== 'almuerzo' && b.type === 'almuerzo') return 1;
+      return 0;
+    });
+  }, [selectedDates, eventosPorFecha]);
 
   const renderEventCard = (event) => {
     if (event.type === 'almuerzo') {
@@ -496,14 +534,21 @@ function CalendarioProduccion() {
             <button onClick={() => setIsImportModalOpen(true)} className="flex items-center gap-1.5 px-3 h-8 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Importar menú desde JSON usando IA">
               <Sparkles size={14} /> Importar JSON
             </button>
-            <button onClick={() => { setLunchToEdit(null); setIsLunchModalOpen(true); }} className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold text-xs transition-colors shadow-sm" title="Crear nuevo Almuerzo">
-              <UtensilsCrossed size={14} /> Nuevo Almuerzo
+            <button 
+              onClick={() => setIsLunchModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 rounded-md text-xs font-semibold shadow-sm transition-all"
+            >
+              <UtensilsCrossed size={14} />
+              <span className="hidden sm:inline">Nuevo Almuerzo</span>
+            </button>
+            <button 
+              onClick={handleCreateComanda}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-xs font-semibold shadow-sm transition-all shadow-blue-500/20"
+            >
+              <Plus size={14} strokeWidth={3} />
+              <span className="hidden sm:inline">NUEVA COMANDA</span>
             </button>
           </div>
-
-          <Button size="sm" onClick={() => handleCreateComanda()} className="h-8 ml-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm text-xs font-bold gap-1 border-0">
-            <Plus size={14} /> NUEVA COMANDA
-          </Button>
         </div>
       </div>
 
@@ -515,13 +560,15 @@ function CalendarioProduccion() {
           <div className="bg-slate-800 text-white p-3 shrink-0 flex items-center justify-between">
             <div>
               <h2 className="text-xs font-black uppercase tracking-widest text-slate-200 mb-0.5">Agenda del Día</h2>
-              <p className="text-sm font-medium">
-                {selectedDayForPanel === "Sin Fecha" ? "Tareas Sin Fecha Asignada" : new Date(selectedDayForPanel + "T12:00:00").toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
+              <h2 className="text-sm font-black text-white uppercase tracking-wide leading-tight">
+                {selectedDates.length === 1 
+                  ? (selectedDates[0] === "Sin Fecha" ? "Tareas Sin Fecha" : new Date(selectedDates[0] + "T12:00:00").toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
+                  : `${selectedDates.length} fechas seleccionadas`}
+              </h2>
             </div>
-            {selectedDayForPanel !== "Sin Fecha" && (
-              <button onClick={() => handleCreateComanda(selectedDayForPanel)} className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex justify-center items-center text-white transition-colors">
-                <Plus size={16} />
+            {selectedDates.filter(d => d !== "Sin Fecha").length > 0 && (
+              <button onClick={handleCreateComanda} className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex justify-center items-center text-white transition-colors">
+                <Plus size={16} strokeWidth={3} />
               </button>
             )}
           </div>
@@ -537,8 +584,8 @@ function CalendarioProduccion() {
           </div>
           {/* Botón Sin Fecha Permanente abajo */}
           <button 
-            onClick={() => setSelectedDayForPanel("Sin Fecha")}
-            className={`shrink-0 p-3 text-xs font-bold uppercase tracking-wider text-center border-t border-slate-200 transition-colors ${selectedDayForPanel === "Sin Fecha" ? "bg-amber-100 text-amber-800 border-t-amber-200" : "bg-white text-slate-500 hover:bg-slate-50"}`}
+            onClick={() => toggleDateSelection("Sin Fecha")}
+            className={`shrink-0 p-3 text-xs font-bold uppercase tracking-wider text-center border-t border-slate-200 transition-colors ${selectedDates.includes("Sin Fecha") ? "bg-amber-100 text-amber-800 border-t-amber-200" : "bg-white text-slate-500 hover:bg-slate-50"}`}
           >
             Ver Tareas Sin Fecha ({eventosPorFecha["Sin Fecha"]?.length || 0})
           </button>
@@ -558,10 +605,10 @@ function CalendarioProduccion() {
                  {calendarGrid.map((day, index) => (
                    <div
                      key={index}
-                     onClick={() => day && setSelectedDayForPanel(day.dateStr)}
+                     onClick={() => day && toggleDateSelection(day.dateStr)}
                      className={`relative flex flex-col transition-colors cursor-pointer ${
                        !day ? "bg-slate-50/50" : 
-                       day.dateStr === selectedDayForPanel ? "bg-blue-50/30 ring-2 ring-inset ring-blue-400 z-10" : "bg-white hover:bg-slate-50"
+                       selectedDates.includes(day.dateStr) ? "bg-blue-50/30 ring-2 ring-inset ring-blue-400 z-10" : "bg-white hover:bg-slate-50"
                      }`}
                      style={{ minHeight: '90px' }} // Altura comprimida
                    >
@@ -607,8 +654,8 @@ function CalendarioProduccion() {
                  {weekGrid.map((day, index) => (
                    <div
                      key={index}
-                     onClick={() => setSelectedDayForPanel(day.dateStr)}
-                     className={`relative flex flex-col h-full overflow-hidden cursor-pointer transition-colors ${day.dateStr === selectedDayForPanel ? "bg-blue-50/30 ring-2 ring-inset ring-blue-400 z-10" : "bg-white hover:bg-slate-50"}`}
+                     onClick={() => toggleDateSelection(day.dateStr)}
+                     className={`relative flex flex-col h-full overflow-hidden cursor-pointer transition-colors ${selectedDates.includes(day.dateStr) ? "bg-blue-50/30 ring-2 ring-inset ring-blue-400 z-10" : "bg-white hover:bg-slate-50"}`}
                    >
                      <div className="flex-1 overflow-y-auto p-1.5 no-scrollbar space-y-1">
                        {day.events.map((event) => (
@@ -679,6 +726,7 @@ function CalendarioProduccion() {
           onClose={() => { setIsLunchModalOpen(false); setLunchToEdit(null); }}
           onSave={handleSaveLunch}
           productToEdit={lunchToEdit}
+          initialDates={selectedDates}
       />
       {isImportModalOpen && (
           <MenuLunchImportModal

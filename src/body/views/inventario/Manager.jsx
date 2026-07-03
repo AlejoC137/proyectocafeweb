@@ -180,114 +180,131 @@ function Manager() {
   const stats = getTypeStats();
 
   return (
-    <PageLayout title="Manager - Centro de Control" actions={headerActions} loading={loading}>
-      {/* Quick stats */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="text-blue-600" size={20} />
-            <div>
-              <p className="text-sm text-blue-600">Total {stats.label}</p>
-              <p className="text-2xl font-bold text-blue-800">{stats.total}</p>
-            </div>
+    <div className="h-[calc(100vh-4rem)] w-full bg-slate-100 flex flex-col font-sans overflow-hidden">
+      {/* Top Bar Ultra Compacta */}
+      <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shrink-0 shadow-sm z-20">
+        <div className="flex items-center gap-4">
+          <h1 className="text-base font-black text-slate-800 tracking-tight uppercase flex items-center gap-2">
+            <Settings size={18} className="text-blue-600" />
+            Manager
+          </h1>
+          <div className="h-6 w-px bg-slate-200 mx-1"></div>
+          {/* Categorías integradas en el Top Bar en lugar de un navbar grande */}
+          <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            {categories.map(cat => (
+              <button 
+                key={cat.type}
+                onClick={() => handleToggleType(cat.type)}
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-md transition-all ${currentType === cat.type ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"}`}
+              >
+                {cat.icon} <span className="hidden xl:inline">{cat.label}</span>
+              </button>
+            ))}
           </div>
         </div>
-        
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <div className="flex items-center gap-2">
-            <Settings className="text-green-600" size={20} />
-            <div>
-              <p className="text-sm text-green-600">Modo edición</p>
-              <p className="text-lg font-bold text-green-800">
-                {showEdit ? 'Activado' : 'Desactivado'}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <div className="flex items-center gap-2">
-            <Zap className="text-purple-600" size={20} />
-            <div>
-              <p className="text-sm text-purple-600">Acciones rápidas</p>
-              <p className="text-lg font-bold text-purple-800">
-                {showAccionesRapidasActividades ? 'Visibles' : 'Ocultas'}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-          <div className="flex items-center gap-2">
-            {currentType === Staff && <Users className="text-amber-600" size={20} />}
-            {currentType === Comanda && <Wrench className="text-amber-600" size={20} />}
-            {currentType === Procedimientos && <FileText className="text-amber-600" size={20} />}
-            {currentType === MenuItems && <UtensilsCrossed className="text-amber-600" size={20} />}
-            <div>
-              <p className="text-sm text-amber-600">Categoría activa</p>
-              <p className="text-lg font-bold text-amber-800 capitalize">
-                {currentType}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div> */}
 
-      {/* Quick Actions */}
-      {showAccionesRapidasActividades && (
-        <ContentCard title="Acciones Rápidas">
-          <AccionesRapidasActividades currentType={currentType} />
-        </ContentCard>
-      )}
-
-      {/* Contenido principal, siguiendo el patrón de Inventario */}
-      <ContentCard
-        title={`Listado de ${currentType}`}
-        actions={
-          <div className="flex items-center gap-2">
-            {currentType === Procedimientos && (
+        <div className="flex items-center gap-2">
+           <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+           {currentType === Procedimientos && (
               <button
                 onClick={() => setShowProcedimientoImportModal(true)}
-                className="flex items-center justify-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors mr-2"
-                title="Importar Procedimiento JSON"
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
               >
-                📥 <span className="hidden sm:inline">Importar</span>
+                📥 <span className="hidden sm:inline">Importar JSON</span>
               </button>
-            )}
-            <ViewToggle
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-          </div>
-        }
-      >
-        {viewMode === "cards" ? (
-          // Vista de tarjetas (Cards)
-          filteredItems.length > 0 ? (
-            renderGrid()
-          ) : (
-            <div className="text-center py-12 text-slate-500">
-              {currentType === Staff && <Users size={48} className="mx-auto mb-4 opacity-50" />}
-              {currentType === Comanda && <Wrench size={48} className="mx-auto mb-4 opacity-50" />}
-              {currentType === Procedimientos && <FileText size={48} className="mx-auto mb-4 opacity-50" />}
-              {currentType === MenuItems && <UtensilsCrossed size={48} className="mx-auto mb-4 opacity-50" />}
-              {currentType === AGENDA && <Calendar size={48} className="mx-auto mb-4 opacity-50" />}
-              <p className="text-lg font-medium">No hay {stats.label} disponibles</p>
-              <p className="text-sm">Los elementos aparecerán aquí cuando se agreguen</p>
-            </div>
-          )
-        ) : (
-          // Vista de tabla tipo Excel
-          <TableViewManager
-            products={filteredItems}
-            currentType={currentType}
-          />
-        )}
-      </ContentCard>
-      {/* Información de estado (similar a Inventario) */}
-      <div className="flex justify-between items-center text-sm text-slate-600 mt-4">
-        <span>Total de elementos: {filteredItems.length}</span>
-        <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
+           )}
+           <button 
+             onClick={handleToggleShowEdit}
+             className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-colors shadow-sm border ${showEdit ? "bg-green-50 text-green-700 border-green-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+           >
+             <Settings size={14} /> <span className="hidden md:inline">{showEdit ? "Edición Activa" : "Modo Edición"}</span>
+           </button>
+        </div>
+      </div>
+
+      {/* Main Content Split - TV Dashboard Style */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Panel Izquierdo: Resumen y Estadísticas (28%) */}
+        <div className="w-[28%] min-w-[320px] max-w-[400px] bg-white border-r border-slate-200 flex flex-col z-10 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+           <div className="bg-slate-800 text-white p-3 shrink-0 flex items-center justify-between">
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-widest text-slate-200 mb-0.5">Dashboard</h2>
+                <h2 className="text-sm font-black text-white uppercase tracking-wide leading-tight">
+                   {categories.find(c => c.type === currentType)?.label || "Categoría"}
+                </h2>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex justify-center items-center text-white">
+                <BarChart3 size={16} />
+              </div>
+           </div>
+           
+           <div className="flex-1 overflow-y-auto no-scrollbar p-3 flex flex-col gap-3 bg-slate-50/50">
+             {/* Stats rápidas */}
+             <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
+                  <span className="text-2xl font-black text-slate-700">{filteredItems.length}</span>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm flex flex-col items-center text-center">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Activos</span>
+                  <span className="text-2xl font-black text-blue-700">
+                    {filteredItems.filter(i => i.Estado === "Activo" || i.Activo || !i.Terminado).length}
+                  </span>
+                </div>
+             </div>
+
+             {/* Acciones Rápidas del componente existente si está activado */}
+             {showAccionesRapidasActividades && (
+                <div className="bg-white p-3 rounded-xl border border-purple-200 shadow-sm mt-2">
+                   <h3 className="text-xs font-bold text-purple-700 mb-2 uppercase tracking-wider flex items-center gap-1"><Zap size={12}/> Acciones Rápidas</h3>
+                   <AccionesRapidasActividades currentType={currentType} />
+                </div>
+             )}
+
+             {/* Lista de recientes o resumen */}
+             <div className="mt-2 flex-1">
+               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 border-b border-slate-200 pb-1">Recientes</h3>
+               <div className="flex flex-col gap-1">
+                 {filteredItems.slice(0, 15).map((item, i) => (
+                   <div key={item._id || i} className="bg-white p-2 rounded-lg border border-slate-100 shadow-sm flex justify-between items-center hover:border-blue-200 transition-colors cursor-default">
+                     <span className="text-xs font-semibold text-slate-700 truncate max-w-[70%]">{item.NombreES || item.Tittle || item.Nombre || "Item"}</span>
+                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase truncate max-w-[25%]">
+                       {item.Categoria || item.SUB_GRUPO || "Gral"}
+                     </span>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           </div>
+        </div>
+
+        {/* Panel Derecho: Contenido Principal */}
+        <div className="flex-1 bg-slate-100 p-4 overflow-y-auto no-scrollbar flex flex-col relative">
+           {viewMode === "cards" ? (
+             filteredItems.length > 0 ? (
+               <div className="w-full pb-10">
+                 {renderGrid()}
+               </div>
+             ) : (
+               <div className="m-auto flex flex-col items-center text-center text-slate-400 max-w-sm">
+                 {currentType === Staff && <Users size={48} className="mb-4 opacity-50" />}
+                 {currentType === Comanda && <Wrench size={48} className="mb-4 opacity-50" />}
+                 {currentType === Procedimientos && <FileText size={48} className="mb-4 opacity-50" />}
+                 {currentType === MenuItems && <UtensilsCrossed size={48} className="mb-4 opacity-50" />}
+                 {currentType === AGENDA && <Calendar size={48} className="mb-4 opacity-50" />}
+                 <p className="text-lg font-bold text-slate-600 mb-1">No hay {stats.label} disponibles</p>
+                 <p className="text-xs">Selecciona otra categoría o agrega nuevos elementos para verlos aquí.</p>
+               </div>
+             )
+           ) : (
+             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
+               <TableViewManager
+                  products={filteredItems}
+                  currentType={currentType}
+               />
+             </div>
+           )}
+        </div>
       </div>
 
       {showProcedimientoImportModal && (
@@ -302,7 +319,7 @@ function Manager() {
           </div>
         </div>
       )}
-    </PageLayout>
+    </div>
   );
 }
 

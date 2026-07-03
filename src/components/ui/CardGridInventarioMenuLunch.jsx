@@ -37,7 +37,7 @@ const ViewToggle = ({ viewMode, onViewModeChange }) => {
 };
 
 // --- Modal Unificado para Crear y Editar Almuerzos ---
-export const LunchModal = ({ isOpen, onClose, onSave, productToEdit }) => {
+export const LunchModal = ({ isOpen, onClose, onSave, productToEdit, initialDates = [] }) => {
     const [nombreES, setNombreES] = useState('');
     const [compLunchData, setCompLunchData] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -59,10 +59,16 @@ export const LunchModal = ({ isOpen, onClose, onSave, productToEdit }) => {
             } else {
                 // --- Modo Creación ---
                 setNombreES(''); // Inicia con nombre vacío
-                setCompLunchData(null); // Inicia sin datos de formulario
+                setCompLunchData({
+                    fechasSeleccionadas: initialDates.filter(d => d !== "Sin Fecha"),
+                    fecha: initialDates.length > 0 && initialDates[0] !== "Sin Fecha" ? {
+                        fecha: initialDates[0],
+                        dia: new Date(initialDates[0] + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' })
+                    } : { dia: "", fecha: "" }
+                });
             }
         }
-    }, [productToEdit, isOpen]);
+    }, [productToEdit, isOpen, initialDates]);
 
     if (!isOpen) return null;
 
@@ -422,6 +428,7 @@ export function CardGridInventarioMenuLunch({ products, showEdit }) {
                 onClose={handleCloseModal}
                 onSave={handleSaveLunch}
                 productToEdit={modalState.mode === 'edit' ? modalState.data : null}
+                initialDates={[]}
             />
 
             {isImportModalOpen && (
