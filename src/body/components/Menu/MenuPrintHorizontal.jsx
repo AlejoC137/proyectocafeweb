@@ -86,7 +86,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
         const layout = config.group_descriptions?.__layout || {};
         if (layout.pageSize) setPageSize(layout.pageSize);
-        if (layout.pages) {
+        if (layout.pages && Array.isArray(layout.pages)) {
           let loadedPages = layout.pages;
           while (loadedPages.length < 4) {
             loadedPages.push({ id: 'PAGE_' + (loadedPages.length + 1), columns: [{ id: 'COL_1', blocks: [], flex: 1 }] });
@@ -198,6 +198,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
   const addColumn = (pageIndex) => {
     const newPages = JSON.parse(JSON.stringify(pages));
+    if (!newPages[pageIndex].columns) newPages[pageIndex].columns = [];
     newPages[pageIndex].columns.push({ id: 'COL_' + Date.now(), blocks: [], flex: 1 });
     setPages(newPages);
     setTimeout(() => saveConfig(), 100);
@@ -246,6 +247,8 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     }
 
     const newPages = JSON.parse(JSON.stringify(pages));
+    if (!newPages[pageIndex].columns) newPages[pageIndex].columns = [];
+    if (!newPages[pageIndex].columns[colIdx].blocks) newPages[pageIndex].columns[colIdx].blocks = [];
     newPages[pageIndex].columns[colIdx].blocks.push(newBlockId);
     setPages(newPages);
     setShowBlockSelector(null);
@@ -270,6 +273,8 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     const { pageIndex, colIdx, blockId } = galleryTarget;
 
     if (galleryContext === 'ADD_BLOCK') {
+      if (!newPages[pageIndex].columns) newPages[pageIndex].columns = [];
+      if (!newPages[pageIndex].columns[colIdx].blocks) newPages[pageIndex].columns[colIdx].blocks = [];
       newPages[pageIndex].columns[colIdx].blocks.push(img.id);
       if (!printImages.find(pi => pi.id === img.id)) {
         setPrintImages([...printImages, img]);
@@ -367,7 +372,10 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
       if (galleryContext === 'SET_BACKGROUND') {
         newPages[pageIndex].bgImage = newImage;
       } else {
-        if (newPages[pageIndex] && newPages[pageIndex].columns && newPages[pageIndex].columns[0]) {
+        if (newPages[pageIndex]) {
+          if (!newPages[pageIndex].columns) newPages[pageIndex].columns = [];
+          if (!newPages[pageIndex].columns[0]) newPages[pageIndex].columns[0] = { id: 'COL_1', blocks: [], flex: 1 };
+          if (!newPages[pageIndex].columns[0].blocks) newPages[pageIndex].columns[0].blocks = [];
           newPages[pageIndex].columns[0].blocks.push(newImage.id);
         }
       }

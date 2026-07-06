@@ -666,13 +666,19 @@ const AnalisisAlmuerzo = () => {
 
             let cantidadVendida = 0;
             let totalIngreso = 0;
+            let desgloseVersiones = {};
 
             try {
                 const compLunchObj = typeof almuerzoHoy.Comp_Lunch === 'string' ? JSON.parse(almuerzoHoy.Comp_Lunch) : almuerzoHoy.Comp_Lunch;
                 if (compLunchObj && Array.isArray(compLunchObj.lista)) {
                     compLunchObj.lista.forEach(version => {
                         if (version && Array.isArray(version.list)) {
-                            cantidadVendida += version.list.length;
+                            const qty = version.list.length;
+                            cantidadVendida += qty;
+                            if (qty > 0) {
+                                const vName = version.name || 'General';
+                                desgloseVersiones[vName] = (desgloseVersiones[vName] || 0) + qty;
+                            }
                         }
                     });
                 }
@@ -712,6 +718,7 @@ const AnalisisAlmuerzo = () => {
                 dia: day,
                 nombre: almuerzoHoy.NombreES,
                 cantidad: cantidadVendida,
+                desgloseVersiones: desgloseVersiones,
                 ingreso: totalIngreso,
                 costoUnitario: recetaValor,
                 costoTotal: costoTotal,
@@ -751,6 +758,7 @@ const AnalisisAlmuerzo = () => {
                     ingreso: 0,
                     costoTotal: 0,
                     utilidad: 0,
+                    desgloseVersiones: {},
                     originalItem: item.originalItem
                 };
             }
@@ -759,6 +767,12 @@ const AnalisisAlmuerzo = () => {
             groups[item.nombre].ingreso += item.ingreso;
             groups[item.nombre].costoTotal += item.costoTotal;
             groups[item.nombre].utilidad += item.utilidad;
+
+            if (item.desgloseVersiones) {
+                Object.entries(item.desgloseVersiones).forEach(([vName, vQty]) => {
+                    groups[item.nombre].desgloseVersiones[vName] = (groups[item.nombre].desgloseVersiones[vName] || 0) + vQty;
+                });
+            }
         });
         return Object.values(groups).sort((a, b) => b.cantidad - a.cantidad);
     }, [lunchStats.stats]);
@@ -837,6 +851,7 @@ const AnalisisAlmuerzo = () => {
                 }
             }
 
+            let desgloseVersionesLocal = {};
             try {
                 const compLunchObj = typeof item.Comp_Lunch === 'string' ? JSON.parse(item.Comp_Lunch) : item.Comp_Lunch;
                 if (compLunchObj && Array.isArray(compLunchObj.lista)) {
@@ -849,6 +864,11 @@ const AnalisisAlmuerzo = () => {
                                 if (parsedDate && parsedDate.year === selectedYear) {
                                     const qty = version.list.length;
                                     cantidadVendida += qty;
+
+                                    if (qty > 0) {
+                                        const vName = version.name || 'General';
+                                        desgloseVersionesLocal[vName] = (desgloseVersionesLocal[vName] || 0) + qty;
+                                    }
 
                                     const val = qty * precioVenta;
                                     const cost = recetaValor * qty;
@@ -882,10 +902,14 @@ const AnalisisAlmuerzo = () => {
                 topMenus[item.NombreES] = {
                     nombre: item.NombreES,
                     cantidad: 0,
+                    desgloseVersiones: {},
                     originalItem: item
                 };
             }
             topMenus[item.NombreES].cantidad += cantidadVendida;
+            Object.entries(desgloseVersionesLocal).forEach(([vName, vQty]) => {
+                topMenus[item.NombreES].desgloseVersiones[vName] = (topMenus[item.NombreES].desgloseVersiones[vName] || 0) + vQty;
+            });
         });
 
         // Retornamos todos los menús ordenados por venta sin limitar a 8
@@ -1311,18 +1335,36 @@ const AnalisisAlmuerzo = () => {
                                                 </td>
                                                 <td className="py-3.5 px-4 text-center font-bold text-slate-700">
                                                     {item.originalItem?.Comp_Lunch ? (
-                                                        <div className="flex items-center justify-center gap-1.5">
-                                                            <span>{item.cantidad}</span>
-                                                            <button 
-                                                                onClick={() => navigate(`/CalendarioProduccion`)}
-                                                                className="p-0.5 text-[9px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border rounded"
-                                                                title="Ver/Editar listado de clientes en el Calendario"
-                                                            >
-                                                                Clientes
-                                                            </button>
+                                                        <div className="flex flex-col items-center justify-center gap-1.5">
+                                                            <div className="flex items-center justify-center gap-1.5">
+                                                                <span>{item.cantidad}</span>
+                                                                <button 
+                                                                    onClick={() => navigate(`/CalendarioProduccion`)}
+                                                                    className="p-0.5 text-[9px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border rounded"
+                                                                    title="Ver/Editar listado de clientes en el Calendario"
+                                                                >
+                                                                    Clientes
+                                                                </button>
+                                                            </div>
+                                                            {item.desgloseVersiones && Object.keys(item.desgloseVersiones).length > 0 && (
+                                                                <div className="text-[10px] text-slate-500 font-normal mt-1 flex flex-col items-center">
+                                                                    {Object.entries(item.desgloseVersiones).map(([vName, vQty]) => (
+                                                                        <span key={vName}>{vName}: {vQty}</span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     ) : (
-                                                        <span>{item.cantidad}</span>
+                                                        <div className="flex flex-col items-center justify-center gap-1.5">
+                                                            <span>{item.cantidad}</span>
+                                                            {item.desgloseVersiones && Object.keys(item.desgloseVersiones).length > 0 && (
+                                                                <div className="text-[10px] text-slate-500 font-normal mt-1 flex flex-col items-center">
+                                                                    {Object.entries(item.desgloseVersiones).map(([vName, vQty]) => (
+                                                                        <span key={vName}>{vName}: {vQty}</span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-right font-bold text-green-600">
@@ -1429,7 +1471,16 @@ const AnalisisAlmuerzo = () => {
                                                     {item.diasServido}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-center font-bold text-slate-700">
-                                                    {item.cantidad}
+                                                    <div className="flex flex-col items-center justify-center gap-1">
+                                                        <span>{item.cantidad}</span>
+                                                        {item.desgloseVersiones && Object.keys(item.desgloseVersiones).length > 0 && (
+                                                            <div className="text-[10px] text-slate-500 font-normal mt-1 flex flex-col items-center">
+                                                                {Object.entries(item.desgloseVersiones).map(([vName, vQty]) => (
+                                                                    <span key={vName}>{vName}: {vQty}</span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="py-3.5 px-4 text-right font-bold text-green-600">
                                                     {item.ingreso.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}
@@ -1590,7 +1641,16 @@ const AnalisisAlmuerzo = () => {
                                                     className="h-full bg-amber-400/80 hover:bg-amber-400 rounded-r transition-all"
                                                 ></div>
                                             </div>
-                                            <span className="w-16 text-xs font-black text-slate-650 text-right">{m.cantidad} platos</span>
+                                            <div className="w-auto flex flex-col items-end">
+                                                <span className="text-xs font-black text-slate-650 text-right">{m.cantidad} platos</span>
+                                                {m.desgloseVersiones && Object.keys(m.desgloseVersiones).length > 0 && (
+                                                    <div className="text-[9px] text-slate-500 font-normal mt-0.5 flex flex-col items-end">
+                                                        {Object.entries(m.desgloseVersiones).map(([vName, vQty]) => (
+                                                            <span key={vName}>{vName}: {vQty}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                             
                                             {/* Action buttons inside final annual report list */}
                                             <div className="flex items-center gap-1 flex-shrink-0">

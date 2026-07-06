@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { getAllFromTable, crearItem } from '../../../redux/actions';
-import { STAFF, MENU, CONSUMO_STAFF } from '../../../redux/actions-types';
+import { STAFF, MENU, CONSUMO_STAFF, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
 import {
     Coffee, User, Plus, Trash2, CheckCircle, Search, Calendar,
     ArrowLeft, ShieldAlert, ClipboardList, Zap, History,
@@ -62,6 +62,8 @@ const ConsumoAdminView = () => {
     const allStaff = useSelector((state) => state.allStaff || []);
     const allMenu = useSelector((state) => state.allMenu || []);
     const allConsumoStaff = useSelector((state) => state.allConsumoStaff || []);
+    const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
+    const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
     const currentStaff = useSelector((state) => state.currentStaff);
 
     const isAdmin = currentStaff?.isAdmin === true;
@@ -91,11 +93,12 @@ const ConsumoAdminView = () => {
     // --- ESTADOS: Pestaña Historial ---
     const [histDate, setHistDate] = useState(() => new Date().toISOString().split('T')[0]);
 
-    // Cargar datos al montar
     useEffect(() => {
         dispatch(getAllFromTable(STAFF));
         dispatch(getAllFromTable(MENU));
         dispatch(getAllFromTable(CONSUMO_STAFF));
+        dispatch(getAllFromTable(RECETAS_MENU));
+        dispatch(getAllFromTable(RECETAS_PRODUCCION));
     }, [dispatch]);
 
     // Opciones para datalists
@@ -232,16 +235,65 @@ const ConsumoAdminView = () => {
                 const staffMember = allStaff.find(s => s._id === c.staff_id);
                 let productos = [];
                 try { productos = typeof c.Productos === 'string' ? JSON.parse(c.Productos) : (c.Productos || []); } catch {}
+                
+                let valorVentaTotal = 0;
+                let valorProduccionTotal = 0;
+
+                productos.forEach(prod => {
+                    const cant = Number(prod.quantity) || 1;
+                    const menuItem = allMenu.find(m => m.NombreES === prod.NombreES);
+                    
+                    if (menuItem) {
+                        valorVentaTotal += (Number(menuItem.Precio) || 0) * cant;
+                    }
+
+                    let itemCost = 0;
+                    if (prod.Receta) {
+                        let recetaData = allRecetasMenu.find(r => r._id === prod.Receta || r.forId === menuItem?._id);
+                        if (!recetaData && menuItem) {
+                            recetaData = allRecetasProduccion.find(r => r._id === prod.Receta || r.forId === menuItem._id);
+                        }
+                        
+                        if (recetaData && recetaData.costo) {
+                            try {
+                                const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
+                                if (typeof costData === 'number') {
+                                    itemCost = costData;
+                                } else if (costData) {
+                                    itemCost = (Number(costData.vCMP) || 0) + (Number(costData.vCMO) || 0);
+                                    if (itemCost === 0 && costData.COSTO) {
+                                        itemCost = Number(costData.COSTO);
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                    if (itemCost === 0 && menuItem && menuItem.COSTO) {
+                        itemCost = Number(menuItem.COSTO);
+                    }
+                    valorProduccionTotal += itemCost * cant;
+                });
+
                 return {
                     ...c,
                     staffName: staffMember ? `${staffMember.Nombre} ${staffMember.Apellido || ''}` : 'Desconocido',
                     productos,
+                    valorVentaTotal,
+                    valorProduccionTotal,
                     tipo: c.tipo || (productos[0]?.tipo) || 'eventual',
                     hora: c.Date ? new Date(c.Date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '—'
                 };
             })
             .sort((a, b) => new Date(b.Date) - new Date(a.Date));
-    }, [allConsumoStaff, histDate, allStaff]);
+    }, [allConsumoStaff, histDate, allStaff, allMenu, allRecetasMenu, allRecetasProduccion]);
+
+    const totalesDelDia = useMemo(() => {
+        return historialDelDia.reduce((acc, curr) => {
+            acc.venta += curr.valorVentaTotal || 0;
+            acc.produccion += curr.valorProduccionTotal || 0;
+            return acc;
+        }, { venta: 0, produccion: 0 });
+    }, [historialDelDia]);
 
     // --- GUARD: Solo admins ---
     if (!isAdmin) {
@@ -504,9 +556,19 @@ const ConsumoAdminView = () => {
                             <input type="date" value={histDate} onChange={(e) => setHistDate(e.target.value)}
                                 className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 transition" />
                         </div>
-                        <div className="ml-auto text-right">
-                            <p className="text-2xl font-extrabold text-slate-800">{historialDelDia.length}</p>
-                            <p className="text-xs text-slate-500 uppercase tracking-wider">Registros</p>
+                        <div className="ml-auto flex gap-6 text-right">
+                            <div>
+                                <p className="text-2xl font-extrabold text-slate-800">${totalesDelDia.produccion.toLocaleString('es-CO')}</p>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider">Costo Prod.</p>
+                            </div>
+                            <div>
+                                <p className="text-2xl font-extrabold text-slate-800">${totalesDelDia.venta.toLocaleString('es-CO')}</p>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider">Potencial Venta</p>
+                            </div>
+                            <div className="pl-6 border-l border-slate-200">
+                                <p className="text-2xl font-extrabold text-slate-800">{historialDelDia.length}</p>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider">Registros</p>
+                            </div>
                         </div>
                     </div>
 
@@ -537,12 +599,22 @@ const ConsumoAdminView = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 ml-7">
-                                        {record.productos.map((prod, pIdx) => (
-                                            <span key={pIdx} className="bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-lg">
-                                                {prod.quantity || 1}x {prod.NombreES}
-                                            </span>
-                                        ))}
+                                    <div className="flex justify-between items-end mt-2">
+                                        <div className="flex flex-wrap gap-2 ml-7">
+                                            {record.productos.map((prod, pIdx) => (
+                                                <span key={pIdx} className="bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-lg">
+                                                    {prod.quantity || 1}x {prod.NombreES}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-4 text-xs font-semibold bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                            <div className="text-slate-500">
+                                                Costo: <span className="text-slate-700">${(record.valorProduccionTotal || 0).toLocaleString('es-CO')}</span>
+                                            </div>
+                                            <div className="text-slate-500">
+                                                Venta: <span className="text-emerald-600">${(record.valorVentaTotal || 0).toLocaleString('es-CO')}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
