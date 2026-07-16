@@ -85,13 +85,13 @@ function App() {
             <Route path="/BuscarPreciosInternet"             element={<BuscarPreciosInternet />} />
             <Route path="/Home"                              element={<MenuView />} />
             <Route path="/Agenda/:year?/:month?"             element={<Agenda />} />
-            <Route path="/Manager"                           element={<Manager />} />
+            <Route path="/Manager/:tab?"                     element={<Manager />} />
             <Route path="/Recetas"                           element={<Recetas />} />
             <Route path="/SobreNosotros"                     element={<SobreNosotros />} />
             <Route path="/Scraper"                           element={<Scraper />} />
             <Route path="/"                                  element={<StaffPortal />} />
-            <Route path="/Inventario"                        element={<Inventario />} />
-            <Route path="/GestionAlmacen"                   element={<GestionAlmacen />} />
+            <Route path="/Inventario/:tab?"                  element={<Inventario />} />
+            <Route path="/GestionAlmacen/:tab?"             element={<GestionAlmacen />} />
             <Route path="/Inventario/BarcodeManager"         element={<BarcodeManager />} />
             <Route path="/VentaCompra"                       element={<VentaCompra />} />
             <Route path="/Actividades"                       element={<Actividades />} />

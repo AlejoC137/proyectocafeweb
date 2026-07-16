@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
 import { Comanda, Staff, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems, AGENDA } from "../../../redux/actions-types";
@@ -30,9 +31,28 @@ import ComandaExcelView from "../actividades/WorkE/ComandaExcelView";
 import ProcedimientoImportModal from "../ventaCompra/ProcedimientoImportModal";
 
 function Manager() {
+  const { tab } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [currentType, setCurrentType] = useState(MenuItems);
+
+  const getTabType = (tabParam) => {
+    switch (tabParam?.toLowerCase()) {
+      case 'procedimientos': return Procedimientos;
+      case 'staff': return Staff;
+      case 'comandas': return Comanda;
+      case 'eventos': return AGENDA;
+      case 'menu':
+      default: return MenuItems;
+    }
+  };
+
+  const [currentType, setCurrentType] = useState(getTabType(tab));
+
+  useEffect(() => {
+    setCurrentType(getTabType(tab));
+  }, [tab]);
+
   const [showAccionesRapidasActividades, setShowAccionesRapidasActividades] = useState(false);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' por defecto, como Inventario
   const [showProcedimientoImportModal, setShowProcedimientoImportModal] = useState(false);
@@ -90,7 +110,12 @@ function Manager() {
     if (currentType === type) {
       dispatch(resetExpandedGroups());
     } else {
-      setCurrentType(type);
+      let tabStr = 'menu';
+      if (type === Procedimientos) tabStr = 'procedimientos';
+      else if (type === Staff) tabStr = 'staff';
+      else if (type === Comanda) tabStr = 'comandas';
+      else if (type === AGENDA) tabStr = 'eventos';
+      navigate(`/Manager/${tabStr}`);
     }
   };
 

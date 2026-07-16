@@ -424,6 +424,39 @@ Ejemplo de salida:
 Si aparecen marcadores de cita como [cite: 5, 6] o [cite:#], elimínalos completamente.
 `;
 
+// Prompt for Menu Items
+const PROMPT_MENU_ITEMS = `# Prompt: MenuItems (Creación/Actualización de Platos del Menú)
+
+Actúa como experto gastronómico y de estructuración de datos. Tu trabajo es extraer o actualizar información de platos del menú y devolver un registro que respete el schema de MenuItems.
+
+## ENTRADAS
+1) itemBase (opcional): un objeto/registro existente.
+2) Información del plato (texto, link, o imagen).
+
+## OBJETIVO
+- Si hay itemBase: SOLO actualizar los campos que puedas inferir de la nueva información.
+- Si NO hay itemBase: construir el objeto completo respetando el schema.
+
+## OUTPUT (ESTRICTO)
+Devuelve ÚNICAMENTE un objeto JSON (no array, no texto). Debe contener EXACTAMENTE estas claves:
+
+- NombreES (string)         <- Nombre del plato en Español
+- NombreEN (string)         <- Nombre del plato en Inglés (traducido, obligatorio)
+- Precio (number)           <- Precio de venta (número sin comillas ni signos, ej: 25000)
+- DescripcionMenuES (string)<- Descripción apetitosa en Español
+- DescripcionMenuEN (string)<- Descripción en Inglés (traducida)
+- GRUPO (string)            <- Inferir de la lista: CAFE, DESAYUNO, BEBIDAS, PANADERIA, REPOSTERIA, TARDEO, ADICIONES, etc.
+- SUB_GRUPO (string)        <- Inferir de la lista: CAFE_ESPRESSO, CAFE_METODOS, BEBIDAS_FRIAS, BEBIDAS_CALIENTES, DESAYUNO_DULCE, DESAYUNO_SALADO, PANADERIA_REPOSTERIA_DULCE, etc.
+- Foto (string)             <- URL de la foto (si está disponible, si no "")
+- Estado (string)           <- "Activo" o "Inactivo" (default "Activo")
+- _id (string uuid)         <- Conservar el original o generar uuid v4 si es nuevo
+
+## RESTRICCIONES DE SALIDA
+- Entrega el resultado ÚNICAMENTE dentro de un bloque \`\`\`json ... \`\`\` (con el cajón de copiar en la esquina).
+- NO agregar campos extra como "fuente_precio", "notas", etc.
+- Si aparecen marcadores de cita como [cite: 5, 6], elimínalos.
+`;
+
 /**
  * Get the appropriate prompt based on entity type
  * @param {string} type - Entity type constant (ITEMS, PRODUCCION, MENU, etc.)
@@ -448,9 +481,7 @@ export function getPromptByType(type) {
     case MENU:
     case 'MenuItems':
     case 'MENU':
-      // For now, reuse Items prompt for Menu items
-      // Can be customized later if needed
-      return PROMPT_ITEMS_ALMACEN;
+      return PROMPT_MENU_ITEMS;
 
     case 'RECETAS_MENU':
     case 'RECETAS_PRODUCCION':

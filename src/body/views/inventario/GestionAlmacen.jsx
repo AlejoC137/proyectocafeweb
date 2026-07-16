@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable, resetExpandedGroups, toggleShowEdit, updateItem } from "../../../redux/actions";
 import { STAFF, MENU, ITEMS, PRODUCCION, PROVEE, ItemsAlmacen, ProduccionInterna, MenuItems, CATEGORIES } from "../../../redux/actions-types";
@@ -20,9 +21,26 @@ import { compareAndGenerateHistory } from "../../../utils/historyUtils";
 
 
 function GestionAlmacen() {
+  const { tab } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [currentType, setCurrentType] = useState(ItemsAlmacen);
+
+  const getTabType = (tabParam) => {
+    switch (tabParam?.toLowerCase()) {
+      case 'menu': return MenuItems;
+      case 'produccion': return ProduccionInterna;
+      case 'almacen':
+      default: return ItemsAlmacen;
+    }
+  };
+
+  const [currentType, setCurrentType] = useState(getTabType(tab));
+
+  useEffect(() => {
+    setCurrentType(getTabType(tab));
+  }, [tab]);
+
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
   const [viewMode, setViewMode] = useState("table"); // "cards" o "table"
 
@@ -62,7 +80,10 @@ function GestionAlmacen() {
     if (currentType === type) {
       dispatch(resetExpandedGroups());
     } else {
-      setCurrentType(type);
+      let tabStr = 'almacen';
+      if (type === MenuItems) tabStr = 'menu';
+      else if (type === ProduccionInterna) tabStr = 'produccion';
+      navigate(`/GestionAlmacen/${tabStr}`);
     }
   };
 

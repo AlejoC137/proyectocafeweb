@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { copyPromptToClipboard } from "../../../utils/prompts";
 import MacroEditorItems from "./MacroEditorItems";
 import CorrectorOrtograficoModal from "../inventario/CorrectorOrtograficoModal";
+import JsonImportReviewModal from "./JsonImportReviewModal";
 
 function AccionesRapidas({ currentType: propType }) {
   // Normalize type: "ITEMS" string -> ItemsAlmacen constant
@@ -42,6 +43,7 @@ function AccionesRapidas({ currentType: propType }) {
   const [promptCopied, setPromptCopied] = useState(false);
   const [macroEditorVisible, setMacroEditorVisible] = useState(false);
   const [spellCheckerVisible, setSpellCheckerVisible] = useState(false);
+  const [jsonItemsToReview, setJsonItemsToReview] = useState(null);
 
   // Initial Data
   const initialItemData = {
@@ -57,56 +59,83 @@ function AccionesRapidas({ currentType: propType }) {
   const [menuItemData, setMenuItemData] = useState(initialMenuItemData);
 
   // Helpers
-  const parseJsonToItem = () => {
+  const parseJsonToItem = async () => {
     try {
       const parsed = JSON.parse(jsonText);
+      const isArray = Array.isArray(parsed);
+      const itemsToProcess = isArray ? parsed : [parsed];
 
-      if (currentType === MenuItems) {
-        setMenuItemData(prev => ({
-          ...prev,
-          NombreES: parsed.NombreES || parsed.nombre || parsed.name || prev.NombreES,
-          NombreEN: parsed.NombreEN || parsed.englishName || prev.NombreEN,
-          Precio: parsed.Precio || parsed.price || parsed.precio || prev.Precio,
-          DescripcionMenuES: parsed.DescripcionMenuES || parsed.description || prev.DescripcionMenuES,
-          GRUPO: parsed.GRUPO || parsed.category || parsed.grupo || prev.GRUPO,
-          SUB_GRUPO: parsed.SUB_GRUPO || parsed.subcategory || prev.SUB_GRUPO,
-          Foto: parsed.Foto || parsed.image || prev.Foto,
-        }));
-        alert("Datos cargados al formulario de Menú.");
-      } else {
-        // Items / Produccion
-        let stockData = { ...newItemData.STOCK };
-        if (parsed.STOCK) {
-          if (typeof parsed.STOCK === 'object') stockData = { ...stockData, ...parsed.STOCK };
-        }
-
-        // Try to find provider ID by name
-        let providerId = newItemData.Proveedor;
-        if (parsed.Proveedor) {
-          const provName = parsed.Proveedor.toLowerCase();
-          const found = allProveedores.find(p => p.Nombre_Proveedor.toLowerCase().includes(provName));
-          if (found) providerId = found._id;
-        }
-
-        setNewItemData(prev => ({
-          ...prev,
-          Nombre_del_producto: parsed.Nombre_del_producto || parsed.nombre || parsed.name || prev.Nombre_del_producto,
-          CANTIDAD: parsed.CANTIDAD || parsed.cantidad || parsed.quantity || prev.CANTIDAD,
-          UNIDADES: parsed.UNIDADES || parsed.unidades || parsed.units || prev.UNIDADES,
-          COSTO: parsed.COSTO || parsed.costo || parsed.cost || prev.COSTO,
-          Merma: parsed.Merma || parsed.merma || prev.Merma,
-          GRUPO: parsed.GRUPO || parsed.grupo || parsed.category || prev.GRUPO,
-          Area: parsed.Area || parsed.area || prev.Area,
-          ALMACENAMIENTO: parsed.ALMACENAMIENTO || parsed.storage || prev.ALMACENAMIENTO,
-          Proveedor: providerId || prev.Proveedor, // Keep existing if not found/provided
-          STOCK: stockData
-        }));
-        alert("Datos cargados al formulario de Ítem.");
-      }
+      setJsonItemsToReview(itemsToProcess);
       setJsonImportVisible(false);
-      setFormVisible(true); // Open the form to see the data
     } catch (e) {
       alert("Error al leer JSON: " + e.message);
+    }
+  };
+
+  const handleSaveImportedItems = async (reviewedItems) => {
+    try {
+      let count = 0;
+      for (const item of reviewedItems) {
+        if (currentType === MenuItems) {
+          const menuItemData = {
+            NombreES: item.NombreES || item.nombre || item.name,
+            NombreEN: item.NombreEN || item.englishName,
+            Precio: item.Precio || item.price || item.precio,
+            DescripcionMenuES: item.DescripcionMenuES || item.description,
+            DescripcionMenuEN: item.DescripcionMenuEN || item.englishDescription,
+            GRUPO: item.GRUPO || item.category || item.grupo,
+            SUB_GRUPO: item.SUB_GRUPO || item.subcategory,
+            Foto: item.Foto || item.image,
+            Estado: item.Estado || "Activo"
+          };
+          Object.keys(menuItemData).forEach(key => { if (menuItemData[key] === "" || menuItemData[key] == null) delete menuItemData[key]; });
+          await dispatch(crearItem(menuItemData, MENU));
+          count++;
+        } else {
+          let stockData = { minimo: 0, maximo: 0, actual: 0 };
+          if (item.STOCK) {
+            if (typeof item.STOCK === 'object') stockData = { ...stockData, ...item.STOCK };
+            else if (typeof item.STOCK === 'string') {
+              try { stockData = { ...stockData, ...JSON.parse(item.STOCK) }; } catch (e) { }
+            }
+          }
+
+          let providerId = item.Proveedor;
+          if (item.Proveedor && typeof item.Proveedor === 'string') {
+            const provName = item.Proveedor.toLowerCase();
+            const found = allProveedores.find(p => p.Nombre_Proveedor.toLowerCase().includes(provName));
+            if (found) providerId = found._id;
+          }
+
+          let newItemToCreate = {
+            Nombre_del_producto: item.Nombre_del_producto || item.nombre || item.name,
+            CANTIDAD: item.CANTIDAD || item.cantidad || item.quantity,
+            UNIDADES: item.UNIDADES || item.unidades || item.units,
+            COSTO: item.COSTO || item.costo || item.cost,
+            Merma: item.Merma || item.merma || 0,
+            GRUPO: item.GRUPO || item.grupo || item.category,
+            Area: item.Area || item.area,
+            ALMACENAMIENTO: typeof item.ALMACENAMIENTO === 'object' ? JSON.stringify(item.ALMACENAMIENTO) : (item.ALMACENAMIENTO || item.storage || ""),
+            Proveedor: providerId || null,
+            Estado: item.Estado || "OK",
+            STOCK: JSON.stringify(stockData),
+          };
+
+          if (currentType === ItemsAlmacen) {
+            newItemToCreate.COOR = item.COOR || "1.05";
+          }
+
+          Object.keys(newItemToCreate).forEach(key => { if (newItemToCreate[key] === "" || newItemToCreate[key] == null) delete newItemToCreate[key]; });
+          await dispatch(crearItem(newItemToCreate, currentType));
+          count++;
+        }
+      }
+
+      alert(`Se importaron exitosamente ${count} ítems.`);
+      setJsonText("");
+      setJsonItemsToReview(null);
+    } catch (e) {
+      alert("Error al guardar ítems: " + e.message);
     }
   };
 
@@ -277,6 +306,16 @@ function AccionesRapidas({ currentType: propType }) {
         <CorrectorOrtograficoModal
           onClose={() => setSpellCheckerVisible(false)}
           currentType={currentType}
+        />
+      )}
+
+      {jsonItemsToReview && (
+        <JsonImportReviewModal
+          items={jsonItemsToReview}
+          onClose={() => setJsonItemsToReview(null)}
+          onSave={handleSaveImportedItems}
+          currentType={currentType}
+          allProveedores={allProveedores}
         />
       )}
 
