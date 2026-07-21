@@ -1176,7 +1176,10 @@ function RecetaModal({ item, onClose }) {
               onClose={() => setShowImportModal(false)}
               initialTargetProduct={implementationInstances.length > 0 ? implementationInstances[0] : null}
               forcedRecipeId={receta._id} forcedRecipeSource={recetaSource}
-              onSuccess={() => alert("Receta importada correctamente. Por favor recarga si es necesario.")} />
+              onSuccess={() => {
+                alert("Receta importada correctamente. La página se recargará.");
+                window.location.reload();
+              }} />
           </div>
         </div>
       )}

@@ -598,28 +598,24 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                                             <div className="flex flex-col gap-2">
                                                 {/* SOURCE (Editable if Manual) */}
                                                 <div>
-                                                    {isManual ? (
-                                                        <div className="flex gap-1 mb-1">
-                                                            <Input
-                                                                placeholder="Cant"
-                                                                className="h-7 text-xs w-16"
-                                                                type="number"
-                                                                value={ing.quantity}
-                                                                onChange={(e) => handleManualChange(ing.index, 'quantity', e.target.value)}
-                                                            />
-                                                            <Input
-                                                                placeholder="Und"
-                                                                className="h-7 text-xs flex-1"
-                                                                value={ing.units}
-                                                                onChange={(e) => handleManualChange(ing.index, 'units', e.target.value)}
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <p className="text-sm font-bold text-gray-800 break-words">{ing.legacyName}</p>
-                                                            <p className="text-xs text-gray-500">{ing.quantity} {ing.units}</p>
-                                                        </>
+                                                    {!isManual && (
+                                                        <p className="text-sm font-bold text-gray-800 break-words mb-1">{ing.legacyName}</p>
                                                     )}
+                                                    <div className="flex gap-1 mb-1">
+                                                        <Input
+                                                            placeholder="Cant"
+                                                            className="h-7 text-xs w-16"
+                                                            type="number"
+                                                            value={ing.quantity}
+                                                            onChange={(e) => handleManualChange(ing.index, 'quantity', e.target.value)}
+                                                        />
+                                                        <Input
+                                                            placeholder="Und"
+                                                            className="h-7 text-xs flex-1"
+                                                            value={ing.units}
+                                                            onChange={(e) => handleManualChange(ing.index, 'units', e.target.value)}
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 {/* ARROW */}
