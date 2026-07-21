@@ -23,6 +23,7 @@ import { Copy, RefreshCw, PlusCircle, X, Save, ShoppingCart, Hammer, FileText, U
 import { Textarea } from "@/components/ui/textarea";
 import { copyPromptToClipboard } from "../../../utils/prompts";
 import MacroEditorItems from "./MacroEditorItems";
+import MacroAgregadorItems from "./MacroAgregadorItems";
 import CorrectorOrtograficoModal from "../inventario/CorrectorOrtograficoModal";
 import JsonImportReviewModal from "./JsonImportReviewModal";
 
@@ -42,6 +43,7 @@ function AccionesRapidas({ currentType: propType }) {
   const [jsonText, setJsonText] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
   const [macroEditorVisible, setMacroEditorVisible] = useState(false);
+  const [macroAgregadorVisible, setMacroAgregadorVisible] = useState(false);
   const [spellCheckerVisible, setSpellCheckerVisible] = useState(false);
   const [jsonItemsToReview, setJsonItemsToReview] = useState(null);
 
@@ -275,6 +277,15 @@ function AccionesRapidas({ currentType: propType }) {
           )}
 
           <Button
+            variant={macroAgregadorVisible ? "default" : "outline"}
+            className={macroAgregadorVisible ? "bg-emerald-600 text-white" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}
+            onClick={() => setMacroAgregadorVisible(true)}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Macro Agregador de Inventario
+          </Button>
+
+          <Button
             variant={macroEditorVisible ? "default" : "outline"}
             className={macroEditorVisible ? "bg-amber-600 text-white" : "border-amber-300 text-amber-700 hover:bg-amber-50"}
             onClick={() => setMacroEditorVisible(true)}
@@ -294,6 +305,14 @@ function AccionesRapidas({ currentType: propType }) {
 
         </div>
       </div>
+
+      {macroAgregadorVisible && (
+        <MacroAgregadorItems
+          onClose={() => setMacroAgregadorVisible(false)}
+          currentType={currentType}
+          allProveedores={allProveedores}
+        />
+      )}
 
       {macroEditorVisible && (
         <MacroEditorItems

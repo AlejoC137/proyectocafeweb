@@ -6,9 +6,10 @@ import { getAllFromTable } from "../../../redux/actions";
 import { ITEMS, PRODUCCION, PROVEE, STAFF } from "../../../redux/actions-types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, XCircle, Receipt } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import NominaCalculator from "./NominaCalculator";
+import GastosReceiptIngestionModal from "./GastosReceiptIngestionModal";
 
 function Gastos() {
   // --- Redux State ---
@@ -23,6 +24,7 @@ function Gastos() {
   const [formattedHoy, setFormattedHoy] = useState(
     new Date().toLocaleDateString("en-US", { timeZone: "America/Bogota" })
   );
+  const [showIngestionModal, setShowIngestionModal] = useState(false);
 
   // Estados generales del Gasto
   const [MedioDeCompra, setMedioDeCompra] = useState("");
@@ -557,10 +559,15 @@ function Gastos() {
                   </div>
                 ))}
               </div>
-              {/* Botón para Añadir Nueva Fila */}
-              <Button type="button" onClick={handleAddNewItemRow} variant="outline" className="w-full mt-4 border-dashed h-10 text-sm hover:bg-gray-100">
-                <PlusCircle size={16} className="mr-2" /> Añadir Producto
-              </Button>
+              {/* Botones de Acción para Items */}
+              <div className="flex flex-col md:flex-row gap-2 mt-4">
+                <Button type="button" onClick={handleAddNewItemRow} variant="outline" className="flex-1 border-dashed h-10 text-sm hover:bg-gray-100">
+                  <PlusCircle size={16} className="mr-2" /> Añadir Producto Manual
+                </Button>
+                <Button type="button" onClick={() => setShowIngestionModal(true)} className="flex-1 h-10 text-sm bg-purple-600 hover:bg-purple-700 text-white border-purple-600">
+                  <Receipt size={16} className="mr-2" /> Importar Recibo con IA
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -588,6 +595,13 @@ function Gastos() {
           </Button>
         </div>
       </form>
+
+      {showIngestionModal && (
+        <GastosReceiptIngestionModal
+          onClose={() => setShowIngestionModal(false)}
+          onApply={(newItems) => setItems(prev => [...prev, ...newItems])}
+        />
+      )}
     </div>
   );
 }

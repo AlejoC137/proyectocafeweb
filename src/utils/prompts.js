@@ -525,7 +525,9 @@ Devuelve ÚNICAMENTE un array de objetos JSON con la siguiente estructura para c
     "cantidad": 1.5,
     "unidades": "kg", 
     "costo_total": 15000,
-    "precio_unitario": 10000
+    "precio_unitario": 10000,
+    "proveedor": "Nombre del proveedor (si aplica o deducible, de lo contrario null)",
+    "marca": "Marca del producto (si es visible, de lo contrario null)"
   }
 ]
 \`\`\`
@@ -533,7 +535,7 @@ Devuelve ÚNICAMENTE un array de objetos JSON con la siguiente estructura para c
 ## POLÍTICA DE DATOS (ANTI-ALUCINACIÓN)
 - Extrae SOLO lo que esté claramente visible en el recibo/imagen.
 - **PROHIBIDO** inventar, alucinar o deducir productos, cantidades o precios sin respaldo visible.
-- Si un dato no se puede leer con certeza, usa \`null\` para ese campo.
+- Si un dato no se puede leer con certeza, usa `null` para ese campo.
 
 ## REGLAS DE EXTRACCIÓN
 1. **nombre**: Mantén el nombre lo más descriptivo posible.
