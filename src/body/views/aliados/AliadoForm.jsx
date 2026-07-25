@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import supabase from '@/config/supabaseClient';
 import { ALIADOS } from '@/redux/actions-types';
 import { X, Save } from 'lucide-react';
+import { formatUrl } from '@/utils/urlUtils';
 
 function AliadoForm({ aliadoToEdit = null, onClose }) {
     const [formData, setFormData] = useState({
@@ -53,13 +54,17 @@ function AliadoForm({ aliadoToEdit = null, onClose }) {
         
         setIsSaving(true);
         try {
+            const dataToSubmit = {
+                ...formData,
+                sitio_web: formatUrl(formData.sitio_web)
+            };
             if (aliadoToEdit && aliadoToEdit.id) {
                 // Update
-                const { error } = await supabase.from(ALIADOS).update(formData).eq('id', aliadoToEdit.id);
+                const { error } = await supabase.from(ALIADOS).update(dataToSubmit).eq('id', aliadoToEdit.id);
                 if (error) throw error;
             } else {
                 // Insert
-                const { error } = await supabase.from(ALIADOS).insert([formData]);
+                const { error } = await supabase.from(ALIADOS).insert([dataToSubmit]);
                 if (error) throw error;
             }
             onClose();
@@ -152,12 +157,17 @@ function AliadoForm({ aliadoToEdit = null, onClose }) {
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-gray-700">Sitio Web</label>
                             <input 
-                                type="url"
+                                type="text"
                                 name="sitio_web"
                                 value={formData.sitio_web}
                                 onChange={handleChange}
+                                onBlur={(e) => {
+                                    if (e.target.value) {
+                                        setFormData(prev => ({ ...prev, sitio_web: formatUrl(e.target.value) }));
+                                    }
+                                }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="https://..."
+                                placeholder="ej. concervezatorio.vercel.app"
                             />
                         </div>
                     </div>

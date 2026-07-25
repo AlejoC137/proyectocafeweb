@@ -3,6 +3,7 @@ import supabase from '@/config/supabaseClient';
 import { ALIADOS } from '@/redux/actions-types';
 import { UploadCloud, CheckCircle, ChevronRight, Image as ImageIcon, Info, DollarSign, Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatUrl } from '@/utils/urlUtils';
 
 function AliadoRegistrationForm() {
     const [step, setStep] = useState(1);
@@ -63,7 +64,11 @@ function AliadoRegistrationForm() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const { error } = await supabase.from(ALIADOS).insert([formData]);
+            const dataToSubmit = {
+                ...formData,
+                sitio_web: formatUrl(formData.sitio_web)
+            };
+            const { error } = await supabase.from(ALIADOS).insert([dataToSubmit]);
             if (error) throw error;
             setIsSuccess(true);
         } catch (error) {
@@ -207,7 +212,19 @@ function AliadoRegistrationForm() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Sitio Web</label>
-                                        <input type="url" name="sitio_web" value={formData.sitio_web} onChange={handleChange} placeholder="https://..." className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                                        <input 
+                                            type="text" 
+                                            name="sitio_web" 
+                                            value={formData.sitio_web} 
+                                            onChange={handleChange} 
+                                            onBlur={(e) => {
+                                                if (e.target.value) {
+                                                    setFormData(prev => ({ ...prev, sitio_web: formatUrl(e.target.value) }));
+                                                }
+                                            }}
+                                            placeholder="ej. concervezatorio.vercel.app" 
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                                        />
                                     </div>
                                 </div>
 

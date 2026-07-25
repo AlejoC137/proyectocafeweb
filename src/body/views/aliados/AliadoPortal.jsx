@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getAllFromTable } from '@/redux/actions';
 import { User, LogOut, Image as ImageIcon, Calendar, Plus, Save, Edit, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { formatUrl } from '@/utils/urlUtils';
 
 export default function AliadoPortal() {
     const dispatch = useDispatch();
@@ -80,9 +81,13 @@ export default function AliadoPortal() {
 
     const handleSaveProfile = async () => {
         try {
-            const { error } = await supabase.from(ALIADOS).update(editForm).eq('id', currentAliado.id);
+            const dataToSave = {
+                ...editForm,
+                sitio_web: formatUrl(editForm.sitio_web)
+            };
+            const { error } = await supabase.from(ALIADOS).update(dataToSave).eq('id', currentAliado.id);
             if (error) throw error;
-            setCurrentAliado(editForm);
+            setCurrentAliado(dataToSave);
             setIsEditing(false);
             dispatch(getAllFromTable(ALIADOS));
             alert('Perfil actualizado con éxito');
@@ -243,9 +248,32 @@ export default function AliadoPortal() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-1">Sitio Web</label>
                                     {isEditing ? (
-                                        <input type="url" name="sitio_web" value={editForm.sitio_web || ''} onChange={handleEditChange} className="w-full px-3 py-2 border rounded-lg" />
+                                        <input 
+                                            type="text" 
+                                            name="sitio_web" 
+                                            value={editForm.sitio_web || ''} 
+                                            onChange={handleEditChange} 
+                                            onBlur={(e) => {
+                                                if (e.target.value) {
+                                                    setEditForm(prev => ({ ...prev, sitio_web: formatUrl(e.target.value) }));
+                                                }
+                                            }}
+                                            placeholder="ej. concervezatorio.vercel.app"
+                                            className="w-full px-3 py-2 border rounded-lg" 
+                                        />
                                     ) : (
-                                        <div className="font-medium text-blue-600">{currentAliado.sitio_web || 'No registrado'}</div>
+                                        currentAliado.sitio_web ? (
+                                            <a 
+                                                href={formatUrl(currentAliado.sitio_web)} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="font-medium text-blue-600 hover:underline"
+                                            >
+                                                {currentAliado.sitio_web}
+                                            </a>
+                                        ) : (
+                                            <div className="font-medium text-gray-400">No registrado</div>
+                                        )
                                     )}
                                 </div>
                                 {isEditing && (
