@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import supabase from '@/config/supabaseClient';
 import { ALIADOS } from '@/redux/actions-types';
-import { UploadCloud, CheckCircle, ChevronRight, Image as ImageIcon, Info, DollarSign, Heart, Star } from 'lucide-react';
+import { UploadCloud, CheckCircle, ChevronRight, Image as ImageIcon, Info, DollarSign, Heart, Star, Trash2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatUrl } from '@/utils/urlUtils';
 
@@ -9,6 +9,7 @@ function AliadoRegistrationForm() {
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -32,23 +33,71 @@ function AliadoRegistrationForm() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleLogoUpload = async (e) => {
-        const file = e.target.files[0];
+    const processFile = async (file) => {
         if (!file) return;
+
+        const isImageMime = file.type && file.type.startsWith('image/');
+        const isImageExt = /\.(png|jpe?g|webp|svg|gif|avif|heic|bmp)$/i.test(file.name);
+
+        if (!isImageMime && !isImageExt) {
+            alert('Por favor selecciona un archivo de imagen válido (PNG, JPG, WEBP, SVG, GIF, AVIF, HEIC, etc.)');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            alert('La imagen no debe superar los 10 MB.');
+            return;
+        }
+
         setIsUploading(true);
         try {
-            const fileExt = file.name.split('.').pop();
-            const uniqueName = `aliado_logo_${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage.from("Images_eventos").upload(uniqueName, file);
+            let fileExt = 'png';
+            if (file.name && file.name.includes('.')) {
+                fileExt = file.name.split('.').pop().toLowerCase();
+            } else if (file.type) {
+                fileExt = file.type.split('/')[1]?.replace('+xml', '')?.toLowerCase() || 'png';
+            }
+
+            const uniqueName = `aliado_logo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage.from("Images_eventos").upload(uniqueName, file, {
+                cacheControl: '3600',
+                upsert: true
+            });
             if (uploadError) throw uploadError;
             const { data: { publicUrl } } = supabase.storage.from("Images_eventos").getPublicUrl(uniqueName);
             setFormData(prev => ({ ...prev, logo_url: publicUrl }));
         } catch (err) {
             console.error(err);
-            alert("Error subiendo el logo");
+            alert("Error al subir la imagen: " + (err.message || err));
         } finally {
             setIsUploading(false);
         }
+    };
+
+    const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        processFile(file);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleRemoveLogo = () => {
+        setFormData(prev => ({ ...prev, logo_url: '' }));
     };
 
     const nextStep = (e) => {
@@ -263,20 +312,90 @@ function AliadoRegistrationForm() {
                             <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
                                 <h3 className="text-xl font-semibold border-b pb-2 mb-4">Paso 4: Perfil y Seguridad</h3>
                                 
-                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50">
-                                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Sube el Logo de tu Marca</label>
-                                    <div className="flex justify-center">
-                                        <label className="cursor-pointer bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2 font-medium">
-                                            <UploadCloud size={18} /> {isUploading ? 'Subiendo...' : 'Seleccionar Imagen'}
-                                            <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" disabled={isUploading} />
-                                        </label>
-                                    </div>
-                                    {formData.logo_url && (
-                                        <div className="mt-4">
-                                            <img src={formData.logo_url} alt="Logo preview" className="h-20 object-contain mx-auto rounded-lg border border-gray-200 shadow-sm" />
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-medium text-gray-700">Logo de tu Marca o Proyecto</label>
+                                    
+                                    {!formData.logo_url ? (
+                                        <div
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                            className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
+                                                isDragging 
+                                                    ? 'border-blue-500 bg-blue-50/70 scale-[1.01]' 
+                                                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100/80'
+                                            }`}
+                                        >
+                                            {isUploading ? (
+                                                <div className="flex flex-col items-center py-4 space-y-2">
+                                                    <Loader2 className="animate-spin text-blue-600 h-10 w-10" />
+                                                    <p className="text-sm font-medium text-blue-600">Subiendo logo a la nube...</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+                                                        <UploadCloud size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-gray-700">
+                                                            Arrastra y suelta el logo de tu marca aquí
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG, WEBP, SVG, GIF, AVIF (Máx. 10MB)</p>
+                                                    </div>
+                                                    <div className="pt-2">
+                                                        <label className="cursor-pointer inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-sm">
+                                                            <ImageIcon size={16} /> Seleccionar Imagen
+                                                            <input 
+                                                                type="file" 
+                                                                accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml, image/gif, image/avif, image/heic, image/bmp, image/*" 
+                                                                onChange={handleLogoUpload} 
+                                                                className="hidden" 
+                                                                disabled={isUploading} 
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="border border-gray-200 rounded-2xl p-4 bg-gray-50 flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-4 min-w-0">
+                                                <div className="w-16 h-16 rounded-xl border bg-white p-1 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                    <img src={formData.logo_url} alt="Logo preview" className="w-full h-full object-contain" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-semibold text-green-700 flex items-center gap-1">
+                                                        <CheckCircle size={14} /> Logo cargado exitosamente
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 truncate mt-0.5 max-w-[200px] sm:max-w-xs">{formData.logo_url}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveLogo}
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                                title="Eliminar logo"
+                                            >
+                                                <Trash2 size={20} />
+                                            </button>
                                         </div>
                                     )}
+                                    
+                                    <div className="pt-1">
+                                        <details className="text-xs text-gray-500 cursor-pointer">
+                                            <summary className="hover:text-blue-600 transition-colors">¿Prefieres ingresar la URL de la imagen directamente?</summary>
+                                            <div className="mt-2">
+                                                <input 
+                                                    type="text"
+                                                    name="logo_url"
+                                                    value={formData.logo_url}
+                                                    onChange={handleChange}
+                                                    placeholder="https://ejemplo.com/mi-logo.png"
+                                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                                                />
+                                            </div>
+                                        </details>
+                                    </div>
                                 </div>
 
                                 <div>
