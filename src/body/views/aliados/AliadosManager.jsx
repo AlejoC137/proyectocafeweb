@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { getAllFromTable } from '@/redux/actions';
 import { ALIADOS } from '@/redux/actions-types';
 import supabase from '@/config/supabaseClient';
 import AliadoForm from './AliadoForm';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, FileSpreadsheet } from 'lucide-react';
 
 function AliadosManager() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const allAliados = useSelector(state => state.allAliados) || [];
     
     const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +68,12 @@ function AliadosManager() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-SpaceGrotesk font-bold">Base de Datos de Aliados</h1>
                 <div className="flex gap-3">
+                    <button 
+                        onClick={() => navigate('/AliadosExcel')}
+                        className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors text-sm font-medium shadow-sm"
+                    >
+                        <FileSpreadsheet size={20} /> Ver Vista Excel
+                    </button>
                     <button 
                         onClick={() => copyToClipboard('/RegistroAliado')}
                         className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium border border-gray-200"

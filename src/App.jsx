@@ -58,6 +58,7 @@ const ConsumoAdminView      = lazy(() => import('./body/views/staff/ConsumoAdmin
 
 const CotizacionesView       = lazy(() => import('./body/views/cotizaciones/CotizacionesView'));
 const AliadosManager         = lazy(() => import('./body/views/aliados/AliadosManager'));
+const AliadosExcelView       = lazy(() => import('./body/views/aliados/AliadosExcelView'));
 const AliadoRegistrationForm = lazy(() => import('./body/views/aliados/AliadoRegistrationForm'));
 const AliadoPortal           = lazy(() => import('./body/views/aliados/AliadoPortal'));
 const AnalisisAlmuerzo       = lazy(() => import('./body/views/lunchByOrder/AnalisisAlmuerzo'));
@@ -147,6 +148,8 @@ function App() {
             <Route path="/radiomanager"                      element={<RadioManager />} />
             <Route path="/Cotizaciones"                      element={<CotizacionesView />} />
             <Route path="/Aliados"                           element={<AliadosManager />} />
+            <Route path="/AliadosExcel text-excel"           element={<AliadosExcelView />} />
+            <Route path="/AliadosExcel"                      element={<AliadosExcelView />} />
             <Route path="/RegistroAliado"                    element={<AliadoRegistrationForm />} />
             <Route path="/PortalAliado"                      element={<AliadoPortal />} />
 

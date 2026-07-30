@@ -16,18 +16,19 @@ function PageLayout({
   actions, 
   children, 
   loading = false, 
-  className = "" 
+  className = "",
+  fullWidth = false
 }) {
   if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
-    <div className={`h-[calc(100vh-4.5rem)] w-screen bg-transparent overflow-auto p-4 md:p-6 ${className}`}>
-      <div className="max-w-screen-2xl mx-auto">
+    <div className={`h-[calc(100vh-4.5rem)] w-full bg-transparent overflow-auto p-4 md:p-6 ${className}`}>
+      <div className={`${fullWidth ? 'w-full max-w-none' : 'max-w-screen-2xl mx-auto'} h-full flex flex-col min-h-0`}>
         {/* Header unificado con título y acciones */}
         {(title || actions) && (
-          <div className="flex flex-wrap items-center gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4 mb-4 flex-shrink-0">
             {title && (
               <h1 className="text-2xl font-bold text-cobalt-blue mr-auto font-SpaceGrotesk">
                 {title}
@@ -42,7 +43,7 @@ function PageLayout({
         )}
         
         {/* Contenido principal */}
-        <div className="space-y-6">
+        <div className="flex-1 flex flex-col min-h-0 space-y-4">
           {children}
         </div>
       </div>
