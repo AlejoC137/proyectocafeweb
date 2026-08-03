@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { STAFF } from '../../../redux/actions-types';
+import { getAllFromTable } from '../../../redux/actions';
 import { ArrowLeft, Calculator, DollarSign, Clock, Users, Save, RotateCcw, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
