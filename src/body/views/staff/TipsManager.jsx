@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { STAFF } from '../../../redux/actions-types';
 import { ArrowLeft, Calculator, DollarSign, Clock, Users, Save, RotateCcw, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
