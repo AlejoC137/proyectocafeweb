@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarouselIdx, currentMenuItem, todaysLunch }) {
   const navigate = useNavigate();
   const borderColor = "border-[#1F2937]";
-  const shadowColor = "shadow-[4px_4px_0px_0px_rgba(31,41,55,1)]";
+  const shadowColor = "shadow-[4px_4px_0px_0px_rgba(255,0,0,1)]";
   const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
 
   // Siguientes items (3 para llenar el espacio)
@@ -29,11 +29,11 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
   const renderLunchField = (label, itemData, indexPrefix = "") => {
     if (!itemData || !itemData.nombre) return null;
     return (
-      <div className="w-full leading-tight mb-1 truncate">
-        <span className="text-xs font-black uppercase tracking-widest text-black mr-1.5">
+      <div className="w-full leading-tight mb-1 truncate" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        <span className="text-lg lg:text-xl font-bold uppercase tracking-widest text-black mr-1.5">
           {label}:
         </span>
-        <span className="text-xs font-black uppercase tracking-widest text-pink-600">
+        <span className="text-lg lg:text-xl font-bold uppercase tracking-widest text-[#FF0000]">
           {indexPrefix}{itemData.nombre}
         </span>
         {itemData.descripcion && (
@@ -46,13 +46,13 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
   return (
     <div className={`w-full flex-col flex border-[3px] ${borderColor} bg-white rounded-none ${shadowColor}`}>
       
-      {/* SECCIÓN 1: Menú del Día (Almuerzo Tipográfico) */}
-      <div className={`p-4 border-b-[3px] ${borderColor} bg-yellow-100 flex items-center justify-between`}>
-        <h3 className="font-black uppercase tracking-widest text-xs flex items-center gap-2">
-          <Utensils className="w-4 h-4" /> Menú del Día
+      {/* Header Menu del Dia */}
+      <div className={`px-3 py-2 border-b-[3px] ${borderColor} bg-pink-100 flex items-center justify-between overflow-hidden gap-2`}>
+        <h3 className="font-black uppercase tracking-widest text-xl lg:text-2xl flex items-center gap-2 mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+          <Utensils className="w-4 h-4 -mt-1 flex-shrink-0" /> <span className="truncate">Menú del Día</span>
         </h3>
         {parsedLunch?.fecha?.fecha && (
-          <span className="text-[10px] font-black uppercase bg-white border-[2px] border-black px-2 py-0.5">
+          <span className="text-[9px] leading-none font-black uppercase tracking-widest border-[2px] border-black px-1.5 py-1 bg-white flex-shrink-0">
             {parsedLunch.fecha.fecha === todayStr ? 'HOY' : parsedLunch.fecha.fecha}
           </span>
         )}
@@ -80,9 +80,9 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
               
               {/* Proteína inline 1 */}
               {parsedLunch.proteina?.nombre && (
-                <div className="w-full leading-tight mb-1 truncate">
-                  <span className="text-xs font-black uppercase tracking-widest text-black mr-1.5">Proteína:</span>
-                  <span className="text-xs font-black uppercase tracking-widest text-pink-600">
+                <div className="w-full leading-tight mb-1 truncate" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <span className="text-lg lg:text-xl font-bold uppercase tracking-widest text-black mr-1.5">Proteína:</span>
+                  <span className="text-lg lg:text-xl font-bold uppercase tracking-widest text-[#FF0000]">
                     1. {parsedLunch.proteina.nombre}
                   </span>
                   {parsedLunch.proteina.descripcion && <span className="text-[10px] sm:text-xs font-bold text-[#1F2937] ml-1">({parsedLunch.proteina.descripcion})</span>}
@@ -91,9 +91,9 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
               
               {/* Proteína inline 2 */}
               {(parsedLunch.proteina_opcion_2?.nombre || parsedLunch["Opción 2"]?.nombre) && (
-                <div className="w-full leading-tight mb-1 truncate">
-                  <span className="text-xs font-black uppercase tracking-widest text-transparent mr-1.5 select-none">Proteína:</span>
-                  <span className="text-xs font-black uppercase tracking-widest text-pink-600">
+                <div className="w-full leading-tight mb-1 truncate" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <span className="text-lg lg:text-xl font-bold uppercase tracking-widest text-transparent mr-1.5 select-none">Proteína:</span>
+                  <span className="text-lg lg:text-xl font-bold uppercase tracking-widest text-[#FF0000]">
                     2. {parsedLunch.proteina_opcion_2?.nombre || parsedLunch["Opción 2"]?.nombre}
                   </span>
                   {(parsedLunch.proteina_opcion_2?.descripcion || parsedLunch["Opción 2"]?.descripcion) && (
@@ -116,12 +116,12 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
         )}
       </div>
 
-      {/* SECCIÓN 2: Carrusel de la Carta */}
-      <div className={`p-4 border-b-[3px] ${borderColor} bg-pink-100 flex items-center justify-between`}>
-        <h3 className="font-black uppercase tracking-widest text-xs flex items-center gap-2">
-          <Coffee className="w-4 h-4" /> Carta de Hoy
+      {/* Header Carta de Hoy */}
+      <div className={`px-3 py-2 border-b-[3px] ${borderColor} bg-pink-100 text-black flex items-center justify-between overflow-hidden gap-2`}>
+        <h3 className="font-black uppercase tracking-widest text-xl lg:text-2xl flex items-center gap-2 mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+          <Coffee className="w-4 h-4 -mt-1 flex-shrink-0" /> <span className="truncate">Carta de Hoy</span>
         </h3>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-shrink-0">
           <button 
             onClick={() => setMenuCarouselIdx(prev => (prev - 1 + menuItems.length) % menuItems.length)}
             className={`p-1 bg-white border-[2px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] ${buttonHover} transition-all`}
@@ -152,17 +152,17 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 
-                {/* Badge Precio */}
-                <div className={`absolute top-3 right-3 bg-yellow-100 border-[3px] border-[#1F2937] px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
-                  <span className="font-black text-lg">{currentMenuItem.Precio}</span>
+                {/* Price Badge */}
+                <div className={`absolute top-3 right-3 bg-yellow-100 border-[2px] border-[#1F2937] px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
+                  <span className="text-sm font-black text-[#1F2937]">{currentMenuItem.PrecioNormal}</span>
                 </div>
                 
                 {/* Info Text Box */}
-                <div className={`absolute bottom-3 left-3 right-3 bg-white border-[3px] border-[#1F2937] p-2 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
-                  <p className="text-xs font-black uppercase text-pink-500 tracking-widest leading-none mb-1">{currentMenuItem.SubTipoES || currentMenuItem.TipoES}</p>
-                  <h4 className="font-black uppercase tracking-tight text-xl leading-none truncate text-pink-600">
+                <div className={`absolute top-3 left-3 right-24 bg-white border-[3px] border-[#1F2937] px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] flex items-center gap-2 overflow-hidden`}>
+                  <span className="text-[10px] sm:text-xs font-black uppercase text-[#FF0000] tracking-widest flex-shrink-0 mt-0.5">{currentMenuItem.SubTipoES || currentMenuItem.TipoES}</span>
+                  <span className="font-black uppercase tracking-tight text-lg lg:text-xl truncate text-black">
                     {currentMenuItem.NombreES}
-                  </h4>
+                  </span>
                 </div>
               </div>
             </div>
@@ -173,17 +173,25 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
                 <p className="text-xs font-black uppercase tracking-widest opacity-50 mb-2">A continuación:</p>
                 <div className="flex flex-col gap-1.5">
                   {nextItems.map((item, i) => (
-                    <div key={i} className={`flex flex-col p-2 bg-white border-[2px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] cursor-pointer hover:bg-yellow-100 transition-colors leading-tight`}
+                    <div 
+                      key={item._id || i} 
+                      className={`flex items-baseline justify-between px-3 py-1.5 bg-white border-[2px] border-[#1F2937] shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:bg-yellow-100 transition-colors cursor-pointer group`}
                       onClick={() => setMenuCarouselIdx((menuCarouselIdx + i + 1) % menuItems.length)}
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        <p className="text-base font-black uppercase truncate text-pink-600 flex-1">
+                      <div className="flex items-baseline gap-2 truncate flex-1 min-w-0" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                        <span className="text-base lg:text-lg font-bold uppercase truncate text-[#FF0000] flex-shrink-0 max-w-[60%]">
                           {item.NombreES}
-                          {item.DescripcionMenuES && (
-                            <span className="text-[10px] font-bold text-[#1F2937] ml-1">({item.DescripcionMenuES})</span>
-                          )}
-                        </p>
-                        <span className="text-sm font-black bg-yellow-100 border-[2px] border-black px-1.5 py-0.5 leading-none flex-shrink-0">{item.Precio}</span>
+                        </span>
+                        {item.DescripcionMenuES && (
+                          <span className="text-[11px] font-bold text-[#1F2937] truncate flex-1">
+                            ({item.DescripcionMenuES})
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 ml-3">
+                        <span className="text-base lg:text-lg font-bold text-black" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                          {item.PrecioNormal}
+                        </span>
                       </div>
                     </div>
                   ))}

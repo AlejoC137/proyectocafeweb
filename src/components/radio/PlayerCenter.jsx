@@ -25,7 +25,7 @@ export default function PlayerCenter({
 }) {
   const [showVolume, setShowVolume] = useState(false);
   const borderColor = "border-[#1F2937]";
-  const shadowColor = "shadow-[6px_6px_0px_0px_rgba(31,41,55,1)]";
+  const shadowColor = "shadow-[6px_6px_0px_0px_rgba(255,0,0,1)]";
   const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
 
   return (
@@ -41,15 +41,15 @@ export default function PlayerCenter({
         {/* Top Bar: Badge EN VIVO + Volumen */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
           {currentTrack?.isLiveStream ? (
-            <div className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-red-500 text-white border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] pointer-events-auto`}>
-              <span className="w-2 h-2 bg-white animate-ping" />
-              En Vivo
+            <div className="bg-[#FF0000] border-[2px] border-black text-black px-3 py-1 flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] pointer-events-auto">
+              <div className="w-2 h-2 rounded-full bg-black animate-pulse" />
+              <span className="text-xs font-black uppercase tracking-widest text-black">En Vivo</span>
             </div>
           ) : <div />}
 
           {/* Control de Volumen Vertical Interactivo */}
           <div 
-            className="pointer-events-auto relative flex flex-col items-center bg-white border-[3px] border-[#1F2937] shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] p-2 transition-all duration-300"
+            className="pointer-events-auto relative flex flex-col items-center bg-white border-[3px] border-[#1F2937] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] p-2 transition-all duration-300"
             onMouseEnter={() => setShowVolume(true)}
             onMouseLeave={() => setShowVolume(false)}
           >
