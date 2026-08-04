@@ -18,6 +18,7 @@ export default function ProyectoRadio() {
 
   // 2. Tab Local
   const [activeTab, setActiveTab] = useState('supabase');
+  const [mobileTab, setMobileTab] = useState('player'); // 'agenda', 'player', 'menu'
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     player.setCurrentTrackIndex(0);
@@ -153,26 +154,7 @@ export default function ProyectoRadio() {
   return (
     <div className="w-full min-h-screen bg-cream-bg text-black relative font-sans overflow-x-hidden pb-8">
       
-      {/* Marquee Header Estilo EventosOffer */}
-      <section className={`w-full bg-yellow-100 border-b-[3px] ${borderColor} py-2 rounded-none shadow-[0px_4px_0px_0px_rgba(31,41,55,1)] mb-4 overflow-hidden flex items-center h-12 box-border relative z-10`}>
-          <style>{`
-            @keyframes marquee-radio {
-              0% { transform: translateX(0%); }
-              100% { transform: translateX(-50%); }
-            }
-            .animate-marquee-radio {
-              display: flex;
-              width: max-content;
-              animation: marquee-radio 15s linear infinite;
-            }
-          `}</style>
-          <div className="animate-marquee-radio text-lg md:text-xl font-black uppercase tracking-[0.2em] whitespace-nowrap flex items-center" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-              <span className="px-12">• PROYECTO CAFÉ RADIO • ON AIR •</span>
-              <span className="px-12">• SELECCIÓN CURADA • ON AIR •</span>
-              <span className="px-12">• PROYECTO CAFÉ RADIO • ON AIR •</span>
-              <span className="px-12">• SELECCIÓN CURADA • ON AIR •</span>
-          </div>
-      </section>
+
 
       <RadioHeader 
         isPlaying={isPlaying}
@@ -199,11 +181,36 @@ export default function ProyectoRadio() {
 
       {/* LAYOUT PRINCIPAL */}
       <div className="relative z-10 px-4 lg:px-6 pb-8 mx-auto w-full" style={{ maxWidth: '1600px' }}>
+        
+        {/* MOBILE TABS SWITCHER */}
+        <div className="lg:hidden flex border-[3px] border-black bg-cream-bg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 rounded-none overflow-hidden">
+          <button 
+            onClick={() => setMobileTab('agenda')}
+            className={`flex-1 py-3 px-2 font-black uppercase text-xs sm:text-sm border-r-[3px] border-black transition-colors ${mobileTab === 'agenda' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
+          >
+            Agenda
+          </button>
+          <button 
+            onClick={() => setMobileTab('player')}
+            className={`flex-1 py-3 px-2 font-black uppercase text-xs sm:text-sm border-r-[3px] border-black transition-colors ${mobileTab === 'player' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
+          >
+            Radio
+          </button>
+          <button 
+            onClick={() => setMobileTab('menu')}
+            className={`flex-1 py-3 px-2 font-black uppercase text-xs sm:text-sm transition-colors ${mobileTab === 'menu' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
+          >
+            Menú
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12 xl:gap-16">
           
-          <AgendaColumn {...cafeData} />
+          <div className={`${mobileTab === 'agenda' ? 'block' : 'hidden'} lg:block`}>
+            <AgendaColumn {...cafeData} />
+          </div>
 
-          <div className="flex flex-col gap-4">
+          <div className={`flex-col gap-4 ${mobileTab === 'player' ? 'flex' : 'hidden'} lg:flex`}>
             <PlayerCenter 
               currentTrack={{
                 ...currentTrack,
@@ -249,7 +256,9 @@ export default function ProyectoRadio() {
             />
           </div>
 
-          <MenuColumn {...cafeData} />
+          <div className={`${mobileTab === 'menu' ? 'block' : 'hidden'} lg:block`}>
+            <MenuColumn {...cafeData} />
+          </div>
         </div>
       </div>
 

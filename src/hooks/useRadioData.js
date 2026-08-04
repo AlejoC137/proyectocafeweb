@@ -215,6 +215,31 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   };
 
+  // 6.5 Favoritos (Radio Browser)
+  const toggleFavorite = async (station) => {
+    try {
+      const exists = supabasePlaylist.find(s => s.url === station.url || s.id === station.id);
+      if (exists) {
+        // Eliminar de favoritos
+        await supabase.from('playlist_radio').delete().eq('id', exists.id);
+      } else {
+        // Agregar a favoritos
+        const newFavorite = {
+          title: station.title,
+          artist: station.artist,
+          url: station.url,
+          cover: station.cover,
+          isLiveStream: true,
+          order_index: supabasePlaylist.length
+        };
+        await supabase.from('playlist_radio').insert(newFavorite);
+      }
+      fetchSupabasePlaylist();
+    } catch (err) {
+      console.error("Error al modificar favoritos:", err);
+    }
+  };
+
   // 7. Archivos Locales
   const getActivePlaylist = () => {
     if (activeTab === 'somafm') return somaFmChannels;
@@ -286,6 +311,7 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     supabaseError,
     moveSongOrder,
     handleDeleteSong,
+    toggleFavorite,
     localPlaylist,
     handleLocalFilesUpload,
     removeLocalTrack,

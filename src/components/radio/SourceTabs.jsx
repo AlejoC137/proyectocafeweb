@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud, Disc, Globe, HardDrive, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, FolderOpen, Clock } from 'lucide-react';
+import { Cloud, Disc, Globe, HardDrive, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, FolderOpen, Clock, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function SourceTabs({
@@ -14,6 +14,7 @@ export default function SourceTabs({
   isApplyingRemoteChange,
   moveSongOrder,
   handleDeleteSong,
+  toggleFavorite,
   somaFmChannels,
   loadingSomaFm,
   selectedCategory,
@@ -60,8 +61,8 @@ export default function SourceTabs({
         {/* TAB: SUPABASE */}
         {activeTab === 'supabase' && (
           <div className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black border-b-[3px] border-black pb-1 mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 border-b-[3px] border-black bg-white bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] px-3 py-2">
+              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 <Cloud className="w-6 h-6 -mt-1 flex-shrink-0" />
                 <span className="truncate">Play List Alejo ({supabasePlaylist.length})</span>
               </h3>
@@ -118,8 +119,8 @@ export default function SourceTabs({
         {/* TAB: SOMAFM */}
         {activeTab === 'somafm' && (
           <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black border-b-[3px] border-black pb-1 mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="flex items-center justify-between mb-4 border-b-[3px] border-black bg-white bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] px-3 py-2">
+              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 <Disc className="w-6 h-6 -mt-1 flex-shrink-0" />
                 <span className="truncate">Selección Proyecto</span>
               </h3>
@@ -158,8 +159,8 @@ export default function SourceTabs({
         {/* TAB: RADIO BROWSER */}
         {activeTab === 'live' && (
           <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black border-b-[3px] border-black pb-1 mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="flex items-center justify-between mb-4 border-b-[3px] border-black bg-white bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] px-3 py-2">
+              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 <Globe className="w-6 h-6 -mt-1 flex-shrink-0" />
                 <span className="truncate">Radio Browser</span>
               </h3>
@@ -200,9 +201,23 @@ export default function SourceTabs({
                         <p className="text-[10px] font-bold uppercase">{station.artist}</p>
                       </div>
                     </div>
-                    {isCurrent
-                      ? <span className="text-[10px] font-black px-2 py-1 bg-[#FF0000] border-[2px] border-black text-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">LIVE</span>
-                      : <Play className="w-5 h-5 group-hover:text-white" />}
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (toggleFavorite) toggleFavorite(station);
+                        }}
+                        className="p-1.5 transition-transform hover:scale-110"
+                        title="Añadir a Play List Alejo"
+                      >
+                        <Heart 
+                          className={`w-5 h-5 ${supabasePlaylist.some(s => s.url === station.url || s.id === station.id) ? 'fill-[#FF0000] text-[#FF0000]' : 'text-black group-hover:text-white'}`} 
+                        />
+                      </button>
+                      {isCurrent
+                        ? <span className="text-[10px] font-black px-2 py-1 bg-[#FF0000] border-[2px] border-black text-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">LIVE</span>
+                        : <Play className="w-5 h-5 group-hover:text-white" />}
+                    </div>
                   </div>
                 );
               })}
@@ -213,8 +228,8 @@ export default function SourceTabs({
         {/* TAB: LOCAL */}
         {activeTab === 'local' && (
           <div className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black border-b-[3px] border-black pb-1 mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 border-b-[3px] border-black bg-white bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] px-3 py-2">
+              <h3 className="text-2xl lg:text-3xl font-black flex items-center gap-2 uppercase tracking-widest text-black mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                 <HardDrive className="w-6 h-6 -mt-1 flex-shrink-0" />
                 <span className="truncate">Archivos de tu PC ({localPlaylist.length})</span>
               </h3>
