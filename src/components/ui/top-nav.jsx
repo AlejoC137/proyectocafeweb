@@ -180,11 +180,23 @@ export default function TopNav() {
           </button>
 
           <IconButton 
-            onClick={() => navigate('/UserPortal')}
-            className="bg-purple-600 text-white hover:bg-opacity-80"
-            title={currentLeng === ESP ? "Portal de Usuario" : "User Portal"}
+            onClick={() => {
+              if (currentStaff) {
+                if (window.confirm(currentLeng === ESP ? "¿Deseas cerrar sesión?" : "Do you want to log out?")) {
+                  dispatch({ type: 'SET_CURRENT_STAFF', payload: null });
+                  localStorage.removeItem("staffFoundId");
+                  navigate('/');
+                }
+              }
+            }}
+            className="bg-purple-600 text-white hover:bg-opacity-80 flex items-center justify-center relative"
+            title={currentStaff ? (currentLeng === ESP ? `Sesión iniciada como ${currentStaff.Nombre}` : `Logged in as ${currentStaff.Nombre}`) : (currentLeng === ESP ? "Iniciar Sesión" : "Login")}
           >
-            <User className="h-4 w-4" />
+            {currentStaff ? (
+              <span className="font-bold text-xs font-SpaceGrotesk px-1">{currentStaff.Nombre?.charAt(0) || "U"}</span>
+            ) : (
+              <User className="h-4 w-4" />
+            )}
           </IconButton>
 
           <IconButton className="bg-cobalt-blue text-white hover:bg-opacity-80">

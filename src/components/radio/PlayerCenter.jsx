@@ -29,15 +29,13 @@ export default function PlayerCenter({
   const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
 
   return (
-    <div className={`rounded-none border-[3px] ${borderColor} ${shadowColor} bg-white flex flex-col h-full`}>
-      {/* Cover grande con todo superpuesto y sin cajón inferior extra */}
-      <div className="relative flex-1 overflow-hidden bg-black group flex flex-col">
-        <img
-          src={currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'}
-          alt={currentTrack?.title || 'Radio'}
-          className="absolute inset-0 w-full h-full object-cover grayscale opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 pointer-events-none" />
+    <div className={`rounded-none border-[3px] ${borderColor} ${shadowColor} relative w-full aspect-square overflow-hidden bg-black group flex flex-col flex-shrink-0`}>
+      <img 
+        src={currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'} 
+        alt={currentTrack?.title || 'Radio'}
+        className="absolute inset-0 w-full h-full object-cover grayscale opacity-70"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 pointer-events-none" />
 
         {/* Top Bar: Badge EN VIVO + Volumen */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
@@ -80,15 +78,15 @@ export default function PlayerCenter({
         )}
 
         {/* Info sobre el cover */}
-        <div className="absolute bottom-28 left-0 right-0 p-6 pt-0 z-10 pointer-events-none">
-          <h2 className="text-2xl sm:text-4xl font-black leading-tight mb-2 truncate uppercase text-white tracking-widest" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+        <div className="absolute bottom-28 left-0 right-0 p-6 pt-0 z-10 pointer-events-none flex flex-col justify-end items-start">
+          <h2 className="text-2xl sm:text-4xl font-black leading-tight mb-2 line-clamp-2 uppercase text-white tracking-widest" style={{ fontFamily: "'First Bunny', sans-serif" }}>
             {currentTrack?.title || 'Selecciona una estación'}
           </h2>
-          <p className="text-sm font-black truncate uppercase text-white bg-[#1F2937] inline-block px-2 py-0.5 border-[2px] border-white">
+          <p className="text-sm font-black truncate uppercase text-white bg-[#1F2937] inline-block px-2 py-0.5 border-[2px] border-white max-w-full">
             {nowPlaying?.artist || currentTrack?.artist || 'Proyecto Café Radio'}
           </p>
           {nowPlaying?.album && (
-            <p className="text-xs mt-2 font-bold truncate uppercase text-white opacity-80">💿 {nowPlaying.album}</p>
+            <p className="text-xs mt-2 font-bold truncate uppercase text-white opacity-80 max-w-full">💿 {nowPlaying.album}</p>
           )}
         </div>
 
@@ -130,7 +128,6 @@ export default function PlayerCenter({
             />
           </div>
         )}
-      </div>
     </div>
   );
 }

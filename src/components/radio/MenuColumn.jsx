@@ -1,41 +1,117 @@
 import React from 'react';
 import { Coffee, ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import MenuDelDiaPrint from '../../body/views/ventaCompra/MenuDelDiaPrint';
 
-export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarouselIdx, currentMenuItem }) {
+export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarouselIdx, currentMenuItem, todaysLunch }) {
   const navigate = useNavigate();
   const borderColor = "border-[#1F2937]";
   const shadowColor = "shadow-[4px_4px_0px_0px_rgba(31,41,55,1)]";
   const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
 
-  // Siguientes items (solo 2 para que sea pequeño y sencillo)
+  // Siguientes items (3 para llenar el espacio)
   const nextItems = menuItems.length > 1 
     ? [
         menuItems[(menuCarouselIdx + 1) % menuItems.length],
-        menuItems[(menuCarouselIdx + 2) % menuItems.length]
+        menuItems[(menuCarouselIdx + 2) % menuItems.length],
+        menuItems[(menuCarouselIdx + 3) % menuItems.length]
       ]
     : [];
+
+  let parsedLunch = null;
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  if (todaysLunch) {
+    try {
+      parsedLunch = JSON.parse(todaysLunch.Comp_Lunch);
+    } catch(e) {}
+  }
+
+  const renderLunchField = (label, itemData, indexPrefix = "") => {
+    if (!itemData || !itemData.nombre) return null;
+    return (
+      <div className="w-full leading-tight mb-0.5 truncate">
+        <span className="text-lg lg:text-xl font-black uppercase tracking-wide text-black mr-1.5" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+          {label}:
+        </span>
+        <span className="font-black text-base lg:text-lg uppercase text-pink-600">
+          {indexPrefix}{itemData.nombre}
+        </span>
+        {itemData.descripcion && (
+          <span className="text-[10px] sm:text-xs font-bold text-[#1F2937] ml-1">({itemData.descripcion})</span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className={`w-full flex-col flex border-[3px] ${borderColor} bg-white rounded-none ${shadowColor}`}>
       
-      {/* SECCIÓN 1: Menú del Día (Almuerzo) */}
+      {/* SECCIÓN 1: Menú del Día (Almuerzo Tipográfico) */}
       <div className={`p-4 border-b-[3px] ${borderColor} bg-yellow-100 flex items-center justify-between`}>
         <h3 className="font-black uppercase tracking-widest text-xs flex items-center gap-2">
           <Utensils className="w-4 h-4" /> Menú del Día
         </h3>
+        {parsedLunch?.fecha?.fecha && (
+          <span className="text-[10px] font-black uppercase bg-white border-[2px] border-black px-2 py-0.5">
+            {parsedLunch.fecha.fecha === todayStr ? 'HOY' : parsedLunch.fecha.fecha}
+          </span>
+        )}
       </div>
-      <div className={`bg-cream-bg border-b-[3px] ${borderColor} flex flex-col justify-center items-center overflow-hidden h-[300px] relative`}>
-        {/* Aquí renderizamos el componente de Almuerzo pero escalado para encajar */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 scale-[0.25] origin-top pointer-events-none mt-2">
-          <MenuDelDiaPrint isMiniature={true} />
+      
+      {/* Imagen del Almuerzo (1:1) si existe */}
+      {todaysLunch?.Foto && (
+        <div className={`w-full aspect-square border-b-[3px] ${borderColor} relative overflow-hidden bg-white group flex-shrink-0`}>
+          <img 
+            src={todaysLunch.Foto} 
+            alt="Menú del Día" 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
         </div>
-        {/* Capa invisible para atrapar clicks y redirigir si se quiere */}
-        <div 
-          onClick={() => navigate('/Menu')}
-          className="absolute inset-0 z-10 cursor-pointer hover:bg-black/5 transition-colors"
-        />
+      )}
+
+      <div className={`bg-cream-bg border-b-[3px] ${borderColor} flex flex-col relative px-3 py-2`}>
+        {parsedLunch ? (
+          <div className="flex flex-col w-full overflow-hidden">
+            <div className="flex flex-col gap-0.5 w-full">
+              {/* Entrada */}
+              {renderLunchField("Entrada", parsedLunch.entrada)}
+              
+              {/* Proteína inline 1 */}
+              {parsedLunch.proteina?.nombre && (
+                <div className="w-full leading-tight truncate">
+                  <span className="text-lg lg:text-xl font-black uppercase tracking-wide text-black mr-1.5" style={{ fontFamily: "'First Bunny', sans-serif" }}>Proteína:</span>
+                  <span className="font-black text-base lg:text-lg uppercase text-pink-600">
+                    1. {parsedLunch.proteina.nombre}
+                  </span>
+                  {parsedLunch.proteina.descripcion && <span className="text-[10px] sm:text-xs font-bold text-[#1F2937] ml-1">({parsedLunch.proteina.descripcion})</span>}
+                </div>
+              )}
+              
+              {/* Proteína inline 2 */}
+              {(parsedLunch.proteina_opcion_2?.nombre || parsedLunch["Opción 2"]?.nombre) && (
+                <div className="w-full leading-tight truncate">
+                  <span className="text-lg lg:text-xl font-black uppercase tracking-wide text-transparent mr-1.5 select-none" style={{ fontFamily: "'First Bunny', sans-serif" }}>Proteína:</span>
+                  <span className="font-black text-base lg:text-lg uppercase text-pink-600">
+                    2. {parsedLunch.proteina_opcion_2?.nombre || parsedLunch["Opción 2"]?.nombre}
+                  </span>
+                  {(parsedLunch.proteina_opcion_2?.descripcion || parsedLunch["Opción 2"]?.descripcion) && (
+                    <span className="text-[10px] sm:text-xs font-bold text-[#1F2937] ml-1">({parsedLunch.proteina_opcion_2?.descripcion || parsedLunch["Opción 2"]?.descripcion})</span>
+                  )}
+                </div>
+              )}
+
+              {renderLunchField("Carbo", parsedLunch.carbohidrato)}
+              {renderLunchField("Acomp", parsedLunch.acompanante)}
+              {renderLunchField("Ensalada", parsedLunch.ensalada)}
+              {renderLunchField("Bebida", parsedLunch.bebida)}
+            </div>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-black/50">
+            <Utensils className="w-12 h-12 mb-2 opacity-30" />
+            <p className="text-xs font-black uppercase tracking-widest text-center">No hay menú para hoy</p>
+          </div>
+        )}
       </div>
 
       {/* SECCIÓN 2: Carrusel de la Carta */}
@@ -61,11 +137,12 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
         </div>
       </div>
 
-      <div className="flex-1 bg-cream-bg relative overflow-hidden flex flex-col">
+      <div className="flex-1 bg-cream-bg relative overflow-hidden flex flex-col justify-start">
         {menuItems.length > 0 && currentMenuItem ? (
-          <div className="flex flex-col h-full">
-            {/* Foto Grande (Carrusel) */}
-            <div className="w-full h-48 sm:h-56 relative group">
+          <div className="flex flex-col h-full w-full">
+            
+            {/* Foto Grande Cuadrada (Full Width 1:1) */}
+            <div className="w-full aspect-square relative group flex-shrink-0">
               <div className={`w-full h-full border-b-[3px] ${borderColor} relative overflow-hidden bg-white`}>
                 <img 
                   src={currentMenuItem.Foto} 
@@ -75,37 +152,43 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
                 
                 {/* Badge Precio */}
                 <div className={`absolute top-3 right-3 bg-yellow-100 border-[3px] ${borderColor} px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
-                  <span className="font-black text-xs">{currentMenuItem.Precio}</span>
+                  <span className="font-black text-lg">{currentMenuItem.Precio}</span>
                 </div>
                 
                 {/* Info Text Box */}
                 <div className={`absolute bottom-3 left-3 right-3 bg-white border-[3px] ${borderColor} p-2 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
-                  <p className="text-[9px] font-black uppercase text-pink-500 tracking-widest leading-none mb-1">{currentMenuItem.SubTipoES || currentMenuItem.TipoES}</p>
-                  <h4 className="font-black uppercase tracking-tight text-sm leading-none truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                  <p className="text-xs font-black uppercase text-pink-500 tracking-widest leading-none mb-1">{currentMenuItem.SubTipoES || currentMenuItem.TipoES}</p>
+                  <h4 className="font-black uppercase tracking-tight text-xl leading-none truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {currentMenuItem.NombreES}
                   </h4>
                 </div>
               </div>
             </div>
 
-            {/* Mini lista de los siguientes (muy pequeña y sencilla) */}
+            {/* Lista compacta de siguientes items */}
             {nextItems.length > 0 && (
-              <div className="p-3 bg-cream-bg flex-1 flex flex-col justify-center">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">A continuación:</p>
-                <div className="flex flex-col gap-2">
+              <div className="p-3 bg-cream-bg flex-1 flex flex-col justify-start border-b-[3px] border-black overflow-y-auto custom-scrollbar">
+                <p className="text-xs font-black uppercase tracking-widest opacity-50 mb-2">A continuación:</p>
+                <div className="flex flex-col gap-1.5">
                   {nextItems.map((item, i) => (
-                    <div key={i} className={`flex items-center gap-3 p-2 bg-white border-[2px] ${borderColor} shadow-[1px_1px_0px_0px_rgba(31,41,55,1)] cursor-pointer hover:bg-yellow-100 transition-colors`}
+                    <div key={i} className={`flex flex-col p-2 bg-white border-[2px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] cursor-pointer hover:bg-yellow-100 transition-colors leading-tight`}
                       onClick={() => setMenuCarouselIdx((menuCarouselIdx + i + 1) % menuItems.length)}
                     >
-                      <img src={item.Foto} alt={item.NombreES} className="w-8 h-8 object-cover border-[1px] border-black" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black uppercase truncate">{item.NombreES}</p>
+                      <div className="flex items-center gap-2 truncate">
+                        <p className="text-base font-black uppercase truncate text-black flex-1">
+                          {item.NombreES}
+                          {item.DescripcionMenuES && (
+                            <span className="text-[10px] font-bold text-gray-500 ml-1">({item.DescripcionMenuES})</span>
+                          )}
+                        </p>
+                        <span className="text-sm font-black bg-yellow-100 border-[2px] border-black px-1.5 py-0.5 leading-none flex-shrink-0">{item.Precio}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+            
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-black/50 min-h-[200px]">
@@ -116,7 +199,7 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
       </div>
 
       {/* Botón Inferior */}
-      <div className={`p-4 border-t-[3px] ${borderColor} bg-white mt-auto`}>
+      <div className={`p-4 bg-white mt-auto`}>
         <button
           onClick={() => navigate('/Menu')}
           className={`w-full py-3 border-[3px] ${borderColor} bg-black text-white font-black uppercase tracking-[0.2em] text-xs shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] hover:bg-yellow-100 hover:text-black transition-all ${buttonHover} rounded-none`}

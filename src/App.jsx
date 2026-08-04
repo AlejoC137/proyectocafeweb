@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import TopNav from './components/ui/top-nav';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import GlobalAuthModal from './components/GlobalAuthModal';
 
 // --- Lazy imports: cada ruta se carga solo cuando se navega a ella ---
 const MenuView = lazy(() => import('./body/views/menuView/MenuView'));
@@ -75,13 +76,14 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <div className='flex w-full min-h-screen relative bg-cream-bg text-darker-on-cream font-sans'>
-      <div className="relative z-10 w-full overflow-x-hidden min-h-screen flex flex-col">
-        <TopNav />
-        <ErrorBoundary section="Aplicación">
-          <Suspense fallback={<PageLoader />}>
-            <div className="flex-1 flex flex-col pt-14">
-              <Routes>
+    <GlobalAuthModal>
+      <div className='flex w-full min-h-screen relative bg-cream-bg text-darker-on-cream font-sans'>
+        <div className="relative z-10 w-full overflow-x-hidden min-h-screen flex flex-col">
+          <TopNav />
+          <ErrorBoundary section="Aplicación">
+            <Suspense fallback={<PageLoader />}>
+              <div className="flex-1 flex flex-col pt-14">
+                <Routes>
                 <Route path="/MenuView" element={<MenuView />} />
                 <Route path="/MenuLunch" element={<MenuLunch />} />
                 <Route path="/LunchByOrder" element={<LunchByOrder />} />
@@ -166,6 +168,7 @@ function App() {
         </ErrorBoundary>
       </div>
     </div>
+    </GlobalAuthModal>
   );
 }
 

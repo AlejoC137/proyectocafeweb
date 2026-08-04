@@ -23,17 +23,46 @@ export function useCafeData() {
     }
   };
 
-  // Fetch Menú (platos con foto)
+  const [todaysLunch, setTodaysLunch] = useState(null);
+
+  // Fetch Menú (platos con foto y almuerzos)
   const fetchMenu = async () => {
     try {
-      const { data, error } = await supabase
+      // 1. Fetch regular menu items for the carousel
+      const { data: menuData, error: menuError } = await supabase
         .from('Menu')
-        .select('_id, NombreES, Precio, Foto, TipoES, SubTipoES, DescripcionMenuES, Estado')
+        .select('_id, NombreES, Precio, Foto, TipoES, SubTipoES, DescripcionMenuES, Estado, SUB_GRUPO')
         .eq('Estado', 'Activo')
         .not('Foto', 'is', null)
         .order('Order', { ascending: true })
-        .limit(20);
-      if (!error && data) setMenuItems(data.filter(m => m.Foto && m.Foto.trim() !== ''));
+        .limit(100);
+
+      if (!menuError && menuData) {
+        setMenuItems(menuData.filter(m => m.Foto && m.Foto.trim() !== '' && m.SUB_GRUPO !== 'TARDEO_ALMUERZO'));
+      }
+
+      // 2. Fetch lunch items specifically
+      const { data: lunchDataDB, error: lunchError } = await supabase
+        .from('Menu')
+        .select('_id, NombreES, Precio, Foto, TipoES, SubTipoES, DescripcionMenuES, Estado, SUB_GRUPO, Comp_Lunch')
+        .eq('Estado', 'Activo')
+        .eq('SUB_GRUPO', 'TARDEO_ALMUERZO');
+
+      if (!lunchError && lunchDataDB && lunchDataDB.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        let foundLunch = lunchDataDB.find(item => {
+          if (!item.Comp_Lunch) return false;
+          try {
+            const parsed = JSON.parse(item.Comp_Lunch);
+            return parsed?.fecha?.fecha === todayStr;
+          } catch { return false; }
+        });
+
+        if (!foundLunch) {
+          foundLunch = lunchDataDB.find(item => item.Comp_Lunch);
+        }
+        setTodaysLunch(foundLunch);
+      }
     } catch (err) {
       console.warn('[Radio] Menu no disponible:', err.message);
     }
@@ -49,7 +78,7 @@ export function useCafeData() {
     if (agendaEvents.length <= 1) return;
     const timer = setInterval(() => {
       setEventCarouselIdx(prev => (prev + 1) % agendaEvents.length);
-    }, 5000);
+    }, 300000); // 5 minutes
     return () => clearInterval(timer);
   }, [agendaEvents.length]);
 
@@ -57,7 +86,7 @@ export function useCafeData() {
     if (menuItems.length <= 1) return;
     const timer = setInterval(() => {
       setMenuCarouselIdx(prev => (prev + 1) % menuItems.length);
-    }, 4000);
+    }, 8000);
     return () => clearInterval(timer);
   }, [menuItems.length]);
 
@@ -78,6 +107,7 @@ export function useCafeData() {
     setMenuCarouselIdx,
     currentEvent: agendaEvents[eventCarouselIdx],
     currentMenuItem: menuItems[menuCarouselIdx],
+    todaysLunch,
     formatEventDate
   };
 }

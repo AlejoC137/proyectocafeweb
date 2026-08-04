@@ -112,6 +112,16 @@ export default function ProyectoRadio() {
     }, 500);
   }, [currentPlay]);
 
+  // Sincronizar el index local si la playlist actual contiene la estación global
+  React.useEffect(() => {
+    if (currentPlay && radioData.currentPlaylist.length > 0) {
+      const idx = radioData.currentPlaylist.findIndex(t => (t.url || t.stream_url) === currentPlay.station_url);
+      if (idx !== -1 && idx !== currentTrackIndex) {
+        setCurrentTrackIndex(idx);
+      }
+    }
+  }, [currentPlay, radioData.currentPlaylist]);
+
   const handleAutoStart = () => {
     player.setShowAutoStart(false);
     if (player.pendingPlayRef.current && player.audioRef.current) {
@@ -188,7 +198,7 @@ export default function ProyectoRadio() {
       )}
 
       {/* LAYOUT PRINCIPAL */}
-      <div className="relative z-10 px-4 lg:px-6 pb-8" style={{ width: '100%', margin: '0 auto' }}>
+      <div className="relative z-10 px-4 lg:px-6 pb-8 mx-auto w-full" style={{ maxWidth: '1600px' }}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12 xl:gap-16">
           
           <AgendaColumn {...cafeData} />
@@ -197,9 +207,10 @@ export default function ProyectoRadio() {
             <PlayerCenter 
               currentTrack={{
                 ...currentTrack,
-                title: currentTrack?.title || currentPlay?.station_name || 'Selecciona una estación',
-                artist: currentTrack?.artist || currentPlay?.station_artist || '',
-                cover: currentTrack?.cover || currentPlay?.station_cover,
+                // Si la URL que está sonando es la global, garantizamos que el título y cover vengan del global para evitar desajustes
+                title: (player.audioRef.current?.src === currentPlay?.station_url) ? currentPlay?.station_name : (currentTrack?.title || currentPlay?.station_name || 'Selecciona una estación'),
+                artist: (player.audioRef.current?.src === currentPlay?.station_url) ? currentPlay?.station_artist : (currentTrack?.artist || currentPlay?.station_artist || ''),
+                cover: (player.audioRef.current?.src === currentPlay?.station_url) ? currentPlay?.station_cover : (currentTrack?.cover || currentPlay?.station_cover),
                 isLiveStream: currentTrack?.isLiveStream ?? true,
                 url: currentTrack?.url || currentPlay?.station_url
               }}

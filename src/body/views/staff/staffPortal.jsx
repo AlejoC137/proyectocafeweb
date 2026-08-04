@@ -137,8 +137,6 @@ function StaffPortal() {
     dispatch(setCurrentStaff(null));
     localStorage.removeItem("staffFoundId");
     setActiveView(null);
-    setCcInput("");
-    setPinInput("");
   };
 
   const handleGoToNomina = () => {
@@ -232,27 +230,7 @@ function StaffPortal() {
             <h1 className="text-headline-md font-bold text-primary-stitch hidden sm:block whitespace-nowrap">Portal Operativo</h1>
 
             <div className="flex-1 max-w-lg ml-auto mr-4 hidden md:block">
-              <form className="w-full" onSubmit={handleSearch}>
-                 <div className="flex gap-2">
-                    <input 
-                       type="text" 
-                       value={ccInput}
-                       onChange={(e) => setCcInput(e.target.value)}
-                       placeholder="Cédula (CC)" 
-                       className="w-1/3 min-w-[100px] bg-surface-main border border-primary-stitch/30 rounded-lg p-1.5 px-3 text-body-sm focus:ring-1 focus:ring-primary-stitch outline-none"
-                       required
-                    />
-                    <input 
-                       type="password" 
-                       value={pinInput}
-                       onChange={(e) => setPinInput(e.target.value)}
-                       placeholder="PIN / Código" 
-                       className="w-1/3 min-w-[100px] bg-surface-main border border-primary-stitch/30 rounded-lg p-1.5 px-3 text-body-sm focus:ring-1 focus:ring-primary-stitch outline-none"
-                       required
-                    />
-                    <button type="submit" className="bg-primary-stitch text-white px-4 py-1.5 rounded-lg font-label-md hover:brightness-110 transition-all text-sm shrink-0">Ingresar</button>
-                 </div>
-              </form>
+              {/* Login has been moved to GlobalAuthModal */}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -327,30 +305,7 @@ function StaffPortal() {
             {/* CENTER COLUMN: Acceso al Sistema */}
             <section className="lg:col-span-6 space-y-4">
               
-              {/* Controles de Staff - Mobile Only */}
-              <div className="md:hidden bg-surface-card p-3 rounded-xl border border-outline-variant shadow-sm flex flex-col gap-3">
-                <form className="w-full" onSubmit={handleSearch}>
-                   <div className="flex gap-2">
-                      <input 
-                         type="text" 
-                         value={ccInput}
-                         onChange={(e) => setCcInput(e.target.value)}
-                         placeholder="Cédula (CC)" 
-                         className="flex-1 bg-surface-main border border-outline-variant rounded-lg p-2 text-body-sm focus:ring-1 focus:ring-primary-stitch outline-none min-w-[80px]"
-                         required
-                      />
-                      <input 
-                         type="password" 
-                         value={pinInput}
-                         onChange={(e) => setPinInput(e.target.value)}
-                         placeholder="PIN / Código" 
-                         className="flex-1 bg-surface-main border border-outline-variant rounded-lg p-2 text-body-sm focus:ring-1 focus:ring-primary-stitch outline-none min-w-[80px]"
-                         required
-                      />
-                      <button type="submit" className="bg-primary-stitch text-white px-4 py-2 rounded-lg font-label-md hover:brightness-110 transition-all shrink-0">Ingresar</button>
-                   </div>
-                </form>
-              </div>
+              {/* Mobile Controles de Staff removed, moved to GlobalAuthModal */}
               
               {error && (
                 <div className="bg-error-container text-on-error-container p-3 rounded-lg text-sm border border-error/20">
@@ -358,26 +313,30 @@ function StaffPortal() {
                 </div>
               )}
 
-              <h2 className="font-headline-sm text-headline-sm text-primary-stitch flex items-center gap-2">
-                <Grid size={24} />
-                Acceso al Sistema
-              </h2>
-              
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
-                {systemButtons.map((btn, idx) => {
-                  const Icon = btn.icon;
-                  return (
-                    <button 
-                      key={idx} 
-                      onClick={btn.onClick}
-                      className="flex flex-col items-center justify-center py-3 px-2 sm:p-4 bg-surface-card rounded-xl border border-outline-variant hover:border-primary-stitch hover:shadow-md transition-all group active:scale-95"
-                    >
-                      <Icon className="text-primary-stitch mb-1 sm:mb-2" size={28} strokeWidth={1.5} />
-                      <span className="font-label-md text-on-surface-variant group-hover:text-primary-stitch text-center px-1 text-[11px] sm:text-[12px] leading-tight">{btn.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              {staffFound?.isAdmin && (
+                <>
+                  <h2 className="font-headline-sm text-headline-sm text-primary-stitch flex items-center gap-2">
+                    <Grid size={24} />
+                    Acceso al Sistema
+                  </h2>
+                  
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+                    {systemButtons.map((btn, idx) => {
+                      const Icon = btn.icon;
+                      return (
+                        <button 
+                          key={idx} 
+                          onClick={btn.onClick}
+                          className="flex flex-col items-center justify-center py-3 px-2 sm:p-4 bg-surface-card rounded-xl border border-outline-variant hover:border-primary-stitch hover:shadow-md transition-all group active:scale-95"
+                        >
+                          <Icon className="text-primary-stitch mb-1 sm:mb-2" size={28} strokeWidth={1.5} />
+                          <span className="font-label-md text-on-surface-variant group-hover:text-primary-stitch text-center px-1 text-[11px] sm:text-[12px] leading-tight">{btn.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
 
               {/* Botones del Staff seleccionado */}
               {staffFound && (
