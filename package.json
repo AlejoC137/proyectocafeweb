@@ -23,6 +23,8 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^8.17.10",
     "@reduxjs/toolkit": "^2.11.2",
     "@supabase/supabase-js": "^2.45.4",
     "axios": "^1.7.7",
@@ -52,6 +54,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwind-variants": "^1.0.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.185.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

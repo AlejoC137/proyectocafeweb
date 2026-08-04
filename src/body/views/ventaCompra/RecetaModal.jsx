@@ -626,6 +626,7 @@ function RecetaModal({ item, onClose }) {
 
   const handleSaveFullRecipe = async () => {
     if (!permanentEditMode || !receta || !recetaSource) return;
+    if (!window.confirm("⚠️ CONFIRMACIÓN DE GUARDADO:\n\n¿Estás seguro de que deseas guardar y actualizar los cambios de esta receta en Supabase?")) return;
     const mapItemsToPayload = (items) => {
       const payload = {};
       for (let i = 1; i <= 30; i++) { payload[`item${i}_Id`] = null; payload[`item${i}_Cuantity_Units`] = null; }

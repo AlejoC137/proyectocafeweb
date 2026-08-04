@@ -62,6 +62,8 @@ const AliadosExcelView       = lazy(() => import('./body/views/aliados/AliadosEx
 const AliadoRegistrationForm = lazy(() => import('./body/views/aliados/AliadoRegistrationForm'));
 const AliadoPortal           = lazy(() => import('./body/views/aliados/AliadoPortal'));
 const AnalisisAlmuerzo       = lazy(() => import('./body/views/lunchByOrder/AnalisisAlmuerzo'));
+const ReviewProyectoCafe     = lazy(() => import('./body/views/reviewProyectoCafe/ReviewProyectoCafe'));
+const CalculadorRecetaHelados= lazy(() => import('./body/views/ventaCompra/CalculadorRecetaHelados'));
 
 const ProyectoRadio          = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager           = lazy(() => import('./components/RadioManager'));
@@ -88,6 +90,7 @@ function App() {
             <Route path="/Agenda/:year?/:month?"             element={<Agenda />} />
             <Route path="/Manager/:tab?"                     element={<Manager />} />
             <Route path="/Recetas"                           element={<Recetas />} />
+            <Route path="/CalculadorRecetaHelados"          element={<CalculadorRecetaHelados />} />
             <Route path="/SobreNosotros"                     element={<SobreNosotros />} />
             <Route path="/Scraper"                           element={<Scraper />} />
             <Route path="/"                                  element={<StaffPortal />} />
@@ -144,6 +147,8 @@ function App() {
             <Route path="/MenuPrintHorizontal"              element={<MenuPrintManager />} />
             <Route path="/Radio"                             element={<ProyectoRadio />} />
             <Route path="/radio"                             element={<ProyectoRadio />} />
+            <Route path="/ProyectoRadio"                     element={<ProyectoRadio />} />
+            <Route path="/proyectoradio"                     element={<ProyectoRadio />} />
             <Route path="/RadioManager"                      element={<RadioManager />} />
             <Route path="/radiomanager"                      element={<RadioManager />} />
             <Route path="/Cotizaciones"                      element={<CotizacionesView />} />
@@ -152,6 +157,7 @@ function App() {
             <Route path="/AliadosExcel"                      element={<AliadosExcelView />} />
             <Route path="/RegistroAliado"                    element={<AliadoRegistrationForm />} />
             <Route path="/PortalAliado"                      element={<AliadoPortal />} />
+            <Route path="/review_ProyectoCafe"               element={<ReviewProyectoCafe />} />
 
             <Route path="*"                                  element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
           </Routes>

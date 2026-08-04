@@ -40,6 +40,7 @@ const pageTitles = {
   "MODELOPROYECTO": { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" },
   "USERPORTAL": { [ESP]: "Portal de Usuario", [ENG]: "User Portal" },
   "COTIZACIONES": { [ESP]: "Cotizaciones", [ENG]: "Quotes" },
+  "CALCULADORRECETAHELADOS": { [ESP]: "Formulador de Helados", [ENG]: "Ice Cream Formulator" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -127,7 +128,8 @@ export default function TopNav() {
     { label: "Día", path: "/DiaResumen" },
     { label: "Mes", path: "/MesResumen" },
     { label: "Modelo Proyecto", path: "/ModeloProyecto" },
-    { label: "Cotizaciones", path: "/Cotizaciones" }
+    { label: "Cotizaciones", path: "/Cotizaciones" },
+    { label: "Formulador Helados (Dubovik)", path: "/CalculadorRecetaHelados" }
   ];
 
   return (
