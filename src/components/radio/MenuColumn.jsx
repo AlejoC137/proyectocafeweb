@@ -29,11 +29,11 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
   const renderLunchField = (label, itemData, indexPrefix = "") => {
     if (!itemData || !itemData.nombre) return null;
     return (
-      <div className="w-full leading-tight mb-0.5 truncate">
-        <span className="text-lg lg:text-xl font-black uppercase tracking-wide text-black mr-1.5" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+      <div className="w-full leading-tight mb-1 truncate">
+        <span className="text-xs font-black uppercase tracking-widest text-black mr-1.5">
           {label}:
         </span>
-        <span className="font-black text-base lg:text-lg uppercase text-pink-600">
+        <span className="text-xs font-black uppercase tracking-widest text-pink-600">
           {indexPrefix}{itemData.nombre}
         </span>
         {itemData.descripcion && (
@@ -80,9 +80,9 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
               
               {/* Proteína inline 1 */}
               {parsedLunch.proteina?.nombre && (
-                <div className="w-full leading-tight truncate">
-                  <span className="text-lg lg:text-xl font-black uppercase tracking-wide text-black mr-1.5" style={{ fontFamily: "'First Bunny', sans-serif" }}>Proteína:</span>
-                  <span className="font-black text-base lg:text-lg uppercase text-pink-600">
+                <div className="w-full leading-tight mb-1 truncate">
+                  <span className="text-xs font-black uppercase tracking-widest text-black mr-1.5">Proteína:</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-pink-600">
                     1. {parsedLunch.proteina.nombre}
                   </span>
                   {parsedLunch.proteina.descripcion && <span className="text-[10px] sm:text-xs font-bold text-[#1F2937] ml-1">({parsedLunch.proteina.descripcion})</span>}
@@ -91,9 +91,9 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
               
               {/* Proteína inline 2 */}
               {(parsedLunch.proteina_opcion_2?.nombre || parsedLunch["Opción 2"]?.nombre) && (
-                <div className="w-full leading-tight truncate">
-                  <span className="text-lg lg:text-xl font-black uppercase tracking-wide text-transparent mr-1.5 select-none" style={{ fontFamily: "'First Bunny', sans-serif" }}>Proteína:</span>
-                  <span className="font-black text-base lg:text-lg uppercase text-pink-600">
+                <div className="w-full leading-tight mb-1 truncate">
+                  <span className="text-xs font-black uppercase tracking-widest text-transparent mr-1.5 select-none">Proteína:</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-pink-600">
                     2. {parsedLunch.proteina_opcion_2?.nombre || parsedLunch["Opción 2"]?.nombre}
                   </span>
                   {(parsedLunch.proteina_opcion_2?.descripcion || parsedLunch["Opción 2"]?.descripcion) && (
@@ -160,7 +160,7 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
                 {/* Info Text Box */}
                 <div className={`absolute bottom-3 left-3 right-3 bg-white border-[3px] border-[#1F2937] p-2 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
                   <p className="text-xs font-black uppercase text-pink-500 tracking-widest leading-none mb-1">{currentMenuItem.SubTipoES || currentMenuItem.TipoES}</p>
-                  <h4 className="font-black uppercase tracking-tight text-xl leading-none truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                  <h4 className="font-black uppercase tracking-tight text-xl leading-none truncate text-pink-600">
                     {currentMenuItem.NombreES}
                   </h4>
                 </div>
@@ -177,10 +177,10 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
                       onClick={() => setMenuCarouselIdx((menuCarouselIdx + i + 1) % menuItems.length)}
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <p className="text-base font-black uppercase truncate text-black flex-1">
+                        <p className="text-base font-black uppercase truncate text-pink-600 flex-1">
                           {item.NombreES}
                           {item.DescripcionMenuES && (
-                            <span className="text-[10px] font-bold text-gray-500 ml-1">({item.DescripcionMenuES})</span>
+                            <span className="text-[10px] font-bold text-[#1F2937] ml-1">({item.DescripcionMenuES})</span>
                           )}
                         </p>
                         <span className="text-sm font-black bg-yellow-100 border-[2px] border-black px-1.5 py-0.5 leading-none flex-shrink-0">{item.Precio}</span>

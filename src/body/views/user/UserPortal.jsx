@@ -54,7 +54,7 @@ export default function UserPortal() {
   const [activeTab, setActiveTab] = useState("overview"); // overview, events, history, diet, settings, messages
   const location = useLocation();
   const [isRegistering, setIsRegistering] = useState(location.pathname.includes("/Registro"));
-  
+
   useEffect(() => {
     setIsRegistering(location.pathname.includes("/Registro"));
   }, [location.pathname]);
@@ -477,9 +477,9 @@ export default function UserPortal() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Mensaje Reciente</p>
-                          <h3 className="text-xl font-bold font-SpaceGrotesk">{userMessages[0].title}</h3>
+                          <h3 style={{ fontFamily: "'First Bunny', sans-serif" }} className="text-xl font-bold">{userMessages[0].title} </h3>
                         </div>
-                      </div>
+                      </div>|
                       <ChevronRight className="w-6 h-6 opacity-50" />
                     </div>
                   </div>
@@ -665,15 +665,15 @@ export default function UserPortal() {
                       <div
                         key={msg._id}
                         className={`p-6 rounded-3xl border transition-all ${msg.type === 'welcome' ? 'bg-emerald-50/50 border-emerald-100' :
-                            msg.type === 'promo' ? 'bg-amber-50/50 border-amber-100' :
-                              'bg-indigo-50/50 border-indigo-100'
+                          msg.type === 'promo' ? 'bg-amber-50/50 border-amber-100' :
+                            'bg-indigo-50/50 border-indigo-100'
                           }`}
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-xl ${msg.type === 'welcome' ? 'bg-emerald-100 text-emerald-600' :
-                                msg.type === 'promo' ? 'bg-amber-100 text-amber-600' :
-                                  'bg-indigo-100 text-indigo-600'
+                              msg.type === 'promo' ? 'bg-amber-100 text-amber-600' :
+                                'bg-indigo-100 text-indigo-600'
                               }`}>
                               <span className="text-lg">
                                 {msg.type === 'welcome' ? '✨' : msg.type === 'promo' ? '🎁' : '💬'}

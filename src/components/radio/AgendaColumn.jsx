@@ -54,7 +54,7 @@ export default function AgendaColumn({ currentEvent, agendaEvents = [], eventCar
                 return (
                   <div key={evt._id || idx} className={`p-4 border-b-[3px] ${borderColor} flex flex-col justify-between transition-colors ${isSelected ? 'bg-yellow-100 opacity-100' : 'bg-transparent opacity-50 hover:opacity-100'}`}>
                     <div>
-                      <h4 className="text-2xl font-black uppercase leading-none tracking-tighter mb-4" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                      <h4 className="text-3xl lg:text-4xl font-black uppercase leading-none tracking-tighter mb-4" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                         {evt.nombreES || evt.nombre}
                       </h4>
                       
