@@ -12,7 +12,7 @@ const categoryEmojis = {
   "Acompañante": "🥔", "Ensalada": "🥗", "Bebida": "🍹", "Default": "✨"
 };
 
-function MenuDelDiaPrint() {
+function MenuDelDiaPrint({ isMiniature = false }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -192,6 +192,37 @@ function MenuDelDiaPrint() {
     return <div className="text-center text-2xl p-10">Cargando...</div>;
   }
 
+  const posterElement = (
+    <div className={`${isMiniature ? '' : 'shadow-2xl'} overflow-hidden flex-shrink-0 relative`} style={{
+      width: '650px',
+      height: '1200px',
+      minWidth: '650px',
+      minHeight: '1200px',
+      transform: isMiniature ? 'scale(1)' : 'scale(0.85)',
+      transformOrigin: 'top center',
+      marginBottom: isMiniature ? '0px' : '-180px'
+    }}>
+      <div
+        ref={printRef}
+        className="absolute inset-0 bg-white overflow-hidden text-left"
+        style={{
+          width: '650px',
+          height: '1200px',
+          backgroundImage: `url('${almuerzoBg}')`,
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {renderMenuDetails()}
+      </div>
+    </div>
+  );
+
+  if (isMiniature) {
+    return posterElement;
+  }
+
   return (
     <div className="w-full h-full flex flex-col bg-gray-100">
       <div className="flex justify-between items-center p-4 bg-white border-b shadow-sm w-full">
@@ -206,31 +237,7 @@ function MenuDelDiaPrint() {
 
       <div className="flex-grow flex gap-8 p-8 overflow-auto items-start">
         <div className="flex justify-center items-start overflow-auto bg-gray-200/50 rounded-lg border border-gray-300 shadow-inner p-4" style={{ maxWidth: '100%', maxHeight: '100%' }}>
-          {/* Contenedor con dimensiones fijas estrictas para la captura de html2canvas y visualización sin deformarse */}
-          <div className="shadow-2xl overflow-hidden flex-shrink-0 relative" style={{
-            width: '650px',
-            height: '1200px',
-            minWidth: '650px',
-            minHeight: '1200px',
-            transform: 'scale(0.85)',
-            transformOrigin: 'top center',
-            marginBottom: '-180px' // Compensate for scale(0.85) roughly 15% of 1200px
-          }}>
-            <div
-              ref={printRef}
-              className="absolute inset-0 bg-white overflow-hidden text-left"
-              style={{
-                width: '650px',
-                height: '1200px',
-                backgroundImage: `url('${almuerzoBg}')`,
-                backgroundSize: '100% 100%', // Evita que se recorte si cambia la proporción
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
-              }}
-            >
-              {renderMenuDetails()}
-            </div>
-          </div>
+          {posterElement}
         </div>
 
         <div className="flex-grow min-w-[300px] overflow-auto bg-white rounded-lg shadow-xl p-4">
