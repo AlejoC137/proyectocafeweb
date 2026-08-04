@@ -29,13 +29,14 @@ export default function PlayerCenter({
   const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
 
   return (
-    <div className={`rounded-none border-[3px] ${borderColor} ${shadowColor} relative w-full aspect-square overflow-hidden bg-black group flex flex-col flex-shrink-0`}>
-      <img 
-        src={currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'} 
-        alt={currentTrack?.title || 'Radio'}
-        className="absolute inset-0 w-full h-full object-cover grayscale opacity-70"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 pointer-events-none" />
+    <div className={`rounded-none border-[3px] ${borderColor} ${shadowColor} relative w-full pt-[100%] overflow-hidden bg-black group flex-shrink-0`}>
+      <div className="absolute inset-0 flex flex-col">
+        <img 
+          src={currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'} 
+          alt={currentTrack?.title || 'Radio'}
+          className="absolute inset-0 w-full h-full object-cover grayscale opacity-70"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 pointer-events-none" />
 
         {/* Top Bar: Badge EN VIVO + Volumen */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
@@ -128,6 +129,7 @@ export default function PlayerCenter({
             />
           </div>
         )}
+      </div>
     </div>
   );
 }

@@ -60,12 +60,14 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
       
       {/* Imagen del Almuerzo (1:1) si existe */}
       {todaysLunch?.Foto && (
-        <div className={`w-full aspect-square border-b-[3px] ${borderColor} relative overflow-hidden bg-white group flex-shrink-0`}>
-          <img 
-            src={todaysLunch.Foto} 
-            alt="Menú del Día" 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
+        <div className={`w-full pt-[100%] border-b-[3px] ${borderColor} relative overflow-hidden bg-white group flex-shrink-0`}>
+          <div className="absolute inset-0">
+            <img 
+              src={todaysLunch.Foto} 
+              alt="Menú del Día" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          </div>
         </div>
       )}
 
@@ -141,9 +143,9 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
         {menuItems.length > 0 && currentMenuItem ? (
           <div className="flex flex-col h-full w-full">
             
-            {/* Foto Grande Cuadrada (Full Width 1:1) */}
-            <div className="w-full aspect-square relative group flex-shrink-0">
-              <div className={`w-full h-full border-b-[3px] ${borderColor} relative overflow-hidden bg-white`}>
+            {/* Foto Grande Cuadrada (Full Width 1:1 Bulletproof) */}
+            <div className={`w-full pt-[100%] border-b-[3px] border-[#1F2937] relative group flex-shrink-0 overflow-hidden bg-white`}>
+              <div className="absolute inset-0">
                 <img 
                   src={currentMenuItem.Foto} 
                   alt={currentMenuItem.NombreES} 
@@ -151,12 +153,12 @@ export default function MenuColumn({ menuItems, menuCarouselIdx, setMenuCarousel
                 />
                 
                 {/* Badge Precio */}
-                <div className={`absolute top-3 right-3 bg-yellow-100 border-[3px] ${borderColor} px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
+                <div className={`absolute top-3 right-3 bg-yellow-100 border-[3px] border-[#1F2937] px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
                   <span className="font-black text-lg">{currentMenuItem.Precio}</span>
                 </div>
                 
                 {/* Info Text Box */}
-                <div className={`absolute bottom-3 left-3 right-3 bg-white border-[3px] ${borderColor} p-2 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
+                <div className={`absolute bottom-3 left-3 right-3 bg-white border-[3px] border-[#1F2937] p-2 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)]`}>
                   <p className="text-xs font-black uppercase text-pink-500 tracking-widest leading-none mb-1">{currentMenuItem.SubTipoES || currentMenuItem.TipoES}</p>
                   <h4 className="font-black uppercase tracking-tight text-xl leading-none truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
                     {currentMenuItem.NombreES}

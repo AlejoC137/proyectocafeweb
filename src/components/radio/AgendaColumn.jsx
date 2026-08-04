@@ -27,15 +27,17 @@ export default function AgendaColumn({ currentEvent, agendaEvents = [], eventCar
       <div className="flex-1 bg-cream-bg relative overflow-hidden flex flex-col group">
         {currentEvent ? (
           <>
-            {/* Imagen del Evento (Full Width 1:1) */}
-            <div className={`w-full aspect-square border-b-[3px] ${borderColor} relative overflow-hidden bg-white group`}>
-              {currentEvent.bannerIMG ? (
-                <img src={currentEvent.bannerIMG} alt={currentEvent.nombreES} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <Calendar className="w-12 h-12 opacity-20" />
-                </div>
-              )}
+            {/* Imagen del Evento (Full Width 1:1 Bulletproof) */}
+            <div className={`w-full pt-[100%] border-b-[3px] ${borderColor} relative overflow-hidden bg-white group flex-shrink-0`}>
+              <div className="absolute inset-0">
+                {currentEvent.bannerIMG ? (
+                  <img src={currentEvent.bannerIMG} alt={currentEvent.nombreES} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <Calendar className="w-12 h-12 opacity-20" />
+                  </div>
+                )}
+              </div>
               {/* Etiqueta Flotante sobre la imagen */}
               <div className={`absolute top-4 right-4 bg-yellow-100 border-[3px] ${borderColor} px-4 py-2 shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] z-10`}>
                 <span className="text-lg lg:text-xl font-black uppercase tracking-widest flex items-center gap-2">
