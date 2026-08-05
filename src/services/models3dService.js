@@ -138,5 +138,33 @@ export const models3dService = {
       if (error) throw error;
       return data;
     }
+  },
+
+  /**
+   * Guardar modelo en formato estándar ifcJSON-4
+   */
+  async createIfcJsonModel({ title, description, ifcJsonData }) {
+    const { data, error } = await supabase
+      .from('models3d')
+      .insert([
+        {
+          title: title || 'Modelo ifcJSON-4',
+          description: description || 'Ingestado desde reviewPlugIn (Revit)',
+          file_url: 'ifcjson://payload',
+          metadata_json: ifcJsonData || {}
+        }
+      ])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.warn('Fallback local para guardar el modelo ifcJSON:', error.message);
+      return {
+        id: 'local_' + Date.now(),
+        title: title || 'Modelo ifcJSON-4',
+        metadata_json: ifcJsonData
+      };
+    }
+    return data;
   }
 };

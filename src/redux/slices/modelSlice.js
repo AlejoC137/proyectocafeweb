@@ -1,50 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { parseIfcJson } from '../../utils/ifcJsonParser';
 
 /**
- * Slice de Redux Toolkit para el Visor BIM/Navisworks Proyecto Café 3D
+ * Slice de Redux Toolkit para el Visor BIM 3D Dinámico
+ * Inicializa en estado limpio para cargar datos reales desde JSON / Supabase.
  */
 const initialState = {
-  modelLoaded: true,
-  // Modo de Cámara: 'orthographic' (Axonométrica/Isométrica Navisworks) | 'perspective' (Perspectiva)
+  modelLoaded: false,
+  // Estructura JSON BIM Paramétrica Dinámica
+  bimData: null,
+  // Modo de Cámara: 'orthographic' | 'perspective'
   cameraMode: 'orthographic',
   // Vistas Predefinidas: 'iso' | 'top' | 'front' | 'side' | 'inside'
   presetView: 'iso',
-  // Estilo Visual: 'revitTechnical' (Plano Técnico Líneas Negras) | 'vibrantColors' | 'wireframe'
+  // Estilo Visual: 'revitTechnical' | 'vibrantColors' | 'wireframe'
   visualStyle: 'revitTechnical',
   // Caja de Sección (Corte de Techo/Paredes) 0.1 a 1.0
   sectionCut: 1.0,
-  showSectionBox: true,
-  // Capas / Visibilidad de Capas del Proyecto Café (BIM Navisworks)
-  layers: {
-    walls: true,         // Paredes y Envolvente
-    kitchen: true,       // Cocina, Estanterías y Extractor
-    menu: true,          // Menú Superior ($500.000)
-    tableros: true,      // Tableros Marcador ($300.000)
-    lavaplato: true,     // Lava Platos ($2.000.000)
-    furniture: true,     // Mesas, Sillas y Barra
-    plants: true,        // Plantas y Decoración Exterior
-    annotations: true    // Etiquetas / Callouts 3D de Precios
-  },
-  // Pieza / Elemento Seleccionado
-  activePart: 'menu',
-  selectedElementInfo: {
-    id: 'menu-1',
-    name: 'Menú Superior',
-    detail: 'Hecho a medida',
-    price: '$500.000',
-    category: 'Mobiliario Especial'
-  },
-  // Colores por Capa/Elemento
-  colors: {
-    base: '#f8fafc',       // Blanco Técnico Revit
-    walls: '#0f172a',      // Negro/Gris Líneas
-    kitchen: '#334155',    // Acero Inoxidable / Gris
-    menu: '#3b82f6',       // Azul Resaltado (como el marco azul de la foto)
-    tableros: '#d97706',   // Madera Formica
-    lavaplato: '#0284c7',  // Azul Célula
-    furniture: '#475569',
-    plants: '#16a34a'
-  },
+  showSectionBox: false,
+  // Capas / Visibilidad de Capas dinámicas
+  layers: {},
+  // Elemento Seleccionado dinámico
+  activePart: null,
+  selectedElementInfo: null,
+  colors: {},
   exportStatus: 'idle'
 };
 
@@ -52,8 +31,54 @@ const modelSlice = createSlice({
   name: 'model',
   initialState,
   reducers: {
+    // Cargar y normalizar un paquete o archivo JSON BIM / ifcJSON dinámico
+    loadBimJson: (state, action) => {
+      if (!action.payload) return;
+
+      try {
+        const parsed = parseIfcJson(action.payload);
+        if (!parsed || !parsed.nodes || parsed.nodes.length === 0) return;
+
+        state.bimData = parsed;
+        state.modelLoaded = true;
+
+        // Poblar capas dinámicas a partir de las categorías y layers reales del JSON
+        const dynamicLayers = {};
+        const dynamicColors = {};
+
+        if (Array.isArray(parsed.layers) && parsed.layers.length > 0) {
+          parsed.layers.forEach((l) => {
+            const key = l.id || (l.name ? l.name.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'default');
+            dynamicLayers[key] = true;
+            if (l.color_hex) dynamicColors[key] = l.color_hex;
+          });
+        } else {
+          parsed.nodes.forEach((n) => {
+            const cat = n.category || n.layer || 'BIM_Elements';
+            const key = cat.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            dynamicLayers[key] = true;
+            if (n.color_hex) dynamicColors[key] = n.color_hex;
+          });
+        }
+
+        state.layers = dynamicLayers;
+        state.colors = dynamicColors;
+        state.activePart = null;
+        state.selectedElementInfo = null;
+      } catch (err) {
+        console.error('Error al parsear modelo 3D en loadBimJson:', err);
+      }
+    },
+    clearModel: (state) => {
+      state.bimData = null;
+      state.modelLoaded = false;
+      state.layers = {};
+      state.activePart = null;
+      state.selectedElementInfo = null;
+      state.colors = {};
+    },
     setCameraMode: (state, action) => {
-      state.cameraMode = action.payload; // 'orthographic' | 'perspective'
+      state.cameraMode = action.payload;
     },
     setPresetView: (state, action) => {
       state.presetView = action.payload;
@@ -90,6 +115,12 @@ const modelSlice = createSlice({
       if (state.colors[part] !== undefined) {
         state.colors[part] = color;
       }
+      const nodes = state.bimData?.nodes || state.bimData?.elements || [];
+      const el = nodes.find((e) => e.element_id === part || e.id === part || e.category === part || e.layer === part);
+      if (el) {
+        if (el.color_hex) el.color_hex = color;
+        if (el.color) el.color = color;
+      }
     },
     setExportStatus: (state, action) => {
       state.exportStatus = action.payload;
@@ -101,6 +132,8 @@ const modelSlice = createSlice({
 });
 
 export const {
+  loadBimJson,
+  clearModel,
   setCameraMode,
   setPresetView,
   setVisualStyle,

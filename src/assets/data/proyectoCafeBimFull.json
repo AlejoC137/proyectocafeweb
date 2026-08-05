@@ -1,0 +1,1140 @@
+{
+  "metadata": {
+    "format_version": "2.0-web3d-navisworks",
+    "renderer_target": "React Three Fiber / Three.js / Navisworks Viewer",
+    "style": "FlatShading / Stylized LowPoly & SectionCut Capable",
+    "total_nodes": 841,
+    "total_layers": 32,
+    "total_annotations": 1,
+    "has_section_box": true
+  },
+  "camera": {
+    "eye_position": [
+      108.823,
+      1451.955,
+      -143.314
+    ],
+    "target_position": [
+      107.125,
+      1450.324,
+      -141.378
+    ],
+    "up_direction": [
+      -0.353,
+      0.845,
+      0.402
+    ],
+    "is_perspective": false,
+    "field_of_view_deg": 50.0
+  },
+  "section_box": {
+    "active": true,
+    "min": [
+      9.952,
+      1507.016,
+      -12.327
+    ],
+    "max": [
+      15.674,
+      1509.948,
+      1.512
+    ],
+    "center": [
+      12.813,
+      1508.482,
+      -5.407
+    ],
+    "size": [
+      5.722,
+      2.932,
+      13.839
+    ]
+  },
+  "layers": [
+    {
+      "id": "cat_internal_origin",
+      "name": "Internal Origin",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        86204
+      ]
+    },
+    {
+      "id": "cat_survey_point",
+      "name": "Survey Point",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        111426
+      ]
+    },
+    {
+      "id": "cat_project_base_point",
+      "name": "Project Base Point",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        111429
+      ]
+    },
+    {
+      "id": "cat_sheets",
+      "name": "Sheets",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        3399509,
+        8057665,
+        8058739,
+        8059486
+      ]
+    },
+    {
+      "id": "cat_walls",
+      "name": "Walls",
+      "type": "category",
+      "color_hex": "#4A90E2",
+      "element_ids": [
+        6929941,
+        6929990,
+        6930056,
+        6930078,
+        6930125,
+        6930285,
+        6930484,
+        6930601,
+        6930781,
+        6930902,
+        6931106,
+        6940751,
+        6940877,
+        6940878,
+        6940879,
+        6940880,
+        6941001,
+        6941003,
+        6941004,
+        6941084,
+        6941157,
+        6941451,
+        7013072,
+        7032937,
+        7032942,
+        7032949,
+        7038803,
+        7039157,
+        7041218,
+        7540937,
+        7541534,
+        7541545,
+        7925951,
+        7934266,
+        7934750,
+        7987704,
+        7991487,
+        8044030,
+        8044032,
+        8044033,
+        8044042,
+        8044044
+      ]
+    },
+    {
+      "id": "cat_structural_columns",
+      "name": "Structural Columns",
+      "type": "category",
+      "color_hex": "#9013FE",
+      "element_ids": [
+        6943081,
+        6944145,
+        6944996,
+        6945374,
+        7043074
+      ]
+    },
+    {
+      "id": "cat_floors",
+      "name": "Floors",
+      "type": "category",
+      "color_hex": "#7ED321",
+      "element_ids": [
+        6945459,
+        7012828,
+        7014141,
+        7022133,
+        7037090,
+        7037528,
+        7037546,
+        7037938,
+        7543639,
+        7926823,
+        8037967
+      ]
+    },
+    {
+      "id": "cat_doors",
+      "name": "Doors",
+      "type": "category",
+      "color_hex": "#F5A623",
+      "element_ids": [
+        6947452,
+        6947604
+      ]
+    },
+    {
+      "id": "cat_windows",
+      "name": "Windows",
+      "type": "category",
+      "color_hex": "#50E3C2",
+      "element_ids": [
+        6970390,
+        7087187
+      ]
+    },
+    {
+      "id": "cat_structural_framing",
+      "name": "Structural Framing",
+      "type": "category",
+      "color_hex": "#9013FE",
+      "element_ids": [
+        7033816,
+        7033861,
+        7034253,
+        7040777,
+        7041441,
+        7041472,
+        7041473,
+        7041522,
+        7041523,
+        7041524,
+        7041525,
+        7041526,
+        7099378,
+        7099409,
+        7099433,
+        7099461,
+        7100050,
+        7100051,
+        7100052,
+        7931552,
+        7931881,
+        7932100,
+        7932241,
+        7932255,
+        7932266,
+        7932278,
+        7932360,
+        7932428,
+        7932574,
+        7932847,
+        7932985,
+        8021434,
+        8021436,
+        8021461,
+        8021462,
+        8021463,
+        8021464,
+        8027955,
+        8027976,
+        8027977,
+        8027978,
+        8027979,
+        8027980,
+        8027981,
+        8027982,
+        8027983,
+        8027984,
+        8027985
+      ]
+    },
+    {
+      "id": "cat_ceilings",
+      "name": "Ceilings",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        7038151,
+        7038375,
+        7038667,
+        7039203,
+        7043614,
+        7933308
+      ]
+    },
+    {
+      "id": "cat_plumbing_fixtures",
+      "name": "Plumbing Fixtures",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        7041606,
+        7042439,
+        7872078,
+        7877850,
+        7912711
+      ]
+    },
+    {
+      "id": "cat_roofs",
+      "name": "Roofs",
+      "type": "category",
+      "color_hex": "#D0021B",
+      "element_ids": [
+        7099868
+      ]
+    },
+    {
+      "id": "cat_columns",
+      "name": "Columns",
+      "type": "category",
+      "color_hex": "#9013FE",
+      "element_ids": [
+        7522928,
+        7728491,
+        7728504,
+        7985928,
+        8039274,
+        8039282
+      ]
+    },
+    {
+      "id": "cat_casework",
+      "name": "Casework",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        7537321,
+        7541763,
+        7544494,
+        7704926,
+        7713768,
+        7728494,
+        7728499,
+        7728500,
+        7728506,
+        7728518,
+        7728520,
+        7728524,
+        7728526,
+        7728528,
+        7743742,
+        7789872,
+        7925908,
+        7930554,
+        7971386,
+        7972917,
+        7984191,
+        8039150,
+        8039151,
+        8039152,
+        8039153,
+        8039269,
+        8039270,
+        8039272,
+        8039273,
+        8039277,
+        8039279,
+        8039280,
+        8039285,
+        8039286,
+        8039288,
+        8039289,
+        8039291,
+        8039293,
+        8039294,
+        8044037,
+        8044046,
+        8044049,
+        8048555,
+        8048589,
+        8048638,
+        8052341
+      ]
+    },
+    {
+      "id": "cat_mechanical_equipment",
+      "name": "Mechanical Equipment",
+      "type": "category",
+      "color_hex": "#B8E986",
+      "element_ids": [
+        7725489,
+        7909228,
+        7910409,
+        7915014,
+        7924971,
+        8029840,
+        8038220,
+        8053494,
+        8054666
+      ]
+    },
+    {
+      "id": "cat_furniture",
+      "name": "Furniture",
+      "type": "category",
+      "color_hex": "#F8E71C",
+      "element_ids": [
+        7728799,
+        7736129,
+        7736290,
+        7736373,
+        7737505,
+        7737506,
+        7737507,
+        7737544,
+        7737566,
+        7741468,
+        7741469,
+        7741470,
+        7741472,
+        7743849,
+        7743917,
+        7781410,
+        7789087,
+        7789873,
+        7789874,
+        7789875,
+        7819404,
+        7821618,
+        7824337,
+        7832738,
+        7834499,
+        7835931,
+        7837088,
+        7837135,
+        7837154,
+        7837197,
+        7837218,
+        7837267,
+        7837310,
+        7837320,
+        7837328,
+        7837336,
+        7837366,
+        7837374,
+        7837382,
+        7918258,
+        8035058,
+        8040141,
+        8059688,
+        8059689,
+        8059690,
+        8059691,
+        8167300,
+        8167302,
+        8167303,
+        8167305,
+        8167306,
+        8167307,
+        8167308,
+        8167309,
+        8167404,
+        8167406,
+        8167407,
+        8167409,
+        8167410,
+        8167411,
+        8167412,
+        8167413,
+        8167448,
+        8167450,
+        8167451,
+        8167453,
+        8167454,
+        8167455,
+        8167456,
+        8167457,
+        8167645,
+        8167647,
+        8167648,
+        8167650,
+        8167651,
+        8167652,
+        8167653,
+        8167654,
+        8167657,
+        8167659,
+        8167660,
+        8167662,
+        8167663,
+        8167664,
+        8167665,
+        8167666,
+        8167669,
+        8167671,
+        8167672,
+        8167674,
+        8167675,
+        8167676,
+        8167677,
+        8167678,
+        8167815,
+        8167817,
+        8167818,
+        8167820,
+        8167821,
+        8167822,
+        8167823,
+        8167824,
+        8167827,
+        8167829,
+        8167830,
+        8167832,
+        8167833,
+        8167834,
+        8167835,
+        8167836,
+        8167839,
+        8167841,
+        8167842,
+        8167844,
+        8167845,
+        8167846,
+        8167847,
+        8167848,
+        8167851,
+        8167853,
+        8167854,
+        8167856,
+        8167857,
+        8167858,
+        8167859,
+        8167860,
+        8167863,
+        8167865,
+        8167866,
+        8167868,
+        8167869,
+        8167870,
+        8167871,
+        8167872,
+        8167875,
+        8167877,
+        8167878,
+        8167880,
+        8167881,
+        8167882,
+        8167883,
+        8167884,
+        8167933,
+        8167935,
+        8167936,
+        8167938,
+        8167939,
+        8167940,
+        8167941,
+        8167942,
+        8167945,
+        8167947,
+        8167948,
+        8167950,
+        8167951,
+        8167952,
+        8167953,
+        8167954,
+        8167957,
+        8167959,
+        8167960,
+        8167962,
+        8167963,
+        8167964,
+        8167965,
+        8167966,
+        8167969,
+        8167971,
+        8167972,
+        8167974,
+        8167975,
+        8167976,
+        8167977,
+        8167978,
+        8167981,
+        8167983,
+        8167984,
+        8167986,
+        8167987,
+        8167988,
+        8167989,
+        8167990,
+        8167993,
+        8167995,
+        8167996,
+        8167998,
+        8167999,
+        8168000,
+        8168001,
+        8168002,
+        8168049,
+        8168051,
+        8168052,
+        8168054,
+        8168055,
+        8168056,
+        8168057,
+        8168058,
+        8168061,
+        8168063,
+        8168064,
+        8168066,
+        8168067,
+        8168068,
+        8168069,
+        8168070,
+        8168073,
+        8168075,
+        8168076,
+        8168078,
+        8168079,
+        8168080,
+        8168081,
+        8168082,
+        8168085,
+        8168087,
+        8168088,
+        8168090,
+        8168091,
+        8168092,
+        8168093,
+        8168094,
+        8168097,
+        8168099,
+        8168100,
+        8168102,
+        8168103,
+        8168104,
+        8168105,
+        8168106,
+        8168109,
+        8168111,
+        8168112,
+        8168114,
+        8168115,
+        8168116,
+        8168117,
+        8168118
+      ]
+    },
+    {
+      "id": "cat_planting",
+      "name": "Planting",
+      "type": "category",
+      "color_hex": "#16A34A",
+      "element_ids": [
+        7823516,
+        7823719,
+        7824119,
+        7824372,
+        7834498
+      ]
+    },
+    {
+      "id": "cat_flex_ducts",
+      "name": "Flex Ducts",
+      "type": "category",
+      "color_hex": "#FF5722",
+      "element_ids": [
+        7983115
+      ]
+    }
+  ],
+  "annotations": [
+    {
+      "id": "3399515",
+      "title": "Texto prueba",
+      "description": "Texto prueba",
+      "category": "TextNote",
+      "position": [
+        0.012,
+        0.0,
+        -0.05
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "element_id": 6929941,
+      "unique_id": "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-0069be15",
+      "name": "A_M_12 LADRILLO RALLADO",
+      "category": "Walls",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        13.153,
+        1509.05,
+        0.968
+      ],
+      "dimensions": [
+        4.2,
+        2.4,
+        0.15
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#4A90E2",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Basic Wall",
+        "Type": "A_M_12 LADRILLO RALLADO"
+      }
+    },
+    {
+      "element_id": 6929990,
+      "unique_id": "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-0069be46",
+      "name": "A_M_12 LADRILLO RALLADO",
+      "category": "Walls",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        15.603,
+        1510.35,
+        0.693
+      ],
+      "dimensions": [
+        0.7,
+        5.0,
+        0.7
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#4A90E2",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Basic Wall",
+        "Type": "A_M_12 LADRILLO RALLADO"
+      }
+    },
+    {
+      "element_id": 6930056,
+      "unique_id": "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-0069be88",
+      "name": "A_M_12 LADRILLO RALLADO",
+      "category": "Walls",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        11.128,
+        1510.35,
+        0.298
+      ],
+      "dimensions": [
+        0.15,
+        5.0,
+        1.34
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#4A90E2",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Basic Wall",
+        "Type": "A_M_12 LADRILLO RALLADO"
+      }
+    },
+    {
+      "element_id": 6930078,
+      "unique_id": "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-0069be9e",
+      "name": "A_M_12 LADRILLO RALLADO",
+      "category": "Walls",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        12.058,
+        1510.35,
+        -0.372
+      ],
+      "dimensions": [
+        2.51,
+        5.0,
+        0.15
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#4A90E2",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Basic Wall",
+        "Type": "A_M_12 LADRILLO RALLADO"
+      }
+    },
+    {
+      "element_id": 6930125,
+      "unique_id": "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-0069becd",
+      "name": "A_M_12 LADRILLO RALLADO",
+      "category": "Walls",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        10.878,
+        1509.05,
+        -1.725
+      ],
+      "dimensions": [
+        0.15,
+        2.4,
+        2.705
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#4A90E2",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Basic Wall",
+        "Type": "A_M_12 LADRILLO RALLADO"
+      }
+    },
+    {
+      "element_id": 6943081,
+      "unique_id": "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-0069f169",
+      "name": "Column",
+      "category": "Structural Columns",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        10.833,
+        1510.6,
+        -6.707
+      ],
+      "dimensions": [
+        0.37,
+        5.5,
+        0.37
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#9013FE",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Param_Column_Steel_ROUND",
+        "Type": "Column"
+      }
+    },
+    {
+      "element_id": 6944145,
+      "unique_id": "c4d08b1d-9eb2-4e81-a4c6-3e17ca168413-0069f591",
+      "name": "Column",
+      "category": "Structural Columns",
+      "level": "Piso 0 - Est",
+      "geometry_type": "box",
+      "position": [
+        15.923,
+        1510.6,
+        -6.707
+      ],
+      "dimensions": [
+        0.37,
+        5.5,
+        0.37
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#9013FE",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Param_Column_Steel_ROUND",
+        "Type": "Column"
+      }
+    },
+    {
+      "element_id": 6945459,
+      "unique_id": "9c0a36e9-5d0d-40a5-b52a-91f5ab3fedd6-0069fab3",
+      "name": "A_PI_PISO EN MALLA",
+      "category": "Floors",
+      "level": "Piso 1 - Arq",
+      "geometry_type": "box",
+      "position": [
+        13.228,
+        1507.915,
+        -8.672
+      ],
+      "dimensions": [
+        5.05,
+        0.05,
+        3.27
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#7ED321",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Floor",
+        "Type": "A_PI_PISO EN MALLA"
+      }
+    },
+    {
+      "element_id": 6947452,
+      "unique_id": "9c0a36e9-5d0d-40a5-b52a-91f5ab3fedd6-006a027c",
+      "name": "AE_PUERTA BATIENTE MADERA 0.70X2.20",
+      "category": "Doors",
+      "level": "Piso 1 - Arq",
+      "geometry_type": "box",
+      "position": [
+        11.553,
+        1508.975,
+        0.051
+      ],
+      "dimensions": [
+        0.73,
+        2.25,
+        0.995
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#F5A623",
+      "flat_shading": true,
+      "quick_params": {
+        "Mark": "693",
+        "Family": "AE_PUERTA BATIENTE MADERA",
+        "Type": "AE_PUERTA BATIENTE MADERA 0.70X2.20"
+      }
+    },
+    {
+      "element_id": 6970390,
+      "unique_id": "899ea3bd-eea8-4979-96dd-03dd307cfaf6-006a5c16",
+      "name": "00_VENTANA CORREDIZA 1.50 X 2.25",
+      "category": "Windows",
+      "level": "Piso 1 - Arq",
+      "geometry_type": "box",
+      "position": [
+        13.378,
+        1509.015,
+        -6.887
+      ],
+      "dimensions": [
+        4.32,
+        2.27,
+        0.369
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#50E3C2",
+      "flat_shading": true,
+      "quick_params": {
+        "Mark": "1010",
+        "Family": "A_PLANB_VENTANA CORREDIZA CUERPOS DINAMICOS",
+        "Type": "00_VENTANA CORREDIZA 1.50 X 2.25"
+      }
+    },
+    {
+      "element_id": 7041606,
+      "unique_id": "4021bbb8-c257-4cca-ba81-c179328d01b5-006b7246",
+      "name": "Type 1",
+      "category": "Plumbing Fixtures",
+      "level": "Piso 1 - Arq",
+      "geometry_type": "box",
+      "position": [
+        11.818,
+        1508.789,
+        0.656
+      ],
+      "dimensions": [
+        0.55,
+        0.374,
+        0.473
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#0284C7",
+      "price": "$2.000.000",
+      "hasCallout": true,
+      "calloutLabel": "Lava Platos",
+      "calloutSub": "Ahorra Tiempo - No Alquilar",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "A_Lavamanos pared",
+        "Type": "Type 1"
+      }
+    },
+    {
+      "element_id": 7971386,
+      "unique_id": "0b68946d-7a6b-4479-9e12-33c0c1fc5981-0079a23a",
+      "name": "Menú Superior",
+      "category": "Casework",
+      "level": "",
+      "geometry_type": "box",
+      "position": [
+        13.673,
+        1509.721,
+        -3.45
+      ],
+      "dimensions": [
+        2.52,
+        0.428,
+        0.255
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#3B82F6",
+      "price": "$500.000",
+      "hasCallout": true,
+      "calloutLabel": "Menú Superior",
+      "calloutSub": "Hecho a medida",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Menú Superior",
+        "Type": "Menú Superior"
+      }
+    },
+    {
+      "element_id": 7972917,
+      "unique_id": "0b68946d-7a6b-4479-9e12-33c0c1fc5981-0079a835",
+      "name": "Tableros Marcador",
+      "category": "Casework",
+      "level": "",
+      "geometry_type": "box",
+      "position": [
+        10.981,
+        1509.497,
+        -3.115
+      ],
+      "dimensions": [
+        0.055,
+        0.813,
+        4.184
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#D97706",
+      "price": "$300.000",
+      "hasCallout": true,
+      "calloutLabel": "Tableros Marcador",
+      "calloutSub": "Solo Formica",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Tableros Marcador",
+        "Type": "Tableros Marcador"
+      }
+    },
+    {
+      "element_id": 7983115,
+      "unique_id": "c9c367fb-b439-4bfa-8ee8-0af3f2c3af9f-0079d00b",
+      "name": "Extractor",
+      "category": "Flex Ducts",
+      "level": "Piso 0 - Est",
+      "geometry_type": "cylinder",
+      "position": [
+        13.701,
+        1509.841,
+        -0.072
+      ],
+      "dimensions": [
+        0.22,
+        0.22,
+        2.5
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        1.5708
+      ],
+      "color_hex": "#FF5722",
+      "price": "$1.800.000",
+      "hasCallout": true,
+      "calloutLabel": "ct Round Extractor",
+      "calloutSub": "0.000",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Flex Duct Round",
+        "Type": "Extractor"
+      }
+    },
+    {
+      "element_id": 7728799,
+      "unique_id": "fdd70a57-ed78-4801-8af1-11a935fbf3c1-0075ee9f",
+      "name": "A_MESA 0.55  X 2.60",
+      "category": "Furniture",
+      "level": "Piso 1 - Arq",
+      "geometry_type": "box",
+      "position": [
+        13.362,
+        1508.27,
+        -6.372
+      ],
+      "dimensions": [
+        1.413,
+        0.7,
+        0.8
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#F8E71C",
+      "price": "$1.400.000",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "Mesa Teca",
+        "Type": "A_MESA 0.55  X 2.60"
+      }
+    },
+    {
+      "element_id": 7823516,
+      "unique_id": "3c2a451a-8f8a-4319-99af-3654e0e97662-0077609c",
+      "name": "DM_JARDINERA RECTANGULAR COLGANTE 0.30*0.50*2.40",
+      "category": "Planting",
+      "level": "Piso 1 - Arq",
+      "geometry_type": "box",
+      "position": [
+        15.573,
+        1508.07,
+        -10.132
+      ],
+      "dimensions": [
+        2.4,
+        0.3,
+        0.35
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color_hex": "#16A34A",
+      "price": "$650.000",
+      "flat_shading": true,
+      "quick_params": {
+        "Family": "DM_JARDINERA CIRrfa",
+        "Type": "DM_JARDINERA RECTANGULAR COLGANTE 0.30*0.50*2.40"
+      }
+    }
+  ]
+}

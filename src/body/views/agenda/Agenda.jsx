@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import AgendaForm from "./AgendaForm";
+import { PropuestasGrid } from "./PropuestasGrid";
 import supabase from "@/config/supabaseClient";
 import { EventImporter } from "./EventImporter";
 
@@ -39,18 +40,17 @@ function Agenda() {
   const [viewMode, setViewMode] = useState("calendar"); // calendar, table, cards
   const [showForm, setShowForm] = useState(false);
   const [eventoToEdit, setEventoToEdit] = useState(null);
-  
-  // Initialize month from URL or current date
+
+  // Inicializar mes desde URL o la fecha actual
   const initialMonth = (year && month) ? `${year}-${month}` : new Date().toISOString().slice(0, 7);
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [attendeeCounts, setAttendeeCounts] = useState({});
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Cargar eventos y asistentes al montar
+  // Cargar eventos y asistentes al montar el componente
   useEffect(() => {
     dispatch(getAllFromTable(AGENDA));
-    
-    // Cargar cantidad de inscritos
+
     const fetchCounts = async () => {
       const { data, error } = await supabase.from('attendees').select('evento_id');
       if (data && !error) {
@@ -64,8 +64,19 @@ function Agenda() {
     fetchCounts();
   }, [dispatch]);
 
+  // Actualización automática: si un evento en calendario (ejecutado === false) ya pasó su fecha, el sistema o admin lo pasa a true
+  useEffect(() => {
+    if (!allAgenda.length) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    allAgenda.forEach((evento) => {
+      if (evento.ejecutado === false && evento.fecha && evento.fecha < hoy) {
+        dispatch(updateItem(evento._id, { ejecutado: true }, AGENDA));
+      }
+    });
+  }, [allAgenda, dispatch]);
+
   const handleCreateEvento = (fecha = null) => {
-    // Abrir formulario en nueva pestaña con fecha pre-seleccionada
     if (fecha) {
       window.open(`/agendaForm/new?fecha=${fecha}`, "_blank");
     } else {
@@ -74,12 +85,10 @@ function Agenda() {
   };
 
   const handleEditEvento = (evento) => {
-    // Navegar al modal con el ID corto del evento y la pestaña inicial
     navigate(`/agendaForm/${evento._id.substring(0, 8)}`);
   };
 
   const handleViewEvento = (evento) => {
-    // Navegar al modal para ver detalles
     navigate(`/agendaForm/${evento._id.substring(0, 8)}`);
   };
 
@@ -98,19 +107,27 @@ function Agenda() {
     dispatch(getAllFromTable(AGENDA));
   };
 
-  // Handlers para navegación de calendario
+  const handleVolverAIdea = async (evento) => {
+    if (window.confirm(`¿Estás seguro de devolver "${evento.nombre || evento.nombreES || 'este evento'}" a la lista de ideas?`)) {
+      try {
+        await dispatch(updateItem(evento._id, { ejecutado: null, estado_proceso: "idea" }, AGENDA));
+        dispatch(getAllFromTable(AGENDA));
+      } catch (error) {
+        console.error("Error devolviendo a idea:", error);
+      }
+    }
+  };
+
   const changeMonth = (offset) => {
     const [y, m] = selectedMonth.split("-").map(Number);
     const newDate = new Date(y, m - 1 + offset, 1);
     const newMonthStr = newDate.toISOString().slice(0, 7);
     setSelectedMonth(newMonthStr);
-    
-    // Actualizar URL
+
     const [newYear, newMonth] = newMonthStr.split("-");
     navigate(`/Agenda/${newYear}/${newMonth}`);
   };
 
-  // Sincronizar estado con cambios en la URL
   useEffect(() => {
     if (year && month) {
       const monthStr = `${year}-${month}`;
@@ -139,13 +156,28 @@ function Agenda() {
     navigate(`/Agenda/${y}/${m}`);
   };
 
-  // Filtrar eventos por mes seleccionado
-  const eventosFiltrados = useMemo(() => {
-    if (!selectedMonth) return allAgenda;
-    return allAgenda.filter((evento) => evento.fecha?.startsWith(selectedMonth));
-  }, [allAgenda, selectedMonth]);
+  // Filtrado 1: Propuestas pendientes para el cuadro izquierdo (ejecutado === null o undefined)
+  const propuestasPendientes = useMemo(() => {
+    return allAgenda.filter((e) => e.ejecutado === null || e.ejecutado === undefined);
+  }, [allAgenda]);
 
-  // Agrupar eventos por fecha para vista de calendario
+  // Filtrado 2: Eventos asignados a calendario o ejecutados (ejecutado !== null) y las ideas (null) que tengan fecha asignada
+  const eventosEnCalendario = useMemo(() => {
+    return allAgenda.filter((e) => {
+      const isIdea = e.ejecutado === null || e.ejecutado === undefined;
+      if (isIdea) {
+        return !!e.fecha; // Mostrar ideas solo si tienen fecha
+      }
+      return true;
+    });
+  }, [allAgenda]);
+
+  // Filtrar por mes seleccionado para las vistas del panel derecho
+  const eventosFiltrados = useMemo(() => {
+    if (!selectedMonth) return eventosEnCalendario;
+    return eventosEnCalendario.filter((evento) => evento.fecha?.startsWith(selectedMonth));
+  }, [eventosEnCalendario, selectedMonth]);
+
   const eventosPorFecha = useMemo(() => {
     const grupos = {};
     eventosFiltrados.forEach((evento) => {
@@ -158,29 +190,23 @@ function Agenda() {
     return grupos;
   }, [eventosFiltrados]);
 
-  // Nombres de los días de la semana
   const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-  // Generar la cuadrícula del calendario
   const calendarGrid = useMemo(() => {
-    const [year, month] = selectedMonth.split("-").map(Number); // month es 1-12
-    const firstDay = new Date(year, month - 1, 1); // 0-11 para month
-    const firstDayOfWeek = firstDay.getDay(); // 0 = Domingo, 1 = Lunes...
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const firstDay = new Date(year, month - 1, 1);
+    const firstDayOfWeek = firstDay.getDay();
 
-    const daysInMonth = new Date(year, month, 0).getDate(); // Día 0 del *siguiente* mes
+    const daysInMonth = new Date(year, month, 0).getDate();
 
     const days = [];
 
-    // 1. Añadir días de relleno (padding) del mes anterior
     for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(null); // Representa una celda vacía
+      days.push(null);
     }
 
-    // 2. Añadir los días del mes
     for (let i = 1; i <= daysInMonth; i++) {
-      const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(
-        i
-      ).padStart(2, "0")}`;
+      const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
       const dayEvents = eventosPorFecha[dateStr] || [];
       days.push({
         day: i,
@@ -191,401 +217,455 @@ function Agenda() {
     return days;
   }, [selectedMonth, eventosPorFecha]);
 
-  // Formato de fecha para el título (usado en la vista de lista anterior, mantenido por si acaso)
-  const formatDate = (dateString) => {
-    if (dateString === "Sin Fecha") return "Eventos Sin Fecha";
-    const date = new Date(`${dateString}T00:00:00`);
-    return date.toLocaleDateString("es-CO", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const handleCopyPublicLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/EventosOffer`);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  // LOG PRINCIPAL DE CONTROL
+  console.log("=== RENDERIZANDO AGENDA COMPLETA ===", {
+    modoVista: viewMode,
+    mesSeleccionado: selectedMonth,
+    propuestasInIzquierda: propuestasPendientes.length,
+    eventosInDerecha: eventosFiltrados.length
+  });
+
   return (
     <PageLayout title="Agenda de Eventos">
-      {/* Controles de vista y acciones */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setViewMode("calendar")}
-            variant={viewMode === "calendar" ? "default" : "outline"}
-            className="gap-2"
-          >
-            <CalendarIcon size={18} />
-            Calendario
-          </Button>
-          <Button
-            onClick={() => setViewMode("table")}
-            variant={viewMode === "table" ? "default" : "outline"}
-            className="gap-2"
-          >
-            <TableIcon size={18} />
-            Tabla
-          </Button>
-          <Button
-            onClick={() => setViewMode("cards")}
-            variant={viewMode === "cards" ? "default" : "outline"}
-            className="gap-2"
-          >
-            <Calendar size={18} />
-            Tarjetas
-          </Button>
-          <Button
-            onClick={() => navigate("/Aliados")}
-            variant="outline"
-            className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
-          >
-            <Users size={18} />
-            Aliados
-          </Button>
-          <Button
-            onClick={handleCopyPublicLink}
-            variant="outline"
-            className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
-          >
-            {copiedLink ? <CheckCircle2 size={18} /> : <Link2 size={18} />}
-            {copiedLink ? "¡Copiado!" : "Link Público"}
-          </Button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        {/* RECTÁNGULO ROJO: PANEL IZQUIERDO DE PROPUESTAS */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+          <ContentCard noPadding>
+            <PropuestasGrid
+              propuestas={propuestasPendientes}
+              onFormalizar={(item) => handleViewEvento(item)}
+            />
+          </ContentCard>
         </div>
 
-        <div className="flex gap-2 items-center">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePrevMonth}
-            title="Mes anterior"
-          >
-            <ChevronLeft size={18} />
-          </Button>
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedMonth(val);
-                if (val) {
-                  const [y, m] = val.split("-");
-                  navigate(`/Agenda/${y}/${m}`);
-                }
-              }}
-              className="p-2 border rounded-md"
-            />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNextMonth}
-            title="Mes siguiente"
-          >
-            <ChevronRight size={18} />
-          </Button>
-          <Button variant="outline" onClick={handleToday}>
-            Hoy
-          </Button>
-          <Button
-            onClick={handleCreateEvento}
-                className="text-white flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700  hover:to-blue-700 hover:text-yellow-200 disabled:from-gray-300 disabled:to-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors duration-200"
+        {/* RECTÁNGULO AZUL: PANEL DERECHO DE CALENDARIO Y VISTAS */}
+        <div className="lg:col-span-8 xl:col-span-9 space-y-4">
+          {/* Controles de vista y acciones */}
+          {/* Controles de vista y acciones */}
+          <div className="flex w-full overflow-x-auto pb-2 mb-2 custom-scrollbar">
+            <div className="flex w-full min-w-max items-center justify-between gap-4">
+              
+              {/* Botones de vistas y enlaces */}
+              <div className="flex gap-2 items-center bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                <Button
+                  onClick={() => setViewMode("calendar")}
+                  variant={viewMode === "calendar" ? "default" : "ghost"}
+                  size="sm"
+                  className={`gap-1.5 h-8 px-3 ${viewMode === "calendar" ? "" : "text-gray-600 hover:bg-gray-100"}`}
                 >
-            <Plus size={18} />
-            Nuevo Evento
-          </Button>
+                  <CalendarIcon size={16} />
+                  Calendario
+                </Button>
+                <Button
+                  onClick={() => setViewMode("table")}
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  className={`gap-1.5 h-8 px-3 ${viewMode === "table" ? "" : "text-gray-600 hover:bg-gray-100"}`}
+                >
+                  <TableIcon size={16} />
+                  Tabla
+                </Button>
+                <Button
+                  onClick={() => setViewMode("cards")}
+                  variant={viewMode === "cards" ? "default" : "ghost"}
+                  size="sm"
+                  className={`gap-1.5 h-8 px-3 ${viewMode === "cards" ? "" : "text-gray-600 hover:bg-gray-100"}`}
+                >
+                  <Calendar size={16} />
+                  Tarjetas
+                </Button>
+                
+                <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                
+                <Button
+                  onClick={() => navigate("/Aliados")}
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 px-3 text-orange-600 hover:bg-orange-50"
+                >
+                  <Users size={16} />
+                  Aliados
+                </Button>
+                <Button
+                  onClick={handleCopyPublicLink}
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 px-3 text-blue-600 hover:bg-blue-50"
+                >
+                  {copiedLink ? <CheckCircle2 size={16} /> : <Link2 size={16} />}
+                  {copiedLink ? "¡Copiado!" : "Público"}
+                </Button>
+              </div>
+
+              {/* Controles de fecha y Nuevo Evento */}
+              <div className="flex gap-2 items-center bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-md px-1 h-8">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handlePrevMonth}
+                    title="Mes anterior"
+                    className="h-6 w-6 text-gray-500 hover:text-gray-900"
+                  >
+                    <ChevronLeft size={16} />
+                  </Button>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedMonth(val);
+                      if (val) {
+                        const [y, m] = val.split("-");
+                        navigate(`/Agenda/${y}/${m}`);
+                      }
+                    }}
+                    className="bg-transparent text-sm font-medium text-gray-700 outline-none w-32 text-center"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNextMonth}
+                    title="Mes siguiente"
+                    className="h-6 w-6 text-gray-500 hover:text-gray-900"
+                  >
+                    <ChevronRight size={16} />
+                  </Button>
+                </div>
+                
+                <Button variant="outline" size="sm" onClick={handleToday} className="h-8 px-3 text-sm font-medium">
+                  Hoy
+                </Button>
+                
+                <Button
+                  onClick={() => handleCreateEvento()}
+                  size="sm"
+                  className="h-8 px-4 text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-colors duration-200 font-bold shadow-sm gap-1.5"
+                >
+                  <Plus size={16} />
+                  Nuevo Evento
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <ContentCard noPadding>
+            <div className="p-4">
+              {eventosFiltrados.length === 0 &&
+                !Object.keys(eventosPorFecha).includes("Sin Fecha") ? (
+                <div className="text-center py-12 text-slate-500">
+                  <Calendar size={48} className="mx-auto mb-0 opacity-50" />
+                  <p className="text-lg font-medium">
+                    No hay eventos programados para este mes
+                  </p>
+                  <p className="text-sm">
+                    Haz clic en "Nuevo Evento" para crear uno
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Vista de Tarjetas */}
+                  {viewMode === "cards" && (
+                    <CardGridAgenda
+                      products={eventosFiltrados}
+                      category="Eventos"
+                      onDelete={handleDeleteEvento}
+                    />
+                  )}
+
+                  {/* Vista de Calendario */}
+                  {viewMode === "calendar" && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600">
+                        {dayNames.map((day) => (
+                          <div
+                            key={day}
+                            className="p-2 bg-gray-100 rounded-md shadow-sm"
+                          >
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-2">
+                        {calendarGrid.map((day, index) => (
+                          <div
+                            key={index}
+                            className={`border rounded-lg p-2 min-h-[140px] ${!day
+                              ? "bg-gray-50"
+                              : "bg-white transition-shadow hover:shadow-md"
+                              }`}
+                          >
+                            {day && (
+                              <>
+                                <div className="flex items-center justify-between mb-2 pb-1 border-b border-gray-200">
+                                  <span className="font-bold text-gray-800 text-sm">
+                                    {day.day}
+                                  </span>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 hover:bg-purple-100 text-purple-600 hover:text-purple-700"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCreateEvento(day.dateStr);
+                                    }}
+                                    title={`Agregar evento el ${day.dateStr}`}
+                                  >
+                                    <Plus size={14} />
+                                  </Button>
+                                </div>
+                                <div className="space-y-2">
+                                  {day.events.map((evento) => {
+                                    let hasFood = false;
+                                    let hasAudioVisual = false;
+                                    if (evento.servicios) {
+                                      try {
+                                        const parsedSvc = typeof evento.servicios === "string" ? JSON.parse(evento.servicios) : evento.servicios;
+                                        if (Array.isArray(parsedSvc)) {
+                                          hasFood = parsedSvc.some(s => s.alimentos === true);
+                                          hasAudioVisual = parsedSvc.some(s => s.audioVisual === true);
+                                        } else if (typeof parsedSvc === "object" && parsedSvc !== null) {
+                                          hasFood = parsedSvc.alimentos?.activo === true || parsedSvc.alimentos === true;
+                                          hasAudioVisual = parsedSvc.audioVisual?.activo === true || parsedSvc.audioVisual === true;
+                                        }
+                                      } catch (e) { }
+                                    }
+
+                                    const isIdea = evento.ejecutado === null || evento.ejecutado === undefined;
+                                    return (
+                                      <div
+                                        key={evento._id}
+                                        className={`text-xs rounded cursor-pointer shadow-sm hover:shadow-md relative overflow-hidden h-16 border flex flex-col justify-between group ${evento.ejecutado === true ? "opacity-75" : ""
+                                          } ${isIdea ? "border-gray-400 border-dashed" : "border-transparent"}`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewEvento(evento);
+                                        }}
+                                        title={`${evento.nombreES || evento.nombre || "Evento"} (${evento.horaInicio} - ${evento.horaFinal})`}
+                                      >
+                                        {evento.bannerIMG && (
+                                          <div
+                                            className={`absolute inset-0 w-full h-full bg-cover bg-center transition-transform group-hover:scale-105 ${isIdea ? "grayscale" : ""}`}
+                                            style={{ backgroundImage: `url(${evento.bannerIMG})` }}
+                                          ></div>
+                                        )}
+
+                                        <div className={`absolute inset-0 w-full h-full transition-opacity ${
+                                          isIdea ? "bg-gray-600 bg-opacity-80 hover:bg-opacity-70" : "bg-black bg-opacity-60 hover:bg-opacity-50"
+                                        }`}></div>
+
+                                        <div className="relative z-10 p-1.5 text-white flex-1 flex flex-col justify-between">
+                                          <div className="flex items-center justify-between">
+                                            <p className="truncate font-bold text-xs drop-shadow-md flex items-center gap-1">
+                                              {isIdea && <span title="Idea/Propuesta">💡</span>}
+                                              {evento.nombreES || evento.nombre || "Sin Nombre"}
+                                            </p>
+                                            {evento.ejecutado === true && (
+                                              <span className="text-[9px] bg-green-500/80 text-white px-1 rounded font-bold">
+                                                ✓
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center justify-between mt-1">
+                                            <p className="truncate text-gray-200 text-[10px] drop-shadow-md flex items-center font-medium">
+                                              <Clock size={10} className="mr-0.5" />
+                                              {evento.horaInicio}
+                                            </p>
+
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                              {hasFood && <Utensils size={10} className="text-orange-300 drop-shadow-md" title="Alimentos" />}
+                                              {hasAudioVisual && <MonitorPlay size={10} className="text-blue-300 drop-shadow-md" title="Música / Audiovisual" />}
+                                              <span className="flex items-center bg-white/20 backdrop-blur-sm px-1 py-0.5 rounded text-[9px] font-bold border border-white/20" title="Inscritos">
+                                                <Users size={9} className="mr-0.5" />
+                                                {attendeeCounts[evento._id] || 0}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Eventos sin fecha */}
+                      {eventosPorFecha["Sin Fecha"] && (
+                        <section className="mt-8">
+                          <h2 className="text-xl font-bold mb-4 text-gray-700 border-b-2 border-red-500 pb-2">
+                            Eventos Sin Fecha Asignada
+                          </h2>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {eventosPorFecha["Sin Fecha"].map(evento => (
+                              <div
+                                key={evento._id}
+                                className="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-600 hover:shadow-lg transition-shadow cursor-pointer"
+                                onClick={() => handleViewEvento(evento)}
+                              >
+                                <h3 className="text-lg font-bold text-gray-800 mb-2">{evento.nombre}</h3>
+                                <p className="text-sm text-gray-500 mb-3">Este evento no tiene fecha.</p>
+                                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleViewEvento(evento)}
+                                    className="flex-1 gap-1"
+                                  >
+                                    <Eye size={14} /> Ver
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteEvento(evento)}
+                                    className="flex-1 gap-1"
+                                  >
+                                    <Trash2 size={14} /> Eliminar
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Vista de Tabla */}
+                  {viewMode === "table" && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-gray-100 border-b-2 border-gray-300">
+                            <th className="p-3 text-left font-semibold">Evento</th>
+                            <th className="p-3 text-left font-semibold">Fecha</th>
+                            <th className="p-3 text-left font-semibold">Horario</th>
+                            <th className="p-3 text-left font-semibold">Cliente</th>
+                            <th className="p-3 text-left font-semibold">Personas</th>
+                            <th className="p-3 text-left font-semibold">Valor</th>
+                            <th className="p-3 text-center font-semibold">Ejecutado</th>
+                            <th className="p-3 text-center font-semibold">Estado</th>
+                            <th className="p-3 text-center font-semibold">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {eventosFiltrados.map((evento) => (
+                            <tr
+                              key={evento._id}
+                              className="border-b hover:bg-gray-50"
+                            >
+                              <td className="p-3">
+                                <div className="font-semibold text-gray-800">
+                                  {evento.nombre}
+                                </div>
+                                {evento.infoAdicional && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {evento.infoAdicional.substring(0, 50)}...
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3">{evento.fecha || "Sin Fecha"}</td>
+                              <td className="p-3">
+                                {evento.horaInicio} - {evento.horaFinal}
+                              </td>
+                              <td className="p-3">
+                                <div>{evento.nombreCliente || "-"}</div>
+                                {evento.telefonoCliente && (
+                                  <div className="text-xs text-gray-500">
+                                    {evento.telefonoCliente}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                {evento.numeroPersonas || "-"}
+                              </td>
+                              <td className="p-3">{evento.valor || "-"}</td>
+                              <td className="p-3 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={!!evento.ejecutado}
+                                  onChange={async (e) => {
+                                    await dispatch(
+                                      updateItem(evento._id, { ejecutado: e.target.checked }, AGENDA)
+                                    );
+                                    dispatch(getAllFromTable(AGENDA));
+                                  }}
+                                  className="h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer"
+                                />
+                              </td>
+                              <td className="p-3">
+                                <select
+                                  value={evento.estado || "pendiente"}
+                                  onChange={(e) => handleStatusChange(evento, e.target.value)}
+                                  className={`text-xs p-1 border rounded font-bold ${evento.estado === 'aprobado' ? 'bg-green-100 text-green-700' :
+                                    evento.estado === 'desaprobado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                    }`}
+                                >
+                                  <option value="pendiente">Pendiente</option>
+                                  <option value="aprobado">Aprobado</option>
+                                  <option value="desaprobado">Desaprobado</option>
+                                </select>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-2 justify-center">
+                                  {evento.ejecutado !== null && evento.ejecutado !== undefined && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                      onClick={() => handleVolverAIdea(evento)}
+                                      title="Devolver a Ideas"
+                                    >
+                                      💡
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleViewEvento(evento)}
+                                    title="Ver / Editar detalles"
+                                  >
+                                    <Edit size={14} />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteEvento(evento)}
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </ContentCard>
         </div>
+
       </div>
 
-      {/* Contenido según modo de vista */}
-      <ContentCard noPadding>
-        <div className="p-4">
-          {eventosFiltrados.length === 0 &&
-          !Object.keys(eventosPorFecha).includes("Sin Fecha") ? (
-            <div className="text-center py-12 text-slate-500">
-              <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">
-                No hay eventos programados para este mes
-              </p>
-              <p className="text-sm">
-                Haz clic en "Nuevo Evento" para crear uno
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Vista de Tarjetas */}
-              {viewMode === "cards" && (
-                <CardGridAgenda
-                  products={eventosFiltrados}
-                  category="Eventos"
-                  onDelete={handleDeleteEvento}
-                />
-              )}
-
-              {/* Vista de Calendario (ACTUALIZADA) */}
-              {viewMode === "calendar" && (
-                <div className="space-y-4">
-                  {/* Encabezados de días de la semana */}
-                  <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600">
-                    {dayNames.map((day) => (
-                      <div
-                        key={day}
-                        className="p-2 bg-gray-100 rounded-md shadow-sm"
-                      >
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Cuadrícula de días del calendario */}
-                  <div className="grid grid-cols-7 gap-2">
-                    {calendarGrid.map((day, index) => (
-                      <div
-                        key={index}
-                        className={`border rounded-lg p-2 min-h-[140px] ${ // --- CAMBIO: Altura mínima aumentada
-                          !day
-                            ? "bg-gray-50"
-                            : "bg-white transition-shadow hover:shadow-md"
-                        }`}
-                      >
-                        {day && (
-                          <>
-                            {/* Barra de encabezado con día y botón de agregar */}
-                            <div className="flex items-center justify-between mb-2 pb-1 border-b border-gray-200">
-                              <span className="font-bold text-gray-800 text-sm">
-                                {day.day}
-                              </span>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 hover:bg-purple-100 text-purple-600 hover:text-purple-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCreateEvento(day.dateStr);
-                                }}
-                                title={`Agregar evento el ${day.dateStr}`}
-                              >
-                                <Plus size={14} />
-                              </Button>
-                            </div>
-                            {/* --- INICIO BLOQUE MODIFICADO --- */}
-                            <div className="space-y-2"> {/* Espaciado aumentado */}
-                              {day.events.map((evento) => {
-                                // Parsear servicios para mostrar los iconos
-                                let hasFood = false;
-                                let hasAudioVisual = false;
-                                if (evento.servicios) {
-                                  try {
-                                    const parsedSvc = typeof evento.servicios === "string" ? JSON.parse(evento.servicios) : evento.servicios;
-                                    if (Array.isArray(parsedSvc)) {
-                                      hasFood = parsedSvc.some(s => s.alimentos === true);
-                                      hasAudioVisual = parsedSvc.some(s => s.audioVisual === true);
-                                    } else if (typeof parsedSvc === "object" && parsedSvc !== null) {
-                                      hasFood = parsedSvc.alimentos?.activo === true || parsedSvc.alimentos === true;
-                                      hasAudioVisual = parsedSvc.audioVisual?.activo === true || parsedSvc.audioVisual === true;
-                                    }
-                                  } catch(e) {}
-                                }
-
-                                return (
-                                <div
-                                  key={evento._id}
-                                  className="text-xs rounded cursor-pointer shadow-sm hover:shadow-md relative overflow-hidden h-16 border flex flex-col justify-between group" // Altura fija a 4rem (16)
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewEvento(evento);
-                                  }}
-                                  title={`${evento.nombreES || evento.nombre || "Evento"} (${evento.horaInicio} - ${evento.horaFinal})`}
-                                >
-                                  {/* Imagen de Fondo */}
-                                  {evento.bannerIMG && (
-                                    <div
-                                      className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform group-hover:scale-105"
-                                      style={{ backgroundImage: `url(${evento.bannerIMG})` }}
-                                    ></div>
-                                  )}
-
-                                  {/* Capa Oscura para Legibilidad */}
-                                  <div className="absolute inset-0 w-full h-full bg-black bg-opacity-60 hover:bg-opacity-50 transition-opacity"></div>
-
-                                  {/* Contenido de Texto */}
-                                  <div className="relative z-10 p-1.5 text-white flex-1 flex flex-col justify-between">
-                                    <p className="truncate font-bold text-xs drop-shadow-md">
-                                      {evento.nombreES || evento.nombre || "Sin Nombre"}
-                                    </p>
-                                    <div className="flex items-center justify-between mt-1">
-                                      <p className="truncate text-gray-200 text-[10px] drop-shadow-md flex items-center font-medium">
-                                        <Clock size={10} className="mr-0.5" />
-                                        {evento.horaInicio}
-                                      </p>
-                                      
-                                      <div className="flex items-center gap-1.5 shrink-0">
-                                        {hasFood && <Utensils size={10} className="text-orange-300 drop-shadow-md" title="Alimentos" />}
-                                        {hasAudioVisual && <MonitorPlay size={10} className="text-blue-300 drop-shadow-md" title="Música / Audiovisual" />}
-                                        <span className="flex items-center bg-white/20 backdrop-blur-sm px-1 py-0.5 rounded text-[9px] font-bold border border-white/20" title="Inscritos">
-                                          <Users size={9} className="mr-0.5" />
-                                          {attendeeCounts[evento._id] || 0}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )})}
-                            </div>
-                            {/* --- FIN BLOQUE MODIFICADO --- */}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Eventos sin fecha (si existen) */}
-                  {eventosPorFecha["Sin Fecha"] && (
-                    <section className="mt-8">
-                      <h2 className="text-xl font-bold mb-4 text-gray-700 border-b-2 border-red-500 pb-2">
-                        Eventos Sin Fecha Asignada
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                         {eventosPorFecha["Sin Fecha"].map(evento => (
-                           <div 
-                             key={evento._id} 
-                             className="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-600 hover:shadow-lg transition-shadow cursor-pointer"
-                             onClick={() => handleViewEvento(evento)}
-                           >
-                             <h3 className="text-lg font-bold text-gray-800 mb-2">{evento.nombre}</h3>
-                             <p className="text-sm text-gray-500 mb-3">Este evento no tiene fecha.</p>
-                             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                               <Button
-                                 size="sm"
-                                 variant="outline"
-                                 onClick={() => handleViewEvento(evento)}
-                                 className="flex-1 gap-1"
-                               >
-                                 <Eye size={14} /> Ver
-                               </Button>
-                               <Button
-                                 size="sm"
-                                 variant="destructive"
-                                 onClick={() => handleDeleteEvento(evento)}
-                                 className="flex-1 gap-1"
-                               >
-                                 <Trash2 size={14} /> Eliminar
-                               </Button>
-                             </div>
-                           </div>
-                         ))}
-                      </div>
-                    </section>
-                  )}
-                </div>
-              )}
-
-              {/* Vista de Tabla */}
-              {viewMode === "table" && (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100 border-b-2 border-gray-300">
-                        <th className="p-3 text-left font-semibold">Evento</th>
-                        <th className="p-3 text-left font-semibold">Fecha</th>
-                        <th className="p-3 text-left font-semibold">Horario</th>
-                        <th className="p-3 text-left font-semibold">Cliente</th>
-                        <th className="p-3 text-left font-semibold">
-                          Personas
-                        </th>
-                        <th className="p-3 text-left font-semibold">Valor</th>
-                        <th className="p-3 text-center font-semibold">Estado</th>
-                        <th className="p-3 text-center font-semibold">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {eventosFiltrados.map((evento) => (
-                        <tr
-                          key={evento._id}
-                          className="border-b hover:bg-gray-50"
-                        >
-                          <td className="p-3">
-                            <div className="font-semibold text-gray-800">
-                              {evento.nombre}
-                            </div>
-                            {evento.infoAdicional && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                {evento.infoAdicional.substring(0, 50)}...
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3">{evento.fecha || "Sin Fecha"}</td>
-                          <td className="p-3">
-                            {evento.horaInicio} - {evento.horaFinal}
-                          </td>
-                          <td className="p-3">
-                            <div>{evento.nombreCliente || "-"}</div>
-                            {evento.telefonoCliente && (
-                              <div className="text-xs text-gray-500">
-                                {evento.telefonoCliente}
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            {evento.numeroPersonas || "-"}
-                          </td>
-                          <td className="p-3">{evento.valor || "-"}</td>
-                          <td className="p-3">
-                            <select 
-                              value={evento.estado || "pendiente"} 
-                              onChange={(e) => handleStatusChange(evento, e.target.value)}
-                              className={`text-xs p-1 border rounded font-bold ${
-                                evento.estado === 'aprobado' ? 'bg-green-100 text-green-700' : 
-                                evento.estado === 'desaprobado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                              }`}
-                            >
-                              <option value="pendiente">Pendiente</option>
-                              <option value="aprobado">Aprobado</option>
-                              <option value="desaprobado">Desaprobado</option>
-                            </select>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex gap-2 justify-center">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleViewEvento(evento)}
-                                title="Ver / Editar detalles"
-                              >
-                                <Edit size={14} />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDeleteEvento(evento)}
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </ContentCard>
-
-      {/* Diálogo del formulario */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <AgendaForm eventoToEdit={eventoToEdit} onClose={handleCloseForm} />
         </DialogContent>
       </Dialog>
 
-      {/* Importador de Eventos AI */}
       <EventImporter />
     </PageLayout>
   );

@@ -477,7 +477,7 @@ export default function UserPortal() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Mensaje Reciente</p>
-                          <h3 style={{ fontFamily: "'First Bunny', sans-serif" }} className="text-xl font-bold">{userMessages[0].title} </h3>
+                          <h3 style={{ fontFamily: "'First Bunny', sans-serif" }} className="text-xl font-bold font-SpaceGrotesk">{userMessages[0].title} </h3>
                         </div>
                       </div>|
                       <ChevronRight className="w-6 h-6 opacity-50" />

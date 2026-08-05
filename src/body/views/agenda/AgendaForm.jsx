@@ -97,16 +97,16 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
             typeof eventoToEdit.servicios === "string"
               ? JSON.parse(eventoToEdit.servicios)
               : eventoToEdit.servicios;
-          
+
           if (Array.isArray(serviciosParsed)) {
-             const obj = { alimentos: { activo: false, descripcion: "" }, mesas: { activo: false, descripcion: "" }, audioVisual: { activo: false, descripcion: "" }, otros: { activo: false, descripcion: "" } };
-             serviciosParsed.forEach(s => {
-               if (s.alimentos !== undefined) { obj.alimentos.activo = !!s.alimentos; obj.alimentos.descripcion = s.alimentosDescripcion || ""; }
-               if (s.mesas !== undefined) { obj.mesas.activo = !!s.mesas; obj.mesas.descripcion = s.mesasDescription || ""; }
-               if (s.audioVisual !== undefined) { obj.audioVisual.activo = !!s.audioVisual; obj.audioVisual.descripcion = s.audioVisualDescription || ""; }
-               if (s.otros !== undefined) { obj.otros.activo = !!s.otros; obj.otros.descripcion = s.otrosDescroptions || ""; }
-             });
-             setServicios(obj);
+            const obj = { alimentos: { activo: false, descripcion: "" }, mesas: { activo: false, descripcion: "" }, audioVisual: { activo: false, descripcion: "" }, otros: { activo: false, descripcion: "" } };
+            serviciosParsed.forEach(s => {
+              if (s.alimentos !== undefined) { obj.alimentos.activo = !!s.alimentos; obj.alimentos.descripcion = s.alimentosDescripcion || ""; }
+              if (s.mesas !== undefined) { obj.mesas.activo = !!s.mesas; obj.mesas.descripcion = s.mesasDescription || ""; }
+              if (s.audioVisual !== undefined) { obj.audioVisual.activo = !!s.audioVisual; obj.audioVisual.descripcion = s.audioVisualDescription || ""; }
+              if (s.otros !== undefined) { obj.otros.activo = !!s.otros; obj.otros.descripcion = s.otrosDescroptions || ""; }
+            });
+            setServicios(obj);
           } else {
             setServicios(serviciosParsed);
           }
@@ -132,7 +132,7 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
     setFormData((prev) => ({ ...prev, nombreCliente: value }));
 
     const aliado = allAliados.find((a) => a.nombre.toLowerCase() === value.toLowerCase());
-    
+
     if (aliado) {
       setFormData((prev) => ({
         ...prev,
@@ -246,13 +246,13 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
   };
 
   return (
-    <div className="w-full bg-slate-50 p-4 md:p-6 rounded-2xl">
+    <div className="w-full bg-slate-50 p-1 md:p-0 rounded-2xl">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
+
           {/* COLUMNA IZQUIERDA */}
           <div className="space-y-6">
-            
+
             <Section title="Datos Principales" icon={Edit3}>
               <div className="space-y-4">
                 <div>
@@ -261,14 +261,13 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                 </div>
                 <div>
                   <Label className="text-gray-700 font-semibold">Estado del Evento</Label>
-                  <select 
-                    name="estado" 
-                    value={formData.estado} 
-                    onChange={handleInputChange} 
-                    className={`mt-1 w-full p-2.5 border rounded-lg font-medium outline-none transition-colors ${
-                      formData.estado === 'aprobado' ? 'bg-green-50 text-green-700 border-green-200' : 
+                  <select
+                    name="estado"
+                    value={formData.estado}
+                    onChange={handleInputChange}
+                    className={`mt-1 w-full p-2.5 border rounded-lg font-medium outline-none transition-colors ${formData.estado === 'aprobado' ? 'bg-green-50 text-green-700 border-green-200' :
                       formData.estado === 'desaprobado' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                    }`}
+                      }`}
                   >
                     <option value="pendiente">Pendiente de Aprobación</option>
                     <option value="aprobado">Aprobado y Publicado</option>
@@ -321,39 +320,39 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                     <span className="text-sm text-gray-500">Subiendo imagen...</span>
                   </div>
                 ) : formData.bannerIMG ? (
-                    <div className="relative w-full group">
-                      <img src={formData.bannerIMG} className="w-full h-40 object-cover rounded-lg shadow-sm" alt="Banner" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                         <button type="button" onClick={() => setFormData({...formData, bannerIMG: ""})} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transform hover:scale-110 transition-transform">
-                           <Trash2 size={20} />
-                         </button>
-                      </div>
+                  <div className="relative w-full group">
+                    <img src={formData.bannerIMG} className="w-full h-40 object-cover rounded-lg shadow-sm" alt="Banner" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                      <button type="button" onClick={() => setFormData({ ...formData, bannerIMG: "" })} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transform hover:scale-110 transition-transform">
+                        <Trash2 size={20} />
+                      </button>
                     </div>
-                  ) : (
-                    <Label className="cursor-pointer text-purple-600 hover:text-purple-700 flex flex-col items-center gap-2">
-                      <div className="bg-purple-100 p-4 rounded-full">
-                        <UploadCloud size={28} />
-                      </div>
-                      <span className="text-sm font-medium">Haz clic para subir un banner</span>
-                      <span className="text-xs text-gray-400">PNG, JPG, WEBP hasta 5MB</span>
-                      <input type="file" className="hidden" onChange={handleBannerUpload} accept="image/*" />
-                    </Label>
-                  )
+                  </div>
+                ) : (
+                  <Label className="cursor-pointer text-purple-600 hover:text-purple-700 flex flex-col items-center gap-2">
+                    <div className="bg-purple-100 p-4 rounded-full">
+                      <UploadCloud size={28} />
+                    </div>
+                    <span className="text-sm font-medium">Haz clic para subir un banner</span>
+                    <span className="text-xs text-gray-400">PNG, JPG, WEBP hasta 5MB</span>
+                    <input type="file" className="hidden" onChange={handleBannerUpload} accept="image/*" />
+                  </Label>
+                )
                 }
               </div>
             </Section>
 
             <Section title="Organizador / Aliado" icon={Users}>
               <div className="space-y-4">
-                
+
                 <div className="relative">
                   <Label className="text-gray-700 font-semibold">Nombre del Organizador o Aliado</Label>
-                  <input 
-                    name="nombreCliente" 
-                    type="text" 
-                    value={formData.nombreCliente} 
-                    onChange={handleNameChange} 
-                    className={`mt-1 w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow ${formData.aliado_id ? 'border-purple-400 bg-purple-50' : 'border-gray-300'}`} 
+                  <input
+                    name="nombreCliente"
+                    type="text"
+                    value={formData.nombreCliente}
+                    onChange={handleNameChange}
+                    className={`mt-1 w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow ${formData.aliado_id ? 'border-purple-400 bg-purple-50' : 'border-gray-300'}`}
                     placeholder="Escribe para buscar un aliado o ingresa uno nuevo..."
                     list="aliados-list"
                   />
@@ -378,13 +377,13 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                 <div className="pt-4 border-t mt-4">
                   <Label className="text-gray-700 font-semibold block mb-2">Cuentas de Instagram Asociadas</Label>
                   <div className="flex gap-2 mb-3">
-                    <input 
-                      type="text" 
-                      value={tempIG} 
-                      onChange={(e) => setTempIG(e.target.value)} 
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())} 
-                      className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow" 
-                      placeholder="Ej: @cafereserva" 
+                    <input
+                      type="text"
+                      value={tempIG}
+                      onChange={(e) => setTempIG(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInstagramHandle())}
+                      className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow"
+                      placeholder="Ej: @cafereserva"
                       list="instagrams-list"
                     />
                     <datalist id="instagrams-list">
@@ -394,7 +393,7 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                         </option>
                       ))}
                     </datalist>
-                    <Button type="button" onClick={addInstagramHandle} className="bg-purple-600 hover:bg-purple-700 h-[46px] px-4"><Plus size={18} className="mr-1"/> Añadir</Button>
+                    <Button type="button" onClick={addInstagramHandle} className="bg-purple-600 hover:bg-purple-700 h-[46px] px-4"><Plus size={18} className="mr-1" /> Añadir</Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.instagramsAliados.length === 0 && <span className="text-sm text-gray-400 italic">No hay cuentas asociadas.</span>}
@@ -425,20 +424,20 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
 
         <Section title="Preguntas del Formulario de Inscripción" icon={FileText}>
           <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <input type="text" value={newPregunta.label} onChange={(e) => setNewPregunta({...newPregunta, label: e.target.value})} className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow" placeholder="Escribe una nueva pregunta..." />
-            <select value={newPregunta.tipo} onChange={(e) => setNewPregunta({...newPregunta, tipo: e.target.value})} className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow">
+            <input type="text" value={newPregunta.label} onChange={(e) => setNewPregunta({ ...newPregunta, label: e.target.value })} className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow" placeholder="Escribe una nueva pregunta..." />
+            <select value={newPregunta.tipo} onChange={(e) => setNewPregunta({ ...newPregunta, tipo: e.target.value })} className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-shadow">
               <option value="texto">Respuesta de Texto</option>
               <option value="numero">Respuesta Numérica</option>
             </select>
-            <Button type="button" onClick={handleAddPregunta} className="bg-orange-500 hover:bg-orange-600 text-white h-[46px] px-6"><Plus size={18} className="mr-1"/> Añadir Pregunta</Button>
+            <Button type="button" onClick={handleAddPregunta} className="bg-orange-500 hover:bg-orange-600 text-white h-[46px] px-6"><Plus size={18} className="mr-1" /> Añadir Pregunta</Button>
           </div>
-          
+
           <div className="space-y-3">
             {preguntas.length === 0 && <p className="text-sm text-gray-500 italic text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">No hay preguntas personalizadas adicionales.</p>}
             {preguntas.map((p, i) => (
               <div key={p.id} className="flex justify-between items-center bg-white p-4 border border-gray-200 rounded-lg shadow-sm hover:border-orange-300 transition-colors">
                 <div className="flex items-center gap-4">
-                  <span className="bg-orange-100 text-orange-700 font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm">{i+1}</span>
+                  <span className="bg-orange-100 text-orange-700 font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm">{i + 1}</span>
                   <span className="font-semibold text-gray-700 text-sm md:text-base">{p.label}</span>
                   <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md capitalize font-medium">{p.tipo}</span>
                 </div>
