@@ -15,6 +15,7 @@ export function useCafeData() {
         .from('Agenda')
         .select('_id, nombreES, fecha, horaInicio, horaFinal, bannerIMG, linkInscripcion, valor')
         .gte('fecha', today)
+        .not('ejecutado', 'is', null)
         .order('fecha', { ascending: true })
         .limit(10);
       if (!error && data) setAgendaEvents(data);

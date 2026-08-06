@@ -24,9 +24,9 @@ function AgendaFormPage() {
   const [evento, setEvento] = useState(null);
   const allAliados = useSelector((state) => state.allAliados) || [];
 
-  // Obtener parámetros desde URL si existen
   const fechaDesdeURL = searchParams.get("fecha");
   const aliadoIdDesdeURL = searchParams.get("aliado_id");
+  const isIdea = searchParams.get("is_idea") === "true";
 
   // Dynamic Form Builder State
   const [preguntas, setPreguntas] = useState([]);
@@ -414,7 +414,8 @@ function AgendaFormPage() {
       numeroPersonas: parseInt(formData.numeroPersonas) || 1,
       instagramsAliados: formData.instagramsAliados || [],
       servicios: JSON.stringify(buildServiciosForSupabase(servicios)),
-      preguntas_personalizadas: preguntas
+      preguntas_personalizadas: preguntas,
+      ...(isIdea ? { ejecutado: null, estado_proceso: "idea" } : {})
     };
 
     try {

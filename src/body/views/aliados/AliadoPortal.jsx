@@ -322,7 +322,7 @@ export default function AliadoPortal() {
                             <h2 className="text-2xl font-bold font-SpaceGrotesk">Mis Eventos</h2>
                             <button 
                                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-blue-700 transition-colors"
-                                onClick={() => navigate(`/agendaForm/new?aliado_id=${currentAliado.id}`)}
+                                onClick={() => navigate(`/agendaForm/new?aliado_id=${currentAliado.id}&is_idea=true`)}
                             >
                                 <Plus size={18} /> Proponer Evento
                             </button>
