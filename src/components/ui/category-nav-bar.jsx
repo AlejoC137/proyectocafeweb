@@ -48,23 +48,21 @@ function CategoryNavBar({
   const buttonWidth = totalButtons > 0 ? `${100 / totalButtons}%` : '100%';
 
   return (
-    <div className={`flex justify-center align-top gap-1 p-1 mt-2 fixed top-18 left-0 right-0 bg-cream-bg/95 backdrop-blur-sm border border-sage-green z-40 shadow-sm ${className}`}>
+    <div className={`flex flex-wrap items-center justify-center gap-1.5 p-1.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm w-full sm:w-auto ${className}`}>
       {/* Botones de categorías */}
       {categories.map(({ type, label, icon }) => {
-        
         return (
           <button
             key={type}
-            style={{ width: buttonWidth }}
-            className={`rounded-lg font-PlaywriteDE font-bold flex flex-col items-center justify-center py-2 px-1 transition-all duration-200 min-h-[3.5rem] ${
+            className={`rounded-lg font-bold flex items-center justify-center gap-1.5 py-1.5 px-3 transition-all duration-200 min-h-[2.4rem] text-xs sm:text-sm ${
               currentType === type 
-                ? "bg-cobalt-blue text-white shadow-md" 
-                : "bg-white text-gray-700 hover:bg-sage-green/20 hover:text-sage-green border border-light-leaf"
+                ? "bg-cobalt-blue text-white shadow-sm ring-2 ring-cobalt-blue/20" 
+                : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
             }`}
             onClick={() => onTypeChange(type)}
           >
-            {icon}
-            <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
+            <span className="text-sm">{icon}</span>
+            <span className="whitespace-nowrap">
               {label}
             </span>
           </button>
@@ -74,15 +72,15 @@ function CategoryNavBar({
       {/* Botón de edición */}
       {onToggleEdit && (
         <button
-          style={{ width: buttonWidth }}
-          className={`rounded-lg flex flex-col items-center justify-center py-2 px-1 font-PlaywriteDE font-bold transition-all duration-200 min-h-[3.5rem] ${
+          className={`rounded-lg flex items-center justify-center gap-1.5 py-1.5 px-3 font-bold transition-all duration-200 min-h-[2.4rem] text-xs sm:text-sm ${
             showEdit 
-              ? "bg-terracotta-pink text-white shadow-md" 
-              : "bg-sage-green text-white hover:bg-sage-green/80 shadow-sm"
+              ? "bg-amber-600 text-white shadow-sm ring-2 ring-amber-500/20" 
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
           }`}
           onClick={onToggleEdit}
         >
-⚙️          <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
+          <span>⚙️</span>
+          <span className="whitespace-nowrap">
             Edición
           </span>
         </button>
@@ -91,16 +89,15 @@ function CategoryNavBar({
       {/* Botón de acciones rápidas */}
       {onToggleActions && (
         <button
-          style={{ width: buttonWidth }}
-          className={`rounded-lg flex flex-col items-center justify-center py-2 px-1 font-PlaywriteDE font-bold transition-all duration-200 min-h-[3.5rem] ${
+          className={`rounded-lg flex items-center justify-center gap-1.5 py-1.5 px-3 font-bold transition-all duration-200 min-h-[2.4rem] text-xs sm:text-sm ${
             showActions 
-              ? "bg-terracotta-pink text-white shadow-md" 
-              : "bg-sage-green text-white hover:bg-sage-green/80 shadow-sm"
+              ? "bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500/20" 
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
           }`}
           onClick={onToggleActions}
         >
-          ⚡
-          <span className="text-xs leading-tight text-center break-words hyphens-auto" style={{ wordBreak: 'break-word' }}>
+          <span>⚡</span>
+          <span className="whitespace-nowrap">
             Acciones
           </span>
         </button>

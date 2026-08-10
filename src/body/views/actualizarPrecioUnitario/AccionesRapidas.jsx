@@ -32,9 +32,16 @@ function AccionesRapidas({ currentType: propType }) {
   const currentType = propType === "ITEMS" ? ITEMS : propType;
 
   const dispatch = useDispatch();
-  const allItems = useSelector((state) => state.allItems);
-  const allProduccion = useSelector((state) => state.allProduccion);
-  const allProveedores = useSelector((state) => state.Proveedores);
+  const allItems = useSelector((state) => state.allItems || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
+  const allProveedores = useSelector((state) => state.Proveedores || []);
+
+  // Fetch missing data on mount
+  useEffect(() => {
+    if (!allItems || allItems.length === 0) dispatch(getAllFromTable(ITEMS));
+    if (!allProduccion || allProduccion.length === 0) dispatch(getAllFromTable(PRODUCCION));
+    if (!allProveedores || allProveedores.length === 0) dispatch(getAllFromTable("Proveedores"));
+  }, [dispatch]);
 
   // States
   const [formVisible, setFormVisible] = useState(false);
@@ -152,7 +159,6 @@ function AccionesRapidas({ currentType: propType }) {
     dispatch(sincronizarCostosProduccion());
   };
 
-
   const handleCopiarPendientes = (type) => {
     dispatch(copiarAlPortapapeles(type === ItemsAlmacen ? allItems : allProduccion, type === ItemsAlmacen ? "PC" : "PP", "Proveedor", allProveedores));
   };
@@ -206,103 +212,160 @@ function AccionesRapidas({ currentType: propType }) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+    <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-5">
 
       {/* SECTION 1: CLIPBOARD ACTIONS */}
-      <div>
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Portapapeles</h3>
+      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs">
+        <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <span>📋</span> Portapapeles & Exportación
+        </h3>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleCopiarPendientes(ItemsAlmacen)} className="text-green-600 border-green-200 bg-green-50 hover:bg-green-100">
-            <Copy className="h-4 w-4 mr-1" /> Pendientes Compra
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleCopiarPendientes(ItemsAlmacen)} 
+            className="h-9 text-xs font-semibold text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/80 transition-colors"
+          >
+            <Copy className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> Pendientes Compra
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleCopiarPendientes(ProduccionInterna)} className="text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100">
-            <Copy className="h-4 w-4 mr-1" /> Pendientes Producción
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleCopiarPendientes(ProduccionInterna)} 
+            className="h-9 text-xs font-semibold text-amber-700 border-amber-200 bg-amber-50/50 hover:bg-amber-100/80 transition-colors"
+          >
+            <Copy className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Pendientes Producción
           </Button>
-          <Button variant="outline" size="sm" onClick={handleCopiarInfoItems} className="text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100">
-            <FileText className="h-4 w-4 mr-1" /> Copiar Toda Info
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCopiarInfoItems} 
+            className="h-9 text-xs font-semibold text-blue-700 border-blue-200 bg-blue-50/50 hover:bg-blue-100/80 transition-colors"
+          >
+            <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" /> Copiar Toda Info
           </Button>
         </div>
       </div>
 
-      <div>
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Acciones de Gestión</h3>
+      {/* SECTION 2: CREATION ACTIONS */}
+      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs">
+        <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <span>➕</span> Creación & Carga
+        </h3>
         <div className="flex flex-wrap gap-2">
           <Button
-            variant={formVisible ? "default" : "outline"}
-            className={formVisible ? "bg-slate-800 text-white" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
+            variant="outline"
+            size="sm"
+            className={`h-9 text-xs font-semibold transition-all ${
+              formVisible 
+                ? "bg-slate-800 text-white border-slate-800 shadow-xs" 
+                : "border-slate-300 text-slate-700 bg-white hover:bg-slate-50"
+            }`}
             onClick={() => setFormVisible(!formVisible)}
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
+            <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
             {currentType === MenuItems ? "Nuevo Plato" : "Nuevo Ítem"}
           </Button>
 
           <Button
-            variant={formProveedorVisible ? "default" : "outline"}
-            className={formProveedorVisible ? "bg-orange-600 text-white" : "border-orange-300 text-orange-700 hover:bg-orange-50"}
+            variant="outline"
+            size="sm"
+            className={`h-9 text-xs font-semibold transition-all ${
+              formProveedorVisible 
+                ? "bg-orange-600 text-white border-orange-600 shadow-xs" 
+                : "border-orange-200 text-orange-700 bg-orange-50/40 hover:bg-orange-100/70"
+            }`}
             onClick={() => setFormProveedorVisible(!formProveedorVisible)}
           >
-            <UserPlus className="h-4 w-4 mr-2" />
+            <UserPlus className="h-3.5 w-3.5 mr-1.5" />
             Nuevo Proveedor
           </Button>
 
           <Button
-            variant={jsonImportVisible ? "default" : "outline"}
-            className={jsonImportVisible ? "bg-blue-600 text-white" : "border-blue-300 text-blue-700 hover:bg-blue-50"}
+            variant="outline"
+            size="sm"
+            className={`h-9 text-xs font-semibold transition-all ${
+              jsonImportVisible 
+                ? "bg-blue-600 text-white border-blue-600 shadow-xs" 
+                : "border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/70"
+            }`}
             onClick={() => setJsonImportVisible(!jsonImportVisible)}
           >
-            <FileJson className="h-4 w-4 mr-2" />
+            <FileJson className="h-3.5 w-3.5 mr-1.5" />
             Importar JSON
           </Button>
+        </div>
+      </div>
 
-
+      {/* SECTION 3: MASS TOOLS & CALCULATIONS */}
+      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs">
+        <h3 className="text-xs font-bold text-violet-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <span>🛠️</span> Herramientas & Cálculos Masivos
+        </h3>
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            className="border-red-200 text-red-600 hover:bg-red-50"
-            onClick={handleActualizarPrecios}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Recalcular Precios
-          </Button>
-
-
-          {currentType === ProduccionInterna && (
-            <Button
-              variant="outline"
-              className="border-purple-200 text-purple-600 hover:bg-purple-50"
-              onClick={handleSincronizarCostosProduccion}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Sincronizar Costos Receta
-            </Button>
-          )}
-
-          <Button
-            variant={macroAgregadorVisible ? "default" : "outline"}
-            className={macroAgregadorVisible ? "bg-emerald-600 text-white" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}
+            size="sm"
+            className={`h-9 text-xs font-semibold transition-all ${
+              macroAgregadorVisible 
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs" 
+                : "border-emerald-200 text-emerald-700 bg-emerald-50/40 hover:bg-emerald-100/70"
+            }`}
             onClick={() => setMacroAgregadorVisible(true)}
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
+            <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
             Macro Agregador de Inventario
           </Button>
 
           <Button
-            variant={macroEditorVisible ? "default" : "outline"}
-            className={macroEditorVisible ? "bg-amber-600 text-white" : "border-amber-300 text-amber-700 hover:bg-amber-50"}
+            variant="outline"
+            size="sm"
+            className={`h-9 text-xs font-semibold transition-all ${
+              macroEditorVisible 
+                ? "bg-amber-600 text-white border-amber-600 shadow-xs" 
+                : "border-amber-200 text-amber-700 bg-amber-50/40 hover:bg-amber-100/70"
+            }`}
             onClick={() => setMacroEditorVisible(true)}
           >
-            <Hammer className="h-4 w-4 mr-2" />
-            Macro Editor de armas de inventario
+            <Hammer className="h-3.5 w-3.5 mr-1.5" />
+            Macro Editor de Inventario
           </Button>
 
           <Button
-            variant={spellCheckerVisible ? "default" : "outline"}
-            className={spellCheckerVisible ? "bg-indigo-600 text-white" : "border-indigo-300 text-indigo-700 hover:bg-indigo-50"}
+            variant="outline"
+            size="sm"
+            className={`h-9 text-xs font-semibold transition-all ${
+              spellCheckerVisible 
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-xs" 
+                : "border-indigo-200 text-indigo-700 bg-indigo-50/40 hover:bg-indigo-100/70"
+            }`}
             onClick={() => setSpellCheckerVisible(true)}
           >
-            <SpellCheck className="h-4 w-4 mr-2" />
+            <SpellCheck className="h-3.5 w-3.5 mr-1.5" />
             Corrector Ortográfico
           </Button>
 
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs font-semibold border-rose-200 text-rose-700 bg-rose-50/40 hover:bg-rose-100/70 transition-colors"
+            onClick={handleActualizarPrecios}
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            Recalcular Precios
+          </Button>
+
+          {currentType === ProduccionInterna && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-xs font-semibold border-purple-200 text-purple-700 bg-purple-50/40 hover:bg-purple-100/70 transition-colors"
+              onClick={handleSincronizarCostosProduccion}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Sincronizar Costos Receta
+            </Button>
+          )}
         </div>
       </div>
 
@@ -340,44 +403,44 @@ function AccionesRapidas({ currentType: propType }) {
 
       {/* JSON IMPORT SECTION */}
       {jsonImportVisible && (
-        <div className="bg-blue-50 p-4 rounded-md border border-blue-200 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-blue-50/80 p-4 rounded-xl border border-blue-200 animate-in fade-in zoom-in-95 duration-200 shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-sm text-blue-800 flex items-center gap-2">
-              <FileJson className="h-4 w-4" /> Importar desde JSON
+            <h4 className="font-bold text-sm text-blue-900 flex items-center gap-2">
+              <FileJson className="h-4 w-4 text-blue-600" /> Importar desde JSON
             </h4>
             <Button
               size="sm"
               variant="outline"
               onClick={handleCopyPrompt}
-              className="flex items-center gap-1 text-xs h-7 px-2 border-blue-300 hover:bg-blue-100 hover:border-blue-400"
+              className="flex items-center gap-1 text-xs h-7 px-2.5 border-blue-300 bg-white text-blue-700 hover:bg-blue-100"
               title="Copia instrucciones para IA que generan JSON compatible"
             >
               {promptCopied ? (
                 <>
-                  <Check className="h-3 w-3 text-green-600" />
-                  <span className="text-green-600">Copiado</span>
+                  <Check className="h-3 w-3 text-emerald-600" />
+                  <span className="text-emerald-700 font-medium">Copiado</span>
                 </>
               ) : (
                 <>
                   <Copy className="h-3 w-3" />
-                  <span>Copiar Prompt</span>
+                  <span>Copiar Prompt IA</span>
                 </>
               )}
             </Button>
           </div>
-          <p className="text-xs text-blue-600 mb-2">
+          <p className="text-xs text-blue-700 mb-2.5">
             Pega aquí el objeto JSON del producto (ej. desde Claude/GPT). El sistema intentará autocompletar el formulario.
           </p>
           <Textarea
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
             placeholder='{ "nombre": "...", "costo": 1000 ... }'
-            className="font-mono text-xs bg-white mb-3 h-32"
+            className="font-mono text-xs bg-white mb-3 h-32 border-blue-200 focus:border-blue-400"
           />
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setJsonImportVisible(false)} className="text-blue-600 hover:text-blue-800">Cancelar</Button>
-            <Button size="sm" onClick={parseJsonToItem} className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Hammer className="h-4 w-4 mr-1" /> Procesar JSON
+            <Button variant="ghost" size="sm" onClick={() => setJsonImportVisible(false)} className="text-blue-700 hover:text-blue-900 hover:bg-blue-100/50">Cancelar</Button>
+            <Button size="sm" onClick={parseJsonToItem} className="bg-blue-600 hover:bg-blue-700 text-white font-medium">
+              <Hammer className="h-3.5 w-3.5 mr-1.5" /> Procesar JSON
             </Button>
           </div>
         </div>
@@ -385,9 +448,9 @@ function AccionesRapidas({ currentType: propType }) {
 
       {/* FORMS */}
       {formVisible && (
-        <div className="bg-slate-50 p-4 rounded-md border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
-          <h4 className="font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
-            <PlusCircle className="h-4 w-4" />
+        <div className="bg-white p-4.5 rounded-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200 shadow-xs">
+          <h4 className="font-bold text-sm text-slate-800 mb-3.5 flex items-center gap-2">
+            <PlusCircle className="h-4 w-4 text-slate-600" />
             {currentType === MenuItems ? "Nuevo Ítem de Menú" : "Nuevo Ítem de Almacén/Producción"}
           </h4>
 
@@ -427,13 +490,13 @@ function AccionesRapidas({ currentType: propType }) {
               </select>
 
               <div className="flex gap-2 col-span-1 md:col-span-2 lg:col-span-3">
-                <Input name="minimo" value={newItemData.STOCK.minimo} onChange={handleStockChange} placeholder="Min" title="Stock Min" className="w-1/3" />
-                <Input name="actual" value={newItemData.STOCK.actual} onChange={handleStockChange} placeholder="Actual" title="Stock Actual" className="w-1/3" />
-                <Input name="maximo" value={newItemData.STOCK.maximo} onChange={handleStockChange} placeholder="Max" title="Stock Max" className="w-1/3" />
+                <Input name="minimo" value={newItemData.STOCK.minimo} onChange={handleStockChange} placeholder="Stock Mín" title="Stock Min" className="w-1/3" />
+                <Input name="actual" value={newItemData.STOCK.actual} onChange={handleStockChange} placeholder="Stock Actual" title="Stock Actual" className="w-1/3" />
+                <Input name="maximo" value={newItemData.STOCK.maximo} onChange={handleStockChange} placeholder="Stock Máx" title="Stock Max" className="w-1/3" />
               </div>
 
               <div className="col-span-1 md:col-span-2 lg:col-span-3 pt-2">
-                <Button onClick={handleCrearItem} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={handleCrearItem} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium">
                   <Save className="h-4 w-4 mr-2" /> Guardar Ítem
                 </Button>
               </div>
@@ -452,7 +515,7 @@ function AccionesRapidas({ currentType: propType }) {
               </select>
 
               <div className="col-span-1 md:col-span-2">
-                <Button onClick={handleCrearMenuItem} className="w-full bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleCrearMenuItem} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
                   <Save className="h-4 w-4 mr-2" /> Guardar Plato
                 </Button>
               </div>
@@ -462,16 +525,16 @@ function AccionesRapidas({ currentType: propType }) {
       )}
 
       {formProveedorVisible && (
-        <div className="bg-orange-50 p-4 rounded-md border border-orange-200 animate-in fade-in zoom-in-95 duration-200">
-          <h4 className="font-bold text-sm text-orange-800 mb-3 flex items-center gap-2">
-            <UserPlus className="h-4 w-4" /> Nuevo Proveedor
+        <div className="bg-orange-50/80 p-4.5 rounded-xl border border-orange-200 animate-in fade-in zoom-in-95 duration-200 shadow-xs">
+          <h4 className="font-bold text-sm text-orange-900 mb-3 flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-orange-600" /> Nuevo Proveedor
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Object.keys(initialProveedorData).map(k => (
-              <Input key={k} name={k} value={newProveedorData[k]} onChange={(e) => handleInputChange(e, setNewProveedorData)} placeholder={k.replace(/_/g, " ")} />
+              <Input key={k} name={k} value={newProveedorData[k]} onChange={(e) => handleInputChange(e, setNewProveedorData)} placeholder={k.replace(/_/g, " ")} className="bg-white border-orange-200 focus:border-orange-400" />
             ))}
             <div className="col-span-1 md:col-span-2 pt-2">
-              <Button onClick={handleCrearProveedor} className="w-full bg-orange-600 hover:bg-orange-700">
+              <Button onClick={handleCrearProveedor} className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium">
                 <Save className="h-4 w-4 mr-2" /> Guardar Proveedor
               </Button>
             </div>
