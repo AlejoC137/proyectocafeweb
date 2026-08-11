@@ -76,7 +76,7 @@ function Proveedores() {
     <PageLayout title="Gestión de Proveedores" actions={headerActions} loading={loading}>
       {/* Acciones Rápidas */}
       {showAccionesRapidas && (
-        <ContentCard title="Acciones Rápidas">
+        <ContentCard title="Acciones Rápidas" className="flex-shrink-0">
           <AccionesRapidas currentType={PROVEE} />
         </ContentCard>
       )}

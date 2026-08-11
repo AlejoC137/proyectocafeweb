@@ -10,6 +10,7 @@ import EditableText from "../../../components/ui/EditableText.jsx";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 import { Save, Plus, X, FileJson, RefreshCw, Lock, Unlock, Printer, DollarSign, ClipboardList } from "lucide-react";
 import ProcedimientoImportModal from "./ProcedimientoImportModal.jsx";
+import VeaseSection from "../../../components/Vease/VeaseSection";
 
 // ─── EditableIngredientRow ────────────────────────────────────────────────────
 const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove, onSync, onMove, isFirst, isLast, onNavigate }) => {
@@ -745,13 +746,18 @@ function ProcedimientoModal({ item, onClose }) {
                 )}
               </div>
 
-              {/* Emplatado / Observaciones */}
+              {/* Observaciones Finales */}
               <div>
                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Observaciones Finales</h3>
                 <div className="text-xs text-slate-700">
                   <EditableText value={receta.emplatado || ""} onSave={(v) => updateInfoField("emplatado", v)}
                     isEditable={permanentEditMode} placeholder="Observaciones o validación final..." multiline={true} disabled={isUpdating} />
                 </div>
+              </div>
+
+              {/* Véase / Relacionados */}
+              <div>
+                <VeaseSection sourceId={receta._id || id} sourceType="procedimiento" />
               </div>
 
               {/* Meta */}

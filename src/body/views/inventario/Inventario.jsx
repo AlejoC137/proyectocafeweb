@@ -123,7 +123,7 @@ function Inventario() {
     <PageLayout title="Gestión de Inventario" actions={headerActions} loading={loading}>
       {/* Acciones Rápidas */}
       {showAccionesRapidas && (
-        <ContentCard title="Acciones Rápidas">
+        <ContentCard title="Acciones Rápidas" className="flex-shrink-0">
           <AccionesRapidas currentType={currentType} />
         </ContentCard>
       )}

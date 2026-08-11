@@ -550,7 +550,7 @@ function ModeloContent({ targetMonth, targetYear }) {
         if (window.confirm("¿Desea guardar la lista actual de gastos fijos como la configuración predeterminada?")) {
             try {
                 const { data: existing } = await supabase.from('Proyect_Info').select('id').limit(1);
-                
+
                 const payload = {
                     gastos_fijos: JSON.stringify(currentCosts.fijos)
                 };
@@ -683,7 +683,7 @@ function ModeloContent({ targetMonth, targetYear }) {
             timestamp: Date.now()
         };
         localStorage.setItem('tempMenuAuditData', JSON.stringify(dataToSave));
-        window.open('/productos-financiero', '_blank');
+        window.open('/productosfinanciero', '_blank');
     };
 
     return (
@@ -798,88 +798,88 @@ function ModeloContent({ targetMonth, targetYear }) {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                        <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
-                            <div className="flex justify-between items-center mb-1">
-                                <h3 className="font-bold text-gray-700 text-xs">Compras / Insumos</h3>
-                                <div className="flex gap-1">
-                                    <button onClick={handleSyncRealPurchases} className="p-1 hover:bg-blue-50 text-blue-600 rounded" title="Sincronizar Compras">🔄</button>
-                                    <button onClick={handleSyncTheoretical} className="p-1 hover:bg-purple-50 text-purple-600 rounded" title="Sincronizar Teórico">📋</button>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.compras)}</div>
-                                <button onClick={() => addItem('compras', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Item">+</button>
-                            </div>
-                            <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
-                                {(currentCosts.compras || []).map(i => (
-                                    <div key={i.id} className="relative group">
-                                        <SimpleCostRow cost={i} label="Descripción" onUpdate={(it) => updateItem('compras', it)} onRemove={() => removeItem('compras', i.id)} />
-                                        {i.id === 'auto-compras' && (
-                                            <button onClick={() => setShowPurchasesModal(true)} className="absolute right-2 top-0 text-[9px] text-blue-500 hover:underline">Ver</button>
-                                        )}
+                            <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="font-bold text-gray-700 text-xs">Compras / Insumos</h3>
+                                    <div className="flex gap-1">
+                                        <button onClick={handleSyncRealPurchases} className="p-1 hover:bg-blue-50 text-blue-600 rounded" title="Sincronizar Compras">🔄</button>
+                                        <button onClick={handleSyncTheoretical} className="p-1 hover:bg-purple-50 text-purple-600 rounded" title="Sincronizar Teórico">📋</button>
                                     </div>
-                                ))}
-                            </div>
-                        </section>
-
-                        <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
-                            <div className="flex justify-between items-center mb-1">
-                                <h3 className="font-bold text-gray-700 text-xs">Personal</h3>
-                                <button onClick={handleSyncPayroll} className="p-1 hover:bg-green-50 text-green-600 rounded" title="Sincronizar Nómina">🔄</button>
-                            </div>
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.personal)}</div>
-                                <button onClick={() => addItem('personal', { id: Date.now(), role: '', weeklyHours: 48, hourlyRate: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Empleado">+</button>
-
-                            </div>
-                            <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
-                                {(currentCosts.personal || []).map(i => <EmployeeRow key={i.id} employee={i} onUpdate={(it) => updateItem('personal', it)} onRemove={() => removeItem('personal', i.id)} />)}
-                            </div>
-                        </section>
-
-                        <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
-                            <div className="flex justify-between items-center mb-1">
-                                <h3 className="font-bold text-gray-700 text-xs">Costos Fijos</h3>
-                                <div className="flex gap-1">
-                                    <button onClick={handleSyncFixedCosts} className="p-1 hover:bg-blue-50 text-blue-600 rounded" title="Sincronizar Predeterminados">🔄</button>
-                                    <button onClick={handleSaveFixedCostsAsDefault} className="p-1 hover:bg-green-50 text-green-600 rounded" title="Guardar como Predeterminados">💾</button>
                                 </div>
-                            </div>
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.fijos)}</div>
-                                <button onClick={() => addItem('fijos', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Fijo">+</button>
-                            </div>
-                            <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
-                                {(currentCosts.fijos || []).map(i => <SimpleCostRow key={i.id} cost={i} label="Concepto" onUpdate={(it) => updateItem('fijos', it)} onRemove={() => removeItem('fijos', i.id)} />)}
-                            </div>
-                        </section>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.compras)}</div>
+                                    <button onClick={() => addItem('compras', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Item">+</button>
+                                </div>
+                                <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
+                                    {(currentCosts.compras || []).map(i => (
+                                        <div key={i.id} className="relative group">
+                                            <SimpleCostRow cost={i} label="Descripción" onUpdate={(it) => updateItem('compras', it)} onRemove={() => removeItem('compras', i.id)} />
+                                            {i.id === 'auto-compras' && (
+                                                <button onClick={() => setShowPurchasesModal(true)} className="absolute right-2 top-0 text-[9px] text-blue-500 hover:underline">Ver</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
 
-                        <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
-                            <div className="flex justify-between items-center mb-1">
-                                <h3 className="font-bold text-gray-700 text-xs">Impuestos</h3>
-                            </div>
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.impuestos)}</div>
-                                <button onClick={() => addItem('impuestos', { id: Date.now(), name: '', value: 0, type: 'percentage', rate: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Impuesto">+</button>
-                            </div>
-                            <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
-                                {(currentCosts.impuestos || []).map(i => <ImpuestoRow key={i.id} impuesto={i} totalRevenue={realIncome} onUpdate={(it) => updateItem('impuestos', it)} onRemove={() => removeItem('impuestos', i.id)} />)}
-                            </div>
-                        </section>
+                            <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="font-bold text-gray-700 text-xs">Personal</h3>
+                                    <button onClick={handleSyncPayroll} className="p-1 hover:bg-green-50 text-green-600 rounded" title="Sincronizar Nómina">🔄</button>
+                                </div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.personal)}</div>
+                                    <button onClick={() => addItem('personal', { id: Date.now(), role: '', weeklyHours: 48, hourlyRate: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Empleado">+</button>
 
-                        <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
-                            <div className="flex justify-between items-center mb-1">
-                                <h3 className="font-bold text-gray-700 text-xs">Otros Gastos</h3>
-                            </div>
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.otros)}</div>
-                                <button onClick={() => addItem('otros', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Otro">+</button>
-                            </div>
-                            <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
-                                {(currentCosts.otros || []).map(i => <SimpleCostRow key={i.id} cost={i} label="Descripción" onUpdate={(it) => updateItem('otros', it)} onRemove={() => removeItem('otros', i.id)} />)}
-                            </div>
-                        </section>
-                    </div>
+                                </div>
+                                <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
+                                    {(currentCosts.personal || []).map(i => <EmployeeRow key={i.id} employee={i} onUpdate={(it) => updateItem('personal', it)} onRemove={() => removeItem('personal', i.id)} />)}
+                                </div>
+                            </section>
+
+                            <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="font-bold text-gray-700 text-xs">Costos Fijos</h3>
+                                    <div className="flex gap-1">
+                                        <button onClick={handleSyncFixedCosts} className="p-1 hover:bg-blue-50 text-blue-600 rounded" title="Sincronizar Predeterminados">🔄</button>
+                                        <button onClick={handleSaveFixedCostsAsDefault} className="p-1 hover:bg-green-50 text-green-600 rounded" title="Guardar como Predeterminados">💾</button>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.fijos)}</div>
+                                    <button onClick={() => addItem('fijos', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Fijo">+</button>
+                                </div>
+                                <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
+                                    {(currentCosts.fijos || []).map(i => <SimpleCostRow key={i.id} cost={i} label="Concepto" onUpdate={(it) => updateItem('fijos', it)} onRemove={() => removeItem('fijos', i.id)} />)}
+                                </div>
+                            </section>
+
+                            <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="font-bold text-gray-700 text-xs">Impuestos</h3>
+                                </div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.impuestos)}</div>
+                                    <button onClick={() => addItem('impuestos', { id: Date.now(), name: '', value: 0, type: 'percentage', rate: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Impuesto">+</button>
+                                </div>
+                                <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
+                                    {(currentCosts.impuestos || []).map(i => <ImpuestoRow key={i.id} impuesto={i} totalRevenue={realIncome} onUpdate={(it) => updateItem('impuestos', it)} onRemove={() => removeItem('impuestos', i.id)} />)}
+                                </div>
+                            </section>
+
+                            <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="font-bold text-gray-700 text-xs">Otros Gastos</h3>
+                                </div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.otros)}</div>
+                                    <button onClick={() => addItem('otros', { id: Date.now(), name: '', value: 0 })} className="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg leading-none" title="Agregar Otro">+</button>
+                                </div>
+                                <div className="flex-grow space-y-1 overflow-y-auto custom-scrollbar border rounded-md">
+                                    {(currentCosts.otros || []).map(i => <SimpleCostRow key={i.id} cost={i} label="Descripción" onUpdate={(it) => updateItem('otros', it)} onRemove={() => removeItem('otros', i.id)} />)}
+                                </div>
+                            </section>
+                        </div>
                     )}
                 </div>
             </div>
@@ -890,7 +890,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                 total={realPurchases}
             />
 
-            <ReportCopyButton 
+            <ReportCopyButton
                 title={`Resumen Contable ${monthsNames[targetMonth]} ${targetYear}`}
                 type="model-content"
                 data={{

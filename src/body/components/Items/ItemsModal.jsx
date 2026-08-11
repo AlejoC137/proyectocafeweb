@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { copyPromptToClipboard } from "../../../utils/prompts";
 import supabase from "../../../config/supabaseClient";
 import HorizontalGallery from "../Menu/MenuPrintHorizontal/HorizontalGallery";
+import VeaseSection from "../../../components/Vease/VeaseSection";
 
 // ─── Render helpers ───────────────────────────────────────────────────────
 
@@ -519,6 +520,9 @@ const ItemsModal = () => {
             <BookOpen className="h-4 w-4" /> Ver Receta Asociada
           </a>
         )}
+
+        {/* Sección Véase / Relacionados */}
+        <VeaseSection sourceId={id} sourceType="item" />
 
         {/* Footer meta */}
         <div className="flex justify-between text-[9px] text-slate-300 pt-1 px-1">

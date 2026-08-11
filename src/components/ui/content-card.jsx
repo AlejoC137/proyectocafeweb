@@ -26,7 +26,7 @@ function ContentCard({
       <CoffeeLeafDecoration position="top-right" size="sm" />
       {/* Header del card si hay título o acciones */}
       {(title || actions) && (
-        <div className="flex items-center justify-between p-4 border-b border-light-leaf bg-gradient-to-r from-light-leaf/30 to-transparent">
+        <div className="flex items-center justify-between p-4 border-b border-light-leaf bg-gradient-to-r from-light-leaf/30 to-transparent flex-shrink-0">
           {title && (
             <h2 className="text-lg font-bold text-cobalt-blue font-SpaceGrotesk">
               {title}
@@ -41,7 +41,7 @@ function ContentCard({
       )}
       
       {/* Contenido principal */}
-      <div className={paddingClass}>
+      <div className={`flex-1 min-h-0 ${paddingClass}`}>
         {children}
       </div>
     </div>

@@ -1,10 +1,10 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, List, Pencil, Check, X, Filter } from 'lucide-react';
+import { ArrowLeft, List, Pencil, Check, X, Filter, Plus } from 'lucide-react';
 import { formatCurrency } from './ModelComponents';
 import ReportCopyButton from '../../components/ReportCopyButton';
-import { getAllFromTable, updateItem } from '../../../redux/actions';
+import { getAllFromTable, updateItem, createRecipeForProduct } from '../../../redux/actions';
 import { MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
 
 const ProductosFinanciero = () => {
@@ -134,6 +134,18 @@ const ProductosFinanciero = () => {
 
 
     // --- Handlers ---
+    const handleCreateRecipe = (producto) => {
+        if (window.confirm(`¿Seguro que quieres crear una receta para "${producto.nombre}"?`)) {
+            const baseRecipeData = {
+                legacyName: producto.nombre,
+                autor: "Sistema Automático",
+                revisor: "Pendiente",
+            };
+
+            dispatch(createRecipeForProduct(baseRecipeData, producto.id, MENU, RECETAS_MENU));
+        }
+    };
+
     const handleStartEdit = (item) => {
         setEditingId(item.id);
         setNewPrice(item.precioVenta.toString());
@@ -462,13 +474,21 @@ const ProductosFinanciero = () => {
                                             </td>
                                             <td className="py-3 px-4 font-medium text-gray-800">
                                                 <div className="flex items-center gap-2">
-                                                    {producto.recetaId && (
+                                                    {producto.recetaId ? (
                                                         <button
                                                             onClick={() => window.open(`/receta/${producto.recetaId}`, '_blank')}
                                                             className="text-lg hover:scale-110 transition-transform"
                                                             title="Ver Receta"
                                                         >
                                                             📕
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleCreateRecipe(producto)}
+                                                            className="p-1 bg-green-100 hover:bg-green-200 text-green-700 rounded transition-transform hover:scale-110 flex items-center justify-center"
+                                                            title="Crear Receta"
+                                                        >
+                                                            <Plus size={16} />
                                                         </button>
                                                     )}
                                                     {producto.nombre}

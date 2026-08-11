@@ -18,6 +18,7 @@ import RecipeItemRow from "./RecetaModalComponents/RecipeItemRow";
 import RecipeSection from "./RecetaModalComponents/RecipeSection";
 import EmplatadoEditor from "./RecetaModalComponents/EmplatadoEditor";
 import FuentesEditor from "./RecetaModalComponents/FuentesEditor";
+import VeaseSection from "../../../components/Vease/VeaseSection";
 
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────────
 function RecetaModal({ item, onClose }) {
@@ -940,6 +941,11 @@ function RecetaModal({ item, onClose }) {
                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Emplatado</h3>
                 <EmplatadoEditor value={receta.emplatado || ""} onSave={(v) => updateInfoField("emplatado", v)}
                   isEditable={permanentEditMode} placeholder="Describir emplatado..." disabled={isUpdating} />
+              </div>
+
+              {/* Véase / Relacionados */}
+              <div>
+                <VeaseSection sourceId={receta._id || id} sourceType="receta" />
               </div>
 
               {/* Meta */}
