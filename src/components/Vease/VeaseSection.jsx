@@ -122,6 +122,7 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
         id: String(i._id || i.id),
         name: i.Nombre_del_producto || i.NombreES || i.name || "Sin nombre",
         sub: i.Grupo || i.Categoria || "Almacén",
+        image: i.Foto || i.imagenUrl || i.imagen || null,
       }));
     }
     if (targetType === "produccion") {
@@ -129,6 +130,7 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
         id: String(p._id || p.id || p.Receta),
         name: p.Nombre_del_producto || p.NombreES || p.name || "Sin nombre",
         sub: p.Grupo || "Producción Interna",
+        image: p.Foto || p.imagenUrl || p.imagen || null,
       }));
     }
     if (targetType === "procedimiento") {
@@ -136,6 +138,7 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
         id: String(pr._id || pr.id),
         name: pr.Nombre_del_procedimiento || pr.nombre || pr.Nombre_del_producto || pr.title || "Procedimiento",
         sub: pr.Area || pr.Grupo || "Protocolo",
+        image: pr.Foto || pr.imagenUrl || pr.imagen || null,
       }));
     }
     // Default: targetType === "receta" (recetas de menú)
@@ -144,11 +147,13 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
     allMenu.forEach((m) => {
       const recipeId = String(m.Receta || m.forId || m._id);
       const name = m.Nombre_del_producto || m.NombreES || m.name || "Receta";
+      const image = m.Foto || m.imagenUrl || m.imagen || null;
       if (recipeId && !unique.has(recipeId)) {
         unique.set(recipeId, {
           id: recipeId,
           name,
           sub: m.Grupo || "Receta de Menú",
+          image,
         });
       }
     });
@@ -156,11 +161,13 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
     allRecetasMenu.forEach((r) => {
       const recipeId = String(r._id || r.id || r.Receta);
       const name = r.Nombre_del_producto || r.NombreES || r.name || "Receta";
+      const image = r.Foto || r.imagenUrl || r.imagen || null;
       if (recipeId && !unique.has(recipeId)) {
         unique.set(recipeId, {
           id: recipeId,
           name,
           sub: r.Grupo || "Receta de Menú",
+          image,
         });
       }
     });
@@ -176,31 +183,47 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
     ).slice(0, 50);
   }, [catalogOptions, searchTerm]);
 
-  // Helper to resolve display name for a relation target
-  const resolveTargetName = (rel) => {
-    if (rel.titulo && rel.titulo.trim()) return rel.titulo;
+  // Helper to resolve display name and image thumbnail for a relation target
+  const resolveTargetInfo = (rel) => {
+    let name = rel.titulo && rel.titulo.trim() ? rel.titulo : "";
+    let image = null;
 
     const tid = String(rel.target_id);
     if (rel.target_type === "item") {
       const found = allItems.find((i) => String(i._id || i.id) === tid);
-      if (found) return found.Nombre_del_producto || found.NombreES || found.name;
-    }
-    if (rel.target_type === "produccion") {
+      if (found) {
+        if (!name) name = found.Nombre_del_producto || found.NombreES || found.name;
+        image = found.Foto || found.imagenUrl || found.imagen || null;
+      }
+    } else if (rel.target_type === "produccion") {
       const found = allProduccion.find((p) => String(p._id || p.id || p.Receta) === tid);
-      if (found) return found.Nombre_del_producto || found.NombreES || found.name;
-    }
-    if (rel.target_type === "procedimiento") {
+      if (found) {
+        if (!name) name = found.Nombre_del_producto || found.NombreES || found.name;
+        image = found.Foto || found.imagenUrl || found.imagen || null;
+      }
+    } else if (rel.target_type === "procedimiento") {
       const found = procedimientosList.find((pr) => String(pr._id || pr.id) === tid);
-      if (found) return found.Nombre_del_procedimiento || found.nombre || found.Nombre_del_producto;
-    }
-    if (rel.target_type === "receta") {
+      if (found) {
+        if (!name) name = found.Nombre_del_procedimiento || found.nombre || found.Nombre_del_producto;
+        image = found.Foto || found.imagenUrl || found.imagen || null;
+      }
+    } else if (rel.target_type === "receta") {
       const foundMenu = allMenu.find((m) => String(m.Receta) === tid || String(m._id) === tid || String(m.forId) === tid);
-      if (foundMenu) return foundMenu.Nombre_del_producto || foundMenu.NombreES || foundMenu.name;
+      if (foundMenu) {
+        if (!name) name = foundMenu.Nombre_del_producto || foundMenu.NombreES || foundMenu.name;
+        image = foundMenu.Foto || foundMenu.imagenUrl || foundMenu.imagen || null;
+      }
 
       const foundReceta = allRecetasMenu.find((r) => String(r._id || r.id) === tid);
-      if (foundReceta) return foundReceta.Nombre_del_producto || foundReceta.NombreES || foundReceta.name;
+      if (foundReceta) {
+        if (!name) name = foundReceta.Nombre_del_producto || foundReceta.NombreES || foundReceta.name;
+        if (!image) image = foundReceta.Foto || foundReceta.imagenUrl || foundReceta.imagen || null;
+      }
     }
-    return `Enlace (${rel.target_type})`;
+
+    if (!name) name = `Enlace (${rel.target_type})`;
+
+    return { name, image };
   };
 
   // Add relation submit handler
@@ -354,7 +377,17 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
                       targetId === item.id ? "bg-blue-600 text-white font-bold" : "hover:bg-white text-slate-700"
                     }`}
                   >
-                    <span className="truncate">{item.name}</span>
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-6 h-6 object-cover rounded-md flex-shrink-0 border border-slate-200"
+                          onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                      ) : null}
+                      <span className="truncate">{item.name}</span>
+                    </div>
                     <span className={`text-[10px] font-normal ml-2 shrink-0 ${targetId === item.id ? "text-blue-100" : "text-slate-400"}`}>
                       {item.sub}
                     </span>
@@ -400,7 +433,7 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
         </form>
       )}
 
-      {/* Relations List (Large Hyperlink Buttons) */}
+      {/* Relations List (Large Hyperlink Buttons with Image Previews) */}
       {loading ? (
         <div className="flex items-center justify-center py-6 text-slate-400 gap-2">
           <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
@@ -422,7 +455,7 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
           {relations.map((rel) => {
             const typeConfig = TYPE_CONFIG[rel.target_type] || TYPE_CONFIG.receta;
             const Icon = typeConfig.icon;
-            const name = resolveTargetName(rel);
+            const { name, image } = resolveTargetInfo(rel);
 
             return (
               <div
@@ -430,11 +463,30 @@ export default function VeaseSection({ sourceId, sourceType, title = "Véase / R
                 onClick={() => handleNavigate(rel)}
                 className={`group relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md hover:-translate-y-0.5 ${typeConfig.color}`}
               >
-                {/* Left side: Large Icon + Content */}
+                {/* Left side: Preview Image Thumbnail or Large Icon + Content */}
                 <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${typeConfig.iconBg}`}>
-                    <Icon className="h-5 w-5" />
+                  <div className="relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200/80 shadow-xs bg-white">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          if (e.target.nextSibling) {
+                            e.target.nextSibling.style.display = "flex";
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`w-full h-full flex items-center justify-center ${typeConfig.iconBg}`}
+                      style={{ display: image ? "none" : "flex" }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
                   </div>
+
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-extrabold text-slate-900 group-hover:text-blue-700 transition-colors truncate">

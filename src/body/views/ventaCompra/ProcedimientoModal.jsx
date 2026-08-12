@@ -4,112 +4,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllFromTable, getRecepie, updateItem } from "../../../redux/actions.js";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types.js";
-import EditableText from "../../../components/ui/EditableText.jsx";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
-import { Save, Plus, X, FileJson, RefreshCw, Lock, Unlock, Printer, DollarSign, ClipboardList } from "lucide-react";
+import { Save, Plus, X, DollarSign } from "lucide-react";
 import ProcedimientoImportModal from "./ProcedimientoImportModal.jsx";
-import VeaseSection from "../../../components/Vease/VeaseSection";
 
-// ─── EditableIngredientRow ────────────────────────────────────────────────────
-const EditableIngredientRow = ({ item, index, source, onNameChange, onSelect, onQuantityChange, onRemove, onSync, onMove, isFirst, isLast, onNavigate }) => {
-  const subtotal = (Number(item.originalQuantity) || 0) * (Number(item.precioUnitario) || 0);
-  return (
-    <div className="mb-2 p-2 border border-slate-200 rounded-lg bg-white shadow-sm">
-      <div className="flex items-center gap-1.5">
-        <div className="flex flex-col gap-0.5 flex-shrink-0">
-          <button onClick={() => onMove(index, -1, source)} disabled={isFirst}
-            className="px-1 py-0.5 hover:bg-slate-100 rounded disabled:opacity-30 text-[10px] font-bold text-slate-500 leading-none">▲</button>
-          <button onClick={() => onMove(index, 1, source)} disabled={isLast}
-            className="px-1 py-0.5 hover:bg-slate-100 rounded disabled:opacity-30 text-[10px] font-bold text-slate-500 leading-none">▼</button>
-        </div>
-        <input type="text" placeholder="Buscar ingrediente..." value={item.nombre || ""}
-          onChange={(e) => onNameChange(index, e.target.value, source)}
-          className="flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-400 min-w-0" />
-        {item.item_Id && onNavigate && (
-          <button onClick={() => onNavigate(item.item_Id)} title="Ver ítem"
-            className="flex-shrink-0 w-7 h-7 bg-blue-50 hover:bg-blue-100 rounded text-sm flex items-center justify-center transition-colors">
-            📦
-          </button>
-        )}
-        <button onClick={() => onRemove(index, source)}
-          className="flex-shrink-0 w-7 h-7 bg-red-100 hover:bg-red-200 text-red-600 rounded text-xs font-bold flex items-center justify-center transition-colors">
-          <X className="h-3 w-3" />
-        </button>
-      </div>
-
-      {item.matches && item.matches.length > 0 && (
-        <ul className="border border-slate-200 rounded bg-white max-h-36 overflow-y-auto mt-1 shadow-lg z-10">
-          {item.matches.map((match) => (
-            <li key={match._id} onClick={() => onSelect(index, match, source)}
-              className="px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-xs border-b border-slate-50 last:border-0">
-              {match.Nombre_del_producto}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="grid grid-cols-4 gap-1.5 mt-2">
-        <Input type="number" placeholder="Cant." value={item.originalQuantity || ""}
-          onChange={(e) => onQuantityChange(index, e.target.value, source)}
-          className="h-7 text-xs px-2" />
-        <Input type="text" placeholder="Und." value={item.unidades || ""} readOnly
-          className="h-7 text-xs px-2 bg-slate-50 text-slate-500" />
-        <Input type="text" placeholder="P.Unit" value={Number(item.precioUnitario || 0).toFixed(2)} readOnly
-          className="h-7 text-xs px-2 bg-slate-50 text-slate-500 text-right" />
-        <div className="flex items-center gap-1">
-          <Input type="text" placeholder="Sub." value={subtotal.toFixed(2)} readOnly
-            className="h-7 text-xs px-2 bg-slate-50 font-semibold text-right flex-1" />
-          {onSync && (
-            <button onClick={() => onSync(index, source)} title="Sincronizar precio/unidades"
-              className="flex-shrink-0 p-1 text-blue-500 hover:bg-blue-50 rounded transition-colors">
-              <RefreshCw className="h-3 w-3" />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── RecipeItemRow ─────────────────────────────────────────────────────────────
-const RecipeItemRow = ({ item, isEditing, onCheck, onSave }) => {
-  const [editValue, setEditValue] = useState((item.cantidad ?? 0).toString());
-  const [isInputActive, setIsInputActive] = useState(false);
-  const handleSave = () => { onSave(item.originalIndex, editValue); setIsInputActive(false); };
-  const handleEditClick = () => { setEditValue((item.cantidad ?? 0).toFixed(2)); setIsInputActive(true); };
-  const handleCancel = () => { setIsInputActive(false); setEditValue((item.cantidad ?? 0).toString()); };
-
-  return (
-    <div className={`group flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors mb-1 ${item.isChecked ? "bg-emerald-50 border border-emerald-100" : "bg-slate-50 hover:bg-white border border-transparent hover:border-slate-100"}`}>
-      <button onClick={() => onCheck(item.originalIndex)} type="button"
-        className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-md border-2 transition-all ${item.isChecked ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-slate-300 hover:border-emerald-400"}`}>
-        {item.isChecked && <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-      </button>
-      <span className={`flex-1 text-xs ${item.isChecked ? "line-through text-slate-400" : "text-slate-700"}`}>{item.nombre}</span>
-      <span className="text-xs font-bold text-blue-600 tabular-nums">{(item.cantidad ?? 0).toFixed(2)}</span>
-      <span className="text-[10px] text-slate-400 w-8">{item.unidades}</span>
-      {isEditing && (
-        <div className="flex items-center gap-1">
-          {isInputActive
-            ? <><Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} className="w-16 h-6 text-xs" /><Button size="sm" className="h-6 text-[10px] px-1.5" onClick={handleSave}>OK</Button><Button size="sm" variant="ghost" className="h-6 text-[10px] px-1" onClick={handleCancel}>✕</Button></>
-            : <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleEditClick}>Editar</Button>}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ─── RecipeSection ─────────────────────────────────────────────────────────────
-const RecipeSection = ({ title, items, isEditing, onCheck, onSave }) => (
-  <div>
-    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{title}</h4>
-    {items.length > 0
-      ? items.map(item => <RecipeItemRow key={item.key} item={item} isEditing={isEditing} onCheck={onCheck} onSave={onSave} />)
-      : <p className="text-xs text-slate-400 italic py-2">Sin elementos.</p>}
-  </div>
-);
+// Sub-components
+import EditableIngredientRow from "./RecetaModalComponents/EditableIngredientRow";
+import RecipeSection from "./RecetaModalComponents/RecipeSection";
+import { handlePrintProcedimiento } from "./ProcedimientoModalComponents/printProcedimiento";
+import ProcedimientoHeader from "./ProcedimientoModalComponents/ProcedimientoHeader";
+import ProcedimientoProcesosNotas from "./ProcedimientoModalComponents/ProcedimientoProcesosNotas";
+import ProcedimientoSidebarMeta from "./ProcedimientoModalComponents/ProcedimientoSidebarMeta";
 
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────────
 function ProcedimientoModal({ item, onClose }) {
@@ -389,70 +295,14 @@ function ProcedimientoModal({ item, onClose }) {
     finally { setIsUpdating(false); }
   };
 
-  // ─── Print / PDF ────────────────────────────────────────────────────────────
   const handlePrint = () => {
-    if (!receta) return;
-    const processSteps = Array.from({ length: 20 }, (_, i) => receta[`proces${i + 1}`]).filter(Boolean);
-    const notes = Array.from({ length: 10 }, (_, i) => receta[`nota${i + 1}`]).filter(Boolean);
-    const ingRows = ingredientesAjustados.map(ing =>
-      `<tr><td>${ing.nombre}</td><td class="num">${ing.cantidad.toFixed(2)} ${ing.unidades}</td></tr>`
-    ).join("");
-    const prodRows = produccionAjustada.map(p =>
-      `<tr><td>${p.nombre}</td><td class="num">${p.cantidad.toFixed(2)} ${p.unidades}</td></tr>`
-    ).join("");
-
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Procedimiento: ${menuItem?.tittle || receta.legacyName}</title>
-<style>
-  @page{size:letter;margin:1.5cm 2cm}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Georgia',serif;font-size:10.5px;color:#1a1a1a;line-height:1.6}
-  .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #475569;padding-bottom:12px;margin-bottom:16px}
-  .header-left h1{font-size:22px;color:#1e293b;font-weight:700}
-  .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#f1f5f9;color:#475569}
-  img{max-width:130px;max-height:130px;border-radius:6px;object-fit:cover}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:4px}
-  h2{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:3px;margin:14px 0 6px}
-  table{width:100%;border-collapse:collapse;font-size:10px}
-  thead th{background:#f0f4f8;padding:4px 6px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase}
-  thead th.num{text-align:right}
-  td{padding:3px 6px;border-bottom:1px solid #f8fafc}
-  td.num{text-align:right;font-family:monospace}
-  .process-step{display:flex;gap:6px;margin-bottom:5px}
-  .step-num{font-weight:700;color:#475569;min-width:16px}
-  .note-item{padding-left:10px;position:relative;margin-bottom:3px}
-  .note-item::before{content:'•';position:absolute;left:0;color:#64748b}
-  .footer{margin-top:16px;padding-top:6px;border-top:1px solid #e2e8f0;font-size:8.5px;color:#94a3b8;display:flex;justify-content:space-between}
-</style></head><body>
-<div class="header">
-  <div class="header-left">
-    <h1>${menuItem?.tittle || receta.legacyName || "Sin nombre"}</h1>
-    <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
-      ${receta.ProcessTime ? `<span class="badge">⏱ ${receta.ProcessTime} min</span>` : ""}
-      ${receta.autor ? `<span class="badge">✍ ${receta.autor}</span>` : ""}
-    </div>
-  </div>
-  ${foto ? `<img src="${foto}" alt="Imagen" />` : ""}
-</div>
-<div class="grid2">
-  <div>
-    ${ingRows ? `<h2>Insumos</h2><table><thead><tr><th>Ingrediente</th><th class="num">Cantidad</th></tr></thead><tbody>${ingRows}</tbody></table>` : ""}
-    ${prodRows ? `<h2>Producción Interna</h2><table><thead><tr><th>Producto</th><th class="num">Cantidad</th></tr></thead><tbody>${prodRows}</tbody></table>` : ""}
-  </div>
-  <div>
-    ${processSteps.length > 0 ? `<h2>Proceso</h2>${processSteps.map((p, i) => `<div class="process-step"><span class="step-num">${i + 1}.</span><span>${p}</span></div>`).join("")}` : ""}
-    ${notes.length > 0 ? `<h2>Notas</h2>${notes.map(n => `<div class="note-item">${n}</div>`).join("")}` : ""}
-    ${receta.emplatado ? `<h2>Observaciones Finales</h2><p style="font-size:10px">${receta.emplatado}</p>` : ""}
-  </div>
-</div>
-<div class="footer">
-  <span>ID: ${receta._id}</span>
-  <span>Generado: ${new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" })}</span>
-</div>
-</body></html>`;
-
-    const win = window.open("", "_blank");
-    win.document.documentElement.innerHTML = html;
-    win.onload = () => { win.focus(); win.print(); };
+    handlePrintProcedimiento({
+      receta,
+      menuItem,
+      foto,
+      ingredientesAjustados,
+      produccionAjustada,
+    });
   };
 
   const rendimientoDisplay = (() => {
@@ -484,84 +334,32 @@ function ProcedimientoModal({ item, onClose }) {
       <div className="bg-slate-50 w-screen h-screen flex flex-col overflow-hidden">
 
         {/* ── Header ── */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-3 flex items-center justify-between flex-shrink-0 shadow-lg">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1.5 bg-white/10 rounded-lg flex-shrink-0">
-              <ClipboardList className="h-5 w-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-base font-bold text-white truncate">
-                {menuItem?.tittle || receta.legacyName || "Procedimiento"}
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                {rendimientoDisplay && (
-                  <span className="text-[9px] font-medium bg-white/15 text-white/80 px-2 py-0.5 rounded-full">{rendimientoDisplay}</span>
-                )}
-                {receta.ProcessTime > 0 && (
-                  <span className="text-[9px] font-medium bg-white/15 text-white/80 px-2 py-0.5 rounded-full">⏱ {receta.ProcessTime} min</span>
-                )}
-                <span className="text-[9px] font-bold bg-slate-500/60 text-white/80 px-2 py-0.5 rounded-full">Procedimiento</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Porcentaje */}
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-lg px-2 py-1">
-              <span className="text-[10px] text-white/70 font-medium">%</span>
-              <input type="number" min={1} value={porcentaje}
-                onChange={(e) => setPorcentaje(Number(e.target.value))}
-                className="w-14 h-6 text-xs text-center bg-white/10 text-white rounded border border-white/20 focus:outline-none focus:border-white/50" />
-            </div>
-
-            {/* Edición simple */}
-            <button onClick={() => setEditShow(p => !p)} disabled={permanentEditMode}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${editShow && !permanentEditMode ? "bg-blue-500 text-white" : "bg-white/10 hover:bg-white/20 text-white/80"} disabled:opacity-40`}>
-              {editShow ? "✓ Ed. Simple" : "Editar"}
-            </button>
-
-            {/* Edición avanzada */}
-            <button onClick={permanentEditMode ? handleCancelEdit : handleEnablePermanentEdit} disabled={isUpdating || (showPinInput && !permanentEditMode)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${permanentEditMode ? "bg-emerald-500 text-white" : "bg-amber-500/80 hover:bg-amber-500 text-white"} disabled:opacity-50`}>
-              {permanentEditMode ? <><Unlock className="h-3 w-3" />Avanzado</> : <><Lock className="h-3 w-3" />Avanzado</>}
-            </button>
-
-            {showPinInput && !permanentEditMode && (
-              <div className="flex items-center gap-1">
-                <input type="password" placeholder="PIN" value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value.replace(/\D/g, "").substring(0, 4))}
-                  onKeyDown={(e) => { if (e.key === "Enter") handlePinVerification(); }}
-                  maxLength={4} autoFocus
-                  className="w-16 h-7 text-xs text-center bg-white/10 text-white border border-white/30 rounded focus:outline-none focus:border-white/60" />
-                <button onClick={handlePinVerification} disabled={pinCode.length !== 4}
-                  className="h-7 px-2 bg-white/20 hover:bg-white/30 text-white text-xs rounded disabled:opacity-40">OK</button>
-              </div>
-            )}
-
-            {/* Import JSON */}
-            <button onClick={() => setShowImportModal(true)}
-              className="p-1.5 bg-white/10 hover:bg-white/20 text-white/80 rounded-lg transition-colors" title="Importar desde JSON">
-              <FileJson className="h-4 w-4" />
-            </button>
-
-            {/* Print */}
-            <button onClick={handlePrint}
-              className="p-1.5 bg-white/10 hover:bg-white/20 text-white/80 rounded-lg transition-colors" title="Imprimir (PDF carta)">
-              <Printer className="h-4 w-4" />
-            </button>
-
-            {/* Close */}
-            <button onClick={onClose || (() => navigate(-1))}
-              className="p-1.5 bg-white/10 hover:bg-red-500/70 text-white/80 hover:text-white rounded-lg transition-colors">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        <ProcedimientoHeader
+          menuItem={menuItem}
+          receta={receta}
+          rendimientoDisplay={rendimientoDisplay}
+          porcentaje={porcentaje}
+          setPorcentaje={setPorcentaje}
+          editShow={editShow}
+          setEditShow={setEditShow}
+          permanentEditMode={permanentEditMode}
+          handleEnablePermanentEdit={handleEnablePermanentEdit}
+          handleCancelEdit={handleCancelEdit}
+          isUpdating={isUpdating}
+          showPinInput={showPinInput}
+          pinCode={pinCode}
+          setPinCode={setPinCode}
+          handlePinVerification={handlePinVerification}
+          setShowImportModal={setShowImportModal}
+          handlePrint={handlePrint}
+          onClose={onClose}
+          navigate={navigate}
+        />
 
         {/* ── Content grid ── */}
         <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-0">
 
-          {/* Col 1: Ingredientes */}
+          {/* Col 1: Ingredientes & Insumos */}
           <div className="lg:col-span-1 overflow-y-auto custom-scrollbar border-r border-slate-200 bg-white">
             <div className="p-4 space-y-4">
               {permanentEditMode ? (
@@ -646,129 +444,34 @@ function ProcedimientoModal({ item, onClose }) {
 
           {/* Col 2: Procesos & Notas */}
           <div className="lg:col-span-1 overflow-y-auto custom-scrollbar border-r border-slate-200 bg-white">
-            <div className="p-4 space-y-4">
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3">Procesos</h3>
-                <div className="space-y-2">
-                  {Array.from({ length: 20 }, (_, i) => i + 1).map((i) =>
-                    (receta[`proces${i}`] || permanentEditMode) && (
-                      <div key={`process-${i}`} className="flex items-start gap-2 group">
-                        <span className="flex-shrink-0 w-5 h-5 bg-slate-100 text-slate-600 rounded-full text-[9px] font-bold flex items-center justify-center mt-0.5">{i}</span>
-                        <div className="flex-1 text-xs text-slate-700">
-                          <EditableText value={receta[`proces${i}`] || ""} onSave={(v) => updateProcessOrNote("process", i, v)}
-                            isEditable={permanentEditMode} placeholder={`Proceso ${i}...`} multiline={true} disabled={isUpdating} />
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3">Notas</h3>
-                <div className="space-y-2">
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map((i) =>
-                    (receta[`nota${i}`] || permanentEditMode) && (
-                      <div key={`note-${i}`} className="flex items-start gap-2">
-                        <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5"></span>
-                        <div className="flex-1 text-xs text-slate-700">
-                          <EditableText value={receta[`nota${i}`] || ""} onSave={(v) => updateProcessOrNote("note", i, v)}
-                            isEditable={permanentEditMode} placeholder={`Nota ${i}...`} multiline={true} disabled={isUpdating} />
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
+            <ProcedimientoProcesosNotas
+              receta={receta}
+              permanentEditMode={permanentEditMode}
+              updateProcessOrNote={updateProcessOrNote}
+              isUpdating={isUpdating}
+            />
           </div>
 
-          {/* Col 3: Info, Imagen, Rendimiento, Emplatado */}
+          {/* Col 3: Info, Imagen, Rendimiento, Observaciones */}
           <div className="lg:col-span-1 overflow-y-auto custom-scrollbar bg-white">
-            <div className="p-4 space-y-4">
-              {/* Imagen */}
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3">Imagen</h3>
-                {permanentEditMode ? (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Input type="url" placeholder="URL de la imagen" value={imagenUrl}
-                        onChange={(e) => setImagenUrl(e.target.value)} disabled={isUpdating}
-                        className="flex-1 h-8 text-xs" />
-                      <Button size="sm" onClick={updateImagenUrl} disabled={isUpdating} className="h-8 text-xs px-3">
-                        {isUpdating ? "..." : "Guardar"}
-                      </Button>
-                    </div>
-                    {(foto || imagenUrl) && (
-                      <img src={imagenUrl || foto} alt="Preview"
-                        className="w-full h-40 object-cover rounded-xl shadow-sm" onError={(e) => { e.target.style.display = "none"; }} />
-                    )}
-                  </div>
-                ) : foto ? (
-                  <img src={foto} alt="Imagen" className="w-full h-44 object-cover rounded-xl shadow-sm" />
-                ) : (
-                  <div className="w-full h-32 bg-slate-100 rounded-xl flex items-center justify-center">
-                    <ClipboardList className="h-10 w-10 text-slate-300" />
-                  </div>
-                )}
-              </div>
-
-              {/* Autor */}
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Autor</h3>
-                <div className="text-xs text-slate-700">
-                  <EditableText value={receta.autor || ""} onSave={(v) => updateInfoField("autor", v)}
-                    isEditable={permanentEditMode} placeholder="Nombre del autor..." multiline={false} disabled={isUpdating} />
-                </div>
-              </div>
-
-              {/* Rendimiento */}
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Rendimiento</h3>
-                {permanentEditMode ? (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div>
-                        <label className="text-[9px] text-slate-400 font-bold uppercase">Cantidad</label>
-                        <Input type="number" value={rendimientoCantidad} onChange={(e) => setRendimientoCantidad(e.target.value)} disabled={isUpdating} className="h-7 text-xs mt-0.5" />
-                      </div>
-                      <div>
-                        <label className="text-[9px] text-slate-400 font-bold uppercase">Unidad</label>
-                        <Input type="text" value={rendimientoUnidades} onChange={(e) => setRendimientoUnidades(e.target.value)} disabled={isUpdating} className="h-7 text-xs mt-0.5" />
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={updateRendimiento} disabled={isUpdating} className="w-full h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                      {isUpdating ? "Guardando..." : "Guardar Rendimiento"}
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-600">{rendimientoDisplay || <span className="text-slate-400 italic">No especificado</span>}</p>
-                )}
-              </div>
-
-              {/* Observaciones Finales */}
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Observaciones Finales</h3>
-                <div className="text-xs text-slate-700">
-                  <EditableText value={receta.emplatado || ""} onSave={(v) => updateInfoField("emplatado", v)}
-                    isEditable={permanentEditMode} placeholder="Observaciones o validación final..." multiline={true} disabled={isUpdating} />
-                </div>
-              </div>
-
-              {/* Véase / Relacionados */}
-              <div>
-                <VeaseSection sourceId={receta._id || id} sourceType="procedimiento" />
-              </div>
-
-              {/* Meta */}
-              <div className="bg-slate-50 rounded-lg p-2.5 space-y-1 border border-slate-100">
-                <div className="flex justify-between text-[9px] text-slate-400">
-                  <span>Fuente: {recetaSource}</span>
-                  {receta.actualizacion && <span>Act: {new Date(receta.actualizacion).toLocaleDateString("es-CO")}</span>}
-                </div>
-                <div className="text-[8px] text-slate-300 font-mono truncate">ID: {receta._id}</div>
-              </div>
-            </div>
+            <ProcedimientoSidebarMeta
+              receta={receta}
+              id={id}
+              foto={foto}
+              imagenUrl={imagenUrl}
+              setImagenUrl={setImagenUrl}
+              permanentEditMode={permanentEditMode}
+              isUpdating={isUpdating}
+              updateImagenUrl={updateImagenUrl}
+              updateInfoField={updateInfoField}
+              rendimientoCantidad={rendimientoCantidad}
+              setRendimientoCantidad={setRendimientoCantidad}
+              rendimientoUnidades={rendimientoUnidades}
+              setRendimientoUnidades={setRendimientoUnidades}
+              updateRendimiento={updateRendimiento}
+              rendimientoDisplay={rendimientoDisplay}
+              recetaSource={recetaSource}
+            />
           </div>
         </div>
       </div>

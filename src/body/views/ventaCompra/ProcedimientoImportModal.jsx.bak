@@ -1,16 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { updateItem, createRecipeForProduct } from "../../../redux/actions";
 import { crearProcedimiento } from "../../../redux/actions-Procedimientos";
-import { PROCEDE, RECETAS_PROCEDIMIENTOS } from "../../../redux/actions-types";
+import { MENU, PRODUCCION, PROCEDE, RECETAS_PROCEDIMIENTOS } from "../../../redux/actions-types";
 import { copyPromptToClipboard } from '../../../utils/prompts';
-
-// Sub-components
-import Step1JsonInput from './ProcedimientoImportModalComponents/Step1JsonInput';
-import Step2IngredientMapping from './ProcedimientoImportModalComponents/Step2IngredientMapping';
-import Step2ProcessValidation from './ProcedimientoImportModalComponents/Step2ProcessValidation';
+import { Copy, Check } from 'lucide-react';
 
 const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRecipeSource }) => {
     const dispatch = useDispatch();
@@ -47,9 +45,11 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
         try {
             let parsed = JSON.parse(jsonInput);
 
+            // 1. Normalize Root
             if (parsed.procedimiento && typeof parsed.procedimiento === 'object') parsed = parsed.procedimiento;
             else if (parsed.receta && typeof parsed.receta === 'object') parsed = parsed.receta;
 
+            // 2. Find Ingredients Array
             let ingredientsRaw = parsed.ingredients || parsed.ingredientes || parsed.items;
 
             if (!ingredientsRaw || !Array.isArray(ingredientsRaw)) {
@@ -118,6 +118,7 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
                 return { index, legacyName, quantity, units, raw: ing };
             });
 
+            // Extract Process Steps
             const processSteps = {};
             for (let i = 1; i <= 20; i++) {
                 if (parsed[`proces${i}`] !== undefined) {
@@ -125,6 +126,7 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
                 }
             }
 
+            // Extract Rendimiento
             let rendimiento = null;
             if (parsed.rendimiento) {
                 if (typeof parsed.rendimiento === 'string') {
@@ -147,6 +149,7 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
 
             setProcedimientoTittle(parsed.name || parsed.nombre || parsed.legacyName || parsed.NombreES || parsed.Nombre_del_producto || "");
 
+            // Initialize Search Terms & Try Auto-match Ingredients
             const initialSelections = {};
             const initialSearchTerms = {};
 
@@ -200,6 +203,7 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
         }
     };
 
+    // --- MANUAL INGREDIENT HELPERS ---
     const handleAddManualIngredient = () => {
         const newIndex = `manual-${Date.now()}`;
         setParsedData(prev => ({
@@ -250,10 +254,12 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
         }));
     };
 
+    // --- COPY PROMPT HANDLER ---
     const handleCopyPrompt = async () => {
         await copyPromptToClipboard('PROCEDIMIENTOS', setPromptCopied);
     };
 
+    // --- FINAL SAVE ---
     const handleSave = async () => {
         if (!forcedRecipeId && (!procedimientoCategoria || !procedimientoTittle.trim())) {
             alert("Por favor selecciona una categoría y un título para el nuevo procedimiento.");
@@ -262,6 +268,7 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
 
         setIsSaving(true);
         try {
+            // Build Payload
             const payload = {};
             for (let i = 1; i <= 30; i++) { payload[`item${i}_Id`] = null; payload[`item${i}_Cuantity_Units`] = null; }
             for (let i = 1; i <= 20; i++) { payload[`producto_interno${i}_Id`] = null; payload[`producto_interno${i}_Cuantity_Units`] = null; }
@@ -299,6 +306,7 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
             });
 
             if (forcedRecipeId) {
+                // For ProcedimientoModal we update directly the existing forcedRecipeId
                 await dispatch(updateItem(forcedRecipeId, {
                     ...payload,
                     actualizacion: new Date().toISOString()
@@ -306,12 +314,14 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
 
                 alert("Procedimiento actualizado exitosamente.");
             } else {
+                // Crear nuevo procedimiento
                 const nuevoProcede = await dispatch(crearProcedimiento({
                     Categoria: procedimientoCategoria,
                     tittle: procedimientoTittle,
                     DescripcionGeneral: ""
                 }));
 
+                // Create the recipe linked to the newly created Procedimiento
                 const legacyName = procedimientoTittle;
                 await dispatch(createRecipeForProduct({
                     legacyName,
@@ -343,14 +353,44 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
             {/* CONTENT */}
             <div className="flex-1 overflow-hidden p-6 max-h-[800px] overflow-y-auto">
                 {step === 1 ? (
-                    <Step1JsonInput
-                        jsonInput={jsonInput}
-                        setJsonInput={setJsonInput}
-                        jsonError={jsonError}
-                        handleParse={handleParse}
-                        handleCopyPrompt={handleCopyPrompt}
-                        promptCopied={promptCopied}
-                    />
+                    <div className="flex flex-col gap-4">
+                        <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm text-blue-800 font-medium">
+                                    Pega el objeto JSON de tu procedimiento aquí. El sistema procesará los insumos, producción interna y los pasos automáticamente.
+                                </p>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleCopyPrompt}
+                                    className="flex items-center gap-1 text-xs h-7 px-2 border-blue-300 hover:bg-blue-100 hover:border-blue-400 ml-3 flex-shrink-0"
+                                    title="Copia instrucciones para IA que generan JSON de procedimientos"
+                                >
+                                    {promptCopied ? (
+                                        <>
+                                            <Check className="h-3 w-3 text-green-600" />
+                                            <span className="text-green-600">Copiado</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="h-3 w-3" />
+                                            <span>Copiar Prompt</span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                        <Textarea
+                            className="flex-1 font-mono text-sm min-h-[300px]"
+                            placeholder='{ "legacyName": "Procedimiento ABC", "ingredients": [...] }'
+                            value={jsonInput}
+                            onChange={e => setJsonInput(e.target.value)}
+                        />
+                        {jsonError && <p className="text-red-500 font-bold">{jsonError}</p>}
+                        <div className="flex justify-end">
+                            <Button onClick={handleParse} disabled={!jsonInput.trim()}>Analizar JSON &rarr;</Button>
+                        </div>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="lg:col-span-2 mb-2">
@@ -388,24 +428,125 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
                                 </div>
                             )}
                         </div>
+                        {/* LEFT: INGREDIENT MAPPING */}
+                        <div className="lg:col-span-1 flex flex-col border-r pr-6">
+                            <h3 className="font-bold text-lg border-b pb-2 mb-4">1. Validar Insumos ({parsedData?.ingredients?.length})</h3>
+                            <div className="space-y-3 pr-2 overflow-y-auto max-h-[500px]">
+                                {parsedData?.ingredients.map((ing) => {
+                                    const selected = ingredientSelections[ing.index];
+                                    const searchTerm = ingredientSearchTerms[ing.index] || "";
+                                    const matches = getMatches(searchTerm);
+                                    const isMapped = !!selected;
+                                    const isManual = ing.isManual;
 
-                        <Step2IngredientMapping
-                            parsedData={parsedData}
-                            ingredientSelections={ingredientSelections}
-                            ingredientSearchTerms={ingredientSearchTerms}
-                            getMatches={getMatches}
-                            getProductName={getProductName}
-                            handleSearchIngredient={handleSearchIngredient}
-                            handleSelectIngredient={handleSelectIngredient}
-                            handleManualChange={handleManualChange}
-                            handleDeleteManual={handleDeleteManual}
-                            handleAddManualIngredient={handleAddManualIngredient}
-                        />
+                                    return (
+                                        <div key={ing.index} className={`p-3 rounded-md border ${isMapped ? "bg-white border-green-200 shadow-sm" : "bg-red-50 border-red-200"}`}>
+                                            <div className="flex flex-col gap-2">
+                                                <div>
+                                                    {isManual ? (
+                                                        <div className="flex gap-1 mb-1">
+                                                            <Input
+                                                                placeholder="Cant"
+                                                                className="h-7 text-xs w-16"
+                                                                type="number"
+                                                                value={ing.quantity}
+                                                                onChange={(e) => handleManualChange(ing.index, 'quantity', e.target.value)}
+                                                            />
+                                                            <Input
+                                                                placeholder="Und"
+                                                                className="h-7 text-xs flex-1"
+                                                                value={ing.units}
+                                                                onChange={(e) => handleManualChange(ing.index, 'units', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <p className="text-sm font-bold text-gray-800 break-words">{ing.legacyName}</p>
+                                                            <p className="text-xs text-gray-500">{ing.quantity} {ing.units}</p>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <div className="text-gray-400 text-center">↓</div>
+                                                <div className="relative">
+                                                    {selected ? (
+                                                        <div className="flex items-center justify-between bg-green-50 p-2 rounded border border-green-300">
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-green-900 break-words">{getProductName(selected)}</p>
+                                                                <p className="text-[10px] text-green-600">{selected.__type === "producto_interno" ? "Producción" : "Insumo"}</p>
+                                                            </div>
+                                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => handleSelectIngredient(ing.index, null)}>✕</Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="relative">
+                                                            <Input
+                                                                placeholder={isManual ? "Buscar prod. sistema..." : "Buscar..."}
+                                                                value={searchTerm}
+                                                                onChange={(e) => handleSearchIngredient(ing.index, e.target.value)}
+                                                                className="h-8 text-xs"
+                                                            />
+                                                            {matches.length > 0 && (
+                                                                <ul className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-40 overflow-y-auto">
+                                                                    {matches.map(m => (
+                                                                        <li
+                                                                            key={m._id}
+                                                                            className="p-2 text-xs hover:bg-blue-50 cursor-pointer border-b last:border-0"
+                                                                            onClick={() => handleSelectIngredient(ing.index, m)}
+                                                                        >
+                                                                            {getProductName(m)}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {isManual && (
+                                                    <div className="text-right mt-1">
+                                                        <button onClick={() => handleDeleteManual(ing.index)} className="text-xs text-red-500 hover:text-red-700 underline">Quitar</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
 
-                        <Step2ProcessValidation
-                            parsedData={parsedData}
-                            handleProcessChange={handleProcessChange}
-                        />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleAddManualIngredient}
+                                    className="w-full border-dashed border-2 border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-500 mt-2"
+                                >
+                                    + Agregar Insumo Manual
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* RIGHT: PROCESS PREVIEW */}
+                        <div className="lg:col-span-1 flex flex-col">
+                            <h3 className="font-bold text-lg border-b pb-2 mb-4">2. Validar Procesos ({Object.keys(parsedData?.processSteps || {}).length})</h3>
+                            <div className="space-y-3 pr-2 overflow-y-auto max-h-[500px]">
+                                {parsedData?.processSteps && Object.keys(parsedData.processSteps).length > 0 ? (
+                                    Object.entries(parsedData.processSteps).sort((a, b) => {
+                                        const numA = parseInt(a[0].replace('proces', ''));
+                                        const numB = parseInt(b[0].replace('proces', ''));
+                                        return numA - numB;
+                                    }).map(([key, value]) => (
+                                        <div key={key} className="p-3 rounded-md border bg-slate-50 border-slate-200">
+                                            <span className="text-xs font-bold text-slate-500 uppercase mb-1 block">{key}</span>
+                                            <Textarea
+                                                value={value}
+                                                onChange={(e) => handleProcessChange(key, e.target.value)}
+                                                className="text-sm text-slate-800 font-sans min-h-[80px] bg-white border-slate-300 focus:border-blue-500"
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-4 text-center text-gray-400 italic border rounded-md border-dashed">
+                                        No se detectaron pasos de proceso en el JSON.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

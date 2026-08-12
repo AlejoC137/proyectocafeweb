@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { 
   Calculator, 
@@ -8,24 +8,15 @@ import {
   Sparkles, 
   Package, 
   DollarSign, 
-  Thermometer, 
   PieChart, 
-  Settings, 
   Info, 
-  ChevronDown, 
-  ChevronUp, 
-  CheckCircle2, 
-  AlertTriangle,
-  RotateCcw,
-  Zap,
-  Loader2,
-  Database,
-  Search,
-  BookOpen,
+  Zap, 
+  Loader2, 
+  Database, 
   ArrowRight,
-  Send,
-  BookMarked,
-  HelpCircle
+  CheckCircle2,
+  TrendingUp,
+  BookOpen
 } from "lucide-react";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { 
@@ -40,302 +31,18 @@ import {
   createRecipeForProduct 
 } from "../../../redux/actions";
 
-// --- INGREDIENTES BASE PREDETERMINADOS (DUBOVIK FORMULATOR) ---
-const DEFAULT_INGREDIENTS = [
-  { id: "leche_entera", nombre: "Leche Entera (3.2% Grasa)", grasa: 3.2, solidos: 11.7, pod: 0.5, pac: 1.0, unidad: "g" },
-  { id: "crema_35", nombre: "Crema de Leche 35%", grasa: 35.0, solidos: 40.5, pod: 0.3, pac: 0.6, unidad: "g" },
-  { id: "lpd", nombre: "Leche en Polvo Desnatada (LPD)", grasa: 1.0, solidos: 96.0, pod: 5.2, pac: 10.4, unidad: "g" },
-  { id: "sacarosa", nombre: "Sacarosa (Azúcar común - Patrón POD 100 / PAC 100)", grasa: 0.0, solidos: 100.0, pod: 100.0, pac: 100.0, unidad: "g" },
-  { id: "dextrosa", nombre: "Dextrosa Monohidratada", grasa: 0.0, solidos: 92.0, pod: 70.0, pac: 90.0, unidad: "g" },
-  { id: "maltodextrina", nombre: "Maltodextrina DE19", grasa: 0.0, solidos: 95.0, pod: 15.0, pac: 20.0, unidad: "g" },
-  { id: "glucosa_38", nombre: "Jarabe de Glucosa 38 DE", grasa: 0.0, solidos: 80.0, pod: 50.0, pac: 90.0, unidad: "g" },
-  { id: "glucosa_60", nombre: "Jarabe de Glucosa 60 DE", grasa: 0.0, solidos: 80.0, pod: 70.0, pac: 130.0, unidad: "g" },
-  { id: "chocolate_54", nombre: "Chocolate Cobertura 54%", grasa: 35.0, solidos: 98.0, pod: 50.0, pac: 25.0, unidad: "g" },
-  { id: "cacao_polvo", nombre: "Cacao en Polvo 20/22", grasa: 21.0, solidos: 95.0, pod: 0.0, pac: 0.0, unidad: "g" },
-  { id: "neutro_5", nombre: "Estabilizante Neutro 5g", grasa: 0.0, solidos: 100.0, pod: 0.0, pac: 0.0, unidad: "g" },
-  { id: "inulina", nombre: "Inulina (Fibra soluble)", grasa: 0.0, solidos: 95.0, pod: 10.0, pac: 10.0, unidad: "g" },
-  { id: "frambuesa", nombre: "Puré de Frambuesa", grasa: 0.0, solidos: 8.8, pod: 7.8, pac: 17.2, unidad: "g" },
-  { id: "agua", nombre: "Agua de Chorro / Filtrada", grasa: 0.0, solidos: 0.0, pod: 0.0, pac: 0.0, unidad: "g" },
-];
-
-// --- GLOSARIO TECNICO MATERIALES BASE DUBOVIK ---
-const GLOSSARY_DUBOVIK = [
-  {
-    nombre: "Leche Entera (3.2% Grasa)",
-    icono: "🧪",
-    definicion: "Base líquida fundamental en helados de crema. Aporta fase acuosa, grasa láctea libre y sólidos lácteos no grasos (proteínas caseínas y suero).",
-    valores: "Grasa: 3.2% | Sólidos: 11.7% | POD: 0.5 | PAC: 1.0",
-    condiciones: "Representa del 50% al 70% de la mezcla total. Las proteínas encapsulan los glóbulos de grasa y aire durante el mantecado. Pastorizar a 85°C."
-  },
-  {
-    nombre: "Crema de Leche 35%",
-    icono: "🧪",
-    definicion: "Fuente primaria de materia grasa láctea concentrada. Proporciona cremosidad, retarda el derretimiento y suaviza los cristales de hielo.",
-    valores: "Grasa: 35.0% | Sólidos: 40.5% | POD: 0.3 | PAC: 0.6",
-    condiciones: "Dosificar del 5% al 25% del mix según el nivel de grasa deseado (Soft o Gelato). Excesos provocan película grasa en el paladar."
-  },
-  {
-    nombre: "Leche en Polvo Desnatada (LPD / SMP)",
-    icono: "🧪",
-    definicion: "Concentrado de sólidos lácteos no grasos (MSNF) con alta proteína. Aumenta la estructura y el overrun (incorporación de aire) sin sumar grasa.",
-    valores: "Grasa: 1.0% | Sólidos: 96.0% | POD: 5.2 | PAC: 10.4",
-    condiciones: "Usar de 3% a 7%. Si supera el 10% de MSNF sobre el agua del mix, existe riesgo de cristalización de la lactosa (sensación arenosa en boca)."
-  },
-  {
-    nombre: "Sacarosa (Azúcar Común - Patrón POD 100 / PAC 100)",
-    icono: "🧪",
-    definicion: "Disacárido base patrón de comparación (POD = 100 / PAC = 100). Determina el dulzor de referencia y el punto de congelación estándar del agua.",
-    valores: "Grasa: 0.0% | Sólidos: 100.0% | POD: 100.0 (Referencia) | PAC: 100.0 (Referencia)",
-    condiciones: "Recomendado entre 10% y 16% del mix total. Sirve como estándar contra el cual se miden el resto de azúcares y polioles."
-  },
-  {
-    nombre: "Dextrosa Monohidratada",
-    icono: "🧪",
-    definicion: "Monosacárido derivado del maíz. Posee un poder anticongelante elevado (PAC 90-190) y menor poder edulcorante que la sacarosa (POD 70).",
-    valores: "Grasa: 0.0% | Sólidos: 92.0% | POD: 70.0 | PAC: 90.0",
-    condiciones: "Excelente para reducir la dureza del helado en vitrina sin empalagar. Dosificación habitual del 2% al 6% del azúcar total."
-  },
-  {
-    nombre: "Maltodextrina DE 19",
-    icono: "🧪",
-    definicion: "Polímero de glucosa de bajo DE. Aporta sólidos secos, viscosidad y cuerpo sin alterar el dulzor ni congelar demasiado el agua libre.",
-    valores: "Grasa: 0.0% | Sólidos: 95.0% | POD: 15.0 | PAC: 20.0",
-    condiciones: "Ideal en sorbetes y helados bajos en grasa para alcanzar entre 30% y 36% de sólidos totales sin endulzar en exceso (2% a 8% del mix)."
-  },
-  {
-    nombre: "Jarabe de Glucosa 38 DE",
-    icono: "🧪",
-    definicion: "Jarabe deshidratado de mediana conversión. Otorga viscosidad, masticabilidad (chewiness) y evita la recristalización de azúcares.",
-    valores: "Grasa: 0.0% | Sólidos: 80.0% | POD: 50.0 | PAC: 90.0",
-    condiciones: "Reemplaza parcialmente la sacarosa (15% a 30% de los azúcares) para mejorar la resistencia al choque térmico durante el transporte."
-  },
-  {
-    nombre: "Jarabe de Glucosa 60 DE",
-    icono: "🧪",
-    definicion: "Jarabe de alta conversión rico en azúcares simples. Alto valor de PAC para ablandar helados servidos a temperaturas muy bajas.",
-    valores: "Grasa: 0.0% | Sólidos: 80.0% | POD: 70.0 | PAC: 130.0",
-    condiciones: "Muy utilizado en sorbetes de fruta acida para mantener una textura espautlable a -14°C a -18°C."
-  },
-  {
-    nombre: "Chocolate Cobertura 54%",
-    icono: "🧪",
-    definicion: "Materia prima compuesta rica en manteca de cacao y azúcar. Aporta estructura firme por la solidificación de la grasa vegetal noble.",
-    valores: "Grasa: 35.0% | Sólidos: 98.0% | POD: 50.0 | PAC: 25.0",
-    condiciones: "Incorporar fundido a 45°C en la fase caliente. Al tener bajo PAC, suele compensarse agregando Dextrosa a la mezcla."
-  },
-  {
-    nombre: "Cacao en Polvo 20/22",
-    icono: "🧪",
-    definicion: "Cacao desgrasado parcial alcalinizado (20-22% manteca). Otorga sabor intenso, color profundo y absorbe gran cantidad de agua libre.",
-    valores: "Grasa: 21.0% | Sólidos: 95.0% | POD: 0.0 | PAC: 0.0",
-    condiciones: "Usar entre 2% y 4%. Al ser muy higroscópico, requiere ajustar la hidratación hídrica o aumentar ligeramente los azúcares."
-  },
-  {
-    nombre: "Estabilizante Neutro 5g",
-    icono: "🧪",
-    definicion: "Complejo de hidrocoloides (Garrofín, Guar, CMC) y emulsionantes. Absorbe el agua no ligada y estabiliza las burbujas de aire.",
-    valores: "Grasa: 0.0% | Sólidos: 100.0% | POD: 0.0 | PAC: 0.0",
-    condiciones: "Dosis estricta de 4g a 5g por kg de mezcla (0.4% - 0.5%). Mezclar en seco con el azúcar antes de dispersar a 50°C."
-  },
-  {
-    nombre: "Inulina (Fibra Soluble)",
-    icono: "🧪",
-    definicion: "Fructano de origen vegetal. Simula la textura y sensación grasosa en la boca (fat-replacer) sin aportar calorías ni apenas dulzor.",
-    valores: "Grasa: 0.0% | Sólidos: 95.0% | POD: 10.0 | PAC: 10.0",
-    condiciones: "Indispensable en helados veganos y sorbetes de fruta para dar cuerpo, viscosidad y textura uniforme (dosificación 2% a 6%)."
-  },
-  {
-    nombre: "Puré de Frambuesa (Fruta)",
-    icono: "🧪",
-    definicion: "Pulpa natural de fruta. Aporta la fase acuosa con azúcares naturales propios (fructosa/glucosa), ácidos orgánicos y sólidos secos de fruta.",
-    valores: "Grasa: 0.0% | Sólidos: 8.8% | POD: 7.8 | PAC: 17.2",
-    condiciones: "En sorbetes constituye del 30% al 50% de la formulación total. Mantener balance hídrico adecuado."
-  },
-  {
-    nombre: "Agua Filtrada",
-    icono: "🧪",
-    definicion: "Solvente puro para la disolución de azúcares e hidrocoloides en sorbetes y preparaciones sin base láctea.",
-    valores: "Grasa: 0.0% | Sólidos: 0.0% | POD: 0.0 | PAC: 0.0",
-    condiciones: "Utilizar agua purificada u ósmosis inversa para evitar que minerales/cloro interfieran con el rendimiento de los estabilizantes."
-  }
-];
-
-// RANGOS RECOMENDADOS SEGÚN TIPO DE HELADO
-const TARGET_RANGES = {
-  GELATO: {
-    grasa: { min: 6.0, max: 12.0, opt: "6% - 12%" },
-    solidos: { min: 36.0, max: 42.0, opt: "36% - 42%" },
-    pod: { min: 16.0, max: 22.0, opt: "16 - 22" },
-    pac: { min: 24.0, max: 32.0, opt: "24 - 32" },
-  },
-  SOFT: {
-    grasa: { min: 4.0, max: 10.0, opt: "4% - 10%" },
-    solidos: { min: 32.0, max: 39.0, opt: "32% - 39%" },
-    pod: { min: 14.0, max: 18.0, opt: "14 - 18" },
-    pac: { min: 15.0, max: 22.0, opt: "15 - 22" },
-  },
-  SORBETE: {
-    grasa: { min: 0.0, max: 1.5, opt: "0% - 1.5%" },
-    solidos: { min: 26.0, max: 32.0, opt: "26% - 32%" },
-    pod: { min: 15.0, max: 20.0, opt: "15 - 20" },
-    pac: { min: 18.0, max: 25.0, opt: "18 - 25" },
-  }
-};
-
-// PRESET TEST RECIPES FROM DUBOVIK EXCEL
-const PRESET_RECIPES = {
-  chocolate_soft: {
-    nombre: "Chocolate Soft (Dubovik)",
-    tipo: "SOFT",
-    items: [
-      { ingId: "leche_entera", cantidad: 655, inventarioItemId: "" },
-      { ingId: "crema_35", cantidad: 60, inventarioItemId: "" },
-      { ingId: "lpd", cantidad: 30, inventarioItemId: "" },
-      { ingId: "sacarosa", cantidad: 70, inventarioItemId: "" },
-      { ingId: "dextrosa", cantidad: 60, inventarioItemId: "" },
-      { ingId: "chocolate_54", cantidad: 90, inventarioItemId: "" },
-      { ingId: "cacao_polvo", cantidad: 30, inventarioItemId: "" },
-      { ingId: "neutro_5", cantidad: 5, inventarioItemId: "" },
-    ]
-  },
-  frambuesa_sorbete: {
-    nombre: "Frambuesa Soft Sorbete (Dubovik)",
-    tipo: "SORBETE",
-    items: [
-      { ingId: "agua", cantidad: 365, inventarioItemId: "" },
-      { ingId: "sacarosa", cantidad: 110, inventarioItemId: "" },
-      { ingId: "inulina", cantidad: 70, inventarioItemId: "" },
-      { ingId: "maltodextrina", cantidad: 70, inventarioItemId: "" },
-      { ingId: "frambuesa", cantidad: 380, inventarioItemId: "" },
-      { ingId: "neutro_5", cantidad: 5, inventarioItemId: "" },
-    ]
-  }
-};
-
-// --- REUSABLE SEARCHABLE SELECT COMPONENT ---
-function SearchableSelect({ value, onChange, options, placeholder = "Buscar o seleccionar...", className = "" }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selectedOption = useMemo(() => {
-    for (const opt of options) {
-      if (opt.options) {
-        const found = opt.options.find((o) => o.value === value);
-        if (found) return found;
-      } else if (opt.value === value) {
-        return opt;
-      }
-    }
-    return null;
-  }, [options, value]);
-
-  const filteredOptions = useMemo(() => {
-    if (!search.trim()) return options;
-    const term = search.toLowerCase();
-
-    return options.map((opt) => {
-      if (opt.options) {
-        const matchingSub = opt.options.filter((sub) =>
-          sub.label.toLowerCase().includes(term)
-        );
-        return matchingSub.length > 0 ? { ...opt, options: matchingSub } : null;
-      }
-      return opt.label.toLowerCase().includes(term) ? opt : null;
-    }).filter(Boolean);
-  }, [options, search]);
-
-  return (
-    <div ref={containerRef} className={`relative ${className}`}>
-      <div 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-1.5 border-2 border-black bg-white flex items-center justify-between cursor-pointer hover:bg-yellow-50 text-xs font-semibold shadow-sm"
-      >
-        <span className="truncate pr-2">
-          {selectedOption ? selectedOption.label : <span className="text-gray-400">{placeholder}</span>}
-        </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-gray-600" />
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border-2 border-black shadow-solid max-h-64 overflow-y-auto">
-          <div className="p-1.5 border-b-2 border-black sticky top-0 bg-yellow-100 z-10 flex items-center gap-1.5">
-            <Search className="h-3.5 w-3.5 text-gray-600 shrink-0" />
-            <input
-              type="text"
-              autoFocus
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Escribe para buscar..."
-              className="w-full p-1 text-xs border border-black bg-white focus:outline-none font-medium"
-            />
-          </div>
-
-          <div className="py-1">
-            {filteredOptions.length === 0 ? (
-              <div className="p-3 text-xs text-gray-500 text-center font-medium">No se encontraron resultados</div>
-            ) : (
-              filteredOptions.map((item, idx) => {
-                if (item.options) {
-                  return (
-                    <div key={idx} className="mb-1">
-                      <div className="px-2 py-1 bg-gray-100 text-[10px] font-bold text-gray-700 uppercase border-y border-gray-300">
-                        {item.group}
-                      </div>
-                      {item.options.map((subOpt) => (
-                        <div
-                          key={subOpt.value}
-                          onClick={() => {
-                            onChange(subOpt.value);
-                            setIsOpen(false);
-                            setSearch("");
-                          }}
-                          className={`px-3 py-1.5 text-xs cursor-pointer hover:bg-sage-green hover:text-white flex items-center justify-between transition-colors ${
-                            subOpt.value === value ? "bg-yellow-200 font-bold text-black" : "text-gray-800"
-                          }`}
-                        >
-                          <span className="truncate pr-2">{subOpt.label}</span>
-                          {subOpt.value === value && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-sage-green" />}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    key={item.value}
-                    onClick={() => {
-                      onChange(item.value);
-                      setIsOpen(false);
-                      setSearch("");
-                    }}
-                    className={`px-3 py-1.5 text-xs cursor-pointer hover:bg-sage-green hover:text-white flex items-center justify-between transition-colors ${
-                      item.value === value ? "bg-yellow-200 font-bold text-black" : "text-gray-800"
-                    }`}
-                  >
-                    <span className="truncate pr-2">{item.label}</span>
-                    {item.value === value && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-sage-green" />}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// Sub-components & Data
+import { 
+  DEFAULT_INGREDIENTS, 
+  TARGET_RANGES, 
+  PRESET_RECIPES 
+} from "./CalculadorRecetaHelados/dubovikData";
+import SearchableSelect from "./CalculadorRecetaHelados/SearchableSelect";
+import DubovikGlosario from "./CalculadorRecetaHelados/DubovikGlosario";
+import FormuladorDashboard from "./CalculadorRecetaHelados/FormuladorDashboard";
+import NewIngredientModal from "./CalculadorRecetaHelados/NewIngredientModal";
+import ImportadorHeladoModal from "./CalculadorRecetaHelados/ImportadorHeladoModal";
+import ModeloFinancieroProyecciones from "./CalculadorRecetaHelados/ModeloFinancieroProyecciones";
 
 export default function CalculadorRecetaHelados() {
   const dispatch = useDispatch();
@@ -359,7 +66,26 @@ export default function CalculadorRecetaHelados() {
   // Ingredients catalog state
   const [ingredientesDB, setIngredientesDB] = useState(DEFAULT_INGREDIENTS);
   const [newIngModal, setNewIngModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [tempIng, setTempIng] = useState({ nombre: "", grasa: 0, solidos: 0, pod: 0, pac: 0 });
+
+  // Custom User-Imported Recipes State (Persisted in localStorage)
+  const [customRecipes, setCustomRecipes] = useState(() => {
+    try {
+      const saved = localStorage.getItem("dubovik_custom_recipes");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  // Notification Banner State
+  const [notification, setNotification] = useState(null);
+
+  // Combined Presets (Base Dubovik + Custom User Imported)
+  const allPresets = useMemo(() => {
+    return { ...PRESET_RECIPES, ...customRecipes };
+  }, [customRecipes]);
 
   // Current Recipe Lines State
   const [recetaLines, setRecetaLines] = useState(PRESET_RECIPES.chocolate_soft.items);
@@ -455,11 +181,62 @@ export default function CalculadorRecetaHelados() {
 
   // Quick preset loader
   const loadPreset = (presetKey) => {
-    const preset = PRESET_RECIPES[presetKey];
+    const preset = allPresets[presetKey];
     if (preset) {
       setNombreReceta(preset.nombre);
       setTipoHelado(preset.tipo);
       setRecetaLines(preset.items);
+      setNotification({
+        type: "success",
+        message: `✨ Receta "${preset.nombre}" (${preset.tipo}) cargada al balanceador.`
+      });
+    }
+  };
+
+  const handleImportRecipe = (imported) => {
+    if (imported && imported.items) {
+      const customKey = `custom_${Date.now()}`;
+      const newRecipeObj = {
+        nombre: imported.nombre || "Nuevo Helado Importado",
+        tipo: imported.tipo || "GELATO",
+        items: imported.items,
+        isCustom: true
+      };
+
+      // 1. Cargar directamente en la tabla y balanceador activo
+      setNombreReceta(newRecipeObj.nombre);
+      setTipoHelado(newRecipeObj.tipo);
+      setRecetaLines(newRecipeObj.items);
+      setActiveTab("formulador");
+
+      // 2. Guardar en Accesos Rápidos (State + LocalStorage)
+      const updatedCustoms = { ...customRecipes, [customKey]: newRecipeObj };
+      setCustomRecipes(updatedCustoms);
+      try {
+        localStorage.setItem("dubovik_custom_recipes", JSON.stringify(updatedCustoms));
+      } catch (err) {
+        console.error("Error guardando en localStorage:", err);
+      }
+
+      // 3. Notificación de éxito al usuario
+      setNotification({
+        type: "success",
+        message: `🎉 ¡Receta "${newRecipeObj.nombre}" importada con éxito! Se cargó en la tabla de 1000g y se guardó en tus botones de accesos rápidos.`
+      });
+    }
+  };
+
+  const handleDeleteCustomRecipe = (e, key, name) => {
+    e.stopPropagation();
+    if (window.confirm(`¿Deseas eliminar el acceso rápido de "${name}"?`)) {
+      const updated = { ...customRecipes };
+      delete updated[key];
+      setCustomRecipes(updated);
+      try {
+        localStorage.setItem("dubovik_custom_recipes", JSON.stringify(updated));
+      } catch (err) {
+        console.error("Error eliminando en localStorage:", err);
+      }
     }
   };
 
@@ -591,12 +368,7 @@ export default function CalculadorRecetaHelados() {
     };
   }, [recetaLines, combinedIngredientsCatalog, tipoHelado, allItems]);
 
-  // Target ranges & health checks
   const targets = TARGET_RANGES[tipoHelado];
-  const isGrasaOk = calculations.grasaPct >= targets.grasa.min && calculations.grasaPct <= targets.grasa.max;
-  const isSolidosOk = calculations.solidosPct >= targets.solidos.min && calculations.solidosPct <= targets.solidos.max;
-  const isPodOk = calculations.pod >= targets.pod.min && calculations.pod <= targets.pod.max;
-  const isPacOk = calculations.pac >= targets.pac.min && calculations.pac <= targets.pac.max;
 
   // --- SAVE & LINK TO SUPABASE PRODUCT ---
   const handleSaveRecipeToSupabase = async () => {
@@ -610,7 +382,6 @@ export default function CalculadorRecetaHelados() {
     const productTable = isMenu ? MENU : PRODUCCION;
     const recipeTable = isMenu ? RECETAS_MENU : RECETAS_PRODUCCION;
 
-    // Verificar si el producto ya cuenta con una receta previa asignada
     const targetProductList = isMenu ? allMenu : allProduccion;
     const targetProduct = targetProductList.find((p) => p._id === targetId);
 
@@ -691,19 +462,6 @@ export default function CalculadorRecetaHelados() {
             </span>
           )}
 
-          <button
-            onClick={() => loadPreset("chocolate_soft")}
-            className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold border-2 border-black shadow-solid transition-all flex items-center gap-1"
-          >
-            <Sparkles className="h-3.5 w-3.5" /> Demo Soft Chocolate
-          </button>
-
-          <button
-            onClick={() => loadPreset("frambuesa_sorbete")}
-            className="px-3 py-1.5 bg-pink-100 hover:bg-pink-200 text-pink-900 text-xs font-bold border-2 border-black shadow-solid transition-all flex items-center gap-1"
-          >
-            <Sparkles className="h-3.5 w-3.5" /> Demo Sorbete Frambuesa
-          </button>
 
           <button
             onClick={() => setShowAccionesRapidas(!showAccionesRapidas)}
@@ -714,6 +472,22 @@ export default function CalculadorRecetaHelados() {
           </button>
         </div>
       </div>
+
+      {/* NOTIFICATION SUCCESS BANNER */}
+      {notification && (
+        <div className="bg-emerald-100 border-2 border-black p-3 shadow-solid flex items-center justify-between font-bold text-xs text-emerald-950 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-emerald-700 shrink-0" />
+            <span>{notification.message}</span>
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-xs bg-emerald-200 hover:bg-emerald-300 px-2 py-0.5 border border-black"
+          >
+            ✕ Cerrar
+          </button>
+        </div>
+      )}
 
       {/* MANDAR RECETA RED BOOK ACTION BAR */}
       <div className="bg-red-50 border-2 border-black p-4 shadow-solid flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
@@ -799,27 +573,55 @@ export default function CalculadorRecetaHelados() {
         </div>
       )}
 
-      {/* NAVIGATION TABS */}
-      <div className="flex border-b-2 border-black bg-cream-bg">
+      {/* NAVIGATION TABS (ADAPTATIVAS EN ANCHO GRID 4 COLUMNAS - 1 SOLA LÍNEA) */}
+      <div className="grid grid-cols-4 border-b-2 border-black bg-cream-bg w-full">
+        <button
+          onClick={() => setActiveTab("glosario")}
+          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+            activeTab === "glosario"
+              ? "bg-amber-400 text-black shadow-solid"
+              : "bg-white text-gray-700 hover:bg-gray-100"
+          }`}
+          title="0. Glosario Dubovik"
+        >
+          <BookOpen className="h-4 w-4 shrink-0 text-amber-950" />
+          <span className="truncate">0. Glosario Dubovik</span>
+        </button>
         <button
           onClick={() => setActiveTab("formulador")}
-          className={`px-5 py-3 text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center gap-2 ${
+          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "formulador"
               ? "bg-sage-green text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
           }`}
+          title="1. Balanceador Dubovik (% Grasa, Sólidos, POD, PAC)"
         >
-          <PieChart className="h-4 w-4" /> 1. Balanceador Dubovik (% Grasa, Sólidos, POD, PAC)
+          <PieChart className="h-4 w-4 shrink-0" />
+          <span className="truncate">1. Balanceador Dubovik</span>
         </button>
         <button
           onClick={() => setActiveTab("costeo")}
-          className={`px-5 py-3 text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center gap-2 ${
+          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "costeo"
               ? "bg-sage-green text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
           }`}
+          title={`2. Costeo & Vinculación Supabase (${allItems.length} ítems)`}
         >
-          <DollarSign className="h-4 w-4" /> 2. Costeo & Vinculación con Inventario Supabase ({allItems.length} ítems)
+          <DollarSign className="h-4 w-4 shrink-0" />
+          <span className="truncate">2. Costeo & Inventario</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("proyecciones")}
+          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+            activeTab === "proyecciones"
+              ? "bg-terracotta-accent text-white shadow-solid"
+              : "bg-white text-gray-700 hover:bg-gray-100"
+          }`}
+          title="3. Proyecciones & Modelo Financiero"
+        >
+          <TrendingUp className="h-4 w-4 shrink-0 text-yellow-300" />
+          <span className="truncate">3. Proyecciones & Modelo</span>
         </button>
       </div>
 
@@ -963,101 +765,89 @@ export default function CalculadorRecetaHelados() {
             </div>
           </div>
 
-          {/* RIGHT COL: BALANCE RESULTS & GAUGES */}
+          {/* RIGHT COL: ICE CREAM TOOLS & BALANCE RESULTS */}
           <div className="space-y-4">
             
-            {/* INDICATORS DASHBOARD */}
-            <div className="bg-white border-2 border-black p-4 shadow-solid space-y-4">
-              <h2 className="font-bold text-base text-gray-900 border-b-2 border-black pb-2 flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-terracotta-accent" />
-                Resultados del Balance ({tipoHelado})
-              </h2>
-
-              {/* GRASA % */}
-              <div className="p-3 border-2 border-black bg-blue-50 relative">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-xs text-gray-800">Materia Grasa (%):</span>
-                  <span className={`text-xs px-1.5 py-0.5 font-bold border border-black ${isGrasaOk ? "bg-green-300 text-green-900" : "bg-red-300 text-red-900"}`}>
-                    {isGrasaOk ? "Óptimo" : "Fuera de Rango"}
-                  </span>
-                </div>
-                <div className="text-2xl font-black text-blue-900 font-mono">
-                  {calculations.grasaPct.toFixed(2)}%
-                </div>
-                <div className="text-[11px] text-gray-600 mt-1">
-                  Rango recomendado: <strong>{targets.grasa.opt}</strong>
-                </div>
+            {/* SECCIÓN DE HERRAMIENTAS DE HELADERÍA & BOTONES (SIN SELECTOR) */}
+            <div className="bg-amber-50 border-2 border-black p-4 shadow-solid space-y-3">
+              <div className="flex items-center justify-between border-b-2 border-black pb-2">
+                <h3 className="font-bold text-sm text-amber-950 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-800" />
+                  🛠️ Herramientas de Heladería & Recetas Base
+                </h3>
+                <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 border border-black">
+                  Dubovik Formulator
+                </span>
               </div>
 
-              {/* SOLIDOS TOTALES % */}
-              <div className="p-3 border-2 border-black bg-amber-50 relative">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-xs text-gray-800">Sólidos Totales (%):</span>
-                  <span className={`text-xs px-1.5 py-0.5 font-bold border border-black ${isSolidosOk ? "bg-green-300 text-green-900" : "bg-red-300 text-red-900"}`}>
-                    {isSolidosOk ? "Óptimo" : "Fuera de Rango"}
-                  </span>
-                </div>
-                <div className="text-2xl font-black text-amber-900 font-mono">
-                  {calculations.solidosPct.toFixed(2)}%
-                </div>
-                <div className="text-[11px] text-gray-600 mt-1">
-                  Agua restante: <strong>{calculations.aguaPct.toFixed(2)}%</strong> (Opt: {targets.solidos.opt})
-                </div>
-              </div>
+              {/* BOTÓN CON (+) PARA CREAR NUEVO TIPO DE HELADO CON IA */}
+              <button
+                type="button"
+                onClick={() => setShowImportModal(true)}
+                className="w-full p-2.5 bg-yellow-300 hover:bg-yellow-400 active:bg-yellow-500 text-black border-2 border-black font-black text-xs shadow-solid flex items-center justify-center gap-2 transition-all active:translate-y-0.5"
+              >
+                <Plus className="h-4 w-4 stroke-[3]" />
+                <span>+ Crear Nuevo Tipo de Helado (Importador IA Dubovik)</span>
+              </button>
 
-              {/* POD (Poder Edulcorante) */}
-              <div className="p-3 border-2 border-black bg-purple-50 relative">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-xs text-gray-800 flex items-center gap-1">
-                    POD (Poder Edulcorante):
-                    <span className="text-[10px] font-normal text-purple-700 bg-purple-100 px-1 border border-purple-300">Sacarosa = 100</span>
-                  </span>
-                  <span className={`text-xs px-1.5 py-0.5 font-bold border border-black ${isPodOk ? "bg-green-300 text-green-900" : "bg-red-300 text-red-900"}`}>
-                    {isPodOk ? "Óptimo" : "Ajustar Dulzor"}
-                  </span>
-                </div>
-                <div className="text-2xl font-black text-purple-900 font-mono">
-                  {calculations.pod.toFixed(2)}
-                </div>
-                <div className="text-[11px] text-gray-600 mt-1">
-                  Rango recomendado: <strong>{targets.pod.opt}</strong>
-                </div>
-              </div>
+              {/* BOTONERA DE RECETAS BASE Y PERSONALIZADAS */}
+              <div className="space-y-2 pt-1">
+                <p className="text-xs font-bold text-amber-950 flex items-center gap-1">
+                  ⚡ Recetas Base & Creadas ({Object.keys(allPresets).length}):
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold">
+                  {Object.entries(allPresets).map(([key, item]) => {
+                    const badgeStyle =
+                      item.tipo === "SOFT"
+                        ? "bg-amber-200 text-amber-900"
+                        : item.tipo === "GELATO"
+                        ? "bg-blue-200 text-blue-900"
+                        : "bg-pink-200 text-pink-900";
 
-              {/* PAC (Poder Anticongelante) */}
-              <div className="p-3 border-2 border-black bg-teal-50 relative">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-xs text-gray-800 flex items-center gap-1">
-                    PAC (Poder Anticongelante):
-                    <span className="text-[10px] font-normal text-teal-700 bg-teal-100 px-1 border border-teal-300">Sacarosa = 100</span>
-                  </span>
-                  <span className={`text-xs px-1.5 py-0.5 font-bold border border-black ${isPacOk ? "bg-green-300 text-green-900" : "bg-red-300 text-red-900"}`}>
-                    {isPacOk ? "Óptimo" : "Ajustar Dureza"}
-                  </span>
-                </div>
-                <div className="text-2xl font-black text-teal-900 font-mono">
-                  {calculations.pac.toFixed(2)}
-                </div>
-                <div className="text-[11px] text-gray-600 mt-1">
-                  Rango recomendado: <strong>{targets.pac.opt}</strong>
-                </div>
-              </div>
+                    const isCustom = item.isCustom || key.startsWith("custom_");
 
-              {/* SERVING TEMP ESTIMATE */}
-              <div className="p-3 border-2 border-black bg-cyan-100 text-cyan-950">
-                <div className="flex items-center gap-2 mb-1">
-                  <Thermometer className="h-4 w-4 text-cyan-700" />
-                  <span className="font-bold text-xs">Temp. de Servicio Estimada:</span>
-                </div>
-                <div className="text-xl font-black font-mono">
-                  {calculations.tempServicio.toFixed(2)} °C
-                </div>
-                <div className="text-[10px] text-cyan-800 mt-1">
-                  Algoritmo Dubovik: {tipoHelado === "SORBETE" ? "PAC / -2.5" : "PAC / -2"}
+                    return (
+                      <div key={key} className="relative group">
+                        <button
+                          type="button"
+                          onClick={() => loadPreset(key)}
+                          className={`w-full p-2.5 bg-white hover:bg-amber-100 active:bg-amber-200 border-2 border-black text-amber-950 text-xs shadow-solid text-left flex items-center justify-between transition-all font-bold ${
+                            isCustom ? "border-l-4 border-l-yellow-500" : ""
+                          }`}
+                        >
+                          <span className="truncate pr-1 group-hover:underline flex items-center gap-1">
+                            {isCustom ? "🌟 " : ""}{item.nombre}
+                          </span>
+                          <span className={`text-[9px] px-1.5 py-0.5 border border-black font-mono font-extrabold shrink-0 ${badgeStyle}`}>
+                            {item.tipo}
+                          </span>
+                        </button>
+                        {isCustom && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteCustomRecipe(e, key, item.nombre)}
+                            className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white p-0.5 border border-black rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Eliminar botón personalizado"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
+            {/* INTERLINEADO SEPARADOR */}
+            <div className="my-4 border-b-2 border-dashed border-gray-400"></div>
+
+            {/* RESULTADOS DEL BALANCE DUBOVIK */}
+            <FormuladorDashboard 
+              calculations={calculations}
+              targets={targets}
+              tipoHelado={tipoHelado}
+            />
           </div>
         </div>
       )}
@@ -1158,184 +948,39 @@ export default function CalculadorRecetaHelados() {
         </div>
       )}
 
-      {/* GLOSARIO TECNICO MATERIALES BASE DUBOVIK */}
-      <div className="bg-white border-2 border-black p-4 md:p-6 shadow-solid space-y-6">
-        
-        {/* TARJETA EXPLICATIVA POD, PAC Y LPD/SMP (SACAROSA = 100/100) */}
-        <div className="bg-yellow-50 border-2 border-black p-4 space-y-3">
-          <h3 className="font-extrabold text-sm text-yellow-950 flex items-center gap-2">
-            <HelpCircle className="h-5 w-5 text-yellow-700 shrink-0" />
-            📘 Conceptos Clave de Balanceo: POD, PAC y LPD/SMP (Sacarosa = 100/100)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="bg-white p-3 border border-black space-y-1.5 shadow-sm">
-              <div className="font-bold text-purple-950 flex items-center gap-1.5">
-                <span className="px-1.5 py-0.5 bg-purple-200 text-purple-900 border border-purple-900 text-[10px] font-mono font-bold">POD</span>
-                Poder Edulcorante (Sweetening Power)
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                Mide la capacidad edulcorante o dulzor que aporta un ingrediente en comparación directa con la <strong>Sacarosa (Azúcar Común)</strong>, la cual se fija arbitrariamente como patrón con <strong>POD = 100</strong>.
-              </p>
-              <div className="text-[11px] text-purple-900 font-medium bg-purple-50 p-2 border border-purple-200">
-                • <strong>Sacarosa (POD 100)</strong>: Dulzor estándar.<br/>
-                • <strong>Dextrosa (POD 70)</strong>: Endulza 30% menos que la sacarosa.<br/>
-                • <strong>Maltodextrina (POD 15)</strong>: Aporta cuerpo sin empalagar.
-              </div>
-            </div>
+      {/* TAB 3: MODELO FINANCIERO & PROYECCIONES */}
+      {activeTab === "proyecciones" && (
+        <ModeloFinancieroProyecciones 
+          calculations={calculations}
+          nombreReceta={nombreReceta}
+          tipoHelado={tipoHelado}
+          allPresets={allPresets}
+          combinedIngredientsCatalog={combinedIngredientsCatalog}
+          allItems={allItems}
+          loadPreset={loadPreset}
+        />
+      )}
 
-            <div className="bg-white p-3 border border-black space-y-1.5 shadow-sm">
-              <div className="font-bold text-teal-950 flex items-center gap-1.5">
-                <span className="px-1.5 py-0.5 bg-teal-200 text-teal-900 border border-teal-900 text-[10px] font-mono font-bold">PAC</span>
-                Poder Anticongelante (Anti-Freezing Power)
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                Mide la capacidad de los azúcares disueltos para descender el punto de congelación del agua libre del helado (*depresión del punto de congelación*). Toma a la <strong>Sacarosa como patrón de referencia (PAC = 100)</strong>.
-              </p>
-              <div className="text-[11px] text-teal-900 font-medium bg-teal-50 p-2 border border-teal-200">
-                • <strong>Dextrosa (PAC 90)</strong>: Ablanda el helado y baja la temp. de servicio.<br/>
-                • <strong>Algoritmo Dubovik Temp Servicio (°C)</strong>:<br/>
-                &nbsp;&nbsp; Gelato / Soft: PAC / -2 &nbsp;|&nbsp; Sorbete: PAC / -2.5
-              </div>
-            </div>
-
-            <div className="bg-white p-3 border border-black space-y-1.5 shadow-sm md:col-span-2">
-              <div className="font-bold text-amber-950 flex items-center gap-1.5">
-                <span className="px-1.5 py-0.5 bg-amber-200 text-amber-900 border border-amber-900 text-[10px] font-mono font-bold">LPD / SMP</span>
-                Leche en Polvo Desnatada / Skimmed Milk Powder (Sólidos Lácteos No Grasos - MSNF)
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                <strong>LPD (Leche en Polvo Desnatada)</strong> o <strong>SMP (Skimmed Milk Powder)</strong> es la leche desnatada deshidratada (concentra ~96% sólidos secos: proteínas caseínas/suero, lactosa y minerales). Es la fuente fundamental de <strong>Sólidos Lácteos No Grasos (MSNF)</strong> para estabilizar las burbujas de aire (*overrun*) y aportar cremosidad sin sumar materia grasa.
-              </p>
-              <div className="text-[11px] text-amber-950 font-medium bg-amber-50 p-2 border border-amber-200">
-                • <strong>Aporte Dubovik (100g LPD)</strong>: 1.0% Grasa | 96.0% Sólidos | POD 5.2 | PAC 10.4.<br/>
-                • <strong>Límite Crítico (Riesgo de Arenosidad / Sandiness)</strong>: No superar el 10% a 11% de MSNF sobre el agua del mix. Si se excede, la lactosa cristaliza formando diminutos granos duros e indeseables en la lengua.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-b-2 border-black pb-3 flex flex-col md:flex-row md:items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-              🧪 Glosario Técnico de Ingredientes & Condiciones (Método Dubovik)
-            </h2>
-            <p className="text-xs text-gray-600">
-              Manual bromatológico y condiciones de formulación física para cada materia prima de la base.
-            </p>
-          </div>
-          <span className="text-xs px-2.5 py-1 bg-yellow-200 text-black border-2 border-black font-bold shrink-0">
-            {GLOSSARY_DUBOVIK.length} Materias Primas Base
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {GLOSSARY_DUBOVIK.map((item, idx) => (
-            <div key={idx} className="border-2 border-black bg-cream-bg p-3 shadow-sm flex flex-col justify-between space-y-2 hover:shadow-solid transition-all">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1.5 border-b border-black pb-1">
-                  <span className="text-base">{item.icono}</span>
-                  <h3 className="font-bold text-xs text-gray-900">{item.nombre}</h3>
-                </div>
-                <p className="text-[11px] text-gray-700 leading-snug mb-2">
-                  {item.definicion}
-                </p>
-              </div>
-
-              <div className="space-y-1.5 pt-2 border-t border-gray-300">
-                <div className="text-[10px] font-mono font-bold bg-yellow-100 p-1 border border-black text-gray-900">
-                  {item.valores}
-                </div>
-                <div className="text-[10px] text-gray-600 bg-white p-1.5 border border-gray-300">
-                  <strong>Condición:</strong> {item.condiciones}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* TAB 0: GLOSARIO TECNICO MATERIALES BASE DUBOVIK */}
+      {activeTab === "glosario" && (
+        <DubovikGlosario />
+      )}
 
       {/* CREATE NEW INGREDIENT MODAL */}
-      {newIngModal && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-black p-6 w-full max-w-md shadow-solid space-y-4">
-            <h3 className="font-bold text-base text-gray-900 border-b-2 border-black pb-2">
-              Registrar Nuevo Ingrediente al Catálogo Local
-            </h3>
-            <form onSubmit={handleCreateCustomIngredient} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold mb-1">Nombre Ingrediente:</label>
-                <input
-                  type="text"
-                  required
-                  value={tempIng.nombre}
-                  onChange={(e) => setTempIng({ ...tempIng, nombre: e.target.value })}
-                  className="w-full p-1.5 border border-black"
-                  placeholder="ej. Pasta de Avellana 100%"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block font-bold mb-1">% Grasa:</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={tempIng.grasa}
-                    onChange={(e) => setTempIng({ ...tempIng, grasa: e.target.value })}
-                    className="w-full p-1.5 border border-black font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold mb-1">% Sólidos Totales:</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={tempIng.solidos}
-                    onChange={(e) => setTempIng({ ...tempIng, solidos: e.target.value })}
-                    className="w-full p-1.5 border border-black font-mono"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block font-bold mb-1">POD (Poder Edulcorante):</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={tempIng.pod}
-                    onChange={(e) => setTempIng({ ...tempIng, pod: e.target.value })}
-                    className="w-full p-1.5 border border-black font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold mb-1">PAC (Poder Anticongelante):</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={tempIng.pac}
-                    onChange={(e) => setTempIng({ ...tempIng, pac: e.target.value })}
-                    className="w-full p-1.5 border border-black font-mono"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setNewIngModal(false)}
-                  className="px-3 py-1.5 bg-gray-200 font-bold border border-black"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-sage-green text-white font-bold border border-black"
-                >
-                  Guardar Ingrediente
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <NewIngredientModal 
+        isOpen={newIngModal}
+        onClose={() => setNewIngModal(false)}
+        onSubmit={handleCreateCustomIngredient}
+        tempIng={tempIng}
+        setTempIng={setTempIng}
+      />
+
+      {/* IMPORT & CREATE NEW ICE CREAM TYPE MODAL (DUBOVIK IA) */}
+      <ImportadorHeladoModal 
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImportRecipe={handleImportRecipe}
+      />
     </div>
   );
 }

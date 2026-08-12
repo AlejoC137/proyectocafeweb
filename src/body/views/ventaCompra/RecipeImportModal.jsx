@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { createRecipeForProduct, updateItem, getAllFromTable } from "../../../redux/actions";
+import { createRecipeForProduct, updateItem } from "../../../redux/actions";
 import { MENU, PRODUCCION } from "../../../redux/actions-types";
-import AccionesRapidas from '../actualizarPrecioUnitario/AccionesRapidas';
 import { copyPromptToClipboard } from '../../../utils/prompts';
-import { Copy, Check } from 'lucide-react';
-import { RecipeButton } from '@/components/RecipeButton';
+
+// Sub-components
+import RecipeImportHeaderTools from './RecipeImportModalComponents/RecipeImportHeaderTools';
+import Step1RecipeJsonInput from './RecipeImportModalComponents/Step1RecipeJsonInput';
+import Step2TargetProductSelection from './RecipeImportModalComponents/Step2TargetProductSelection';
+import Step2RecipeIngredientMapping from './RecipeImportModalComponents/Step2RecipeIngredientMapping';
+import Step2RecipeProcessValidation from './RecipeImportModalComponents/Step2RecipeProcessValidation';
 
 const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRecipeId, forcedRecipeSource }) => {
     const dispatch = useDispatch();
@@ -17,32 +18,25 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
     const allProduccion = useSelector((state) => state.allProduccion || []);
     const allMenu = useSelector((state) => state.allMenu || []);
     const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
-    const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []); // For checking existing recipes
 
     const [jsonInput, setJsonInput] = useState("");
     const [jsonError, setJsonError] = useState(null);
-    const [parsedData, setParsedData] = useState(null); // { name: "", ingredients: [] }
+    const [parsedData, setParsedData] = useState(null);
 
-    // State for matches
-    const [ingredientSelections, setIngredientSelections] = useState({}); // { index: selectedItem }
-    const [ingredientSearchTerms, setIngredientSearchTerms] = useState({}); // { index: searchTerm }
+    const [ingredientSelections, setIngredientSelections] = useState({});
+    const [ingredientSearchTerms, setIngredientSearchTerms] = useState({});
 
-    // State for Target Product (The product this recipe belongs to)
     const [targetProduct, setTargetProduct] = useState(null);
     const [targetSearchTerm, setTargetSearchTerm] = useState("");
     const [targetSearchMatches, setTargetSearchMatches] = useState([]);
 
-    // Extra Actions State
     const [showQuickActions, setShowQuickActions] = useState(false);
-    const [quickActionType, setQuickActionType] = useState(MENU); // Default to Menu
+    const [quickActionType, setQuickActionType] = useState(MENU);
 
-    // UI States
-    const [step, setStep] = useState(1); // 1: JSON Input, 2: Mapping & Confirmation
+    const [step, setStep] = useState(1);
     const [isSaving, setIsSaving] = useState(false);
     const [promptCopied, setPromptCopied] = useState(false);
-    const [claudeQuery, setClaudeQuery] = useState("");
 
-    // Helpers
     const getProductName = (product) => product?.Nombre_del_producto || product?.NombreES || product?.name || "(Sin nombre)";
 
     const possibleIngredients = useMemo(() => [
@@ -68,15 +62,12 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
         try {
             let parsed = JSON.parse(jsonInput);
 
-            // 1. Normalize Root: Check if the user pasted { "receta": { ... } } or similar wrapper
             if (parsed.receta && typeof parsed.receta === 'object') parsed = parsed.receta;
             else if (parsed.recipe && typeof parsed.recipe === 'object') parsed = parsed.recipe;
 
-            // 2. Find Ingredients Array: Look for standard keys, then perform a heuristic search
             let ingredientsRaw = parsed.ingredients || parsed.ingredientes || parsed.items;
 
             if (!ingredientsRaw || !Array.isArray(ingredientsRaw)) {
-                // Heuristic: Find the first array prop that looks like it has ingredient-ish data
                 const possibleKey = Object.keys(parsed).find(key =>
                     Array.isArray(parsed[key]) &&
                     parsed[key].length > 0 &&
@@ -86,12 +77,9 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
             }
 
             if (!ingredientsRaw || !Array.isArray(ingredientsRaw)) {
-                // Fallback: If still not found, check if the root itself is the array
                 if (Array.isArray(parsed)) ingredientsRaw = parsed;
-                // Fallback 2: Check for Flat Structure (item1_Id, item1_Cuantity_Units...)
                 else {
                     const flatIngredients = [];
-                    // check for item1...item30
                     for (let i = 1; i <= 30; i++) {
                         if (parsed[`item${i}_Cuantity_Units`]) {
                             try {
@@ -104,7 +92,7 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                                         legacyName: rawVal.legacyName || `Item ${i}`,
                                         cantidad: rawVal.metric.cuantity,
                                         unidades: rawVal.metric.units,
-                                        originalId: parsed[`item${i}_Id`] // Keep track if useful
+                                        originalId: parsed[`item${i}_Id`]
                                     });
                                 }
                             } catch (e) {
@@ -112,7 +100,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                             }
                         }
                     }
-                    // check for producto_interno1...item20
                     for (let i = 1; i <= 20; i++) {
                         if (parsed[`producto_interno${i}_Cuantity_Units`]) {
                             try {
@@ -135,7 +122,7 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                     }
 
                     if (flatIngredients.length > 0) ingredientsRaw = flatIngredients;
-                    else throw new Error("No se encontró una lista de ingredientes válida (buscando claves: ingredients, ingredientes, items, o estructura plana item1_...).");
+                    else throw new Error("No se encontró una lista de ingredientes válida.");
                 }
             }
 
@@ -146,9 +133,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                 return { index, legacyName, quantity, units, raw: ing };
             });
 
-
-
-            // Extract Process Steps
             const processSteps = {};
             for (let i = 1; i <= 20; i++) {
                 if (parsed[`proces${i}`] !== undefined) {
@@ -156,15 +140,12 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                 }
             }
 
-            // Extract Rendimiento
             let rendimiento = null;
             if (parsed.rendimiento) {
                 if (typeof parsed.rendimiento === 'string') {
                     try {
                         rendimiento = JSON.parse(parsed.rendimiento);
                     } catch (e) {
-                        // If it's a string but not JSON? Maybe just keep it if valid string? 
-                        // But we expect JSON structure.
                         console.warn('Rendimiento is string but not valid JSON', e);
                     }
                 } else if (typeof parsed.rendimiento === 'object') {
@@ -179,20 +160,16 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                 rendimiento: rendimiento
             });
 
-            // Initialize Search Terms & Try Auto-match Ingredients
             const initialSelections = {};
             const initialSearchTerms = {};
 
             normalizedIngredients.forEach(ing => {
                 initialSearchTerms[ing.index] = ing.legacyName;
-                // Simple exact match or contains match
                 const exactMatch = possibleIngredients.find(p => getProductName(p).toLowerCase() === ing.legacyName.toLowerCase());
                 if (exactMatch) {
                     initialSelections[ing.index] = exactMatch;
                 } else {
-                    // Try improved matching (fuzzy-ish)
                     const words = ing.legacyName.toLowerCase().split(' ');
-                    // Find product that contains at least first 2 words if possible
                     const match = possibleIngredients.find(p => {
                         const pName = getProductName(p).toLowerCase();
                         return words.every(w => pName.includes(w));
@@ -204,7 +181,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
             setIngredientSelections(initialSelections);
             setIngredientSearchTerms(initialSearchTerms);
 
-            // Try Auto-match Target Product
             const recipeName = parsed.name || parsed.nombre || parsed.legacyName;
             if (recipeName) {
                 setTargetSearchTerm(recipeName);
@@ -228,13 +204,12 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
         const lower = term.toLowerCase();
         return possibleIngredients
             .filter(p => getProductName(p).toLowerCase().includes(lower))
-            .slice(0, 10); // Limit results
+            .slice(0, 10);
     };
 
     const handleSelectIngredient = (index, item) => {
         setIngredientSelections(prev => ({ ...prev, [index]: item }));
 
-        // If it's a manual ingredient, auto-fill the units from the selected item
         if (typeof index === 'string' && index.startsWith('manual-') && item?.UNIDADES) {
             setParsedData(prev => ({
                 ...prev,
@@ -245,7 +220,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
         }
     };
 
-    // --- MANUAL INGREDIENT HELPERS ---
     const handleAddManualIngredient = () => {
         const newIndex = `manual-${Date.now()}`;
         setParsedData(prev => ({
@@ -278,7 +252,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
             ...prev,
             ingredients: prev.ingredients.filter(ing => ing.index !== index)
         }));
-        // Also cleanup selection and search term
         setIngredientSelections(prev => {
             const next = { ...prev }; delete next[index]; return next;
         });
@@ -297,7 +270,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
         }));
     };
 
-    // --- TARGET PRODUCT LOGIC ---
     useEffect(() => {
         if (targetSearchTerm) {
             const lower = targetSearchTerm.toLowerCase();
@@ -310,13 +282,10 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
         }
     }, [targetSearchTerm, possibleTargets]);
 
-    // --- COPY PROMPT HANDLER ---
     const handleCopyPrompt = async () => {
-        // For recipes, always use the Recipe prompt type
         await copyPromptToClipboard('RECETAS', setPromptCopied);
     };
 
-    // --- FINAL SAVE ---
     const handleSave = async () => {
         if (!targetProduct) {
             if (!confirm("No has seleccionado un producto del menú/producción para enlazar esta receta. se creará como receta 'huérfana' con el nombre del JSON. ¿Continuar?")) return;
@@ -324,22 +293,17 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
 
         setIsSaving(true);
         try {
-            // Build Payload
             const payload = {};
-            // Initialize empty slots
             for (let i = 1; i <= 30; i++) { payload[`item${i}_Id`] = null; payload[`item${i}_Cuantity_Units`] = null; }
             for (let i = 1; i <= 20; i++) { payload[`producto_interno${i}_Id`] = null; payload[`producto_interno${i}_Cuantity_Units`] = null; }
-            // Initialize process slots
             for (let i = 1; i <= 20; i++) { payload[`proces${i}`] = null; }
 
-            // Add parsed process steps to payload
             if (parsedData.processSteps) {
                 Object.keys(parsedData.processSteps).forEach(key => {
                     payload[key] = parsedData.processSteps[key];
                 });
             }
 
-            // Include Rendimiento if exists
             if (parsedData.rendimiento) {
                 payload.rendimiento = typeof parsedData.rendimiento === 'string'
                     ? parsedData.rendimiento
@@ -351,7 +315,7 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
 
             parsedData.ingredients.forEach(ing => {
                 const selected = ingredientSelections[ing.index];
-                if (!selected) return; // Skip unmatched? Or throw error? For now skip.
+                if (!selected) return;
 
                 const isProd = selected.__type === "producto_interno";
                 const prefix = isProd ? "producto_interno" : "item";
@@ -367,11 +331,9 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
 
             const legacyName = parsedData.name || "Receta Importada";
 
-            // Check if recipe exists for target
             let existingRecipeId = null;
-            let targetTable = "Recetas"; // Default
+            let targetTable = "Recetas";
 
-            // FORCED UPDATE MODE
             if (forcedRecipeId) {
                 await dispatch(updateItem(forcedRecipeId, {
                     ...payload,
@@ -380,7 +342,6 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                 }, forcedRecipeSource));
                 alert("Receta actual actualizada exitosamente.");
             } else {
-                // NORMAL MODE: Link to Product or Create New
                 if (targetProduct) {
                     if (targetProduct.Receta) {
                         existingRecipeId = targetProduct.Receta;
@@ -428,282 +389,55 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                 <Button variant="ghost" className="text-gray-500" onClick={onClose}>Ocultar ✕</Button>
             </div>
 
-            <div className="bg-gray-50 border-b p-2 flex flex-col gap-2">
-                <div className="flex justify-between items-center px-4">
-                    <span className="text-sm font-semibold text-gray-600">¿Necesitas crear productos nuevos?</span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowQuickActions(!showQuickActions)}
-                        className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
-                    >
-                        {showQuickActions ? "Ocultar Herramientas" : "Mostrar Herramientas de Creación"}
-                    </Button>
-                </div>
-
-                {showQuickActions && (
-                    <div className="p-4 bg-white border-t animate-in slide-in-from-top-2 duration-200">
-                        <div className="mb-4 flex items-center gap-4">
-                            <label className="text-sm font-bold text-gray-700">Tipo de Producto a Gestionar:</label>
-                            <select
-                                value={quickActionType}
-                                onChange={(e) => setQuickActionType(e.target.value)}
-                                className="border rounded p-1 text-sm bg-gray-50"
-                            >
-                                <option value={MENU}>Menú (Venta)</option>
-                                <option value={PRODUCCION}>Producción Interna</option>
-                                <option value="ITEMS">Insumos (Almacén)</option>
-                            </select>
-                        </div>
-                        <div className="border rounded-md p-2 bg-slate-50">
-                            <AccionesRapidas currentType={quickActionType} />
-                        </div>
-                    </div>
-                )}
-            </div>
+            <RecipeImportHeaderTools
+                showQuickActions={showQuickActions}
+                setShowQuickActions={setShowQuickActions}
+                quickActionType={quickActionType}
+                setQuickActionType={setQuickActionType}
+            />
 
             {/* CONTENT */}
             <div className="flex-1 overflow-hidden p-6 max-h-[800px] overflow-y-auto">
                 {step === 1 ? (
-                    <div className="flex flex-col gap-4">
-                        {/* AI GENERATION SECTION */}
-                        {/* <div className="bg-amber-50 p-4 rounded-md border border-amber-200 flex flex-col gap-3">
-                            <p className="text-sm font-semibold text-amber-800">Generar JSON con IA</p>
-                            <div className="flex gap-2 items-center">
-                                <Input
-                                    value={claudeQuery}
-                                    onChange={(e) => setClaudeQuery(e.target.value)}
-                                    placeholder="Ej: receta de sopa de tomate con albahaca"
-                                    className="flex-1 bg-white"
-                                />
-                                <RecipeButton
-                                    userQuery={claudeQuery}
-                                    sources={["menu", "inventario"]}
-                                    onResult={(data) => setJsonInput(JSON.stringify(data, null, 2))}
-                                />
-                            </div>
-                        </div> */}
-
-                        <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm text-blue-800 font-medium">
-                                    Pega el objeto JSON de tu receta aquí. El sistema intentará detectar automáticamente el nombre de la receta y relacionar los ingredientes con tu inventario.
-                                </p>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={handleCopyPrompt}
-                                    className="flex items-center gap-1 text-xs h-7 px-2 border-blue-300 hover:bg-blue-100 hover:border-blue-400 ml-3 flex-shrink-0"
-                                    title="Copia instrucciones para IA que generan JSON de recetas"
-                                >
-                                    {promptCopied ? (
-                                        <>
-                                            <Check className="h-3 w-3 text-green-600" />
-                                            <span className="text-green-600">Copiado</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="h-3 w-3" />
-                                            <span>Copiar Prompt</span>
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                        <Textarea
-                            className="flex-1 font-mono text-sm min-h-[300px]"
-                            placeholder='{ "name": "Sopa de Tomate", "ingredients": [...] }'
-                            value={jsonInput}
-                            onChange={e => setJsonInput(e.target.value)}
-                        />
-                        {jsonError && <p className="text-red-500 font-bold">{jsonError}</p>}
-                        <div className="flex justify-end">
-                            <Button onClick={handleParse} disabled={!jsonInput.trim()}>Analizar JSON &rarr;</Button>
-                        </div>
-                    </div>
+                    <Step1RecipeJsonInput
+                        jsonInput={jsonInput}
+                        setJsonInput={setJsonInput}
+                        jsonError={jsonError}
+                        handleParse={handleParse}
+                        handleCopyPrompt={handleCopyPrompt}
+                        promptCopied={promptCopied}
+                    />
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* LEFT: TARGET PRODUCT SELECTION */}
-                        <div className="lg:col-span-1 border-r pr-6 flex flex-col gap-4">
-                            <h3 className="font-bold text-lg border-b pb-2">1. Validar Producto Destino</h3>
+                        <Step2TargetProductSelection
+                            forcedRecipeId={forcedRecipeId}
+                            targetSearchTerm={targetSearchTerm}
+                            setTargetSearchTerm={setTargetSearchTerm}
+                            targetProduct={targetProduct}
+                            setTargetProduct={setTargetProduct}
+                            targetSearchMatches={targetSearchMatches}
+                            getProductName={getProductName}
+                            parsedData={parsedData}
+                            setParsedData={setParsedData}
+                        />
 
-                            {forcedRecipeId ? (
-                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-md">
-                                    <p className="text-orange-800 font-bold mb-2">Modo Edición Directa</p>
-                                    <p className="text-sm text-orange-700">Has abierto el importador desde una receta existente. Los cambios se guardarán directamente en la receta actual.</p>
-                                    <p className="mt-2 text-xs font-mono text-gray-500">ID: {forcedRecipeId}</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-xs text-gray-500">¿A qué producto del sistema pertenece esta receta?</p>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold">Buscar Producto:</label>
-                                        <Input
-                                            value={targetSearchTerm}
-                                            onChange={(e) => { setTargetSearchTerm(e.target.value); setTargetProduct(null); }}
-                                            placeholder="Ej: Hamburguesa Clásica"
-                                            className={targetProduct ? "border-green-500 bg-green-50" : ""}
-                                        />
-                                        {targetProduct && (
-                                            <div className="p-2 bg-green-100 text-green-800 rounded text-sm border border-green-300 flex justify-between items-center">
-                                                <span>✓ {getProductName(targetProduct)}</span>
-                                                <button onClick={() => { setTargetProduct(null); setTargetSearchTerm(""); }} className="text-xs text-red-500 hover:underline">Cambiar</button>
-                                            </div>
-                                        )}
+                        <Step2RecipeIngredientMapping
+                            parsedData={parsedData}
+                            ingredientSelections={ingredientSelections}
+                            ingredientSearchTerms={ingredientSearchTerms}
+                            getMatches={getMatches}
+                            getProductName={getProductName}
+                            handleSearchIngredient={handleSearchIngredient}
+                            handleSelectIngredient={handleSelectIngredient}
+                            handleManualChange={handleManualChange}
+                            handleDeleteManual={handleDeleteManual}
+                            handleAddManualIngredient={handleAddManualIngredient}
+                        />
 
-                                        {!targetProduct && targetSearchMatches.length > 0 && (
-                                            <ul className="border rounded-md shadow-sm max-h-40 overflow-y-auto bg-white divide-y">
-                                                {targetSearchMatches.map(match => (
-                                                    <li
-                                                        key={match._id}
-                                                        className="p-2 hover:bg-blue-50 cursor-pointer text-sm flex flex-col"
-                                                        onClick={() => { setTargetProduct(match); setTargetSearchTerm(getProductName(match)); }}
-                                                    >
-                                                        <span className="font-semibold">{getProductName(match)}</span>
-                                                        <span className="text-xs text-gray-400">{match._table}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-
-                                    {parsedData?.name !== undefined && (
-                                        <div className="mt-4 p-3 bg-gray-100 rounded border">
-                                            <span className="text-xs text-gray-500 uppercase font-bold">Nombre en JSON (Editable):</span>
-                                            <Input
-                                                value={parsedData.name}
-                                                onChange={(e) => setParsedData(prev => ({ ...prev, name: e.target.value }))}
-                                                className="mt-1 font-mono text-sm bg-white border-blue-200 focus:border-blue-500"
-                                            />
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-
-
-                        {/* MIDDLE: INGREDIENT MAPPING */}
-                        <div className="lg:col-span-1 flex flex-col border-r pr-6">
-                            <h3 className="font-bold text-lg border-b pb-2 mb-4">2. Validar Ingredientes ({parsedData?.ingredients?.length})</h3>
-                            <div className="space-y-3 pr-2 overflow-y-auto max-h-[500px]">
-                                {parsedData?.ingredients.map((ing) => {
-                                    const selected = ingredientSelections[ing.index];
-                                    const searchTerm = ingredientSearchTerms[ing.index] || "";
-                                    const matches = getMatches(searchTerm);
-                                    const isMapped = !!selected;
-                                    const isManual = ing.isManual;
-
-                                    return (
-                                        <div key={ing.index} className={`p-3 rounded-md border ${isMapped ? "bg-white border-green-200 shadow-sm" : "bg-red-50 border-red-200"}`}>
-                                            <div className="flex flex-col gap-2">
-                                                {/* SOURCE (Editable if Manual) */}
-                                                <div>
-                                                    {!isManual && (
-                                                        <p className="text-sm font-bold text-gray-800 break-words mb-1">{ing.legacyName}</p>
-                                                    )}
-                                                    <div className="flex gap-1 mb-1">
-                                                        <Input
-                                                            placeholder="Cant"
-                                                            className="h-7 text-xs w-16"
-                                                            type="number"
-                                                            value={ing.quantity}
-                                                            onChange={(e) => handleManualChange(ing.index, 'quantity', e.target.value)}
-                                                        />
-                                                        <Input
-                                                            placeholder="Und"
-                                                            className="h-7 text-xs flex-1"
-                                                            value={ing.units}
-                                                            onChange={(e) => handleManualChange(ing.index, 'units', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {/* ARROW */}
-                                                <div className="text-gray-400 text-center">↓</div>
-
-                                                {/* MAPPING */}
-                                                <div className="relative">
-                                                    {selected ? (
-                                                        <div className="flex items-center justify-between bg-green-50 p-2 rounded border border-green-300">
-                                                            <div>
-                                                                <p className="text-xs font-semibold text-green-900 break-words">{getProductName(selected)}</p>
-                                                                <p className="text-[10px] text-green-600">{selected.__type === "producto_interno" ? "Producción" : "Insumo"}</p>
-                                                            </div>
-                                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => handleSelectIngredient(ing.index, null)}>✕</Button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="relative">
-                                                            <Input
-                                                                placeholder={isManual ? "Buscar prod. sistema..." : "Buscar..."}
-                                                                value={searchTerm}
-                                                                onChange={(e) => handleSearchIngredient(ing.index, e.target.value)}
-                                                                className="h-8 text-xs"
-                                                            />
-                                                            {matches.length > 0 && (
-                                                                <ul className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-40 overflow-y-auto">
-                                                                    {matches.map(m => (
-                                                                        <li
-                                                                            key={m._id}
-                                                                            className="p-2 text-xs hover:bg-blue-50 cursor-pointer border-b last:border-0"
-                                                                            onClick={() => handleSelectIngredient(ing.index, m)}
-                                                                        >
-                                                                            {getProductName(m)}
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {isManual && (
-                                                    <div className="text-right mt-1">
-                                                        <button onClick={() => handleDeleteManual(ing.index)} className="text-xs text-red-500 hover:text-red-700 underline">Quitar</button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleAddManualIngredient}
-                                    className="w-full border-dashed border-2 border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-500 mt-2"
-                                >
-                                    + Agregar Ingrediente Manual
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* RIGHT: PROCESS PREVIEW */}
-                        <div className="lg:col-span-1 flex flex-col">
-                            <h3 className="font-bold text-lg border-b pb-2 mb-4">3. Validar Procesos ({Object.keys(parsedData?.processSteps || {}).length})</h3>
-                            <div className="space-y-3 pr-2 overflow-y-auto max-h-[500px]">
-                                {parsedData?.processSteps && Object.keys(parsedData.processSteps).length > 0 ? (
-                                    Object.entries(parsedData.processSteps).sort((a, b) => {
-                                        // Sort by proces1, proces2 etc
-                                        const numA = parseInt(a[0].replace('proces', ''));
-                                        const numB = parseInt(b[0].replace('proces', ''));
-                                        return numA - numB;
-                                    }).map(([key, value]) => (
-                                        <div key={key} className="p-3 rounded-md border bg-slate-50 border-slate-200">
-                                            <span className="text-xs font-bold text-slate-500 uppercase mb-1 block">{key}</span>
-                                            <Textarea
-                                                value={value}
-                                                onChange={(e) => handleProcessChange(key, e.target.value)}
-                                                className="text-sm text-slate-800 font-sans min-h-[80px] bg-white border-slate-300 focus:border-blue-500"
-                                            />
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-4 text-center text-gray-400 italic border rounded-md border-dashed">
-                                        No se detectaron pasos de proceso en el JSON.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <Step2RecipeProcessValidation
+                            parsedData={parsedData}
+                            handleProcessChange={handleProcessChange}
+                        />
                     </div>
                 )}
             </div>
