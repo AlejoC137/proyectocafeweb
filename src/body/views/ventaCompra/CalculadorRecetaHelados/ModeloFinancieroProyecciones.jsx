@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   Calculator
 } from "lucide-react";
+import ModeloSociedadHelados from "./ModeloSociedadHelados";
 
 export function ModeloFinancieroProyecciones({ 
   calculations, 
@@ -609,6 +610,11 @@ export function ModeloFinancieroProyecciones({
           ))}
         </div>
       </div>
+
+      {/* SECCIÓN 5, 6 & 7: PROPUESTA DE SOCIEDAD, GASTOS EN EL TIEMPO Y DASHBOARD GRÁFICO */}
+      <ModeloSociedadHelados 
+        utilidadNetaProyectada={proyeccionesIdeal[1]?.utilidadNetaLimpia || proyeccionesLanzamiento[2]?.utilidadNetaLimpia || 3500000} 
+      />
 
     </div>
   );

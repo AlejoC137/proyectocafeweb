@@ -2,6 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { updateItem, getAllFromTable } from '../../redux/actions';
 import { MENU } from '../../redux/actions-types';
+import { Eye, EyeOff } from 'lucide-react';
 
 import adicionesIcon from '../../assets/icons/ADICIONES.svg';
 import bebidasIcon from '../../assets/icons/BEBIDAS.svg';
@@ -109,7 +110,7 @@ const formatPrice = (precio) => {
     return precio;
 };
 
-function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons, colors, showItemDescriptions = true, blockId, groupDescriptions = {} }) {
+function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActiveSlot, showIcons, colors, showItemDescriptions = true, blockId, groupDescriptions = {}, saveGroupDescriptions }) {
     const dispatch = useDispatch();
     const [localIngredients, setLocalIngredients] = React.useState(Array.isArray(product.IngredientesBasicos) ? product.IngredientesBasicos : []);
 
@@ -118,6 +119,25 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
             setLocalIngredients(Array.isArray(product.IngredientesBasicos) ? product.IngredientesBasicos : []);
         }
     }, [product.IngredientesBasicos]);
+
+    const isDeactivated = groupDescriptions?.[`excluded_item_${product._id}`] === true ||
+        product.PrintConst === false || product.PrintConst === "No" || product.PrintConst === "NO" || product.PrintConst === "false";
+
+    const handleToggleItemDeactivation = (e) => {
+        e.stopPropagation();
+        const nextState = !isDeactivated;
+
+        if (saveGroupDescriptions) {
+            saveGroupDescriptions({
+                ...(groupDescriptions || {}),
+                [`excluded_item_${product._id}`]: nextState
+            });
+        }
+
+        dispatch(updateItem(product._id, { PrintConst: !nextState }, MENU)).then(() => {
+            dispatch(getAllFromTable(MENU));
+        });
+    };
 
     const syncWithRedux = (newList) => {
         setLocalIngredients(newList);
@@ -178,21 +198,36 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     const containerStyle = priceAlign === 'left' ? { gap: `${priceGap}px` } : {};
 
     return (
-        <div className="pb-0.5 group relative flex flex-col" style={{ borderBottom: borderBottomStyle }}>
+        <div className={`pb-0.5 group relative flex flex-col transition-opacity ${isDeactivated && editMode ? 'opacity-40 bg-red-50/40 rounded-sm px-0.5' : ''}`} style={{ borderBottom: borderBottomStyle }}>
             <div className={containerClass} style={containerStyle}>
                 <div className={`flex items-start gap-1 min-w-0 ${priceAlign === 'right' ? 'flex-grow' : ''}`}>
                     {editMode && (
-                        <div className="flex items-center gap-1 print:hidden pt-0.5">
+                        <div className="flex items-center gap-1 print:hidden pt-0.5 shrink-0">
+                            <button
+                                type="button"
+                                onClick={handleToggleItemDeactivation}
+                                className={`h-5 px-1.5 rounded border text-[9px] font-black uppercase flex items-center gap-0.5 transition-colors cursor-pointer shadow-sm ${
+                                    isDeactivated 
+                                        ? 'bg-red-100 border-red-500 text-red-600 hover:bg-red-200' 
+                                        : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200'
+                                }`}
+                                title={isDeactivated ? (isEnglish ? "Item Disabled (Click to Enable)" : "Ítem Desactivado (Clic para Activar)") : (isEnglish ? "Item Enabled (Click to Disable)" : "Ítem Activado (Clic para Desactivar)")}
+                            >
+                                {isDeactivated ? <EyeOff size={10} /> : <Eye size={10} />}
+                                <span className="text-[8px]">{isDeactivated ? "OFF" : "ON"}</span>
+                            </button>
+
                             <input
                                 type="number"
                                 defaultValue={product.Order || ''}
                                 onBlur={(e) => handleOrderChange(e.target.value)}
                                 className="w-7 h-5 text-[9px] border border-black px-0.5 font-bold focus:outline-none focus:ring-1 focus:ring-black bg-yellow-100"
+                                title={isEnglish ? "Position order" : "Orden de posición"}
                             />
                         </div>
                     )}
                     <div className="flex flex-col flex-1 min-w-0 mr-1">
-                        <div className="font-bold leading-tight break-words whitespace-normal uppercase" style={{ color: colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}` }}>
+                        <div className={`font-bold leading-tight break-words whitespace-normal uppercase ${isDeactivated && editMode ? 'line-through text-red-600' : ''}`} style={{ color: isDeactivated && editMode ? '#dc2626' : colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}` }}>
                             {isEnglish ? product.NombreEN : product.NombreES}
                         </div>
                         {editMode && (
@@ -295,6 +330,7 @@ export function CardGridPrintMatrix({
     isEnglish,
     GRUPO,
     SUB_GRUPO,
+    excludeSubgrupos,
     TITTLE,
     columns = 2,
     editMode = false,
@@ -311,8 +347,28 @@ export function CardGridPrintMatrix({
     const isExcluded = excludeKey && groupDescriptions?.[excludeKey] === true;
 
     const filteredProducts = products.filter((product) => {
-        const groupMatch = Array.isArray(GRUPO) ? GRUPO.includes(product.GRUPO) : product.GRUPO === GRUPO;
-        return groupMatch && product.Estado === "Activo" && (!SUB_GRUPO || product.SUB_GRUPO === SUB_GRUPO);
+        if (product.Estado === "Inactivo" || product.Estado === "INACTIVO") return false;
+        
+        let groupMatch = false;
+        if (Array.isArray(GRUPO)) {
+          groupMatch = GRUPO.some(g => (product.GRUPO || "").toUpperCase().startsWith(g.toUpperCase()));
+        } else if (GRUPO) {
+          groupMatch = (product.GRUPO || "").toUpperCase().startsWith(GRUPO.toUpperCase()) || 
+                       (GRUPO.toUpperCase().startsWith((product.GRUPO || "").toUpperCase()) && product.GRUPO);
+        }
+
+        if (!groupMatch) return false;
+
+        const prodSub = String(product.SUB_GRUPO || "").toUpperCase();
+
+        if (Array.isArray(excludeSubgrupos) && excludeSubgrupos.length > 0) {
+          const isExcludedSub = excludeSubgrupos.some(ex => ex && prodSub.includes(String(ex).toUpperCase()));
+          if (isExcludedSub) return false;
+        }
+
+        const subGrupoMatch = !SUB_GRUPO || prodSub.includes(String(SUB_GRUPO).toUpperCase());
+        
+        return subGrupoMatch;
     });
 
     const getOrder = (val) => {
@@ -320,7 +376,20 @@ export function CardGridPrintMatrix({
         return (!isNaN(num) && val !== '' && val !== null && val !== undefined) ? num : 9999;
     };
 
-    const activeProducts = filteredProducts.filter(p => p.PrintConst === true).sort((a, b) => getOrder(a.Order) - getOrder(b.Order));
+    const isItemDeactivated = (p) => {
+        if (groupDescriptions?.[`excluded_item_${p._id}`] === true) return true;
+        if (p.PrintConst === false || p.PrintConst === "No" || p.PrintConst === "NO" || p.PrintConst === "false") return true;
+        return false;
+    };
+
+    const isPrintable = (p) => {
+        if (editMode) return true;
+        return !isItemDeactivated(p);
+    };
+
+    const activeProducts = filteredProducts
+        .filter(isPrintable)
+        .sort((a, b) => getOrder(a.Order) - getOrder(b.Order));
 
     if (activeProducts.length === 0) return null;
     if (isExcluded && !editMode) return null;
@@ -388,6 +457,7 @@ export function CardGridPrintMatrix({
                             showItemDescriptions={showItemDescriptions}
                             blockId={blockId}
                             groupDescriptions={groupDescriptions}
+                            saveGroupDescriptions={saveGroupDescriptions}
                         />
                     ))}
                 </div>

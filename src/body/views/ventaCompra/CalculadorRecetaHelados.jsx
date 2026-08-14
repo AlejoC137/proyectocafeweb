@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { 
   Calculator, 
   Plus, 
@@ -16,7 +17,9 @@ import {
   ArrowRight,
   CheckCircle2,
   TrendingUp,
-  BookOpen
+  BookOpen,
+  Printer,
+  ExternalLink
 } from "lucide-react";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { 
@@ -30,6 +33,7 @@ import {
   getAllFromTable, 
   createRecipeForProduct 
 } from "../../../redux/actions";
+import supabase from "../../../config/supabaseClient";
 
 // Sub-components & Data
 import { 
@@ -43,9 +47,11 @@ import FormuladorDashboard from "./CalculadorRecetaHelados/FormuladorDashboard";
 import NewIngredientModal from "./CalculadorRecetaHelados/NewIngredientModal";
 import ImportadorHeladoModal from "./CalculadorRecetaHelados/ImportadorHeladoModal";
 import ModeloFinancieroProyecciones from "./CalculadorRecetaHelados/ModeloFinancieroProyecciones";
+import MenuPrint from "../../components/Menu/MenuPrint";
 
 export default function CalculadorRecetaHelados() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
   // Redux state selectors for Supabase tables
   const allItems = useSelector((state) => state.allItems || []);
@@ -82,6 +88,30 @@ export default function CalculadorRecetaHelados() {
   // Notification Banner State
   const [notification, setNotification] = useState(null);
 
+  // MenuPrint Link State (Persisted in localStorage)
+  const [selectedMenuPrintId, setSelectedMenuPrintId] = useState(() => {
+    try {
+      const saved = localStorage.getItem("dubovik_selected_menu_print_id");
+      return saved ? Number(saved) : 3;
+    } catch (e) {
+      return 3;
+    }
+  });
+  const [filterOnlyHeladosInMenu, setFilterOnlyHeladosInMenu] = useState(true);
+  const [availablePrintMenus, setAvailablePrintMenus] = useState([
+    { id: 3, name: "Menú Helados Dovici (ID: 3)" },
+    { id: 1, name: "Menú Vertical Principal (ID: 1)" },
+    { id: 2, name: "Menú Horizontal Principal (ID: 2)" }
+  ]);
+
+  const handleSelectMenuPrint = (idStr) => {
+    const newId = Number(idStr);
+    setSelectedMenuPrintId(newId);
+    try {
+      localStorage.setItem("dubovik_selected_menu_print_id", newId);
+    } catch (e) {}
+  };
+
   // Combined Presets (Base Dubovik + Custom User Imported)
   const allPresets = useMemo(() => {
     return { ...PRESET_RECIPES, ...customRecipes };
@@ -108,7 +138,40 @@ export default function CalculadorRecetaHelados() {
         setLoadingData(false);
       }
     };
+    
+    const loadPrintMenusList = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("menu_print_config")
+          .select("*")
+          .order("id", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const list = data.map((m) => {
+            let name = m.group_descriptions?.__layout?.name;
+            if (!name) {
+              if (m.id === 1) name = "Menú Vertical Principal";
+              else if (m.id === 2) name = "Menú Horizontal Principal";
+              else if (m.id === 3) name = "Menú Helados Dovici";
+              else name = `Menú Config #${m.id}`;
+            }
+            return { id: m.id, name: `${name} (ID: ${m.id})` };
+          });
+
+          if (!list.some(m => m.id === 1)) list.push({ id: 1, name: "Menú Vertical Principal (ID: 1)" });
+          if (!list.some(m => m.id === 2)) list.push({ id: 2, name: "Menú Horizontal Principal (ID: 2)" });
+          if (!list.some(m => m.id === 3)) list.push({ id: 3, name: "Menú Helados Dovici (ID: 3)" });
+          list.sort((a, b) => a.id - b.id);
+
+          setAvailablePrintMenus(list);
+        }
+      } catch (err) {
+        console.error("Error al cargar lista de menu_print_config:", err);
+      }
+    };
+
     loadSupabaseTables();
+    loadPrintMenusList();
   }, [dispatch]);
 
   // Combined ingredients list (Base Dubovik + ItemsAlmacen from Supabase)
@@ -573,8 +636,8 @@ export default function CalculadorRecetaHelados() {
         </div>
       )}
 
-      {/* NAVIGATION TABS (ADAPTATIVAS EN ANCHO GRID 4 COLUMNAS - 1 SOLA LÍNEA) */}
-      <div className="grid grid-cols-4 border-b-2 border-black bg-cream-bg w-full">
+      {/* NAVIGATION TABS (ADAPTATIVAS EN ANCHO GRID 5 COLUMNAS - 1 SOLA LÍNEA) */}
+      <div className="grid grid-cols-2 md:grid-cols-5 border-b-2 border-black bg-cream-bg w-full">
         <button
           onClick={() => setActiveTab("glosario")}
           className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
@@ -613,7 +676,7 @@ export default function CalculadorRecetaHelados() {
         </button>
         <button
           onClick={() => setActiveTab("proyecciones")}
-          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "proyecciones"
               ? "bg-terracotta-accent text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
@@ -621,44 +684,58 @@ export default function CalculadorRecetaHelados() {
           title="3. Proyecciones & Modelo Financiero"
         >
           <TrendingUp className="h-4 w-4 shrink-0 text-yellow-300" />
-          <span className="truncate">3. Proyecciones & Modelo</span>
+          <span className="truncate">3. Proyecciones</span>
         </button>
-      </div>
-
-      {/* RECIPE CONTROL HEADER */}
-      <div className="bg-white border-2 border-black p-4 shadow-solid flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="flex-1 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-          <div className="flex-1">
-            <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de la Receta:</label>
-            <input
-              type="text"
-              value={nombreReceta}
-              onChange={(e) => setNombreReceta(e.target.value)}
-              className="w-full px-3 py-1.5 border-2 border-black focus:outline-none focus:ring-2 focus:ring-sage-green text-sm font-semibold"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Tipo de Formulación:</label>
-            <select
-              value={tipoHelado}
-              onChange={(e) => setTipoHelado(e.target.value)}
-              className="px-3 py-1.5 border-2 border-black bg-yellow-50 font-bold text-sm focus:outline-none cursor-pointer"
-            >
-              <option value="SOFT">SOFT (Helado de Máquina)</option>
-              <option value="GELATO">GELATO (Artesanal Tradicional)</option>
-              <option value="SORBETE">SORBETE (Agua / Fruta)</option>
-            </select>
-          </div>
-        </div>
-
         <button
-          onClick={() => setNewIngModal(true)}
-          className="px-3 py-2 bg-light-leaf text-sage-green border-2 border-black font-bold text-xs shadow-solid hover:bg-sage-green hover:text-white transition-all flex items-center justify-center gap-1 shrink-0"
+          onClick={() => setActiveTab("menu")}
+          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+            activeTab === "menu"
+              ? "bg-sky-500 text-white shadow-solid"
+              : "bg-white text-gray-700 hover:bg-gray-100"
+          }`}
+          title="4. Menú Helados (Menu Print)"
         >
-          <Plus className="h-4 w-4" /> Agregar Ingrediente Personalizado
+          <Printer className="h-4 w-4 shrink-0 text-white" />
+          <span className="truncate">4. Menú Helados</span>
         </button>
       </div>
+
+      {/* RECIPE CONTROL HEADER (SOLO EN FORMULADOR Y COSTEO) */}
+      {(activeTab === "formulador" || activeTab === "costeo") && (
+        <div className="bg-white border-2 border-black p-4 shadow-solid flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex-1 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de la Receta:</label>
+              <input
+                type="text"
+                value={nombreReceta}
+                onChange={(e) => setNombreReceta(e.target.value)}
+                className="w-full px-3 py-1.5 border-2 border-black focus:outline-none focus:ring-2 focus:ring-sage-green text-sm font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Tipo de Formulación:</label>
+              <select
+                value={tipoHelado}
+                onChange={(e) => setTipoHelado(e.target.value)}
+                className="px-3 py-1.5 border-2 border-black bg-yellow-50 font-bold text-sm focus:outline-none cursor-pointer"
+              >
+                <option value="SOFT">SOFT (Helado de Máquina)</option>
+                <option value="GELATO">GELATO (Artesanal Tradicional)</option>
+                <option value="SORBETE">SORBETE (Agua / Fruta)</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setNewIngModal(true)}
+            className="px-3 py-2 bg-light-leaf text-sage-green border-2 border-black font-bold text-xs shadow-solid hover:bg-sage-green hover:text-white transition-all flex items-center justify-center gap-1 shrink-0"
+          >
+            <Plus className="h-4 w-4" /> Agregar Ingrediente Personalizado
+          </button>
+        </div>
+      )}
 
       {/* MAIN TAB CONTENT */}
       {activeTab === "formulador" && (
@@ -959,6 +1036,73 @@ export default function CalculadorRecetaHelados() {
           allItems={allItems}
           loadPreset={loadPreset}
         />
+      )}
+
+      {/* TAB 4: MENÚ PRINT HELADOS DOVICI (VISTA PREVIA & SELECCIÓN DE MENÚ A VINCULAR) */}
+      {activeTab === "menu" && (
+        <div className="bg-white border-2 border-black shadow-solid p-4 rounded-none space-y-4">
+          <div className="bg-sky-950 text-white p-4 border-2 border-black font-black text-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-solid">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-sky-500 text-white border border-black shadow-sm">
+                <Printer className="h-6 w-6" />
+              </div>
+              <div>
+                <span className="block text-base uppercase tracking-wide font-extrabold text-white">
+                  Vista Previa — Menú Print Vinculado
+                </span>
+                <span className="text-xs font-normal text-sky-200 block mt-0.5">
+                  Selecciona la plantilla/instancia de MenuPrint que deseas vincular y previsualizar.
+                </span>
+              </div>
+            </div>
+
+            {/* SELECTOR DE MENÚ A VINCULAR & ACCIONES */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 bg-sky-900/90 p-1.5 px-3 border border-sky-600">
+                <label className="text-xs font-bold text-sky-100 shrink-0">Menú Vinculado:</label>
+                <select
+                  value={selectedMenuPrintId}
+                  onChange={(e) => handleSelectMenuPrint(e.target.value)}
+                  className="bg-white text-black text-xs font-bold p-1 px-2 border border-black cursor-pointer focus:outline-none max-w-[220px] truncate"
+                >
+                  {availablePrintMenus.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <label className="flex items-center gap-1.5 text-xs text-sky-100 font-semibold cursor-pointer bg-sky-900/90 p-1.5 px-2.5 border border-sky-600">
+                <input
+                  type="checkbox"
+                  checked={filterOnlyHeladosInMenu}
+                  onChange={(e) => setFilterOnlyHeladosInMenu(e.target.checked)}
+                  className="accent-yellow-400 h-3.5 w-3.5 cursor-pointer"
+                />
+                Solo Helados
+              </label>
+
+              <button
+                onClick={() => navigate(`/MenuPrint/${selectedMenuPrintId}`)}
+                className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-extrabold text-xs border-2 border-black shadow-solid flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer"
+              >
+                <ExternalLink className="h-4 w-4 stroke-[2.5]" />
+                Ir a Editar Menú #{selectedMenuPrintId}
+              </button>
+            </div>
+          </div>
+
+          <div className="border-2 border-black bg-gray-100 p-2 overflow-x-auto min-h-[400px] flex justify-center items-start">
+            <MenuPrint 
+              key={selectedMenuPrintId}
+              menuId={selectedMenuPrintId} 
+              filterOnlyHelados={filterOnlyHeladosInMenu} 
+              previewMode={true} 
+              hideControls={true} 
+            />
+          </div>
+        </div>
       )}
 
       {/* TAB 0: GLOSARIO TECNICO MATERIALES BASE DUBOVIK */}

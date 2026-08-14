@@ -27,64 +27,74 @@ export const headerStyles = {
     backgroundSize: '14px 14px',
     backgroundColor: '#f0f0f0',
   },
+  HELADOS: {
+    backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 2px, transparent 2px)',
+    backgroundSize: '10px 10px',
+    backgroundColor: '#fffbeb',
+  },
 };
 
-export const MenuPrintStyles = () => (
-  <style>
-    {`
-      @media print {
-        @page {
-          size: 11in 17in !important;
-          margin: 0 !important;
-        }
+export const MenuPrintStyles = ({ pageWidth = 65, pageHeight = 65, pageSizeUnit = 'cm' }) => {
+  const widthStr = `${pageWidth}${pageSizeUnit}`;
+  const heightStr = `${pageHeight}${pageSizeUnit}`;
+  const sizeStr = `${widthStr} ${heightStr}`;
 
-        /* 1. Oculta la página base al imprimir */
-        body, html, #root {
-          visibility: hidden !important;
-          background: transparent !important;
-        }
+  return (
+    <style>
+      {`
+        @media print {
+          @page {
+            size: ${sizeStr} !important;
+            margin: 0 !important;
+          }
 
-        /* 2. Hace visible ÚNICAMENTE el contenedor con el ID 'print-area' y todos sus hijos */
-        #print-area, #print-area * {
-          visibility: visible !important;
-        }
+          /* 1. Oculta la página base al imprimir */
+          body, html, #root {
+            visibility: hidden !important;
+            background: transparent !important;
+          }
 
-        /* 3. Mueve el área de impresión a la esquina superior izquierda exacta de la hoja */
-        #print-area {
-          position: relative !important;
-          width: 11in !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          background: transparent !important;
-          z-index: 9999 !important;
-          transform: none !important;
-        }
+          /* 2. Hace visible ÚNICAMENTE el contenedor con el ID 'print-area' y todos sus hijos */
+          #print-area, #print-area * {
+            visibility: visible !important;
+          }
 
-        /* 4. Permitir que el documento crezca con las páginas */
-        html, body {
-          width: 11in !important;
-          height: auto !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow: visible !important;
-          background: transparent !important;
-        }
+          /* 3. Mueve el área de impresión a la esquina superior izquierda exacta de la hoja */
+          #print-area {
+            position: relative !important;
+            width: ${widthStr} !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            z-index: 9999 !important;
+            transform: none !important;
+          }
 
-        .page-container {
-          width: 11in !important;
-          height: 17in !important;
-          overflow: hidden !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          position: relative !important;
-          display: grid !important;
-          grid-template-columns: 100% !important;
-          grid-template-rows: 100% !important;
-          box-sizing: border-box !important;
-          page-break-after: always !important;
-          break-after: page !important;
-          background-color: transparent !important;
-        }
+          /* 4. Permitir que el documento crezca con las páginas */
+          html, body {
+            width: ${widthStr} !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
+          }
+
+          .page-container {
+            width: ${widthStr} !important;
+            height: ${heightStr} !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: relative !important;
+            display: grid !important;
+            grid-template-columns: 100% !important;
+            grid-template-rows: 100% !important;
+            box-sizing: border-box !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            background-color: transparent !important;
+          }
 
         /* Forzar renderizado de colores en todo */
         * {
@@ -174,3 +184,4 @@ export const MenuPrintStyles = () => (
     `}
   </style>
 );
+};

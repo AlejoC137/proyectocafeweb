@@ -19,15 +19,22 @@ const MenuPage = ({
   fileInputRef,
   uploadingImage,
   Button,
-  commonProps
+  commonProps,
+  pageWidth = 65,
+  pageHeight = 65,
+  pageSizeUnit = 'cm'
 }) => {
   const hasBg = showWebsiteBg && backgroundUrl;
+  const widthStyle = `${pageWidth}${pageSizeUnit}`;
+  const heightStyle = `${pageHeight}${pageSizeUnit}`;
 
   return (
     <div
       id={`page-${pageIndex}`}
-      className="bg-[#fcfbf9] text-black shadow-2xl w-[11in] h-[17in] border flex flex-col box-border print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container shrink-0"
+      className="bg-[#fcfbf9] text-black shadow-2xl border flex flex-col box-border print:shadow-none print:border-none print:m-0 print:p-0 overflow-hidden page-container shrink-0"
       style={{ 
+        width: widthStyle,
+        height: heightStyle,
         backgroundColor: '#fcfbf9',
         display: 'grid',
         gridTemplateColumns: '100%',

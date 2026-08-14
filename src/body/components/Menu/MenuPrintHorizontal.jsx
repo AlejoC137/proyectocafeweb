@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFromTable } from "../../../redux/actions";
-import { MENU, ITEMS, AGENDA } from "../../../redux/actions-types";
+import { MENU, ITEMS, AGENDA, CATEGORIES_t } from "../../../redux/actions-types";
 import { Button } from "@/components/ui/button";
 import supabase from "../../../config/supabaseClient";
 
@@ -12,6 +12,27 @@ import HorizontalControls from "./MenuPrintHorizontal/HorizontalControls";
 import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
 import PrintCanvas from "./MenuPrintHorizontal/PrintCanvas";
+
+export const normalizePageSize = (val) => {
+  if (val && typeof val === 'object' && !Array.isArray(val)) {
+    const w = Number(val.width);
+    const h = Number(val.height);
+    const u = String(val.unit || 'mm').toLowerCase();
+    return {
+      width: !isNaN(w) && w > 0 ? w : 297,
+      height: !isNaN(h) && h > 0 ? h : 210,
+      unit: ['mm', 'cm', 'in', 'px'].includes(u) ? u : 'mm'
+    };
+  }
+  if (typeof val === 'string') {
+    const upper = val.toUpperCase();
+    if (upper.includes('LETTER') || upper.includes('CARTA')) return { width: 279.4, height: 215.9, unit: 'mm' };
+    if (upper.includes('TABLOID') || upper.includes('TABLOIDE')) return { width: 431.8, height: 279.4, unit: 'mm' };
+    if (upper.includes('A3')) return { width: 420, height: 297, unit: 'mm' };
+    if (upper.includes('65')) return { width: 65, height: 65, unit: 'cm' };
+  }
+  return { width: 297, height: 210, unit: 'mm' };
+};
 
 function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", containerPaddingClass = "pt-[180px]" }) {
   const dispatch = useDispatch();
@@ -27,14 +48,14 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
   const [printImages, setPrintImages] = useState([]);
   const [groupDescriptions, setGroupDescriptions] = useState({});
-  const [pageSize, setPageSize] = useState({ width: 210, height: 297, unit: 'mm' });
+  const [pageSize, setPageSize] = useState({ width: 297, height: 210, unit: 'mm' });
   const [qrScale, setQrScale] = useState(1);
   const [uploadTargetPage, setUploadTargetPage] = useState(null);
   const [selectedColumn, setSelectedColumn] = useState(null); // { pageIndex, colIdx }
   const [showGallery, setShowGallery] = useState(false);
   const [galleryContext, setGalleryContext] = useState(null); // 'ADD_BLOCK' | 'REPLACE_IMAGE' | 'SET_BACKGROUND'
   const [galleryTarget, setGalleryTarget] = useState(null);
-  const [colors, setColors] = useState({
+  const DEFAULT_COLORS = {
     mainTitle: "#000000",
     mainBorder: "#000000",
     categoryTitle: "#000000",
@@ -59,14 +80,25 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     sizePrice: 11,
     sizeComment: 9,
     fontSizeUnit: 'px',
-  });
+  };
 
-  const [pages, setPages] = useState([
-    { id: 'PAGE_1', columns: [{ id: 'COL_1', blocks: ["CAFE", "QR"], flex: 1 }] },
-    { id: 'PAGE_2', columns: [{ id: 'COL_1', blocks: ["BEBIDAS"], flex: 1 }] },
-    { id: 'PAGE_3', columns: [{ id: 'COL_1', blocks: ["ALIMENTOS"], flex: 1 }] },
-    { id: 'PAGE_4', columns: [{ id: 'COL_1', blocks: ["INFO"], flex: 1 }] }
-  ]);
+  const [colors, setColors] = useState(DEFAULT_COLORS);
+
+  const getDefaultPages = (id) => {
+    if (Number(id) === 3) {
+      return [
+        { id: 'PAGE_1', columns: [{ id: 'COL_1', blocks: ["HELADOS", "EXTRAS", "QR"], flex: 1 }] }
+      ];
+    }
+    return [
+      { id: 'PAGE_1', columns: [{ id: 'COL_1', blocks: ["CAFE", "QR"], flex: 1 }] },
+      { id: 'PAGE_2', columns: [{ id: 'COL_1', blocks: ["BEBIDAS"], flex: 1 }] },
+      { id: 'PAGE_3', columns: [{ id: 'COL_1', blocks: ["ALIMENTOS"], flex: 1 }] },
+      { id: 'PAGE_4', columns: [{ id: 'COL_1', blocks: ["INFO"], flex: 1 }] }
+    ];
+  };
+
+  const [pages, setPages] = useState(getDefaultPages(menuId));
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
@@ -85,25 +117,54 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         setGroupDescriptions(config.group_descriptions || {});
 
         const layout = config.group_descriptions?.__layout || {};
-        if (layout.pageSize) setPageSize(layout.pageSize);
-        if (layout.pages && Array.isArray(layout.pages)) {
-          let loadedPages = layout.pages;
-          while (loadedPages.length < 4) {
-            loadedPages.push({ id: 'PAGE_' + (loadedPages.length + 1), columns: [{ id: 'COL_1', blocks: [], flex: 1 }] });
+        setPageSize(layout.pageSize ? normalizePageSize(layout.pageSize) : { width: 297, height: 210, unit: 'mm' });
+
+        let pagesToUse = layout.pages;
+        if (pagesToUse && Array.isArray(pagesToUse) && pagesToUse.length > 0) {
+          if (Number(menuId) === 3 || layout.name?.toLowerCase().includes("helado") || layout.name?.toLowerCase().includes("dovici")) {
+            const hasHeladoBlock = pagesToUse.some(p => (p.columns || []).some(c => (c.blocks || []).includes("HELADOS")));
+            if (!hasHeladoBlock) {
+              pagesToUse = pagesToUse.map((p, idx) => {
+                if (idx === 0) {
+                  const firstCol = p.columns?.[0] || { id: 'COL_1', flex: 1, blocks: [] };
+                  const newBlocks = Array.from(new Set(["HELADOS", "EXTRAS", ...(firstCol.blocks || [])]));
+                  return {
+                    ...p,
+                    columns: [
+                      { ...firstCol, blocks: newBlocks },
+                      ...(p.columns || []).slice(1)
+                    ]
+                  };
+                }
+                return p;
+              });
+            }
           }
-          setPages(loadedPages);
+          setPages(pagesToUse);
+        } else {
+          setPages(getDefaultPages(menuId));
         }
 
-        if (layout.qrScale) setQrScale(layout.qrScale);
-        if (layout.showIcons !== undefined) setShowIcons(layout.showIcons);
-        if (layout.showItemDescriptions !== undefined) setShowItemDescriptions(layout.showItemDescriptions);
-        if (layout.leng !== undefined) setLeng(layout.leng);
-        if (layout.colors) setColors(prev => ({ ...prev, ...layout.colors }));
+        setQrScale(layout.qrScale ?? 1);
+        setShowIcons(layout.showIcons ?? config.show_icons ?? true);
+        setShowItemDescriptions(layout.showItemDescriptions ?? true);
+        setLeng(layout.leng ?? true);
+        setColors(layout.colors ? { ...DEFAULT_COLORS, ...layout.colors } : DEFAULT_COLORS);
       } else {
+        const initialPages = getDefaultPages(menuId);
+        setPrintImages([]);
+        setGroupDescriptions({});
+        setPageSize({ width: 297, height: 210, unit: 'mm' });
+        setQrScale(1);
+        setShowIcons(true);
+        setShowItemDescriptions(true);
+        setLeng(true);
+        setColors(DEFAULT_COLORS);
+        setPages(initialPages);
         await supabase.from('menu_print_config').insert([{
           id: menuId,
           images: [],
-          group_descriptions: { __layout: { pages, pageSize, colors, showIcons, showItemDescriptions } },
+          group_descriptions: { __layout: { pages: initialPages, pageSize: normalizePageSize({ width: 297, height: 210, unit: 'mm' }), colors: DEFAULT_COLORS, showIcons: true, showItemDescriptions: true } },
           show_icons: true
         }]);
       }
@@ -112,13 +173,18 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     }
   };
 
-  const saveConfig = async () => {
+  const saveConfig = async (overridePages = null, overrideColors = null, overridePageSize = null) => {
     setIsSaving(true);
     try {
+      // Evitar que objetos de evento de React (como MouseEvent de onClick) se tomen como overridePages
+      const pagesToSave = Array.isArray(overridePages) ? overridePages : pages;
+      const colorsToSave = (overrideColors && typeof overrideColors === 'object' && !overrideColors.nativeEvent && !overrideColors.target) ? overrideColors : colors;
+      const pageSizeToSave = normalizePageSize(overridePageSize || pageSize);
+
       const layoutUpdate = {
-        pages,
-        pageSize,
-        colors,
+        pages: pagesToSave,
+        pageSize: pageSizeToSave,
+        colors: colorsToSave,
         qrScale,
         showIcons,
         showItemDescriptions,
@@ -130,11 +196,14 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         __layout: { ...(groupDescriptions.__layout || {}), ...layoutUpdate }
       };
 
-      await supabase.from('menu_print_config').update({
+      const { error } = await supabase.from('menu_print_config').upsert([{
+        id: Number(menuId),
         group_descriptions: updatedDescriptions,
         images: printImages,
         show_icons: showIcons
-      }).eq('id', menuId);
+      }]);
+
+      if (error) throw error;
     } catch (e) {
       console.error("Error saving config:", e);
     } finally {
@@ -150,9 +219,14 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         ...updated,
         __layout: { ...(updated.__layout || {}), pages, pageSize, colors, qrScale, showIcons, showItemDescriptions, leng }
       };
-      await supabase.from('menu_print_config').update({
-        group_descriptions: updatedLayout
-      }).eq('id', menuId);
+      const { error } = await supabase.from('menu_print_config').upsert([{
+        id: Number(menuId),
+        group_descriptions: updatedLayout,
+        images: printImages,
+        show_icons: showIcons
+      }]);
+
+      if (error) throw error;
     } catch (e) {
       console.error("Error saving descriptions:", e);
     } finally {
@@ -162,6 +236,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
@@ -169,14 +244,14 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
           dispatch(getAllFromTable(AGENDA))
         ]);
         await fetchConfig();
-        setLoading(false);
       } catch (error) {
         console.error("Error loading data:", error);
+      } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [dispatch]);
+  }, [dispatch, menuId]);
 
   const handlePrint = () => {
     window.print();
@@ -185,15 +260,18 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
   const addPage = () => {
     const newPages = [...pages, { id: 'PAGE_' + (pages.length + 1), columns: [{ id: 'COL_1', blocks: [], flex: 1 }] }];
     setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const removePage = (idx) => {
-    if (pages.length <= 1) return;
+    if (pages.length <= 1) {
+      alert("El menú debe tener al menos 1 página.");
+      return;
+    }
     if (!window.confirm("¿Eliminar esta página completa?")) return;
     const newPages = pages.filter((_, i) => i !== idx);
     setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const addColumn = (pageIndex) => {
@@ -201,7 +279,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     if (!newPages[pageIndex].columns) newPages[pageIndex].columns = [];
     newPages[pageIndex].columns.push({ id: 'COL_' + Date.now(), blocks: [], flex: 1 });
     setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const updateColumnFlex = (pageIndex, colIdx, flexValue, shouldSave = false) => {
@@ -210,7 +288,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
       newPages[pageIndex].columns[colIdx].flex = flexValue;
       setPages(newPages);
       if (shouldSave) {
-        setTimeout(() => saveConfig(), 100);
+        saveConfig(newPages);
       }
     }
   };
@@ -220,7 +298,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     const newPages = JSON.parse(JSON.stringify(pages));
     newPages[pageIndex].columns.splice(colIdx, 1);
     setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const addBlock = (pageIndex, colIdx) => {
@@ -252,7 +330,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     newPages[pageIndex].columns[colIdx].blocks.push(newBlockId);
     setPages(newPages);
     setShowBlockSelector(null);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const openGallery = (context, target) => {
@@ -260,7 +338,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
       const newPages = JSON.parse(JSON.stringify(pages));
       newPages[target.pageIndex].bgImage = null;
       setPages(newPages);
-      setTimeout(() => saveConfig(), 100);
+      saveConfig(newPages);
       return;
     }
     setGalleryContext(context);
@@ -291,7 +369,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
     setPages(newPages);
     setShowGallery(false);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const moveBlock = (blockId, direction, pageIndex, colIdx) => {
@@ -306,7 +384,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     }
 
     setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const updatePageTitle = (pageIndex, newTitle) => {
@@ -314,7 +392,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     if (newPages[pageIndex]) {
       newPages[pageIndex].title = newTitle;
       setPages(newPages);
-      setTimeout(() => saveConfig(), 100);
+      saveConfig(newPages);
     }
   };
 
@@ -328,7 +406,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
       });
     });
     setPages(newPages);
-    setTimeout(() => saveConfig(), 100);
+    saveConfig(newPages);
   };
 
   const handleImageUpload = async (e) => {
@@ -469,10 +547,13 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         ...groupDescriptions,
         __layout: { ...(groupDescriptions.__layout || {}), pages, pageSize, colors, qrScale, showIcons, showItemDescriptions, leng }
       };
-      await supabase.from('menu_print_config').update({
+      const { error } = await supabase.from('menu_print_config').upsert([{
+        id: Number(menuId),
         images: newImages,
-        group_descriptions: updatedLayout
-      }).eq('id', menuId);
+        group_descriptions: updatedLayout,
+        show_icons: showIcons
+      }]);
+      if (error) throw error;
     } catch (e) {
       console.error("Error saving images:", e);
     }
@@ -541,7 +622,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
         <MenuPrintColorPanel
           colors={colors}
           setColors={setColors}
-          saveLayoutSizes={() => { }}
+          saveLayoutSizes={(updates) => saveConfig(null, updates?.colors || colors)}
           setShowColorPanel={setShowColorPanel}
         />
       )}
@@ -581,24 +662,30 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
               <button onClick={() => setShowBlockSelector(null)} className="font-black hover:text-red-600 transition-colors">CERRAR X</button>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-5 max-h-[80vh] overflow-y-auto pr-1">
               <div>
-                <p className="text-[10px] font-black uppercase text-gray-400 mb-3 tracking-widest">Menú de Productos</p>
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-2.5 tracking-widest">Categorías de Productos (Action Types)</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => handleSelectBlockType('MENU', 'CAFE')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">☕ CAFÉ</button>
-                  <button onClick={() => handleSelectBlockType('MENU', 'BEBIDAS')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">🍹 BEBIDAS</button>
-                  <button onClick={() => handleSelectBlockType('MENU', 'ALIMENTOS')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">🍰 ALIMENTOS</button>
-                  <button onClick={() => handleSelectBlockType('MENU', 'EXTRAS')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">➕ ADICIONES</button>
+                  {Object.entries(CATEGORIES_t).map(([catKey, catObj]) => (
+                    <button
+                      key={catKey}
+                      onClick={() => handleSelectBlockType('MENU', catKey)}
+                      className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    >
+                      <span className="text-sm">{catObj.icon || "📌"}</span>
+                      <span className="truncate">{catObj.es.toUpperCase()}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div>
-                <p className="text-[10px] font-black uppercase text-gray-400 mb-3 tracking-widest">Otros Elementos</p>
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-2.5 tracking-widest">Otros Elementos de Layout</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => handleSelectBlockType('INFO')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">📄 INFO TEXTO</button>
-                  <button onClick={() => handleSelectBlockType('QR')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">📱 CÓDIGO QR</button>
-                  <button onClick={() => handleSelectBlockType('CUSTOM')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">✏️ TEXTO LIBRE</button>
-                  <button onClick={() => handleSelectBlockType('IMAGE')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-1">🖼️ IMAGEN</button>
+                  <button onClick={() => handleSelectBlockType('INFO')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>📄</span><span>INFO TEXTO</span></button>
+                  <button onClick={() => handleSelectBlockType('QR')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>📱</span><span>CÓDIGO QR</span></button>
+                  <button onClick={() => handleSelectBlockType('CUSTOM')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>✏️</span><span>TEXTO LIBRE</span></button>
+                  <button onClick={() => handleSelectBlockType('IMAGE')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>🖼️</span><span>IMAGEN</span></button>
                 </div>
               </div>
             </div>

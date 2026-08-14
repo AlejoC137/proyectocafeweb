@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useDebounce } from "../../hooks/useDebounce";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { deleteItem, updateItem, getRecepie, createRecipeForProduct } from "../../redux/actions";
+import { deleteItem, updateItem, getRecepie, createRecipeForProduct, crearItem, getAllFromTable } from "../../redux/actions";
 import { ESTATUS, BODEGA, CATEGORIES, SUB_CATEGORIES, ItemsAlmacen, ProduccionInterna, MenuItems, unidades, ACTIVO, INACTIVO, MENU, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from "../../redux/actions-types";
 import { ChevronUp, ChevronDown, Filter, Search, Save } from "lucide-react";
 import { parseCompLunch } from "../../utils/jsonUtils";
@@ -211,6 +211,88 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
   const handleDelete = async (item) => {
     if (window.confirm(`¿Seguro que quieres eliminar "${item.Nombre_del_producto || item.NombreES}"?`)) {
       await dispatch(deleteItem(item._id, currentType));
+    }
+  };
+
+  const handleDuplicate = async (item) => {
+    if (window.confirm(`¿Seguro que deseas duplicar "${item.Nombre_del_producto || item.NombreES || 'este ítem'}"?`)) {
+      try {
+        let duplicatedItem = {};
+        let table = currentType;
+
+        if (currentType === MenuItems || currentType === "MenuItems") {
+          table = MENU;
+          duplicatedItem = {
+            NombreES: item.NombreES ? `${item.NombreES} (Copia)` : undefined,
+            NombreEN: item.NombreEN ? `${item.NombreEN} (Copy)` : undefined,
+            Precio: item.Precio,
+            DescripcionMenuES: item.DescripcionMenuES,
+            DescripcionMenuEN: item.DescripcionMenuEN,
+            TipoES: item.TipoES,
+            TipoEN: item.TipoEN,
+            SubTipoES: item.SubTipoES,
+            SubTipoEN: item.SubTipoEN,
+            DietaES: item.DietaES,
+            DietaEN: item.DietaEN,
+            CuidadoES: item.CuidadoES,
+            CuidadoEN: item.CuidadoEN,
+            GRUPO: item.GRUPO,
+            SUB_GRUPO: item.SUB_GRUPO,
+            Foto: item.Foto,
+            Estado: item.Estado || "Activo",
+            Order: item.Order,
+            PRINT: item.PRINT,
+            PrintConst: item.PrintConst,
+            Comp_Lunch: item.Comp_Lunch,
+            IngredientesBasicos: item.IngredientesBasicos,
+          };
+        } else if (currentType === ProduccionInterna) {
+          table = PRODUCCION;
+          duplicatedItem = {
+            Nombre_del_producto: item.Nombre_del_producto ? `${item.Nombre_del_producto} (Copia)` : undefined,
+            CANTIDAD: item.CANTIDAD,
+            UNIDADES: item.UNIDADES,
+            COSTO: item.COSTO,
+            Merma: item.Merma,
+            Proveedor: item.Proveedor,
+            Area: item.Area,
+            GRUPO: item.GRUPO,
+            MARCA: item.MARCA,
+            Estado: item.Estado || "OK",
+            STOCK: typeof item.STOCK === 'object' ? JSON.stringify(item.STOCK) : item.STOCK,
+            ALMACENAMIENTO: typeof item.ALMACENAMIENTO === 'object' ? JSON.stringify(item.ALMACENAMIENTO) : item.ALMACENAMIENTO,
+          };
+        } else {
+          table = ITEMS;
+          duplicatedItem = {
+            Nombre_del_producto: item.Nombre_del_producto ? `${item.Nombre_del_producto} (Copia)` : undefined,
+            CANTIDAD: item.CANTIDAD,
+            UNIDADES: item.UNIDADES,
+            COSTO: item.COSTO,
+            COOR: item.COOR || "1.05",
+            Merma: item.Merma,
+            Proveedor: item.Proveedor,
+            Area: item.Area,
+            GRUPO: item.GRUPO,
+            MARCA: item.MARCA,
+            Estado: item.Estado || "OK",
+            STOCK: typeof item.STOCK === 'object' ? JSON.stringify(item.STOCK) : item.STOCK,
+            ALMACENAMIENTO: typeof item.ALMACENAMIENTO === 'object' ? JSON.stringify(item.ALMACENAMIENTO) : item.ALMACENAMIENTO,
+          };
+        }
+
+        Object.keys(duplicatedItem).forEach(key => {
+          if (duplicatedItem[key] === undefined || duplicatedItem[key] === null || duplicatedItem[key] === "") {
+            delete duplicatedItem[key];
+          }
+        });
+
+        await dispatch(crearItem(duplicatedItem, table));
+        await dispatch(getAllFromTable(table));
+      } catch (e) {
+        console.error("Error duplicando ítem:", e);
+        alert("Error al duplicar el ítem: " + (e?.message || e?.error_description || JSON.stringify(e)));
+      }
     }
   };
 
@@ -444,8 +526,8 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
   const renderTableHeaders = () => Object.entries(availableColumns)
     .filter(([key]) => visibleColumns[key])
     .map(([key, col]) => (
-      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-900">
-        <button onClick={() => handleSort(col.key)} className="flex items-center gap-1 text-gray-900 bg-white hover:text-blue-600">
+      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-900 sticky top-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm">
+        <button onClick={() => handleSort(col.key)} className="flex items-center gap-1 text-gray-900 bg-transparent hover:text-blue-600">
           {col.label} <SortIcon column={col.key} />
         </button>
       </th>
@@ -578,7 +660,9 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
             return (
               <div className="flex gap-1">
                 <Button onClick={() => handleDelete(item)}
-                  className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6">🗑️</Button>
+                  className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 text-xs h-6" title="Eliminar Ítem">🗑️</Button>
+                <Button onClick={() => handleDuplicate(item)}
+                  className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 text-xs h-6 flex items-center justify-center w-8" title="Duplicar Ítem">📋</Button>
                 {
                   currentType === ItemsAlmacen &&
                   (
@@ -605,6 +689,7 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0"
+                      title="Ver Receta"
                     >
                       📕
                     </a>
@@ -679,46 +764,44 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col h-full min-h-0 overflow-hidden">
       {/* Panel de filtros y acciones */}
-      <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-gray-500 bg-gray-50" />
-            <input type="text" placeholder="Buscar... " value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm" />
+      <div className="bg-gray-50 p-1.5 border-b border-gray-200 mb-1.5 rounded-lg flex-shrink-0">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-1.5">
+            <Search className="w-3.5 h-3.5 text-gray-500 bg-gray-50" />
+            <input type="text" placeholder="Buscar... " value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-2 h-7 text-xs" />
           </div>
-          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border  bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-2 h-7 text-xs">
             <option value="">Todos los grupos</option>
             {uniqueCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
-          <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-3 py-1 text-sm">
+          <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="border bg-gray-50 border-gray-300 rounded px-2 h-7 text-xs">
             <option className="bg-gray-50" value="">Todos los estados</option>
             {uniqueEstados.map(est => <option key={est} value={est}>{est}</option>)}
           </select>
           {currentType !== MenuItems && (
-            <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
+            <select value={filterAlmacenamiento} onChange={(e) => setFilterAlmacenamiento(e.target.value)} className="bg-gray-50 border border-gray-300 rounded px-2 h-7 text-xs">
               <option value="">Todo Almacenamiento</option>
               {uniqueAlmacenamiento.map(alm => <option key={alm} value={alm}>{alm}</option>)}
             </select>
           )}
           {currentType === ItemsAlmacen && (
-            <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className=" bg-gray-50 border border-gray-300 rounded px-3 py-1 text-sm">
+            <select value={filterProveedor} onChange={(e) => setFilterProveedor(e.target.value)} className="bg-gray-50 border border-gray-300 rounded px-2 h-7 text-xs">
               <option value="">Todos los proveedores</option>
               {Proveedores.map(prov => <option key={prov._id} value={prov._id}>{prov.Nombre_Proveedor}</option>)}
             </select>
           )}
-          <Button onClick={() => setShowColumnSelector(true)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 text-sm">📋 Columnas</Button>
+          <Button onClick={() => setShowColumnSelector(true)} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2.5 h-7 text-xs">📋 Columnas</Button>
 
           <div className="flex-grow"></div>
-
-          {/* REMOVIDO: Botón de "Guardar Cambios" ya no hace falta: guardamos en onBlur */}
         </div>
       </div>
 
       {/* Contenedor de la Tabla */}
-      <div className="overflow-x-auto border bg-gray-50 border-gray-200 rounded-lg">
-        <table className="w-full bg-white">
-          <thead className="bg-gray-100 border-b border-gray-200">
+      <div className="overflow-auto border bg-gray-50 border-gray-200 rounded-lg flex-1 min-h-0">
+        <table className="w-full bg-white relative border-collapse">
+          <thead className="bg-gray-100 border-b border-gray-200 sticky top-0 z-20 shadow-sm">
             <tr>
               {renderTableHeaders()}
             </tr>

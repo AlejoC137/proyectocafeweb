@@ -212,158 +212,155 @@ function AccionesRapidas({ currentType: propType }) {
   };
 
   return (
-    <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+    <div className="bg-slate-50/90 p-2 rounded-xl border border-slate-200 shadow-2xs space-y-2">
 
-      {/* SECTION 1: CLIPBOARD ACTIONS */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs">
-        <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-          <span>📋</span> Portapapeles & Exportación
-        </h3>
-        <div className="flex flex-wrap gap-2">
+      {/* UNIFIED COMPACT TOOLBAR ROW */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        {/* SECTION 1: PORTAPAPELES */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wide flex items-center gap-1">
+            📋 Portapapeles:
+          </span>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => handleCopiarPendientes(ItemsAlmacen)} 
-            className="h-9 text-xs font-semibold text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/80 transition-colors"
+            className="h-7 text-[11px] font-semibold px-2 text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/80 transition-colors"
           >
-            <Copy className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> Pendientes Compra
+            <Copy className="h-3 w-3 mr-1 text-emerald-600" /> Pendientes Compra
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => handleCopiarPendientes(ProduccionInterna)} 
-            className="h-9 text-xs font-semibold text-amber-700 border-amber-200 bg-amber-50/50 hover:bg-amber-100/80 transition-colors"
+            className="h-7 text-[11px] font-semibold px-2 text-amber-700 border-amber-200 bg-amber-50/50 hover:bg-amber-100/80 transition-colors"
           >
-            <Copy className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Pendientes Producción
+            <Copy className="h-3 w-3 mr-1 text-amber-600" /> Pendientes Producción
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleCopiarInfoItems} 
-            className="h-9 text-xs font-semibold text-blue-700 border-blue-200 bg-blue-50/50 hover:bg-blue-100/80 transition-colors"
+            className="h-7 text-[11px] font-semibold px-2 text-blue-700 border-blue-200 bg-blue-50/50 hover:bg-blue-100/80 transition-colors"
           >
-            <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" /> Copiar Toda Info
+            <FileText className="h-3 w-3 mr-1 text-blue-600" /> Copiar Info
           </Button>
         </div>
-      </div>
 
-      {/* SECTION 2: CREATION ACTIONS */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs">
-        <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-          <span>➕</span> Creación & Carga
-        </h3>
-        <div className="flex flex-wrap gap-2">
+        {/* SECTION 2: CREACIÓN */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wide flex items-center gap-1">
+            ➕ Creación:
+          </span>
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 text-xs font-semibold transition-all ${
+            className={`h-7 text-[11px] font-semibold px-2 transition-all ${
               formVisible 
-                ? "bg-slate-800 text-white border-slate-800 shadow-xs" 
+                ? "bg-slate-800 text-white border-slate-800" 
                 : "border-slate-300 text-slate-700 bg-white hover:bg-slate-50"
             }`}
             onClick={() => setFormVisible(!formVisible)}
           >
-            <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+            <PlusCircle className="h-3 w-3 mr-1" />
             {currentType === MenuItems ? "Nuevo Plato" : "Nuevo Ítem"}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 text-xs font-semibold transition-all ${
+            className={`h-7 text-[11px] font-semibold px-2 transition-all ${
               formProveedorVisible 
-                ? "bg-orange-600 text-white border-orange-600 shadow-xs" 
+                ? "bg-orange-600 text-white border-orange-600" 
                 : "border-orange-200 text-orange-700 bg-orange-50/40 hover:bg-orange-100/70"
             }`}
             onClick={() => setFormProveedorVisible(!formProveedorVisible)}
           >
-            <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+            <UserPlus className="h-3 w-3 mr-1" />
             Nuevo Proveedor
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 text-xs font-semibold transition-all ${
+            className={`h-7 text-[11px] font-semibold px-2 transition-all ${
               jsonImportVisible 
-                ? "bg-blue-600 text-white border-blue-600 shadow-xs" 
+                ? "bg-blue-600 text-white border-blue-600" 
                 : "border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/70"
             }`}
             onClick={() => setJsonImportVisible(!jsonImportVisible)}
           >
-            <FileJson className="h-3.5 w-3.5 mr-1.5" />
+            <FileJson className="h-3 w-3 mr-1" />
             Importar JSON
           </Button>
         </div>
-      </div>
 
-      {/* SECTION 3: MASS TOOLS & CALCULATIONS */}
-      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs">
-        <h3 className="text-xs font-bold text-violet-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-          <span>🛠️</span> Herramientas & Cálculos Masivos
-        </h3>
-        <div className="flex flex-wrap gap-2">
+        {/* SECTION 3: HERRAMIENTAS & CALCULOS */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-black text-violet-800 uppercase tracking-wide flex items-center gap-1">
+            🛠️ Herramientas:
+          </span>
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 text-xs font-semibold transition-all ${
+            className={`h-7 text-[11px] font-semibold px-2 transition-all ${
               macroAgregadorVisible 
-                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs" 
+                ? "bg-emerald-600 text-white border-emerald-600" 
                 : "border-emerald-200 text-emerald-700 bg-emerald-50/40 hover:bg-emerald-100/70"
             }`}
             onClick={() => setMacroAgregadorVisible(true)}
           >
-            <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
-            Macro Agregador de Inventario
+            <PlusCircle className="h-3 w-3 mr-1" />
+            Macro Agregador
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 text-xs font-semibold transition-all ${
+            className={`h-7 text-[11px] font-semibold px-2 transition-all ${
               macroEditorVisible 
-                ? "bg-amber-600 text-white border-amber-600 shadow-xs" 
+                ? "bg-amber-600 text-white border-amber-600" 
                 : "border-amber-200 text-amber-700 bg-amber-50/40 hover:bg-amber-100/70"
             }`}
             onClick={() => setMacroEditorVisible(true)}
           >
-            <Hammer className="h-3.5 w-3.5 mr-1.5" />
-            Macro Editor de Inventario
+            <Hammer className="h-3 w-3 mr-1" />
+            Macro Editor
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className={`h-9 text-xs font-semibold transition-all ${
+            className={`h-7 text-[11px] font-semibold px-2 transition-all ${
               spellCheckerVisible 
-                ? "bg-indigo-600 text-white border-indigo-600 shadow-xs" 
+                ? "bg-indigo-600 text-white border-indigo-600" 
                 : "border-indigo-200 text-indigo-700 bg-indigo-50/40 hover:bg-indigo-100/70"
             }`}
             onClick={() => setSpellCheckerVisible(true)}
           >
-            <SpellCheck className="h-3.5 w-3.5 mr-1.5" />
-            Corrector Ortográfico
+            <SpellCheck className="h-3 w-3 mr-1" />
+            Corrector
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            className="h-9 text-xs font-semibold border-rose-200 text-rose-700 bg-rose-50/40 hover:bg-rose-100/70 transition-colors"
+            className="h-7 text-[11px] font-semibold px-2 border-rose-200 text-rose-700 bg-rose-50/40 hover:bg-rose-100/70 transition-colors"
             onClick={handleActualizarPrecios}
           >
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-            Recalcular Precios
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Recalcular
           </Button>
 
           {currentType === ProduccionInterna && (
             <Button
               variant="outline"
               size="sm"
-              className="h-9 text-xs font-semibold border-purple-200 text-purple-700 bg-purple-50/40 hover:bg-purple-100/70 transition-colors"
+              className="h-7 text-[11px] font-semibold px-2 border-purple-200 text-purple-700 bg-purple-50/40 hover:bg-purple-100/70 transition-colors"
               onClick={handleSincronizarCostosProduccion}
             >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Sincronizar Costos Receta
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Sincronizar Costos
             </Button>
           )}
         </div>

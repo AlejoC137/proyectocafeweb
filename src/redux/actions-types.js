@@ -75,6 +75,8 @@ export const AREAS = [
 // grupo
 
 export const CARNICO = 'CARNICO'
+export const HELADOS = 'HELADOS'
+export const HELADO = 'HELADOS'
 export const LACTEO = 'LACTEO'
 export const CAFE = 'CAFE'
 export const PANADERIA = 'PANADERIA'
@@ -101,6 +103,7 @@ export const CATEGORIES = [ //GRUPO
   BEBIDAS,
   PANADERIA,
   REPOSTERIA,
+  HELADOS,
   TARDEO,
   ADICIONES,
   CARNICO,
@@ -126,6 +129,7 @@ export const CATEGORIES_t = {
   BEBIDAS: { es: "Bebidas", en: "Drinks", icon: "🍹" },
   PANADERIA: { es: "Panadería", en: "Bakery", icon: "🥐" },
   REPOSTERIA: { es: "Repostería", en: "Pastry", icon: "🍰" },
+  HELADOS: { es: "Helados", en: "Ice Creams", icon: "🍦" },
   TARDEO: { es: "Tardeo", en: "Afternoon Snack", icon: "🥪" },
   ADICIONES: { es: "Adiciones", en: "Add-ons", icon: "🥚" },
   CARNICO: { es: "Cárnico", en: "Meat", icon: "☕" },
@@ -155,6 +159,10 @@ export const ADICIONES_BEBIDAS = 'ADICIONES_BEBIDAS'
 export const PANADERIA_REPOSTERIA_DULCE = 'PANADERIA_REPOSTERIA_DULCE'
 export const PANADERIA_REPOSTERIA_SALADA = 'PANADERIA_REPOSTERIA_SALADA'
 export const TARDEO_ALMUERZO = 'TARDEO_ALMUERZO'
+export const HELADO_SOFT = 'SOFT'
+export const HELADO_GELATO = 'GELATO'
+export const HELADO_SORBETE = 'SORBETE'
+export const TOPPING = 'TOPPING'
 
 
 export const SUB_CATEGORIES = [ //GRUPO
@@ -163,6 +171,11 @@ export const SUB_CATEGORIES = [ //GRUPO
   CAFE_METODOS,
   TARDEO_ALMUERZO,
   BEBIDAS_FRIAS,
+  HELADOS,
+  HELADO_SOFT,
+  HELADO_GELATO,
+  HELADO_SORBETE,
+  TOPPING,
   BEBIDAS_CALIENTES,
   DESAYUNO_DULCE,
   DESAYUNO_SALADO,

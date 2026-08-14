@@ -16,7 +16,7 @@ import MenuPrintColumn from "./MenuPrint/MenuPrintColumn";
 import MenuPage from "./MenuPrint/MenuPage";
 import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 
-function MenuPrint({ menuId = 1 }) {
+function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false, previewMode = false }) {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [leng, setLeng] = useState(true);
@@ -25,7 +25,28 @@ function MenuPrint({ menuId = 1 }) {
   const [showColorPanel, setShowColorPanel] = useState(false);
   const [showIcons, setShowIcons] = useState(true);
   const [showItemDescriptions, setShowItemDescriptions] = useState(true);
-  const menuData = useSelector((state) => state.allMenu);
+
+  const rawMenuData = useSelector((state) => state.allMenu || []);
+  const menuData = React.useMemo(() => {
+    if (!filterOnlyHelados) return rawMenuData;
+    const filtered = rawMenuData.filter((item) => {
+      const g = (item.GRUPO || "").toUpperCase();
+      const sg = (item.SUB_GRUPO || "").toUpperCase();
+      const n = (item.NombreES || item.NombreEN || "").toUpperCase();
+      return (
+        g === "HELADOS" ||
+        sg.includes("HELADO") ||
+        sg.includes("SOFT") ||
+        sg.includes("GELATO") ||
+        sg.includes("SORBETE") ||
+        n.includes("HELADO") ||
+        n.includes("GELATO") ||
+        n.includes("SOFT") ||
+        n.includes("SORBETE")
+      );
+    });
+    return filtered.length > 0 ? filtered : rawMenuData;
+  }, [rawMenuData, filterOnlyHelados]);
 
   const [printImages, setPrintImages] = useState([]);
   const [groupDescriptions, setGroupDescriptions] = useState({});
@@ -34,15 +55,23 @@ function MenuPrint({ menuId = 1 }) {
   const [leftColRatio, setLeftColRatio] = useState(50);
   const [qrScale, setQrScale] = useState(1);
   const [zoom, setZoom] = useState(0.5);
+  const [pageWidth, setPageWidth] = useState(filterOnlyHelados ? 65 : 27.94);
+  const [pageHeight, setPageHeight] = useState(filterOnlyHelados ? 65 : 43.18);
+  const [pageSizeUnit, setPageSizeUnit] = useState('cm');
 
   const [pages, setPages] = useState([
-    { id: 'PAGE_1', left: ["CAFE", "BEBIDAS", "QR"], center: ["ALIMENTOS", "EXTRAS", "INFO"], right: [] }
+    {
+      id: 'PAGE_1',
+      left: filterOnlyHelados ? ["HELADOS", "QR"] : ["CAFE", "BEBIDAS", "QR"],
+      center: filterOnlyHelados ? ["INFO"] : ["ALIMENTOS", "EXTRAS", "INFO"],
+      right: []
+    }
   ]);
 
   const [showWebsiteBg, setShowWebsiteBg] = useState(false);
   const [websiteBgOpacity, setWebsiteBgOpacity] = useState(0.1);
   const [backgroundUrl, setBackgroundUrl] = useState('');
-  const [colors, setColors] = useState({
+  const DEFAULT_COLORS = {
     mainTitle: "#000000",
     mainBorder: "#000000",
     categoryTitle: "#000000",
@@ -57,7 +86,9 @@ function MenuPrint({ menuId = 1 }) {
     blockBg: "#ffffff",
     imgBorder: "#000000",
     imgShadow: "#000000"
-  });
+  };
+
+  const [colors, setColors] = useState(DEFAULT_COLORS);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -67,6 +98,7 @@ function MenuPrint({ menuId = 1 }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         await Promise.all([
           dispatch(getAllFromTable(MENU)),
@@ -74,14 +106,14 @@ function MenuPrint({ menuId = 1 }) {
           dispatch(getAllFromTable(AGENDA))
         ]);
         await fetchConfig();
-        setLoading(false);
       } catch (error) {
         console.error("Error loading data:", error);
+      } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [dispatch]);
+  }, [dispatch, menuId]);
 
   const fetchConfig = async () => {
     try {
@@ -111,17 +143,18 @@ function MenuPrint({ menuId = 1 }) {
         setPhotosWidthUnit(layout.photosWidthUnit ?? 'px');
         setLeftColRatio(layout.leftColRatio ?? 50);
         setQrScale(layout.qrScale ?? 1);
+        setPageWidth(layout.pageWidth ?? (filterOnlyHelados ? 65 : 27.94));
+        setPageHeight(layout.pageHeight ?? (filterOnlyHelados ? 65 : 43.18));
+        setPageSizeUnit(layout.pageSizeUnit ?? 'cm');
         setShowWebsiteBg(layout.showWebsiteBg ?? false);
         setWebsiteBgOpacity(layout.websiteBgOpacity ?? config.websiteBgOpacity ?? 0.1);
-        if (layout.backgroundUrl || config.backgroundUrl) setBackgroundUrl(layout.backgroundUrl || config.backgroundUrl);
-        if (layout.colors) {
-          setColors(prev => ({ ...prev, ...layout.colors }));
-        }
+        setBackgroundUrl(layout.backgroundUrl || config.backgroundUrl || '');
+        setColors(layout.colors ? { ...DEFAULT_COLORS, ...layout.colors } : DEFAULT_COLORS);
 
         let savedPages = layout.pages || [];
         if (savedPages.length === 0) {
-          const savedLeft = layout.leftColBlocks ?? ["CAFE", "BEBIDAS", "QR"];
-          const savedCenter = layout.centerColBlocks ?? ["ALIMENTOS", "EXTRAS", "INFO"];
+          const savedLeft = layout.leftColBlocks ?? (filterOnlyHelados ? ["HELADOS", "QR"] : ["CAFE", "BEBIDAS", "QR"]);
+          const savedCenter = layout.centerColBlocks ?? (filterOnlyHelados ? ["INFO"] : ["ALIMENTOS", "EXTRAS", "INFO"]);
           let savedRight = layout.rightColBlocks || [];
           const allBlocks = [...savedLeft, ...savedCenter, ...savedRight];
           const missingImageIds = loadedImages.filter(img => !allBlocks.includes(img.id)).map(img => img.id);
@@ -139,6 +172,27 @@ function MenuPrint({ menuId = 1 }) {
         setPages(cleanedPages);
 
       } else {
+        setPrintImages([]);
+        setGroupDescriptions({});
+        setShowIcons(true);
+        setShowItemDescriptions(true);
+        setPhotosWidth(210);
+        setPhotosWidthUnit('px');
+        setLeftColRatio(50);
+        setQrScale(1);
+        setPageWidth(filterOnlyHelados ? 65 : 27.94);
+        setPageHeight(filterOnlyHelados ? 65 : 43.18);
+        setPageSizeUnit('cm');
+        setShowWebsiteBg(false);
+        setWebsiteBgOpacity(0.1);
+        setBackgroundUrl('');
+        setColors(DEFAULT_COLORS);
+        setPages([{
+          id: 'PAGE_1',
+          left: filterOnlyHelados ? ["HELADOS", "QR"] : ["CAFE", "BEBIDAS", "QR"],
+          center: filterOnlyHelados ? ["INFO"] : ["ALIMENTOS", "EXTRAS", "INFO"],
+          right: []
+        }]);
         await supabase.from('menu_print_config').insert([{ id: menuId, images: [], group_descriptions: {}, show_icons: true }]);
       }
     } catch (e) {
@@ -148,7 +202,8 @@ function MenuPrint({ menuId = 1 }) {
 
   const saveImagesConfig = async (newImages) => {
     try {
-      await supabase.from('menu_print_config').update({ images: newImages }).eq('id', menuId);
+      const { error } = await supabase.from('menu_print_config').upsert([{ id: Number(menuId), images: newImages }]);
+      if (error) throw error;
     } catch (e) {
       console.error("Error saving images config:", e);
     }
@@ -158,7 +213,8 @@ function MenuPrint({ menuId = 1 }) {
     const nextState = !showIcons;
     setShowIcons(nextState);
     try {
-      await supabase.from('menu_print_config').update({ show_icons: nextState }).eq('id', menuId);
+      const { error } = await supabase.from('menu_print_config').upsert([{ id: Number(menuId), show_icons: nextState }]);
+      if (error) throw error;
     } catch (e) {
       console.error("Error saving showIcons config:", e);
     }
@@ -167,7 +223,8 @@ function MenuPrint({ menuId = 1 }) {
   const saveGroupDescriptions = async (newDescriptions) => {
     setGroupDescriptions(newDescriptions);
     try {
-      await supabase.from('menu_print_config').update({ group_descriptions: newDescriptions }).eq('id', menuId);
+      const { error } = await supabase.from('menu_print_config').upsert([{ id: Number(menuId), group_descriptions: newDescriptions }]);
+      if (error) throw error;
     } catch (e) {
       console.error("Error saving descriptions:", e);
     }
@@ -336,7 +393,11 @@ function MenuPrint({ menuId = 1 }) {
   };
 
   const saveLayoutSizes = (updates = {}) => {
+    const safeUpdates = (updates && typeof updates === 'object' && !updates.nativeEvent && !updates.target) ? updates : {};
     const finalState = {
+      pageWidth,
+      pageHeight,
+      pageSizeUnit,
       photosWidth,
       photosWidthUnit,
       leftColRatio,
@@ -347,7 +408,7 @@ function MenuPrint({ menuId = 1 }) {
       colors,
       backgroundUrl,
       showItemDescriptions,
-      ...updates
+      ...safeUpdates
     };
     saveGroupDescriptions({
       ...groupDescriptions,
@@ -475,43 +536,53 @@ function MenuPrint({ menuId = 1 }) {
     updatePageTitle
   };
 
+  const isPreview = previewMode || hideControls;
+
   return (
-    <div className="flex w-full flex-col items-center justify-start bg-gray-200 min-h-screen pb-10 print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden">
-      <MenuPrintStyles />
+    <div className={`flex w-full flex-col items-center justify-start ${isPreview ? "bg-transparent p-2 min-h-0" : "bg-gray-200 min-h-screen pb-10"} print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden`}>
+      <MenuPrintStyles pageWidth={pageWidth} pageHeight={pageHeight} pageSizeUnit={pageSizeUnit} />
 
-      <MenuPrintControls
-        handlePrint={handlePrint}
-        leng={leng}
-        setLeng={setLeng}
-        editMode={editMode}
-        setEditMode={setEditMode}
-        toggleShowIcons={toggleShowIcons}
-        showIcons={showIcons}
-        showItemDescriptions={showItemDescriptions}
-        setShowItemDescriptions={setShowItemDescriptions}
-        showColorPanel={showColorPanel}
-        setShowColorPanel={setShowColorPanel}
-        showWebsiteBg={showWebsiteBg}
-        setShowWebsiteBg={setShowWebsiteBg}
-        websiteBgOpacity={websiteBgOpacity}
-        setWebsiteBgOpacity={setWebsiteBgOpacity}
-        backgroundUrl={backgroundUrl}
-        setBackgroundUrl={setBackgroundUrl}
-        handleBackgroundUpload={handleBackgroundUpload}
-        saveLayoutSizes={saveLayoutSizes}
-        photosWidth={photosWidth}
-        setPhotosWidth={setPhotosWidth}
-        photosWidthUnit={photosWidthUnit}
-        setPhotosWidthUnit={setPhotosWidthUnit}
-        leftColRatio={leftColRatio}
-        setLeftColRatio={setLeftColRatio}
-        addBlock={addBlock}
-        addPage={addPage}
-        zoom={zoom}
-        setZoom={setZoom}
-      />
+      {!isPreview && (
+        <MenuPrintControls
+          handlePrint={handlePrint}
+          leng={leng}
+          setLeng={setLeng}
+          editMode={editMode}
+          setEditMode={setEditMode}
+          toggleShowIcons={toggleShowIcons}
+          showIcons={showIcons}
+          showItemDescriptions={showItemDescriptions}
+          setShowItemDescriptions={setShowItemDescriptions}
+          showColorPanel={showColorPanel}
+          setShowColorPanel={setShowColorPanel}
+          showWebsiteBg={showWebsiteBg}
+          setShowWebsiteBg={setShowWebsiteBg}
+          websiteBgOpacity={websiteBgOpacity}
+          setWebsiteBgOpacity={setWebsiteBgOpacity}
+          backgroundUrl={backgroundUrl}
+          setBackgroundUrl={setBackgroundUrl}
+          handleBackgroundUpload={handleBackgroundUpload}
+          saveLayoutSizes={saveLayoutSizes}
+          photosWidth={photosWidth}
+          setPhotosWidth={setPhotosWidth}
+          photosWidthUnit={photosWidthUnit}
+          setPhotosWidthUnit={setPhotosWidthUnit}
+          leftColRatio={leftColRatio}
+          setLeftColRatio={setLeftColRatio}
+          addBlock={addBlock}
+          addPage={addPage}
+          zoom={zoom}
+          setZoom={setZoom}
+          pageWidth={pageWidth}
+          setPageWidth={setPageWidth}
+          pageHeight={pageHeight}
+          setPageHeight={setPageHeight}
+          pageSizeUnit={pageSizeUnit}
+          setPageSizeUnit={setPageSizeUnit}
+        />
+      )}
 
-      {showColorPanel && (
+      {!isPreview && showColorPanel && (
         <MenuPrintColorPanel
           colors={colors}
           setColors={setColors}
@@ -520,12 +591,12 @@ function MenuPrint({ menuId = 1 }) {
         />
       )}
 
-      {showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
+      {!isPreview && showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
-      <div id="print-area" className="flex flex-row flex-nowrap gap-8 items-start justify-center p-10 overflow-x-auto w-full print:block print:p-0 print:m-0 print:overflow-visible print:gap-0" style={{ transform: editMode ? 'none' : `scale(${zoom})`, transformOrigin: 'top center' }}>
+      <div id="print-area" className={`flex flex-row flex-nowrap gap-8 items-start justify-center ${isPreview ? "p-2" : "p-10"} overflow-x-auto w-full print:block print:p-0 print:m-0 print:overflow-visible print:gap-0`} style={{ transform: (isPreview || !editMode) ? `scale(${zoom})` : 'none', transformOrigin: 'top center' }}>
         {pages.map((p, idx) => (
           <div key={p.id} className="relative group/page">
-            {editMode && pages.length > 1 && (
+            {!isPreview && editMode && pages.length > 1 && (
                <Button 
                 onClick={() => removePage(idx)} 
                 variant="destructive" 
@@ -546,18 +617,21 @@ function MenuPrint({ menuId = 1 }) {
               leftColRatio={leftColRatio}
               photosWidth={photosWidth}
               photosWidthUnit={photosWidthUnit}
-              editMode={editMode}
+              editMode={isPreview ? false : editMode}
               handleImageUpload={(e) => handleImageUpload(e, idx)}
               fileInputRef={fileInputRef}
               uploadingImage={uploadingImage}
               Button={Button}
               commonProps={commonProps}
+              pageWidth={pageWidth}
+              pageHeight={pageHeight}
+              pageSizeUnit={pageSizeUnit}
             />
           </div>
         ))}
       </div>
 
-      {showGallery && (
+      {!isPreview && showGallery && (
         <HorizontalGallery
           isOpen={showGallery}
           onClose={() => setShowGallery(false)}

@@ -10,7 +10,8 @@ import {
   DESAYUNO, DESAYUNO_DULCE, DESAYUNO_SALADO,
   PANADERIA, PANADERIA_REPOSTERIA_SALADA,
   REPOSTERIA, PANADERIA_REPOSTERIA_DULCE,
-  TARDEO, ADICIONES_BEBIDAS, ADICIONES_COMIDAS
+  TARDEO, ADICIONES_BEBIDAS, ADICIONES_COMIDAS,
+  HELADOS, CATEGORIES_t
 } from "../../../../redux/actions-types";
 import { headerStyles } from "./MenuPrintStyles";
 
@@ -322,6 +323,36 @@ const MenuPrintBlock = ({
           <div className="p-2">
             <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_extras_bebidas`} />
             <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_extras_comida`} />
+            <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={"ADICIONES"} excludeSubgrupos={[ADICIONES_BEBIDAS, ADICIONES_COMIDAS]} TITTLE={{ ES: "Otras Adiciones", EN: "Other Extras" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_extras_generales`} />
+          </div>
+        </div>
+      );
+    case "HELADOS":
+      const heladoCols = groupDescriptions[`__${blockId}_columns`] || groupDescriptions["__HELADOS_columns"] || 2;
+      return (
+        <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
+          {renderBlockControls(blockId, true)}
+          <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ ...(headerStyles.HELADOS || headerStyles.ALIMENTOS), backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
+                style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_${blockId}`] || (!leng ? "Helados Dovici" : "Dovici Ice Cream")}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_${blockId}`] || (!leng ? "Helados Dovici" : "Dovici Ice Cream")}
+              </h2>
+            )}
+            {renderGroupDescription(blockId, true)}
+          </div>
+          <div className="p-2">
+            <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={["HELADOS", "REPOSTERIA"]} SUB_GRUPO="SOFT" TITTLE={{ ES: "Helado Soft", EN: "Soft Serve" }} isEnglish={leng} columns={heladoCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_helados_soft`} />
+            <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={["HELADOS", "REPOSTERIA"]} SUB_GRUPO="GELATO" TITTLE={{ ES: "Gelato Artesanal", EN: "Craft Gelato" }} isEnglish={leng} columns={heladoCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_helados_gelato`} />
+            <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={["HELADOS", "REPOSTERIA"]} SUB_GRUPO="SORBETE" TITTLE={{ ES: "Sorbetes de Fruta", EN: "Fruit Sorbets" }} isEnglish={leng} columns={heladoCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_helados_sorbete`} />
+            <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO="HELADOS" excludeSubgrupos={["SOFT", "GELATO", "SORBETE"]} TITTLE={{ ES: "Helados Generales", EN: "General Ice Cream" }} isEnglish={leng} columns={heladoCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_helados_generales`} />
           </div>
         </div>
       );
@@ -465,7 +496,34 @@ const MenuPrintBlock = ({
           </div>
         );
       }
-      return null;
+
+      // Renderizador dinámico de categorías para cualquier action type (DESAYUNO, PANADERIA, REPOSTERIA, TARDEO, ADICIONES, ENLATADOS, etc.)
+      const catInfo = CATEGORIES_t[baseBlockId] || { es: baseBlockId, en: baseBlockId, icon: "📌" };
+      const dynCols = groupDescriptions[`__${blockId}_columns`] || groupDescriptions[`__${baseBlockId}_columns`] || 2;
+      return (
+        <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
+          {renderBlockControls(blockId, true)}
+          <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
+            {editMode ? (
+              <input
+                className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
+                style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
+                value={groupDescriptions[`title_${blockId}`] || (!leng ? catInfo.es : catInfo.en)}
+                onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
+                onBlur={() => saveGroupDescriptions(groupDescriptions)}
+              />
+            ) : (
+              <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
+                {groupDescriptions[`title_${blockId}`] || (!leng ? catInfo.es : catInfo.en)}
+              </h2>
+            )}
+            {renderGroupDescription(blockId, true)}
+          </div>
+          <div className="p-2">
+            <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={baseBlockId} isEnglish={leng} columns={dynCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_${baseBlockId}`} />
+          </div>
+        </div>
+      );
   }
 };
 

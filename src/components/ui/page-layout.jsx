@@ -24,7 +24,7 @@ function PageLayout({
   }
 
   return (
-    <div className={`h-[calc(100vh-4.5rem)] w-full bg-transparent overflow-auto p-2 md:p-4 ${className}`}>
+    <div className={`h-[calc(100vh-4.5rem)] w-full bg-transparent overflow-hidden p-2 md:p-4 ${className}`}>
       <div className={`${fullWidth ? 'w-full max-w-none' : 'max-w-screen-2xl mx-auto'} h-full flex flex-col min-h-0`}>
         {/* Header unificado con título y acciones */}
         {(title || actions) && (
@@ -43,7 +43,7 @@ function PageLayout({
         )}
 
         {/* Contenido principal */}
-        <div className="flex-1 flex flex-col min-h-0 space-y-2">
+        <div className="flex-1 flex flex-col min-h-0 space-y-2 overflow-hidden">
           {children}
         </div>
       </div>

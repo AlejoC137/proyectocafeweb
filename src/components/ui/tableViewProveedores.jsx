@@ -592,7 +592,7 @@ export function TableViewProveedores(/* { products = [] } */) {
       )}
 
       {/* Panel de filtros tipo Excel */}
-      <div className="bg-gray-50 p-4 border-b border-gray-200 mb-4 rounded-lg">
+      <div className="bg-gray-50 p-3 border-b border-gray-200 mb-2 rounded-lg flex-shrink-0">
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4 text-gray-500" />
@@ -627,9 +627,9 @@ export function TableViewProveedores(/* { products = [] } */) {
       </div>
 
       {/* Tabla estilo Excel */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="w-full bg-white">
-          <thead className="bg-gray-100 border-b border-gray-200">
+      <div className="overflow-auto border border-gray-200 rounded-lg flex-1 min-h-0">
+        <table className="w-full bg-white relative border-collapse">
+          <thead className="bg-gray-100 border-b border-gray-200 sticky top-0 z-20 shadow-sm">
             <tr>
               {renderTableHeaders()}
             </tr>

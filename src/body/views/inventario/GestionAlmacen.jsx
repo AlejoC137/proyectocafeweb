@@ -469,7 +469,7 @@ function GestionAlmacen() {
 
   return (
     <PageLayout loading={loading} >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 h-[calc(100vh-140px)] text-xs">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 min-h-[calc(100vh-140px)] md:h-[calc(100vh-140px)] text-xs">
         {/* Column 1: Search & Selection List */}
         <div className="bg-white rounded-lg shadow-sm border p-2 flex flex-col h-full gap-2 border-t-4 border-t-blue-500/80">
           <h2 className="text-sm font-bold mb-1 text-slate-800 flex items-center gap-2">

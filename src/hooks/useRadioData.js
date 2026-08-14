@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import supabase from '../config/supabaseClient';
-import { SOMAFM_CURATED_STATIONS, getAudioDuration, MAX_PLAYLIST_SECONDS } from '../utils/radioHelpers';
+import { getAudioDuration, MAX_PLAYLIST_SECONDS } from '../utils/radioHelpers';
+import { extractYoutubeId, getYoutubeThumbnail } from '../utils/youtubeHelpers';
 
 export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurrentTrackIndex, setIsPlaying, setAudioError) {
   // Radio Browser API & Filtros
@@ -9,49 +10,22 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingApi, setLoadingApi] = useState(false);
 
-  // SomaFM API State
-  const [somaFmChannels, setSomaFmChannels] = useState(SOMAFM_CURATED_STATIONS);
-  const [loadingSomaFm, setLoadingSomaFm] = useState(false);
-  const [nowPlaying, setNowPlaying] = useState(null); // Metadata "ahora suena" de SomaFM
+  // Metadata "ahora suena"
+  const [nowPlaying, setNowPlaying] = useState(null);
 
-  // Playlist estrictamente de Supabase
+  // Playlist de Supabase (MP3s)
   const [supabasePlaylist, setSupabasePlaylist] = useState([]);
   const [localPlaylist, setLocalPlaylist] = useState([]);
   const [loadingSupabase, setLoadingSupabase] = useState(true);
   const [supabaseError, setSupabaseError] = useState(null);
 
-  // 1. Fetch Canales de SomaFM API
-  const fetchSomaFmChannels = async () => {
-    try {
-      setLoadingSomaFm(true);
-      const res = await fetch('https://api.somafm.com/channels.json');
-      const data = await res.json();
-      console.log("==== SOMA FM API DATA ====", data);
-      if (data && Array.isArray(data.channels)) {
-        const formatted = data.channels.map((chan) => ({
-          id: `somafm-${chan.id}`,
-          title: `${chan.title} (SomaFM)`,
-          artist: chan.description || 'SomaFM Internet Radio',
-          genre: chan.genre ? chan.genre.replace(/\|/g, ' / ') : 'Lounge',
-          url: `https://stream.somafm.com/${chan.id}-128-mp3`,
-          isLiveStream: true,
-          cover: chan.largeimage || chan.image || 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=600'
-        }));
-        setSomaFmChannels(formatted);
-      }
-    } catch (err) {
-      console.warn("SomaFM API no disponible, usando canales curados:", err);
-      setSomaFmChannels(SOMAFM_CURATED_STATIONS);
-    } finally {
-      setLoadingSomaFm(false);
-    }
-  };
+  // Playlist de YouTube (Estrictamente desde Supabase)
+  const [youtubePlaylist, setYoutubePlaylist] = useState([]);
+  const [selectedYoutubeCategory, setSelectedYoutubeCategory] = useState('Todos');
+  const [youtubeSearchQuery, setYoutubeSearchQuery] = useState('');
+  const [loadingYoutube, setLoadingYoutube] = useState(false);
 
-  useEffect(() => {
-    fetchSomaFmChannels();
-  }, []);
-
-  // 2. Fetch playlist real desde Supabase
+  // 2. Fetch playlist real desde Supabase (MP3s)
   const fetchSupabasePlaylist = async () => {
     try {
       setLoadingSupabase(true);
@@ -92,31 +66,52 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     fetchSupabasePlaylist();
   }, []);
 
-  // 3. SomaFM Now Playing
-  const fetchNowPlaying = useCallback(async () => {
-    if (activeTab !== 'somafm' || !currentTrack?.id) return;
+  // 2.5 Fetch playlist de YouTube estrictamente desde Supabase
+  const fetchYoutubePlaylist = async () => {
     try {
-      const channelId = currentTrack.id?.replace('somafm-', '');
-      if (!channelId) return;
-      const res = await fetch(`https://api.somafm.com/songs/${channelId}.json`);
-      const data = await res.json();
-      if (data?.songs?.[0]) {
-        setNowPlaying({
-          title: data.songs[0].title,
-          artist: data.songs[0].artist,
-          album: data.songs[0].album,
-        });
+      setLoadingYoutube(true);
+      const { data, error } = await supabase
+        .from('playlist_youtube')
+        .select('*')
+        .order('order_index', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error("Error al consultar playlist_youtube en Supabase:", error.message);
+        setYoutubePlaylist([]);
+        return;
       }
-    } catch {
-      // silencioso
+
+      const formatted = (data || []).map(item => {
+        const ytId = item.youtube_id || extractYoutubeId(item.url || item.youtube_url);
+        return {
+          ...item,
+          id: item.id ? String(item.id) : `yt-${Date.now()}`,
+          title: item.title || 'Video de YouTube',
+          artist: item.artist || 'Canal de YouTube',
+          youtubeId: ytId,
+          url: item.url || item.youtube_url || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : ''),
+          cover: (item.cover && typeof item.cover === 'string' && !item.cover.startsWith('blob:'))
+            ? item.cover.replace('hqdefault.jpg', 'mqdefault.jpg')
+            : getYoutubeThumbnail(ytId),
+          category: item.category || 'Lofi & Chill',
+          type: 'youtube'
+        };
+      });
+      setYoutubePlaylist(formatted);
+    } catch (err) {
+      console.error("Error cargando playlist de YouTube desde Supabase:", err);
+      setYoutubePlaylist([]);
+    } finally {
+      setLoadingYoutube(false);
     }
-  }, [activeTab, currentTrack?.id]);
+  };
 
   useEffect(() => {
-    fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNowPlaying]);
+    fetchYoutubePlaylist();
+  }, []);
+
+
 
   // 4. Radio-Browser API
   const fetchApiRadioStations = async (tag, query = '') => {
@@ -131,7 +126,6 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
 
       const res = await fetch(endpoint);
       const data = await res.json();
-      console.log("==== RADIO BROWSER API DATA ====", data);
 
       if (Array.isArray(data) && data.length > 0) {
         const formatted = data.map((item, idx) => ({
@@ -168,7 +162,7 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   };
 
-  // 5. Reordenar canción en Supabase
+  // 5. Reordenar canción en Supabase (MP3s)
   const moveSongOrder = async (index, direction) => {
     if (activeTab !== 'supabase' || supabasePlaylist.length === 0) return;
     const newIndex = direction === 'up' ? index - 1 : index + 1;
@@ -190,16 +184,13 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   };
 
-  // 6. Eliminar canción de Supabase
+  // 6. Eliminar canción de Supabase (MP3)
   const handleDeleteSong = async (id, fileUrl) => {
     if (!window.confirm("¿Seguro que deseas eliminar esta canción de Supabase?")) return;
     try {
-      const { error: dbError } = await supabase
-        .from('playlist_radio')
-        .delete()
-        .eq('id', id);
-
-      if (dbError) throw dbError;
+      setSupabasePlaylist(prev => prev.filter(s => String(s.id) !== String(id)));
+      const numId = !isNaN(Number(id)) ? Number(id) : id;
+      await supabase.from('playlist_radio').delete().eq('id', numId);
 
       if (fileUrl && (fileUrl.includes('/Radio/') || fileUrl.includes('/radio_mp3/'))) {
         const urlParts = fileUrl.split('/');
@@ -215,15 +206,26 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   };
 
+  // 6.1 Eliminar canción de YouTube de Supabase
+  const handleDeleteYoutubeSong = async (id) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este enlace de YouTube de Supabase?")) return;
+    try {
+      setYoutubePlaylist(prev => prev.filter(s => String(s.id) !== String(id)));
+      const numId = !isNaN(Number(id)) ? Number(id) : id;
+      await supabase.from('playlist_youtube').delete().eq('id', numId);
+      fetchYoutubePlaylist();
+    } catch (err) {
+      alert("Error eliminando video de YouTube: " + err.message);
+    }
+  };
+
   // 6.5 Favoritos (Radio Browser)
   const toggleFavorite = async (station) => {
     try {
       const exists = supabasePlaylist.find(s => s.url === station.url || s.id === station.id);
       if (exists) {
-        // Eliminar de favoritos
         await supabase.from('playlist_radio').delete().eq('id', exists.id);
       } else {
-        // Agregar a favoritos
         const newFavorite = {
           title: station.title,
           artist: station.artist,
@@ -240,13 +242,45 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   };
 
-  // 7. Archivos Locales
+  // Toggle Favorito en YouTube
+  const toggleYoutubeFavorite = async (trackId) => {
+    const updated = youtubePlaylist.map(t => {
+      if (t.id === trackId) {
+        return { ...t, is_favorite: !t.is_favorite };
+      }
+      return t;
+    });
+    setYoutubePlaylist(updated);
+
+    try {
+      const track = updated.find(t => t.id === trackId);
+      if (track && typeof track.id !== 'string' || !track.id.startsWith('yt-default')) {
+        await supabase.from('playlist_youtube').update({ is_favorite: track.is_favorite }).eq('id', trackId);
+      }
+    } catch (e) {
+      console.warn("No se pudo actualizar favorito en Supabase:", e);
+    }
+  };
+
+  // 7. Archivos Locales / YouTube / Obtener Playlist Activa
+  const getFilteredYoutubePlaylist = () => {
+    return youtubePlaylist.filter(track => {
+      const matchCat = selectedYoutubeCategory === 'Todos' || track.category === selectedYoutubeCategory;
+      const q = youtubeSearchQuery.toLowerCase().trim();
+      const matchQuery = !q || (track.title || '').toLowerCase().includes(q) || (track.artist || '').toLowerCase().includes(q);
+      return matchCat && matchQuery;
+    });
+  };
+
+  const filteredYoutubePlaylist = getFilteredYoutubePlaylist();
+
   const getActivePlaylist = () => {
-    if (activeTab === 'somafm') return somaFmChannels;
     if (activeTab === 'live') return apiStations;
     if (activeTab === 'supabase') return supabasePlaylist;
+    if (activeTab === 'youtube') return filteredYoutubePlaylist.length > 0 ? filteredYoutubePlaylist : youtubePlaylist;
     return localPlaylist;
   };
+
   const currentPlaylist = getActivePlaylist();
   const totalPlaylistSeconds = currentPlaylist.reduce((acc, item) => acc + (item.duration || 0), 0);
 
@@ -284,7 +318,7 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
 
     if (processedTracks.length > 0) {
       setLocalPlaylist((prev) => [...prev, ...processedTracks]);
-      setActiveTabCallback('local'); // Callback to main component
+      setActiveTabCallback('local');
     }
   };
 
@@ -296,8 +330,6 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
   };
 
   return {
-    somaFmChannels,
-    loadingSomaFm,
     nowPlaying,
     apiStations,
     loadingApi,
@@ -311,7 +343,20 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     supabaseError,
     moveSongOrder,
     handleDeleteSong,
+    handleDeleteYoutubeSong,
     toggleFavorite,
+    // YouTube
+    youtubePlaylist,
+    filteredYoutubePlaylist,
+    selectedYoutubeCategory,
+    setSelectedYoutubeCategory,
+    youtubeSearchQuery,
+    setYoutubeSearchQuery,
+    loadingYoutube,
+    toggleYoutubeFavorite,
+    fetchYoutubePlaylist,
+    setYoutubePlaylist,
+    // Local / Playlist activa
     localPlaylist,
     handleLocalFilesUpload,
     removeLocalTrack,
@@ -319,3 +364,4 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     totalPlaylistSeconds
   };
 }
+

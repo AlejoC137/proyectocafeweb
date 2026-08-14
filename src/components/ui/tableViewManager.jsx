@@ -195,7 +195,7 @@ export function TableViewManager({ products, currentType }) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col h-full min-h-0 overflow-hidden">
       <TableFilters 
         currentType={currentType}
         searchTerm={searchTerm}
@@ -217,8 +217,8 @@ export function TableViewManager({ products, currentType }) {
         productsLength={products.length}
       />
 
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="w-full bg-white">
+      <div className="overflow-auto border border-gray-200 rounded-lg flex-1 min-h-0">
+        <table className="w-full bg-white relative border-collapse">
           <TableHeaders 
             currentType={currentType}
             filterSubGrupo={filterSubGrupo}

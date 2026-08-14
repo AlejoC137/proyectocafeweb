@@ -40,44 +40,46 @@ export function CardGridInventarioMenu({ products, showEdit }) {
   }, {});
 
   return (
-    <div className="flex flex-col gap-2 ml-4 mr-4">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden px-2">
       <input
         type="text"
         placeholder="Buscar productos..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="mb-4 p-2 border border-gray-300 rounded-md bg-white"
+        className="mb-2 p-2 border border-gray-300 rounded-md bg-white flex-shrink-0"
       />
-      {Object.keys(filteredProducts)
-        .sort()
-        .map((group) => (
-          <div key={group}>
-            <div className="flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
-              <button
-                onClick={() => toggleGroup(group)}
-                className="flex-grow bg-white text-left py-2 px-4 overflow-hidden whitespace-nowrap truncate"
-              >
-                <span className="ml-2 text-sm text-gray-500">
-                  {expandedGroups[group] ? "▲ " : "▼ "}
-                </span>
-                <span className="text-sm font-bold text-gray-700">
-                  {group.toUpperCase()} ({filteredProducts[group].length})
-                </span>
-              </button>
-            </div>
-            {expandedGroups[group] && (
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredProducts[group].map((product) => (
-                  <CardInstanceInventarioMenu
-                    key={product._id}
-                    product={product}
-                    showEdit={showEdit}
-                  />
-                ))}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+        {Object.keys(filteredProducts)
+          .sort()
+          .map((group) => (
+            <div key={group}>
+              <div className="flex items-center justify-between bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+                <button
+                  onClick={() => toggleGroup(group)}
+                  className="flex-grow bg-white text-left py-2 px-4 overflow-hidden whitespace-nowrap truncate"
+                >
+                  <span className="ml-2 text-sm text-gray-500">
+                    {expandedGroups[group] ? "▲ " : "▼ "}
+                  </span>
+                  <span className="text-sm font-bold text-gray-700">
+                    {group.toUpperCase()} ({filteredProducts[group].length})
+                  </span>
+                </button>
               </div>
-            )}
-          </div>
-        ))}
+              {expandedGroups[group] && (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredProducts[group].map((product) => (
+                    <CardInstanceInventarioMenu
+                      key={product._id}
+                      product={product}
+                      showEdit={showEdit}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+      </div>
     </div>
   );
 }

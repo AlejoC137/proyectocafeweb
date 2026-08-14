@@ -92,7 +92,7 @@ export function useRadioSync() {
 
     const payload = {
       id: SYNC_ROW_ID,
-      tab: tab || 'somafm',
+      tab: tab || 'supabase',
       station_url: station.url || '',
       station_name: station.title || station.name || 'Desconocido',
       station_cover: station.cover || station.favicon || '',

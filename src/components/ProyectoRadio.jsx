@@ -31,14 +31,11 @@ export default function ProyectoRadio() {
   // 3. Hooks
   const cafeData = useCafeData();
   
-  // Create a placeholder currentTrackIndex and currentTrack first to pass to radioData? 
-  // Wait, radioData needs currentTrack to fetch NowPlaying from SomaFM, 
-  // and needs setCurrentTrackIndex to remove local files.
-  // This is a circular dependency if we're not careful. 
-  // Let's hoist states we need shared.
+  // Hoist shared states needed for player and radioData
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null);
+  const [continueYoutubeAutoplay, setContinueYoutubeAutoplay] = useState(true);
 
   const radioData = useRadioData(
     activeTab, 
@@ -88,6 +85,15 @@ export default function ProyectoRadio() {
 
     player.pendingPlayRef.current = remoteTrack.url;
 
+    if (currentPlay.tab === 'youtube' || activeTab === 'youtube') {
+      player.audioRef.current?.pause();
+      setIsPlaying(Boolean(currentPlay.is_playing));
+      setTimeout(() => { isApplyingRemoteChange.current = false; }, 500);
+      return;
+    }
+
+    player.pendingPlayRef.current = remoteTrack.url;
+
     if (player.audioRef.current && remoteTrack.url) {
       player.audioRef.current.src = remoteTrack.url;
       player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
@@ -125,6 +131,15 @@ export default function ProyectoRadio() {
 
   const handleAutoStart = () => {
     player.setShowAutoStart(false);
+    setIsPlaying(true);
+
+    if (activeTab === 'youtube' || currentTrack?.type === 'youtube') {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
+      }, 150);
+      return;
+    }
+
     if (player.pendingPlayRef.current && player.audioRef.current) {
       player.audioRef.current.src = player.pendingPlayRef.current;
       player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
@@ -148,13 +163,44 @@ export default function ProyectoRadio() {
     }
   };
 
-  const borderColor = "border-[#1F2937]";
-  const shadowColor = "shadow-[6px_6px_0px_0px_rgba(31,41,55,1)]";
+  // Dark mode state with persistence
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('proyecto_radio_dark_mode');
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return document.documentElement.classList.contains('dark');
+  });
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('proyecto_radio_dark_mode', String(next));
+      if (next) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return next;
+    });
+  };
+
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const borderColor = "border-[#1F2937] dark:border-slate-700";
+  const shadowColor = "shadow-[6px_6px_0px_0px_rgba(31,41,55,1)] dark:shadow-[6px_6px_0px_0px_rgba(239,68,68,0.5)]";
 
   return (
-    <div className="w-full min-h-screen bg-cream-bg text-black relative font-sans overflow-x-hidden pb-8">
+    <div className={`w-full min-h-screen relative font-sans overflow-x-hidden pb-8 transition-colors duration-300 ${
+      isDarkMode ? 'dark bg-[#0b0c10] text-white' : 'bg-cream-bg text-black'
+    }`}>
       
-
 
       <RadioHeader 
         isPlaying={isPlaying}
@@ -164,20 +210,9 @@ export default function ProyectoRadio() {
         isDailyLoop={player.isDailyLoop}
         setIsDailyLoop={player.setIsDailyLoop}
         setShowInfoModal={player.setShowInfoModal}
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
       />
-
-      {/* BANNER AHORA SUENA */}
-      {isPlaying && radioData.nowPlaying?.title && activeTab === 'somafm' && (
-        <div className="relative z-10 mx-auto px-4 mb-4" style={{ maxWidth: '1600px' }}>
-          <div className="flex items-center gap-3 px-4 py-2 border-[3px] border-black bg-yellow-100 text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none overflow-hidden">
-            <span className="w-3 h-3 border-[2px] border-black bg-red-500 animate-ping flex-shrink-0" />
-            <span className="tracking-widest">AHORA SUENA:</span>
-            <span className="truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>{radioData.nowPlaying.title}</span>
-            {radioData.nowPlaying.artist && <span className="truncate text-black/70">— {radioData.nowPlaying.artist}</span>}
-            {radioData.nowPlaying.album && <span className="hidden md:inline truncate text-black/50">· {radioData.nowPlaying.album}</span>}
-          </div>
-        </div>
-      )}
 
       {/* LAYOUT PRINCIPAL */}
       <div className="relative z-10 px-4 lg:px-6 pb-8 mx-auto w-full" style={{ maxWidth: '1600px' }}>
@@ -223,6 +258,7 @@ export default function ProyectoRadio() {
               }}
               nowPlaying={radioData.nowPlaying}
               isPlaying={isPlaying}
+              setIsPlaying={setIsPlaying}
               volume={player.volume}
               isMuted={player.isMuted}
               handleVolumeChange={player.handleVolumeChange}
@@ -240,6 +276,8 @@ export default function ProyectoRadio() {
               isRepeatSingle={player.isRepeatSingle}
               setIsRepeatSingle={player.setIsRepeatSingle}
               audioError={audioError}
+              activeTab={activeTab}
+              continueYoutubeAutoplay={continueYoutubeAutoplay}
             />
 
             <SourceTabs 
@@ -252,6 +290,8 @@ export default function ProyectoRadio() {
               isApplyingRemoteChange={isApplyingRemoteChange}
               formattedTotalPlaylistTime={player.formatTime(radioData.totalPlaylistSeconds)}
               quotaPercent={Math.min(100, Math.round((radioData.totalPlaylistSeconds / 14400) * 100))}
+              continueYoutubeAutoplay={continueYoutubeAutoplay}
+              setContinueYoutubeAutoplay={setContinueYoutubeAutoplay}
               {...radioData}
             />
           </div>
@@ -312,7 +352,7 @@ export default function ProyectoRadio() {
         referrerPolicy="no-referrer"
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
-          if (isPlaying && currentTrack?.url) {
+          if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {
             setAudioError(`No se pudo cargar "${currentTrack.title}". Prueba con otra señal.`);
             setIsPlaying(false);
           }

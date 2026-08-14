@@ -126,6 +126,13 @@ export function useRadioPlayer(currentPlaylist, activeTab, broadcastPlay, broadc
   };
 
   useEffect(() => {
+    if (activeTab === 'youtube') {
+      if (audioRef.current) {
+        try { audioRef.current.pause(); } catch (e) {}
+      }
+      return;
+    }
+
     if (audioRef.current && currentTrack?.url) {
       if (audioRef.current.src !== currentTrack.url) {
         audioRef.current.src = currentTrack.url;

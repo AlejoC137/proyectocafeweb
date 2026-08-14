@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import supabase from "../../../config/supabaseClient";
 import MenuPrint from "./MenuPrint";
 import MenuPrintHorizontal from "./MenuPrintHorizontal";
+import MenuPrintIaModal from "./MenuPrintIaModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Coffee, Layers, Plus, Trash2, Edit, Check, X, Copy } from "lucide-react";
+import { Coffee, Layers, Plus, Trash2, Edit, Check, X, Copy, Sparkles } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 
 function MenuPrintManager() {
@@ -20,11 +21,12 @@ function MenuPrintManager() {
   const [cloneName, setCloneName] = useState("");
   const [cloneSourceId, setCloneSourceId] = useState(2); // default to clone from menu 2 (horizontal default)
   const [isCreating, setIsCreating] = useState(false);
+  const [showIaModal, setShowIaModal] = useState(false);
 
   useEffect(() => {
     fetchMenus(activeMenuId);
-  }, []);
-
+  }, [activeMenuId]);
+  
   const fetchMenus = async (currentActiveId = activeMenuId) => {
     try {
       setLoading(true);
@@ -81,6 +83,7 @@ function MenuPrintManager() {
     }
     if (menu.id === 1) return "Menú Vertical Principal";
     if (menu.id === 2) return "Menú Horizontal Principal";
+    if (menu.id === 3) return "Menú Helados Dovici";
     return `Menú Clonado ${menu.id}`;
   };
 
@@ -90,7 +93,7 @@ function MenuPrintManager() {
     return menu.group_descriptions?.__layout?.type || "horizontal";
   };
 
-  const activeMenu = menus.find((m) => m.id === activeMenuId) || { id: 2 };
+  const activeMenu = menus.find((m) => m.id === activeMenuId) || { id: activeMenuId };
   const activeMenuType = getMenuType(activeMenu);
 
   const startEditName = () => {
@@ -112,8 +115,10 @@ function MenuPrintManager() {
 
       const { error } = await supabase
         .from("menu_print_config")
-        .update({ group_descriptions: updatedDescriptions })
-        .eq("id", activeMenuId);
+        .upsert([{
+          id: activeMenuId,
+          group_descriptions: updatedDescriptions
+        }]);
 
       if (error) throw error;
 
@@ -128,7 +133,7 @@ function MenuPrintManager() {
       setIsEditingName(false);
     } catch (err) {
       console.error("Error updating name:", err);
-      alert("Error al actualizar el nombre del menú");
+      alert("Error al actualizar el nombre del menú: " + err.message);
     }
   };
 
@@ -287,8 +292,17 @@ function MenuPrintManager() {
           })}
         </div>
 
-        {/* Right Side: Clone & Delete Actions */}
+        {/* Right Side: IA & Clone & Delete Actions */}
         <div className="flex items-center gap-2 shrink-0">
+          <Button
+            onClick={() => setShowIaModal(true)}
+            className="bg-yellow-300 hover:bg-yellow-400 text-black border-2 border-black font-black uppercase text-xs h-9 px-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
+            title="Diagramar o Importar Layout con Gemini IA"
+          >
+            <Sparkles size={14} className="text-black" />
+            <span className="hidden sm:inline">IA Layout / Importar</span>
+          </Button>
+
           <Button
             onClick={() => {
               setCloneSourceId(activeMenuType === "horizontal" ? activeMenuId : 2);
@@ -316,10 +330,11 @@ function MenuPrintManager() {
       <div className="flex-1 w-full flex flex-col">
         {activeMenuType === "vertical" ? (
           <div className="pt-[64px]">
-            <MenuPrint menuId={activeMenuId} />
+            <MenuPrint key={activeMenuId} menuId={activeMenuId} />
           </div>
         ) : (
           <MenuPrintHorizontal
+            key={activeMenuId}
             menuId={activeMenuId}
             controlTopClass="top-[120px]"
             containerPaddingClass="pt-[240px]"
@@ -395,6 +410,20 @@ function MenuPrintManager() {
           </div>
         </div>
       )}
+
+      {/* Menu Print IA Layout Modal */}
+      <MenuPrintIaModal
+        isOpen={showIaModal}
+        onClose={() => setShowIaModal(false)}
+        menuId={activeMenuId}
+        menuType={activeMenuType}
+        currentConfig={activeMenu?.group_descriptions}
+        onLayoutImported={() => {
+          fetchMenus(activeMenuId);
+          // Forzar recarga de ventana si es necesario para asegurar refresco completo del visor
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
