@@ -35,7 +35,6 @@ export default function ProyectoRadio() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null);
-  const [continueYoutubeAutoplay, setContinueYoutubeAutoplay] = useState(true);
 
   const radioData = useRadioData(
     activeTab, 
@@ -277,7 +276,6 @@ export default function ProyectoRadio() {
               setIsRepeatSingle={player.setIsRepeatSingle}
               audioError={audioError}
               activeTab={activeTab}
-              continueYoutubeAutoplay={continueYoutubeAutoplay}
             />
 
             <SourceTabs 
@@ -290,8 +288,6 @@ export default function ProyectoRadio() {
               isApplyingRemoteChange={isApplyingRemoteChange}
               formattedTotalPlaylistTime={player.formatTime(radioData.totalPlaylistSeconds)}
               quotaPercent={Math.min(100, Math.round((radioData.totalPlaylistSeconds / 14400) * 100))}
-              continueYoutubeAutoplay={continueYoutubeAutoplay}
-              setContinueYoutubeAutoplay={setContinueYoutubeAutoplay}
               {...radioData}
             />
           </div>

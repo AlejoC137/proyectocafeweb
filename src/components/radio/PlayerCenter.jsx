@@ -7,7 +7,6 @@ export default function PlayerCenter({
   nowPlaying,
   isPlaying,
   setIsPlaying,
-  continueYoutubeAutoplay = true,
   volume,
   isMuted,
   handleVolumeChange,
@@ -46,7 +45,7 @@ export default function PlayerCenter({
     }
   }, [isPlaying, isYoutubeTrack]);
 
-  // Escuchar fin de video en el IFrame de YouTube API para pasar automáticamente al siguiente video
+  // Escuchar fin de video en el IFrame de YouTube API para pasar automáticamente al siguiente video en la lista
   useEffect(() => {
     const handleYoutubeEvent = (event) => {
       if (!isYoutubeTrack) return;
@@ -57,9 +56,9 @@ export default function PlayerCenter({
         }
         if (payload) {
           const state = payload.info?.playerState ?? payload.infoState ?? payload.info;
-          // State 0 === ENDED (Video Terminado)
+          // State 0 === ENDED (Video Terminado -> Avanzar automáticamente al siguiente video)
           if (state === 0 && (payload.event === 'infoDelivery' || payload.event === 'onStateChange')) {
-            if (!continueYoutubeAutoplay && nextTrack) {
+            if (nextTrack) {
               nextTrack();
             }
           }
@@ -69,7 +68,7 @@ export default function PlayerCenter({
 
     window.addEventListener('message', handleYoutubeEvent);
     return () => window.removeEventListener('message', handleYoutubeEvent);
-  }, [isYoutubeTrack, continueYoutubeAutoplay, nextTrack]);
+  }, [isYoutubeTrack, nextTrack]);
 
   // Escuchar inicio forzado desde el modal AutoStart
   useEffect(() => {
@@ -105,8 +104,8 @@ export default function PlayerCenter({
         {isYoutubeTrack && ytId ? (
           <iframe
             ref={iframeRef}
-            key={`${ytId}-${continueYoutubeAutoplay}`}
-            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&rel=${continueYoutubeAutoplay ? 1 : 0}&playsinline=1&modestbranding=1`}
+            key={ytId}
+            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&rel=0&playsinline=1&modestbranding=1`}
             title={currentTrack?.title || 'YouTube Player'}
             className="absolute inset-0 w-full h-full border-0 object-cover z-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import supabase from '../config/supabaseClient';
 import { parseAudioFileMetadata } from '../utils/radioMetadataParser';
 import RadioEditModal from './radio/RadioEditModal';
+import AlbumEditModal from './radio/AlbumEditModal';
+import YoutubeBulkModal from './radio/YoutubeBulkModal';
 import MusicCoversGalleryModal from './radio/MusicCoversGalleryModal';
-import { extractYoutubeId, getYoutubeThumbnail, YOUTUBE_CATEGORIES } from '../utils/youtubeHelpers';
+import { extractYoutubeId, getYoutubeThumbnail, fetchYoutubeMetadata, YOUTUBE_CATEGORIES } from '../utils/youtubeHelpers';
 import { 
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
   GripVertical, Search, Filter, Layers, Disc, Tag, Calendar, Sparkles, 
   Clock, CheckSquare, Square, Volume2, VolumeX, SkipBack, SkipForward,
-  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon
+  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus
 } from 'lucide-react';
 
 const MAX_PLAYLIST_SECONDS = 4 * 60 * 60; // 4 horas
@@ -131,6 +133,13 @@ export default function RadioManager() {
   });
   const [isEditingYt, setIsEditingYt] = useState(false);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
+
+  // Editor de Álbumes en React
+  const [editingAlbumTarget, setEditingAlbumTarget] = useState(null);
+  const [isSavingAlbum, setIsSavingAlbum] = useState(false);
+
+  // Modal de Importación Masiva de YouTube
+  const [showYoutubeBulkModal, setShowYoutubeBulkModal] = useState(false);
 
   const availableCategories = useMemo(() => {
     return Array.from(new Set([
@@ -706,37 +715,77 @@ export default function RadioManager() {
     }
   };
 
-  // Editar metadatos del álbum completo (Título, Artista, Año)
-  const handleEditAlbumMetadata = async (albumTarget) => {
-    const newAlbumTitle = window.prompt("Nuevo título para el Álbum:", albumTarget.albumName);
-    if (!newAlbumTitle || !newAlbumTitle.trim()) return;
-    const newArtist = window.prompt("Nuevo Artista para el Álbum:", albumTarget.artistName) || albumTarget.artistName;
-    const newYear = window.prompt("Año de Lanzamiento del Álbum:", albumTarget.year) || albumTarget.year;
-
+  // Editar metadatos del álbum completo (Título, Artista, Año, Género, Carátula) en React Modal
+  const handleSaveAlbumModal = async (albumTarget, updatedFields) => {
+    setIsSavingAlbum(true);
     try {
       const trackIds = albumTarget.tracks.map(t => t.id);
       setSongs(prev => prev.map(s => trackIds.includes(s.id) ? { 
         ...s, 
-        album: newAlbumTitle.trim(), 
-        artist: newArtist.trim(),
-        year: newYear.trim()
+        album: updatedFields.albumName, 
+        artist: updatedFields.artistName,
+        year: updatedFields.year,
+        genre: updatedFields.genre,
+        cover: updatedFields.cover || s.cover
       } : s));
 
       for (const songId of trackIds) {
         try {
           const cleanPayload = filterPayloadByKnownColumns({ 
-            album: newAlbumTitle.trim(), 
-            artist: newArtist.trim(),
-            year: newYear.trim()
+            album: updatedFields.albumName, 
+            artist: updatedFields.artistName,
+            year: updatedFields.year,
+            genre: updatedFields.genre,
+            cover: updatedFields.cover
           });
           await supabase.from('playlist_radio').update(cleanPayload).eq('id', songId);
         } catch (e) {}
       }
 
-      setSuccess(`¡Metadatos del álbum "${newAlbumTitle}" actualizados correctamente!`);
+      setSuccess(`¡Álbum "${updatedFields.albumName}" actualizado correctamente (${trackIds.length} canciones)!`);
+      setEditingAlbumTarget(null);
     } catch (err) {
-      console.error("Error editando metadatos de álbum:", err);
-      setError("Error al editar álbum: " + err.message);
+      console.error("Error editando álbum:", err);
+      setError("Error al guardar cambios del álbum: " + err.message);
+    } finally {
+      setIsSavingAlbum(false);
+    }
+  };
+
+  // Importación Masiva y de Playlists de YouTube a Supabase
+  const handleBulkImportYoutube = async (itemsToInsert) => {
+    try {
+      const newEntries = itemsToInsert.map((item, idx) => ({
+        title: item.title.trim(),
+        artist: item.artist?.trim() || 'YouTube',
+        youtube_url: item.url,
+        youtube_id: item.videoId,
+        cover: item.cover,
+        category: item.category || 'Lofi & Chill',
+        order_index: youtubeSongs.length + idx
+      }));
+
+      // Insertar en Supabase
+      const { data, error } = await supabase
+        .from('playlist_youtube')
+        .insert(newEntries)
+        .select();
+
+      if (error) {
+        console.warn("Falló inserción directa completa de YouTube, intentando payload mínimo:", error.message);
+        const minimalEntries = newEntries.map(e => ({
+          title: e.title,
+          youtube_url: e.youtube_url,
+          youtube_id: e.youtube_id
+        }));
+        await supabase.from('playlist_youtube').insert(minimalEntries);
+      }
+
+      await fetchYoutubeSongs();
+      setSuccess(`¡${itemsToInsert.length} canciones/videos agregados exitosamente a la Radio desde YouTube!`);
+    } catch (err) {
+      console.error("Error en importación masiva de YouTube:", err);
+      setError("No se pudieron agregar los videos masivamente: " + err.message);
     }
   };
 
@@ -1392,7 +1441,7 @@ export default function RadioManager() {
                       </button>
 
                       <button 
-                        onClick={() => handleEditAlbumMetadata(alb)}
+                        onClick={() => setEditingAlbumTarget(alb)}
                         className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1"
                         title="Editar metadatos del álbum"
                       >
@@ -1409,22 +1458,33 @@ export default function RadioManager() {
           <div className="space-y-6">
             {/* Formulario Agregar / Editar Enlace YouTube */}
             <div className="bg-[#181818] p-6 rounded-2xl border border-white/10 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-3 gap-3">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <Youtube className="w-5 h-5 text-red-500 fill-current" />
-                  {isEditingYt ? 'Editar Propiedades de Video YouTube' : 'Agregar Nuevo Enlace de YouTube'}
+                  {isEditingYt ? 'Editar Propiedades de Video YouTube' : 'Agregar Enlace de YouTube'}
                 </h3>
-                {isEditingYt && (
-                  <button 
-                    onClick={() => {
-                      setYtForm({ id: null, title: '', artist: '', youtubeUrl: '', category: 'Lofi & Chill' });
-                      setIsEditingYt(false);
-                    }}
-                    className="text-xs text-gray-400 hover:text-white px-3 py-1 bg-white/10 rounded-lg"
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowYoutubeBulkModal(true)}
+                    className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-extrabold shadow-md shadow-red-600/30 flex items-center gap-1.5 transition"
                   >
-                    Cancelar Edición
+                    <ListPlus className="w-4 h-4" /> Importación Masiva / Playlists
                   </button>
-                )}
+
+                  {isEditingYt && (
+                    <button 
+                      onClick={() => {
+                        setYtForm({ id: null, title: '', artist: '', youtubeUrl: '', category: 'Lofi & Chill' });
+                        setIsEditingYt(false);
+                      }}
+                      className="text-xs text-gray-400 hover:text-white px-3 py-1.5 bg-white/10 rounded-xl"
+                    >
+                      Cancelar Edición
+                    </button>
+                  )}
+                </div>
               </div>
 
               <form onSubmit={handleSaveYoutubeLink} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1436,7 +1496,7 @@ export default function RadioManager() {
                       required
                       placeholder="Ej: https://www.youtube.com/watch?v=jfKfPfyJRdk"
                       value={ytForm.youtubeUrl}
-                      onChange={e => {
+                      onChange={async (e) => {
                         const url = e.target.value;
                         const ytId = extractYoutubeId(url);
                         setYtForm(prev => ({
@@ -1444,6 +1504,17 @@ export default function RadioManager() {
                           youtubeUrl: url,
                           title: prev.title || (ytId ? `Video de YouTube (${ytId})` : prev.title)
                         }));
+
+                        if (ytId && !isEditingYt) {
+                          const meta = await fetchYoutubeMetadata(url);
+                          if (meta && meta.title) {
+                            setYtForm(prev => ({
+                              ...prev,
+                              title: meta.title,
+                              artist: meta.artist || prev.artist
+                            }));
+                          }
+                        }
                       }}
                       className="flex-1 px-4 py-2.5 bg-black/50 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 font-mono"
                     />
@@ -1735,6 +1806,23 @@ export default function RadioManager() {
           setShowAlbumCoversModal(false);
           setTargetAlbumForCover(null);
         }}
+      />
+
+      {/* MODAL DE EDICIÓN DE ÁLBUMES EN REACT */}
+      <AlbumEditModal 
+        album={editingAlbumTarget}
+        isOpen={Boolean(editingAlbumTarget)}
+        onClose={() => setEditingAlbumTarget(null)}
+        onSave={handleSaveAlbumModal}
+        isSaving={isSavingAlbum}
+      />
+
+      {/* MODAL DE IMPORTACIÓN MASIVA Y PLAYLISTS DE YOUTUBE */}
+      <YoutubeBulkModal 
+        isOpen={showYoutubeBulkModal}
+        onClose={() => setShowYoutubeBulkModal(false)}
+        onImport={handleBulkImportYoutube}
+        categories={availableCategories}
       />
 
     </div>

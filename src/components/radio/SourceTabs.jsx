@@ -184,24 +184,6 @@ export default function SourceTabs({
               </h3>
               
               <div className="flex items-center gap-2.5 ml-auto sm:ml-0 flex-shrink-0">
-                {setContinueYoutubeAutoplay && (
-                  <div className="flex items-center gap-1.5" title={continueYoutubeAutoplay ? "Auto-Play: Recomendación de YouTube" : "Auto-Play: Siguiente pista de la lista"}>
-                    <span className="text-[10px] font-black uppercase text-black dark:text-slate-200 hidden sm:inline">Autoplay</span>
-                    <button 
-                      type="button"
-                      onClick={() => setContinueYoutubeAutoplay(!continueYoutubeAutoplay)}
-                      className={`relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer border-[2px] border-black transition-colors duration-200 ease-in-out ${
-                        continueYoutubeAutoplay ? 'bg-red-600' : 'bg-gray-300 dark:bg-slate-700'
-                      }`}
-                      title="Activar: Recomendados YT | Desactivar: Siguiente en lista"
-                    >
-                      <span className={`inline-block h-4 w-4 transform border-[1.5px] border-black bg-white transition duration-200 ease-in-out mt-0.5 ${
-                        continueYoutubeAutoplay ? 'translate-x-6' : 'translate-x-0.5'
-                      }`} />
-                    </button>
-                  </div>
-                )}
-
                 <button onClick={() => navigate('/RadioManager')}
                   className="px-3 py-1.5 text-xs font-black uppercase tracking-widest transition border-[2.5px] border-black dark:border-red-600 bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black rounded-none flex items-center gap-1"
                 >

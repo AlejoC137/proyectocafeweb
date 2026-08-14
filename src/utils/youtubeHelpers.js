@@ -102,3 +102,181 @@ export const DEFAULT_YOUTUBE_PLAYLIST = [
     type: 'youtube'
   }
 ];
+
+/**
+ * Extrae el ID de una lista de reproducción (Playlist) de YouTube.
+ * Soporta:
+ * - https://www.youtube.com/playlist?list=PLAYLIST_ID
+ * - https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID
+ */
+export function extractPlaylistId(url) {
+  if (!url || typeof url !== 'string') return null;
+  const match = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Obtiene el título y autor/canal de un video de YouTube automáticamente mediante oEmbed o noembed.
+ */
+export async function fetchYoutubeMetadata(urlOrId) {
+  const videoId = extractYoutubeId(urlOrId);
+  if (!videoId) return null;
+
+  const targetUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  const thumbnail = getYoutubeThumbnail(videoId);
+
+  // Intentar oEmbed oficial de YouTube
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(targetUrl)}&format=json`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.title) {
+        return {
+          videoId,
+          url: targetUrl,
+          title: data.title,
+          artist: data.author_name || 'Canal de YouTube',
+          cover: thumbnail
+        };
+      }
+    }
+  } catch (e) {
+    // Fallback silencioso a noembed
+  }
+
+  // Fallback 2: Noembed
+  try {
+    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(targetUrl)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.title) {
+        return {
+          videoId,
+          url: targetUrl,
+          title: data.title,
+          artist: data.author_name || 'Canal de YouTube',
+          cover: thumbnail
+        };
+      }
+    }
+  } catch (e) {}
+
+  return {
+    videoId,
+    url: targetUrl,
+    title: `Video de YouTube (${videoId})`,
+    artist: 'YouTube',
+    cover: thumbnail
+  };
+}
+
+/**
+ * Extrae los videos de una playlist pública de YouTube utilizando el Feed RSS XML + fallback de proxies CORS.
+ */
+export async function fetchYoutubePlaylist(playlistId) {
+  if (!playlistId) return [];
+
+  const rssUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`
+  ];
+
+  for (const proxyUrl of proxies) {
+    try {
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const xmlText = await res.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        const entries = Array.from(xmlDoc.querySelectorAll("entry"));
+
+        if (entries.length > 0) {
+          return entries.map(entry => {
+            const videoIdNode = entry.querySelector("videoId") || entry.getElementsByTagName("yt:videoId")[0];
+            const videoId = videoIdNode ? videoIdNode.textContent.trim() : '';
+            const titleNode = entry.querySelector("title");
+            const title = titleNode ? titleNode.textContent.trim() : `Video ${videoId}`;
+            const authorNode = entry.querySelector("name") || entry.querySelector("author > name");
+            const author = authorNode ? authorNode.textContent.trim() : 'Canal de YouTube';
+
+            return {
+              videoId,
+              url: `https://www.youtube.com/watch?v=${videoId}`,
+              title,
+              artist: author,
+              cover: getYoutubeThumbnail(videoId)
+            };
+          }).filter(item => item.videoId && item.videoId.length === 11);
+        }
+      }
+    } catch (err) {
+      console.warn("Proxy playlist attempt failed:", err);
+    }
+  }
+  return [];
+}
+
+/**
+ * Extrae todos los IDs de video de YouTube únicos encontrados en un texto o bloque de URLs.
+ */
+export function extractAllYoutubeVideoIds(text) {
+  if (!text || typeof text !== 'string') return [];
+
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/gi;
+  const found = new Set();
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match[1]) found.add(match[1]);
+  }
+
+  // Verificar líneas individuales si se pegaron IDs puros
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+      found.add(trimmed);
+    }
+  }
+
+  return Array.from(found);
+}
+
+/**
+ * Procesa masivamente un texto pegado (URLs, Playlist o IDs) y recupera sus metadatos de forma asíncrona.
+ */
+export async function parseBulkYoutubeInput(rawText, onProgress = () => {}) {
+  if (!rawText || !rawText.trim()) return [];
+
+  const trimmed = rawText.trim();
+  const playlistId = extractPlaylistId(trimmed);
+
+  let items = [];
+
+  // Si es una URL de playlist, intentar traer toda la playlist primero
+  if (playlistId) {
+    onProgress(0, 1, "Cargando lista de reproducción de YouTube...");
+    const playlistItems = await fetchYoutubePlaylist(playlistId);
+    if (playlistItems.length > 0) {
+      items = playlistItems;
+    }
+  }
+
+  // Si no era playlist o la playlist falló, extraer todos los IDs de los enlaces pegados
+  if (items.length === 0) {
+    const videoIds = extractAllYoutubeVideoIds(trimmed);
+    if (videoIds.length === 0) return [];
+
+    const total = videoIds.length;
+    for (let i = 0; i < total; i++) {
+      onProgress(i + 1, total, `Obteniendo información del video ${i + 1} de ${total}...`);
+      const meta = await fetchYoutubeMetadata(videoIds[i]);
+      if (meta) items.push(meta);
+    }
+  }
+
+  return items;
+}
+
