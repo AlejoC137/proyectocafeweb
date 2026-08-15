@@ -219,16 +219,56 @@ export async function fetchYoutubePlaylist(playlistId) {
 }
 
 /**
- * Extrae todos los IDs de video de YouTube únicos encontrados en un texto o bloque de URLs.
+ * Extrae los videos de un Mix / Radio de YouTube (list=RD... o start_radio=1) analizando la página del mix vía proxy.
+ */
+export async function fetchYoutubeMix(urlOrPlaylistId) {
+  let targetUrl = urlOrPlaylistId;
+  if (!targetUrl.startsWith('http')) {
+    targetUrl = `https://www.youtube.com/watch?v=POzphzik4l0&list=${urlOrPlaylistId}`;
+  }
+
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+  ];
+
+  for (const proxyUrl of proxies) {
+    try {
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const html = await res.text();
+        const videoIds = extractAllYoutubeVideoIds(html);
+        if (videoIds.length > 0) {
+          return videoIds;
+        }
+      }
+    } catch (err) {
+      console.warn("Error obteniendo mix de YouTube via proxy:", err);
+    }
+  }
+  return [];
+}
+
+/**
+ * Extrae todos los IDs de video de YouTube únicos encontrados en un texto o bloque de URLs (incluyendo v= y rv=).
  */
 export function extractAllYoutubeVideoIds(text) {
   if (!text || typeof text !== 'string') return [];
 
-  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/gi;
   const found = new Set();
+
+  // Match v=VIDEO_ID, /v/VIDEO_ID, shorts/VIDEO_ID, youtu.be/VIDEO_ID, embed/VIDEO_ID
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/gi;
   let match;
 
   while ((match = regex.exec(text)) !== null) {
+    if (match[1]) found.add(match[1]);
+  }
+
+  // Match rv=VIDEO_ID (videos relacionados en URLs de mix de YouTube)
+  const rvRegex = /[?&]rv=([a-zA-Z0-9_-]{11})/gi;
+  while ((match = rvRegex.exec(text)) !== null) {
     if (match[1]) found.add(match[1]);
   }
 
@@ -245,38 +285,62 @@ export function extractAllYoutubeVideoIds(text) {
 }
 
 /**
- * Procesa masivamente un texto pegado (URLs, Playlist o IDs) y recupera sus metadatos de forma asíncrona.
+ * Procesa masivamente un texto pegado (URLs, Mixes, Playlists o IDs) y recupera sus metadatos de forma asíncrona.
  */
 export async function parseBulkYoutubeInput(rawText, onProgress = () => {}) {
   if (!rawText || !rawText.trim()) return [];
 
   const trimmed = rawText.trim();
   const playlistId = extractPlaylistId(trimmed);
+  const isMixUrl = Boolean(
+    (playlistId && playlistId.startsWith('RD')) || 
+    trimmed.includes('start_radio=1') || 
+    trimmed.includes('&list=RD') ||
+    trimmed.includes('?list=RD')
+  );
 
-  let items = [];
+  let videoIds = [];
 
-  // Si es una URL de playlist, intentar traer toda la playlist primero
-  if (playlistId) {
-    onProgress(0, 1, "Cargando lista de reproducción de YouTube...");
-    const playlistItems = await fetchYoutubePlaylist(playlistId);
-    if (playlistItems.length > 0) {
-      items = playlistItems;
+  // 1. Si es un Mix o Radio de YouTube (list=RD... o start_radio=1)
+  if (isMixUrl) {
+    onProgress(0, 1, "Extrayendo lista de canciones del Mix / Radio de YouTube...");
+    const mixVideoIds = await fetchYoutubeMix(trimmed);
+    if (mixVideoIds.length > 0) {
+      videoIds = mixVideoIds;
     }
   }
 
-  // Si no era playlist o la playlist falló, extraer todos los IDs de los enlaces pegados
-  if (items.length === 0) {
-    const videoIds = extractAllYoutubeVideoIds(trimmed);
-    if (videoIds.length === 0) return [];
-
-    const total = videoIds.length;
-    for (let i = 0; i < total; i++) {
-      onProgress(i + 1, total, `Obteniendo información del video ${i + 1} de ${total}...`);
-      const meta = await fetchYoutubeMetadata(videoIds[i]);
-      if (meta) items.push(meta);
+  // 2. Si es una Playlist estándar de YouTube (list=PL...)
+  if (videoIds.length === 0 && playlistId && !playlistId.startsWith('RD')) {
+    onProgress(0, 1, "Cargando lista de reproducción de YouTube...");
+    const playlistItems = await fetchYoutubePlaylist(playlistId);
+    if (playlistItems.length > 0) {
+      return playlistItems;
     }
+  }
+
+  // 3. Extraer todos los IDs de video directamente de la URL o texto (v=..., rv=..., etc.)
+  const directIds = extractAllYoutubeVideoIds(trimmed);
+  for (const id of directIds) {
+    if (!videoIds.includes(id)) {
+      videoIds.unshift(id); // Colocar videos principales al inicio
+    }
+  }
+
+  if (videoIds.length === 0) return [];
+
+  // Limitar a un máximo razonable de 50 canciones por extracción
+  const uniqueIds = Array.from(new Set(videoIds)).slice(0, 50);
+  const total = uniqueIds.length;
+  const items = [];
+
+  for (let i = 0; i < total; i++) {
+    onProgress(i + 1, total, `Leyendo información de canción ${i + 1} de ${total}...`);
+    const meta = await fetchYoutubeMetadata(uniqueIds[i]);
+    if (meta) items.push(meta);
   }
 
   return items;
 }
+
 
