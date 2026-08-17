@@ -45,6 +45,8 @@ export function formatDuration(seconds) {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
+export const formatTime = formatDuration;
+
 /**
  * Categorías predefinidas para organizar temas de YouTube
  */
@@ -122,17 +124,21 @@ export async function fetchYoutubeMetadata(urlOrId) {
   const videoId = extractYoutubeId(urlOrId);
   if (!videoId) return null;
 
-  const targetUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  const listId = extractPlaylistId(urlOrId);
+  const targetUrl = typeof urlOrId === 'string' && urlOrId.startsWith('http')
+    ? urlOrId
+    : (listId ? `https://www.youtube.com/watch?v=${videoId}&list=${listId}` : `https://www.youtube.com/watch?v=${videoId}`);
   const thumbnail = getYoutubeThumbnail(videoId);
 
   // Intentar oEmbed oficial de YouTube
   try {
-    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(targetUrl)}&format=json`);
+    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`);
     if (res.ok) {
       const data = await res.json();
       if (data && data.title) {
         return {
           videoId,
+          listId,
           url: targetUrl,
           title: data.title,
           artist: data.author_name || 'Canal de YouTube',
@@ -146,12 +152,13 @@ export async function fetchYoutubeMetadata(urlOrId) {
 
   // Fallback 2: Noembed
   try {
-    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(targetUrl)}`);
+    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`);
     if (res.ok) {
       const data = await res.json();
       if (data && data.title) {
         return {
           videoId,
+          listId,
           url: targetUrl,
           title: data.title,
           artist: data.author_name || 'Canal de YouTube',
@@ -163,6 +170,7 @@ export async function fetchYoutubeMetadata(urlOrId) {
 
   return {
     videoId,
+    listId,
     url: targetUrl,
     title: `Video de YouTube (${videoId})`,
     artist: 'YouTube',

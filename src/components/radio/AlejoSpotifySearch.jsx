@@ -16,8 +16,11 @@ import {
   Sparkles,
   Volume2,
   Mic,
-  User
+  User,
+  Edit2
 } from 'lucide-react';
+import AlbumEditModal from './AlbumEditModal';
+import CreateAlbumModal from './CreateAlbumModal';
 
 // Categorías de género predefinidas con colores estilo Spotify / Neo-brutalismo
 const GENRES_LIST = [
@@ -35,6 +38,17 @@ const GENRES_LIST = [
 
 export default function AlejoSpotifySearch({
   supabasePlaylist = [],
+  filteredSupabasePlaylist,
+  supabaseSearchQuery = '',
+  setSupabaseSearchQuery,
+  selectedGenre = 'all',
+  setSelectedGenre,
+  selectedArtist = 'all',
+  setSelectedArtist,
+  selectedAlbum = 'all',
+  setSelectedAlbum,
+  activeView = 'all',
+  setActiveView,
   loadingSupabase = false,
   currentTrackIndex,
   setCurrentTrackIndex,
@@ -43,18 +57,19 @@ export default function AlejoSpotifySearch({
   isApplyingRemoteChange,
   moveSongOrder,
   handleDeleteSong,
+  updateAlbumData,
   toggleFavorite,
   navigate,
   activeTab
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('all');
-  const [selectedArtist, setSelectedArtist] = useState('all');
-  const [selectedAlbum, setSelectedAlbum] = useState('all');
-  const [activeView, setActiveView] = useState('all'); // 'all', 'favorites'
+  const searchQuery = supabaseSearchQuery;
+  const setSearchQuery = setSupabaseSearchQuery;
+
   const [showGenreGrid, setShowGenreGrid] = useState(false);
   const [showArtistGrid, setShowArtistGrid] = useState(false);
   const [showAlbumGrid, setShowAlbumGrid] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState(null);
+  const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
 
   // Helper para inferir género si no está especificado en los metadatos
   const getTrackGenre = (song) => {
@@ -95,85 +110,43 @@ export default function AlejoSpotifySearch({
           map[albumName] = {
             name: albumName,
             artist: song.artist || 'Varios',
+            genre: song.genre || 'Lofi / Chill',
+            mood: song.mood || 'Chill & Relax',
             cover: song.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400',
-            count: 0
+            count: 0,
+            songCount: 0
           };
         }
         map[albumName].count += 1;
+        map[albumName].songCount += 1;
       }
     });
     return Object.values(map).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }, [supabasePlaylist]);
 
-  // Contadores por género
-  const genreCounts = useMemo(() => {
-    const counts = { all: supabasePlaylist.length };
-    GENRES_LIST.forEach(g => { if (g.id !== 'all') counts[g.id] = 0; });
-    
+  // Extraer lista única de géneros reales desde las canciones de Supabase
+  const genreList = useMemo(() => {
+    const map = {};
     supabasePlaylist.forEach(song => {
-      const g = getTrackGenre(song);
-      GENRES_LIST.forEach(genreObj => {
-        if (genreObj.id !== 'all') {
-          if (g.includes(genreObj.id) || (genreObj.id === 'salsa' && (g.includes('latino') || g.includes('salsa')))) {
-            counts[genreObj.id] = (counts[genreObj.id] || 0) + 1;
-          }
-        }
-      });
+      const g = (song.genre || song.category || '').trim();
+      if (g) {
+        const parts = g.split(/[,/]/).map(p => p.trim()).filter(Boolean);
+        parts.forEach(part => {
+          const formattedName = part.charAt(0).toUpperCase() + part.slice(1);
+          map[formattedName] = (map[formattedName] || 0) + 1;
+        });
+      }
     });
-    return counts;
+    return Object.entries(map)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }, [supabasePlaylist]);
 
-  // Filtrado de canciones por Búsqueda, Género, Artista, Álbum y Vista (Favoritos)
-  const filteredTracks = useMemo(() => {
-    return supabasePlaylist.filter((song) => {
-      // Filtro por Vista activa (Favoritos)
-      if (activeView === 'favorites' && !song.is_favorite) {
-        return false;
-      }
+  // Lista de canciones filtradas recibida o calculada
+  const filteredTracks = filteredSupabasePlaylist || supabasePlaylist;
 
-      // Filtro por género seleccionado
-      if (selectedGenre !== 'all') {
-        const songGenre = getTrackGenre(song);
-        if (!songGenre.includes(selectedGenre) && selectedGenre !== 'varios') {
-          return false;
-        }
-      }
-
-      // Filtro por artista seleccionado
-      if (selectedArtist !== 'all') {
-        const songArtist = (song.artist || 'Artista Desconocido').trim().toLowerCase();
-        if (songArtist !== selectedArtist.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // Filtro por álbum seleccionado
-      if (selectedAlbum !== 'all') {
-        const songAlbum = (song.album || 'Sencillo').trim().toLowerCase();
-        if (songAlbum !== selectedAlbum.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // Filtro por búsqueda de texto (Busca por Canción, Artista, Género o Álbum)
-      if (searchQuery.trim() !== '') {
-        const q = searchQuery.toLowerCase().trim();
-        const matchTitle = (song.title || '').toLowerCase().includes(q);
-        const matchArtist = (song.artist || '').toLowerCase().includes(q);
-        const matchAlbum = (song.album || '').toLowerCase().includes(q);
-        const matchGenre = (song.genre || '').toLowerCase().includes(q);
-        return matchTitle || matchArtist || matchAlbum || matchGenre;
-      }
-
-      return true;
-    });
-  }, [supabasePlaylist, searchQuery, selectedGenre, selectedArtist, selectedAlbum, activeView]);
-
-  const handlePlayTrack = (originalIndex, track) => {
-    const realIndex = supabasePlaylist.findIndex(s => (s.id && s.id === track.id) || (s.url === track.url));
-    const targetIdx = realIndex !== -1 ? realIndex : originalIndex;
-    
-    setCurrentTrackIndex(targetIdx);
+  const handlePlayTrack = (index, track) => {
+    setCurrentTrackIndex(index);
     setIsPlaying(true);
     if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(track, 'supabase', true);
@@ -181,11 +154,11 @@ export default function AlejoSpotifySearch({
   };
 
   const clearAllFilters = () => {
-    setSearchQuery('');
-    setSelectedGenre('all');
-    setSelectedArtist('all');
-    setSelectedAlbum('all');
-    setActiveView('all');
+    if (setSearchQuery) setSearchQuery('');
+    if (setSelectedGenre) setSelectedGenre('all');
+    if (setSelectedArtist) setSelectedArtist('all');
+    if (setSelectedAlbum) setSelectedAlbum('all');
+    if (setActiveView) setActiveView('all');
     setShowGenreGrid(false);
     setShowArtistGrid(false);
     setShowAlbumGrid(false);
@@ -209,12 +182,21 @@ export default function AlejoSpotifySearch({
           </div>
         </div>
 
-        <button 
-          onClick={() => navigate('/RadioManager')}
-          className="px-3 py-1 text-[11px] font-black uppercase tracking-widest transition border-[2px] border-black dark:border-yellow-400 bg-yellow-300 dark:bg-yellow-400 text-black hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 rounded-none ml-auto sm:ml-0"
-        >
-          <Plus className="w-3.5 h-3.5" /> Administrar
-        </button>
+        <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+          <button 
+            onClick={() => setShowCreateAlbumModal(true)}
+            className="px-3 py-1 text-[11px] font-black uppercase tracking-widest transition border-[2px] border-black bg-[#1DB954] text-black hover:bg-black hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 rounded-none"
+            title="Crear Álbum desde archivos MP3 leyendo metadatos automáticamente"
+          >
+            <Plus className="w-3.5 h-3.5" /> Crear Álbum
+          </button>
+          <button 
+            onClick={() => navigate('/RadioManager')}
+            className="px-3 py-1 text-[11px] font-black uppercase tracking-widest transition border-[2px] border-black dark:border-yellow-400 bg-yellow-300 dark:bg-yellow-400 text-black hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 rounded-none"
+          >
+            <Plus className="w-3.5 h-3.5" /> Administrar
+          </button>
+        </div>
       </div>
 
       {/* 2. BUSCADOR PRINCIPAL (Canción, Artista, Género) */}
@@ -335,31 +317,37 @@ export default function AlejoSpotifySearch({
 
         {/* Explorador Desplegable de Géneros */}
         {(showGenreGrid || selectedGenre !== 'all') && !showArtistGrid && !showAlbumGrid && (
-          <div className="flex gap-1.5 flex-wrap p-2 border-[2px] border-black dark:border-slate-700 bg-cream-bg dark:bg-[#0d0e15] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] animate-in fade-in duration-150">
-            {GENRES_LIST.map((genre) => {
-              const isSelected = selectedGenre === genre.id;
-              const count = genreCounts[genre.id] || 0;
+          <div className="flex gap-1.5 flex-wrap p-2 border-[2px] border-black dark:border-slate-700 bg-emerald-50 dark:bg-[#091f14] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] max-h-36 overflow-y-auto animate-in fade-in duration-150">
+            <button
+              onClick={() => { setSelectedGenre('all'); }}
+              className={`px-2 py-1 text-[9px] font-black uppercase border-[2px] border-black dark:border-slate-600 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-none ${
+                selectedGenre === 'all' ? 'bg-black text-white' : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white hover:bg-emerald-200'
+              }`}
+            >
+              Todos los Géneros ({genreList.length})
+            </button>
+            {genreList.map((genreObj) => {
+              const isSelected = selectedGenre.toLowerCase() === genreObj.name.toLowerCase();
               return (
                 <button
-                  key={genre.id}
+                  key={genreObj.name}
                   onClick={() => {
-                    setSelectedGenre(genre.id);
+                    setSelectedGenre(genreObj.name);
                     setSelectedArtist('all');
                     setSelectedAlbum('all');
                     setActiveView('all');
                   }}
                   className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider border-[2px] border-black dark:border-slate-600 transition shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 rounded-none ${
                     isSelected
-                      ? 'bg-black text-[#1DB954] dark:bg-[#1DB954] dark:text-black scale-105 z-10'
-                      : `${genre.color} hover:opacity-90`
+                      ? 'bg-[#1DB954] text-black font-extrabold scale-105 z-10'
+                      : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white hover:bg-emerald-100 dark:hover:bg-emerald-900'
                   }`}
                 >
-                  <span>{genre.label}</span>
-                  {genre.id !== 'all' && (
-                    <span className={`px-1 py-0.2 text-[8px] font-mono border border-black ${isSelected ? 'bg-[#1DB954] text-black dark:bg-black dark:text-[#1DB954]' : 'bg-black text-white'}`}>
-                      {count}
-                    </span>
-                  )}
+                  <Filter className="w-3 h-3 text-[#1DB954]" />
+                  <span className="truncate max-w-[120px]">{genreObj.name}</span>
+                  <span className={`px-1 text-[8px] font-mono border border-black ${isSelected ? 'bg-black text-white' : 'bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200'}`}>
+                    {genreObj.count}
+                  </span>
                 </button>
               );
             })}
@@ -419,31 +407,47 @@ export default function AlejoSpotifySearch({
             {albumList.map((albumObj) => {
               const isSelected = selectedAlbum.toLowerCase() === albumObj.name.toLowerCase();
               return (
-                <button
+                <div
                   key={albumObj.name}
-                  onClick={() => {
-                    setSelectedAlbum(albumObj.name);
-                    setSelectedGenre('all');
-                    setSelectedArtist('all');
-                    setActiveView('all');
-                  }}
                   className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider border-[2px] border-black dark:border-slate-600 transition shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1.5 rounded-none ${
                     isSelected
                       ? 'bg-amber-900 text-yellow-300 scale-105 z-10'
                       : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white hover:bg-amber-200 dark:hover:bg-amber-900'
                   }`}
                 >
-                  <img 
-                    src={albumObj.cover} 
-                    alt={albumObj.name} 
-                    className="w-4 h-4 object-cover border border-black flex-shrink-0"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                  <span className="truncate max-w-[120px] font-extrabold">{albumObj.name}</span>
-                  <span className={`px-1 text-[8px] font-mono border border-black ${isSelected ? 'bg-yellow-300 text-black' : 'bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200'}`}>
-                    {albumObj.count}
-                  </span>
-                </button>
+                  <div
+                    onClick={() => {
+                      setSelectedAlbum(albumObj.name);
+                      setSelectedGenre('all');
+                      setSelectedArtist('all');
+                      setActiveView('all');
+                    }}
+                    className="flex items-center gap-1.5 cursor-pointer truncate"
+                  >
+                    <img 
+                      src={albumObj.cover} 
+                      alt={albumObj.name} 
+                      className="w-4 h-4 object-cover border border-black flex-shrink-0"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <span className="truncate max-w-[110px] font-extrabold">{albumObj.name}</span>
+                    <span className={`px-1 text-[8px] font-mono border border-black ${isSelected ? 'bg-yellow-300 text-black' : 'bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200'}`}>
+                      {albumObj.count}
+                    </span>
+                  </div>
+                  {updateAlbumData && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingAlbum(albumObj);
+                      }}
+                      className="p-1 hover:bg-yellow-400 hover:text-black border border-black transition bg-black/10 rounded-none ml-0.5"
+                      title="Editar Género, Mood y Detalles del Álbum"
+                    >
+                      <Edit2 className="w-2.5 h-2.5" />
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -474,7 +478,7 @@ export default function AlejoSpotifySearch({
         ) : (
           filteredTracks.map((song, index) => {
             const realIndex = supabasePlaylist.findIndex(s => (s.id && s.id === song.id) || (s.url === song.url));
-            const isCurrent = activeTab === 'supabase' && currentTrackIndex === (realIndex !== -1 ? realIndex : index);
+            const isCurrent = activeTab === 'supabase' && currentTrackIndex === index;
 
             return (
               <div
@@ -491,7 +495,7 @@ export default function AlejoSpotifySearch({
                   className="flex items-center gap-2.5 flex-1 truncate cursor-pointer"
                 >
                   <span className={`text-[10px] font-black w-5 text-center flex-shrink-0 ${isCurrent ? 'text-[#1DB954]' : 'text-black/70 dark:text-slate-400'}`}>
-                    {isCurrent ? <Volume2 className="w-4 h-4 animate-bounce text-[#1DB954] mx-auto" /> : (index + 1)}
+                    {isCurrent ? <Volume2 className="w-4 h-4 animate-bounce text-[#1DB954] mx-auto" /> : index}
                   </span>
 
                   <div className="w-10 h-10 border-[2px] border-black overflow-hidden flex-shrink-0 bg-black relative group/img">
@@ -615,6 +619,18 @@ export default function AlejoSpotifySearch({
           )}
         </div>
       </div>
+      {/* Modal de Edición de Álbum */}
+      <AlbumEditModal
+        isOpen={Boolean(editingAlbum)}
+        onClose={() => setEditingAlbum(null)}
+        albumData={editingAlbum}
+        onSave={updateAlbumData}
+      />
+      {/* Modal de Creación de Álbum desde MP3 */}
+      <CreateAlbumModal
+        isOpen={showCreateAlbumModal}
+        onClose={() => setShowCreateAlbumModal(false)}
+      />
     </div>
   );
 }

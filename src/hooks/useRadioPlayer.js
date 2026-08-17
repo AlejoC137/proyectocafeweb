@@ -1,7 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 
-export function useRadioPlayer(currentPlaylist, activeTab, broadcastPlay, broadcastStop, isApplyingRemoteChange) {
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+export function useRadioPlayer(
+  currentPlaylist, 
+  activeTab, 
+  broadcastPlay, 
+  broadcastStop, 
+  isApplyingRemoteChange,
+  externalTrackIndex,
+  externalSetTrackIndex
+) {
+  const [internalTrackIndex, setInternalTrackIndex] = useState(0);
+  const currentTrackIndex = externalTrackIndex !== undefined ? externalTrackIndex : internalTrackIndex;
+  const setCurrentTrackIndex = externalSetTrackIndex || setInternalTrackIndex;
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);

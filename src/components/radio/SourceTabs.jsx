@@ -9,6 +9,17 @@ export default function SourceTabs({
   activeTab,
   handleTabChange,
   supabasePlaylist = [],
+  filteredSupabasePlaylist,
+  supabaseSearchQuery,
+  setSupabaseSearchQuery,
+  selectedGenre,
+  setSelectedGenre,
+  selectedArtist,
+  setSelectedArtist,
+  selectedAlbum,
+  setSelectedAlbum,
+  activeView,
+  setActiveView,
   loadingSupabase = false,
   currentTrackIndex,
   setCurrentTrackIndex,
@@ -17,6 +28,7 @@ export default function SourceTabs({
   isApplyingRemoteChange,
   moveSongOrder,
   handleDeleteSong,
+  updateAlbumData,
   toggleFavorite,
   selectedCategory,
   setSelectedCategory,
@@ -67,6 +79,17 @@ export default function SourceTabs({
         {activeTab === 'supabase' && (
           <AlejoSpotifySearch
             supabasePlaylist={supabasePlaylist}
+            filteredSupabasePlaylist={filteredSupabasePlaylist}
+            supabaseSearchQuery={supabaseSearchQuery}
+            setSupabaseSearchQuery={setSupabaseSearchQuery}
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
+            selectedArtist={selectedArtist}
+            setSelectedArtist={setSelectedArtist}
+            selectedAlbum={selectedAlbum}
+            setSelectedAlbum={setSelectedAlbum}
+            activeView={activeView}
+            setActiveView={setActiveView}
             loadingSupabase={loadingSupabase}
             currentTrackIndex={currentTrackIndex}
             setCurrentTrackIndex={setCurrentTrackIndex}
@@ -75,6 +98,7 @@ export default function SourceTabs({
             isApplyingRemoteChange={isApplyingRemoteChange}
             moveSongOrder={moveSongOrder}
             handleDeleteSong={handleDeleteSong}
+            updateAlbumData={updateAlbumData}
             toggleFavorite={toggleFavorite}
             navigate={navigate}
             activeTab={activeTab}
@@ -121,7 +145,7 @@ export default function SourceTabs({
                   >
                     <div className="flex items-center gap-2.5 flex-1 truncate">
                       <span className={`text-[10px] font-black w-5 text-center flex-shrink-0 ${isCurrent ? 'text-cyan-400 dark:text-yellow-400' : 'text-black/70 dark:text-slate-400'}`}>
-                        {index + 1}
+                        {index}
                       </span>
                       <div className="w-10 h-10 border-[2px] border-black overflow-hidden flex-shrink-0 bg-black relative group/img">
                         <img 
@@ -241,7 +265,7 @@ export default function SourceTabs({
                         className="flex items-center gap-2.5 flex-1 truncate"
                       >
                         <span className={`text-[10px] font-black w-5 text-center flex-shrink-0 ${isCurrent ? 'text-red-500' : 'text-black/70 dark:text-slate-400'}`}>
-                          {index + 1}
+                          {index}
                         </span>
                         <div className="w-10 h-10 border-[2px] border-black overflow-hidden flex-shrink-0 bg-black relative group/img">
                           <img 

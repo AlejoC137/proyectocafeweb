@@ -3,8 +3,10 @@ import supabase from '../config/supabaseClient';
 import { parseAudioFileMetadata } from '../utils/radioMetadataParser';
 import RadioEditModal from './radio/RadioEditModal';
 import AlbumEditModal from './radio/AlbumEditModal';
+import CreateAlbumModal from './radio/CreateAlbumModal';
 import YoutubeBulkModal from './radio/YoutubeBulkModal';
 import MusicCoversGalleryModal from './radio/MusicCoversGalleryModal';
+import AlbumTracklistModal from './radio/AlbumTracklistModal';
 import { extractYoutubeId, getYoutubeThumbnail, fetchYoutubeMetadata, YOUTUBE_CATEGORIES } from '../utils/youtubeHelpers';
 import { 
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
@@ -13,7 +15,7 @@ import {
   Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus
 } from 'lucide-react';
 
-const MAX_PLAYLIST_SECONDS = 4 * 60 * 60; // 4 horas
+const MAX_PLAYLIST_SECONDS = Infinity; // Sin límite de tiempo ni de canciones
 
 // Helper de subida a Supabase Storage con progreso y fallback
 const uploadFileWithProgress = async (bucketName, filePath, file, onProgress) => {
@@ -134,12 +136,20 @@ export default function RadioManager() {
   const [isEditingYt, setIsEditingYt] = useState(false);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
 
-  // Editor de Álbumes en React
+  // Editor y Detalle de Álbumes en React
   const [editingAlbumTarget, setEditingAlbumTarget] = useState(null);
+  const [selectedAlbumModalTarget, setSelectedAlbumModalTarget] = useState(null);
   const [isSavingAlbum, setIsSavingAlbum] = useState(false);
 
-  // Modal de Importación Masiva de YouTube
+  // Modal de Creación e Importación Masiva
   const [showYoutubeBulkModal, setShowYoutubeBulkModal] = useState(false);
+  const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+
+  const handleAlbumCreated = (newSongs) => {
+    setSongs(prev => [...prev, ...newSongs]);
+    setSuccess(`¡Álbum creado exitosamente con ${newSongs.length} canciones!`);
+    fetchSongs();
+  };
 
   const availableCategories = useMemo(() => {
     return Array.from(new Set([
@@ -346,6 +356,7 @@ export default function RadioManager() {
     if (!ytForm.youtubeUrl || !ytForm.title) return;
 
     const ytId = extractYoutubeId(ytForm.youtubeUrl);
+    const listId = extractPlaylistId(ytForm.youtubeUrl);
     if (!ytId) {
       setError("Por favor ingresa una URL válida de YouTube.");
       return;
@@ -357,6 +368,7 @@ export default function RadioManager() {
       artist: ytForm.artist?.trim() || 'YouTube',
       youtube_url: ytForm.youtubeUrl.trim(),
       youtube_id: ytId,
+      list_id: listId,
       cover: coverUrl,
       category: ytForm.category || 'Lofi & Chill',
       order_index: ytForm.id ? (ytForm.order_index ?? 0) : youtubeSongs.length
@@ -582,13 +594,18 @@ export default function RadioManager() {
         let targetBucket = null;
         let finalUrl = null;
 
-        for (const bName of possibleBuckets) {
+        let bucketsToTry = window._cachedRadioBucket 
+          ? [window._cachedRadioBucket, ...possibleBuckets.filter(b => b !== window._cachedRadioBucket)] 
+          : possibleBuckets;
+
+        for (const bName of bucketsToTry) {
           try {
             const { success: upOk, bucket } = await uploadFileWithProgress(bName, filePath, file, (pct) => {
               setUploadPercent(pct);
             });
             if (upOk) {
               targetBucket = bucket;
+              window._cachedRadioBucket = bucket;
               break;
             }
           } catch (err) {}
@@ -726,6 +743,7 @@ export default function RadioManager() {
         artist: updatedFields.artistName,
         year: updatedFields.year,
         genre: updatedFields.genre,
+        mood: updatedFields.mood,
         cover: updatedFields.cover || s.cover
       } : s));
 
@@ -736,6 +754,7 @@ export default function RadioManager() {
             artist: updatedFields.artistName,
             year: updatedFields.year,
             genre: updatedFields.genre,
+            mood: updatedFields.mood,
             cover: updatedFields.cover
           });
           await supabase.from('playlist_radio').update(cleanPayload).eq('id', songId);
@@ -749,6 +768,42 @@ export default function RadioManager() {
       setError("Error al guardar cambios del álbum: " + err.message);
     } finally {
       setIsSavingAlbum(false);
+    }
+  };
+
+  // Eliminar Álbum completo y todas sus canciones de Supabase y estado local
+  const handleDeleteAlbum = async (albumTarget) => {
+    if (!albumTarget || !albumTarget.tracks) return;
+    
+    const trackCount = albumTarget.tracks.length;
+    const confirmMessage = `¿Estás seguro de eliminar el álbum "${albumTarget.albumName}"?\nSe eliminarán las ${trackCount} canciones pertenecientes a este álbum.`;
+    
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      setLoading(true);
+      const trackIds = albumTarget.tracks.map(t => t.id);
+      
+      const numIds = trackIds.filter(id => !String(id).startsWith('local-') && !String(id).startsWith('album-track-'));
+      if (numIds.length > 0) {
+        let { error: delErr } = await supabase.from('playlist_radio').delete().in('id', numIds);
+        if (delErr) {
+          for (const id of numIds) {
+            await supabase.from('playlist_radio').delete().eq('id', id);
+          }
+        }
+      }
+
+      setSongs(prev => prev.filter(s => !trackIds.includes(s.id)));
+      setSuccess(`¡El álbum "${albumTarget.albumName}" y sus ${trackCount} canciones fueron eliminados correctamente!`);
+      if (editingAlbumTarget?.albumName === albumTarget.albumName) {
+        setEditingAlbumTarget(null);
+      }
+    } catch (err) {
+      console.error("Error al eliminar el álbum:", err);
+      setError("Error al eliminar el álbum: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1068,8 +1123,8 @@ export default function RadioManager() {
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-3.5 overflow-hidden p-0.5 mt-2">
                   <div 
-                    className={`h-full rounded-full transition-all duration-500 ${quotaPercent >= 90 ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-gradient-to-r from-[#1DB954] to-emerald-400'}`}
-                    style={{ width: `${quotaPercent}%` }}
+                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#1DB954] via-emerald-400 to-cyan-400"
+                    style={{ width: '100%' }}
                   ></div>
                 </div>
               </div>
@@ -1356,15 +1411,23 @@ export default function RadioManager() {
                   Se han catalogado <strong className="text-[#1DB954]">{albumList.length} álbumes</strong> automáticamente. Cambia portadas en bloque desde musicCovers o edita sus metadatos.
                 </p>
               </div>
-              <button 
-                onClick={() => {
-                  setTargetAlbumForCover(null);
-                  setShowAlbumCoversModal(true);
-                }}
-                className="px-4 py-2 rounded-full bg-[#1DB954]/20 border border-[#1DB954]/40 text-[#1DB954] font-extrabold text-xs hover:bg-[#1DB954] hover:text-black transition flex items-center gap-2 shadow-lg"
-              >
-                <ImageIcon className="w-4 h-4" /> Abrir Galería musicCovers
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button 
+                  onClick={() => setShowCreateAlbumModal(true)}
+                  className="px-4 py-2 rounded-full bg-[#1DB954] text-black font-extrabold text-xs hover:bg-[#1ed760] transition flex items-center gap-2 shadow-lg"
+                >
+                  <Plus className="w-4 h-4" /> Crear Álbum desde MP3
+                </button>
+                <button 
+                  onClick={() => {
+                    setTargetAlbumForCover(null);
+                    setShowAlbumCoversModal(true);
+                  }}
+                  className="px-4 py-2 rounded-full bg-[#1DB954]/20 border border-[#1DB954]/40 text-[#1DB954] font-extrabold text-xs hover:bg-[#1DB954] hover:text-black transition flex items-center gap-2 shadow-lg"
+                >
+                  <ImageIcon className="w-4 h-4" /> Abrir Galería musicCovers
+                </button>
+              </div>
             </div>
 
             {albumList.length === 0 ? (
@@ -1392,10 +1455,17 @@ export default function RadioManager() {
                             onClick={() => {
                               if (alb.tracks[0]) handlePlayPreview(alb.tracks[0]);
                             }}
-                            className="p-3.5 bg-[#1DB954] hover:bg-[#1ed760] text-black rounded-full shadow-2xl scale-90 group-hover:scale-100 transition"
+                            className="p-3 bg-[#1DB954] hover:bg-[#1ed760] text-black rounded-full shadow-2xl scale-90 group-hover:scale-100 transition"
                             title="Reproducir Álbum"
                           >
                             <Play className="w-5 h-5 fill-current ml-0.5" />
+                          </button>
+                          <button 
+                            onClick={() => setSelectedAlbumModalTarget(alb)}
+                            className="p-3 bg-white text-black hover:bg-yellow-300 rounded-full shadow-2xl scale-90 group-hover:scale-100 transition"
+                            title="Ver lista de canciones de este álbum"
+                          >
+                            <ListPlus className="w-5 h-5" />
                           </button>
                         </div>
 
@@ -1405,8 +1475,8 @@ export default function RadioManager() {
                       </div>
 
                       {/* Info del Álbum */}
-                      <div className="p-4 space-y-2">
-                        <h4 className="font-extrabold text-sm text-white truncate" title={alb.albumName}>
+                      <div className="p-4 space-y-2 cursor-pointer" onClick={() => setSelectedAlbumModalTarget(alb)}>
+                        <h4 className="font-extrabold text-sm text-white truncate hover:text-[#1DB954] transition" title={alb.albumName}>
                           {alb.albumName}
                         </h4>
                         <p className="text-xs font-semibold text-gray-300 truncate" title={alb.artistName}>
@@ -1428,13 +1498,21 @@ export default function RadioManager() {
                     </div>
 
                     {/* Botones de Acción del Álbum */}
-                    <div className="p-3 bg-black/30 border-t border-white/5 flex items-center justify-between gap-2">
+                    <div className="p-3 bg-black/30 border-t border-white/5 flex items-center justify-between gap-1.5 flex-wrap">
+                      <button 
+                        onClick={() => setSelectedAlbumModalTarget(alb)}
+                        className="py-1.5 px-2 bg-[#1DB954]/20 hover:bg-[#1DB954] text-[#1DB954] hover:text-black rounded-lg text-[11px] font-bold transition flex items-center gap-1 border border-[#1DB954]/30"
+                        title="Ver lista de canciones del álbum"
+                      >
+                        <ListPlus className="w-3.5 h-3.5" /> Canciones
+                      </button>
+
                       <button 
                         onClick={() => {
                           setTargetAlbumForCover(alb);
                           setShowAlbumCoversModal(true);
                         }}
-                        className="flex-1 py-1.5 px-2 bg-white/5 hover:bg-[#1DB954]/20 hover:text-[#1DB954] text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1"
+                        className="py-1.5 px-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1"
                         title="Cambiar carátula de todas las canciones de este álbum"
                       >
                         <ImageIcon className="w-3.5 h-3.5" /> Carátula
@@ -1442,10 +1520,18 @@ export default function RadioManager() {
 
                       <button 
                         onClick={() => setEditingAlbumTarget(alb)}
-                        className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1"
+                        className="py-1.5 px-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1"
                         title="Editar metadatos del álbum"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> Editar
+                      </button>
+
+                      <button 
+                        onClick={() => handleDeleteAlbum(alb)}
+                        className="py-1.5 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1 border border-red-500/20"
+                        title="Eliminar este álbum y todas sus canciones"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1810,11 +1896,29 @@ export default function RadioManager() {
 
       {/* MODAL DE EDICIÓN DE ÁLBUMES EN REACT */}
       <AlbumEditModal 
+        albumData={editingAlbumTarget}
         album={editingAlbumTarget}
         isOpen={Boolean(editingAlbumTarget)}
         onClose={() => setEditingAlbumTarget(null)}
         onSave={handleSaveAlbumModal}
+        onDeleteAlbum={handleDeleteAlbum}
         isSaving={isSavingAlbum}
+      />
+
+      {/* MODAL DE LISTA DE CANCIONES Y DETALLE DE ÁLBUM */}
+      <AlbumTracklistModal 
+        album={selectedAlbumModalTarget}
+        isOpen={Boolean(selectedAlbumModalTarget)}
+        onClose={() => setSelectedAlbumModalTarget(null)}
+        onPlayTrack={(track) => handlePlayPreview(track)}
+        onPlayAlbum={(alb) => {
+          if (alb.tracks && alb.tracks[0]) handlePlayPreview(alb.tracks[0]);
+        }}
+        onDeleteTrack={(trackId) => handleDeleteSong(trackId)}
+        onEditAlbum={(alb) => setEditingAlbumTarget(alb)}
+        onAddSongsToAlbum={(albumName, newSongs) => {
+          setSongs(prev => [...prev, ...newSongs]);
+        }}
       />
 
       {/* MODAL DE IMPORTACIÓN MASIVA Y PLAYLISTS DE YOUTUBE */}
@@ -1823,6 +1927,13 @@ export default function RadioManager() {
         onClose={() => setShowYoutubeBulkModal(false)}
         onImport={handleBulkImportYoutube}
         categories={availableCategories}
+      />
+
+      {/* MODAL DE CREACIÓN DE ÁLBUMES DESDE ARCHIVOS MP3 */}
+      <CreateAlbumModal
+        isOpen={showCreateAlbumModal}
+        onClose={() => setShowCreateAlbumModal(false)}
+        onAlbumCreated={handleAlbumCreated}
       />
 
     </div>

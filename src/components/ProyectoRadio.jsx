@@ -52,7 +52,9 @@ export default function ProyectoRadio() {
     activeTab,
     broadcastPlay,
     broadcastStop,
-    isApplyingRemoteChange
+    isApplyingRemoteChange,
+    currentTrackIndex,
+    setCurrentTrackIndex
   );
 
   // Override player's states with hoisted states
@@ -145,6 +147,9 @@ export default function ProyectoRadio() {
       const promise = player.audioRef.current.play();
       if (promise !== undefined) {
         promise.then(() => setIsPlaying(true)).catch((err) => {
+          if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
+            return;
+          }
           console.warn("Autoplay block (AutoStart):", err.message);
           setIsPlaying(false);
         });
@@ -155,6 +160,9 @@ export default function ProyectoRadio() {
       const promise = player.audioRef.current.play();
       if (promise !== undefined) {
         promise.then(() => setIsPlaying(true)).catch((err) => {
+          if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
+            return;
+          }
           console.warn("Autoplay fallback:", err.message);
           setIsPlaying(false);
         });

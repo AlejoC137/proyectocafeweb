@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import supabase from '../config/supabaseClient';
 import { getAudioDuration, MAX_PLAYLIST_SECONDS } from '../utils/radioHelpers';
-import { extractYoutubeId, getYoutubeThumbnail } from '../utils/youtubeHelpers';
+import { extractYoutubeId, extractPlaylistId, getYoutubeThumbnail } from '../utils/youtubeHelpers';
 
 export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurrentTrackIndex, setIsPlaying, setAudioError) {
   // Radio Browser API & Filtros
@@ -83,14 +83,17 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
       }
 
       const formatted = (data || []).map(item => {
-        const ytId = item.youtube_id || extractYoutubeId(item.url || item.youtube_url);
+        const ytUrl = item.url || item.youtube_url || '';
+        const ytId = item.youtube_id || extractYoutubeId(ytUrl);
+        const listId = item.list_id || extractPlaylistId(ytUrl);
         return {
           ...item,
           id: item.id ? String(item.id) : `yt-${Date.now()}`,
           title: item.title || 'Video de YouTube',
           artist: item.artist || 'Canal de YouTube',
           youtubeId: ytId,
-          url: item.url || item.youtube_url || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : ''),
+          listId,
+          url: ytUrl || (ytId ? (listId ? `https://www.youtube.com/watch?v=${ytId}&list=${listId}` : `https://www.youtube.com/watch?v=${ytId}`) : ''),
           cover: (item.cover && typeof item.cover === 'string' && !item.cover.startsWith('blob:'))
             ? item.cover.replace('hqdefault.jpg', 'mqdefault.jpg')
             : getYoutubeThumbnail(ytId),
@@ -219,27 +222,68 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   };
 
-  // 6.5 Favoritos (Radio Browser)
-  const toggleFavorite = async (station) => {
-    try {
-      const exists = supabasePlaylist.find(s => s.url === station.url || s.id === station.id);
-      if (exists) {
-        await supabase.from('playlist_radio').delete().eq('id', exists.id);
-      } else {
-        const newFavorite = {
-          title: station.title,
-          artist: station.artist,
-          url: station.url,
-          cover: station.cover,
-          isLiveStream: true,
-          order_index: supabasePlaylist.length
-        };
-        await supabase.from('playlist_radio').insert(newFavorite);
+  // 6.5 Favoritos para Files (Supabase MP3s)
+  const toggleSupabaseFavorite = async (songOrId) => {
+    const songId = typeof songOrId === 'object' ? songOrId.id : songOrId;
+    const updated = supabasePlaylist.map(s => {
+      if (String(s.id) === String(songId)) {
+        return { ...s, is_favorite: !s.is_favorite };
       }
-      fetchSupabasePlaylist();
-    } catch (err) {
-      console.error("Error al modificar favoritos:", err);
+      return s;
+    });
+    setSupabasePlaylist(updated);
+
+    try {
+      const numId = !isNaN(Number(songId)) ? Number(songId) : songId;
+      const targetSong = updated.find(s => String(s.id) === String(songId));
+      if (targetSong) {
+        await supabase.from('playlist_radio').update({ is_favorite: Boolean(targetSong.is_favorite) }).eq('id', numId);
+      }
+    } catch (e) {
+      console.warn("No se pudo actualizar favorito en Supabase:", e);
     }
+  };
+
+  // Toggle Favorito Unificado para Files, Radio Browser y YouTube
+  const toggleFavorite = async (item, source) => {
+    if (!item) return;
+    const isYt = source === 'youtube' || item.type === 'youtube' || Boolean(item.youtubeId);
+    if (isYt) {
+      const trackId = typeof item === 'object' ? item.id : item;
+      return toggleYoutubeFavorite(trackId);
+    }
+
+    const isLiveApi = source === 'live' || (item.isLiveStream && !supabasePlaylist.some(s => s.id === item.id));
+    if (isLiveApi) {
+      try {
+        const exists = supabasePlaylist.find(s => s.url === item.url || s.id === item.id);
+        if (exists) {
+          return toggleSupabaseFavorite(exists.id);
+        } else {
+          const newFavorite = {
+            title: item.title,
+            artist: item.artist,
+            url: item.url,
+            cover: item.cover,
+            isLiveStream: true,
+            is_favorite: true,
+            order_index: supabasePlaylist.length
+          };
+          const { data } = await supabase.from('playlist_radio').insert([newFavorite]).select();
+          if (data?.[0]) {
+            setSupabasePlaylist(prev => [...prev, data[0]]);
+          } else {
+            setSupabasePlaylist(prev => [...prev, { ...newFavorite, id: `fav-${Date.now()}` }]);
+          }
+        }
+      } catch (err) {
+        console.error("Error al modificar favorito en radio:", err);
+      }
+      return;
+    }
+
+    // Default: Canción de Files
+    toggleSupabaseFavorite(item);
   };
 
   // Toggle Favorito en YouTube
@@ -254,21 +298,149 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
 
     try {
       const track = updated.find(t => t.id === trackId);
-      if (track && typeof track.id !== 'string' || !track.id.startsWith('yt-default')) {
-        await supabase.from('playlist_youtube').update({ is_favorite: track.is_favorite }).eq('id', trackId);
+      if (track && (typeof track.id !== 'string' || !track.id.startsWith('yt-default'))) {
+        const numId = !isNaN(Number(trackId)) ? Number(trackId) : trackId;
+        await supabase.from('playlist_youtube').update({ is_favorite: Boolean(track.is_favorite) }).eq('id', numId);
       }
     } catch (e) {
       console.warn("No se pudo actualizar favorito en Supabase:", e);
     }
   };
 
+  // Actualizar Álbum (Género, Mood, Portada, Nombre) afectando a todas sus canciones
+  const updateAlbumData = async (oldAlbumName, updatedAlbum) => {
+    try {
+      const payload = {
+        album: updatedAlbum.name,
+        artist: updatedAlbum.artist,
+        genre: updatedAlbum.genre,
+        mood: updatedAlbum.mood,
+        cover: updatedAlbum.cover
+      };
+
+      const { error: err1 } = await supabase
+        .from('playlist_radio')
+        .update(payload)
+        .eq('album', oldAlbumName);
+
+      if (err1 && (err1.message?.includes('mood') || err1.message?.includes('column'))) {
+        const minimalPayload = {
+          album: updatedAlbum.name,
+          artist: updatedAlbum.artist,
+          genre: updatedAlbum.genre,
+          cover: updatedAlbum.cover
+        };
+        await supabase
+          .from('playlist_radio')
+          .update(minimalPayload)
+          .eq('album', oldAlbumName);
+      }
+
+      setSupabasePlaylist(prev => prev.map(song => {
+        const songAlbum = (song.album || 'Sencillo').trim().toLowerCase();
+        if (songAlbum === oldAlbumName.trim().toLowerCase()) {
+          return {
+            ...song,
+            album: updatedAlbum.name,
+            artist: updatedAlbum.artist || song.artist,
+            genre: updatedAlbum.genre,
+            mood: updatedAlbum.mood,
+            cover: updatedAlbum.cover || song.cover
+          };
+        }
+        return song;
+      }));
+
+    } catch (err) {
+      console.error("Error al actualizar álbum:", err);
+      throw err;
+    }
+  };
+
+  // Filtros Supabase (Files)
+  const [supabaseSearchQuery, setSupabaseSearchQuery] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedArtist, setSelectedArtist] = useState('all');
+  const [selectedAlbum, setSelectedAlbum] = useState('all');
+  const [activeView, setActiveView] = useState('all'); // 'all', 'favorites'
+
+  const handleSetSelectedGenre = (genre) => {
+    setSelectedGenre(genre);
+    if (genre !== 'all') {
+      setSelectedCategory(genre.toLowerCase());
+      setSelectedYoutubeCategory(genre);
+    } else {
+      setSelectedYoutubeCategory('Todos');
+    }
+  };
+
+  // Helper para inferir género
+  const getTrackGenre = (song) => {
+    if (song.genre && song.genre.trim() !== '') return song.genre.toLowerCase();
+    const text = `${song.title || ''} ${song.artist || ''} ${song.album || ''}`.toLowerCase();
+    if (text.includes('rock') || text.includes('metal')) return 'rock';
+    if (text.includes('lofi') || text.includes('lo-fi') || text.includes('chill') || text.includes('relax')) return 'lofi';
+    if (text.includes('jazz') || text.includes('blues') || text.includes('swing')) return 'jazz';
+    if (text.includes('pop') || text.includes('dance')) return 'pop';
+    if (text.includes('salsa') || text.includes('latin') || text.includes('cumbia') || text.includes('merengue')) return 'salsa';
+    if (text.includes('electro') || text.includes('house') || text.includes('techno') || text.includes('synth')) return 'electro';
+    if (text.includes('acoustic') || text.includes('acustico') || text.includes('guitar') || text.includes('unplugged')) return 'acustico';
+    if (text.includes('indie') || text.includes('alt')) return 'indie';
+    return 'varios';
+  };
+
+  // Filtrar playlist de Supabase
+  const getFilteredSupabasePlaylist = () => {
+    return supabasePlaylist.filter((song) => {
+      if (activeView === 'favorites' && !song.is_favorite) return false;
+
+      if (selectedGenre !== 'all') {
+        const songGenre = (song.genre || song.category || '').trim().toLowerCase();
+        if (!songGenre.includes(selectedGenre.toLowerCase())) return false;
+      }
+
+      if (selectedArtist !== 'all') {
+        const songArtist = (song.artist || 'Artista Desconocido').trim().toLowerCase();
+        if (songArtist !== selectedArtist.toLowerCase()) return false;
+      }
+
+      if (selectedAlbum !== 'all') {
+        const songAlbum = (song.album || 'Sencillo').trim().toLowerCase();
+        if (songAlbum !== selectedAlbum.toLowerCase()) return false;
+      }
+
+      if (supabaseSearchQuery.trim() !== '') {
+        const q = supabaseSearchQuery.toLowerCase().trim();
+        const matchTitle = (song.title || '').toLowerCase().includes(q);
+        const matchArtist = (song.artist || '').toLowerCase().includes(q);
+        const matchAlbum = (song.album || '').toLowerCase().includes(q);
+        const matchGenre = (song.genre || song.category || '').toLowerCase().includes(q);
+        return matchTitle || matchArtist || matchAlbum || matchGenre;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredSupabasePlaylist = getFilteredSupabasePlaylist();
+
+  // Reset index if out of bounds when filter changes
+  useEffect(() => {
+    if (activeTab === 'supabase' && currentTrackIndex >= filteredSupabasePlaylist.length && filteredSupabasePlaylist.length > 0) {
+      if (setCurrentTrackIndex) setCurrentTrackIndex(0);
+    }
+  }, [filteredSupabasePlaylist.length, activeTab]);
+
   // 7. Archivos Locales / YouTube / Obtener Playlist Activa
   const getFilteredYoutubePlaylist = () => {
     return youtubePlaylist.filter(track => {
-      const matchCat = selectedYoutubeCategory === 'Todos' || track.category === selectedYoutubeCategory;
+      const matchFav = activeView !== 'favorites' || track.is_favorite;
+      const matchCat = selectedYoutubeCategory === 'Todos' || selectedGenre === 'all' ||
+        (track.category && track.category.toLowerCase().includes(selectedGenre.toLowerCase())) ||
+        (selectedYoutubeCategory !== 'Todos' && track.category === selectedYoutubeCategory);
       const q = youtubeSearchQuery.toLowerCase().trim();
       const matchQuery = !q || (track.title || '').toLowerCase().includes(q) || (track.artist || '').toLowerCase().includes(q);
-      return matchCat && matchQuery;
+      return matchFav && matchCat && matchQuery;
     });
   };
 
@@ -276,7 +448,7 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
 
   const getActivePlaylist = () => {
     if (activeTab === 'live') return apiStations;
-    if (activeTab === 'supabase') return supabasePlaylist;
+    if (activeTab === 'supabase') return filteredSupabasePlaylist;
     if (activeTab === 'youtube') return filteredYoutubePlaylist.length > 0 ? filteredYoutubePlaylist : youtubePlaylist;
     return localPlaylist;
   };
@@ -295,11 +467,6 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     for (let idx = 0; idx < files.length; idx++) {
       const file = files[idx];
       const durSec = await getAudioDuration(file);
-
-      if (totalPlaylistSeconds + accumulatedNewSeconds + durSec > MAX_PLAYLIST_SECONDS) {
-        setAudioError(`⚠️ Límite de 4 horas alcanzado. Se agregaron solo los temas dentro del cupo disponible.`);
-        break;
-      }
 
       accumulatedNewSeconds += durSec;
       const objectUrl = URL.createObjectURL(file);
@@ -339,10 +506,22 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     setSearchQuery,
     handleSearchSubmit,
     supabasePlaylist,
+    filteredSupabasePlaylist,
+    supabaseSearchQuery,
+    setSupabaseSearchQuery,
+    selectedGenre,
+    setSelectedGenre: handleSetSelectedGenre,
+    selectedArtist,
+    setSelectedArtist,
+    selectedAlbum,
+    setSelectedAlbum,
+    activeView,
+    setActiveView,
     loadingSupabase,
     supabaseError,
     moveSongOrder,
     handleDeleteSong,
+    updateAlbumData,
     handleDeleteYoutubeSong,
     toggleFavorite,
     // YouTube

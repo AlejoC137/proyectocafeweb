@@ -81,11 +81,22 @@ export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
       const filePath = `covers/${fileName}`;
 
-      const possibleBuckets = ['musicCovers', 'music_covers', 'Radio', 'radio', 'Images_eventos'];
+      let targetBuckets = [];
+      try {
+        const { data: existingBuckets } = await supabase.storage.listBuckets();
+        if (existingBuckets && existingBuckets.length > 0) {
+          targetBuckets = existingBuckets.map(b => b.name);
+        }
+      } catch (e) {}
+
+      if (targetBuckets.length === 0) {
+        targetBuckets = ['Radio', 'radio', 'musicCovers', 'public'];
+      }
+
       let targetBucket = null;
       let publicUrl = null;
 
-      for (const bName of possibleBuckets) {
+      for (const bName of targetBuckets) {
         try {
           const { error: upErr } = await supabase.storage
             .from(bName)
@@ -101,7 +112,12 @@ export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover
       }
 
       if (!publicUrl) {
-        publicUrl = URL.createObjectURL(file);
+        publicUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => resolve(URL.createObjectURL(file));
+          reader.readAsDataURL(file);
+        });
       }
 
       const coverItem = {
@@ -171,7 +187,9 @@ export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover
     if (!window.confirm("¿Deseas eliminar esta carátula de la galería musicCovers?")) return;
 
     try {
-      await supabase.from('music_covers').delete().eq('id', coverId).catch(() => {});
+      if (coverId && !String(coverId).startsWith('loc-')) {
+        await supabase.from('music_covers').delete().eq('id', coverId);
+      }
       setCovers(prev => prev.filter(c => c.id !== coverId));
       if (editingCover?.id === coverId) setEditingCover(null);
     } catch (err) {

@@ -1,4 +1,4 @@
-export const MAX_PLAYLIST_SECONDS = 4 * 60 * 60; // 4 horas en segundos (14,400 seg)
+export const MAX_PLAYLIST_SECONDS = Infinity; // Sin límite de tiempo o capacidad
 
 export const getAudioDuration = (file) => {
   return new Promise((resolve) => {
