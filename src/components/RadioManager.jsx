@@ -807,10 +807,33 @@ export default function RadioManager() {
     }
   };
 
-  // Importación Masiva y de Playlists de YouTube a Supabase
+  // Importación Masiva y de Playlists de YouTube a Supabase con filtro de no repetición
   const handleBulkImportYoutube = async (itemsToInsert) => {
     try {
-      const newEntries = itemsToInsert.map((item, idx) => ({
+      // Descartar repeticiones contra las canciones ya existentes en Supabase
+      const nonDuplicates = itemsToInsert.filter(item => {
+        const itemTitle = (item.title || '').trim().toLowerCase();
+        const itemVid = item.videoId || extractYoutubeId(item.url);
+        const itemUrl = item.url || '';
+
+        return !youtubeSongs.some(existing => {
+          const exId = existing.youtube_id || existing.videoId || extractYoutubeId(existing.youtube_url || existing.url);
+          const exTitle = (existing.title || '').trim().toLowerCase();
+          const exUrl = existing.youtube_url || existing.url;
+
+          if (itemVid && exId && itemVid === exId) return true;
+          if (itemUrl && exUrl && itemUrl === exUrl) return true;
+          if (itemTitle && exTitle && itemTitle.length > 3 && itemTitle === exTitle) return true;
+          return false;
+        });
+      });
+
+      if (nonDuplicates.length === 0) {
+        setInfo("Todas las canciones seleccionadas ya existen en tu biblioteca de YouTube. Se omitieron para evitar repeticiones.");
+        return;
+      }
+
+      const newEntries = nonDuplicates.map((item, idx) => ({
         title: item.title.trim(),
         artist: item.artist?.trim() || 'YouTube',
         youtube_url: item.url,
@@ -837,7 +860,7 @@ export default function RadioManager() {
       }
 
       await fetchYoutubeSongs();
-      setSuccess(`¡${itemsToInsert.length} canciones/videos agregados exitosamente a la Radio desde YouTube!`);
+      setSuccess(`¡${nonDuplicates.length} canciones/videos agregados exitosamente a la Radio desde YouTube!`);
     } catch (err) {
       console.error("Error en importación masiva de YouTube:", err);
       setError("No se pudieron agregar los videos masivamente: " + err.message);
@@ -1927,6 +1950,7 @@ export default function RadioManager() {
         onClose={() => setShowYoutubeBulkModal(false)}
         onImport={handleBulkImportYoutube}
         categories={availableCategories}
+        existingSongs={youtubeSongs}
       />
 
       {/* MODAL DE CREACIÓN DE ÁLBUMES DESDE ARCHIVOS MP3 */}

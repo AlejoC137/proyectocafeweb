@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { X, Youtube, Sparkles, Loader2, CheckSquare, Square, Trash2, Plus, ExternalLink, ListPlus } from 'lucide-react';
 import { parseBulkYoutubeInput, YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
 
-export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories = [] }) {
+export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories = [], existingSongs = [] }) {
   const [rawText, setRawText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parseStatus, setParseStatus] = useState('');
   const [parsedTracks, setParsedTracks] = useState([]);
   const [globalCategory, setGlobalCategory] = useState('Lofi & Chill');
   const [isImporting, setIsImporting] = useState(false);
+  const [omittedDuplicatesCount, setOmittedDuplicatesCount] = useState(0);
 
   if (!isOpen) return null;
 
@@ -17,17 +18,67 @@ export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories
   const handleParse = async () => {
     if (!rawText.trim()) return;
     setIsParsing(true);
-    setParseStatus('Analizando enlaces y listas de reproducción...');
+    setParseStatus('Analizando enlaces y descartando duplicados...');
+    setOmittedDuplicatesCount(0);
     try {
       const results = await parseBulkYoutubeInput(rawText, (current, total, msg) => {
         setParseStatus(msg || `Procesando video ${current} de ${total}...`);
       });
 
-      const formatted = results.map((item, idx) => ({
+      // 1. Filtrar duplicados dentro del lote pegado y contra canciones existentes
+      const uniqueResults = [];
+      const seenKeys = new Set();
+      let omittedCount = 0;
+
+      for (const item of results) {
+        const normTitle = (item.title || '').trim().toLowerCase();
+        const vId = item.videoId || extractYoutubeId(item.url);
+        const normUrl = item.url || '';
+
+        const key = vId || normUrl || normTitle;
+
+        // Repetición interna en el mismo lote
+        if (key && seenKeys.has(key)) {
+          omittedCount++;
+          continue;
+        }
+        if (normTitle && normTitle.length > 3 && seenKeys.has(normTitle)) {
+          omittedCount++;
+          continue;
+        }
+
+        // Repetición contra biblioteca existente de Supabase / Radio
+        const isDuplicateInLibrary = (existingSongs || []).some(existing => {
+          const exId = existing.youtube_id || existing.videoId || extractYoutubeId(existing.youtube_url || existing.url);
+          const exTitle = (existing.title || '').trim().toLowerCase();
+          const exUrl = existing.youtube_url || existing.url;
+
+          if (vId && exId && vId === exId) return true;
+          if (normUrl && exUrl && normUrl === exUrl) return true;
+          if (normTitle && exTitle && normTitle.length > 3 && normTitle === exTitle) return true;
+          return false;
+        });
+
+        if (isDuplicateInLibrary) {
+          omittedCount++;
+          continue;
+        }
+
+        if (key) seenKeys.add(key);
+        if (normTitle && normTitle.length > 3) seenKeys.add(normTitle);
+        uniqueResults.push(item);
+      }
+
+      setOmittedDuplicatesCount(omittedCount);
+
+      const formatted = uniqueResults.map((item, idx) => ({
         ...item,
+        title: item.title?.trim() ? item.title : `Video YouTube ${idx + 1}`,
+        artist: item.artist?.trim() ? item.artist : 'Canal de YouTube',
+        cover: item.cover || `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg`,
         selected: true,
         category: globalCategory,
-        tempId: `${item.videoId}-${idx}-${Date.now()}`
+        tempId: `${item.videoId || idx}-${idx}-${Date.now()}`
       }));
 
       setParsedTracks(formatted);
@@ -202,8 +253,13 @@ export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories
 
                     <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-white/10">
                       <img 
-                        src={track.cover} 
+                        src={track.cover || `https://img.youtube.com/vi/${track.videoId}/hqdefault.jpg`} 
                         alt={track.title}
+                        onError={(e) => {
+                          e.currentTarget.src = track.videoId 
+                            ? `https://img.youtube.com/vi/${track.videoId}/0.jpg` 
+                            : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400';
+                        }}
                         className="w-full h-full object-cover"
                       />
                     </div>
