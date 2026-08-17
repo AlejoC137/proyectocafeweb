@@ -406,100 +406,7 @@ export async function fetchWithCORSProxy(targetUrl) {
   return null;
 }
 
-/**
- * Extrae los videos de una playlist o Mix de YouTube usando Invidious API sin restricciones CORS.
- */
-export async function fetchYoutubePlaylistFromAPI(playlistId) {
-  if (!playlistId) return [];
 
-  const invidiousEndpoints = [
-    `https://yewtu.be/api/v1/playlists/${playlistId}`,
-    `https://invidious.drgns.space/api/v1/playlists/${playlistId}`,
-    `https://invidious.lunar.icu/api/v1/playlists/${playlistId}`
-  ];
-
-  for (const endpoint of invidiousEndpoints) {
-    try {
-      const res = await fetchWithCORSProxy(endpoint);
-      if (res && res.ok) {
-        const data = await res.json();
-        const videos = data.videos || data.relatedVideos || [];
-        if (videos.length > 0) {
-          return videos.map(item => ({
-            videoId: item.videoId,
-            url: `https://www.youtube.com/watch?v=${item.videoId}`,
-            title: item.title || `Video ${item.videoId}`,
-            artist: item.author || item.authorName || 'Canal de YouTube',
-            cover: getYoutubeThumbnail(item.videoId)
-          }));
-        }
-      }
-    } catch (e) {}
-  }
-
-  // Fallback 2: Proxy RSS XML para playlists públicas estándar (list=PL...)
-  if (!playlistId.startsWith('RD')) {
-    return await fetchYoutubePlaylist(playlistId);
-  }
-
-  // Fallback 3: Proxy de página de Mix
-  return await fetchYoutubeMix(playlistId);
-}
-
-/**
- * Extrae la lista de canciones de un YouTube Mix llamando a la API InnerTube (youtubei/v1/next).
- */
-export async function fetchYoutubeMixAPI(videoId, playlistId) {
-  if (!playlistId) return [];
-
-  const targetUrl = 'https://www.youtube.com/youtubei/v1/next';
-  const requestBody = {
-    context: {
-      client: {
-        clientName: 'WEB',
-        clientVersion: '2.20240101.00.00',
-        hl: 'es',
-        gl: 'US'
-      }
-    },
-    playlistId: playlistId,
-    ...(videoId ? { videoId: videoId } : {})
-  };
-
-  const proxies = [
-    'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest=',
-    'https://api.allorigins.win/raw?url='
-  ];
-
-  for (const proxyPrefix of proxies) {
-    try {
-      let res;
-      if (proxyPrefix.includes('corsproxy')) {
-        res = await fetch(`${proxyPrefix}${encodeURIComponent(targetUrl)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
-        });
-      } else {
-        const getUrl = `${targetUrl}?playlistId=${playlistId}${videoId ? `&videoId=${videoId}` : ''}`;
-        res = await fetch(`${proxyPrefix}${encodeURIComponent(getUrl)}`);
-      }
-
-      if (res && res.ok) {
-        const data = await res.json();
-        const items = extractTracksFromYoutubeiResponse(data);
-        if (items.length > 0) {
-          return items;
-        }
-      }
-    } catch (err) {
-      console.warn("YouTubei API proxy error:", err);
-    }
-  }
-
-  return [];
-}
 
 /**
  * Parsea el JSON retornado por YouTube InnerTube API y extrae todas las canciones del Mix.
@@ -585,70 +492,54 @@ export function parseCopiedYoutubeText(text) {
 }
 
 /**
- * Procesa masivamente un texto pegado (URLs, Mixes, Playlists, texto copiado de YouTube o IDs) y recupera sus metadatos.
+ * Procesa masivamente un texto pegado (JSON, URLs, texto copiado de la cola de YouTube o IDs) sin bloqueos CORS.
  */
 export async function parseBulkYoutubeInput(rawText, onProgress = () => {}) {
   if (!rawText || !rawText.trim()) return [];
 
   const trimmed = rawText.trim();
-  const playlistId = extractPlaylistId(trimmed);
-  const videoId = extractYoutubeId(trimmed);
 
-  let items = [];
-
-  // 1. Si la entrada es un Mix de YouTube (list=RD...)
-  if (playlistId && playlistId.startsWith('RD')) {
-    onProgress(0, 1, "Extrayendo lista completa de canciones del Mix de YouTube...");
+  // 1. Si el texto pegado es una estructura JSON válida (arreglo u objeto de canciones)
+  try {
+    const jsonParsed = JSON.parse(trimmed);
+    const jsonArray = Array.isArray(jsonParsed) ? jsonParsed : (jsonParsed.playlist || jsonParsed.tracks || jsonParsed.items || [jsonParsed]);
     
-    // Probar Invidious mirror APIs
-    const invItems = await fetchYoutubePlaylistFromAPI(playlistId);
-    if (invItems.length > 0) {
-      items = invItems;
-    } else {
-      // Probar InnerTube API (youtubei/v1/next)
-      const mixAPIItems = await fetchYoutubeMixAPI(videoId, playlistId);
-      if (mixAPIItems.length > 0) {
-        items = mixAPIItems;
-      } else {
-        // Probar parseo HTML via proxy
-        const htmlMixItems = await fetchYoutubeMix(trimmed);
-        if (htmlMixItems.length > 0) {
-          items = htmlMixItems;
-        }
+    if (jsonArray.length > 0) {
+      const itemsFromJSON = jsonArray.map(item => {
+        const vId = item.id || item.videoId || extractYoutubeId(item.url || item.youtube_url);
+        return {
+          videoId: vId || '',
+          url: item.url || (vId ? `https://www.youtube.com/watch?v=${vId}` : ''),
+          title: item.title || `Video ${vId || ''}`,
+          artist: item.artist || item.author || 'Canal de YouTube',
+          cover: getYoutubeThumbnail(vId)
+        };
+      }).filter(i => i.title);
+
+      if (itemsFromJSON.length > 0) {
+        return itemsFromJSON;
       }
     }
+  } catch (e) {}
+
+  // 2. Si se pegó un bloque de texto copiado directamente desde la lista de YouTube (títulos + artistas + duraciones)
+  const copiedItems = parseCopiedYoutubeText(trimmed);
+  if (copiedItems.length > 0) {
+    return copiedItems;
   }
 
-  // 2. Si es una Playlist estándar de YouTube (list=PL...)
-  if (items.length === 0 && playlistId && !playlistId.startsWith('RD')) {
-    onProgress(0, 1, "Extrayendo lista de reproducción de YouTube...");
-    const playlistItems = await fetchYoutubePlaylistFromAPI(playlistId);
-    if (playlistItems.length > 0) {
-      items = playlistItems;
-    }
-  }
+  // 3. Extraer todos los enlaces/IDs de YouTube del texto o lista pegada
+  const videoIds = extractAllYoutubeVideoIds(trimmed);
+  if (videoIds.length === 0) return [];
 
-  // 3. Si se pegó un bloque de texto copiado directamente desde la lista de YouTube (títulos + artistas + duraciones)
-  if (items.length === 0) {
-    const copiedItems = parseCopiedYoutubeText(trimmed);
-    if (copiedItems.length > 0) {
-      items = copiedItems;
-    }
-  }
+  const uniqueIds = Array.from(new Set(videoIds)).slice(0, 50);
+  const total = uniqueIds.length;
+  const items = [];
 
-  // 4. Si no hay playlist o las APIs fallaron, extraer todos los enlaces/IDs directos del texto pegado
-  if (items.length === 0) {
-    const videoIds = extractAllYoutubeVideoIds(trimmed);
-    if (videoIds.length > 0) {
-      const uniqueIds = Array.from(new Set(videoIds)).slice(0, 50);
-      const total = uniqueIds.length;
-
-      for (let i = 0; i < total; i++) {
-        onProgress(i + 1, total, `Leyendo información de video ${i + 1} de ${total}...`);
-        const meta = await fetchYoutubeMetadata(uniqueIds[i]);
-        if (meta) items.push(meta);
-      }
-    }
+  for (let i = 0; i < total; i++) {
+    onProgress(i + 1, total, `Leyendo información de video ${i + 1} de ${total}...`);
+    const meta = await fetchYoutubeMetadata(uniqueIds[i]);
+    if (meta) items.push(meta);
   }
 
   return items;

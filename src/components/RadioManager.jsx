@@ -136,6 +136,11 @@ export default function RadioManager() {
   const [isEditingYt, setIsEditingYt] = useState(false);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
 
+  // Filtros y Orden de Enlaces Guardados de YouTube
+  const [ytFilterCategory, setYtFilterCategory] = useState('Todos');
+  const [ytSearchQuery, setYtSearchQuery] = useState('');
+  const [ytSortBy, setYtSortBy] = useState('custom');
+
   // Editor y Detalle de Álbumes en React
   const [editingAlbumTarget, setEditingAlbumTarget] = useState(null);
   const [selectedAlbumModalTarget, setSelectedAlbumModalTarget] = useState(null);
@@ -157,6 +162,64 @@ export default function RadioManager() {
       ...youtubeSongs.map(s => s.category).filter(Boolean)
     ]));
   }, [youtubeSongs]);
+
+  const ytCategoryCounts = useMemo(() => {
+    const counts = { 'Todos': youtubeSongs.length };
+    youtubeSongs.forEach(song => {
+      const cat = song.category || 'Sin Categoría';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [youtubeSongs]);
+
+  const ytCategoriesForFilter = useMemo(() => {
+    const cats = new Set(youtubeSongs.map(s => s.category).filter(Boolean));
+    return ['Todos', ...Array.from(cats)];
+  }, [youtubeSongs]);
+
+  const filteredAndSortedYoutubeSongs = useMemo(() => {
+    let list = [...youtubeSongs];
+
+    // 1. Filtrar por Categoría
+    if (ytFilterCategory !== 'Todos') {
+      list = list.filter(item => (item.category || 'Sin Categoría') === ytFilterCategory);
+    }
+
+    // 2. Filtrar por Búsqueda
+    if (ytSearchQuery.trim() !== '') {
+      const q = ytSearchQuery.toLowerCase().trim();
+      list = list.filter(item =>
+        (item.title && item.title.toLowerCase().includes(q)) ||
+        (item.artist && item.artist.toLowerCase().includes(q)) ||
+        (item.category && item.category.toLowerCase().includes(q))
+      );
+    }
+
+    // 3. Ordenar
+    switch (ytSortBy) {
+      case 'title-asc':
+        list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        break;
+      case 'title-desc':
+        list.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+        break;
+      case 'artist-asc':
+        list.sort((a, b) => (a.artist || '').localeCompare(b.artist || ''));
+        break;
+      case 'category':
+        list.sort((a, b) => (a.category || '').localeCompare(b.category || ''));
+        break;
+      case 'newest':
+        list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        break;
+      case 'custom':
+      default:
+        // Mantener orden personalizado
+        break;
+    }
+
+    return list;
+  }, [youtubeSongs, ytFilterCategory, ytSearchQuery, ytSortBy]);
 
   // Generación automática de lista de álbumes agrupados a profundidad
   const albumList = useMemo(() => {
@@ -1724,13 +1787,88 @@ export default function RadioManager() {
 
             {/* Lista de Enlaces de YouTube Creados */}
             <div className="bg-[#181818] rounded-2xl border border-white/10 overflow-hidden shadow-xl">
-              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Youtube className="w-4 h-4 text-red-500 fill-current" />
-                  Lista de Enlaces Guardados ({youtubeSongs.length})
-                </h4>
-                <p className="text-xs text-gray-400">Reordena o cambia propiedades de cada video</p>
+              {/* Encabezado con Contador y Herramientas */}
+              <div className="p-4 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/5">
+                <div>
+                  <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Youtube className="w-4 h-4 text-red-500 fill-current" />
+                    Lista de Enlaces Guardados ({filteredAndSortedYoutubeSongs.length}
+                    {filteredAndSortedYoutubeSongs.length !== youtubeSongs.length && ` de ${youtubeSongs.length}`})
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-0.5">Filtra por categoría, busca por texto o reordena los videos guardados</p>
+                </div>
+
+                {/* Controles de Búsqueda y Ordenamiento */}
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  {/* Campo de Búsqueda */}
+                  <div className="relative flex-1 sm:w-44">
+                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="text"
+                      placeholder="Buscar video..."
+                      value={ytSearchQuery}
+                      onChange={(e) => setYtSearchQuery(e.target.value)}
+                      className="w-full pl-8 pr-7 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition"
+                    />
+                    {ytSearchQuery && (
+                      <button 
+                        onClick={() => setYtSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs font-bold px-1"
+                        title="Limpiar búsqueda"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Selector de Orden */}
+                  <div className="relative">
+                    <select
+                      value={ytSortBy}
+                      onChange={(e) => setYtSortBy(e.target.value)}
+                      className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs text-gray-200 focus:outline-none focus:border-red-500 font-medium cursor-pointer"
+                    >
+                      <option value="custom" className="bg-[#181818] text-white">↕ Orden Personalizado</option>
+                      <option value="title-asc" className="bg-[#181818] text-white">🔤 Título (A - Z)</option>
+                      <option value="title-desc" className="bg-[#181818] text-white">🔤 Título (Z - A)</option>
+                      <option value="artist-asc" className="bg-[#181818] text-white">🎤 Artista (A - Z)</option>
+                      <option value="category" className="bg-[#181818] text-white">🏷️ Categoría</option>
+                      <option value="newest" className="bg-[#181818] text-white">🕒 Más Recientes</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+
+              {/* Barra de Categorías para Filtrado Rápido */}
+              {youtubeSongs.length > 0 && (
+                <div className="px-4 py-2.5 bg-black/30 border-b border-white/5 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+                    <Filter className="w-3 h-3 text-red-400" /> Categorías:
+                  </span>
+                  {ytCategoriesForFilter.map((cat) => {
+                    const count = ytCategoryCounts[cat] || 0;
+                    const isActive = ytFilterCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setYtFilterCategory(cat)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                          isActive 
+                            ? 'bg-red-600 text-white shadow-md shadow-red-600/30' 
+                            : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                          isActive ? 'bg-black/30 text-white' : 'bg-white/10 text-gray-400'
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {loadingYoutubeManager ? (
                 <div className="p-12 text-center text-gray-400">
@@ -1743,72 +1881,93 @@ export default function RadioManager() {
                   <p className="text-sm font-bold text-white">No hay enlaces de YouTube configurados</p>
                   <p className="text-xs text-gray-400">Ingresa la URL de una canción o transmisión en vivo arriba para agregarla.</p>
                 </div>
+              ) : filteredAndSortedYoutubeSongs.length === 0 ? (
+                <div className="p-10 text-center text-gray-400 space-y-3">
+                  <Filter className="w-8 h-8 text-gray-600 mx-auto" />
+                  <p className="text-sm font-bold text-white">No hay enlaces que coincidan con el filtro</p>
+                  <p className="text-xs text-gray-400">Prueba cambiando el texto de búsqueda o la categoría seleccionada.</p>
+                  <button 
+                    onClick={() => { setYtFilterCategory('Todos'); setYtSearchQuery(''); }}
+                    className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition inline-flex items-center gap-1.5"
+                  >
+                    Restablecer Filtros
+                  </button>
+                </div>
               ) : (
                 <div className="divide-y divide-white/5">
-                  {youtubeSongs.map((track, idx) => (
-                    <div key={track.id || idx} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-white/5 transition">
-                      <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
-                          <img 
-                            src={track.cover} 
-                            alt={track.title}
-                            onError={(e) => { e.currentTarget.src = getYoutubeThumbnail(track.youtubeId); }}
-                            className="w-full h-full object-cover" 
-                          />
-                        </div>
-                        <div className="truncate flex-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-extrabold text-sm text-white truncate">{track.title}</h4>
-                            <a 
-                              href={track.youtube_url || track.url || `https://www.youtube.com/watch?v=${track.youtubeId}`} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="text-gray-400 hover:text-red-400 transition"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          </div>
-                          <p className="text-xs text-gray-400 truncate">{track.artist || 'Canal de YouTube'}</p>
-                          <span className="inline-block text-[10px] px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-full font-bold mt-1">
-                            {track.category}
-                          </span>
-                        </div>
-                      </div>
+                  {filteredAndSortedYoutubeSongs.map((track) => {
+                    const origIndex = youtubeSongs.findIndex(s => String(s.id) === String(track.id));
+                    const isManualOrderActive = ytSortBy === 'custom' && ytFilterCategory === 'Todos' && !ytSearchQuery;
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button 
-                          onClick={() => moveYoutubeOrder(idx, 'up')} 
-                          disabled={idx === 0}
-                          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-30 transition"
-                          title="Subir posición"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => moveYoutubeOrder(idx, 'down')} 
-                          disabled={idx === youtubeSongs.length - 1}
-                          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-30 transition"
-                          title="Bajar posición"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleEditYoutubeClick(track)}
-                          className="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 transition"
-                          title="Editar Propiedades"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteYoutubeLink(track.id)}
-                          className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition"
-                          title="Eliminar Enlace"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                    return (
+                      <div key={track.id || track.youtubeId} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-white/5 transition">
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
+                            <img 
+                              src={track.cover} 
+                              alt={track.title}
+                              onError={(e) => { e.currentTarget.src = getYoutubeThumbnail(track.youtubeId); }}
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                          <div className="truncate flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-sm text-white truncate">{track.title}</h4>
+                              <a 
+                                href={track.youtube_url || track.url || `https://www.youtube.com/watch?v=${track.youtubeId}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="text-gray-400 hover:text-red-400 transition shrink-0"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                            <p className="text-xs text-gray-400 truncate">{track.artist || 'Canal de YouTube'}</p>
+                            <button
+                              onClick={() => setYtFilterCategory(track.category)}
+                              className="inline-block text-[10px] px-2 py-0.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 rounded-full font-bold mt-1 transition cursor-pointer"
+                              title={`Filtrar por ${track.category}`}
+                            >
+                              {track.category}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button 
+                            onClick={() => moveYoutubeOrder(origIndex, 'up')} 
+                            disabled={!isManualOrderActive || origIndex <= 0}
+                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-20 transition"
+                            title={isManualOrderActive ? "Subir posición" : "Cambia a 'Orden Personalizado' y quita filtros para mover"}
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => moveYoutubeOrder(origIndex, 'down')} 
+                            disabled={!isManualOrderActive || origIndex >= youtubeSongs.length - 1}
+                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-20 transition"
+                            title={isManualOrderActive ? "Bajar posición" : "Cambia a 'Orden Personalizado' y quita filtros para mover"}
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleEditYoutubeClick(track)}
+                            className="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 transition"
+                            title="Editar Propiedades"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteYoutubeLink(track.id)}
+                            className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition"
+                            title="Eliminar Enlace"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
