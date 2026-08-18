@@ -33,7 +33,13 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
       const g = (item.GRUPO || "").toUpperCase();
       const sg = (item.SUB_GRUPO || "").toUpperCase();
       const n = (item.NombreES || item.NombreEN || "").toUpperCase();
-      if (n.includes("MICHELAD") || sg.includes("MICHELAD") || g.includes("MICHELAD")) return false;
+      if (
+        n.includes("MICHELAD") || 
+        sg.includes("MICHELAD") || 
+        g.includes("MICHELAD") ||
+        g.includes("ADICION") ||
+        sg.includes("ADICION")
+      ) return false;
       return (
         g === "HELADOS" ||
         sg.includes("HELADO") ||
@@ -474,6 +480,43 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
     saveLayoutSizes({ pages: newPages });
   };
 
+  const duplicateBlock = (blockId, pageIndex = 0, columnId = 'center') => {
+    const baseId = String(blockId).split('_')[0];
+    const timestamp = Math.random().toString(36).substr(2, 6);
+    const newBlockId = `${baseId}_dup_${timestamp}`;
+
+    const newPages = JSON.parse(JSON.stringify(pages));
+    const currentPage = newPages[pageIndex];
+    if (currentPage && currentPage[columnId]) {
+      const colArray = currentPage[columnId];
+      const idx = colArray.indexOf(blockId);
+      if (idx !== -1) {
+        colArray.splice(idx + 1, 0, newBlockId);
+      } else {
+        colArray.push(newBlockId);
+      }
+    }
+
+    const newGroupDescriptions = { ...groupDescriptions };
+    Object.keys(groupDescriptions).forEach(key => {
+      if (key.includes(blockId)) {
+        const newKey = key.replace(blockId, newBlockId);
+        newGroupDescriptions[newKey] = groupDescriptions[key];
+      }
+    });
+
+    setPages(newPages);
+    setGroupDescriptions(newGroupDescriptions);
+
+    saveGroupDescriptions({
+      ...newGroupDescriptions,
+      __layout: {
+        ...(newGroupDescriptions.__layout || {}),
+        pages: newPages
+      }
+    });
+  };
+
   const deleteBlock = (blockId) => {
     const isCustom = blockId.startsWith('CUSTOM_') || blockId.startsWith('IMG_');
     if (!isCustom && !window.confirm("Este es un bloque de sistema. ¿Estás seguro de que quieres quitarlo del menú?")) return;
@@ -513,6 +556,7 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
   const commonProps = {
     editMode,
     moveBlock,
+    duplicateBlock,
     colors,
     leng,
     groupDescriptions,

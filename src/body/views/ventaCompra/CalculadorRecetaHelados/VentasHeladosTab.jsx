@@ -21,6 +21,7 @@ import {
   Receipt,
   ExternalLink
 } from "lucide-react";
+import RecetaModal from "../RecetaModal";
 
 export default function VentasHeladosTab({
   allMenu = [],
@@ -35,6 +36,7 @@ export default function VentasHeladosTab({
   const [searchTerm, setSearchTerm] = useState("");
   const [filterHeladosOnly, setFilterHeladosOnly] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState("ALL"); // 'ALL' | 'THIS_MONTH' | 'LAST_MONTH'
+  const [selectedRecetaModal, setSelectedRecetaModal] = useState(null);
 
   // Filter sales by selected time period
   const filteredVentas = useMemo(() => {
@@ -112,8 +114,14 @@ export default function VentasHeladosTab({
     const g = (item.GRUPO || "").toUpperCase();
     const sub = (item.SUB_GRUPO || "").toUpperCase();
 
-    // EXPLICIT EXCLUSION: Michelado / Michelada is a drink addition, NOT an Ice Cream
-    if (name.includes("michelad") || sub.includes("MICHELAD") || g.includes("MICHELAD")) {
+    // EXPLICIT EXCLUSION: Michelado / Michelada AND ADICIONES (Grupo or SubGrupo) are NOT Ice Cream
+    if (
+      name.includes("michelad") ||
+      sub.includes("MICHELAD") ||
+      g.includes("MICHELAD") ||
+      g.includes("ADICION") ||
+      sub.includes("ADICION")
+    ) {
       return false;
     }
 
@@ -205,8 +213,14 @@ export default function VentasHeladosTab({
   const produccionHelados = useMemo(() => {
     return allProduccion.filter((p) => {
       const g = (p.GRUPO || "").toUpperCase();
+      const sub = (p.SUB_GRUPO || "").toUpperCase();
       const name = (p.Nombre_del_producto || p.NombreES || p.nombre || "").toLowerCase();
-      if (name.includes("michelad") || g.includes("MICHELAD")) return false;
+      if (
+        name.includes("michelad") || 
+        g.includes("MICHELAD") ||
+        g.includes("ADICION") ||
+        sub.includes("ADICION")
+      ) return false;
 
       return (
         g.includes("HELADO") ||
@@ -252,8 +266,8 @@ export default function VentasHeladosTab({
         const ingName = (ing.nombre || ing.ingNombre || "").toLowerCase();
         const ingId = ing.inventarioItemId || ing.ingId || ing.id;
 
-        // Exclude michelado from ingredients search
-        if (ingName.includes("michelad")) return;
+        // Exclude michelado and adiciones from ingredients search
+        if (ingName.includes("michelad") || ingName.includes("adicion")) return;
 
         // Check if ingredient is an Ice Cream production item
         const isHeladoProd = produccionHelados.some(
@@ -431,7 +445,7 @@ export default function VentasHeladosTab({
               1. Ventas Directas de Ítems de Menú (Heladería)
             </h3>
             <p className="text-xs text-gray-600">
-              Desglose de productos de menú configurados como Helados, Gelatos o Soft Serve (Navega a Libro o Caja según corresponda).
+              Desglose de productos de menú configurados como Helados, Gelatos o Soft Serve (Haz clic en Receta Modal para ver/editar ingredientes y costos).
             </p>
           </div>
 
@@ -476,7 +490,7 @@ export default function VentasHeladosTab({
                 <th className="p-3 text-right">Costo Unit. (Dubovik)</th>
                 <th className="p-3 text-right">Margen %</th>
                 <th className="p-3 text-right">Ganancia Est.</th>
-                <th className="p-3 text-center">Ir a Libro o Caja</th>
+                <th className="p-3 text-center">Acción / Receta Modal</th>
               </tr>
             </thead>
             <tbody className="divide-y border-black font-medium">
@@ -489,6 +503,7 @@ export default function VentasHeladosTab({
               ) : (
                 menuHeladosList.map((item, idx) => {
                   const hasRecipe = Boolean(item.receta);
+                  const recipeId = item.Receta || (item.receta && item.receta._id);
                   return (
                     <tr key={item._id || idx} className="hover:bg-amber-50 transition-colors">
                       <td className="p-3 font-bold text-gray-900 flex items-center gap-2">
@@ -544,13 +559,13 @@ export default function VentasHeladosTab({
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          {hasRecipe ? (
+                          {hasRecipe && recipeId ? (
                             <button
-                              onClick={() => navigate('/Recetas')}
-                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold border border-black shadow-sm flex items-center gap-1 transition-all"
-                              title="Ir a Libro de Recetas"
+                              onClick={() => setSelectedRecetaModal({ Receta: recipeId })}
+                              className="px-2.5 py-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-[10px] font-black border border-black shadow-sm flex items-center gap-1 transition-all active:translate-y-0.5"
+                              title={`Abrir Receta Modal (ID: ${recipeId})`}
                             >
-                              📕 Ir a Libro
+                              📕 Receta Modal
                             </button>
                           ) : (
                             <button
@@ -603,7 +618,7 @@ export default function VentasHeladosTab({
                 <th className="p-3 text-center">Porciones Vendidas</th>
                 <th className="p-3 text-right">Consumo Total (kg)</th>
                 <th className="p-3 text-right">Costo Estimado Helado</th>
-                <th className="p-3 text-center">Ir a Libro o Caja</th>
+                <th className="p-3 text-center">Acción / Receta Modal</th>
               </tr>
             </thead>
             <tbody className="divide-y border-black font-medium">
@@ -644,13 +659,23 @@ export default function VentasHeladosTab({
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => navigate('/Recetas')}
-                          className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold border border-black shadow-sm flex items-center gap-1 transition-all"
-                          title="Ver en Libro de Recetas"
-                        >
-                          📕 Ir a Libro
-                        </button>
+                        {row.recetaId ? (
+                          <button
+                            onClick={() => setSelectedRecetaModal({ Receta: row.recetaId })}
+                            className="px-2.5 py-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-[10px] font-black border border-black shadow-sm flex items-center gap-1 transition-all active:translate-y-0.5"
+                            title={`Abrir Receta Modal (ID: ${row.recetaId})`}
+                          >
+                            📕 Receta Modal
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => navigate('/Recetas')}
+                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold border border-black shadow-sm flex items-center gap-1 transition-all"
+                            title="Ir a Libro de Recetas"
+                          >
+                            📕 Ir a Libro
+                          </button>
+                        )}
                         <button
                           onClick={() => navigate('/VentaCompra')}
                           className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold border border-black shadow-sm flex items-center gap-1 transition-all"
@@ -667,6 +692,14 @@ export default function VentasHeladosTab({
           </table>
         </div>
       </div>
+
+      {/* RECETA MODAL INTERACTIVO AL HACER CLIC EN 'RECETA MODAL' */}
+      {selectedRecetaModal && (
+        <RecetaModal
+          item={selectedRecetaModal}
+          onClose={() => setSelectedRecetaModal(null)}
+        />
+      )}
 
       {/* FOOTER ADVISORY */}
       <div className="bg-yellow-50 border-2 border-black p-3 text-xs text-amber-950 font-bold flex items-center gap-2">
