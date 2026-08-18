@@ -417,7 +417,7 @@ const MenuPrintBlock = ({
 
         {/* Panel de Configuración de Modo e Ítem en Modo Edición */}
         {editMode && (
-          <div className="bg-yellow-100 border-b-2 border-black p-1.5 flex flex-wrap items-center justify-between gap-1 z-40 print:hidden text-[10px] font-SpaceGrotesk">
+          <div className="bg-yellow-100 border-b-2 border-black p-1.5 flex flex-wrap items-center justify-start gap-2 z-40 print:hidden text-[10px] font-SpaceGrotesk">
             <div className="flex items-center gap-1">
               <span className="font-black text-gray-800 uppercase">VISTA:</span>
               <div className="flex bg-white border border-black rounded overflow-hidden shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
