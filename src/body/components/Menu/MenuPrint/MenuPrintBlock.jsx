@@ -42,10 +42,10 @@ const SearchableItemSelect = ({ productList = [], activeProductId, onSelect }) =
   });
 
   return (
-    <div className="relative inline-block font-SpaceGrotesk" ref={containerRef}>
+    <div className="relative flex items-center font-SpaceGrotesk" ref={containerRef}>
       <input
         type="text"
-        className="w-[160px] text-[9px] font-bold border border-black bg-white rounded p-0.5 outline-none truncate shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+        className="w-[180px] sm:w-[210px] h-5.5 text-[9px] font-bold border border-black bg-white rounded px-1.5 py-0 outline-none leading-none truncate shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer flex items-center"
         placeholder="🔍 Escribe para buscar..."
         value={isOpen ? searchTerm : (selectedProduct ? `${selectedProduct.NombreES} ($${selectedProduct.Precio})` : '')}
         onFocus={() => {
@@ -453,8 +453,8 @@ const MenuPrintBlock = ({
               </button>
             </div>
 
-            <div className="flex items-center gap-1 max-w-[240px]">
-              <span className="font-black text-gray-800 uppercase">ÍTEM:</span>
+            <div className="flex items-center gap-1">
+              <span className="font-black text-gray-800 uppercase leading-none text-[9px] shrink-0">ÍTEM:</span>
               <SearchableItemSelect
                 productList={productList}
                 activeProductId={product._id}
