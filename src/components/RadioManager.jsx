@@ -12,7 +12,7 @@ import {
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
   GripVertical, Search, Filter, Layers, Disc, Tag, Calendar, Sparkles, 
   Clock, CheckSquare, Square, Volume2, VolumeX, SkipBack, SkipForward,
-  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus
+  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus, RotateCcw
 } from 'lucide-react';
 
 const MAX_PLAYLIST_SECONDS = Infinity; // Sin límite de tiempo ni de canciones
@@ -96,6 +96,7 @@ export default function RadioManager() {
   const [uploadPercent, setUploadPercent] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   // Notificaciones
   const [error, setError] = useState(null);
@@ -254,6 +255,61 @@ export default function RadioManager() {
     fetchSongs();
     fetchYoutubeSongs();
   }, []);
+
+  // Forzar Reinicio del sistema de radio y sincronización global
+  const handleForceRestart = async () => {
+    if (!window.confirm("¿Estás seguro de que deseas forzar el reinicio de la radio? Esto detendrá la reproducción global, detendrá la vista previa y actualizará las listas de canciones.")) {
+      return;
+    }
+
+    setIsRestarting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // 1. Detener preview local de audio si está activo
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setPreviewTrack(null);
+      setIsPlayingPreview(false);
+
+      // 2. Resetear estado de sincronización global en Supabase (radio_current_play)
+      try {
+        await supabase
+          .from('radio_current_play')
+          .upsert({
+            id: 1,
+            tab: 'supabase',
+            station_url: '',
+            station_name: '',
+            station_cover: '',
+            station_artist: '',
+            is_playing: false,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+      } catch (syncErr) {
+        console.warn("No se pudo resetear radio_current_play en Supabase:", syncErr.message);
+      }
+
+      // 3. Recargar canciones de Supabase
+      await Promise.all([
+        fetchSongs(),
+        fetchYoutubeSongs()
+      ]);
+
+      // 4. Disparar evento global para resetear escuchadores activos
+      window.dispatchEvent(new CustomEvent('RADIO_FORCE_RESTART'));
+
+      setSuccess("¡Reinicio forzado ejecutado con éxito! Se ha detenido la transmisión activa y recargado la información.");
+    } catch (err) {
+      console.error("Error al forzar reinicio:", err);
+      setError("Error al forzar reinicio: " + err.message);
+    } finally {
+      setIsRestarting(false);
+    }
+  };
 
   // Control de audio preview
   useEffect(() => {
@@ -1160,6 +1216,16 @@ export default function RadioManager() {
             >
               <FolderUp className="w-4 h-4" />
               Subir Carpeta Completa
+            </button>
+
+            <button 
+              onClick={handleForceRestart}
+              disabled={isRestarting}
+              title="Forzar el reinicio completo de la radio, detener la transmisión activa y recargar listas"
+              className="flex-1 md:flex-none px-5 py-3 rounded-full bg-red-600/90 hover:bg-red-600 text-white font-extrabold text-xs uppercase tracking-wider border border-red-500/40 transition flex items-center justify-center gap-2 shadow-xl shadow-red-900/30 disabled:opacity-50"
+            >
+              <RotateCcw className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} />
+              {isRestarting ? 'Reiniciando...' : 'Forzar Reinicio'}
             </button>
           </div>
         </div>

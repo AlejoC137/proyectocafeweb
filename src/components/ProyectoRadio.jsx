@@ -130,6 +130,23 @@ export default function ProyectoRadio() {
     }
   }, [currentPlay, radioData.currentPlaylist]);
 
+  // Escuchar evento de reinicio forzado global
+  React.useEffect(() => {
+    const handleForceRestartEvent = () => {
+      if (player.audioRef.current) {
+        player.audioRef.current.pause();
+        player.audioRef.current.currentTime = 0;
+      }
+      setIsPlaying(false);
+      setCurrentTrackIndex(0);
+      player.setProgress(0);
+      player.setCurrentTime(0);
+    };
+
+    window.addEventListener('RADIO_FORCE_RESTART', handleForceRestartEvent);
+    return () => window.removeEventListener('RADIO_FORCE_RESTART', handleForceRestartEvent);
+  }, []);
+
   const handleAutoStart = () => {
     player.setShowAutoStart(false);
     setIsPlaying(true);
