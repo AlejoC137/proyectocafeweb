@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import TopNav from './components/ui/top-nav';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import GlobalAuthModal from './components/GlobalAuthModal';
+import supabase from './config/supabaseClient';
 
 // --- Lazy imports: cada ruta se carga solo cuando se navega a ella ---
 const MenuView = lazy(() => import('./body/views/menuView/MenuView'));
@@ -76,6 +77,46 @@ const PageLoader = () => (
 );
 
 function App() {
+  useEffect(() => {
+    // Escuchador BroadcastChannel local entre pestañas
+    let bc;
+    try {
+      bc = new BroadcastChannel('radio-reload-channel');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'FORCE_RELOAD') {
+          window.location.reload();
+        }
+      };
+    } catch (e) {}
+
+    // Escuchador Supabase Realtime (WebSockets + DB change)
+    const channel = supabase
+      .channel('app-global-reload-listener')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'radio_current_play',
+          filter: 'id=eq.1',
+        },
+        (payload) => {
+          if (payload.new?.station_name === 'FORCE_RELOAD') {
+            window.location.reload();
+          }
+        }
+      )
+      .on('broadcast', { event: 'FORCE_RELOAD' }, () => {
+        window.location.reload();
+      })
+      .subscribe();
+
+    return () => {
+      if (bc) bc.close();
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <GlobalAuthModal>
       <div className='flex w-full min-h-screen relative bg-cream-bg text-darker-on-cream font-sans'>

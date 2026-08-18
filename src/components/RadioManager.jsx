@@ -256,15 +256,15 @@ export default function RadioManager() {
     fetchYoutubeSongs();
   }, []);
 
-  // Forzar Reinicio del sistema de radio y sincronización global
+  // Forzar Reinicio del sistema de radio y recarga (F5) de todas las instancias abiertas
   const handleForceRestart = async () => {
-    if (!window.confirm("¿Estás seguro de que deseas forzar el reinicio de la radio? Esto detendrá la reproducción global, detendrá la vista previa y actualizará las listas de canciones.")) {
+    if (!window.confirm("¿Estás seguro de que deseas forzar el reinicio de la radio? Esto recargará (F5) todas las instancias y pestañas abiertas de la página.")) {
       return;
     }
 
     setIsRestarting(true);
     setError(null);
-    setSuccess(null);
+    setSuccess("Enviando señal de recarga forzada (F5) a todas las instancias...");
 
     try {
       // 1. Detener preview local de audio si está activo
@@ -272,10 +272,26 @@ export default function RadioManager() {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
-      setPreviewTrack(null);
-      setIsPlayingPreview(false);
 
-      // 2. Resetear estado de sincronización global en Supabase (radio_current_play)
+      // 2. Emitir mensaje por BroadcastChannel local (todas las pestañas del mismo navegador)
+      try {
+        const bc = new BroadcastChannel('radio-reload-channel');
+        bc.postMessage({ type: 'FORCE_RELOAD', timestamp: Date.now() });
+        bc.close();
+      } catch (e) {}
+
+      // 3. Emitir mensaje por Supabase Realtime Broadcast (WebSockets)
+      try {
+        const channel = supabase.channel('radio-sync-global');
+        await channel.subscribe();
+        await channel.send({
+          type: 'broadcast',
+          event: 'FORCE_RELOAD',
+          payload: { timestamp: Date.now() }
+        });
+      } catch (e) {}
+
+      // 4. Actualizar la tabla radio_current_play en Supabase
       try {
         await supabase
           .from('radio_current_play')
@@ -283,30 +299,24 @@ export default function RadioManager() {
             id: 1,
             tab: 'supabase',
             station_url: '',
-            station_name: '',
+            station_name: 'FORCE_RELOAD',
             station_cover: '',
             station_artist: '',
             is_playing: false,
             updated_at: new Date().toISOString()
           }, { onConflict: 'id' });
       } catch (syncErr) {
-        console.warn("No se pudo resetear radio_current_play en Supabase:", syncErr.message);
+        console.warn("Error al forzar reinicio en Supabase:", syncErr.message);
       }
 
-      // 3. Recargar canciones de Supabase
-      await Promise.all([
-        fetchSongs(),
-        fetchYoutubeSongs()
-      ]);
+      // 5. Recargar la propia instancia actual (F5)
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
 
-      // 4. Disparar evento global para resetear escuchadores activos
-      window.dispatchEvent(new CustomEvent('RADIO_FORCE_RESTART'));
-
-      setSuccess("¡Reinicio forzado ejecutado con éxito! Se ha detenido la transmisión activa y recargado la información.");
     } catch (err) {
       console.error("Error al forzar reinicio:", err);
       setError("Error al forzar reinicio: " + err.message);
-    } finally {
       setIsRestarting(false);
     }
   };

@@ -56,6 +56,11 @@ export function useRadioSync() {
         },
         (payload) => {
           console.log('[RadioSync] Cambio global recibido:', payload.new);
+          if (payload.new?.station_name === 'FORCE_RELOAD') {
+            console.log('[RadioSync] Recargando ventana por evento global FORCE_RELOAD (F5)');
+            window.location.reload();
+            return;
+          }
           setCurrentPlay(payload.new);
         }
       )
@@ -67,9 +72,17 @@ export function useRadioSync() {
           table: SYNC_TABLE,
         },
         (payload) => {
+          if (payload.new?.station_name === 'FORCE_RELOAD') {
+            window.location.reload();
+            return;
+          }
           setCurrentPlay(payload.new);
         }
       )
+      .on('broadcast', { event: 'FORCE_RELOAD' }, () => {
+        console.log('[RadioSync] Broadcast FORCE_RELOAD recibido. Recargando página (F5)...');
+        window.location.reload();
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('[RadioSync] Suscripcion Realtime activa.');
@@ -80,9 +93,24 @@ export function useRadioSync() {
 
     channelRef.current = channel;
 
+    // Escuchador BroadcastChannel local entre pestañas del mismo navegador
+    let bc;
+    try {
+      bc = new BroadcastChannel('radio-reload-channel');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'FORCE_RELOAD') {
+          console.log('[RadioSync] BroadcastChannel local FORCE_RELOAD recibido. Recargando (F5)...');
+          window.location.reload();
+        }
+      };
+    } catch (e) {}
+
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+      }
+      if (bc) {
+        bc.close();
       }
     };
   }, []);
@@ -129,10 +157,58 @@ export function useRadioSync() {
     }
   };
 
+  const broadcastForceReload = async () => {
+    try {
+      setIsSyncing(true);
+
+      // 1. Emitir por BroadcastChannel local (todas las pestañas del navegador)
+      try {
+        const bc = new BroadcastChannel('radio-reload-channel');
+        bc.postMessage({ type: 'FORCE_RELOAD', timestamp: Date.now() });
+        bc.close();
+      } catch (e) {}
+
+      // 2. Emitir por Supabase Realtime Broadcast (WebSockets)
+      try {
+        if (channelRef.current) {
+          await channelRef.current.send({
+            type: 'broadcast',
+            event: 'FORCE_RELOAD',
+            payload: { timestamp: Date.now() }
+          });
+        }
+      } catch (e) {}
+
+      // 3. Notificar en Supabase Postgres Table
+      await supabase
+        .from(SYNC_TABLE)
+        .upsert({
+          id: SYNC_ROW_ID,
+          tab: 'supabase',
+          station_url: '',
+          station_name: 'FORCE_RELOAD',
+          station_cover: '',
+          station_artist: '',
+          is_playing: false,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+    } catch (err) {
+      console.warn('[RadioSync] Error en broadcastForceReload:', err.message);
+    } finally {
+      setIsSyncing(false);
+    }
+
+    // 4. Recargar la propia ventana actual
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
+  };
+
   return {
     currentPlay,
     broadcastPlay,
     broadcastStop,
+    broadcastForceReload,
     isSyncing,
     syncError,
   };
