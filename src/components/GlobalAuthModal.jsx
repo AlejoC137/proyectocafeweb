@@ -29,7 +29,8 @@ export default function GlobalAuthModal({ children }) {
     "/proyectoradio", "/radio", "/radiomanager",
     "/menuview", "/home",
     "/eventosoffer",
-    "/inscripcion"
+    "/inscripcion",
+    "/calculadorrecetahelados"
   ];
 
   const path = location.pathname.toLowerCase();

@@ -19,7 +19,8 @@ import {
   TrendingUp,
   BookOpen,
   Printer,
-  ExternalLink
+  ExternalLink,
+  Lock
 } from "lucide-react";
 import AccionesRapidas from "../actualizarPrecioUnitario/AccionesRapidas";
 import { 
@@ -61,6 +62,27 @@ export default function CalculadorRecetaHelados() {
   // Loading state for Supabase sync
   const [loadingData, setLoadingData] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
+
+  // PIN Protection State (2400 from .env or fallback)
+  const HELADOS_PIN = import.meta.env.VITE_HELADOS_PIN || "2400";
+  const [isPinAuthenticated, setIsPinAuthenticated] = useState(() => {
+    return sessionStorage.getItem("helados_pin_authenticated") === "true";
+  });
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+
+  const handlePinSubmit = (e) => {
+    e.preventDefault();
+    if (pinInput.trim() === HELADOS_PIN) {
+      sessionStorage.setItem("helados_pin_authenticated", "true");
+      setIsPinAuthenticated(true);
+      setPinError("");
+      setPinInput("");
+    } else {
+      setPinError("PIN incorrecto. Intente nuevamente.");
+      setPinInput("");
+    }
+  };
 
   // Form State
   const [nombreReceta, setNombreReceta] = useState("Mi Formulación Helado");
@@ -495,6 +517,65 @@ export default function CalculadorRecetaHelados() {
     }
   };
 
+  if (!isPinAuthenticated) {
+    return (
+      <div className="w-full min-h-[80vh] flex items-center justify-center p-4 font-SpaceGrotesk">
+        <div className="w-full max-w-md bg-cream-bg border-2 border-black p-6 md:p-8 shadow-solid space-y-6">
+          <div className="text-center space-y-2">
+            <div className="inline-flex p-4 bg-terracotta-accent text-white border-2 border-black shadow-solid mb-2">
+              <Lock className="h-8 w-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Acceso Protegido por PIN</h2>
+            <p className="text-xs md:text-sm text-gray-600">
+              Formulador & Balanceador de Helados (Dubovik)
+            </p>
+          </div>
+
+          <form onSubmit={handlePinSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                PIN de Autorización
+              </label>
+              <input
+                type="password"
+                maxLength={8}
+                value={pinInput}
+                onChange={(e) => {
+                  setPinInput(e.target.value);
+                  setPinError("");
+                }}
+                placeholder="Ingrese PIN"
+                className="w-full p-3 text-center text-xl font-bold tracking-widest bg-white border-2 border-black focus:outline-none focus:ring-2 focus:ring-terracotta-accent shadow-sm"
+                autoFocus
+              />
+            </div>
+
+            {pinError && (
+              <div className="p-3 bg-red-100 border border-red-400 text-red-700 text-xs font-bold text-center">
+                {pinError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-terracotta-accent hover:bg-terracotta-accent/90 text-white font-bold text-sm border-2 border-black shadow-solid transition-all active:translate-y-0.5"
+            >
+              Ingresar al Formulador
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/MenuView")}
+              className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs border-2 border-black shadow-sm transition-all"
+            >
+              Volver al Menú Principal
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-7xl mx-auto p-3 md:p-6 space-y-6 font-SpaceGrotesk">
       
@@ -532,6 +613,18 @@ export default function CalculadorRecetaHelados() {
           >
             <Zap className="h-3.5 w-3.5" />
             {showAccionesRapidas ? "Ocultar Acciones Rápidas" : "Acciones Rápidas"}
+          </button>
+
+          <button
+            onClick={() => {
+              sessionStorage.removeItem("helados_pin_authenticated");
+              setIsPinAuthenticated(false);
+            }}
+            className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-800 text-xs font-bold border-2 border-black shadow-solid transition-all flex items-center gap-1"
+            title="Bloquear acceso con PIN"
+          >
+            <Lock className="h-3.5 w-3.5" />
+            Bloquear PIN
           </button>
         </div>
       </div>
