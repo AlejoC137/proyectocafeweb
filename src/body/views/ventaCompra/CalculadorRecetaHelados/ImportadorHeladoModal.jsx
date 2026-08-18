@@ -30,6 +30,7 @@ INGREDIENTES BASE DISPONIBLES Y SUS PARÁMETROS:
 - neutro_5 (Grasa: 0.0%, Sólidos: 100.0%, POD: 0.0, PAC: 0.0)
 - inulina (Grasa: 0.0%, Sólidos: 95.0%, POD: 10.0, PAC: 10.0)
 - frambuesa (Grasa: 0.0%, Sólidos: 8.8%, POD: 7.8, PAC: 17.2)
+- yogurt_griego (Grasa: 8.0%, Sólidos: 18.0%, POD: 1.0, PAC: 2.0)
 - agua (Grasa: 0.0%, Sólidos: 0.0%, POD: 0.0, PAC: 0.0)
 
 DEVUELVE ÚNICAMENTE UN OBJETO JSON CON EL SIGUIENTE FORMATO EXACTO (SIN TEXTO ADICIONAL NI MARKDOWN):

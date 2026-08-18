@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFromTable, resetExpandedGroups, toggleShowEdit } from "../../../redux/actions";
-import { Comanda, Staff, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems, AGENDA } from "../../../redux/actions-types";
+import { getAllFromTable, resetExpandedGroups, toggleShowEdit, updateViewPreference } from "../../../redux/actions";
+import { Comanda, Staff, Procedimientos, STAFF, MENU, ITEMS, PRODUCCION, PROVEE, PROCEDE, MenuItems, AGENDA, RECETAS_MENU, RECETAS_PRODUCCION } from "../../../redux/actions-types";
 import AccionesRapidasActividades from "../actualizarPrecioUnitario/AccionesRapidasActividades";
 // Vistas tipo grid (cards)
 import { CardGridComanda } from "./gridInstance/CardGridComanda";
@@ -10,11 +10,7 @@ import { CardGridStaff } from "./gridInstance/CardGridStaff";
 import { CardGridProcedimientos } from "./gridInstance/CardGridProcedimientos";
 import { CardGridInventarioMenuLunch } from "@/components/ui/CardGridInventarioMenuLunch";
 // Vista tipo Excel (tabla)
-
-
 import { TableViewManager } from "@/components/ui/tableViewManager";
-import PageLayout from "../../../components/ui/page-layout";
-import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { ViewToggle } from "@/components/ui/viewToggle";
 import {
@@ -27,7 +23,6 @@ import {
   BarChart3,
   Calendar
 } from "lucide-react";
-import ComandaExcelView from "../actividades/WorkE/ComandaExcelView";
 import ProcedimientoImportModal from "../ventaCompra/ProcedimientoImportModal";
 
 function Manager() {
@@ -54,14 +49,33 @@ function Manager() {
   }, [tab]);
 
   const [showAccionesRapidasActividades, setShowAccionesRapidasActividades] = useState(false);
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' por defecto, como Inventario
   const [showProcedimientoImportModal, setShowProcedimientoImportModal] = useState(false);
+
+  // Sync viewMode preference with Redux like Inventario view
+  const currentStaff = useSelector((state) => state.currentStaff);
+  const viewPreferences = useSelector((state) => state.viewPreferences || {});
+  const managerPrefs = viewPreferences.manager || {};
+  const [viewMode, setViewModeState] = useState(managerPrefs.viewMode || 'cards');
+
+  useEffect(() => {
+    if (managerPrefs.viewMode && managerPrefs.viewMode !== viewMode) {
+      setViewModeState(managerPrefs.viewMode);
+    }
+  }, [managerPrefs.viewMode]);
+
+  const setViewMode = (mode) => {
+    setViewModeState(mode);
+    if (currentStaff?._id) {
+      dispatch(updateViewPreference(currentStaff._id, "manager", { viewMode: mode }));
+    }
+  };
 
   // Redux selectors
   const AllProcedimientos = useSelector((state) => state.allProcedimientos || []);
   const AllStaff = useSelector((state) => state.allStaff || []);
   const AllComanda = useSelector((state) => state.allComanda || []);
-  const recetas = useSelector((state) => state.allRecetasMenu || []);
+  const recetasMenu = useSelector((state) => state.allRecetasMenu || []);
+  const recetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
   const showEdit = useSelector((state) => state.showEdit);
   const Menu = useSelector((state) => state.allMenu || []);
   const allAgenda = useSelector((state) => state.allAgenda || []);
@@ -77,12 +91,7 @@ function Manager() {
     }[currentType];
 
     return Array.isArray(items) ? items : [];
-  }, [currentType, AllStaff, AllComanda, AllProcedimientos, Menu]);
-
-  useEffect(() => {
-    if (currentType === MenuItems) {
-    }
-  }, [currentType, filteredItems]);
+  }, [currentType, AllStaff, AllComanda, AllProcedimientos, Menu, allAgenda]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +105,8 @@ function Manager() {
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(PROCEDE)),
           dispatch(getAllFromTable(AGENDA)),
+          dispatch(getAllFromTable(RECETAS_MENU)),
+          dispatch(getAllFromTable(RECETAS_PRODUCCION)),
         ]);
         setLoading(false);
       } catch (error) {
@@ -127,10 +138,6 @@ function Manager() {
     setShowAccionesRapidasActividades((prev) => !prev);
   };
 
-  const handleToggleViewMode = () => {
-    setViewMode((prev) => prev === 'table' ? 'cards' : 'table');
-  };
-
   // Categorías para CategoryNavBar
   const categories = [
     { type: MenuItems, label: "Menú", icon: "🗺️" },
@@ -140,32 +147,18 @@ function Manager() {
     { type: AGENDA, label: "Eventos", icon: "📅" }
   ];
 
-  const headerActions = (
-    <CategoryNavBar
-      categories={categories}
-      currentType={currentType}
-      onTypeChange={handleToggleType}
-      showEdit={showEdit}
-      onToggleEdit={handleToggleShowEdit}
-      showActions={showAccionesRapidasActividades}
-      onToggleActions={handleToggleAccionesRapidasActividades}
-    />
-  );
-
   // Render vista según el modo seleccionado
   const renderGrid = () => {
     if (viewMode === 'table') {
-      // Vista tipo Excel (Tabla)
-
-
       return (
         <TableViewManager
           products={filteredItems}
           currentType={currentType}
+          recetasMenu={recetasMenu}
+          recetasProduccion={recetasProduccion}
         />
       );
     } else {
-      // Vista tipo Cards (Grid original)
       switch (currentType) {
         case Comanda:
           return <CardGridComanda currentType={currentType} />;
@@ -185,150 +178,177 @@ function Manager() {
     }
   };
 
-  // Get statistics for the current type
-  const getTypeStats = () => {
+  // Statistics calculation for the current type
+  const stats = useMemo(() => {
     const total = filteredItems.length;
     const typeLabels = {
       [Staff]: "empleados",
-      [Comanda]: "Comandas",
+      [Comanda]: "comandas",
       [Procedimientos]: "procedimientos",
-      [MenuItems]: "items del menú",
+      [MenuItems]: "ítems del menú",
       [AGENDA]: "eventos"
     };
 
+    const activeCount = filteredItems.filter(
+      i => i.Estado === "Activo" || i.Activo || (i.Terminado === false) || i.estado === "Activo"
+    ).length;
+
     return {
       total,
+      activeCount,
       label: typeLabels[currentType] || "elementos"
     };
-  };
+  }, [filteredItems, currentType]);
 
-  const stats = getTypeStats();
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="text-center text-slate-700 text-lg font-medium">Cargando datos del Manager...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full bg-slate-100 flex flex-col font-sans overflow-hidden">
+    <div className="flex-1 flex flex-col w-full h-[calc(100vh-3.5rem)] bg-slate-100 font-sans overflow-hidden min-h-0">
       {/* Top Bar Ultra Compacta */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between shrink-0 shadow-sm z-20">
-        <div className="flex items-center gap-4">
-          <h1 className="text-base font-black text-slate-800 tracking-tight uppercase flex items-center gap-2">
+      <div className="bg-white border-b border-slate-200 px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-sm z-20">
+        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto custom-scrollbar py-0.5">
+          <h1 className="text-sm sm:text-base font-black text-slate-800 tracking-tight uppercase flex items-center gap-1.5 shrink-0">
             <Settings size={18} className="text-blue-600" />
             Manager
           </h1>
-          <div className="h-6 w-px bg-slate-200 mx-1"></div>
-          {/* Categorías integradas en el Top Bar en lugar de un navbar grande */}
-          <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+          <div className="h-6 w-px bg-slate-200 mx-0.5 shrink-0 hidden sm:block"></div>
+          {/* Categorías en el Top Bar */}
+          <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 shrink-0">
             {categories.map(cat => (
-              <button 
+              <button
                 key={cat.type}
                 onClick={() => handleToggleType(cat.type)}
-                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-md transition-all ${currentType === cat.type ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                  currentType === cat.type 
+                    ? "bg-white text-blue-700 shadow-sm" 
+                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                }`}
               >
-                {cat.icon} <span className="hidden xl:inline">{cat.label}</span>
+                <span>{cat.icon}</span> 
+                <span className="inline">{cat.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-           <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-           {currentType === Procedimientos && (
-              <button
-                onClick={() => setShowProcedimientoImportModal(true)}
-                className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                📥 <span className="hidden sm:inline">Importar JSON</span>
-              </button>
-           )}
-           <button 
-             onClick={handleToggleShowEdit}
-             className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-colors shadow-sm border ${showEdit ? "bg-green-50 text-green-700 border-green-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
-           >
-             <Settings size={14} /> <span className="hidden md:inline">{showEdit ? "Edición Activa" : "Modo Edición"}</span>
-           </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          {currentType === Procedimientos && (
+            <button
+              onClick={() => setShowProcedimientoImportModal(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              📥 <span className="hidden sm:inline">Importar JSON</span>
+            </button>
+          )}
+          <button
+            onClick={handleToggleShowEdit}
+            className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-colors shadow-sm border ${
+              showEdit 
+                ? "bg-green-50 text-green-700 border-green-200" 
+                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <Settings size={14} /> 
+            <span className="hidden sm:inline">{showEdit ? "Edición Activa" : "Modo Edición"}</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Content Split - TV Dashboard Style */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Panel Izquierdo: Resumen y Estadísticas (28%) */}
-        <div className="w-[28%] min-w-[320px] max-w-[400px] bg-white border-r border-slate-200 flex flex-col z-10 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
-           <div className="bg-slate-800 text-white p-3 shrink-0 flex items-center justify-between">
-              <div>
-                <h2 className="text-xs font-black uppercase tracking-widest text-slate-200 mb-0.5">Dashboard</h2>
-                <h2 className="text-sm font-black text-white uppercase tracking-wide leading-tight">
-                   {categories.find(c => c.type === currentType)?.label || "Categoría"}
-                </h2>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex justify-center items-center text-white">
-                <BarChart3 size={16} />
-              </div>
-           </div>
-           
-           <div className="flex-1 overflow-y-auto no-scrollbar p-3 flex flex-col gap-3 bg-slate-50/50">
-             {/* Stats rápidas */}
-             <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
-                  <span className="text-2xl font-black text-slate-700">{filteredItems.length}</span>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm flex flex-col items-center text-center">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Activos</span>
-                  <span className="text-2xl font-black text-blue-700">
-                    {filteredItems.filter(i => i.Estado === "Activo" || i.Activo || !i.Terminado).length}
-                  </span>
-                </div>
-             </div>
+      {/* Main Content Split - Responsive Dashboard & Content */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
+        {/* Panel Izquierdo: Resumen y Estadísticas */}
+        <div className="w-full lg:w-[28%] lg:min-w-[300px] lg:max-w-[380px] bg-white border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col z-10 shadow-sm shrink-0 max-h-[30vh] lg:max-h-none min-h-0">
+          <div className="bg-slate-800 text-white p-2.5 sm:p-3 shrink-0 flex items-center justify-between">
+            <div>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-0.5">Dashboard</h2>
+              <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wide leading-tight">
+                {categories.find(c => c.type === currentType)?.label || "Categoría"}
+              </h2>
+            </div>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-700 flex justify-center items-center text-white shrink-0">
+              <BarChart3 size={16} />
+            </div>
+          </div>
 
-             {/* Acciones Rápidas del componente existente si está activado */}
-             {showAccionesRapidasActividades && (
-                <div className="bg-white p-3 rounded-xl border border-purple-200 shadow-sm mt-2">
-                   <h3 className="text-xs font-bold text-purple-700 mb-2 uppercase tracking-wider flex items-center gap-1"><Zap size={12}/> Acciones Rápidas</h3>
-                   <AccionesRapidasActividades currentType={currentType} />
-                </div>
-             )}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 flex flex-col gap-3 bg-slate-50/50 min-h-0">
+            {/* Stats rápidas */}
+            <div className="grid grid-cols-2 gap-2 shrink-0">
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
+                <span className="text-xl sm:text-2xl font-black text-slate-700">{stats.total}</span>
+              </div>
+              <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-200 shadow-sm flex flex-col items-center text-center">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Activos</span>
+                <span className="text-xl sm:text-2xl font-black text-blue-700">{stats.activeCount}</span>
+              </div>
+            </div>
 
-             {/* Lista de recientes o resumen */}
-             <div className="mt-2 flex-1">
-               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 border-b border-slate-200 pb-1">Recientes</h3>
-               <div className="flex flex-col gap-1">
-                 {filteredItems.slice(0, 15).map((item, i) => (
-                   <div key={item._id || i} className="bg-white p-2 rounded-lg border border-slate-100 shadow-sm flex justify-between items-center hover:border-blue-200 transition-colors cursor-default">
-                     <span className="text-xs font-semibold text-slate-700 truncate max-w-[70%]">{item.NombreES || item.Tittle || item.Nombre || "Item"}</span>
-                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase truncate max-w-[25%]">
-                       {item.Categoria || item.SUB_GRUPO || "Gral"}
-                     </span>
-                   </div>
-                 ))}
-               </div>
-             </div>
-           </div>
+            {/* Acciones Rápidas */}
+            {showAccionesRapidasActividades && (
+              <div className="bg-white p-3 rounded-xl border border-purple-200 shadow-sm mt-1 shrink-0">
+                <h3 className="text-xs font-bold text-purple-700 mb-2 uppercase tracking-wider flex items-center gap-1">
+                  <Zap size={12}/> Acciones Rápidas
+                </h3>
+                <AccionesRapidasActividades currentType={currentType} />
+              </div>
+            )}
+
+            {/* Lista de recientes o resumen */}
+            <div className="mt-1 flex-1 flex flex-col min-h-0">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 border-b border-slate-200 pb-1 shrink-0">
+                Recientes ({stats.label})
+              </h3>
+              <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1">
+                {filteredItems.slice(0, 20).map((item, i) => (
+                  <div key={item._id || i} className="bg-white p-2 rounded-lg border border-slate-200 shadow-xs flex justify-between items-center hover:border-blue-300 transition-colors cursor-default">
+                    <span className="text-xs font-semibold text-slate-700 truncate max-w-[70%]">
+                      {item.NombreES || item.Tittle || item.tittle || item.Nombre || item.nombreES || "Item sin nombre"}
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase truncate max-w-[28%]">
+                      {item.Categoria || item.SUB_GRUPO || item.Cargo || "Gral"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Panel Derecho: Contenido Principal */}
-        <div className="flex-1 bg-slate-100 p-4 overflow-y-auto no-scrollbar flex flex-col relative">
-           {viewMode === "cards" ? (
-             filteredItems.length > 0 ? (
-               <div className="w-full pb-10">
-                 {renderGrid()}
-               </div>
-             ) : (
-               <div className="m-auto flex flex-col items-center text-center text-slate-400 max-w-sm">
-                 {currentType === Staff && <Users size={48} className="mb-4 opacity-50" />}
-                 {currentType === Comanda && <Wrench size={48} className="mb-4 opacity-50" />}
-                 {currentType === Procedimientos && <FileText size={48} className="mb-4 opacity-50" />}
-                 {currentType === MenuItems && <UtensilsCrossed size={48} className="mb-4 opacity-50" />}
-                 {currentType === AGENDA && <Calendar size={48} className="mb-4 opacity-50" />}
-                 <p className="text-lg font-bold text-slate-600 mb-1">No hay {stats.label} disponibles</p>
-                 <p className="text-xs">Selecciona otra categoría o agrega nuevos elementos para verlos aquí.</p>
-               </div>
-             )
-           ) : (
-             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
-               <TableViewManager
-                  products={filteredItems}
-                  currentType={currentType}
-               />
-             </div>
-           )}
+        {/* Panel Derecho: Contenido Principal con Scroll Apto */}
+        <div className="flex-1 bg-slate-100 p-3 sm:p-4 overflow-y-auto custom-scrollbar flex flex-col relative min-h-0">
+          {viewMode === "cards" ? (
+            filteredItems.length > 0 ? (
+              <div className="w-full pb-8">
+                {renderGrid()}
+              </div>
+            ) : (
+              <div className="m-auto flex flex-col items-center text-center text-slate-400 max-w-sm py-12">
+                {currentType === Staff && <Users size={48} className="mb-4 opacity-50" />}
+                {currentType === Comanda && <Wrench size={48} className="mb-4 opacity-50" />}
+                {currentType === Procedimientos && <FileText size={48} className="mb-4 opacity-50" />}
+                {currentType === MenuItems && <UtensilsCrossed size={48} className="mb-4 opacity-50" />}
+                {currentType === AGENDA && <Calendar size={48} className="mb-4 opacity-50" />}
+                <p className="text-base sm:text-lg font-bold text-slate-600 mb-1">No hay {stats.label} disponibles</p>
+                <p className="text-xs text-slate-400">Selecciona otra categoría o agrega nuevos elementos para verlos aquí.</p>
+              </div>
+            )
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col min-h-0">
+              <TableViewManager
+                products={filteredItems}
+                currentType={currentType}
+                recetasMenu={recetasMenu}
+                recetasProduccion={recetasProduccion}
+              />
+            </div>
+          )}
         </div>
       </div>
 

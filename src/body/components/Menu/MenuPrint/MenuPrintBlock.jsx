@@ -211,9 +211,259 @@ const MenuPrintBlock = ({
     );
   };
 
+  const renderItemBlock = (id) => {
+    const langKey = leng ? 'en' : 'es';
+    
+    // Find assigned product ID
+    const savedProductId = groupDescriptions[`item_${id}_productId`];
+    const parts = String(id).split('_');
+    const fallbackProductId = parts.length >= 3 ? parts[1] : (parts.length === 2 && parts[1] !== 'CUSTOM' ? parts[1] : null);
+    const activeProductId = savedProductId || fallbackProductId;
+
+    // Display mode: 'normal' | 'ampliado' | 'solo_imagen'
+    const displayMode = groupDescriptions[`item_${id}_mode`] || 'normal';
+
+    const productList = Array.isArray(menuData) ? menuData : [];
+    const product = productList.find(p => String(p._id) === String(activeProductId)) || productList[0];
+
+    if (!product) {
+      return (
+        <div key={id} className="border-2 border-black p-3 text-center text-xs font-bold text-gray-500 bg-gray-50 rounded-[6px] relative group">
+          {renderBlockControls(id)}
+          Ítem de menú no disponible
+        </div>
+      );
+    }
+
+    const itemTitle = leng ? (product.NombreEN || product.NombreES) : product.NombreES;
+    const itemDesc = leng 
+      ? (product.DescripcionMenuEN || product.DescripcionEN || product.MenuComentsEN || "") 
+      : (product.DescripcionMenuES || product.DescripcionES || product.MenuComentsES || "");
+    const itemPhoto = product.Foto || product.foto || product.ImagenUrl || product.url;
+    const formattedPrice = product.Precio >= 1000 
+      ? `$${(product.Precio / 1000).toFixed(product.Precio % 1000 === 0 ? 0 : 1)}K` 
+      : `$${product.Precio}`;
+
+    return (
+      <div 
+        key={id} 
+        className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] transition-all overflow-hidden"
+        style={{ 
+          borderColor: colors.categoryBorder || '#000000', 
+          boxShadow: `4px 4px 0px 0px ${colors.categoryBorder || '#000000'}`, 
+          backgroundColor: colors.blockBg || '#ffffff' 
+        }}
+      >
+        {/* Controles Estándar del Bloque (Mover/Eliminar) */}
+        {renderBlockControls(id)}
+
+        {/* Panel de Configuración de Modo e Ítem en Modo Edición */}
+        {editMode && (
+          <div className="bg-yellow-100 border-b-2 border-black p-1.5 flex flex-wrap items-center justify-between gap-1 z-40 print:hidden text-[10px] font-SpaceGrotesk">
+            <div className="flex items-center gap-1">
+              <span className="font-black text-gray-800 uppercase">VISTA:</span>
+              <div className="flex bg-white border border-black rounded overflow-hidden shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                <button
+                  onClick={() => saveGroupDescriptions({ ...groupDescriptions, [`item_${id}_mode`]: 'normal' })}
+                  className={`px-1.5 py-0.5 font-bold uppercase transition-colors ${displayMode === 'normal' ? 'bg-black text-white' : 'hover:bg-gray-200 text-black'}`}
+                  title="Modo Normal (Fila compacta)"
+                >
+                  Normal
+                </button>
+                <button
+                  onClick={() => saveGroupDescriptions({ ...groupDescriptions, [`item_${id}_mode`]: 'ampliado' })}
+                  className={`px-1.5 py-0.5 font-bold uppercase transition-colors border-l border-black ${displayMode === 'ampliado' ? 'bg-black text-white' : 'hover:bg-gray-200 text-black'}`}
+                  title="Modo Ampliado (Foto y Descripción)"
+                >
+                  Ampliado
+                </button>
+                <button
+                  onClick={() => saveGroupDescriptions({ ...groupDescriptions, [`item_${id}_mode`]: 'solo_imagen' })}
+                  className={`px-1.5 py-0.5 font-bold uppercase transition-colors border-l border-black ${displayMode === 'solo_imagen' ? 'bg-black text-white' : 'hover:bg-gray-200 text-black'}`}
+                  title="Modo Solo Imagen"
+                >
+                  Solo Imagen
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 max-w-[200px]">
+              <span className="font-black text-gray-800 uppercase">ÍTEM:</span>
+              <select
+                className="text-[9px] font-bold border border-black bg-white rounded p-0.5 outline-none max-w-[140px] truncate"
+                value={product._id}
+                onChange={(e) => {
+                  saveGroupDescriptions({
+                    ...groupDescriptions,
+                    [`item_${id}_productId`]: e.target.value
+                  });
+                }}
+              >
+                {productList.map(p => (
+                  <option key={p._id} value={p._id}>
+                    {p.NombreES} (${p.Precio})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* 1. MODO NORMAL */}
+        {displayMode === 'normal' && (
+          <div className="p-2 flex flex-col gap-0.5">
+            <div className="flex items-baseline justify-between gap-2 border-b border-dashed pb-1" style={{ borderColor: colors.gridBorder || '#0000001a' }}>
+              <span 
+                className="font-black uppercase tracking-tight truncate text-left"
+                style={{ 
+                  fontFamily: colors.fontItem || 'Space Grotesk', 
+                  color: colors.itemName || '#000000',
+                  fontSize: `${colors.sizeItem || 11}${colors.fontSizeUnit || 'px'}`
+                }}
+              >
+                {itemTitle}
+              </span>
+              <span 
+                className="font-black shrink-0"
+                style={{ 
+                  fontFamily: colors.fontItem || 'Space Grotesk', 
+                  color: colors.itemPrice || '#000000',
+                  fontSize: `${colors.sizePrice || 11}${colors.fontSizeUnit || 'px'}`
+                }}
+              >
+                {formattedPrice}
+              </span>
+            </div>
+            {showItemDescriptions && itemDesc && (
+              <p 
+                className="text-left italic leading-tight mt-0.5"
+                style={{ 
+                  fontFamily: colors.fontBody || 'Inter', 
+                  color: colors.itemComment || '#6b7280',
+                  fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}`
+                }}
+              >
+                {itemDesc}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 2. MODO AMPLIADO */}
+        {displayMode === 'ampliado' && (
+          <div className="flex flex-col w-full">
+            {itemPhoto ? (
+              <div className="relative w-full aspect-[16/9] border-b-[2px] overflow-hidden bg-gray-100" style={{ borderColor: colors.categoryBorder || '#000000' }}>
+                <img
+                  src={itemPhoto}
+                  alt={itemTitle}
+                  className="w-full h-full object-cover"
+                />
+                {product.AproxTime && (
+                  <div className="absolute top-1.5 left-1.5 bg-white border border-black px-1.5 py-0.5 font-black text-[9px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    ⏱️ {product.AproxTime}m
+                  </div>
+                )}
+                {(product.DietaES || product.DietaEN) && (
+                  <div className="absolute top-1.5 right-1.5 bg-green-100 text-green-900 border border-black px-1.5 py-0.5 font-bold text-[9px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    🌱 {leng ? product.DietaEN : product.DietaES}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-2 bg-yellow-50 border-b border-black text-center text-[10px] italic text-gray-500 font-bold">
+                (Sin foto asignada en menú)
+              </div>
+            )}
+
+            <div className="p-2.5 flex flex-col gap-1">
+              <div className="flex items-start justify-between gap-2 border-b-2 pb-1.5" style={{ borderColor: colors.categoryBorder || '#000000' }}>
+                <h3 
+                  className="font-black uppercase tracking-tight leading-tight text-left"
+                  style={{ 
+                    fontFamily: colors.fontCategory || colors.fontItem || "'First Bunny', sans-serif", 
+                    color: colors.itemName || '#000000',
+                    fontSize: `${(colors.sizeItem || 11) * 1.3}${colors.fontSizeUnit || 'px'}`
+                  }}
+                >
+                  {itemTitle}
+                </h3>
+                <span 
+                  className="font-black bg-black text-white px-2 py-0.5 rounded-sm shrink-0 leading-none"
+                  style={{ 
+                    fontFamily: colors.fontItem || 'Space Grotesk', 
+                    fontSize: `${(colors.sizePrice || 11) * 1.1}${colors.fontSizeUnit || 'px'}`
+                  }}
+                >
+                  {formattedPrice}
+                </span>
+              </div>
+
+              {itemDesc && (
+                <p 
+                  className="text-left font-medium leading-snug mt-1"
+                  style={{ 
+                    fontFamily: colors.fontBody || 'Inter', 
+                    color: colors.itemComment || '#4b5563',
+                    fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}`
+                  }}
+                >
+                  {itemDesc}
+                </p>
+              )}
+
+              {Array.isArray(product.IngredientesBasicos) && product.IngredientesBasicos.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-gray-200">
+                  {product.IngredientesBasicos.map((ing, idx) => (
+                    <span key={idx} className="bg-gray-100 border border-gray-300 text-[8px] font-bold px-1.5 py-0.5 rounded text-gray-700 uppercase">
+                      {ing}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 3. MODO SOLO IMAGEN */}
+        {displayMode === 'solo_imagen' && (
+          <div className="flex flex-col w-full items-center justify-center p-1 bg-white">
+            {itemPhoto ? (
+              <div className="relative w-full overflow-hidden" style={{ height: `${groupDescriptions[`${id}_imgHeight`] || 180}px` }}>
+                <img
+                  src={itemPhoto}
+                  alt={itemTitle}
+                  className="w-full h-full object-cover rounded-sm border"
+                  style={{ borderColor: colors.imgBorder || '#000000' }}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-32 flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-400 text-gray-500 font-bold text-xs p-2 text-center">
+                📷 {itemTitle} (Sin foto asignada en menú)
+              </div>
+            )}
+            {editMode && (
+              <div className="w-full flex items-center justify-between text-[9px] font-bold text-gray-500 mt-1 px-1 print:hidden">
+                <span>Alto imagen:</span>
+                <input
+                  type="number"
+                  defaultValue={groupDescriptions[`${id}_imgHeight`] || 180}
+                  onBlur={(e) => saveGroupDescriptions({ ...groupDescriptions, [`${id}_imgHeight`]: parseInt(e.target.value) || 180 })}
+                  className="w-12 border border-black px-1 text-center bg-white"
+                /> px
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const baseBlockId = String(blockId).split('_')[0];
 
   switch (baseBlockId) {
+    case "ITEM":
+      return renderItemBlock(blockId);
     case "CAFE":
       const cafeCols = groupDescriptions[`__${blockId}_columns`] || groupDescriptions["__CAFE_columns"] || 2;
       return (
@@ -413,6 +663,9 @@ const MenuPrintBlock = ({
     default:
       if (String(blockId).startsWith('CUSTOM_')) {
         return renderCustomBlock(blockId);
+      }
+      if (String(blockId).startsWith('ITEM_')) {
+        return renderItemBlock(blockId);
       }
       const imgObj = printImages.find(img => String(img.id) === String(blockId));
       if (imgObj) {

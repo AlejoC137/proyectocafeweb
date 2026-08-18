@@ -33,6 +33,7 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
       const g = (item.GRUPO || "").toUpperCase();
       const sg = (item.SUB_GRUPO || "").toUpperCase();
       const n = (item.NombreES || item.NombreEN || "").toUpperCase();
+      if (n.includes("MICHELAD") || sg.includes("MICHELAD") || g.includes("MICHELAD")) return false;
       return (
         g === "HELADOS" ||
         sg.includes("HELADO") ||

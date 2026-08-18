@@ -28,7 +28,9 @@ import {
   MENU, 
   PRODUCCION, 
   RECETAS_MENU, 
-  RECETAS_PRODUCCION 
+  RECETAS_PRODUCCION,
+  VENTAS,
+  Comanda
 } from "../../../redux/actions-types";
 import { 
   getAllFromTable, 
@@ -48,7 +50,9 @@ import FormuladorDashboard from "./CalculadorRecetaHelados/FormuladorDashboard";
 import NewIngredientModal from "./CalculadorRecetaHelados/NewIngredientModal";
 import ImportadorHeladoModal from "./CalculadorRecetaHelados/ImportadorHeladoModal";
 import ModeloFinancieroProyecciones from "./CalculadorRecetaHelados/ModeloFinancieroProyecciones";
+import VentasHeladosTab from "./CalculadorRecetaHelados/VentasHeladosTab";
 import MenuPrint from "../../components/Menu/MenuPrint";
+import MenuPrintHorizontal from "../../components/Menu/MenuPrintHorizontal";
 
 export default function CalculadorRecetaHelados() {
   const dispatch = useDispatch();
@@ -58,6 +62,10 @@ export default function CalculadorRecetaHelados() {
   const allItems = useSelector((state) => state.allItems || []);
   const allMenu = useSelector((state) => state.allMenu || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
+  const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
+  const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
+  const allVentas = useSelector((state) => state.allVentas || []);
+  const allComanda = useSelector((state) => state.allComanda || []);
 
   // Loading state for Supabase sync
   const [loadingData, setLoadingData] = useState(false);
@@ -153,6 +161,8 @@ export default function CalculadorRecetaHelados() {
           dispatch(getAllFromTable(PRODUCCION)),
           dispatch(getAllFromTable(RECETAS_MENU)),
           dispatch(getAllFromTable(RECETAS_PRODUCCION)),
+          dispatch(getAllFromTable(VENTAS)),
+          dispatch(getAllFromTable(Comanda)),
         ]);
       } catch (err) {
         console.error("Error al cargar datos de Supabase:", err);
@@ -171,18 +181,19 @@ export default function CalculadorRecetaHelados() {
         if (!error && data && data.length > 0) {
           const list = data.map((m) => {
             let name = m.group_descriptions?.__layout?.name;
+            let type = m.group_descriptions?.__layout?.type || (m.id === 2 || m.id === 3 ? "horizontal" : "vertical");
             if (!name) {
               if (m.id === 1) name = "Menú Vertical Principal";
               else if (m.id === 2) name = "Menú Horizontal Principal";
               else if (m.id === 3) name = "Menú Helados Dovici";
               else name = `Menú Config #${m.id}`;
             }
-            return { id: m.id, name: `${name} (ID: ${m.id})` };
+            return { id: m.id, name: `${name} (ID: ${m.id})`, type };
           });
 
-          if (!list.some(m => m.id === 1)) list.push({ id: 1, name: "Menú Vertical Principal (ID: 1)" });
-          if (!list.some(m => m.id === 2)) list.push({ id: 2, name: "Menú Horizontal Principal (ID: 2)" });
-          if (!list.some(m => m.id === 3)) list.push({ id: 3, name: "Menú Helados Dovici (ID: 3)" });
+          if (!list.some(m => m.id === 1)) list.push({ id: 1, name: "Menú Vertical Principal (ID: 1)", type: "vertical" });
+          if (!list.some(m => m.id === 2)) list.push({ id: 2, name: "Menú Horizontal Principal (ID: 2)", type: "horizontal" });
+          if (!list.some(m => m.id === 3)) list.push({ id: 3, name: "Menú Helados Dovici (ID: 3)", type: "horizontal" });
           list.sort((a, b) => a.id - b.id);
 
           setAvailablePrintMenus(list);
@@ -729,11 +740,11 @@ export default function CalculadorRecetaHelados() {
         </div>
       )}
 
-      {/* NAVIGATION TABS (ADAPTATIVAS EN ANCHO GRID 5 COLUMNAS - 1 SOLA LÍNEA) */}
-      <div className="grid grid-cols-2 md:grid-cols-5 border-b-2 border-black bg-cream-bg w-full">
+      {/* NAVIGATION TABS (ADAPTATIVAS EN ANCHO GRID 6 COLUMNAS - 1 SOLA LÍNEA) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 border-b-2 border-black bg-cream-bg w-full">
         <button
           onClick={() => setActiveTab("glosario")}
-          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+          className={`px-2 md:px-3 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "glosario"
               ? "bg-amber-400 text-black shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
@@ -741,11 +752,11 @@ export default function CalculadorRecetaHelados() {
           title="0. Glosario Dubovik"
         >
           <BookOpen className="h-4 w-4 shrink-0 text-amber-950" />
-          <span className="truncate">0. Glosario Dubovik</span>
+          <span className="truncate">0. Glosario</span>
         </button>
         <button
           onClick={() => setActiveTab("formulador")}
-          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+          className={`px-2 md:px-3 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "formulador"
               ? "bg-sage-green text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
@@ -753,11 +764,11 @@ export default function CalculadorRecetaHelados() {
           title="1. Balanceador Dubovik (% Grasa, Sólidos, POD, PAC)"
         >
           <PieChart className="h-4 w-4 shrink-0" />
-          <span className="truncate">1. Balanceador Dubovik</span>
+          <span className="truncate">1. Balanceador</span>
         </button>
         <button
           onClick={() => setActiveTab("costeo")}
-          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+          className={`px-2 md:px-3 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "costeo"
               ? "bg-sage-green text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
@@ -765,11 +776,11 @@ export default function CalculadorRecetaHelados() {
           title={`2. Costeo & Vinculación Supabase (${allItems.length} ítems)`}
         >
           <DollarSign className="h-4 w-4 shrink-0" />
-          <span className="truncate">2. Costeo & Inventario</span>
+          <span className="truncate">2. Costeo</span>
         </button>
         <button
           onClick={() => setActiveTab("proyecciones")}
-          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+          className={`px-2 md:px-3 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "proyecciones"
               ? "bg-terracotta-accent text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
@@ -781,7 +792,7 @@ export default function CalculadorRecetaHelados() {
         </button>
         <button
           onClick={() => setActiveTab("menu")}
-          className={`px-2 md:px-4 py-3 text-xs md:text-sm font-bold border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+          className={`px-2 md:px-3 py-3 text-xs md:text-sm font-bold border-r-2 border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
             activeTab === "menu"
               ? "bg-sky-500 text-white shadow-solid"
               : "bg-white text-gray-700 hover:bg-gray-100"
@@ -789,7 +800,19 @@ export default function CalculadorRecetaHelados() {
           title="4. Menú Helados (Menu Print)"
         >
           <Printer className="h-4 w-4 shrink-0 text-white" />
-          <span className="truncate">4. Menú Helados</span>
+          <span className="truncate">4. Menú</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("ventas")}
+          className={`px-2 md:px-3 py-3 text-xs md:text-sm font-bold border-t-2 border-black transition-colors flex items-center justify-center gap-1.5 truncate ${
+            activeTab === "ventas"
+              ? "bg-amber-600 text-white shadow-solid"
+              : "bg-white text-gray-700 hover:bg-gray-100"
+          }`}
+          title="5. Control de Ventas & Consumo de Helados"
+        >
+          <Package className="h-4 w-4 shrink-0 text-white" />
+          <span className="truncate">5. Ventas</span>
         </button>
       </div>
 
@@ -1134,29 +1157,29 @@ export default function CalculadorRecetaHelados() {
       {/* TAB 4: MENÚ PRINT HELADOS DOVICI (VISTA PREVIA & SELECCIÓN DE MENÚ A VINCULAR) */}
       {activeTab === "menu" && (
         <div className="bg-white border-2 border-black shadow-solid p-4 rounded-none space-y-4">
-          <div className="bg-sky-950 text-white p-4 border-2 border-black font-black text-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-solid">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-sky-500 text-white border border-black shadow-sm">
-                <Printer className="h-6 w-6" />
+          <div className="bg-sky-950 text-white p-3 px-4 border-2 border-black font-black text-xs flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-solid">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="p-1.5 bg-sky-500 text-white border border-black shadow-sm shrink-0">
+                <Printer className="h-5 w-5" />
               </div>
-              <div>
-                <span className="block text-base uppercase tracking-wide font-extrabold text-white">
+              <div className="truncate">
+                <span className="block text-sm uppercase tracking-wide font-extrabold text-white truncate">
                   Vista Previa — Menú Print Vinculado
                 </span>
-                <span className="text-xs font-normal text-sky-200 block mt-0.5">
-                  Selecciona la plantilla/instancia de MenuPrint que deseas vincular y previsualizar.
+                <span className="text-[11px] font-normal text-sky-200 block truncate">
+                  Selecciona la plantilla de MenuPrint que deseas vincular y previsualizar.
                 </span>
               </div>
             </div>
 
-            {/* SELECTOR DE MENÚ A VINCULAR & ACCIONES */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 bg-sky-900/90 p-1.5 px-3 border border-sky-600">
+            {/* SELECTOR DE MENÚ A VINCULAR & ACCIONES EN UN SOLO RENGLÓN */}
+            <div className="flex items-center gap-2 shrink-0 flex-nowrap overflow-x-auto">
+              <div className="flex items-center gap-1.5 bg-sky-900/90 p-1 px-2.5 border border-sky-600 shrink-0 whitespace-nowrap">
                 <label className="text-xs font-bold text-sky-100 shrink-0">Menú Vinculado:</label>
                 <select
                   value={selectedMenuPrintId}
                   onChange={(e) => handleSelectMenuPrint(e.target.value)}
-                  className="bg-white text-black text-xs font-bold p-1 px-2 border border-black cursor-pointer focus:outline-none max-w-[220px] truncate"
+                  className="bg-white text-black text-xs font-bold p-1 px-2 border border-black cursor-pointer focus:outline-none max-w-[200px] truncate"
                 >
                   {availablePrintMenus.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1166,7 +1189,7 @@ export default function CalculadorRecetaHelados() {
                 </select>
               </div>
 
-              <label className="flex items-center gap-1.5 text-xs text-sky-100 font-semibold cursor-pointer bg-sky-900/90 p-1.5 px-2.5 border border-sky-600">
+              <label className="flex items-center gap-1.5 text-xs text-sky-100 font-semibold cursor-pointer bg-sky-900/90 p-1.5 px-2.5 border border-sky-600 shrink-0 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={filterOnlyHeladosInMenu}
@@ -1177,25 +1200,57 @@ export default function CalculadorRecetaHelados() {
               </label>
 
               <button
+                type="button"
                 onClick={() => navigate(`/MenuPrint/${selectedMenuPrintId}`)}
-                className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-extrabold text-xs border-2 border-black shadow-solid flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer"
+                className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-extrabold text-xs border-2 border-black shadow-solid flex items-center justify-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer"
               >
-                <ExternalLink className="h-4 w-4 stroke-[2.5]" />
+                <ExternalLink className="h-3.5 w-3.5 stroke-[2.5]" />
                 Ir a Editar Menú #{selectedMenuPrintId}
               </button>
             </div>
           </div>
 
           <div className="border-2 border-black bg-gray-100 p-2 overflow-x-auto min-h-[400px] flex justify-center items-start">
-            <MenuPrint 
-              key={selectedMenuPrintId}
-              menuId={selectedMenuPrintId} 
-              filterOnlyHelados={filterOnlyHeladosInMenu} 
-              previewMode={true} 
-              hideControls={true} 
-            />
+            {(() => {
+              const currentMenuObj = availablePrintMenus.find(m => m.id === selectedMenuPrintId);
+              const isHorizontal = currentMenuObj?.type === "horizontal" || selectedMenuPrintId === 2 || selectedMenuPrintId === 3;
+              if (isHorizontal) {
+                return (
+                  <div className="w-full">
+                    <MenuPrintHorizontal 
+                      key={selectedMenuPrintId}
+                      menuId={selectedMenuPrintId}
+                      controlTopClass="top-0 relative mb-4"
+                      containerPaddingClass="pt-2"
+                    />
+                  </div>
+                );
+              }
+              return (
+                <MenuPrint 
+                  key={selectedMenuPrintId}
+                  menuId={selectedMenuPrintId} 
+                  filterOnlyHelados={filterOnlyHeladosInMenu} 
+                  previewMode={true} 
+                  hideControls={true} 
+                />
+              );
+            })()}
           </div>
         </div>
+      )}
+
+      {/* TAB 5: VENTAS Y CONSUMO DE HELADO EN OTRAS RECETAS */}
+      {activeTab === "ventas" && (
+        <VentasHeladosTab 
+          allMenu={allMenu}
+          allProduccion={allProduccion}
+          allItems={allItems}
+          allRecetasMenu={allRecetasMenu}
+          allRecetasProduccion={allRecetasProduccion}
+          allVentas={allVentas}
+          allComanda={allComanda}
+        />
       )}
 
       {/* TAB 0: GLOSARIO TECNICO MATERIALES BASE DUBOVIK */}

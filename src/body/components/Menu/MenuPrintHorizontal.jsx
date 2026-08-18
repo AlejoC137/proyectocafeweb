@@ -45,6 +45,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
   const [showIcons, setShowIcons] = useState(true);
   const [showItemDescriptions, setShowItemDescriptions] = useState(true);
   const [showBlockSelector, setShowBlockSelector] = useState(null); // { pageIndex, colIdx }
+  const [blockSearchTerm, setBlockSearchTerm] = useState("");
 
   const [printImages, setPrintImages] = useState([]);
   const [groupDescriptions, setGroupDescriptions] = useState({});
@@ -121,25 +122,6 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
         let pagesToUse = layout.pages;
         if (pagesToUse && Array.isArray(pagesToUse) && pagesToUse.length > 0) {
-          if (Number(menuId) === 3 || layout.name?.toLowerCase().includes("helado") || layout.name?.toLowerCase().includes("dovici")) {
-            const hasHeladoBlock = pagesToUse.some(p => (p.columns || []).some(c => (c.blocks || []).includes("HELADOS")));
-            if (!hasHeladoBlock) {
-              pagesToUse = pagesToUse.map((p, idx) => {
-                if (idx === 0) {
-                  const firstCol = p.columns?.[0] || { id: 'COL_1', flex: 1, blocks: [] };
-                  const newBlocks = Array.from(new Set(["HELADOS", "EXTRAS", ...(firstCol.blocks || [])]));
-                  return {
-                    ...p,
-                    columns: [
-                      { ...firstCol, blocks: newBlocks },
-                      ...(p.columns || []).slice(1)
-                    ]
-                  };
-                }
-                return p;
-              });
-            }
-          }
           setPages(pagesToUse);
         } else {
           setPages(getDefaultPages(menuId));
@@ -312,12 +294,26 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     if (type === 'IMAGE') {
       openGallery('ADD_BLOCK', { pageIndex, colIdx });
       setShowBlockSelector(null);
+      setBlockSearchTerm("");
       return;
     }
 
     let newBlockId = type;
+    let updatedDescriptions = groupDescriptions;
+
     if (type === 'MENU' && categoryId) {
       newBlockId = categoryId + '_' + Math.random().toString(36).substr(2, 9);
+    } else if (type === 'ITEM') {
+      const randomSuffix = Math.random().toString(36).substr(2, 9);
+      newBlockId = categoryId ? `ITEM_${categoryId}_${randomSuffix}` : `ITEM_${randomSuffix}`;
+      if (categoryId) {
+        updatedDescriptions = {
+          ...groupDescriptions,
+          [`item_${newBlockId}_productId`]: categoryId,
+          [`item_${newBlockId}_mode`]: 'normal'
+        };
+        setGroupDescriptions(updatedDescriptions);
+      }
     } else if (type === 'CUSTOM') {
       newBlockId = 'CUSTOM_' + Math.random().toString(36).substr(2, 9);
     } else if (type === 'INFO' || type === 'QR') {
@@ -330,7 +326,11 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
     newPages[pageIndex].columns[colIdx].blocks.push(newBlockId);
     setPages(newPages);
     setShowBlockSelector(null);
+    setBlockSearchTerm("");
     saveConfig(newPages);
+    if (type === 'ITEM' && categoryId) {
+      saveGroupDescriptions(updatedDescriptions);
+    }
   };
 
   const openGallery = (context, target) => {
@@ -655,39 +655,116 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
       />
 
       {showBlockSelector && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white border-4 border-black p-6 rounded-lg shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-md w-window animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
-              <h3 className="font-black text-xl uppercase italic">Seleccionar Bloque</h3>
-              <button onClick={() => setShowBlockSelector(null)} className="font-black hover:text-red-600 transition-colors">CERRAR X</button>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 p-4">
+          <div className="bg-white border-4 border-black p-4 md:p-6 rounded-lg shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-4xl w-full max-h-[88vh] flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b-2 border-black pb-3 shrink-0">
+              <div>
+                <h3 className="font-black text-xl uppercase italic">Seleccionar Bloque</h3>
+                <p className="text-xs text-gray-500 font-bold">Elige un elemento de layout, categoría o busca un ítem del menú</p>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-72">
+                  <input
+                    type="text"
+                    placeholder="🔍 Buscar categoría o ítem..."
+                    value={blockSearchTerm}
+                    onChange={(e) => setBlockSearchTerm(e.target.value)}
+                    className="w-full border-2 border-black px-3 py-1.5 text-xs font-bold rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:bg-yellow-50"
+                  />
+                  {blockSearchTerm && (
+                    <button 
+                      onClick={() => setBlockSearchTerm("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500 hover:text-red-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <button 
+                  onClick={() => { setShowBlockSelector(null); setBlockSearchTerm(""); }} 
+                  className="font-black hover:text-red-600 transition-colors border-2 border-black px-3 py-1.5 text-xs rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-gray-100 hover:bg-gray-200 shrink-0"
+                >
+                  CERRAR X
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 max-h-[80vh] overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+              {/* Layout Elements */}
               <div>
-                <p className="text-[10px] font-black uppercase text-gray-500 mb-2.5 tracking-widest">Categorías de Productos (Action Types)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(CATEGORIES_t).map(([catKey, catObj]) => (
-                    <button
-                      key={catKey}
-                      onClick={() => handleSelectBlockType('MENU', catKey)}
-                      className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                    >
-                      <span className="text-sm">{catObj.icon || "📌"}</span>
-                      <span className="truncate">{catObj.es.toUpperCase()}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[10px] font-black uppercase text-gray-500 mb-2.5 tracking-widest">Otros Elementos de Layout</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-2 tracking-widest">Elementos de Layout</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   <button onClick={() => handleSelectBlockType('INFO')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>📄</span><span>INFO TEXTO</span></button>
                   <button onClick={() => handleSelectBlockType('QR')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>📱</span><span>CÓDIGO QR</span></button>
                   <button onClick={() => handleSelectBlockType('CUSTOM')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>✏️</span><span>TEXTO LIBRE</span></button>
                   <button onClick={() => handleSelectBlockType('IMAGE')} className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>🖼️</span><span>IMAGEN</span></button>
+                  <button onClick={() => handleSelectBlockType('ITEM')} className="border-2 border-black p-2 font-bold text-xs hover:bg-yellow-300 hover:text-black transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-yellow-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span>🏷️</span><span>ÍTEM MENÚ</span></button>
                 </div>
               </div>
+
+              {/* Action Types / Categories */}
+              <div>
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-2 tracking-widest">
+                  Categorías de Productos ({Object.entries(CATEGORIES_t).filter(([k, v]) => !blockSearchTerm || v.es.toLowerCase().includes(blockSearchTerm.toLowerCase()) || v.en.toLowerCase().includes(blockSearchTerm.toLowerCase())).length})
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  {Object.entries(CATEGORIES_t)
+                    .filter(([catKey, catObj]) => 
+                      !blockSearchTerm || 
+                      catObj.es.toLowerCase().includes(blockSearchTerm.toLowerCase()) || 
+                      catObj.en.toLowerCase().includes(blockSearchTerm.toLowerCase()) ||
+                      catKey.toLowerCase().includes(blockSearchTerm.toLowerCase())
+                    )
+                    .map(([catKey, catObj]) => (
+                      <button
+                        key={catKey}
+                        onClick={() => handleSelectBlockType('MENU', catKey)}
+                        className="border-2 border-black p-2 font-bold text-xs hover:bg-black hover:text-white transition-all rounded active:translate-y-0.5 flex items-center gap-2 text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                      >
+                        <span className="text-sm">{catObj.icon || "📌"}</span>
+                        <span className="truncate">{catObj.es.toUpperCase()}</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Direct Menu Item Selector */}
+              {Array.isArray(menuData) && menuData.length > 0 && (
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">
+                      Ítems Singulares de Menú ({
+                        menuData.filter(p => 
+                          p.Estado !== "Inactivo" && p.Estado !== "INACTIVO" &&
+                          (!blockSearchTerm || p.NombreES?.toLowerCase().includes(blockSearchTerm.toLowerCase()) || p.NombreEN?.toLowerCase().includes(blockSearchTerm.toLowerCase()) || p.GRUPO?.toLowerCase().includes(blockSearchTerm.toLowerCase()))
+                        ).length
+                      })
+                    </p>
+                    <span className="text-[9px] text-gray-400 font-bold">Haz clic en un ítem para agregarlo directamente</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1 border-2 border-black/10 rounded bg-gray-50">
+                    {menuData
+                      .filter(p => 
+                        p.Estado !== "Inactivo" && p.Estado !== "INACTIVO" &&
+                        (!blockSearchTerm || p.NombreES?.toLowerCase().includes(blockSearchTerm.toLowerCase()) || p.NombreEN?.toLowerCase().includes(blockSearchTerm.toLowerCase()) || p.GRUPO?.toLowerCase().includes(blockSearchTerm.toLowerCase()))
+                      )
+                      .slice(0, blockSearchTerm ? 40 : 20)
+                      .map(item => (
+                        <button
+                          key={item._id}
+                          onClick={() => handleSelectBlockType('ITEM', item._id)}
+                          className="border-2 border-black p-2 font-bold text-xs hover:bg-yellow-200 transition-all rounded text-left bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-2 group"
+                        >
+                          <div className="flex flex-col truncate">
+                            <span className="truncate text-[11px] font-black group-hover:text-black">{item.NombreES}</span>
+                            <span className="text-[9px] text-gray-500 font-normal uppercase">{item.GRUPO}</span>
+                          </div>
+                          <span className="text-[10px] font-black bg-black text-white px-1.5 py-0.5 rounded shrink-0">${item.Precio >= 1000 ? `${(item.Precio/1000).toFixed(item.Precio % 1000 === 0 ? 0 : 1)}K` : item.Precio}</span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ export const DEFAULT_INGREDIENTS = [
   { id: "neutro_5", nombre: "Estabilizante Neutro 5g", grasa: 0.0, solidos: 100.0, pod: 0.0, pac: 0.0, unidad: "g" },
   { id: "inulina", nombre: "Inulina (Fibra soluble)", grasa: 0.0, solidos: 95.0, pod: 10.0, pac: 10.0, unidad: "g" },
   { id: "frambuesa", nombre: "Puré de Frambuesa", grasa: 0.0, solidos: 8.8, pod: 7.8, pac: 17.2, unidad: "g" },
+  { id: "yogurt_griego", nombre: "Yogurt Griego Natural (8% Grasa)", grasa: 8.0, solidos: 18.0, pod: 1.0, pac: 2.0, unidad: "g" },
   { id: "agua", nombre: "Agua de Chorro / Filtrada", grasa: 0.0, solidos: 0.0, pod: 0.0, pac: 0.0, unidad: "g" },
 ];
 
@@ -115,6 +116,13 @@ export const GLOSSARY_DUBOVIK = [
     definicion: "Solvente puro para la disolución de azúcares e hidrocoloides en sorbetes y preparaciones sin base láctea.",
     valores: "Grasa: 0.0% | Sólidos: 0.0% | POD: 0.0 | PAC: 0.0",
     condiciones: "Utilizar agua purificada u ósmosis inversa para evitar que minerales/cloro interfieran con el rendimiento de los estabilizantes."
+  },
+  {
+    nombre: "Yogurt Griego Natural (8% Grasa)",
+    icono: "🧪",
+    definicion: "Base láctea fermentada concentrada. Aporta acidez láctica natural, frescura, cremosidad y una textura untuosa característica en helados Soft y Gelato.",
+    valores: "Grasa: 8.0% | Sólidos: 18.0% | POD: 1.0 | PAC: 2.0",
+    condiciones: "Dosificar del 20% al 40% de la mezcla total. Su acidez láctica equilibra el dulzor y resalta notas frescas de vainilla."
   }
 ];
 
@@ -166,6 +174,20 @@ export const PRESET_RECIPES = {
       { ingId: "sacarosa", cantidad: 105, inventarioItemId: "" },
       { ingId: "dextrosa", cantidad: 40, inventarioItemId: "" },
       { ingId: "glucosa_38", cantidad: 25, inventarioItemId: "" },
+      { ingId: "neutro_5", cantidad: 5, inventarioItemId: "" },
+    ]
+  },
+  vainilla_yogurt_soft: {
+    nombre: "Gelato Soft Vainilla & Yogurt Griego (Gourmet Dubovik)",
+    tipo: "SOFT",
+    items: [
+      { ingId: "yogurt_griego", cantidad: 320, inventarioItemId: "" },
+      { ingId: "leche_entera", cantidad: 410, inventarioItemId: "" },
+      { ingId: "crema_35", cantidad: 95, inventarioItemId: "" },
+      { ingId: "lpd", cantidad: 40, inventarioItemId: "" },
+      { ingId: "sacarosa", cantidad: 90, inventarioItemId: "" },
+      { ingId: "dextrosa", cantidad: 30, inventarioItemId: "" },
+      { ingId: "glucosa_38", cantidad: 50, inventarioItemId: "" },
       { ingId: "neutro_5", cantidad: 5, inventarioItemId: "" },
     ]
   },
