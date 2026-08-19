@@ -543,36 +543,54 @@ const MenuPrintBlock = ({
           </div>
         </div>
 
-        {/* Columnas y Alineación de Precio */}
+        {/* Columnas, Alineación de Precio y Omitir Título */}
         {showColumnToggle && (
-          <div className="flex items-center justify-between gap-1 bg-blue-50 p-1 rounded border border-black text-[9px]">
-            <div className="flex items-center gap-1">
-              <span className="font-black text-blue-800">COL:</span>
-              <input 
-                type="number"
-                min="1"
-                max="5"
-                className="w-6 bg-white text-[9px] font-bold border border-black rounded outline-none text-center p-0.5"
-                value={currentCols}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value) || 1;
-                  saveGroupDescriptions({ ...groupDescriptions, [colKey]: val });
-                }}
-              />
+          <div className="flex flex-col gap-1 bg-blue-50 p-1 rounded border border-black text-[9px]">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1">
+                <span className="font-black text-blue-800">COL:</span>
+                <input 
+                  type="number"
+                  min="1"
+                  max="5"
+                  className="w-6 bg-white text-[9px] font-bold border border-black rounded outline-none text-center p-0.5"
+                  value={currentCols}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 1;
+                    saveGroupDescriptions({ ...groupDescriptions, [colKey]: val });
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-1" title="Alineación del Precio">
+                <span className="font-black text-gray-600">ALN:</span>
+                <select 
+                  className="text-[8px] font-bold border border-black outline-none bg-white p-0.5 rounded cursor-pointer"
+                  value={groupDescriptions[`${id}_priceAlign`] || colors?.priceAlign || 'right'}
+                  onChange={(e) => {
+                    saveGroupDescriptions({ ...groupDescriptions, [`${id}_priceAlign`]: e.target.value });
+                  }}
+                >
+                  <option value="right">Der.</option>
+                  <option value="left">Jun.</option>
+                </select>
+              </div>
             </div>
-            <div className="flex items-center gap-1" title="Alineación del Precio">
-              <span className="font-black text-gray-600">ALN:</span>
-              <select 
-                className="text-[8px] font-bold border border-black outline-none bg-white p-0.5 rounded cursor-pointer"
-                value={groupDescriptions[`${id}_priceAlign`] || colors?.priceAlign || 'right'}
-                onChange={(e) => {
-                  saveGroupDescriptions({ ...groupDescriptions, [`${id}_priceAlign`]: e.target.value });
-                }}
-              >
-                <option value="right">Der.</option>
-                <option value="left">Jun.</option>
-              </select>
-            </div>
+
+            <button
+              type="button"
+              className={`w-full h-5 text-[8px] font-black rounded border border-black px-1 transition-colors flex items-center justify-center gap-1 cursor-pointer ${groupDescriptions[`__${id}_hide_header`] ? 'bg-amber-200 text-amber-900 border-amber-500' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                saveGroupDescriptions({
+                  ...groupDescriptions,
+                  [`__${id}_hide_header`]: !groupDescriptions[`__${id}_hide_header`]
+                });
+              }}
+              title={groupDescriptions[`__${id}_hide_header`] ? "Mostrar Encabezado/Título del Bloque" : "Omitir/Ocultar Encabezado del Bloque"}
+            >
+              {groupDescriptions[`__${id}_hide_header`] ? "👁️ Mostrar Título" : "🚫 Omitir Título"}
+            </button>
           </div>
         )}
 
@@ -604,6 +622,73 @@ const MenuPrintBlock = ({
     );
   };
 
+  const renderBlockHeader = (id, defaultTitleES, defaultTitleEN, customHeaderStyle = {}) => {
+    const hideHeaderKey = `__${id}_hide_header`;
+    const isHeaderHidden = groupDescriptions[hideHeaderKey] === true;
+
+    const savedTitle = groupDescriptions[`title_${id}`];
+    const defaultTitle = !leng ? defaultTitleES : defaultTitleEN;
+    const titleVal = savedTitle !== undefined ? savedTitle : defaultTitle;
+
+    const langKey = leng ? 'en' : 'es';
+    const baseGroupId = String(id).split('_')[0];
+    const descText = groupDescriptions[id]?.[langKey] || groupDescriptions[baseGroupId]?.[langKey] || '';
+
+    const hasTitle = titleVal && titleVal.trim().length > 0;
+    const hasDesc = descText && descText.trim().length > 0;
+
+    if (isHeaderHidden && !editMode) {
+      return null;
+    }
+
+    if (!hasTitle && !hasDesc && !editMode) {
+      return null;
+    }
+
+    return (
+      <div 
+        className={`border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px] relative ${isHeaderHidden && editMode ? 'opacity-60 bg-amber-50/60 border-dashed border-amber-400' : ''}`} 
+        style={{ ...customHeaderStyle, backgroundColor: isHeaderHidden && editMode ? '#fffbeb' : colors.categoryBg, borderColor: colors.categoryBorder }}
+      >
+        {isHeaderHidden && editMode && (
+          <span className="absolute top-0.5 left-1 text-[8px] font-black uppercase text-amber-800 bg-amber-200 px-1 rounded border border-amber-400">
+            🚫 Título Omitido
+          </span>
+        )}
+        {editMode ? (
+          <input
+            className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em] p-0"
+            style={{ 
+              width: 'fit-content', 
+              minWidth: '80px', 
+              fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
+              color: colors.categoryTitle, 
+              fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` 
+            }}
+            placeholder="Sin título (vacío)..."
+            value={titleVal}
+            onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${id}`]: e.target.value }))}
+            onBlur={() => saveGroupDescriptions(groupDescriptions)}
+          />
+        ) : (
+          hasTitle && (
+            <h2 
+              className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" 
+              style={{ 
+                fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
+                color: colors.categoryTitle, 
+                fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` 
+              }}
+            >
+              {titleVal}
+            </h2>
+          )
+        )}
+        {renderGroupDescription(id, true)}
+      </div>
+    );
+  };
+
   const renderGroupDescription = (groupId, isTitleStyle = false) => {
     const langKey = leng ? 'en' : 'es';
     const baseGroupId = String(groupId).split('_')[0];
@@ -615,14 +700,17 @@ const MenuPrintBlock = ({
           <input
             type="text"
             className={isTitleStyle 
-              ? "w-full bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none text-center font-black tracking-[0.1em]" 
-              : "w-full text-[9px] font-SpaceGrotesk px-1 py-0 border-b border-dashed border-gray-400 bg-yellow-50 print:hidden outline-none"}
+              ? "w-full bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none text-center font-black tracking-[0.1em] p-0 m-0 leading-none" 
+              : "w-full bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none italic p-0 m-0 leading-none text-gray-500"}
             style={isTitleStyle ? { 
               fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
               color: colors.categoryTitle, 
               fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}`,
               textTransform: 'uppercase'
-            } : {}}
+            } : {
+              fontFamily: colors.fontBody || 'Space Grotesk', 
+              fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}` 
+            }}
             placeholder={`Desc ${langKey}...`}
             value={text}
             onChange={(e) => {
@@ -662,30 +750,10 @@ const MenuPrintBlock = ({
   };
 
   const renderCustomBlock = (id) => {
-    const langKey = leng ? 'en' : 'es';
-    const titleKey = `${id}_title_${langKey}`;
-    const title = groupDescriptions[titleKey] || (leng ? "Custom Title" : "Título Personalizado");
-
     return (
       <div key={id} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px] h-full" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
         {renderBlockControls(id, true)}
-        <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-          {editMode ? (
-            <input
-              className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.4em]"
-              style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-              value={title}
-              onChange={(e) => {
-                setGroupDescriptions(prev => ({ ...prev, [titleKey]: e.target.value }));
-              }}
-              onBlur={() => saveGroupDescriptions(groupDescriptions)}
-            />
-          ) : (
-            <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-              {title}
-            </h2>
-          )}
-        </div>
+        {renderBlockHeader(id, "Título Personalizado", "Custom Title", headerStyles.INFO)}
         <div className="p-2 leading-tight italic" style={{ color: colors.itemComment, fontFamily: colors.fontBody || 'Space Grotesk', fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}` }}>
           <MenuPrintInfo
             isEnglish={leng}
@@ -947,22 +1015,7 @@ const MenuPrintBlock = ({
         return (
           <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls(blockId, true)}
-            <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ ...headerStyles.CAFE, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
-                  style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_${blockId}`] || (!leng ? "Café" : "Coffee")}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_${blockId}`] || (!leng ? "Café" : "Coffee")}
-                </h2>
-              )}
-              {renderGroupDescription(blockId, true)}
-            </div>
+            {renderBlockHeader(blockId, "Café", "Coffee", headerStyles.CAFE)}
             <div className="p-2">
               <CardGridPrintMatrix blockId={blockId} products={menuData} SUB_GRUPO={CAFE_ESPRESSO} TITTLE={{ ES: "Espresso", EN: "Espresso" }} GRUPO={CAFE} isEnglish={leng} columns={cafeCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_cafe_espresso`} />
               <CardGridPrintMatrix blockId={blockId} products={menuData} SUB_GRUPO={CAFE_METODOS} TITTLE={{ ES: "Métodos", EN: "Methods" }} GRUPO={CAFE} isEnglish={leng} columns={cafeCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_cafe_metodos`} />
@@ -975,22 +1028,7 @@ const MenuPrintBlock = ({
         return (
           <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls(blockId, true)}
-            <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ ...headerStyles.BEBIDAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
-                  style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_${blockId}`] || (!leng ? "Bebidas" : "Drinks")}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_${blockId}`] || (!leng ? "Bebidas" : "Drinks")}
-                </h2>
-              )}
-              {renderGroupDescription(blockId, true)}
-            </div>
+            {renderBlockHeader(blockId, "Bebidas", "Drinks", headerStyles.BEBIDAS)}
             <div className="p-2">
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_CALIENTES} TITTLE={{ ES: "Caliente", EN: "Hot" }} isEnglish={leng} columns={bebidasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_bebidas_calientes`} />
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={BEBIDAS} SUB_GRUPO={BEBIDAS_FRIAS} TITTLE={{ ES: "Frío", EN: "Cold" }} isEnglish={leng} columns={bebidasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_bebidas_frias`} />
@@ -1004,22 +1042,7 @@ const MenuPrintBlock = ({
         return (
           <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls(blockId, true)}
-            <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ ...headerStyles.ALIMENTOS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
-                  style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_${blockId}`] || (!leng ? "Alimentos" : "Food")}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_${blockId}`] || (!leng ? "Alimentos" : "Food")}
-                </h2>
-              )}
-              {renderGroupDescription(blockId, true)}
-            </div>
+            {renderBlockHeader(blockId, "Alimentos", "Food", headerStyles.ALIMENTOS)}
             <div className="p-2">
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_DULCE} TITTLE={{ ES: "Desayuno Dulce", EN: "Sweet Breakfast" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_alimentos_desayuno_dulce`} />
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={DESAYUNO} SUB_GRUPO={DESAYUNO_SALADO} TITTLE={{ ES: "Desayuno Salado", EN: "Savory Breakfast" }} isEnglish={leng} columns={alimentosCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_alimentos_desayuno_salado`} />
@@ -1035,22 +1058,7 @@ const MenuPrintBlock = ({
         return (
           <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls(blockId, true)}
-            <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ ...headerStyles.EXTRAS, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
-                  style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_${blockId}`] || (!leng ? "Adiciones" : "Extras")}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_${blockId}`] || (!leng ? "Adiciones" : "Extras")}
-                </h2>
-              )}
-              {renderGroupDescription(blockId, true)}
-            </div>
+            {renderBlockHeader(blockId, "Adiciones", "Extras", headerStyles.EXTRAS)}
             <div className="p-2">
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_BEBIDAS} TITTLE={{ ES: "Bebidas", EN: "Drinks" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_extras_bebidas`} />
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={"ADICIONES"} SUB_GRUPO={ADICIONES_COMIDAS} TITTLE={{ ES: "Comida", EN: "Food" }} isEnglish={leng} columns={extrasCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_extras_comida`} />
@@ -1064,22 +1072,7 @@ const MenuPrintBlock = ({
         return (
           <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls(blockId, true)}
-            <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ ...(headerStyles.HELADOS || headerStyles.ALIMENTOS), backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
-                  style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_${blockId}`] || (!leng ? "Helados Dovici" : "Dovici Ice Cream")}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_${blockId}`] || (!leng ? "Helados Dovici" : "Dovici Ice Cream")}
-                </h2>
-              )}
-              {renderGroupDescription(blockId, true)}
-            </div>
+            {renderBlockHeader(blockId, "Helados Dovici", "Dovici Ice Cream", headerStyles.HELADOS || headerStyles.ALIMENTOS)}
             <div className="p-2">
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={["HELADOS", "REPOSTERIA"]} SUB_GRUPO="SOFT" TITTLE={{ ES: "Helado Soft", EN: "Soft Serve" }} isEnglish={leng} columns={heladoCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_helados_soft`} />
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={["HELADOS", "REPOSTERIA"]} SUB_GRUPO="GELATO" TITTLE={{ ES: "Gelato Artesanal", EN: "Craft Gelato" }} isEnglish={leng} columns={heladoCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_helados_gelato`} />
@@ -1117,21 +1110,7 @@ const MenuPrintBlock = ({
         return (
           <div key="INFO" className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls("INFO", true)}
-            <div className="border-b-[2px] p-0 flex flex-col items-center justify-center gap-0 rounded-t-[4px]" style={{ ...headerStyles.INFO, backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none w-full text-center tracking-[0.1em]"
-                  style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_INFO`] || (!leng ? "Más sobre el Menú" : "More About")}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_INFO`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center w-full tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_INFO`] || (!leng ? "Más sobre el Menú" : "More About")}
-                </h2>
-              )}
-            </div>
+            {renderBlockHeader("INFO", "Más sobre el Menú", "More About", headerStyles.INFO)}
             <div className="p-2 text-[9px] leading-tight font-SpaceGrotesk italic" style={{ color: colors.itemComment }}>
               <MenuPrintInfo
                 isEnglish={leng}
@@ -1233,22 +1212,7 @@ const MenuPrintBlock = ({
         return (
           <div key={blockId} className="border-[2px] shadow-[4px_4px_0px_0px] relative group rounded-[6px]" style={{ borderColor: colors.categoryBorder, boxShadow: `4px 4px 0px 0px ${colors.categoryBorder}`, backgroundColor: colors.blockBg }}>
             {renderBlockControls(blockId, true)}
-            <div className="border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px]" style={{ backgroundColor: colors.categoryBg, borderColor: colors.categoryBorder }}>
-              {editMode ? (
-                <input
-                  className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em]"
-                  style={{ width: 'fit-content', minWidth: '80px', fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}
-                  value={groupDescriptions[`title_${blockId}`] || (!leng ? catInfo.es : catInfo.en)}
-                  onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${blockId}`]: e.target.value }))}
-                  onBlur={() => saveGroupDescriptions(groupDescriptions)}
-                />
-              ) : (
-                <h2 className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" style={{ fontFamily: colors.fontCategory || "'First Bunny', sans-serif", color: colors.categoryTitle, fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` }}>
-                  {groupDescriptions[`title_${blockId}`] || (!leng ? catInfo.es : catInfo.en)}
-                </h2>
-              )}
-              {renderGroupDescription(blockId, true)}
-            </div>
+            {renderBlockHeader(blockId, catInfo.es, catInfo.en)}
             <div className="p-2">
               <CardGridPrintMatrix blockId={blockId} products={menuData} GRUPO={baseBlockId} isEnglish={leng} columns={dynCols} editMode={editMode} showIcons={showIcons} showItemDescriptions={showItemDescriptions} colors={colors} groupDescriptions={groupDescriptions} saveGroupDescriptions={saveGroupDescriptions} excludeKey={`${blockId}_exclude_${baseBlockId}`} />
             </div>

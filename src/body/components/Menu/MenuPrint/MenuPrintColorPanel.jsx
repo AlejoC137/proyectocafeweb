@@ -72,12 +72,64 @@ function FontSelector({ id, label, colors, setColors, saveLayoutSizes }) {
 }
 
 const MenuPrintColorPanel = ({ colors, setColors, saveLayoutSizes, setShowColorPanel }) => {
+  const [position, setPosition] = React.useState(null);
+  const isDraggingRef = React.useRef(false);
+  const dragOffsetRef = React.useRef({ x: 0, y: 0 });
+  const panelRef = React.useRef(null);
+
+  const handleMouseDownHeader = (e) => {
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+      return;
+    }
+    e.preventDefault();
+    if (!panelRef.current) return;
+
+    const rect = panelRef.current.getBoundingClientRect();
+    isDraggingRef.current = true;
+    dragOffsetRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isDraggingRef.current) return;
+      const newX = Math.max(0, Math.min(window.innerWidth - 100, moveEvent.clientX - dragOffsetRef.current.x));
+      const newY = Math.max(0, Math.min(window.innerHeight - 100, moveEvent.clientY - dragOffsetRef.current.y));
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const containerStyle = position
+    ? { left: `${position.x}px`, top: `${position.y}px`, transform: 'none' }
+    : {};
+
   return (
-    <div className="fixed top-[150px] left-1/2 -translate-x-1/2 w-full max-w-[1200px] z-[110] bg-white border-2 border-black p-4 rounded-lg shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] animate-in fade-in slide-in-from-top-4 duration-300 print:hidden overflow-x-auto max-h-[70vh] overflow-y-auto">
-      <div className="flex items-center justify-between mb-4 border-b border-black/20 pb-2">
-        <h3 className="font-black font-SpaceGrotesk uppercase text-base flex items-center gap-2">
-          <span className="bg-black text-white px-1.5 py-0.5 rounded text-sm">🎨</span> Diseño y Tipografía
-        </h3>
+    <div
+      ref={panelRef}
+      style={containerStyle}
+      className={`fixed ${!position ? 'top-[150px] left-1/2 -translate-x-1/2' : ''} w-full max-w-[1200px] z-[110] bg-white border-2 border-black p-4 rounded-lg shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] print:hidden overflow-x-auto max-h-[85vh] overflow-y-auto`}
+    >
+      <div 
+        onMouseDown={handleMouseDownHeader}
+        className="flex items-center justify-between mb-4 border-b border-black/20 pb-2 cursor-grab active:cursor-grabbing select-none bg-zinc-100 -mx-4 -mt-4 p-3 rounded-t-lg border-b-2 border-black"
+        title="Haz clic y arrastra desde aquí para mover el panel"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500 font-mono text-sm font-black">⋮⋮</span>
+          <h3 className="font-black font-SpaceGrotesk uppercase text-base flex items-center gap-2 m-0">
+            <span className="bg-black text-white px-1.5 py-0.5 rounded text-sm">🎨</span> Diseño y Tipografía
+          </h3>
+          <span className="text-[10px] text-gray-500 font-bold italic ml-2 hidden sm:inline">(Arrastra la barra para reposicionar)</span>
+        </div>
         <Button size="sm" variant="ghost" onClick={() => setShowColorPanel(false)} className="h-6 w-6 p-0 border border-black font-black hover:bg-red-50 text-xs">X</Button>
       </div>
       

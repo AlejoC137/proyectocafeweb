@@ -90,10 +90,12 @@ function Proveedores() {
             onViewModeChange={setViewMode}
           />
         }
+        scrollable={viewMode === "cards"}
+        bodyClassName={viewMode === "table" ? "p-2 flex-1 flex flex-col min-h-0 overflow-hidden" : ""}
       >
         {viewMode === "cards" ? (
           // Vista de tarjetas (actual)
-          <div className="p-4">
+          <div className="p-2 sm:p-4">
             <CardGridProveedores />
           </div>
         ) : (

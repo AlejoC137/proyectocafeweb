@@ -230,15 +230,6 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         <div className={`font-bold leading-tight break-words whitespace-normal uppercase ${isDeactivated && editMode ? 'line-through text-red-600' : ''}`} style={{ color: isDeactivated && editMode ? '#dc2626' : colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}` }}>
                             {isEnglish ? product.NombreEN : product.NombreES}
                         </div>
-                        {editMode && (
-                            <input
-                                type="text"
-                                defaultValue={(isEnglish ? product.MenuComentsEN : product.MenuComentsES) || ''}
-                                placeholder={isEnglish ? "Add comment (e.g. Gluten Free)..." : "Añadir comentario (ej. Gluten Free)..."}
-                                onBlur={(e) => handleComentsChange(e.target.value)}
-                                className="w-full text-[9px] border-b border-black/30 px-0.5 focus:outline-none focus:border-black bg-blue-50/30 print:hidden italic text-gray-600 font-serif"
-                            />
-                        )}
                     </div>
 
                     <div className={`flex gap-0 items-center flex-shrink-0 pt-[2px] ${!showIcons ? 'hidden' : ''}`}>
@@ -315,11 +306,38 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                 </span>
             </div>
 
-            {/* Comentario en una nueva línea que puede ocupar todo el ancho */}
-            {!editMode && showItemDescriptions && (isEnglish ? product.MenuComentsEN : product.MenuComentsES) && (
-                <div className="italic font-normal normal-case tracking-normal leading-tight w-full" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}` }}>
-                    {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
-                </div>
+            {/* Comentario en una nueva línea de ancho completo que ocupa exactamente los mismos renglones en Vista Previa y Editar */}
+            {showItemDescriptions && (
+                editMode ? (
+                    <textarea
+                        defaultValue={(isEnglish ? product.MenuComentsEN : product.MenuComentsES) || ''}
+                        placeholder={isEnglish ? "Añadir comentario..." : "Añadir comentario..."}
+                        onBlur={(e) => handleComentsChange(e.target.value)}
+                        rows={1}
+                        ref={(el) => {
+                            if (el) {
+                                el.style.height = 'auto';
+                                el.style.height = `${el.scrollHeight}px`;
+                            }
+                        }}
+                        onInput={(e) => {
+                            e.target.style.height = 'auto';
+                            e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        className="italic font-normal normal-case tracking-normal leading-tight w-full bg-transparent border-b border-dashed border-gray-300 focus:border-black outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
+                        style={{
+                            color: colors?.itemComment || '#6b7280',
+                            fontFamily: colors?.fontBody || 'serif',
+                            fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`
+                        }}
+                    />
+                ) : (
+                    (isEnglish ? product.MenuComentsEN : product.MenuComentsES) ? (
+                        <div className="italic font-normal normal-case tracking-normal leading-tight w-full break-words" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}` }}>
+                            {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
+                        </div>
+                    ) : null
+                )
             )}
         </div>
     );

@@ -73,29 +73,57 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
     return marked.parse(text);
   };
 
-  if (editMode) {
+  const [isEditingText, setIsEditingText] = useState(false);
+
+  if (editMode && isEditingText) {
     return (
-      <div className="flex flex-col gap-1 w-full print:hidden">
-        <label className="text-xs font-bold text-gray-500 uppercase">{isEnglish ? "Edit Markdown (English)" : "Editar Markdown (Español)"}</label>
+      <div className="flex flex-col gap-1 w-full print:hidden p-1 bg-yellow-50/80 border border-black rounded">
+        <div className="flex justify-between items-center">
+          <label className="text-[10px] font-black text-gray-700 uppercase">{isEnglish ? "Editar Markdown (English)" : "Editar Markdown (Español)"}</label>
+          <button 
+            type="button" 
+            onClick={() => setIsEditingText(false)}
+            className="text-[9px] font-bold bg-black text-white px-2 py-0.5 rounded uppercase hover:bg-gray-800"
+          >
+            ✓ Guardar / Listo
+          </button>
+        </div>
         <textarea
-          className="w-full min-h-[250px] text-[11px] font-mono border border-gray-400 p-2 outline-none focus:border-black bg-yellow-50"
+          autoFocus
+          className="w-full min-h-[180px] text-[11px] font-mono border border-gray-400 p-2 outline-none focus:border-black bg-white rounded"
           value={currentText}
           onChange={(e) => {
             if (isEnglish) setLocalTextEN(e.target.value);
             else setLocalTextES(e.target.value);
           }}
-          onBlur={handleBlur}
+          onBlur={() => {
+            handleBlur();
+          }}
         />
-        <p className="text-[9px] text-gray-500 mt-1">Soporta Markdown completo: # Títulos, **negrita**, *cursiva*, &gt; Citas, - Listas, | Tablas |.</p>
+        <p className="text-[9px] text-gray-500 mt-0.5">Soporta Markdown completo: **negrita**, *cursiva*, # Títulos, - Listas.</p>
       </div>
     );
   }
 
   return (
-    <div
-      className={`font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-${columns} gap-4`}
-      dangerouslySetInnerHTML={{ __html: parseMarkdown(currentText) }}
-    />
+    <div className="relative group/info">
+      {editMode && (
+        <button
+          type="button"
+          onClick={() => setIsEditingText(true)}
+          className="absolute -top-3 right-0 bg-yellow-300 text-black border border-black px-1.5 py-0.5 text-[8px] font-black uppercase rounded shadow-sm opacity-90 group-hover/info:opacity-100 transition-opacity z-20 cursor-pointer print:hidden"
+          title="Haz clic para editar el contenido Markdown"
+        >
+          ✏️ Editar Texto
+        </button>
+      )}
+      <div
+        className={`font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-${columns} gap-4 ${editMode ? 'cursor-pointer hover:bg-yellow-50/60 transition-colors p-1 rounded border border-dashed border-yellow-300' : ''}`}
+        onClick={() => { if (editMode) setIsEditingText(true); }}
+        dangerouslySetInnerHTML={{ __html: parseMarkdown(currentText) }}
+        title={editMode ? "Haz clic para editar texto" : ""}
+      />
+    </div>
   );
 }
 

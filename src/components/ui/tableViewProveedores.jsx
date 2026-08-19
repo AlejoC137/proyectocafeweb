@@ -577,7 +577,7 @@ export function TableViewProveedores(/* { products = [] } */) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full flex-1 flex flex-col min-h-0">
       {showProcessOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 sm:p-8">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-screen-2xl h-[90vh] flex flex-col">
@@ -749,7 +749,7 @@ export function TableViewProveedores(/* { products = [] } */) {
       )}
 
       {/* Resumen tipo Excel */}
-      <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+      <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-200 flex-shrink-0">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
             <span className="font-semibold text-gray-700">Total proveedores:</span>

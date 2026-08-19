@@ -651,7 +651,7 @@ export function PagosProveedores() {
     >
       {showGastos && <div className="bg-white rounded-lg shadow-md p-4"><Gastos /></div>}
 
-      <ContentCard title="Pendientes por pagar">
+      <ContentCard title="Pendientes por pagar" scrollable={true}>
         {comprasPendientes.length === 0 ? (
           <p className="text-sm text-slate-600">No hay compras con pagadoFull en falso.</p>
         ) : (
