@@ -120,8 +120,12 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
         }
     }, [product.IngredientesBasicos]);
 
-    const isDeactivated = groupDescriptions?.[`excluded_item_${product._id}`] === true ||
-        product.PrintConst === false || product.PrintConst === "No" || product.PrintConst === "NO" || product.PrintConst === "false";
+    const itemKey = blockId ? `${blockId}_excluded_item_${product._id}` : `excluded_item_${product._id}`;
+
+    const isDeactivated = groupDescriptions?.[itemKey] !== undefined
+        ? groupDescriptions[itemKey] === true
+        : (groupDescriptions?.[`excluded_item_${product._id}`] === true ||
+           product.PrintConst === false || product.PrintConst === "No" || product.PrintConst === "NO" || product.PrintConst === "false");
 
     const handleToggleItemDeactivation = (e) => {
         e.stopPropagation();
@@ -130,13 +134,9 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
         if (saveGroupDescriptions) {
             saveGroupDescriptions({
                 ...(groupDescriptions || {}),
-                [`excluded_item_${product._id}`]: nextState
+                [itemKey]: nextState
             });
         }
-
-        dispatch(updateItem(product._id, { PrintConst: !nextState }, MENU)).then(() => {
-            dispatch(getAllFromTable(MENU));
-        });
     };
 
     const syncWithRedux = (newList) => {
@@ -395,6 +395,10 @@ export function CardGridPrintMatrix({
     };
 
     const isItemDeactivated = (p) => {
+        const itemKey = blockId ? `${blockId}_excluded_item_${p._id}` : `excluded_item_${p._id}`;
+        if (groupDescriptions?.[itemKey] !== undefined) {
+            return groupDescriptions[itemKey] === true;
+        }
         if (groupDescriptions?.[`excluded_item_${p._id}`] === true) return true;
         if (p.PrintConst === false || p.PrintConst === "No" || p.PrintConst === "NO" || p.PrintConst === "false") return true;
         return false;
@@ -420,6 +424,20 @@ export function CardGridPrintMatrix({
         columns === 2 ? "grid-cols-2" :
         "grid-cols-1";
 
+    const dispatch = useDispatch();
+
+    const handleToggleAllItemsInSubgroup = (enableAll) => {
+        if (!saveGroupDescriptions) return;
+        const updates = { ...(groupDescriptions || {}) };
+
+        filteredProducts.forEach(p => {
+            const itemKey = blockId ? `${blockId}_excluded_item_${p._id}` : `excluded_item_${p._id}`;
+            updates[itemKey] = !enableAll;
+        });
+
+        saveGroupDescriptions(updates);
+    };
+
     const handleToggleExclude = () => {
         if (!saveGroupDescriptions || !excludeKey) return;
         const newDescriptions = {
@@ -431,7 +449,7 @@ export function CardGridPrintMatrix({
 
     return (
         <div className="mb-0 break-inside-avoid">
-            <div className="flex items-center mb-1.5 ">
+            <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
                 <span className={`font-black uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px] ${isExcluded ? 'opacity-50 bg-zinc-100 border-zinc-400 text-zinc-400' : ''}`} style={{ 
                     backgroundColor: isExcluded ? '#f4f4f5' : (colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg), 
                     color: isExcluded ? '#a1a1aa' : colors?.categoryTitle, 
@@ -442,21 +460,48 @@ export function CardGridPrintMatrix({
                 }}>
                     {titleText} {isExcluded && (isEnglish ? " (HIDDEN)" : " (OCULTO)")}
                 </span>
-                {editMode && excludeKey && (
-                    <button
-                        onClick={handleToggleExclude}
-                        className="ml-3 flex items-center gap-1.5 focus:outline-none print:hidden cursor-pointer bg-transparent border-none p-0"
-                        title={isExcluded ? "Mostrar subcategoría" : "Ocultar subcategoría"}
-                    >
-                        <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out border-2 border-black flex items-center ${
-                            isExcluded ? 'bg-zinc-300' : 'bg-green-500'
-                        }`}>
-                            <div className="w-2.5 h-2.5 bg-white rounded-full border border-black transition-transform duration-200 ease-in-out" style={{ transform: isExcluded ? 'translateX(0px)' : 'translateX(10px)' }} />
-                        </div>
-                        <span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">
-                            {isExcluded ? "OFF" : "ON"}
-                        </span>
-                    </button>
+
+                {editMode && (
+                    <div className="ml-auto flex items-center gap-2 print:hidden">
+                        {excludeKey && (
+                            <button
+                                onClick={handleToggleExclude}
+                                className="flex items-center gap-1.5 focus:outline-none cursor-pointer bg-transparent border-none p-0"
+                                title={isExcluded ? "Mostrar subcategoría" : "Ocultar subcategoría"}
+                            >
+                                <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out border-2 border-black flex items-center ${
+                                    isExcluded ? 'bg-zinc-300' : 'bg-green-500'
+                                }`}>
+                                    <div className="w-2.5 h-2.5 bg-white rounded-full border border-black transition-transform duration-200 ease-in-out" style={{ transform: isExcluded ? 'translateX(0px)' : 'translateX(10px)' }} />
+                                </div>
+                                <span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">
+                                    {isExcluded ? "OFF" : "ON"}
+                                </span>
+                            </button>
+                        )}
+
+                        {!isExcluded && filteredProducts.length > 0 && (
+                            <div className="flex items-center gap-1 bg-yellow-50 p-0.5 rounded border border-black text-[9px] font-SpaceGrotesk">
+                                <span className="font-black text-amber-900 text-[8px] uppercase">ÍTEMS:</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleAllItemsInSubgroup(true)}
+                                    className="text-[8px] font-black px-1.5 py-0.5 rounded bg-green-200 text-green-900 hover:bg-green-300 border border-green-600 cursor-pointer"
+                                    title={isEnglish ? "Enable ALL items in this subcategory" : "Activar TODOS los productos de esta subcategoría"}
+                                >
+                                    ON ALL
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleAllItemsInSubgroup(false)}
+                                    className="text-[8px] font-black px-1.5 py-0.5 rounded bg-red-200 text-red-900 hover:bg-red-300 border border-red-600 cursor-pointer"
+                                    title={isEnglish ? "Disable ALL items in this subcategory" : "Desactivar TODOS los productos de esta subcategoría"}
+                                >
+                                    OFF ALL
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
