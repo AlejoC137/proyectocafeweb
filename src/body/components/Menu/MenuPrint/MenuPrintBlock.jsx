@@ -16,6 +16,242 @@ import {
 } from "../../../../redux/actions-types";
 import { headerStyles } from "./MenuPrintStyles";
 
+const ItemImageContainer = ({
+  itemPhoto,
+  itemTitle,
+  product,
+  leng,
+  colors,
+  groupDescriptions,
+  setGroupDescriptions,
+  saveGroupDescriptions,
+  id,
+  editMode
+}) => {
+  const imageContainerRef = useRef(null);
+  const heightKey = `__${id}_height`;
+  const imgHeightKey = `${id}_imgHeight`;
+
+  return (
+    <div className="relative w-full flex flex-col">
+      <div 
+        ref={imageContainerRef}
+        className="relative w-full overflow-hidden bg-gray-100 border-b-[2px]" 
+        style={{ 
+          borderColor: colors.categoryBorder || '#000000',
+          height: groupDescriptions[imgHeightKey] ? `${groupDescriptions[imgHeightKey]}px` : undefined,
+          aspectRatio: groupDescriptions[imgHeightKey] ? undefined : '16/9'
+        }}
+      >
+        <img
+          src={itemPhoto}
+          alt={itemTitle}
+          className="w-full h-full object-cover"
+        />
+        {product.AproxTime && (
+          <div className="absolute top-1.5 left-1.5 bg-white border border-black px-1.5 py-0.5 font-black text-[9px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            ⏱️ {product.AproxTime}m
+          </div>
+        )}
+        {(product.DietaES || product.DietaEN) && (
+          <div className="absolute top-1.5 right-1.5 bg-green-100 text-green-900 border border-black px-1.5 py-0.5 font-bold text-[9px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            🌱 {leng ? product.DietaEN : product.DietaES}
+          </div>
+        )}
+      </div>
+      {editMode && (
+        <HorizontalResizeHandle
+          containerRef={imageContainerRef}
+          currentHeight={groupDescriptions[imgHeightKey] || 180}
+          onHeightChange={(newH) => {
+            setGroupDescriptions(prev => {
+              const updates = { ...prev, [imgHeightKey]: newH };
+              const currentBlockH = parseInt(prev[heightKey] || 0, 10);
+              if (currentBlockH && currentBlockH < newH + 80) {
+                updates[heightKey] = `${newH + 80}px`;
+              }
+              return updates;
+            });
+          }}
+          onSaveHeight={(newH) => {
+            const currentBlockH = parseInt(groupDescriptions[heightKey] || 0, 10);
+            const updates = { [imgHeightKey]: newH };
+            if (currentBlockH && currentBlockH < newH + 80) {
+              updates[heightKey] = `${newH + 80}px`;
+            }
+            saveGroupDescriptions({ ...groupDescriptions, ...updates });
+          }}
+          color="blue"
+          minHeight={40}
+          maxHeight={600}
+          title="Arrastrar para cambiar la altura de la foto"
+        />
+      )}
+    </div>
+  );
+};
+
+const HorizontalResizeHandle = ({
+  currentHeight,
+  onHeightChange,
+  onSaveHeight,
+  color = "purple",
+  minHeight = 40,
+  maxHeight = 1200,
+  title = "Arrastrar para cambiar altura",
+  containerRef,
+  className = ""
+}) => {
+  const isDraggingRef = useRef(false);
+  const startYRef = useRef(0);
+  const startHeightRef = useRef(0);
+  const currentValRef = useRef(currentHeight);
+  const [isDragging, setIsDragging] = useState(false);
+  const badgeRef = useRef(null);
+  const rafIdRef = useRef(null);
+  const lastHeightRef = useRef(0);
+
+  currentValRef.current = currentHeight;
+
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let initialH = 180;
+    const val = currentValRef.current;
+    if (typeof val === 'number') {
+      initialH = val;
+    } else if (typeof val === 'string') {
+      const parsed = parseInt(val, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        initialH = parsed;
+      } else if (containerRef && containerRef.current) {
+        initialH = containerRef.current.offsetHeight;
+      }
+    } else if (containerRef && containerRef.current) {
+      initialH = containerRef.current.offsetHeight;
+    }
+
+    let scaleY = 1;
+    if (containerRef && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const offH = containerRef.current.offsetHeight;
+      if (rect.height > 0 && offH > 0) {
+        scaleY = rect.height / offH;
+      }
+      containerRef.current.style.transition = 'none';
+    }
+
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    startYRef.current = e.clientY;
+    startHeightRef.current = initialH;
+    lastHeightRef.current = initialH;
+
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isDraggingRef.current) return;
+      const mouseDeltaY = moveEvent.clientY - startYRef.current;
+      const canvasDeltaY = mouseDeltaY / (scaleY || 1);
+      const newH = Math.max(minHeight, Math.min(maxHeight, Math.round(startHeightRef.current + canvasDeltaY)));
+      
+      lastHeightRef.current = newH;
+
+      // Direct synchronous DOM update for 0ms lag
+      if (containerRef && containerRef.current) {
+        containerRef.current.style.height = `${newH}px`;
+        containerRef.current.style.minHeight = `${newH}px`;
+      }
+
+      // Direct badge update without triggering React state re-render
+      if (badgeRef.current) {
+        badgeRef.current.textContent = `${newH}px`;
+      }
+
+      // Non-blocking rAF throttle for React state updates
+      if (!rafIdRef.current) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          rafIdRef.current = null;
+          if (onHeightChange && isDraggingRef.current) {
+            onHeightChange(lastHeightRef.current);
+          }
+        });
+      }
+    };
+
+    const handleMouseUp = (upEvent) => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        setIsDragging(false);
+
+        if (rafIdRef.current) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+
+        if (containerRef && containerRef.current) {
+          containerRef.current.style.transition = '';
+        }
+
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+
+        const mouseDeltaY = upEvent.clientY - startYRef.current;
+        const canvasDeltaY = mouseDeltaY / (scaleY || 1);
+        const finalH = Math.max(minHeight, Math.min(maxHeight, Math.round(startHeightRef.current + canvasDeltaY)));
+        
+        if (containerRef && containerRef.current) {
+          containerRef.current.style.height = `${finalH}px`;
+          containerRef.current.style.minHeight = `${finalH}px`;
+        }
+
+        if (onHeightChange) {
+          onHeightChange(finalH);
+        }
+        if (onSaveHeight) {
+          onSaveHeight(finalH);
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const isPurple = color === 'purple';
+  const borderCol = isPurple ? 'border-purple-600 shadow-purple-200' : 'border-blue-600 shadow-blue-200';
+  const bgCol = isPurple ? 'bg-purple-600' : 'bg-blue-600';
+  const lineHover = isPurple ? 'group-hover/handle:bg-purple-500' : 'group-hover/handle:bg-blue-500';
+
+  return (
+    <div 
+      className={`w-full h-4 relative cursor-row-resize group/handle shrink-0 flex items-center justify-center print:hidden z-30 ${className}`}
+      onMouseDown={handleMouseDown}
+      title={title}
+    >
+      <div className={`absolute inset-x-0 h-0.5 bg-gray-300 ${lineHover} group-hover/handle:h-1 transition-all`}></div>
+      <div className={`w-8 h-4 bg-white border-2 ${borderCol} rounded-full shadow-md z-40 flex items-center justify-center hover:scale-110 transition-transform ${isDragging ? 'ring-2 ring-purple-400 scale-110' : ''}`}>
+        <div className="flex flex-col gap-0.5 pointer-events-none">
+          <div className={`w-3.5 h-0.5 ${bgCol} rounded-full`}></div>
+          <div className={`w-3.5 h-0.5 ${bgCol} rounded-full`}></div>
+        </div>
+      </div>
+      {isDragging && (
+        <div 
+          ref={badgeRef}
+          className="absolute left-1/2 -translate-x-1/2 -top-6 bg-black text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shadow z-50 pointer-events-none whitespace-nowrap border border-white/20"
+        >
+          {startHeightRef.current}px
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SearchableItemSelect = ({ productList = [], activeProductId, onSelect }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -118,26 +354,31 @@ const MenuPrintBlock = ({
   const parseDimensionStyle = (val, isWidth = true) => {
     if (!val || val === 'auto') return isWidth ? '100%' : undefined;
     const str = String(val).trim();
-    if (str === '50' || str === '50%') return isWidth ? 'calc(50% - 0.375rem)' : '50%';
-    if (str === '100' || str === '100%') return '100%';
-    if (str === '33' || str === '33%') return isWidth ? 'calc(33.333% - 0.5rem)' : '33.333%';
-    if (str === '66' || str === '66%') return isWidth ? 'calc(66.666% - 0.25rem)' : '66.666%';
-    
-    if (str.endsWith('%')) {
-      const num = parseFloat(str);
-      if (!isNaN(num)) {
-        if (num === 100) return '100%';
-        return isWidth ? `calc(${num}% - 0.375rem)` : `${num}%`;
+
+    if (isWidth) {
+      if (str === '50' || str === '50%') return 'calc(50% - 0.375rem)';
+      if (str === '100' || str === '100%') return '100%';
+      if (str === '33' || str === '33%') return 'calc(33.333% - 0.5rem)';
+      if (str === '66' || str === '66%') return 'calc(66.666% - 0.25rem)';
+      
+      if (str.endsWith('%')) {
+        const num = parseFloat(str);
+        if (!isNaN(num)) {
+          if (num === 100) return '100%';
+          return `calc(${num}% - 0.375rem)`;
+        }
       }
+    } else {
+      if (str.endsWith('%')) return str;
     }
     
     if (str.endsWith('px')) return str;
 
     const num = parseFloat(str);
     if (!isNaN(num)) {
-      if (num <= 100) {
+      if (isWidth && num <= 100) {
         if (num === 100) return '100%';
-        return isWidth ? `calc(${num}% - 0.375rem)` : `${num}%`;
+        return `calc(${num}% - 0.375rem)`;
       }
       return `${num}px`;
     }
@@ -155,6 +396,21 @@ const MenuPrintBlock = ({
     }
   };
 
+  const getBlockActiveHeight = (id) => {
+    const hKey = `__${id}_height`;
+    if (groupDescriptions[hKey] !== undefined) return String(groupDescriptions[hKey]);
+    const isImg = String(id).startsWith('IMG_');
+    const isItem = String(id).startsWith('ITEM_');
+    const itemM = isItem ? (groupDescriptions[`item_${id}_mode`] || 'normal') : null;
+    const isSoloImg = isItem && itemM === 'solo_imagen';
+    const imgO = isImg ? printImages.find(img => String(img.id) === String(id)) : null;
+
+    if (isImg && imgO?.height) return `${imgO.height}px`;
+    if (isSoloImg && groupDescriptions[`${id}_imgHeight`]) return `${groupDescriptions[`${id}_imgHeight`]}px`;
+    if (groupDescriptions[`${id}_height`]) return String(groupDescriptions[`${id}_height`]);
+    return '';
+  };
+
   const renderBlockControls = (id, showColumnToggle = false) => {
     if (!editMode) return null;
     const isRemovable = true;
@@ -165,7 +421,8 @@ const MenuPrintBlock = ({
     const widthKey = `__${id}_width`;
     const heightKey = `__${id}_height`;
     const currentWidth = groupDescriptions[widthKey] || '';
-    const currentHeight = groupDescriptions[heightKey] || '';
+    const activeHeight = getBlockActiveHeight(id);
+    const displayHeight = activeHeight ? String(activeHeight).replace(/px$/, '') : '';
 
     return (
       <div className="absolute top-1 right-1 flex flex-col gap-1 z-50 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded-[6px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
@@ -202,9 +459,47 @@ const MenuPrintBlock = ({
             <input
               type="text"
               placeholder="auto, 250px"
-              value={groupDescriptions[heightKey] ?? ''}
+              value={displayHeight}
               onChange={(e) => {
-                saveGroupDescriptions({ ...groupDescriptions, [heightKey]: e.target.value });
+                const rawVal = e.target.value;
+                const parsedNum = parseInt(rawVal, 10);
+                let formattedVal = rawVal;
+                if (!isNaN(parsedNum) && !rawVal.includes('%') && !rawVal.includes('auto')) {
+                  formattedVal = `${parsedNum}px`;
+                }
+
+                const isImg = String(id).startsWith('IMG_');
+                const isItem = String(id).startsWith('ITEM_');
+                const itemM = isItem ? (groupDescriptions[`item_${id}_mode`] || 'normal') : null;
+                const isSoloImg = isItem && itemM === 'solo_imagen';
+
+                const updates = { 
+                  ...groupDescriptions, 
+                  [heightKey]: formattedVal,
+                  [`${id}_height`]: formattedVal
+                };
+
+                if (rawVal === '' || rawVal === 'auto') {
+                  updates[heightKey] = '';
+                  updates[`${id}_height`] = '';
+                  delete updates[`${id}_imgHeight`];
+                } else if (isSoloImg && !isNaN(parsedNum) && parsedNum >= 30) {
+                  updates[`${id}_imgHeight`] = parsedNum;
+                } else if (isItem && itemM === 'ampliado' && !isNaN(parsedNum) && parsedNum >= 30) {
+                  const currentImgH = groupDescriptions[`${id}_imgHeight`] || 180;
+                  if (parsedNum - 70 < currentImgH) {
+                    updates[`${id}_imgHeight`] = Math.max(40, parsedNum - 70);
+                  }
+                }
+
+                if (isNaN(parsedNum) || parsedNum >= 30 || rawVal === '' || rawVal === 'auto') {
+                  saveGroupDescriptions(updates);
+
+                  if (isImg && !isNaN(parsedNum) && parsedNum >= 30) {
+                    updateImageHeight(id, parsedNum);
+                    saveImagesConfig(printImages);
+                  }
+                }
               }}
               className="w-12 text-[9px] font-bold p-0.5 border border-black bg-white outline-none text-center rounded"
             />
@@ -246,10 +541,10 @@ const MenuPrintBlock = ({
 
         {/* Botones de Dirección Horizontales */}
         <div className="flex items-center justify-between gap-1">
-          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black" onClick={() => moveBlock(id, 'up', pageIndex, columnId)} title="Subir">↑</Button>
-          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black" onClick={() => moveBlock(id, 'down', pageIndex, columnId)} title="Bajar">↓</Button>
-          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black" onClick={() => moveBlock(id, 'left', pageIndex, columnId)} title="Mover a Izquierda">←</Button>
-          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black" onClick={() => moveBlock(id, 'right', pageIndex, columnId)} title="Mover a Derecha">→</Button>
+          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveBlock && moveBlock(id, 'up', pageIndex, columnId); }} title="Subir">↑</Button>
+          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveBlock && moveBlock(id, 'down', pageIndex, columnId); }} title="Bajar">↓</Button>
+          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveBlock && moveBlock(id, 'left', pageIndex, columnId); }} title="Mover a Izquierda">←</Button>
+          <Button size="sm" variant="secondary" className="h-5 w-5 p-0 text-xs rounded border border-black cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveBlock && moveBlock(id, 'right', pageIndex, columnId); }} title="Mover a Derecha">→</Button>
         </div>
 
         {/* Fila de Acciones: Duplicar + Eliminar */}
@@ -257,13 +552,13 @@ const MenuPrintBlock = ({
           <button
             type="button"
             className="flex-1 h-5 px-1 text-[8px] font-black rounded border border-black bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-            onClick={() => duplicateBlock && duplicateBlock(id, pageIndex, columnId)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); duplicateBlock && duplicateBlock(id, pageIndex, columnId); }}
             title="Duplicar Bloque"
           >
             📋 Duplicar
           </button>
           {isRemovable && (
-            <Button size="sm" variant="destructive" className="h-5 w-5 p-0 text-xs rounded border border-black shrink-0" onClick={() => deleteBlock(id)} title="Eliminar Bloque">
+            <Button size="sm" variant="destructive" className="h-5 w-5 p-0 text-xs rounded border border-black shrink-0 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteBlock && deleteBlock(id); }} title="Eliminar Bloque">
               X
             </Button>
           )}
@@ -375,7 +670,8 @@ const MenuPrintBlock = ({
     // Find assigned product ID
     const savedProductId = groupDescriptions[`item_${id}_productId`];
     const parts = String(id).split('_');
-    const fallbackProductId = parts.length >= 3 ? parts[1] : (parts.length === 2 && parts[1] !== 'CUSTOM' ? parts[1] : null);
+    const rawFallback = parts.length >= 3 ? parts[1] : (parts.length === 2 && parts[1] !== 'CUSTOM' ? parts[1] : null);
+    const fallbackProductId = (rawFallback && rawFallback !== 'dup') ? rawFallback : null;
     const activeProductId = savedProductId || fallbackProductId;
 
     // Display mode: 'normal' | 'ampliado' | 'solo_imagen'
@@ -513,23 +809,18 @@ const MenuPrintBlock = ({
         {displayMode === 'ampliado' && (
           <div className="flex flex-col w-full">
             {itemPhoto ? (
-              <div className="relative w-full aspect-[16/9] border-b-[2px] overflow-hidden bg-gray-100" style={{ borderColor: colors.categoryBorder || '#000000' }}>
-                <img
-                  src={itemPhoto}
-                  alt={itemTitle}
-                  className="w-full h-full object-cover"
-                />
-                {product.AproxTime && (
-                  <div className="absolute top-1.5 left-1.5 bg-white border border-black px-1.5 py-0.5 font-black text-[9px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    ⏱️ {product.AproxTime}m
-                  </div>
-                )}
-                {(product.DietaES || product.DietaEN) && (
-                  <div className="absolute top-1.5 right-1.5 bg-green-100 text-green-900 border border-black px-1.5 py-0.5 font-bold text-[9px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    🌱 {leng ? product.DietaEN : product.DietaES}
-                  </div>
-                )}
-              </div>
+              <ItemImageContainer
+                itemPhoto={itemPhoto}
+                itemTitle={itemTitle}
+                product={product}
+                leng={leng}
+                colors={colors}
+                groupDescriptions={groupDescriptions}
+                setGroupDescriptions={setGroupDescriptions}
+                saveGroupDescriptions={saveGroupDescriptions}
+                id={id}
+                editMode={editMode}
+              />
             ) : (
               <div className="p-2 bg-yellow-50 border-b border-black text-center text-[10px] italic text-gray-500 font-bold">
                 (Sin foto asignada en menú)
@@ -587,43 +878,19 @@ const MenuPrintBlock = ({
 
         {/* 3. MODO SOLO IMAGEN */}
         {displayMode === 'solo_imagen' && (
-          <div className="flex flex-col w-full items-center justify-center p-1 bg-white relative group/imgcontainer">
+          <div className="flex flex-col w-full h-full flex-1 items-center justify-center p-1 bg-white relative group/imgcontainer overflow-hidden min-h-0">
             {itemPhoto ? (
-              <div className="relative w-full overflow-hidden" style={{ height: `${groupDescriptions[`${id}_imgHeight`] || 180}px` }}>
+              <div className="relative w-full h-full flex-1 min-h-0 overflow-hidden">
                 <img
                   src={itemPhoto}
                   alt={itemTitle}
-                  className="w-full h-full object-cover rounded-sm border"
+                  className="w-full h-full flex-1 object-cover rounded-sm border"
                   style={{ borderColor: colors.imgBorder || '#000000' }}
                 />
               </div>
             ) : (
               <div className="w-full h-32 flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-400 text-gray-500 font-bold text-xs p-2 text-center">
                 📷 {itemTitle} (Sin foto asignada en menú)
-              </div>
-            )}
-            {editMode && (
-              <div className="w-full flex items-center justify-between gap-2 text-[9px] font-bold text-gray-800 mt-1.5 px-2 py-1 print:hidden bg-amber-50 border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <span className="shrink-0 font-black uppercase text-[8px]">Alto imagen:</span>
-                <input
-                  type="range"
-                  min="40"
-                  max="600"
-                  step="5"
-                  value={groupDescriptions[`${id}_imgHeight`] || 180}
-                  onChange={(e) => saveGroupDescriptions({ ...groupDescriptions, [`${id}_imgHeight`]: parseInt(e.target.value) || 180 })}
-                  className="w-full h-1.5 accent-black cursor-pointer"
-                  title="Deslizar horizontalmente para ajustar altura"
-                />
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <input
-                    type="number"
-                    value={groupDescriptions[`${id}_imgHeight`] || 180}
-                    onChange={(e) => saveGroupDescriptions({ ...groupDescriptions, [`${id}_imgHeight`]: parseInt(e.target.value) || 180 })}
-                    className="w-10 border border-black text-center bg-white rounded font-bold p-0.5 text-[9px]"
-                  />
-                  <span className="text-[8px] font-black">px</span>
-                </div>
               </div>
             )}
           </div>
@@ -849,10 +1116,10 @@ const MenuPrintBlock = ({
         const imgObj = printImages.find(img => String(img.id) === String(blockId));
         if (imgObj) {
           return (
-            <div key={blockId} className="relative group border-[2px] p-2 flex flex-col items-center justify-center rounded-[6px] overflow-hidden" style={{ borderColor: colors.imgBorder || '#000000', boxShadow: `4px 4px 0px 0px ${colors.imgShadow || '#000000'}`, backgroundColor: colors.blockBg }}>
+            <div key={blockId} className="relative group border-[2px] p-2 flex flex-col items-center justify-center rounded-[6px] overflow-hidden w-full h-full flex-1" style={{ borderColor: colors.imgBorder || '#000000', boxShadow: `4px 4px 0px 0px ${colors.imgShadow || '#000000'}`, backgroundColor: colors.blockBg }}>
               {renderBlockControls(blockId)}
 
-              <div className="w-full flex justify-between items-center mb-1">
+              <div className="w-full flex justify-between items-center mb-1 shrink-0">
                 {editMode ? (
                   <input
                     type="text"
@@ -905,7 +1172,7 @@ const MenuPrintBlock = ({
                 )}
               </div>
 
-              <div className="w-full relative" style={{ height: `${imgObj.height || 150}px` }}>
+              <div className="w-full flex-1 min-h-0 relative h-full flex flex-col overflow-hidden">
                 <img
                   src={imgObj.url}
                   alt={imgObj.nameES || "Menu Image"}
@@ -913,35 +1180,12 @@ const MenuPrintBlock = ({
                     e.target.onerror = null;
                     e.target.src = "https://placehold.co/600x400?text=Imagen+Menu";
                   }}
-                  className="w-full h-full object-cover rounded-none border grayscale-[30%] contrast-[1.1] brightness-[1.05]"
+                  className="w-full h-full flex-1 object-cover rounded-none border grayscale-[30%] contrast-[1.1] brightness-[1.05]"
                   style={{
                     borderColor: colors.imgBorder || '#000000'
                   }}
                 />
               </div>
-
-              {editMode && (
-                <div className="absolute bottom-1 left-1 bg-white border-2 border-black p-1 text-[9px] z-10 print:hidden font-SpaceGrotesk opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <span className="font-bold shrink-0">Alto:</span>
-                  <input 
-                    type="range" 
-                    min="40" 
-                    max="600" 
-                    step="10" 
-                    value={imgObj.height || 150} 
-                    onChange={(e) => updateImageHeight(blockId, Number(e.target.value))} 
-                    className="w-24 h-1.5 accent-black cursor-pointer"
-                    title="Deslizar para cambiar la altura de la imagen"
-                  />
-                  <input 
-                    type="number" 
-                    value={imgObj.height || 150} 
-                    onChange={(e) => updateImageHeight(blockId, Number(e.target.value))} 
-                    className="w-12 border border-black text-center bg-white rounded font-bold shrink-0" 
-                  />
-                  <span className="shrink-0 font-bold">px</span>
-                </div>
-              )}
             </div>
           );
         }
@@ -977,25 +1221,133 @@ const MenuPrintBlock = ({
     }
   };
 
+  const blockContainerRef = useRef(null);
+
+  const isImageBlock = String(blockId).startsWith('IMG_');
+  const isItemBlock = String(blockId).startsWith('ITEM_');
+  const itemMode = isItemBlock ? (groupDescriptions[`item_${blockId}_mode`] || 'normal') : null;
+  const isSoloImagen = isItemBlock && itemMode === 'solo_imagen';
+  const imgObj = isImageBlock ? printImages.find(img => String(img.id) === String(blockId)) : null;
+
   const widthKey = `__${blockId}_width`;
   const heightKey = `__${blockId}_height`;
   const blockWidthVal = groupDescriptions[widthKey] || groupDescriptions[`${blockId}_width`];
   const blockHeightVal = groupDescriptions[heightKey] || groupDescriptions[`${blockId}_height`];
 
+  const effectiveHeightVal = getBlockActiveHeight(blockId);
+
   const widthStyle = parseDimensionStyle(blockWidthVal, true);
-  const heightStyle = parseDimensionStyle(blockHeightVal, false);
+  const heightStyle = parseDimensionStyle(effectiveHeightVal, false);
+
+  const getCurrentHandleHeight = () => {
+    return effectiveHeightVal || 'auto';
+  };
+
+  const [isDragTarget, setIsDragTarget] = useState(false);
+
+  const handleDragStartBlock = (e) => {
+    if (!editMode) return;
+    e.stopPropagation();
+    e.dataTransfer.setData("text/plain", JSON.stringify({ blockId, pageIndex, columnId }));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOverBlock = (e) => {
+    if (!editMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    setIsDragTarget(true);
+  };
+
+  const handleDragLeaveBlock = (e) => {
+    if (!editMode) return;
+    e.stopPropagation();
+    setIsDragTarget(false);
+  };
+
+  const handleDropOnBlock = (e) => {
+    if (!editMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragTarget(false);
+    try {
+      const raw = e.dataTransfer.getData("text/plain");
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && data.blockId && data.blockId !== blockId && props.reorderBlock) {
+        props.reorderBlock(data.blockId, blockId, pageIndex, columnId, 'before');
+      }
+    } catch (err) {
+      console.error("Drop block error:", err);
+    }
+  };
 
   return (
     <>
       <div 
-        className="box-border shrink-0 grow-0 transition-all duration-200" 
+        ref={blockContainerRef}
+        draggable={editMode}
+        onDragStart={handleDragStartBlock}
+        onDragOver={handleDragOverBlock}
+        onDragLeave={handleDragLeaveBlock}
+        onDrop={handleDropOnBlock}
+        className={`box-border shrink-0 grow-0 transition-shadow duration-150 relative group/blockwrapper flex flex-col z-20 hover:z-40 ${isDragTarget ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`} 
         style={{ 
           width: widthStyle,
           height: heightStyle || undefined,
           minHeight: heightStyle || undefined
         }}
       >
-        {renderBlockContent()}
+        <div className="w-full flex-1 flex flex-col min-h-0 overflow-hidden rounded-[6px]">
+          {renderBlockContent()}
+        </div>
+
+        {editMode && (
+          <HorizontalResizeHandle
+            currentHeight={effectiveHeightVal || 'auto'}
+            containerRef={blockContainerRef}
+            onHeightChange={(newH) => {
+              if (isImageBlock) {
+                updateImageHeight(blockId, newH);
+              }
+              setGroupDescriptions(prev => {
+                const updates = { ...prev, [heightKey]: `${newH}px` };
+                if (isSoloImagen) {
+                  updates[`${blockId}_imgHeight`] = newH;
+                } else if (itemMode === 'ampliado') {
+                  const currentImgH = prev[`${blockId}_imgHeight`] || 180;
+                  const minTextH = 70;
+                  if (newH - minTextH < currentImgH) {
+                    updates[`${blockId}_imgHeight`] = Math.max(40, newH - minTextH);
+                  }
+                }
+                return updates;
+              });
+            }}
+            onSaveHeight={(newH) => {
+              const updates = { [heightKey]: `${newH}px` };
+              if (isImageBlock) {
+                updateImageHeight(blockId, newH);
+                saveImagesConfig(printImages);
+              } else if (isSoloImagen) {
+                updates[`${blockId}_imgHeight`] = newH;
+              } else if (itemMode === 'ampliado') {
+                const currentImgH = groupDescriptions[`${blockId}_imgHeight`] || 180;
+                const minTextH = 70;
+                if (newH - minTextH < currentImgH) {
+                  updates[`${blockId}_imgHeight`] = Math.max(40, newH - minTextH);
+                }
+              }
+              saveGroupDescriptions({ ...groupDescriptions, ...updates });
+            }}
+            color="purple"
+            minHeight={isSoloImagen ? 40 : (itemMode === 'ampliado' ? 100 : (isImageBlock ? 40 : 40))}
+            maxHeight={1200}
+            title="Arrastrar para cambiar el alto del bloque"
+            className="absolute -bottom-2 inset-x-0 z-50"
+          />
+        )}
       </div>
 
       {selectedRecetaItem && (

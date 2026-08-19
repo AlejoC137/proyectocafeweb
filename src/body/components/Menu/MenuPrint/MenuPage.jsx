@@ -88,6 +88,17 @@ const MenuPage = ({
               pageIndex={pageIndex}
               columnId="left"
             />
+            {editMode && (
+              <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
+                <Button 
+                  size="sm" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"
+                  onClick={() => commonProps.addBlock && commonProps.addBlock(pageIndex, 'left')}
+                >
+                  + BLOQUE
+                </Button>
+              </div>
+            )}
           </div>
 
           <div 
@@ -100,6 +111,17 @@ const MenuPage = ({
               pageIndex={pageIndex}
               columnId="center"
             />
+            {editMode && (
+              <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
+                <Button 
+                  size="sm" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"
+                  onClick={() => commonProps.addBlock && commonProps.addBlock(pageIndex, 'center')}
+                >
+                  + BLOQUE
+                </Button>
+              </div>
+            )}
           </div>
 
           <div 
@@ -125,6 +147,17 @@ const MenuPage = ({
               pageIndex={pageIndex}
               columnId="right"
             />
+            {editMode && (
+              <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
+                <Button 
+                  size="sm" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"
+                  onClick={() => commonProps.addBlock && commonProps.addBlock(pageIndex, 'right')}
+                >
+                  + BLOQUE
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -154,10 +154,10 @@ const HorizontalPage = ({
                     columnId={colIdx}
                   />
                   {editMode && (
-                    <div className="mt-4 mb-2 flex justify-center print:hidden">
+                    <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
                       <Button 
                         size="sm" 
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[9px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[9px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"
                         onClick={() => onAddBlock(pageIndex, colIdx)}
                       >
                         + Bloque

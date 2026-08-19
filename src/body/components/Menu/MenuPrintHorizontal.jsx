@@ -374,17 +374,183 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
   const moveBlock = (blockId, direction, pageIndex, colIdx) => {
     const newPages = JSON.parse(JSON.stringify(pages));
-    const currentBlocks = newPages[pageIndex].columns[colIdx].blocks;
-    const blockIndex = currentBlocks.indexOf(blockId);
 
-    if (direction === 'up' && blockIndex > 0) {
-      [currentBlocks[blockIndex], currentBlocks[blockIndex - 1]] = [currentBlocks[blockIndex - 1], currentBlocks[blockIndex]];
-    } else if (direction === 'down' && blockIndex < currentBlocks.length - 1) {
-      [currentBlocks[blockIndex], currentBlocks[blockIndex + 1]] = [currentBlocks[blockIndex + 1], currentBlocks[blockIndex]];
+    let foundPageIndex = pageIndex;
+    let foundColIdx = colIdx;
+    let foundBlockIdx = -1;
+
+    if (newPages[pageIndex]?.columns?.[colIdx]?.blocks) {
+      const idx = newPages[pageIndex].columns[colIdx].blocks.indexOf(blockId);
+      if (idx !== -1) {
+        foundPageIndex = pageIndex;
+        foundColIdx = colIdx;
+        foundBlockIdx = idx;
+      }
+    }
+
+    if (foundBlockIdx === -1) {
+      for (let pIdx = 0; pIdx < newPages.length; pIdx++) {
+        const cols = newPages[pIdx]?.columns || [];
+        for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+          const idx = (cols[cIdx].blocks || []).indexOf(blockId);
+          if (idx !== -1) {
+            foundPageIndex = pIdx;
+            foundColIdx = cIdx;
+            foundBlockIdx = idx;
+            break;
+          }
+        }
+        if (foundBlockIdx !== -1) break;
+      }
+    }
+
+    if (foundBlockIdx === -1) return;
+
+    const currentPage = newPages[foundPageIndex];
+    const columns = currentPage.columns || [];
+    const currentColumn = columns[foundColIdx];
+
+    if (!currentColumn) return;
+
+    if (direction === 'up') {
+      if (foundBlockIdx > 0) {
+        [currentColumn.blocks[foundBlockIdx - 1], currentColumn.blocks[foundBlockIdx]] = 
+          [currentColumn.blocks[foundBlockIdx], currentColumn.blocks[foundBlockIdx - 1]];
+      } else if (foundPageIndex > 0) {
+        const prevPageCols = newPages[foundPageIndex - 1]?.columns || [];
+        const targetColIdx = Math.min(foundColIdx, prevPageCols.length - 1);
+        if (prevPageCols[targetColIdx]) {
+          currentColumn.blocks.splice(foundBlockIdx, 1);
+          if (!prevPageCols[targetColIdx].blocks) prevPageCols[targetColIdx].blocks = [];
+          prevPageCols[targetColIdx].blocks.push(blockId);
+        }
+      }
+    } else if (direction === 'down') {
+      if (foundBlockIdx < currentColumn.blocks.length - 1) {
+        [currentColumn.blocks[foundBlockIdx + 1], currentColumn.blocks[foundBlockIdx]] = 
+          [currentColumn.blocks[foundBlockIdx], currentColumn.blocks[foundBlockIdx + 1]];
+      } else if (foundPageIndex < newPages.length - 1) {
+        const nextPageCols = newPages[foundPageIndex + 1]?.columns || [];
+        const targetColIdx = Math.min(foundColIdx, nextPageCols.length - 1);
+        if (nextPageCols[targetColIdx]) {
+          currentColumn.blocks.splice(foundBlockIdx, 1);
+          if (!nextPageCols[targetColIdx].blocks) nextPageCols[targetColIdx].blocks = [];
+          nextPageCols[targetColIdx].blocks.unshift(blockId);
+        }
+      }
+    } else if (direction === 'right') {
+      if (foundColIdx < columns.length - 1) {
+        currentColumn.blocks = currentColumn.blocks.filter(b => b !== blockId);
+        if (!columns[foundColIdx + 1].blocks) columns[foundColIdx + 1].blocks = [];
+        columns[foundColIdx + 1].blocks.push(blockId);
+      } else if (foundPageIndex < newPages.length - 1) {
+        const nextPageCols = newPages[foundPageIndex + 1]?.columns || [];
+        if (nextPageCols.length > 0) {
+          currentColumn.blocks = currentColumn.blocks.filter(b => b !== blockId);
+          if (!nextPageCols[0].blocks) nextPageCols[0].blocks = [];
+          nextPageCols[0].blocks.unshift(blockId);
+        }
+      }
+    } else if (direction === 'left') {
+      if (foundColIdx > 0) {
+        currentColumn.blocks = currentColumn.blocks.filter(b => b !== blockId);
+        if (!columns[foundColIdx - 1].blocks) columns[foundColIdx - 1].blocks = [];
+        columns[foundColIdx - 1].blocks.push(blockId);
+      } else if (foundPageIndex > 0) {
+        const prevPageCols = newPages[foundPageIndex - 1]?.columns || [];
+        if (prevPageCols.length > 0) {
+          currentColumn.blocks = currentColumn.blocks.filter(b => b !== blockId);
+          const lastCol = prevPageCols[prevPageCols.length - 1];
+          if (!lastCol.blocks) lastCol.blocks = [];
+          lastCol.blocks.push(blockId);
+        }
+      }
     }
 
     setPages(newPages);
     saveConfig(newPages);
+  };
+
+  const duplicateBlock = (blockId, pageIndex = 0, colIdx = 0) => {
+    const timestamp = Math.random().toString(36).substr(2, 6);
+
+    let newBlockId;
+    if (String(blockId).startsWith('ITEM_')) {
+      newBlockId = `${blockId}_dup_${timestamp}`;
+    } else {
+      const baseId = String(blockId).split('_')[0];
+      newBlockId = `${baseId}_dup_${timestamp}`;
+    }
+
+    const newPages = JSON.parse(JSON.stringify(pages));
+    let targetPageIndex = pageIndex;
+    let targetColIdx = colIdx;
+    let blockIndex = -1;
+
+    if (newPages[pageIndex]?.columns?.[colIdx]?.blocks) {
+      const idx = newPages[pageIndex].columns[colIdx].blocks.indexOf(blockId);
+      if (idx !== -1) {
+        targetPageIndex = pageIndex;
+        targetColIdx = colIdx;
+        blockIndex = idx;
+      }
+    }
+
+    if (blockIndex === -1) {
+      for (let pIdx = 0; pIdx < newPages.length; pIdx++) {
+        const cols = newPages[pIdx].columns || [];
+        for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+          const idx = (cols[cIdx].blocks || []).indexOf(blockId);
+          if (idx !== -1) {
+            targetPageIndex = pIdx;
+            targetColIdx = cIdx;
+            blockIndex = idx;
+            break;
+          }
+        }
+        if (blockIndex !== -1) break;
+      }
+    }
+
+    if (blockIndex !== -1 && newPages[targetPageIndex]?.columns?.[targetColIdx]?.blocks) {
+      newPages[targetPageIndex].columns[targetColIdx].blocks.splice(blockIndex + 1, 0, newBlockId);
+    } else if (newPages[targetPageIndex]?.columns?.[targetColIdx]?.blocks) {
+      newPages[targetPageIndex].columns[targetColIdx].blocks.push(newBlockId);
+    }
+
+    const newGroupDescriptions = { ...groupDescriptions };
+    Object.keys(groupDescriptions).forEach(key => {
+      if (key.includes(blockId)) {
+        const newKey = key.replace(blockId, newBlockId);
+        newGroupDescriptions[newKey] = groupDescriptions[key];
+      }
+    });
+
+    if (String(blockId).startsWith('ITEM_')) {
+      const savedProdId = groupDescriptions[`item_${blockId}_productId`];
+      const parts = String(blockId).split('_');
+      const rawFallback = parts.length >= 2 && parts[1] !== 'dup' && parts[1] !== 'CUSTOM' ? parts[1] : null;
+      const activeProdId = savedProdId || rawFallback;
+
+      if (activeProdId) {
+        newGroupDescriptions[`item_${newBlockId}_productId`] = activeProdId;
+      }
+      if (groupDescriptions[`item_${blockId}_mode`]) {
+        newGroupDescriptions[`item_${newBlockId}_mode`] = groupDescriptions[`item_${blockId}_mode`];
+      }
+    }
+
+    const existingImg = printImages.find(img => String(img.id) === String(blockId));
+    if (existingImg) {
+      const newImgObj = { ...existingImg, id: newBlockId };
+      const updatedImages = [...printImages, newImgObj];
+      setPrintImages(updatedImages);
+      saveImagesConfig(updatedImages);
+    }
+
+    setPages(newPages);
+    setGroupDescriptions(newGroupDescriptions);
+    saveConfig(newPages, newGroupDescriptions);
   };
 
   const updatePageTitle = (pageIndex, newTitle) => {
@@ -562,6 +728,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
   const commonProps = {
     editMode,
     moveBlock,
+    duplicateBlock,
     colors,
     leng,
     menuData,

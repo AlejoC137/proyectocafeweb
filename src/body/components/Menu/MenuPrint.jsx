@@ -434,37 +434,89 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
   const moveBlock = (blockId, direction, pageIndex, columnId) => {
     const newPages = JSON.parse(JSON.stringify(pages));
-    const currentPage = newPages[pageIndex];
-    const colArray = [...currentPage[columnId]];
-    const idx = colArray.indexOf(blockId);
+    
+    // Dynamically locate page & column containing blockId
+    let foundPageIndex = pageIndex;
+    let foundColKey = columnId;
+    let foundIndex = -1;
 
-    if (direction === 'up' && idx > 0) {
-      [colArray[idx - 1], colArray[idx]] = [colArray[idx], colArray[idx - 1]];
-      currentPage[columnId] = colArray;
-    } else if (direction === 'down' && idx < colArray.length - 1) {
-      [colArray[idx + 1], colArray[idx]] = [colArray[idx], colArray[idx + 1]];
-      currentPage[columnId] = colArray;
+    const colsOrder = ['left', 'center', 'right'];
+
+    if (newPages[pageIndex]) {
+      const pageObj = newPages[pageIndex];
+      colsOrder.forEach(col => {
+        if (Array.isArray(pageObj[col])) {
+          const idx = pageObj[col].indexOf(blockId);
+          if (idx !== -1) {
+            foundPageIndex = pageIndex;
+            foundColKey = col;
+            foundIndex = idx;
+          }
+        }
+      });
+    }
+
+    if (foundIndex === -1) {
+      for (let pIdx = 0; pIdx < newPages.length; pIdx++) {
+        const pageObj = newPages[pIdx];
+        colsOrder.forEach(col => {
+          if (Array.isArray(pageObj[col])) {
+            const idx = pageObj[col].indexOf(blockId);
+            if (idx !== -1) {
+              foundPageIndex = pIdx;
+              foundColKey = col;
+              foundIndex = idx;
+            }
+          }
+        });
+        if (foundIndex !== -1) break;
+      }
+    }
+
+    if (foundIndex === -1) return;
+
+    const currentPage = newPages[foundPageIndex];
+    const currentColIdx = colsOrder.indexOf(foundColKey);
+
+    if (direction === 'up') {
+      if (foundIndex > 0) {
+        const colArray = currentPage[foundColKey];
+        [colArray[foundIndex - 1], colArray[foundIndex]] = [colArray[foundIndex], colArray[foundIndex - 1]];
+      } else if (foundPageIndex > 0) {
+        currentPage[foundColKey].splice(foundIndex, 1);
+        if (!newPages[foundPageIndex - 1][foundColKey]) newPages[foundPageIndex - 1][foundColKey] = [];
+        newPages[foundPageIndex - 1][foundColKey].push(blockId);
+      }
+    } else if (direction === 'down') {
+      const colArray = currentPage[foundColKey];
+      if (foundIndex < colArray.length - 1) {
+        [colArray[foundIndex + 1], colArray[foundIndex]] = [colArray[foundIndex], colArray[foundIndex + 1]];
+      } else if (foundPageIndex < newPages.length - 1) {
+        currentPage[foundColKey].splice(foundIndex, 1);
+        if (!newPages[foundPageIndex + 1][foundColKey]) newPages[foundPageIndex + 1][foundColKey] = [];
+        newPages[foundPageIndex + 1][foundColKey].unshift(blockId);
+      }
     } else if (direction === 'right') {
-      if (columnId === 'left') {
-        currentPage.left = currentPage.left.filter(b => b !== blockId);
-        currentPage.center = [...currentPage.center, blockId];
-      } else if (columnId === 'center') {
-        currentPage.center = currentPage.center.filter(b => b !== blockId);
-        currentPage.right = [...currentPage.right, blockId];
-      } else if (columnId === 'right' && pageIndex < pages.length - 1) {
+      if (currentColIdx !== -1 && currentColIdx < colsOrder.length - 1) {
+        const targetColKey = colsOrder[currentColIdx + 1];
+        currentPage[foundColKey] = currentPage[foundColKey].filter(b => b !== blockId);
+        if (!currentPage[targetColKey]) currentPage[targetColKey] = [];
+        currentPage[targetColKey].push(blockId);
+      } else if (foundColKey === 'right' && foundPageIndex < newPages.length - 1) {
         currentPage.right = currentPage.right.filter(b => b !== blockId);
-        newPages[pageIndex+1].left = [blockId, ...newPages[pageIndex+1].left];
+        if (!newPages[foundPageIndex + 1].left) newPages[foundPageIndex + 1].left = [];
+        newPages[foundPageIndex + 1].left.unshift(blockId);
       }
     } else if (direction === 'left') {
-      if (columnId === 'right') {
-        currentPage.right = currentPage.right.filter(b => b !== blockId);
-        currentPage.center = [...currentPage.center, blockId];
-      } else if (columnId === 'center') {
-        currentPage.center = currentPage.center.filter(b => b !== blockId);
-        currentPage.left = [...currentPage.left, blockId];
-      } else if (columnId === 'left' && pageIndex > 0) {
+      if (currentColIdx > 0) {
+        const targetColKey = colsOrder[currentColIdx - 1];
+        currentPage[foundColKey] = currentPage[foundColKey].filter(b => b !== blockId);
+        if (!currentPage[targetColKey]) currentPage[targetColKey] = [];
+        currentPage[targetColKey].push(blockId);
+      } else if (foundColKey === 'left' && foundPageIndex > 0) {
         currentPage.left = currentPage.left.filter(b => b !== blockId);
-        newPages[pageIndex-1].right = [...newPages[pageIndex-1].right, blockId];
+        if (!newPages[foundPageIndex - 1].right) newPages[foundPageIndex - 1].right = [];
+        newPages[foundPageIndex - 1].right.push(blockId);
       }
     }
     
@@ -472,29 +524,95 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
     saveLayoutSizes({ pages: newPages });
   };
 
-  const addBlock = (pageIndex = 0) => {
+  const reorderBlock = (draggedId, targetId, targetPageIndex, targetColId, position = 'after') => {
+    const newPages = JSON.parse(JSON.stringify(pages));
+    
+    newPages.forEach(p => {
+      ['left', 'center', 'right'].forEach(col => {
+        if (p[col]) {
+          p[col] = p[col].filter(id => id !== draggedId);
+        }
+      });
+    });
+
+    const targetCol = newPages[targetPageIndex]?.[targetColId];
+    if (!targetCol) return;
+
+    if (targetId) {
+      const targetIdx = targetCol.indexOf(targetId);
+      if (targetIdx !== -1) {
+        const insertIdx = position === 'after' ? targetIdx + 1 : targetIdx;
+        targetCol.splice(insertIdx, 0, draggedId);
+      } else {
+        targetCol.push(draggedId);
+      }
+    } else {
+      targetCol.push(draggedId);
+    }
+
+    setPages(newPages);
+    saveLayoutSizes({ pages: newPages });
+  };
+
+  const addBlock = (pageIndex = 0, columnId = 'center') => {
     const newBlockId = 'CUSTOM_' + Math.random().toString(36).substr(2, 9);
-    const newPages = [...pages];
-    newPages[pageIndex].center = [...newPages[pageIndex].center, newBlockId];
+    const newPages = JSON.parse(JSON.stringify(pages));
+    if (!newPages[pageIndex]) return;
+    const col = columnId || 'center';
+    if (!newPages[pageIndex][col]) newPages[pageIndex][col] = [];
+    newPages[pageIndex][col].push(newBlockId);
     setPages(newPages);
     saveLayoutSizes({ pages: newPages });
   };
 
   const duplicateBlock = (blockId, pageIndex = 0, columnId = 'center') => {
-    const baseId = String(blockId).split('_')[0];
     const timestamp = Math.random().toString(36).substr(2, 6);
-    const newBlockId = `${baseId}_dup_${timestamp}`;
+
+    let newBlockId;
+    if (String(blockId).startsWith('ITEM_')) {
+      newBlockId = `${blockId}_dup_${timestamp}`;
+    } else {
+      const baseId = String(blockId).split('_')[0];
+      newBlockId = `${baseId}_dup_${timestamp}`;
+    }
 
     const newPages = JSON.parse(JSON.stringify(pages));
-    const currentPage = newPages[pageIndex];
-    if (currentPage && currentPage[columnId]) {
-      const colArray = currentPage[columnId];
-      const idx = colArray.indexOf(blockId);
+    let targetPageIndex = pageIndex;
+    let targetColId = columnId;
+    let blockIndex = -1;
+
+    if (newPages[pageIndex] && newPages[pageIndex][columnId]) {
+      const idx = newPages[pageIndex][columnId].indexOf(blockId);
       if (idx !== -1) {
-        colArray.splice(idx + 1, 0, newBlockId);
-      } else {
-        colArray.push(newBlockId);
+        targetPageIndex = pageIndex;
+        targetColId = columnId;
+        blockIndex = idx;
       }
+    }
+
+    if (blockIndex === -1) {
+      for (let pIdx = 0; pIdx < newPages.length; pIdx++) {
+        const pageObj = newPages[pIdx];
+        ['left', 'center', 'right'].forEach(col => {
+          if (pageObj[col]) {
+            const idx = pageObj[col].indexOf(blockId);
+            if (idx !== -1) {
+              targetPageIndex = pIdx;
+              targetColId = col;
+              blockIndex = idx;
+            }
+          }
+        });
+        if (blockIndex !== -1) break;
+      }
+    }
+
+    if (blockIndex !== -1 && newPages[targetPageIndex] && newPages[targetPageIndex][targetColId]) {
+      newPages[targetPageIndex][targetColId].splice(blockIndex + 1, 0, newBlockId);
+    } else if (newPages[targetPageIndex] && newPages[targetPageIndex][targetColId]) {
+      newPages[targetPageIndex][targetColId].push(newBlockId);
+    } else if (newPages[0] && newPages[0].center) {
+      newPages[0].center.push(newBlockId);
     }
 
     const newGroupDescriptions = { ...groupDescriptions };
@@ -504,6 +622,28 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
         newGroupDescriptions[newKey] = groupDescriptions[key];
       }
     });
+
+    if (String(blockId).startsWith('ITEM_')) {
+      const savedProdId = groupDescriptions[`item_${blockId}_productId`];
+      const parts = String(blockId).split('_');
+      const rawFallback = parts.length >= 2 && parts[1] !== 'dup' && parts[1] !== 'CUSTOM' ? parts[1] : null;
+      const activeProdId = savedProdId || rawFallback;
+
+      if (activeProdId) {
+        newGroupDescriptions[`item_${newBlockId}_productId`] = activeProdId;
+      }
+      if (groupDescriptions[`item_${blockId}_mode`]) {
+        newGroupDescriptions[`item_${newBlockId}_mode`] = groupDescriptions[`item_${blockId}_mode`];
+      }
+    }
+
+    const existingImg = printImages.find(img => String(img.id) === String(blockId));
+    if (existingImg) {
+      const newImgObj = { ...existingImg, id: newBlockId };
+      const updatedImages = [...printImages, newImgObj];
+      setPrintImages(updatedImages);
+      saveImagesConfig(updatedImages);
+    }
 
     setPages(newPages);
     setGroupDescriptions(newGroupDescriptions);
@@ -555,7 +695,9 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
   const commonProps = {
     editMode,
+    addBlock,
     moveBlock,
+    reorderBlock,
     duplicateBlock,
     colors,
     leng,
