@@ -227,7 +227,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         </div>
                     )}
                     <div className="flex flex-col flex-1 min-w-0 mr-1">
-                        <div className={`font-bold leading-tight break-words whitespace-normal uppercase ${isDeactivated && editMode ? 'line-through text-red-600' : ''}`} style={{ color: isDeactivated && editMode ? '#dc2626' : colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}` }}>
+                        <div className={`font-bold break-words whitespace-normal uppercase ${isDeactivated && editMode ? 'line-through text-red-600' : ''}`} style={{ color: isDeactivated && editMode ? '#dc2626' : colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
                             {isEnglish ? product.NombreEN : product.NombreES}
                         </div>
                     </div>
@@ -301,7 +301,7 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                         )}
                     </div>
                 </div>
-                <span className="font-black whitespace-nowrap" style={{ color: colors?.itemPrice, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizePrice || 11}${colors?.fontSizeUnit || 'px'}` }}>
+                <span className="font-black whitespace-nowrap" style={{ color: colors?.itemPrice, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizePrice || 11}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
                     ${formatPrice(product.Precio)}
                 </span>
             </div>
@@ -324,16 +324,17 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                             e.target.style.height = 'auto';
                             e.target.style.height = `${e.target.scrollHeight}px`;
                         }}
-                        className="italic font-normal normal-case tracking-normal leading-tight w-full bg-transparent border-b border-dashed border-gray-300 focus:border-black outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
+                        className="italic font-normal normal-case tracking-normal w-full bg-transparent border-b border-dashed border-gray-300 focus:border-black outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
                         style={{
                             color: colors?.itemComment || '#6b7280',
                             fontFamily: colors?.fontBody || 'serif',
-                            fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`
+                            fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`,
+                            lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1
                         }}
                     />
                 ) : (
                     (isEnglish ? product.MenuComentsEN : product.MenuComentsES) ? (
-                        <div className="italic font-normal normal-case tracking-normal leading-tight w-full break-words" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}` }}>
+                        <div className="italic font-normal normal-case tracking-normal w-full break-words" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
                             {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
                         </div>
                     ) : null

@@ -71,6 +71,32 @@ function FontSelector({ id, label, colors, setColors, saveLayoutSizes }) {
   );
 }
 
+function SimpleNumberInput({ id, label, unit = "", min = 0.5, max = 5, step = 0.05, colors, setColors, saveLayoutSizes, defaultValue = 1.1 }) {
+  const val = colors[id] !== undefined ? colors[id] : defaultValue;
+  return (
+    <div className="flex flex-col gap-1 p-1.5 rounded border border-black/5 hover:bg-black/5 transition-colors group">
+      <label className="text-[9px] font-black uppercase tracking-tight leading-none text-gray-500">{label}</label>
+      <div className="flex items-center gap-1.5">
+        <input 
+          type="number" 
+          value={val} 
+          min={min}
+          max={max}
+          step={step}
+          onChange={e => { 
+            const num = Number(e.target.value);
+            const c = { ...colors, [id]: num }; 
+            setColors(c); 
+            saveLayoutSizes({ colors: c }); 
+          }} 
+          className="w-14 h-7 border border-black p-0.5 text-center cursor-pointer rounded-sm bg-white shrink-0 font-bold text-xs" 
+        />
+        {unit && <span className="text-[9px] font-mono text-gray-400">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
 const MenuPrintColorPanel = ({ colors, setColors, saveLayoutSizes, setShowColorPanel }) => {
   const [position, setPosition] = React.useState(null);
   const isDraggingRef = React.useRef(false);
@@ -267,12 +293,13 @@ const MenuPrintColorPanel = ({ colors, setColors, saveLayoutSizes, setShowColorP
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <SizeSelector id="sizeTitle" label="T. Título" colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
               <SizeSelector id="sizeCategory" label="T. Secciones" colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
               <SizeSelector id="sizeItem" label="T. Nombres" colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
               <SizeSelector id="sizePrice" label="T. Precios" colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
               <SizeSelector id="sizeComment" label="T. Descrip." colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} />
+              <SimpleNumberInput id="lineHeight" label="Interlineado" min={0.5} max={3} step={0.05} colors={colors} setColors={setColors} saveLayoutSizes={saveLayoutSizes} defaultValue={1.1} />
             </div>
           </div>
         </div>
