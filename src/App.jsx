@@ -38,6 +38,7 @@ const PagosProveedores = lazy(() => import('./body/views/proveedores/PagosProvee
 const StaffCreator = lazy(() => import('./body/views/actividades/StaffCreator'));
 const RecetaModal = lazy(() => import('./body/views/ventaCompra/RecetaModal'));
 const ItemsModal = lazy(() => import('./body/components/Items/ItemsModal'));
+const ItemMenuModal = lazy(() => import('./body/components/Menu/ItemMenuModal'));
 const ProcedimientoModal = lazy(() => import('./body/views/ventaCompra/ProcedimientoModal'));
 const InscripcionEvento = lazy(() => import('./body/views/agenda/InscripcionEvento'));
 const AgendaFormPage = lazy(() => import('./body/views/agenda/AgendaFormPage'));
@@ -67,6 +68,7 @@ const AliadoPortal = lazy(() => import('./body/views/aliados/AliadoPortal'));
 const AnalisisAlmuerzo = lazy(() => import('./body/views/lunchByOrder/AnalisisAlmuerzo'));
 const ReviewProyectoCafe = lazy(() => import('./body/views/reviewProyectoCafe/ReviewProyectoCafe'));
 const CalculadorRecetaHelados = lazy(() => import('./body/views/ventaCompra/CalculadorRecetaHelados'));
+const BajasManager = lazy(() => import('./body/views/bajas/BajasManager'));
 
 const ProyectoRadio = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager = lazy(() => import('./components/RadioManager'));
@@ -162,6 +164,8 @@ function App() {
                   <Route path="/StaffCreator" element={<StaffCreator />} />
                   <Route path="/receta/:id" element={<RecetaModal />} />
                   <Route path="/item/:id" element={<ItemsModal />} />
+                  <Route path="/menu-item/:id" element={<ItemMenuModal />} />
+                  <Route path="/item-menu/:id" element={<ItemMenuModal />} />
                   <Route path="/comanda/:id" element={<ComandaModal />} />
                   <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
                   <Route path="/evento/:id/:tab?" element={<AgendaFormPage />} />
@@ -203,6 +207,8 @@ function App() {
                   <Route path="/RegistroAliado" element={<AliadoRegistrationForm />} />
                   <Route path="/PortalAliado" element={<AliadoPortal />} />
                   <Route path="/review_ProyectoCafe" element={<ReviewProyectoCafe />} />
+                  <Route path="/bajas" element={<BajasManager />} />
+                  <Route path="/Bajas" element={<BajasManager />} />
 
                   <Route path="*" element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
                 </Routes>

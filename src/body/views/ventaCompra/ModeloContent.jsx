@@ -394,6 +394,12 @@ function ModeloContent({ targetMonth, targetYear }) {
         updateItem('compras', newRow);
     };
 
+    const handleSyncConsumoStaff = () => {
+        const total = datosCalculadosDelMes.totalConsumoStaff;
+        const newRow = { id: 'auto-consumo-staff', name: 'Consumo Staff (Sinc)', value: total };
+        updateItem('otros', newRow);
+    };
+
     const handleSyncPayroll = () => {
         if (!allStaff || allStaff.length === 0) {
             alert("No hay datos de allStaff disponibles.");
@@ -870,6 +876,7 @@ function ModeloContent({ targetMonth, targetYear }) {
                             <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
                                 <div className="flex justify-between items-center mb-1">
                                     <h3 className="font-bold text-gray-700 text-xs">Otros Gastos</h3>
+                                    <button onClick={handleSyncConsumoStaff} className="p-1 hover:bg-orange-50 text-orange-600 rounded" title="Sincronizar Consumo Staff">🔄</button>
                                 </div>
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="text-xl font-bold text-gray-800">{formatCurrency(totals.otros)}</div>

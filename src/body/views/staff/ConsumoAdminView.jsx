@@ -51,6 +51,29 @@ function getShiftHours(staff, dateStr) {
     return { inicio: dayConfig.inicio || '—', fin: dayConfig.fin || '—' };
 }
 
+function getWeekRange(dateStr) {
+    if (!dateStr) return { monday: new Date(), sunday: new Date() };
+    const d = new Date(dateStr + 'T12:00:00');
+    const day = d.getDay();
+    const diffToMonday = (day === 0 ? -6 : 1) - day;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    return { monday, sunday };
+}
+
+function getLocalDateStr(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // ========================================================================
 // COMPONENTE PRINCIPAL
 // ========================================================================
@@ -91,7 +114,12 @@ const ConsumoAdminView = () => {
     const [progQuantity, setProgQuantity] = useState(1);
 
     // --- ESTADOS: Pestaña Historial ---
+    const [histPeriod, setHistPeriod] = useState('dia'); // 'dia' | 'semana' | 'mes'
     const [histDate, setHistDate] = useState(() => new Date().toISOString().split('T')[0]);
+    const [histMonth, setHistMonth] = useState(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    });
 
     useEffect(() => {
         dispatch(getAllFromTable(STAFF));
@@ -222,14 +250,26 @@ const ConsumoAdminView = () => {
     };
 
     // ================================================================
-    // PESTAÑA 3: HISTORIAL
+    // PESTAÑA 3: HISTORIAL (Día / Semana / Mes)
     // ================================================================
-    const historialDelDia = useMemo(() => {
+    const historialFiltrado = useMemo(() => {
+        const { monday, sunday } = getWeekRange(histDate);
+
         return allConsumoStaff
             .filter(c => {
                 if (!c.Date) return false;
-                const cDate = new Date(c.Date).toISOString().split('T')[0];
-                return cDate === histDate;
+                const cDateObj = new Date(c.Date);
+                const cDateStr = getLocalDateStr(cDateObj);
+
+                if (histPeriod === 'dia') {
+                    return cDateStr === histDate;
+                } else if (histPeriod === 'semana') {
+                    return cDateObj >= monday && cDateObj <= sunday;
+                } else if (histPeriod === 'mes') {
+                    const [y, m] = histMonth.split('-').map(Number);
+                    return cDateObj.getFullYear() === y && (cDateObj.getMonth() + 1) === m;
+                }
+                return false;
             })
             .map(c => {
                 const staffMember = allStaff.find(s => s._id === c.staff_id);
@@ -274,6 +314,10 @@ const ConsumoAdminView = () => {
                     valorProduccionTotal += itemCost * cant;
                 });
 
+                const dObj = new Date(c.Date);
+                const fechaFormateada = dObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+                const horaFormateada = dObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
                 return {
                     ...c,
                     staffName: staffMember ? `${staffMember.Nombre} ${staffMember.Apellido || ''}` : 'Desconocido',
@@ -281,19 +325,43 @@ const ConsumoAdminView = () => {
                     valorVentaTotal,
                     valorProduccionTotal,
                     tipo: c.tipo || (productos[0]?.tipo) || 'eventual',
-                    hora: c.Date ? new Date(c.Date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '—'
+                    fechaFormateada,
+                    hora: horaFormateada
                 };
             })
             .sort((a, b) => new Date(b.Date) - new Date(a.Date));
-    }, [allConsumoStaff, histDate, allStaff, allMenu, allRecetasMenu, allRecetasProduccion]);
+    }, [allConsumoStaff, histPeriod, histDate, histMonth, allStaff, allMenu, allRecetasMenu, allRecetasProduccion]);
 
-    const totalesDelDia = useMemo(() => {
-        return historialDelDia.reduce((acc, curr) => {
+    const totalesDelPeriodo = useMemo(() => {
+        return historialFiltrado.reduce((acc, curr) => {
             acc.venta += curr.valorVentaTotal || 0;
             acc.produccion += curr.valorProduccionTotal || 0;
             return acc;
         }, { venta: 0, produccion: 0 });
-    }, [historialDelDia]);
+    }, [historialFiltrado]);
+
+    const resumenPorStaff = useMemo(() => {
+        const map = {};
+        historialFiltrado.forEach(rec => {
+            const id = rec.staff_id || rec.staffName;
+            if (!map[id]) {
+                map[id] = {
+                    staffName: rec.staffName,
+                    registros: 0,
+                    totalProductos: 0,
+                    totalProduccion: 0,
+                    totalVenta: 0
+                };
+            }
+            map[id].registros += 1;
+            map[id].totalProduccion += rec.valorProduccionTotal || 0;
+            map[id].totalVenta += rec.valorVentaTotal || 0;
+            rec.productos.forEach(p => {
+                map[id].totalProductos += Number(p.quantity) || 1;
+            });
+        });
+        return Object.values(map).sort((a, b) => b.totalProduccion - a.totalProduccion);
+    }, [historialFiltrado]);
 
     // --- GUARD: Solo admins ---
     if (!isAdmin) {
@@ -314,7 +382,7 @@ const ConsumoAdminView = () => {
     const tabs = [
         { id: 'manual', label: 'Registro Manual', icon: ClipboardList },
         { id: 'programado', label: 'Consumo Programado', icon: Zap },
-        { id: 'historial', label: 'Historial del Día', icon: History },
+        { id: 'historial', label: 'Historial y Reportes', icon: History },
     ];
 
     return (
@@ -545,43 +613,136 @@ const ConsumoAdminView = () => {
                 </div>
             )}
 
-            {/* ============= TAB: HISTORIAL ============= */}
+            {/* ============= TAB: HISTORIAL (DÍA / SEMANA / MES) ============= */}
             {activeTab === 'historial' && (
                 <div className="bg-white rounded-b-xl border border-t-0 border-slate-200 shadow-sm p-6 md:p-8 animate-fade-in space-y-6">
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="space-y-1">
-                            <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-slate-500" /> Ver consumos del día
-                            </label>
-                            <input type="date" value={histDate} onChange={(e) => setHistDate(e.target.value)}
-                                className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 transition" />
+                    {/* Filtros de Período y Métricas */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Selector de modo: Día, Semana, Mes */}
+                            <div className="flex bg-white p-1 border border-slate-200 rounded-xl shadow-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => setHistPeriod('dia')}
+                                    className={`px-4 py-2 text-xs font-extrabold rounded-lg transition-all ${
+                                        histPeriod === 'dia' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    Día
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setHistPeriod('semana')}
+                                    className={`px-4 py-2 text-xs font-extrabold rounded-lg transition-all ${
+                                        histPeriod === 'semana' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    Semana
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setHistPeriod('mes')}
+                                    className={`px-4 py-2 text-xs font-extrabold rounded-lg transition-all ${
+                                        histPeriod === 'mes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    Mes
+                                </button>
+                            </div>
+
+                            {/* Controles según el período */}
+                            {histPeriod === 'dia' && (
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="date"
+                                        value={histDate}
+                                        onChange={(e) => setHistDate(e.target.value)}
+                                        className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                                    />
+                                </div>
+                            )}
+
+                            {histPeriod === 'semana' && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="date"
+                                        value={histDate}
+                                        onChange={(e) => setHistDate(e.target.value)}
+                                        className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                                    />
+                                    <span className="text-xs text-blue-700 font-bold bg-blue-50 px-3 py-2 border border-blue-200 rounded-xl">
+                                        📅 {getWeekRange(histDate).monday.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {getWeekRange(histDate).sunday.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </span>
+                                </div>
+                            )}
+
+                            {histPeriod === 'mes' && (
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="month"
+                                        value={histMonth}
+                                        onChange={(e) => setHistMonth(e.target.value)}
+                                        className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                                    />
+                                </div>
+                            )}
                         </div>
-                        <div className="ml-auto flex gap-6 text-right">
+
+                        {/* Totales */}
+                        <div className="flex items-center gap-6 text-right self-end md:self-center">
                             <div>
-                                <p className="text-2xl font-extrabold text-slate-800">${totalesDelDia.produccion.toLocaleString('es-CO')}</p>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">Costo Prod.</p>
+                                <p className="text-2xl font-extrabold text-slate-800">${totalesDelPeriodo.produccion.toLocaleString('es-CO')}</p>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Costo Prod.</p>
                             </div>
                             <div>
-                                <p className="text-2xl font-extrabold text-slate-800">${totalesDelDia.venta.toLocaleString('es-CO')}</p>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">Potencial Venta</p>
+                                <p className="text-2xl font-extrabold text-slate-800">${totalesDelPeriodo.venta.toLocaleString('es-CO')}</p>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Potencial Venta</p>
                             </div>
                             <div className="pl-6 border-l border-slate-200">
-                                <p className="text-2xl font-extrabold text-slate-800">{historialDelDia.length}</p>
-                                <p className="text-xs text-slate-500 uppercase tracking-wider">Registros</p>
+                                <p className="text-2xl font-extrabold text-slate-800">{historialFiltrado.length}</p>
+                                <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Registros</p>
                             </div>
                         </div>
                     </div>
 
+                    {/* Resumen Agrupado por Empleado (si hay datos en Semana / Mes) */}
+                    {resumenPorStaff.length > 0 && (histPeriod === 'semana' || histPeriod === 'mes') && (
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <Users className="w-4 h-4 text-blue-600" />
+                                Resumen Acumulado por Empleado ({histPeriod === 'semana' ? 'Semanal' : 'Mensual'})
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {resumenPorStaff.map((staff, idx) => (
+                                    <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between hover:border-blue-300 transition-colors">
+                                        <div>
+                                            <p className="font-bold text-slate-800 text-sm truncate">{staff.staffName}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">{staff.registros} registros ({staff.totalProductos} productos)</p>
+                                        </div>
+                                        <div className="mt-3 pt-2 border-t border-slate-200 flex justify-between text-xs font-semibold">
+                                            <span className="text-slate-500">Costo: <b className="text-slate-800">${staff.totalProduccion.toLocaleString('es-CO')}</b></span>
+                                            <span className="text-slate-500">Venta: <b className="text-emerald-600">${staff.totalVenta.toLocaleString('es-CO')}</b></span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <hr className="border-slate-100" />
 
-                    {historialDelDia.length === 0 ? (
+                    {/* Lista Detallada de Consumos */}
+                    {historialFiltrado.length === 0 ? (
                         <div className="text-center py-12 text-slate-400">
                             <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p className="font-medium">Sin consumos registrados para esta fecha.</p>
+                            <p className="font-medium">Sin consumos registrados para el período seleccionado.</p>
                         </div>
                     ) : (
                         <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
-                            {historialDelDia.map((record, idx) => (
+                            {historialFiltrado.map((record, idx) => (
                                 <div key={record._id || idx} className="p-4 bg-white hover:bg-slate-50/50 transition">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-3">
@@ -589,7 +750,10 @@ const ConsumoAdminView = () => {
                                             <span className="font-semibold text-slate-800">{record.staffName}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs text-slate-500">{record.hora}</span>
+                                            <span className="text-xs text-slate-500 font-medium">
+                                                {histPeriod !== 'dia' && <span className="font-bold text-slate-700 mr-1">{record.fechaFormateada} ·</span>}
+                                                {record.hora}
+                                            </span>
                                             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                                                 record.tipo === 'programado'
                                                     ? 'bg-blue-100 text-blue-700 border border-blue-200'

@@ -41,6 +41,8 @@ const pageTitles = {
   "USERPORTAL": { [ESP]: "Portal de Usuario", [ENG]: "User Portal" },
   "COTIZACIONES": { [ESP]: "Cotizaciones", [ENG]: "Quotes" },
   "CALCULADORRECETAHELADOS": { [ESP]: "Formulador de Helados", [ENG]: "Ice Cream Formulator" },
+  "BAJAS": { [ESP]: "Gestión de Bajas", [ENG]: "Withdrawals & Offboarding" },
+  "bajas": { [ESP]: "Gestión de Bajas", [ENG]: "Withdrawals & Offboarding" },
 };
 
 // Componente reutilizable para los botones de íconos

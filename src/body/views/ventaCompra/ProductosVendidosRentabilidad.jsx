@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Predict from './Predict';
 import RecetaModal from './RecetaModal';
-import { LineChart, DollarSign, TrendingUp } from 'lucide-react';
+import ItemMenuModal from '../../components/Menu/ItemMenuModal';
+import { LineChart, DollarSign, TrendingUp, Utensils, ChefHat } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,7 @@ const ProductosVendidosRentabilidad = ({
   const [showFinancials, setShowFinancials] = useState(true);
   const [showPredict, setShowPredict] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedMenuModalItem, setSelectedMenuModalItem] = useState(null);
 
   const handlePredictClick = (item) => {
     setSelectedItem(item);
@@ -110,24 +112,32 @@ const ProductosVendidosRentabilidad = ({
               const margin = producto.totalIngreso > 0 ? ((producto.totalUtilidad / producto.totalIngreso) * 100) : 0;
               return (
                 <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-1.5 px-2 text-center flex justify-center gap-2">
+                  <td className="py-1.5 px-2 text-center flex justify-center gap-1.5 items-center">
+                    <button
+                      onClick={() => setSelectedMenuModalItem({ NombreES: producto.nombre, Nombre: producto.nombre, Receta: producto.recetaId, Precio: producto.totalIngreso && producto.cantidad ? producto.totalIngreso / producto.cantidad : 0 })}
+                      className="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 p-1 rounded transition-colors"
+                      title="Ver Modal Platillo del Menú (Ventas & Receta)"
+                    >
+                      <Utensils size={15} />
+                    </button>
                     <button
                       onClick={() => handlePredictClick(producto)}
                       className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded transition-colors"
                       title="Análisis de Tendencias"
                     >
-                      <LineChart size={16} />
+                      <LineChart size={15} />
                     </button>
                     {producto.recetaId && producto.recetaId !== "N/A" && (
                       <Button asChild
-                        className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 text-xs h-6">
+                        className="bg-amber-100 hover:bg-amber-200 text-amber-900 px-1.5 py-0.5 text-xs h-6">
                         <a
                           href={`/receta/${producto.recetaId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center w-8  focus:outline-none focus-visible:ring-0"
+                          className="flex items-center justify-center gap-1 focus:outline-none focus-visible:ring-0"
+                          title="Ver Receta Ficha Técnica"
                         >
-                          📕
+                          <ChefHat size={13} />
                         </a>
                       </Button>
                     )}
@@ -158,6 +168,13 @@ const ProductosVendidosRentabilidad = ({
           selectedMonth={targetMonth}
           selectedYear={targetYear}
           ventas={ventas}
+        />
+      )}
+
+      {selectedMenuModalItem && (
+        <ItemMenuModal
+          item={selectedMenuModalItem}
+          onClose={() => setSelectedMenuModalItem(null)}
         />
       )}
     </div>

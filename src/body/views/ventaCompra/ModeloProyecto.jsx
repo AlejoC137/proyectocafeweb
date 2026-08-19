@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchModelsAction, getAllFromTable, deleteModelAction } from '../../../redux/actions';
-import { VENTAS, COMPRAS, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
+import { VENTAS, COMPRAS, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, CONSUMO_STAFF } from '../../../redux/actions-types';
 import ModeloContent from './ModeloContent';
 import { jsPDF } from 'jspdf';
 
@@ -29,6 +29,7 @@ const ModeloProyecto = () => {
     const models = useSelector(state => state.models);
     const allVentas = useSelector(state => state.allVentas);
     const allCompras = useSelector(state => state.allCompras || []);
+    const allConsumoStaff = useSelector(state => state.allConsumoStaff || []);
     const allMenu = useSelector(state => state.allMenu || []);
     const allItems = useSelector(state => state.allItems || []);
     const allProduccion = useSelector(state => state.allProduccion || []);
@@ -92,6 +93,7 @@ const ModeloProyecto = () => {
         dispatch(getAllFromTable(PRODUCCION));
         dispatch(getAllFromTable(RECETAS_MENU));
         dispatch(getAllFromTable(RECETAS_PRODUCCION));
+        dispatch(getAllFromTable(CONSUMO_STAFF));
     }, [dispatch]);
 
     // --- LÓGICA DE MATRIZ: Calcular Años Disponibles ---

@@ -43,7 +43,7 @@ function PageLayout({
         )}
 
         {/* Contenido principal */}
-        <div className="flex-1 flex flex-col min-h-0 space-y-2 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 space-y-2 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </div>

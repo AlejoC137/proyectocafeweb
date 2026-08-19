@@ -36,6 +36,7 @@ export const RECETAS_PROCEDIMIENTOS = "RecetasProcedimientos";
 export const PROVEE = "Proveedores";
 export const COMPRAS = "Compras";
 export const ALIADOS = "Aliados";
+export const BAJAS = "Bajas";
 // Fuentes dd precios
 export const FUENTES = []
 
