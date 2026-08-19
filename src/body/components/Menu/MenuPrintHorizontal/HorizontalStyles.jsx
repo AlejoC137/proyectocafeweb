@@ -6,7 +6,7 @@ export const HorizontalStyles = ({ width, height, unit }) => (
       @media print {
         @page {
           size: ${width}${unit} ${height}${unit} !important;
-          margin: 0 !important;
+          margin: 0mm !important;
         }
 
         /* Reset all ancestors of print area to simple blocks with zero margin/padding/bg */
@@ -15,11 +15,14 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           padding: 0 !important;
           display: block !important;
           position: relative !important;
-          width: 100% !important;
+          width: ${width}${unit} !important;
+          max-width: ${width}${unit} !important;
           height: auto !important;
           background: transparent !important;
           min-height: 0 !important;
           overflow: visible !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
 
         /* 1. Oculta la página base al imprimir */
@@ -36,7 +39,8 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           position: relative !important;
           left: 0 !important;
           top: 0 !important;
-          width: 100% !important;
+          width: ${width}${unit} !important;
+          max-width: ${width}${unit} !important;
           margin: 0 !important;
           padding: 0 !important;
           background: transparent !important;
@@ -50,7 +54,7 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           transform: none !important;
           transition: none !important;
           display: block !important;
-          width: 100% !important;
+          width: ${width}${unit} !important;
           height: auto !important;
           margin: 0 !important;
           padding: 0 !important;
@@ -60,19 +64,33 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           display: block !important;
           page-break-after: always !important;
           break-after: page !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
           width: ${width}${unit} !important;
           height: ${height}${unit} !important;
+          max-width: ${width}${unit} !important;
+          max-height: ${height}${unit} !important;
           margin: 0 !important;
           padding: 0 !important;
           box-shadow: none !important;
           background: transparent !important;
+          box-sizing: border-box !important;
+        }
+
+        .print-page-wrapper:last-child {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
         }
 
         .horizontal-page {
           width: ${width}${unit} !important;
           height: ${height}${unit} !important;
+          max-width: ${width}${unit} !important;
+          max-height: ${height}${unit} !important;
           page-break-after: always !important;
           break-after: page !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
           position: relative !important;
           display: grid !important;
           grid-template-columns: 100% !important;
@@ -83,6 +101,11 @@ export const HorizontalStyles = ({ width, height, unit }) => (
           margin: 0 !important;
           padding: 0 !important;
           background-color: transparent !important;
+        }
+
+        .horizontal-page:last-child {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
         }
 
         * {

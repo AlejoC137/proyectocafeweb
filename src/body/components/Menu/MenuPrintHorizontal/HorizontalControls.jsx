@@ -35,13 +35,13 @@ const HorizontalControls = ({
     : 1;
 
   return (
-    <div className={`fixed ${controlTopClass} left-0 w-full z-[100] bg-white/95 backdrop-blur-md p-4 shadow-md border-b border-zinc-200 flex flex-wrap items-center justify-center gap-4 print:hidden`}>
+    <div className={`fixed ${controlTopClass} left-0 w-full z-[100] bg-white/95 backdrop-blur-md p-2 md:p-3 shadow-md border-b border-zinc-200 flex flex-nowrap items-center justify-start md:justify-center gap-2 md:gap-3 overflow-x-auto whitespace-nowrap print:hidden scrollbar-thin`}>
 
-      <div className="flex items-center gap-2 border-r pr-4">
+      <div className="flex items-center gap-2 border-r pr-3 shrink-0">
         <Button
           variant={editMode ? "default" : "outline"}
           onClick={() => setEditMode(!editMode)}
-          className="h-10 gap-2"
+          className="h-10 gap-2 shrink-0"
         >
           {editMode ? <EyeOff size={16} /> : <Eye size={16} />}
           {editMode ? "Vista Previa" : "Editar"}
@@ -50,7 +50,7 @@ const HorizontalControls = ({
         <Button
           variant="outline"
           onClick={() => setLeng(!leng)}
-          className="h-10 gap-2"
+          className="h-10 gap-2 shrink-0"
         >
           <Globe size={16} />
           {leng ? "ES" : "EN"}
@@ -59,7 +59,7 @@ const HorizontalControls = ({
         <Button
           variant="outline"
           onClick={() => setShowColorPanel(!showColorPanel)}
-          className="h-10 gap-2"
+          className="h-10 gap-2 shrink-0"
         >
           <Palette size={16} />
           Diseño
@@ -68,7 +68,7 @@ const HorizontalControls = ({
         <Button
           variant={showIcons ? "default" : "outline"}
           onClick={() => setShowIcons(!showIcons)}
-          className="h-10 gap-2"
+          className="h-10 gap-2 shrink-0"
         >
           <Coffee size={16} />
           {showIcons ? "Ocultar Iconos" : "Mostrar Iconos"}
@@ -77,15 +77,15 @@ const HorizontalControls = ({
         <Button
           variant={showItemDescriptions ? "default" : "outline"}
           onClick={() => setShowItemDescriptions(!showItemDescriptions)}
-          className="h-10 gap-2"
+          className="h-10 gap-2 shrink-0"
         >
           {showItemDescriptions ? "📝 Ocultar Detalles" : "📝 Mostrar Detalles"}
         </Button>
       </div>
 
       {/* SELECTOR Y CONTROLES DE TAMAÑO DE HOJA */}
-      <div className="flex items-center gap-3 border-r pr-4 bg-amber-50/80 p-1.5 px-3 rounded-md border border-amber-200">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 md:gap-3 border-r pr-3 bg-amber-50/80 p-1.5 px-3 rounded-md border border-amber-200 shrink-0">
+        <div className="flex flex-col gap-1 shrink-0">
           <Label className="text-[10px] uppercase font-black text-amber-900">📐 Preset Hoja:</Label>
           <select
             value={
@@ -115,7 +115,7 @@ const HorizontalControls = ({
           </select>
         </div>
 
-        <div className="grid w-20 gap-1">
+        <div className="grid w-20 gap-1 shrink-0">
           <Label htmlFor="width" className="text-[10px] uppercase font-bold text-gray-700">Ancho</Label>
           <Input
             id="width"
@@ -129,7 +129,7 @@ const HorizontalControls = ({
             className="h-8 text-xs font-bold"
           />
         </div>
-        <div className="grid w-20 gap-1">
+        <div className="grid w-20 gap-1 shrink-0">
           <Label htmlFor="height" className="text-[10px] uppercase font-bold text-gray-700">Alto</Label>
           <Input
             id="height"
@@ -143,7 +143,7 @@ const HorizontalControls = ({
             className="h-8 text-xs font-bold"
           />
         </div>
-        <div className="grid w-16 gap-1">
+        <div className="grid w-16 gap-1 shrink-0">
           <Label className="text-[10px] uppercase font-bold text-gray-700">Unidad</Label>
           <Select
             value={safePageSize.unit || 'mm'}
@@ -166,11 +166,9 @@ const HorizontalControls = ({
         </div>
       </div>
 
-
-
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {editMode && (
-          <Button variant="outline" className="h-10 gap-2 border-dashed" onClick={addPage}>
+          <Button variant="outline" className="h-10 gap-2 border-dashed shrink-0" onClick={addPage}>
             <Plus size={16} />
             Añadir Página
           </Button>
@@ -178,7 +176,7 @@ const HorizontalControls = ({
 
         <Button
           variant="default"
-          className="bg-green-600 hover:bg-green-700 h-10 gap-2"
+          className="bg-green-600 hover:bg-green-700 h-10 gap-2 shrink-0"
           onClick={() => saveConfig()}
           disabled={isSaving}
         >
@@ -187,7 +185,7 @@ const HorizontalControls = ({
         </Button>
         <Button
           variant="default"
-          className="bg-black text-white hover:bg-zinc-800 h-10 gap-2"
+          className="bg-black text-white hover:bg-zinc-800 h-10 gap-2 shrink-0"
           onClick={handlePrint}
         >
           <Printer size={16} />

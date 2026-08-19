@@ -576,20 +576,58 @@ const MenuPrintBlock = ({
               </div>
             </div>
 
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className={`flex-1 h-5 text-[8px] font-black rounded border border-black px-1 transition-colors flex items-center justify-center gap-1 cursor-pointer ${groupDescriptions[`__${id}_hide_header`] ? 'bg-amber-200 text-amber-900 border-amber-500' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  saveGroupDescriptions({
+                    ...groupDescriptions,
+                    [`__${id}_hide_header`]: !groupDescriptions[`__${id}_hide_header`]
+                  });
+                }}
+                title={groupDescriptions[`__${id}_hide_header`] ? "Mostrar Encabezado/Título del Bloque" : "Omitir/Ocultar Encabezado del Bloque"}
+              >
+                {groupDescriptions[`__${id}_hide_header`] ? "👁️ Título" : "🚫 Omitir Título"}
+              </button>
+
+              <button
+                type="button"
+                className={`flex-1 h-5 text-[8px] font-black rounded border border-black px-1 transition-colors flex items-center justify-center gap-1 cursor-pointer ${groupDescriptions[`__${id}_hide_block`] ? 'bg-red-200 text-red-900 border-red-500' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  saveGroupDescriptions({
+                    ...groupDescriptions,
+                    [`__${id}_hide_block`]: !groupDescriptions[`__${id}_hide_block`]
+                  });
+                }}
+                title={groupDescriptions[`__${id}_hide_block`] ? "Mostrar Bloque Completo" : "Omitir/Ocultar Bloque Completo en esta Instancia"}
+              >
+                {groupDescriptions[`__${id}_hide_block`] ? "👁️ Bloque" : "🚫 Omitir Bloque"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!showColumnToggle && (
+          <div className="flex items-center gap-1">
             <button
               type="button"
-              className={`w-full h-5 text-[8px] font-black rounded border border-black px-1 transition-colors flex items-center justify-center gap-1 cursor-pointer ${groupDescriptions[`__${id}_hide_header`] ? 'bg-amber-200 text-amber-900 border-amber-500' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
+              className={`w-full h-5 text-[8px] font-black rounded border border-black px-1 transition-colors flex items-center justify-center gap-1 cursor-pointer ${groupDescriptions[`__${id}_hide_block`] ? 'bg-red-200 text-red-900 border-red-500' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 saveGroupDescriptions({
                   ...groupDescriptions,
-                  [`__${id}_hide_header`]: !groupDescriptions[`__${id}_hide_header`]
+                  [`__${id}_hide_block`]: !groupDescriptions[`__${id}_hide_block`]
                 });
               }}
-              title={groupDescriptions[`__${id}_hide_header`] ? "Mostrar Encabezado/Título del Bloque" : "Omitir/Ocultar Encabezado del Bloque"}
+              title={groupDescriptions[`__${id}_hide_block`] ? "Mostrar Bloque Completo" : "Omitir/Ocultar Bloque Completo en esta Instancia"}
             >
-              {groupDescriptions[`__${id}_hide_header`] ? "👁️ Mostrar Título" : "🚫 Omitir Título"}
+              {groupDescriptions[`__${id}_hide_block`] ? "👁️ Mostrar Bloque" : "🚫 Omitir Bloque"}
             </button>
           </div>
         )}
@@ -1284,6 +1322,13 @@ const MenuPrintBlock = ({
     }
   };
 
+  const hideBlockKey = `__${blockId}_hide_block`;
+  const isBlockHidden = groupDescriptions[hideBlockKey] === true;
+
+  if (isBlockHidden && !editMode) {
+    return null;
+  }
+
   return (
     <>
       <div 
@@ -1293,13 +1338,18 @@ const MenuPrintBlock = ({
         onDragOver={handleDragOverBlock}
         onDragLeave={handleDragLeaveBlock}
         onDrop={handleDropOnBlock}
-        className={`box-border shrink-0 grow-0 transition-shadow duration-150 relative group/blockwrapper flex flex-col z-20 hover:z-40 ${isDragTarget ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`} 
+        className={`box-border shrink-0 grow-0 transition-shadow duration-150 relative group/blockwrapper flex flex-col z-20 hover:z-40 ${isDragTarget ? 'ring-2 ring-blue-500 ring-offset-2' : ''} ${isBlockHidden && editMode ? 'opacity-50 grayscale border-2 border-dashed border-red-500 rounded-[6px] bg-red-50/50' : ''}`} 
         style={{ 
           width: widthStyle,
           height: heightStyle || undefined,
           minHeight: heightStyle || undefined
         }}
       >
+        {isBlockHidden && editMode && (
+          <div className="bg-red-600 text-white font-black text-[9px] uppercase px-2 py-0.5 text-center flex items-center justify-center gap-1 z-30 shrink-0">
+            🚫 Bloque Omitido en esta Instancia
+          </div>
+        )}
         <div className="w-full flex-1 flex flex-col min-h-0 overflow-hidden rounded-[6px]">
           {renderBlockContent()}
         </div>

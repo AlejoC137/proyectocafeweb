@@ -119,11 +119,7 @@ const HorizontalPage = ({
           {(page.columns || []).map((col, colIdx) => (
             <React.Fragment key={col.id}>
               <div 
-                className={`flex flex-col min-w-0 transition-all duration-75 relative h-full border-[3px] rounded-[8px] p-2 bg-white/80 ${
-                  selectedColumn?.pageIndex === pageIndex && selectedColumn?.colIdx === colIdx 
-                  ? 'ring-4 ring-blue-500/50' 
-                  : ''
-                }`}
+                className="flex flex-col min-w-0 transition-all duration-75 relative h-full border-[3px] rounded-[8px] p-2 bg-white/80"
                 style={{ 
                   flex: col.flex || 1,
                   borderColor: colors.mainBorder,
@@ -146,7 +142,7 @@ const HorizontalPage = ({
                   </div>
                 )}
                 
-                <div className="flex-grow overflow-auto h-full scrollbar-hide pb-12">
+                <div className={`flex-grow h-full ${editMode ? 'overflow-y-auto scrollbar-none' : 'overflow-hidden'} print:overflow-visible pb-2 print:pb-0`}>
                   <MenuPrintColumn
                     blocks={col.blocks || []}
                     {...commonProps}

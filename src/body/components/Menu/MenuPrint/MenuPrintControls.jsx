@@ -67,7 +67,7 @@ const MenuPrintControls = ({
 
   return (
     <>
-      <div className="flex gap-4 mt-8 mb-4 print:hidden flex-wrap justify-center items-center px-4">
+      <div className="flex gap-3 mt-8 mb-4 print:hidden flex-nowrap justify-start md:justify-center items-center px-4 overflow-x-auto whitespace-nowrap scrollbar-thin">
         <Button onClick={handlePrint} className="font-SpaceGrotesk font-medium bg-black text-white hover:bg-gray-800">
           🖨️ Imprimir
         </Button>
@@ -185,7 +185,7 @@ const MenuPrintControls = ({
       </div>
 
       {editMode && (
-        <div className="flex items-center justify-center gap-6 bg-yellow-100 border-2 border-black p-3 text-xs font-SpaceGrotesk mb-4 print:hidden rounded-md flex-wrap mx-4 shadow-solid">
+        <div className="flex items-center justify-start md:justify-center gap-4 md:gap-6 bg-yellow-100 border-2 border-black p-3 text-xs font-SpaceGrotesk mb-4 print:hidden rounded-md flex-nowrap overflow-x-auto whitespace-nowrap mx-4 shadow-solid scrollbar-thin">
           {/* MEDIDAS EXACTAS DE HOJA */}
           <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded border border-black">
             <span className="font-black uppercase text-amber-900">Dimensiones Hoja:</span>
