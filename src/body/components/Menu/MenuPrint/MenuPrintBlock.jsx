@@ -320,6 +320,44 @@ const SearchableItemSelect = ({ productList = [], activeProductId, onSelect }) =
   );
 };
 
+const DimensionInput = ({ value, onApply, placeholder, className, title }) => {
+  const [localVal, setLocalVal] = useState(value ?? '');
+  const isFocusedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setLocalVal(value ?? '');
+    }
+  }, [value]);
+
+  const handleApply = () => {
+    onApply(localVal);
+  };
+
+  return (
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={localVal}
+      onFocus={() => { isFocusedRef.current = true; }}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={() => {
+        isFocusedRef.current = false;
+        handleApply();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleApply();
+          e.target.blur();
+        }
+      }}
+      className={className}
+      title={title}
+    />
+  );
+};
+
 const MenuPrintBlock = ({
   blockId,
   pageIndex,
@@ -368,22 +406,23 @@ const MenuPrintBlock = ({
           return `calc(${num}% - 0.375rem)`;
         }
       }
-    } else {
-      if (str.endsWith('%')) return str;
-    }
-    
-    if (str.endsWith('px')) return str;
+      if (str.endsWith('px')) return str;
 
-    const num = parseFloat(str);
-    if (!isNaN(num)) {
-      if (isWidth && num <= 100) {
-        if (num === 100) return '100%';
-        return `calc(${num}% - 0.375rem)`;
+      const num = parseFloat(str);
+      if (!isNaN(num)) {
+        if (num <= 100) {
+          if (num === 100) return '100%';
+          return `calc(${num}% - 0.375rem)`;
+        }
+        return `${num}px`;
       }
-      return `${num}px`;
+      return str;
+    } else {
+      if (str.endsWith('%') || str.endsWith('px')) return str;
+      const num = parseFloat(str);
+      if (!isNaN(num)) return `${num}px`;
+      return str;
     }
-
-    return str;
   };
 
   const handleOpenReceta = (prod) => {
@@ -398,7 +437,7 @@ const MenuPrintBlock = ({
 
   const getBlockActiveHeight = (id) => {
     const hKey = `__${id}_height`;
-    if (groupDescriptions[hKey] !== undefined) return String(groupDescriptions[hKey]);
+    if (groupDescriptions[hKey]) return String(groupDescriptions[hKey]);
     const isImg = String(id).startsWith('IMG_');
     const isItem = String(id).startsWith('ITEM_');
     const itemM = isItem ? (groupDescriptions[`item_${id}_mode`] || 'normal') : null;
@@ -442,29 +481,28 @@ const MenuPrintBlock = ({
               >
                 50%
               </button>
-              <input
-                type="text"
+              <DimensionInput
                 placeholder="100%, 50%"
                 value={groupDescriptions[widthKey] ?? ''}
-                onChange={(e) => {
-                  saveGroupDescriptions({ ...groupDescriptions, [widthKey]: e.target.value });
+                onApply={(val) => {
+                  saveGroupDescriptions({ ...groupDescriptions, [widthKey]: val.trim() });
                 }}
                 className="w-12 text-[9px] font-bold p-0.5 border border-black bg-white outline-none text-center rounded"
+                title="Ancho del bloque (ej. 50%, 100%, 400px)"
               />
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-1" title="Alto del bloque (ej. auto, 250px, 100%)">
             <span className="font-black text-purple-800 uppercase shrink-0">ALTO:</span>
-            <input
-              type="text"
+            <DimensionInput
               placeholder="auto, 250px"
               value={displayHeight}
-              onChange={(e) => {
-                const rawVal = e.target.value;
-                const parsedNum = parseInt(rawVal, 10);
-                let formattedVal = rawVal;
-                if (!isNaN(parsedNum) && !rawVal.includes('%') && !rawVal.includes('auto')) {
+              onApply={(rawVal) => {
+                const trimmed = String(rawVal).trim();
+                const parsedNum = parseInt(trimmed, 10);
+                let formattedVal = trimmed;
+                if (!isNaN(parsedNum) && !trimmed.includes('%') && !trimmed.toLowerCase().includes('auto') && !trimmed.endsWith('px')) {
                   formattedVal = `${parsedNum}px`;
                 }
 
@@ -479,29 +517,28 @@ const MenuPrintBlock = ({
                   [`${id}_height`]: formattedVal
                 };
 
-                if (rawVal === '' || rawVal === 'auto') {
+                if (trimmed === '' || trimmed.toLowerCase() === 'auto') {
                   updates[heightKey] = '';
                   updates[`${id}_height`] = '';
                   delete updates[`${id}_imgHeight`];
-                } else if (isSoloImg && !isNaN(parsedNum) && parsedNum >= 30) {
+                } else if (isSoloImg && !isNaN(parsedNum) && parsedNum > 0) {
                   updates[`${id}_imgHeight`] = parsedNum;
-                } else if (isItem && itemM === 'ampliado' && !isNaN(parsedNum) && parsedNum >= 30) {
+                } else if (isItem && itemM === 'ampliado' && !isNaN(parsedNum) && parsedNum > 0) {
                   const currentImgH = groupDescriptions[`${id}_imgHeight`] || 180;
                   if (parsedNum - 70 < currentImgH) {
                     updates[`${id}_imgHeight`] = Math.max(40, parsedNum - 70);
                   }
                 }
 
-                if (isNaN(parsedNum) || parsedNum >= 30 || rawVal === '' || rawVal === 'auto') {
-                  saveGroupDescriptions(updates);
+                saveGroupDescriptions(updates);
 
-                  if (isImg && !isNaN(parsedNum) && parsedNum >= 30) {
-                    updateImageHeight(id, parsedNum);
-                    saveImagesConfig(printImages);
-                  }
+                if (isImg && !isNaN(parsedNum) && parsedNum > 0) {
+                  updateImageHeight(id, parsedNum);
+                  saveImagesConfig(printImages);
                 }
               }}
               className="w-12 text-[9px] font-bold p-0.5 border border-black bg-white outline-none text-center rounded"
+              title="Alto del bloque (ej. auto, 250px, 100%)"
             />
           </div>
         </div>
