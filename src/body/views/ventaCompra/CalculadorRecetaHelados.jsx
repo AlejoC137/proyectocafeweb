@@ -207,22 +207,36 @@ export default function CalculadorRecetaHelados() {
     loadPrintMenusList();
   }, [dispatch]);
 
-  // Combined ingredients list (Base Dubovik + ItemsAlmacen from Supabase)
+  // Combined ingredients list (Base Dubovik + ItemsAlmacen + ProduccionInterna from Supabase)
   const combinedIngredientsCatalog = useMemo(() => {
     const supabaseCatalogItems = allItems.map((item) => ({
       id: `inv_${item._id}`,
       inventarioItemId: item._id,
+      itemType: "item",
       nombre: `🛒 ${item.Nombre_del_producto || item.nombre}`,
       grasa: parseFloat(item.Grasa) || 0,
       solidos: parseFloat(item.Solidos) || 0,
       pod: parseFloat(item.POD) || 0,
       pac: parseFloat(item.PAC) || 0,
       unidad: item.Unidad_de_medida || "g",
-      costoUnitario: parseFloat(item.Precio || item.Precio_Unitario || item.COSTO) || 0
+      costoUnitario: parseFloat(item.Precio || item.Precio_Unitario || item.COSTO || item.precioUnitario) || 0
     }));
 
-    return [...ingredientesDB, ...supabaseCatalogItems];
-  }, [ingredientesDB, allItems]);
+    const supabaseProduccionItems = allProduccion.map((item) => ({
+      id: `prod_${item._id}`,
+      inventarioItemId: `prod_${item._id}`,
+      itemType: "produccion",
+      nombre: `🥘 ${item.Nombre_del_producto || item.nombre}`,
+      grasa: parseFloat(item.Grasa) || 0,
+      solidos: parseFloat(item.Solidos) || 0,
+      pod: parseFloat(item.POD) || 0,
+      pac: parseFloat(item.PAC) || 0,
+      unidad: item.Unidad_de_medida || "g",
+      costoUnitario: parseFloat(item.Precio || item.Precio_Unitario || item.COSTO || item.precioUnitario) || 0
+    }));
+
+    return [...ingredientesDB, ...supabaseCatalogItems, ...supabaseProduccionItems];
+  }, [ingredientesDB, allItems, allProduccion]);
 
   // Searchable Select Options for Ingredients
   const ingredientSelectOptions = useMemo(() => {
@@ -235,41 +249,58 @@ export default function CalculadorRecetaHelados() {
         }))
       },
       ...(allItems.length > 0 ? [{
-        group: "🛒 Insumos Almacén Supabase",
+        group: "🛒 Insumos Almacén Supabase (Items)",
         options: allItems.map((item) => ({
           value: `inv_${item._id}`,
-          label: `🛒 ${item.Nombre_del_producto || item.nombre} ($${item.Precio || item.Precio_Unitario || item.COSTO || 0})`
+          label: `🛒 ${item.Nombre_del_producto || item.nombre} ($${item.Precio || item.Precio_Unitario || item.COSTO || item.precioUnitario || 0})`
+        }))
+      }] : []),
+      ...(allProduccion.length > 0 ? [{
+        group: "🥘 Insumos Producción Interna (Producción)",
+        options: allProduccion.map((p) => ({
+          value: `prod_${p._id}`,
+          label: `🥘 ${p.Nombre_del_producto || p.nombre} ($${p.Precio || p.Precio_Unitario || p.COSTO || p.precioUnitario || 0})`
         }))
       }] : [])
     ];
-  }, [ingredientesDB, allItems]);
+  }, [ingredientesDB, allItems, allProduccion]);
 
   // Searchable Select Options for Inventory Items (Costing tab)
   const inventorySelectOptions = useMemo(() => {
     return [
-      { value: "", label: "-- Sin vincular a almacén --" },
-      ...allItems.map((item) => ({
-        value: item._id,
-        label: `🛒 ${item.Nombre_del_producto || item.nombre} ($${item.Precio || item.Precio_Unitario || item.COSTO || 0})`
-      }))
+      { value: "", label: "-- Sin vincular a almacén / producción --" },
+      ...(allItems.length > 0 ? [{
+        group: "🛒 Insumos Almacén (Items)",
+        options: allItems.map((item) => ({
+          value: item._id,
+          label: `🛒 ${item.Nombre_del_producto || item.nombre} ($${item.Precio || item.Precio_Unitario || item.COSTO || item.precioUnitario || 0})`
+        }))
+      }] : []),
+      ...(allProduccion.length > 0 ? [{
+        group: "🥘 Insumos Producción Interna (Producción)",
+        options: allProduccion.map((p) => ({
+          value: `prod_${p._id}`,
+          label: `🥘 ${p.Nombre_del_producto || p.nombre} ($${p.Precio || p.Precio_Unitario || p.COSTO || p.precioUnitario || 0})`
+        }))
+      }] : [])
     ];
-  }, [allItems]);
+  }, [allItems, allProduccion]);
 
   // Searchable Select Options for Target Products (Save Recipe)
   const targetProductSelectOptions = useMemo(() => {
     return [
       {
-        group: "🗺️ Productos de Menú (Tabla: Menu)",
+        group: "MAP Productos de Menú (Tabla: Menu)",
         options: allMenu.map((m) => ({
           value: `menu_${m._id}`,
-          label: `🗺️ ${m.NombreES || m.nombre}`
+          label: `MAP ${m.NombreES || m.nombre}`
         }))
       },
       {
-        group: "🥘 Productos de Producción (Tabla: ProduccionInterna)",
+        group: "PROD Productos de Producción (Tabla: ProduccionInterna)",
         options: allProduccion.map((p) => ({
           value: `prod_${p._id}`,
-          label: `🥘 ${p.Nombre_del_producto || p.nombre}`
+          label: `PROD ${p.Nombre_del_producto || p.nombre}`
         }))
       }
     ];
@@ -351,7 +382,11 @@ export default function CalculadorRecetaHelados() {
       if (value.startsWith("inv_")) {
         const invId = value.replace("inv_", "");
         updated[index].inventarioItemId = invId;
+      } else if (value.startsWith("prod_")) {
+        updated[index].inventarioItemId = value;
       }
+    } else if (field === "inventarioItemId") {
+      updated[index].inventarioItemId = value;
     } else {
       updated[index][field] = field === "cantidad" ? parseFloat(value) || 0 : value;
     }
@@ -412,14 +447,20 @@ export default function CalculadorRecetaHelados() {
       podContribucionTotal += podContrib;
       pacContribucionTotal += pacContrib;
 
-      // Cost calculation from matching inventory item in Supabase
+      // Cost calculation from matching inventory item or production item in Supabase
       let itemCostoKg = ing.costoUnitario || 0;
       const targetInvId = line.inventarioItemId || ing.inventarioItemId;
       
       if (targetInvId) {
-        const invItem = allItems.find((i) => i._id === targetInvId);
-        if (invItem) {
-          itemCostoKg = parseFloat(invItem.Precio || invItem.Precio_Unitario || invItem.COSTO) || 0;
+        const isProd = String(targetInvId).startsWith("prod_");
+        const cleanId = String(targetInvId).replace(/^(inv_|prod_)/, "");
+        
+        const foundItem = isProd
+          ? allProduccion.find((p) => String(p._id) === cleanId) || allItems.find((i) => String(i._id) === cleanId)
+          : allItems.find((i) => String(i._id) === cleanId) || allProduccion.find((p) => String(p._id) === cleanId);
+
+        if (foundItem) {
+          itemCostoKg = parseFloat(foundItem.Precio || foundItem.Precio_Unitario || foundItem.COSTO || foundItem.precioUnitario) || 0;
         }
       }
 
@@ -462,24 +503,27 @@ export default function CalculadorRecetaHelados() {
       costoPorKg,
       linesDetail,
     };
-  }, [recetaLines, combinedIngredientsCatalog, tipoHelado, allItems]);
+  }, [recetaLines, combinedIngredientsCatalog, tipoHelado, allItems, allProduccion]);
 
   const targets = TARGET_RANGES[tipoHelado];
 
   // --- SAVE & LINK TO SUPABASE PRODUCT ---
   const handleSaveRecipeToSupabase = async () => {
     if (!selectedProductTarget) {
-      alert("Por favor seleccione un producto del Menú (🗺️) o Producción (🥘) de la lista.");
+      alert("Por favor seleccione un producto del Menú (MAP) o Producción (PROD) de la lista.");
       return;
     }
 
-    const [typePrefix, targetId] = selectedProductTarget.split("_");
-    const isMenu = typePrefix === "menu";
+    const isMenu = selectedProductTarget.startsWith("menu_");
+    const targetId = isMenu 
+      ? selectedProductTarget.replace(/^menu_/, "") 
+      : selectedProductTarget.replace(/^prod_/, "");
+
     const productTable = isMenu ? MENU : PRODUCCION;
     const recipeTable = isMenu ? RECETAS_MENU : RECETAS_PRODUCCION;
 
     const targetProductList = isMenu ? allMenu : allProduccion;
-    const targetProduct = targetProductList.find((p) => p._id === targetId);
+    const targetProduct = targetProductList.find((p) => String(p._id) === String(targetId));
 
     if (targetProduct && targetProduct.Receta) {
       const productName = targetProduct.NombreES || targetProduct.Nombre_del_producto || targetProduct.nombre || "Seleccionado";
@@ -491,9 +535,39 @@ export default function CalculadorRecetaHelados() {
 
     setSavingRecipe(true);
     try {
+      // Build standard legacy item fields (item1_Id, item1_Cuantity_Units, etc.) for cross-view compatibility
+      const legacyItemFields = {};
+      let iCounter = 1;
+      let pCounter = 1;
+
+      calculations.linesDetail.forEach((line) => {
+        const rawInvId = line.inventarioItemId || "";
+        const isProd = rawInvId.startsWith("prod_") || allProduccion.some((p) => String(p._id) === String(rawInvId));
+        const cleanId = rawInvId.replace(/^(inv_|prod_)/, "");
+
+        if (cleanId) {
+          if (isProd && pCounter <= 20) {
+            legacyItemFields[`producto_interno${pCounter}_Id`] = cleanId;
+            legacyItemFields[`producto_interno${pCounter}_Cuantity_Units`] = JSON.stringify({
+              metric: { cuantity: line.cantidad, units: "g" },
+              legacyName: line.ingNombre
+            });
+            pCounter++;
+          } else if (!isProd && iCounter <= 30) {
+            legacyItemFields[`item${iCounter}_Id`] = cleanId;
+            legacyItemFields[`item${iCounter}_Cuantity_Units`] = JSON.stringify({
+              metric: { cuantity: line.cantidad, units: "g" },
+              legacyName: line.ingNombre
+            });
+            iCounter++;
+          }
+        }
+      });
+
       const baseRecipeData = {
         legacyName: nombreReceta,
         nombre: nombreReceta,
+        ...legacyItemFields,
         detalles: calculations.linesDetail.map((line) => ({
           nombre: line.ingNombre,
           cantidad: line.cantidad,
@@ -515,14 +589,27 @@ export default function CalculadorRecetaHelados() {
           tempServicio: calculations.tempServicio,
           tipoHelado: tipoHelado
         },
-        costo: { COSTO: calculations.costoTotalLote, COSTO_KG: calculations.costoPorKg },
+        costo: isMenu 
+          ? JSON.stringify({ COSTO: calculations.costoTotalLote, COSTO_KG: calculations.costoPorKg }) 
+          : calculations.costoTotalLote,
         pesoTotal: calculations.pesoTotal,
       };
 
-      await dispatch(createRecipeForProduct(baseRecipeData, targetId, productTable, recipeTable));
+      const savedRecipe = await dispatch(createRecipeForProduct(baseRecipeData, targetId, productTable, recipeTable));
+
+      if (savedRecipe) {
+        if (!isMenu) {
+          await dispatch(updateItem(targetId, { COSTO: calculations.costoTotalLote, precioUnitario: calculations.costoPorKg }, PRODUCCION));
+        }
+
+        setNotification({
+          type: "success",
+          message: `🎉 ¡Receta "${nombreReceta}" enviada y enlazada con éxito al producto de ${isMenu ? "Menú" : "Producción Interna"}!`
+        });
+      }
     } catch (err) {
       console.error("Error al mandar receta a Supabase:", err);
-      alert("Error al mandar la receta a Supabase.");
+      alert("Error al mandar la receta a Supabase: " + (err.message || err));
     } finally {
       setSavingRecipe(false);
     }

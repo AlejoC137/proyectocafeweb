@@ -197,7 +197,7 @@ export function createRecipeForProduct(baseRecipeData, productId, productTable, 
 
       if (recipeError) {
         console.error("Error al crear la receta:", recipeError);
-        throw new Error("No se pudo crear la receta en la base de datos.");
+        throw new Error(`No se pudo crear la receta en ${recipeTable}: ${recipeError.message || recipeError.details || recipeError.hint || JSON.stringify(recipeError)}`);
       }
       const newRecipeId = newRecipe._id;
 
