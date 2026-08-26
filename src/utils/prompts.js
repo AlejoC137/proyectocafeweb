@@ -37,8 +37,11 @@ Actúa como experto en extracción de datos e inventarios. Tu trabajo es leer el
 - **PROHIBIDO** inventar, alucinar o deducir valores por cuenta propia sin respaldo.
 - Si tras buscar en internet el dato sigue sin encontrarse con certeza, usa \`null\` o conserva el valor original del input.
 
-## OUTPUT
-Devuelve ÚNICAMENTE un objeto JSON (no array, no texto). Debe contener EXACTAMENTE estas claves y NINGUNA más:
+## OUTPUT Y FORMATO DE SALIDA (ÍTEM ÚNICO O MÚLTIPLES ÍTEMS)
+- Si la información proporcionada contiene MÚLTIPLES productos, ítems, elementos de catálogo o lista de factura: Devuelve SIEMPRE un ARRAY de objetos JSON ([ { ... }, { ... } ]) donde CADA objeto representa un producto individual respetando el esquema.
+- Si la información corresponde a UN SOLO producto: Devuelve el objeto JSON plano { ... }.
+
+Cada objeto de ítem debe contener EXACTAMENTE estas claves y NINGUNA más:
 
 - Nombre_del_producto (string)
 - Area (string)
@@ -437,8 +440,11 @@ Actúa como experto gastronómico y de estructuración de datos. Tu trabajo es e
 - Si hay itemBase: SOLO actualizar los campos que puedas inferir de la nueva información.
 - Si NO hay itemBase: construir el objeto completo respetando el schema.
 
-## OUTPUT (ESTRICTO)
-Devuelve ÚNICAMENTE un objeto JSON (no array, no texto). Debe contener EXACTAMENTE estas claves:
+## OUTPUT Y FORMATO DE SALIDA (PLATO ÚNICO O MÚLTIPLES PLATOS)
+- Si la información proporcionada contiene MÚLTIPLES platos, elementos del menú o catálogo: Devuelve SIEMPRE un ARRAY de objetos JSON ([ { ... }, { ... } ]) respetando el esquema.
+- Si la información corresponde a UN SOLO plato: Devuelve el objeto JSON plano { ... }.
+
+Cada objeto debe contener EXACTAMENTE estas claves:
 
 - NombreES (string)         <- Nombre del plato en Español
 - NombreEN (string)         <- Nombre del plato en Inglés (traducido, obligatorio)

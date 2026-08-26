@@ -42,10 +42,11 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
     ], [allItems, allProduccion]);
 
     // --- STEP 1: PARSE JSON ---
-    const handleParse = () => {
+    const handleParse = (overrideJsonStr = null) => {
         setJsonError(null);
         try {
-            let parsed = JSON.parse(jsonInput);
+            const strToParse = typeof overrideJsonStr === 'string' ? overrideJsonStr : jsonInput;
+            let parsed = typeof strToParse === 'object' ? strToParse : JSON.parse(strToParse);
 
             if (parsed.procedimiento && typeof parsed.procedimiento === 'object') parsed = parsed.procedimiento;
             else if (parsed.receta && typeof parsed.receta === 'object') parsed = parsed.receta;
@@ -350,6 +351,8 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
                         handleParse={handleParse}
                         handleCopyPrompt={handleCopyPrompt}
                         promptCopied={promptCopied}
+                        allItems={allItems}
+                        allProduccion={allProduccion}
                     />
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

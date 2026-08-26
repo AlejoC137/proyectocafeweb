@@ -1,15 +1,20 @@
 import React, { useState } from "react";
-import { Sparkles, Copy, Check, FileCode, ArrowRight, AlertCircle } from "lucide-react";
+import { Sparkles, Copy, Check, ChevronDown, ChevronUp, AlertCircle, Loader2 } from "lucide-react";
+import { useDeepSeek } from "@/hooks/useDeepSeek";
 
 export function ImportadorHeladoModal({ isOpen, onClose, onImportRecipe }) {
   const [copied, setCopied] = useState(false);
+  const [flavorPrompt, setFlavorPrompt] = useState("");
   const [jsonInput, setJsonInput] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [showManualPaste, setShowManualPaste] = useState(false);
+
+  const { loading: aiLoading, error: aiError, query: queryDeepSeek } = useDeepSeek();
 
   if (!isOpen) return null;
 
   const SYSTEM_PROMPT = `Actúa como un Maestro Heladero e Ingeniero de Alimentos experto en la técnica de balanceo Dubovik (Dubovik Formulator).
-Diseña una formulación balanceada para un lote total de 1,000 gramos de helado con el siguiente requerimiento: [ESCRIBE AQUÍ TU HELADO DESEADO, ej: Gelato de Avellana Cremoso].
+Diseña una formulación balanceada para un lote total de 1,000 gramos de helado.
 
 CUMPLE ESTRICTAMENTE CON LOS RANGOS TÉCNICOS DUBOVIK:
 - SOFT: Grasa 4.0%-10.0%, Sólidos 32.0%-39.0%, POD 14-18, PAC 15-22.
@@ -55,6 +60,59 @@ REGLA CRÍTICA: La suma total de los valores de "cantidad" DEBE ser exactamente 
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const processAndImportParsedJson = (parsed) => {
+    if (!parsed.nombre || !parsed.tipo || !Array.isArray(parsed.items)) {
+      throw new Error("El JSON debe contener 'nombre', 'tipo' (SOFT, GELATO o SORBETE) y 'items' (array).");
+    }
+
+    if (parsed.items.length === 0) {
+      throw new Error("El array 'items' no puede estar vacío.");
+    }
+
+    const validItems = parsed.items.map((it) => ({
+      ingId: String(it.ingId || "leche_entera"),
+      cantidad: parseFloat(it.cantidad) || 0,
+      inventarioItemId: ""
+    }));
+
+    const totalPeso = validItems.reduce((acc, curr) => acc + curr.cantidad, 0);
+
+    onImportRecipe({
+      nombre: parsed.nombre,
+      tipo: parsed.tipo.toUpperCase(),
+      items: validItems,
+      totalPeso
+    });
+
+    setJsonInput("");
+    setFlavorPrompt("");
+    onClose();
+  };
+
+  const handleGenerateAI = async () => {
+    setErrorMsg("");
+    if (!flavorPrompt.trim()) {
+      setErrorMsg("Escribe el helado que deseas formular (ej: 'Gelato de Maracuyá').");
+      return;
+    }
+
+    const userMessage = `Requerimiento de formulación de helado: ${flavorPrompt.trim()}`;
+
+    const res = await queryDeepSeek({
+      systemPrompt: SYSTEM_PROMPT,
+      userMessage,
+      temperature: 0.2
+    });
+
+    if (res) {
+      try {
+        processAndImportParsedJson(res);
+      } catch (err) {
+        setErrorMsg(`Error procesando respuesta de IA: ${err.message}`);
+      }
+    }
+  };
+
   const handleProcessImport = (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -72,32 +130,7 @@ REGLA CRÍTICA: La suma total de los valores de "cantidad" DEBE ser exactamente 
       }
 
       const parsed = JSON.parse(rawText);
-
-      if (!parsed.nombre || !parsed.tipo || !Array.isArray(parsed.items)) {
-        throw new Error("El JSON debe contener 'nombre', 'tipo' (SOFT, GELATO o SORBETE) y 'items' (array).");
-      }
-
-      if (parsed.items.length === 0) {
-        throw new Error("El array 'items' no puede estar vacío.");
-      }
-
-      const validItems = parsed.items.map((it) => ({
-        ingId: String(it.ingId || "leche_entera"),
-        cantidad: parseFloat(it.cantidad) || 0,
-        inventarioItemId: ""
-      }));
-
-      const totalPeso = validItems.reduce((acc, curr) => acc + curr.cantidad, 0);
-
-      onImportRecipe({
-        nombre: parsed.nombre,
-        tipo: parsed.tipo.toUpperCase(),
-        items: validItems,
-        totalPeso
-      });
-
-      setJsonInput("");
-      onClose();
+      processAndImportParsedJson(parsed);
     } catch (err) {
       console.error("Error importando receta JSON:", err);
       setErrorMsg(`Error de formato JSON: ${err.message}`);
@@ -106,7 +139,7 @@ REGLA CRÍTICA: La suma total de los valores de "cantidad" DEBE ser exactamente 
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center p-3 md:p-6 overflow-y-auto animate-fadeIn font-SpaceGrotesk">
-      <div className="bg-white border-2 border-black p-4 md:p-6 w-full max-w-2xl shadow-solid space-y-4 my-auto">
+      <div className="bg-white border-2 border-black p-4 md:p-6 w-full max-w-2xl shadow-solid space-y-4 my-auto rounded-none">
         
         {/* HEADER */}
         <div className="flex items-start justify-between border-b-2 border-black pb-3">
@@ -116,10 +149,10 @@ REGLA CRÍTICA: La suma total de los valores de "cantidad" DEBE ser exactamente 
             </div>
             <div>
               <h3 className="font-extrabold text-base md:text-lg text-gray-900 leading-tight">
-                Importador & Generador de Helados (IA Dubovik)
+                Formulador & Balanceador de Helados IA (Dubovik)
               </h3>
               <p className="text-xs text-gray-600">
-                Genera cualquier tipo de helado mediante inteligencia artificial estructurada.
+                Formula helados perfectos de 1,000g ajustados a parámetros técnicos.
               </p>
             </div>
           </div>
@@ -131,78 +164,101 @@ REGLA CRÍTICA: La suma total de los valores de "cantidad" DEBE ser exactamente 
           </button>
         </div>
 
-        {/* PASO 1: COPIAR PROMPT */}
-        <div className="bg-amber-50 border-2 border-black p-3 space-y-2">
+        {/* SECCIÓN PRINCIPAL: GENERACIÓN CON IA DIRECTA */}
+        <div className="bg-yellow-50 border-2 border-black p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="font-bold text-xs text-amber-950 flex items-center gap-1.5">
-              <FileCode className="h-4 w-4 text-amber-800" />
-              Paso 1: Copia las Instrucciones Estructuradas (Prompt Dubovik)
+            <h4 className="font-extrabold text-xs text-black flex items-center gap-1.5 uppercase">
+              <Sparkles className="h-4 w-4 text-yellow-700" />
+              Generación Directa con IA (DeepSeek)
             </h4>
             <button
               type="button"
               onClick={handleCopyPrompt}
-              className={`px-3 py-1 text-xs font-extrabold border-2 border-black shadow-solid transition-all flex items-center gap-1.5 ${
-                copied
-                  ? "bg-green-400 text-black"
-                  : "bg-yellow-300 hover:bg-yellow-400 text-black active:translate-y-0.5"
-              }`}
+              className="text-[11px] font-bold text-gray-700 hover:underline flex items-center gap-1"
             >
-              {copied ? (
-                <>
-                  <Check className="h-3.5 w-3.5" /> ¡Prompt Copiado!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" /> Copiar Prompt IA
-                </>
-              )}
+              {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+              {copied ? "Prompt Copiado" : "Copiar Prompt Manual"}
             </button>
           </div>
-          <p className="text-[11px] text-amber-900 leading-snug">
-            Pega este prompt en tu IA favorita (ChatGPT, Claude o Gemini), personaliza el sabor deseado y te devolverá el JSON perfecto ajustado a los rangos de % Grasa, % Sólidos, POD y PAC.
-          </p>
+
+          <input
+            type="text"
+            value={flavorPrompt}
+            onChange={(e) => setFlavorPrompt(e.target.value)}
+            placeholder="Ej: Gelato cremoso de pistacho con trozos de chocolate blanco"
+            className="w-full p-2.5 border-2 border-black text-xs bg-white focus:outline-none focus:ring-2 focus:ring-black font-medium"
+          />
+
+          <button
+            type="button"
+            onClick={handleGenerateAI}
+            disabled={aiLoading || !flavorPrompt.trim()}
+            className="w-full py-2.5 bg-yellow-300 hover:bg-yellow-400 disabled:opacity-50 text-black font-black text-xs border-2 border-black shadow-solid transition-all flex items-center justify-center gap-2 active:translate-y-0.5"
+          >
+            {aiLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Formulando Helado Dubovik con IA...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                <span>Formular Helado con IA Directa (1,000g)</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* PASO 2: PEGAR JSON E IMPORTAR */}
-        <form onSubmit={handleProcessImport} className="space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-gray-900 mb-1 flex items-center gap-1">
-              <ArrowRight className="h-3.5 w-3.5 text-sage-green stroke-[3]" />
-              Paso 2: Pega el JSON o la Respuesta de la IA:
-            </label>
-            <textarea
-              rows={7}
-              value={jsonInput}
-              onChange={(e) => setJsonInput(e.target.value)}
-              placeholder={`{\n  "nombre": "Helado de Pistacho Artesanal",\n  "tipo": "GELATO",\n  "items": [\n    { "ingId": "leche_entera", "cantidad": 550 },\n    { "ingId": "crema_35", "cantidad": 180 }\n  ]\n}`}
-              className="w-full p-2.5 border-2 border-black font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sage-green bg-gray-50 text-gray-900"
-            />
+        {(errorMsg || aiError) && (
+          <div className="p-2.5 bg-red-100 border-2 border-black text-red-900 text-xs font-bold flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-700 shrink-0" />
+            <span>{errorMsg || aiError}</span>
           </div>
+        )}
 
-          {errorMsg && (
-            <div className="p-2.5 bg-red-100 border-2 border-black text-red-900 text-xs font-bold flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-700 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
+        {/* PASO SECUNDARIO: PEGAR JSON MANUALMENTE */}
+        <div className="border-2 border-black bg-gray-50">
+          <button
+            type="button"
+            onClick={() => setShowManualPaste(!showManualPaste)}
+            className="w-full p-2 flex items-center justify-between text-xs font-bold text-gray-800 hover:bg-gray-100 transition-colors"
+          >
+            <span>Opciones avanzadas: Pegar código JSON de helado manualmente</span>
+            {showManualPaste ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+
+          {showManualPaste && (
+            <form onSubmit={handleProcessImport} className="p-3 border-t-2 border-black space-y-3 bg-white">
+              <textarea
+                rows={5}
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder={`{\n  "nombre": "Helado de Avellana",\n  "tipo": "GELATO",\n  "items": [{ "ingId": "leche_entera", "cantidad": 550 }]\n}`}
+                className="w-full p-2.5 border-2 border-black font-mono text-xs focus:outline-none bg-gray-50 text-gray-900"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={!jsonInput.trim()}
+                  className="px-4 py-1.5 bg-gray-800 text-white font-bold text-xs border-2 border-black shadow-solid hover:bg-black"
+                >
+                  Importar JSON Manual
+                </button>
+              </div>
+            </form>
           )}
+        </div>
 
-          {/* ACCIONES DEL MODAL */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t-2 border-black">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold text-xs border-2 border-black shadow-solid transition-all"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 bg-sage-green hover:bg-emerald-700 text-white font-black text-xs border-2 border-black shadow-solid transition-all flex items-center gap-1.5 active:translate-y-0.5"
-            >
-              <Sparkles className="h-4 w-4" /> Importar & Formular Receta
-            </button>
-          </div>
-        </form>
+        {/* ACCIONES DEL MODAL */}
+        <div className="flex items-center justify-end gap-2 pt-2 border-t-2 border-black">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold text-xs border-2 border-black shadow-solid transition-all"
+          >
+            Cerrar
+          </button>
+        </div>
 
       </div>
     </div>

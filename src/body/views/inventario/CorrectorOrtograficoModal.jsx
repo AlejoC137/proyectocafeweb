@@ -4,8 +4,11 @@ import { updateItem } from '../../../redux/actions';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, SpellCheck, Copy, Check, X, ArrowRight, Save, SlidersHorizontal, Package, CheckSquare, Square } from "lucide-react";
+import { Search, SpellCheck, Copy, Check, X, ArrowRight, Save, SlidersHorizontal, Package, CheckSquare, Square, Sparkles, Loader2 } from "lucide-react";
 import { ITEMS, PRODUCCION, MENU, ItemsAlmacen, ProduccionInterna, MenuItems } from "../../../redux/actions-types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDeepSeek } from "@/hooks/useDeepSeek";
+import { getPromptByType } from "@/utils/prompts";
 
 const CorrectorOrtograficoModal = ({ onClose, currentType }) => {
     const dispatch = useDispatch();
@@ -42,6 +45,8 @@ const CorrectorOrtograficoModal = ({ onClose, currentType }) => {
     const [isApplying, setIsApplying] = useState(false);
     const [feedback, setFeedback] = useState('');
 
+    const { loading: aiLoading, error: aiError, query: queryDeepSeek } = useDeepSeek();
+
     // --- Derived State ---
     const availableGroups = useMemo(() => [...new Set(inventoryList.map(i => i.GRUPO))].filter(Boolean).sort(), [inventoryList]);
 
@@ -74,10 +79,8 @@ const CorrectorOrtograficoModal = ({ onClose, currentType }) => {
         setSelectedItems(newSet);
     };
 
-    const handleGeneratePrompt = async () => {
-        if (selectedItems.size === 0) return alert("Selecciona al menos un ítem.");
-        
-        const itemsToProcess = inventoryList.filter(i => selectedItems.has(i._id)).map(i => {
+    const buildItemsPayload = () => {
+        return inventoryList.filter(i => selectedItems.has(i._id)).map(i => {
             if (currentType === MenuItems || currentType === MENU) {
                 return {
                     _id: i._id,
@@ -94,7 +97,12 @@ const CorrectorOrtograficoModal = ({ onClose, currentType }) => {
                 MARCA: Array.isArray(i.MARCA) ? i.MARCA.join(", ") : i.MARCA
             };
         });
+    };
 
+    const handleGeneratePrompt = async () => {
+        if (selectedItems.size === 0) return alert("Selecciona al menos un ítem.");
+        
+        const itemsToProcess = buildItemsPayload();
         const promptText = `Revisa la ortografía y gramática (ES/EN) de estos elementos de inventario. Devuelve ÚNICAMENTE un array JSON con los objetos corregidos (manteniendo el _id y solo los campos que cambiaron).
 
 Elementos:
@@ -110,9 +118,9 @@ ${JSON.stringify(itemsToProcess, null, 2)}`;
         }
     };
 
-    const handleProcessResponse = () => {
+    const processJsonResponse = (jsonRaw) => {
         try {
-            const parsed = JSON.parse(jsonResponse);
+            const parsed = typeof jsonRaw === 'object' ? jsonRaw : JSON.parse(jsonRaw);
             if (!Array.isArray(parsed)) throw new Error("Debe ser un array.");
             
             const enriched = parsed.map(suggestion => {
@@ -137,6 +145,30 @@ ${JSON.stringify(itemsToProcess, null, 2)}`;
             setFeedback(`Se detectaron ${enriched.length} sugerencias de corrección.`);
         } catch (e) {
             alert("Error al procesar JSON: " + e.message);
+        }
+    };
+
+    const handleGenerateAI = async () => {
+        if (selectedItems.size === 0) {
+            alert("Selecciona al menos un ítem para analizar ortografía.");
+            return;
+        }
+
+        const itemsToProcess = buildItemsPayload();
+        const systemPrompt = getPromptByType("SPELL_CHECK");
+
+        const userMessage = `Analiza y corrige la ortografía de los siguientes elementos:\n${JSON.stringify(itemsToProcess, null, 2)}`;
+
+        const res = await queryDeepSeek({
+            systemPrompt,
+            userMessage,
+            temperature: 0.1
+        });
+
+        if (res) {
+            const jsonStr = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
+            setJsonResponse(jsonStr);
+            processJsonResponse(res);
         }
     };
 
@@ -179,7 +211,7 @@ ${JSON.stringify(itemsToProcess, null, 2)}`;
                 <div className="p-4 border-b bg-slate-100 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <SpellCheck className="h-5 w-5 text-indigo-600" />
-                        <h2 className="text-xl font-bold text-slate-800">Corrector Ortográfico (IA)</h2>
+                        <h2 className="text-xl font-bold text-slate-800">Corrector Ortográfico con IA (DeepSeek)</h2>
                     </div>
                     <Button variant="ghost" onClick={onClose} className="h-8 w-8 p-0">
                         <X className="h-5 w-5" />
@@ -243,38 +275,50 @@ ${JSON.stringify(itemsToProcess, null, 2)}`;
                                 <Button variant="outline" size="sm" onClick={handleSelectVisible} className="flex-1 text-[10px]">Sel. Visibles</Button>
                                 <Button variant="outline" size="sm" onClick={handleDeselectVisible} className="flex-1 text-[10px]">Quitar Visibles</Button>
                             </div>
+
+                            {/* BOTÓN PRINCIPAL IA DIRECTA */}
+                            <Button 
+                                onClick={handleGenerateAI} 
+                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 shadow flex items-center justify-center gap-2"
+                                disabled={selectedItems.size === 0 || aiLoading}
+                            >
+                                {aiLoading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <span>Analizando Ortografía con IA...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="h-4 w-4" />
+                                        <span>Corregir Ortografía con IA Directa</span>
+                                    </>
+                                )}
+                            </Button>
+
+                            {/* BOTÓN SECUNDARIO PROMPT MANUAL */}
                             <Button 
                                 onClick={handleGeneratePrompt} 
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                                variant="ghost"
+                                className="w-full text-xs text-slate-500 hover:text-slate-700 h-7"
                                 disabled={selectedItems.size === 0}
                             >
-                                <Copy className="h-4 w-4 mr-2" />
-                                {promptCopied ? "Copiado!" : "Generar Prompt para IA"}
+                                <Copy className="h-3 w-3 mr-1" />
+                                {promptCopied ? "Prompt Copiado!" : "Copiar Prompt para ChatGPT Manual"}
                             </Button>
                         </div>
                     </div>
 
                     {/* Right: Response & Review */}
                     <div className="w-1/2 flex flex-col p-4 gap-4">
-                        <h3 className="font-bold text-sm text-slate-600 uppercase">2. Respuesta de la IA</h3>
+                        <h3 className="font-bold text-sm text-slate-600 uppercase">2. Sugerencias de Corrección</h3>
                         
-                        <div className="space-y-2">
-                            <Textarea 
-                                className="h-32 text-[10px] font-mono" 
-                                placeholder='Pega aquí el JSON de respuesta...' 
-                                value={jsonResponse}
-                                onChange={(e) => setJsonResponse(e.target.value)}
-                            />
-                            <Button variant="secondary" className="w-full h-9" onClick={handleProcessResponse} disabled={!jsonResponse}>
-                                Analizar Sugerencias
-                            </Button>
-                        </div>
+                        {aiError && <p className="text-xs font-semibold text-red-600">{aiError}</p>}
 
                         <div className="flex-1 overflow-y-auto border rounded bg-slate-50 p-2">
                             {suggestedChanges.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-50">
                                     <Package className="h-10 w-10 mb-2" />
-                                    <p className="text-xs">No hay sugerencias para mostrar</p>
+                                    <p className="text-xs">No hay sugerencias aún. Selecciona ítems y presiona "Corregir Ortografía con IA Directa".</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
@@ -307,6 +351,19 @@ ${JSON.stringify(itemsToProcess, null, 2)}`;
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* OPCIÓN MANUAL JSON */}
+                        <div className="space-y-2 pt-2 border-t">
+                            <Textarea 
+                                className="h-20 text-[10px] font-mono bg-white" 
+                                placeholder='Opciones avanzadas: Pega aquí el JSON de respuesta manual...' 
+                                value={jsonResponse}
+                                onChange={(e) => setJsonResponse(e.target.value)}
+                            />
+                            <Button variant="secondary" className="w-full h-8 text-xs" onClick={() => processJsonResponse(jsonResponse)} disabled={!jsonResponse.trim()}>
+                                Analizar JSON Manual
+                            </Button>
                         </div>
                     </div>
                 </div>

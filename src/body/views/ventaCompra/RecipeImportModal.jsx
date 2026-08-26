@@ -406,6 +406,8 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
                         handleParse={handleParse}
                         handleCopyPrompt={handleCopyPrompt}
                         promptCopied={promptCopied}
+                        allItems={allItems}
+                        allProduccion={allProduccion}
                     />
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

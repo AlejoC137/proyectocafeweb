@@ -6,7 +6,8 @@ import { ITEMS, CATEGORIES, unidades, BODEGA, ESTATUS, PROVEE } from "../../../r
 import { X, Package, BookOpen, Edit, Save, Loader2, FileJson, Copy, Check, RefreshCw, Printer, Tag, MapPin, DollarSign, BarChart3, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { copyPromptToClipboard } from "../../../utils/prompts";
+import { copyPromptToClipboard, getPromptByType } from "../../../utils/prompts";
+import { useDeepSeek } from "@/hooks/useDeepSeek";
 import supabase from "../../../config/supabaseClient";
 import HorizontalGallery from "../Menu/MenuPrintHorizontal/HorizontalGallery";
 import VeaseSection from "../../../components/Vease/VeaseSection";
@@ -328,7 +329,48 @@ const ItemsModal = () => {
     } catch (e) { alert("Error al leer JSON: " + e.message); }
   };
 
+  const [itemAiContext, setItemAiContext] = useState("");
+  const { loading: aiLoading, error: aiError, query: queryDeepSeek } = useDeepSeek();
+
   const handleCopyPrompt = async () => { await copyPromptToClipboard(ITEMS, setPromptCopied); };
+
+  const handleGenerateItemAI = async () => {
+    if (!itemAiContext.trim()) {
+      alert("Ingresa los datos o la descripción del producto.");
+      return;
+    }
+
+    const basePrompt = getPromptByType(ITEMS);
+    const suppliersContext = (proveedores || []).map(p => ({ _id: p._id, Nombre_Proveedor: p.Nombre_Proveedor }));
+    const systemPrompt = `${basePrompt}
+
+## LISTA DE PROVEEDORES REGISTRADOS EN EL SISTEMA
+${JSON.stringify(suppliersContext)}
+
+REGLA CRÍTICA DE ASIGNACIÓN DE PROVEEDOR:
+Identifica la marca, vendor o proveedor del producto. Si coincide o se relaciona con algún proveedor de la lista anterior, asigna su "_id" en la propiedad "Proveedor". Si no hay coincidencia directa, asigna null.`;
+
+    const userMessage = `Extrae las propiedades del producto para la base de datos de almacén a partir de la siguiente información:
+
+[DATOS / ESPECIFICACIONES DEL PRODUCTO]
+${itemAiContext}`;
+
+    const res = await queryDeepSeek({
+      systemPrompt,
+      userMessage,
+      temperature: 0.1
+    });
+
+    if (res) {
+      const rawJson = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
+      setJsonText(rawJson);
+      try {
+        setEditableItem((prev) => mergeJsonIntoItem(prev, rawJson));
+      } catch (e) {
+        console.error("Error al fusionar datos de IA:", e);
+      }
+    }
+  };
 
   const handleRecalculate = async () => {
     if (!displayItem) return;
@@ -678,30 +720,62 @@ const ItemsModal = () => {
                 {isEditing ? editContent() : viewContent()}
               </div>
 
-              {/* JSON Import panel */}
+              {/* JSON / AI Import panel */}
               {showJsonImport && isEditing && (
-                <div className="w-80 flex-shrink-0 flex flex-col bg-slate-50">
-                  <div className="p-3 border-b border-slate-200 flex items-center justify-between">
+                <div className="w-80 flex-shrink-0 flex flex-col bg-slate-50 border-l border-slate-200">
+                  <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-blue-50/50">
                     <div className="flex items-center gap-2">
-                      <FileJson className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-bold text-slate-700">Importar JSON</span>
+                      <Sparkles className="h-4 w-4 text-blue-600" />
+                      <span className="text-xs font-bold text-slate-800">Auto-llenar con IA</span>
                     </div>
                     <button onClick={handleCopyPrompt}
-                      className="flex items-center gap-1 text-[10px] border border-slate-200 bg-white hover:bg-slate-100 px-2 py-1 rounded transition-colors">
+                      className="flex items-center gap-1 text-[10px] border border-slate-200 bg-white hover:bg-slate-100 px-2 py-1 rounded transition-colors"
+                      title="Copiar prompt para ChatGPT manual">
                       {promptCopied ? <><Check className="h-3 w-3 text-green-600" /><span className="text-green-600">Copiado</span></>
                         : <><Copy className="h-3 w-3 text-slate-500" /><span className="text-slate-500">Prompt</span></>}
                     </button>
                   </div>
-                  <textarea
-                    className="flex-1 w-full p-3 text-[10px] font-mono bg-white border-0 focus:outline-none resize-none"
-                    placeholder={'{ "COSTO": "15000", "CANTIDAD": "500"... }'}
-                    value={jsonText}
-                    onChange={(e) => setJsonText(e.target.value)}
-                  />
-                  <div className="p-3 border-t border-slate-200">
-                    <Button size="sm" onClick={handleParseJson}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-8">
-                      Aplicar al Formulario
+
+                  <div className="p-3 flex flex-col gap-2 border-b border-slate-200 bg-white">
+                    <label className="text-[10px] font-bold text-slate-600 uppercase">Datos del Producto (IA Directa)</label>
+                    <textarea
+                      className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[90px]"
+                      placeholder="Pega la ficha técnica, mensaje del proveedor o datos del producto (ej: 'Harina Haz de Oros bulto 12.5kg costo 45000 proveedor Fruver stock min 2 max 10')"
+                      value={itemAiContext}
+                      onChange={(e) => setItemAiContext(e.target.value)}
+                    />
+                    {aiError && <p className="text-[10px] font-semibold text-red-600">{aiError}</p>}
+                    <Button 
+                      size="sm" 
+                      onClick={handleGenerateItemAI}
+                      disabled={aiLoading || !itemAiContext.trim()}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 font-bold flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      {aiLoading ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <span>Extrayendo...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span>Generar con IA Directa</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="p-3 flex flex-col flex-1 gap-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Opciones Avanzadas: JSON Manual</label>
+                    <textarea
+                      className="flex-1 w-full p-2 text-[10px] font-mono bg-white border border-slate-200 rounded focus:outline-none resize-none"
+                      placeholder={'{ "COSTO": "15000", "CANTIDAD": "500"... }'}
+                      value={jsonText}
+                      onChange={(e) => setJsonText(e.target.value)}
+                    />
+                    <Button size="sm" onClick={handleParseJson} disabled={!jsonText.trim()}
+                      className="w-full bg-slate-700 hover:bg-slate-800 text-white text-xs h-7">
+                      Aplicar JSON Manual
                     </Button>
                   </div>
                 </div>

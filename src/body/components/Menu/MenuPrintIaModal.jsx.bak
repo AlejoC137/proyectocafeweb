@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Copy, Check, FileCode, ArrowRight, AlertCircle, CheckCircle2, Download, RefreshCw, X, LayoutGrid, Loader2 } from "lucide-react";
+import { Sparkles, Copy, Check, FileCode, ArrowRight, AlertCircle, CheckCircle2, Download, RefreshCw, X, LayoutGrid } from "lucide-react";
 import supabase from "../../../config/supabaseClient";
 import { normalizePageSize } from "./MenuPrintHorizontal";
-import { useDeepSeek } from "@/hooks/useDeepSeek";
 
 export default function MenuPrintIaModal({
   isOpen,
@@ -22,8 +21,6 @@ export default function MenuPrintIaModal({
   const [verificationResult, setVerificationResult] = useState(null); // { valid: bool, message: string, summary: obj, parsed: obj }
   const [isSaving, setIsSaving] = useState(false);
   const [imagesList, setImagesList] = useState([]);
-
-  const { loading: aiLoading, error: aiError, query: queryDeepSeek } = useDeepSeek();
 
   useEffect(() => {
     if (isOpen && menuId) {
@@ -210,7 +207,7 @@ CRÍTICO:
         });
       }
 
-      const resultObj = {
+      setVerificationResult({
         valid: true,
         message: "¡JSON Estructurado Correctamente!",
         summary: {
@@ -221,38 +218,13 @@ CRÍTICO:
           hasColors: !!parsed.colors
         },
         parsedClean: parsed
-      };
-
-      setVerificationResult(resultObj);
-      return resultObj;
+      });
 
     } catch (err) {
-      const errObj = {
+      setVerificationResult({
         valid: false,
         message: `Error de verificación: ${err.message}`
-      };
-      setVerificationResult(errObj);
-      return errObj;
-    }
-  };
-
-  const handleGenerateAI = async () => {
-    const systemPrompt = generatedPrompt;
-    const userMessage = "Genera la estructura de diagramación en JSON para este menú respetando todas las reglas descritas.";
-
-    const res = await queryDeepSeek({
-      systemPrompt,
-      userMessage,
-      temperature: 0.3
-    });
-
-    if (res) {
-      const jsonStr = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
-      setJsonInput(jsonStr);
-      setActiveTab("input");
-      setTimeout(() => {
-        handleVerifyJson(jsonStr);
-      }, 100);
+      });
     }
   };
 
@@ -337,7 +309,7 @@ CRÍTICO:
             </div>
             <div>
               <h2 className="font-black text-lg md:text-xl text-black uppercase italic tracking-tight flex items-center gap-2">
-                Asistente de Diagramación por IA Directa (DeepSeek)
+                Asistente de Diagramación por IA (Gemini)
               </h2>
               <p className="text-xs font-bold text-gray-600">
                 Menú ID: <span className="bg-amber-200 px-1.5 py-0.5 border border-black rounded">{menuId}</span> | Tipo: <span className="uppercase font-black">{menuType}</span>
@@ -363,7 +335,7 @@ CRÍTICO:
                 : "bg-white hover:bg-gray-100 text-gray-700"
             }`}
           >
-            <Sparkles className="h-4 w-4" /> 1. Generador IA
+            <FileCode className="h-4 w-4" /> 1. Prompt para Gemini
           </button>
           <button
             onClick={() => setActiveTab("input")}
@@ -390,20 +362,12 @@ CRÍTICO:
           </button>
         </div>
 
-        {/* TAB 1: GENERADOR IA DIRECTA */}
+        {/* TAB 1: GENERADOR DE PROMPT */}
         {activeTab === "prompt" && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="bg-amber-50 border-2 border-black p-3.5 rounded shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] space-y-3">
-              <h3 className="font-extrabold text-xs text-amber-950 flex items-center justify-between uppercase tracking-wide">
-                <span>🎨 Reglas de Diagramación Personalizada:</span>
-                <button
-                  type="button"
-                  onClick={handleCopyPrompt}
-                  className="text-[10px] font-bold text-amber-900 hover:underline flex items-center gap-1"
-                >
-                  {copiedPrompt ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                  {copiedPrompt ? "Prompt Copiado" : "Copiar Prompt Manual"}
-                </button>
+              <h3 className="font-extrabold text-xs text-amber-950 flex items-center gap-2 uppercase tracking-wide">
+                <span>🎨 Personalizar Reglas del Prompt:</span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -436,43 +400,50 @@ CRÍTICO:
                   />
                 </div>
               </div>
-
-              {aiError && <p className="text-xs font-bold text-red-600">{aiError}</p>}
-
-              <button
-                type="button"
-                onClick={handleGenerateAI}
-                disabled={aiLoading}
-                className="w-full py-3 bg-yellow-300 hover:bg-yellow-400 disabled:opacity-50 text-black border-2 border-black font-black uppercase text-xs rounded shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 flex items-center justify-center gap-2"
-              >
-                {aiLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Diagramando Menú Impreso con IA...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    <span>Generar Diagramación con IA Directa</span>
-                  </>
-                )}
-              </button>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-black uppercase text-gray-900 flex items-center gap-1.5">
                   <FileCode className="h-4 w-4 text-black" />
-                  Prompt Generado para la IA:
+                  Prompt Generado para Gemini:
                 </label>
+                <button
+                  type="button"
+                  onClick={handleCopyPrompt}
+                  className={`px-3 py-1.5 text-xs font-black border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-1.5 ${
+                    copiedPrompt
+                      ? "bg-green-400 text-black"
+                      : "bg-yellow-300 hover:bg-yellow-400 text-black active:translate-y-0.5"
+                  }`}
+                >
+                  {copiedPrompt ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" /> ¡Prompt Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" /> Copiar Prompt para Gemini
+                    </>
+                  )}
+                </button>
               </div>
 
               <textarea
                 readOnly
-                rows={6}
+                rows={10}
                 value={generatedPrompt}
                 className="w-full p-3 border-2 border-black font-mono text-xs bg-zinc-900 text-yellow-300 rounded focus:outline-none select-all"
               />
+            </div>
+
+            <div className="flex justify-end pt-2 border-t-2 border-black">
+              <button
+                onClick={() => setActiveTab("input")}
+                className="px-4 py-2 bg-black text-white hover:bg-gray-800 font-black text-xs uppercase border-2 border-black rounded shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 flex items-center gap-2"
+              >
+                Siguiente: Pegar y Verificar JSON <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         )}
@@ -483,7 +454,7 @@ CRÍTICO:
             <div>
               <label className="block text-xs font-black uppercase text-gray-900 mb-1 flex items-center gap-1.5">
                 <ArrowRight className="h-4 w-4 text-black" />
-                Respuesta JSON Generada o Pegada Manualmente:
+                Pega la respuesta JSON devuelta por Gemini u otra IA:
               </label>
               <textarea
                 rows={8}
@@ -568,7 +539,7 @@ CRÍTICO:
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="bg-amber-50 border-2 border-black p-3 rounded text-xs space-y-1">
               <p className="font-bold text-amber-950">
-                A continuación se muestra la estructura JSON del layout actual de este menú. Puedes copiarlo para respaldarlo.
+                A continuación se muestra la estructura JSON del layout actual de este menú. Puedes copiarlo para respaldarlo o enviarlo a Gemini como contexto.
               </p>
             </div>
 

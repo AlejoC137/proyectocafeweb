@@ -4,26 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { copyPromptToClipboard, getPromptByType } from '../../../utils/prompts';
-import { Copy, Check, Search, Receipt, ArrowRight, Trash2, Package, Sparkles, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Copy, Check, Search, Receipt, ArrowRight, Trash2, Package } from 'lucide-react';
 import { updateItem } from "../../../redux/actions";
 import { ItemsAlmacen } from "../../../redux/actions-types";
-import { useDeepSeek } from '@/hooks/useDeepSeek';
 
 const GastosReceiptIngestionModal = ({ onClose, onApply }) => {
     const dispatch = useDispatch();
     const allItems = useSelector((state) => state.allItems || []);
     const proveedores = useSelector((state) => state.Proveedores || []);
     
-    const [receiptContext, setReceiptContext] = useState("");
     const [jsonInput, setJsonInput] = useState("");
     const [jsonError, setJsonError] = useState(null);
     const [parsedData, setParsedData] = useState([]); 
     const [step, setStep] = useState(1); 
     const [promptCopied, setPromptCopied] = useState(false);
     const [selectedForUpdate, setSelectedForUpdate] = useState({});
-    const [showManualPaste, setShowManualPaste] = useState(false);
-
-    const { loading: aiLoading, error: aiError, query: queryDeepSeek } = useDeepSeek();
 
     const [itemSelections, setItemSelections] = useState({});
     const [itemSearchTerms, setItemSearchTerms] = useState({});
@@ -49,7 +44,7 @@ const GastosReceiptIngestionModal = ({ onClose, onApply }) => {
                 cantidad: Number(item.cantidad || 0),
                 unidades: item.unidades || "",
                 costo_total: Number(item.costo_total || item.total || 0),
-                precio_unitario: Number(item.precio_unitario || item.precio || (item.cantidad ? item.costo_total / item.cantidad : 0)),
+                precio_unitario: Number(item.precio_unitario || item.precio || 0),
                 proveedor: item.proveedor || null,
                 marca: item.marca || null
             }));
@@ -93,33 +88,6 @@ const GastosReceiptIngestionModal = ({ onClose, onApply }) => {
             setStep(2);
         } catch (err) {
             setJsonError("Error parseando JSON: " + err.message);
-        }
-    };
-
-    const handleGenerateAI = async () => {
-        if (!receiptContext.trim()) {
-            alert("Ingresa los datos o texto del comprobante de gasto.");
-            return;
-        }
-
-        const basePrompt = getPromptByType("RECIBO");
-        const userMessage = `Extrae los ítems de gasto o compra de la siguiente factura/recibo en formato JSON:
-
-[DATOS DEL GASTO / FACTURA]
-${receiptContext}`;
-
-        const res = await queryDeepSeek({
-            systemPrompt: basePrompt,
-            userMessage,
-            temperature: 0.1
-        });
-
-        if (res) {
-            const jsonStr = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
-            setJsonInput(jsonStr);
-            setTimeout(() => {
-                handleParse(jsonStr);
-            }, 100);
         }
     };
 
@@ -200,7 +168,7 @@ ${receiptContext}`;
                 <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <Receipt className="h-6 w-6" />
-                        <h2 className="text-xl font-bold">Ingestión de Gastos con IA</h2>
+                        <h2 className="text-xl font-bold">Ingestión de Gastos IA</h2>
                     </div>
                     <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1 transition-colors">
                         <Trash2 className="h-6 w-6" />
@@ -209,88 +177,42 @@ ${receiptContext}`;
 
                 <div className="p-6 overflow-y-auto flex-1">
                     {step === 1 ? (
-                        <div className="space-y-5">
-                            {/* PRINCIPAL: IA DIRECTA DEEPSEEK */}
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200 shadow-sm flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-blue-600 text-white rounded-lg">
-                                            <Sparkles className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-blue-900 text-sm">Extracción Directa de Gastos (DeepSeek)</h3>
-                                            <p className="text-xs text-blue-700">Pega los datos del gasto o comprobante y la IA extraerá automáticamente los ítems.</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        onClick={handleCopyPrompt}
-                                        variant="ghost"
-                                        className="text-xs text-blue-800 hover:bg-blue-100 flex items-center gap-1 h-7"
-                                    >
-                                        {promptCopied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                        <span>{promptCopied ? "Copiado" : "Copiar Prompt Manual"}</span>
-                                    </Button>
-                                </div>
-
-                                <Textarea
-                                    className="bg-white border-blue-200 text-sm min-h-[110px] focus:ring-blue-500 font-sans"
-                                    placeholder="Pega el texto del gasto o factura de compra (ej: 'Factura 554 - Distribuidora Lácteos: 20L Leche Entera $70.000, 5kg Queso Mozzarella $90.000')"
-                                    value={receiptContext}
-                                    onChange={(e) => setReceiptContext(e.target.value)}
-                                />
-
-                                {aiError && <p className="text-xs font-semibold text-red-600">{aiError}</p>}
-
+                        <div className="space-y-4">
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
+                                <p className="text-sm text-blue-800">
+                                    1. Toma una foto del recibo o factura.<br/>
+                                    2. Copia el prompt y llévalo a una IA junto con la foto.<br/>
+                                    3. Pega el JSON resultante aquí.
+                                </p>
                                 <Button
-                                    onClick={handleGenerateAI}
-                                    disabled={aiLoading || !receiptContext.trim()}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 py-2.5 rounded-lg shadow"
+                                    onClick={handleCopyPrompt}
+                                    variant="outline"
+                                    className="bg-white border-blue-300 text-blue-600 hover:bg-blue-50"
                                 >
-                                    {aiLoading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            <span>Analizando y Desglosando Gastos con IA...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="h-4 w-4" />
-                                            <span>Extraer y Analizar Gastos con IA Directa</span>
-                                        </>
-                                    )}
+                                    {promptCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                                    {promptCopied ? "Copiado" : "Copiar Prompt Recibo"}
                                 </Button>
                             </div>
 
-                            {/* SECUNDARIO: JSON MANUAL */}
-                            <div className="border border-slate-200 rounded-lg overflow-hidden">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowManualPaste(!showManualPaste)}
-                                    className="w-full bg-slate-50 px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-                                >
-                                    <span>Opciones avanzadas: Pegar código JSON de gastos manualmente</span>
-                                    {showManualPaste ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </button>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700">JSON del Recibo</label>
+                                <Textarea
+                                    className="font-mono text-sm min-h-[300px] border-2 focus:border-blue-500"
+                                    placeholder='[ { "nombre": "Tomate", "cantidad": 2, "costo_total": 5000, "proveedor": "Fruver" }, ... ]'
+                                    value={jsonInput}
+                                    onChange={e => setJsonInput(e.target.value)}
+                                />
+                                {jsonError && <p className="text-red-500 text-sm font-bold">{jsonError}</p>}
+                            </div>
 
-                                {showManualPaste && (
-                                    <div className="p-4 flex flex-col gap-3 bg-white">
-                                        <Textarea
-                                            className="font-mono text-xs min-h-[180px] bg-slate-50"
-                                            placeholder='[ { "nombre": "Tomate", "cantidad": 2, "costo_total": 5000, "proveedor": "Fruver" }, ... ]'
-                                            value={jsonInput}
-                                            onChange={e => setJsonInput(e.target.value)}
-                                        />
-                                        {jsonError && <p className="text-red-500 text-xs font-bold">{jsonError}</p>}
-                                        <div className="flex justify-end">
-                                            <Button 
-                                                onClick={() => handleParse(jsonInput)} 
-                                                disabled={!jsonInput.trim()}
-                                                size="sm"
-                                            >
-                                                Analizar JSON Manual <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
+                            <div className="flex justify-end">
+                                <Button 
+                                    onClick={handleParse} 
+                                    disabled={!jsonInput.trim()}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-8"
+                                >
+                                    Analizar Recibo <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
                     ) : (
@@ -327,41 +249,12 @@ ${receiptContext}`;
                                         <div key={item.index} className="p-4 rounded-xl border-2">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <p className="font-bold text-gray-800">{item.nombre}</p>
-                                                    <p className="text-xs text-gray-500">Cant: {item.cantidad} | Total: ${item.costo_total.toLocaleString()}</p>
-                                                </div>
-                                                <div>
-                                                    {selected ? (
-                                                        <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded">
-                                                            <span className="text-sm font-semibold">{getProductName(selected)}</span>
-                                                            <button onClick={() => handleSelectProduct(item.index, null)} className="text-red-500 text-xs">✕</button>
-                                                        </div>
-                                                    ) : (
-                                                        <Input
-                                                            placeholder="Buscar ingrediente en inventario..."
-                                                            value={searchTerm}
-                                                            onChange={(e) => setItemSearchTerms(prev => ({ ...prev, [item.index]: e.target.value }))}
-                                                            className="text-xs h-8"
-                                                        />
-                                                    )}
+                                                    <p className="font-bold">{item.nombre}</p>
                                                 </div>
                                             </div>
                                         </div>
                                     );
                                 })}
-                            </div>
-
-                            <div className="flex justify-between items-center pt-6 mt-6 border-t">
-                                <Button variant="ghost" onClick={() => setStep(1)} className="text-gray-500 hover:text-gray-700">
-                                    Volver
-                                </Button>
-                                <Button 
-                                    onClick={handleApply} 
-                                    disabled={Object.values(itemSelections).every(v => v === null)}
-                                    className="bg-green-600 hover:bg-green-700 text-white min-w-[200px] h-12 rounded-xl shadow-lg"
-                                >
-                                    Confirmar y Agregar al Gasto
-                                </Button>
                             </div>
                         </div>
                     )}

@@ -28,10 +28,43 @@ const JsonImportReviewModal = ({ items, onClose, onSave, currentType, allProveed
                 alm = { ALMACENAMIENTO: "", BODEGA: "" };
             }
 
+            // Auto-matching Provider _id
+            let providerId = item.Proveedor || item.proveedor || item.vendor || item.marca || item.MARCA || "";
+            if (typeof providerId === 'object' && providerId !== null) {
+                providerId = providerId.Nombre_Proveedor || providerId._id || providerId.name || "";
+            }
+
+            if (allProveedores && allProveedores.length > 0) {
+                const rawVal = String(providerId || "").trim();
+                const exactUuid = allProveedores.find(p => String(p._id) === rawVal);
+                
+                if (exactUuid) {
+                    providerId = exactUuid._id;
+                } else if (rawVal) {
+                    const lowerVal = rawVal.toLowerCase();
+                    const foundByName = allProveedores.find(p => p.Nombre_Proveedor && p.Nombre_Proveedor.toLowerCase().includes(lowerVal)) ||
+                                        allProveedores.find(p => p.Nombre_Proveedor && lowerVal.includes(p.Nombre_Proveedor.toLowerCase()));
+                    if (foundByName) {
+                        providerId = foundByName._id;
+                    } else {
+                        providerId = "";
+                    }
+                } else {
+                    const fullItemText = `${item.Nombre_del_producto || ''} ${item.nombre || ''} ${item.MARCA || ''}`.toLowerCase();
+                    const matchedProv = allProveedores.find(p => p.Nombre_Proveedor && p.Nombre_Proveedor.length > 2 && fullItemText.includes(p.Nombre_Proveedor.toLowerCase()));
+                    if (matchedProv) {
+                        providerId = matchedProv._id;
+                    } else {
+                        providerId = "";
+                    }
+                }
+            }
+
             return {
                 ...item,
                 STOCK: stock || { minimo: 0, actual: 0, maximo: 0 },
-                ALMACENAMIENTO: alm
+                ALMACENAMIENTO: alm,
+                Proveedor: providerId || ""
             };
         });
     });

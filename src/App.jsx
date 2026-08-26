@@ -4,6 +4,7 @@ import TopNav from './components/ui/top-nav';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import GlobalAuthModal from './components/GlobalAuthModal';
 import supabase from './config/supabaseClient';
+import AIAssistantWidget from './components/ai/AIAssistantWidget';
 
 // --- Lazy imports: cada ruta se carga solo cuando se navega a ella ---
 const MenuView = lazy(() => import('./body/views/menuView/MenuView'));
@@ -217,6 +218,7 @@ function App() {
           </ErrorBoundary>
         </div>
       </div>
+      <AIAssistantWidget />
     </GlobalAuthModal>
   );
 }
