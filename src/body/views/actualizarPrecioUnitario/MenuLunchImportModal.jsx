@@ -3,27 +3,23 @@ import { useDispatch } from 'react-redux';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { copyPromptToClipboard, getPromptByType } from '../../../utils/prompts';
-import { Copy, Check, X, Sparkles, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { copyPromptToClipboard } from '../../../utils/prompts';
+import { Copy, Check, X } from 'lucide-react';
 import { crearItem } from "../../../redux/actions-Proveedores";
 import { getAllFromTable } from "../../../redux/actions";
 import { MENU, TARDEO, TARDEO_ALMUERZO } from "../../../redux/actions-types";
-import { useDeepSeek } from '@/hooks/useDeepSeek';
 
 const MenuLunchImportModal = ({ onClose, onSuccess }) => {
     const dispatch = useDispatch();
 
-    const [menuContext, setMenuContext] = useState("");
     const [jsonInput, setJsonInput] = useState("");
     const [jsonError, setJsonError] = useState(null);
-    const [parsedData, setParsedData] = useState([]);
+    const [parsedData, setParsedData] = useState([]); // Ahora es un array
 
-    const [step, setStep] = useState(1);
+    // UI States
+    const [step, setStep] = useState(1); // 1: JSON Input, 2: Review & Confirmation
     const [isSaving, setIsSaving] = useState(false);
     const [promptCopied, setPromptCopied] = useState(false);
-    const [showManualPaste, setShowManualPaste] = useState(false);
-
-    const { loading: aiLoading, error: aiError, query: queryDeepSeek } = useDeepSeek();
 
     // --- STEP 1: PARSE JSON ---
     const handleParse = (overrideJsonStr = null) => {
@@ -79,33 +75,6 @@ const MenuLunchImportModal = ({ onClose, onSuccess }) => {
             setStep(2);
         } catch (err) {
             setJsonError("Error parseando JSON: " + err.message);
-        }
-    };
-
-    const handleGenerateAI = async () => {
-        if (!menuContext.trim()) {
-            alert("Ingresa la minuta, foto transcrita o texto de los menús semanales.");
-            return;
-        }
-
-        const basePrompt = getPromptByType("MENU_LUNCH");
-        const userMessage = `Procesa los siguientes menús de almuerzo de la semana y genera el array JSON correspondiente:
-
-[MINUTA / TEXTO DEL MENÚ SEMANAL]
-${menuContext}`;
-
-        const res = await queryDeepSeek({
-            systemPrompt: basePrompt,
-            userMessage,
-            temperature: 0.2
-        });
-
-        if (res) {
-            const jsonStr = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
-            setJsonInput(jsonStr);
-            setTimeout(() => {
-                handleParse(jsonStr);
-            }, 100);
         }
     };
 
@@ -212,92 +181,52 @@ ${menuContext}`;
             <div className="bg-white rounded-lg shadow-md border w-full max-w-4xl flex flex-col max-h-[95vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
                 {/* HEADER */}
                 <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg shrink-0">
-                    <h2 className="text-xl font-bold text-gray-800">Importador Lote de Menús de Almuerzo (IA)</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Importador Lote de Menús (JSON)</h2>
                     <Button variant="ghost" className="text-gray-500 hover:bg-gray-200" onClick={onClose}>Ocultar ✕</Button>
                 </div>
 
                 {/* CONTENT */}
                 <div className="flex-1 overflow-hidden p-6 overflow-y-auto bg-gray-50/50">
                     {step === 1 ? (
-                        <div className="flex flex-col gap-5">
-                            {/* SECCIÓN PRINCIPAL: GENERACIÓN DIRECTA CON IA DEEPSEEK */}
-                            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200 shadow-sm flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-purple-600 text-white rounded-lg">
-                                            <Sparkles className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-purple-900 text-sm">Creación en Lote con IA (DeepSeek)</h3>
-                                            <p className="text-xs text-purple-700">Pega la minuta o el texto del menú de la semana y la IA creará cada día automáticamente.</p>
-                                        </div>
-                                    </div>
+                        <div className="flex flex-col gap-4 h-full">
+                            <div className="bg-purple-50 p-4 rounded-md border border-purple-100 shrink-0">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-sm text-purple-800 font-medium">
+                                        Pega el <strong className="font-bold">Array JSON</strong> con los menús de la semana aquí.
+                                        El sistema procesará uno por uno y los guardará en lote.
+                                    </p>
                                     <Button
                                         size="sm"
-                                        variant="ghost"
+                                        variant="outline"
                                         onClick={handleCopyPrompt}
-                                        className="text-xs text-purple-800 hover:bg-purple-100 flex items-center gap-1 h-7"
+                                        className="flex items-center gap-1 text-xs h-8 px-3 border-purple-300 hover:bg-purple-100 hover:border-purple-400 ml-3 flex-shrink-0 transition-colors bg-white shadow-sm"
+                                        title="Copia instrucciones para IA que analizan fotos de menús semanales"
                                     >
-                                        {promptCopied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                        <span>{promptCopied ? "Prompt Copiado" : "Copiar Prompt Manual"}</span>
+                                        {promptCopied ? (
+                                            <>
+                                                <Check className="h-4 w-4 text-green-600" />
+                                                <span className="text-green-600 font-medium">Copiado</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="h-4 w-4 text-purple-700" />
+                                                <span className="text-purple-700 font-medium text-xs">Copiar Prompt Lote</span>
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
-
-                                <Textarea
-                                    className="bg-white border-purple-200 text-sm min-h-[110px] focus:ring-purple-500 font-sans"
-                                    placeholder="Ej: 'Menú Lunes 25: Sopa de Verduras / Pechuga a la Plancha o Lomo de Cerdo / Arroz, Papas a la Francesa / Ensalada / Jugo de Mango...'"
-                                    value={menuContext}
-                                    onChange={(e) => setMenuContext(e.target.value)}
-                                />
-
-                                {aiError && <p className="text-xs font-semibold text-red-600">{aiError}</p>}
-
-                                <Button
-                                    onClick={handleGenerateAI}
-                                    disabled={aiLoading || !menuContext.trim()}
-                                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center justify-center gap-2 py-2.5 rounded-lg shadow"
-                                >
-                                    {aiLoading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            <span>Generando y Estructurando Menús con IA...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="h-4 w-4" />
-                                            <span>Generar Menús Semanales con IA Directa</span>
-                                        </>
-                                    )}
-                                </Button>
                             </div>
-
-                            {/* SECCIÓN SECUNDARIA: PEGAR JSON MANUALMENTE */}
-                            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowManualPaste(!showManualPaste)}
-                                    className="w-full bg-slate-50 px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-                                >
-                                    <span>Opciones avanzadas: Pegar código Array JSON manualmente</span>
-                                    {showManualPaste ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                </button>
-
-                                {showManualPaste && (
-                                    <div className="p-4 flex flex-col gap-3">
-                                        <Textarea
-                                            className="font-mono text-xs min-h-[180px] bg-slate-50 border-slate-300"
-                                            placeholder='[\n  {\n    "NombreES": "MENU_LUNES",\n    "Precio": 22000,\n    "Comp_Lunch": { ... }\n  }\n]'
-                                            value={jsonInput}
-                                            onChange={e => setJsonInput(e.target.value)}
-                                        />
-                                        {jsonError && <p className="text-red-500 text-xs font-bold">{jsonError}</p>}
-                                        <div className="flex justify-end">
-                                            <Button onClick={() => handleParse(jsonInput)} disabled={!jsonInput.trim()} size="sm">
-                                                Analizar JSON Lote Manual &rarr;
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
+                            <Textarea
+                                className="flex-1 font-mono text-sm min-h-[300px] bg-slate-50 border-slate-300 focus:border-purple-400 focus:ring-purple-400 p-4 shadow-inner"
+                                placeholder='[\n  {\n    "NombreES": "Menú Lunes",\n    "Precio": 22000,\n    "Comp_Lunch": { ... }\n  }\n]'
+                                value={jsonInput}
+                                onChange={e => setJsonInput(e.target.value)}
+                            />
+                            {jsonError && <p className="text-red-500 font-bold bg-red-50 p-3 rounded-md border border-red-200">{jsonError}</p>}
+                            <div className="flex justify-end shrink-0 pt-2">
+                                <Button className="bg-purple-600 hover:bg-purple-700 text-white font-bold" onClick={handleParse} disabled={!jsonInput.trim()}>
+                                    Analizar JSON Lote &rarr;
+                                </Button>
                             </div>
                         </div>
                     ) : (
@@ -401,7 +330,7 @@ ${menuContext}`;
                 <div className="p-4 border-t bg-gray-50 flex justify-between rounded-b-lg shrink-0">
                     {step === 2 ? (
                         <Button variant="outline" className="border-gray-300 font-medium" onClick={() => setStep(1)}>
-                            &larr; Volver al Panel IA
+                            &larr; Volver al JSON
                         </Button>
                     ) : (
                         <div />

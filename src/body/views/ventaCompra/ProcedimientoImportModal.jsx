@@ -139,14 +139,16 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
                 }
             }
 
+            const legacyNameParsed = parsed.legacyName || parsed.name || parsed.nombre || parsed.procedimientoTittle || "";
+            if (legacyNameParsed) setProcedimientoTittle(legacyNameParsed);
+            if (parsed.categoria) setProcedimientoCategoria(parsed.categoria);
+
             setParsedData({
-                name: parsed.name || parsed.nombre || parsed.legacyName || parsed.NombreES || parsed.Nombre_del_producto || "",
+                name: legacyNameParsed,
                 ingredients: normalizedIngredients,
                 processSteps: processSteps,
                 rendimiento: rendimiento
             });
-
-            setProcedimientoTittle(parsed.name || parsed.nombre || parsed.legacyName || parsed.NombreES || parsed.Nombre_del_producto || "");
 
             const initialSelections = {};
             const initialSearchTerms = {};
@@ -256,8 +258,8 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
     };
 
     const handleSave = async () => {
-        if (!forcedRecipeId && (!procedimientoCategoria || !procedimientoTittle.trim())) {
-            alert("Por favor selecciona una categoría y un título para el nuevo procedimiento.");
+        if (!forcedRecipeId && (!procedimientoCategoria || !procedimientoTittle)) {
+            alert("Por favor completa la Categoría y el Título del Procedimiento.");
             return;
         }
 
@@ -299,27 +301,22 @@ const ProcedimientoImportModal = ({ onClose, onSuccess, forcedRecipeId, forcedRe
                 });
             });
 
+            const legacyName = procedimientoTittle || parsedData.name || "Procedimiento Importado";
+
             if (forcedRecipeId) {
                 await dispatch(updateItem(forcedRecipeId, {
                     ...payload,
+                    legacyName,
                     actualizacion: new Date().toISOString()
-                }, forcedRecipeSource));
-
+                }, forcedRecipeSource || RECETAS_PROCEDIMIENTOS));
                 alert("Procedimiento actualizado exitosamente.");
             } else {
-                const nuevoProcede = await dispatch(crearProcedimiento({
-                    Categoria: procedimientoCategoria,
-                    tittle: procedimientoTittle,
-                    DescripcionGeneral: ""
-                }));
-
-                const legacyName = procedimientoTittle;
-                await dispatch(createRecipeForProduct({
+                await dispatch(crearProcedimiento({
                     legacyName,
+                    Categoria: procedimientoCategoria,
                     ...payload
-                }, nuevoProcede._id, PROCEDE, RECETAS_PROCEDIMIENTOS));
-
-                alert("Procedimiento importado y creado exitosamente.");
+                }));
+                alert("Procedimiento creado exitosamente.");
             }
 
             if (onSuccess) onSuccess();

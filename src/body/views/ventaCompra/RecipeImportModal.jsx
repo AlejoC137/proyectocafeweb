@@ -57,10 +57,11 @@ const RecipeImportModal = ({ onClose, onSuccess, initialTargetProduct, forcedRec
     }, [initialTargetProduct]);
 
     // --- STEP 1: PARSE JSON ---
-    const handleParse = () => {
+    const handleParse = (overrideJsonStr = null) => {
         setJsonError(null);
         try {
-            let parsed = JSON.parse(jsonInput);
+            const strToParse = typeof overrideJsonStr === 'string' ? overrideJsonStr : jsonInput;
+            let parsed = typeof strToParse === 'object' ? strToParse : JSON.parse(strToParse);
 
             if (parsed.receta && typeof parsed.receta === 'object') parsed = parsed.receta;
             else if (parsed.recipe && typeof parsed.recipe === 'object') parsed = parsed.recipe;

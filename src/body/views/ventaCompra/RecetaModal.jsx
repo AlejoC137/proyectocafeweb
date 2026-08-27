@@ -1,25 +1,24 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
-import { Save, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Printer, Plus, X, Settings2, FileJson, Copy, Check, ChefHat, Clock, Users, DollarSign, RefreshCw, Lock, Unlock, BookOpen, Image as ImageIcon } from "lucide-react";
 import RecipeImportModal from './RecipeImportModal';
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
-import { getAllFromTable, getRecepie, updateItem } from "../../../redux/actions";
+import { getAllFromTable, getOtherExpenses, getRecepie, updateItem } from "../../../redux/actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
+import EditableText from "../../../components/ui/EditableText";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 import supabase from "../../../config/supabaseClient";
 import HorizontalGallery from "../../components/Menu/MenuPrintHorizontal/HorizontalGallery";
 
 import EditableIngredientRow from "./RecetaModalComponents/EditableIngredientRow";
+import RecipeItemRow from "./RecetaModalComponents/RecipeItemRow";
 import RecipeSection from "./RecetaModalComponents/RecipeSection";
-
-// Sub-components
-import { handlePrintReceta as printRecetaPdf } from "./RecetaModalComponents/printReceta";
-import RecetaHeader from "./RecetaModalComponents/RecetaHeader";
-import RecetaCostosCard from "./RecetaModalComponents/RecetaCostosCard";
-import RecetaProcesosNotas from "./RecetaModalComponents/RecetaProcesosNotas";
-import RecetaSidebarMeta from "./RecetaModalComponents/RecetaSidebarMeta";
+import EmplatadoEditor from "./RecetaModalComponents/EmplatadoEditor";
+import FuentesEditor from "./RecetaModalComponents/FuentesEditor";
+import VeaseSection from "../../../components/Vease/VeaseSection";
 
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────────
 function RecetaModal({ item, onClose }) {
@@ -31,6 +30,12 @@ function RecetaModal({ item, onClose }) {
   const allItems = useSelector((state) => state.allItems || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
   const allOptions = useMemo(() => [...allItems, ...allProduccion], [allItems, allProduccion]);
+  const searchableProducts = useMemo(() => [
+    ...allItems.map(i => ({ ...i, __type: "item" })),
+    ...allProduccion.map(p => ({ ...p, __type: "producto_interno" })),
+  ], [allItems, allProduccion]);
+
+  const getProductName = (product) => product?.Nombre_del_producto || product?.NombreES || product?.name || "(Sin nombre)";
 
   const [receta, setReceta] = useState(null);
   const [menuItem, setMenuItem] = useState(null);
@@ -59,6 +64,7 @@ function RecetaModal({ item, onClose }) {
     setImagenUrl(img.url);
     setShowGallery(false);
     
+    // Automatically save if possible
     if (receta.forId) {
       setIsUpdating(true);
       try {
@@ -110,6 +116,7 @@ function RecetaModal({ item, onClose }) {
         height: 300
       };
 
+      // Register in menu_print_config
       const { data: configs, error: fetchErr } = await supabase.from('menu_print_config').select('*');
       if (!fetchErr && configs && configs.length > 0) {
         const configToUpdate = configs.find(c => c.id === 2) || configs[0];
@@ -121,6 +128,7 @@ function RecetaModal({ item, onClose }) {
 
       setImagenUrl(publicUrl);
       
+      // Automatically save if possible
       if (receta.forId) {
         const result = await dispatch(updateItem(receta.forId, { Foto: publicUrl }, "Menu"));
         if (result) setFoto(publicUrl);
@@ -164,6 +172,7 @@ function RecetaModal({ item, onClose }) {
         let source = "Recetas";
         if (!result) { result = await getRecepie(id, "RecetasProduccion"); source = "RecetasProduccion"; }
         if (!result) throw new Error("Receta no encontrada");
+        console.log("📦 Objeto Receta cargado:", result);
         setReceta(result); setRecetaSource(source); setTiempoProceso(result.ProcessTime || 0);
         if (result.forId) {
           const plato = await getRecepie(result.forId, "Menu");
@@ -311,6 +320,7 @@ function RecetaModal({ item, onClose }) {
 
     setIsUpdating(true);
     try {
+      // 1. Actualizar el campo precioUnitario en la receta misma
       const payloadReceta = { 
         precioUnitario: valorPorUnidad, 
         actualizacion: new Date().toISOString() 
@@ -321,6 +331,7 @@ function RecetaModal({ item, onClose }) {
         setReceta(prev => ({ ...prev, ...payloadReceta }));
       }
 
+      // 2. Sincronizar con el ítem de Producción Interna (forId)
       if (receta.forId) {
         await dispatch(updateItem(receta.forId, { precioUnitario: valorPorUnidad }, "ProduccionInterna"));
       }
@@ -438,25 +449,115 @@ function RecetaModal({ item, onClose }) {
     finally { setIsUpdating(false); }
   };
 
-  const handlePrint = () => {
-    printRecetaPdf({
-      receta,
-      foto,
-      ingredientesAjustados,
-      produccionAjustada,
-      calculoDetalles,
-      precioVentaFinal,
-      costoProduccion,
-      recetaSource,
-      formatCurrency,
-    });
+  // ─── Print / PDF ────────────────────────────────────────────────────────────
+  const handlePrintReceta = () => {
+    if (!receta) return;
+    const rendimientoData = receta.rendimiento ? (() => { try { return JSON.parse(receta.rendimiento); } catch { return null; } })() : null;
+    const processSteps = Array.from({ length: 20 }, (_, i) => receta[`proces${i + 1}`]).filter(Boolean);
+    const notes = Array.from({ length: 10 }, (_, i) => receta[`nota${i + 1}`]).filter(Boolean);
+
+    const ingRows = ingredientesAjustados.map(ing =>
+      `<tr><td>${ing.nombre}</td><td class="num">${ing.cantidad.toFixed(2)} ${ing.unidades}</td><td class="num">${formatCurrency(ing.cantidad * ing.precioUnitario)}</td></tr>`
+    ).join("");
+    const prodRows = produccionAjustada.map(p =>
+      `<tr><td>${p.nombre}</td><td class="num">${p.cantidad.toFixed(2)} ${p.unidades}</td><td class="num">${formatCurrency(p.cantidad * p.precioUnitario)}</td></tr>`
+    ).join("");
+
+    const emplatadoHtml = (() => {
+      try {
+        const steps = JSON.parse(receta.emplatado || "");
+        if (Array.isArray(steps)) return steps.map((s, i) => `<p><strong>${i + 1}.</strong> ${s.proceso}</p>`).join("");
+      } catch { }
+      return `<p>${receta.emplatado || ""}</p>`;
+    })();
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receta: ${receta.legacyName}</title>
+<style>
+  @page{size:letter;margin:1.5cm 2cm}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Georgia',serif;font-size:12px;color:#1a1a1a;line-height:1.6}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:16px}
+  .header-left h1{font-size:25px;color:#1d4ed8;font-weight:700;letter-spacing:-0.3px}
+  .badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px}
+  .badge-blue{background:#dbeafe;color:#1d4ed8}
+  .badge-gray{background:#f1f5f9;color:#475569}
+  img{max-width:150px;max-height:150px;border-radius:6px;object-fit:cover}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:4px}
+  h2{font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin:16px 0 8px}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  thead th{background:#f0f4f8;padding:5px 7px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px}
+  thead th.num{text-align:right}
+  td{padding:4px 7px;border-bottom:1px solid #f8fafc}
+  td.num{text-align:right;font-family:monospace}
+  .total-row td{background:#eff6ff;font-weight:700;font-size:12.5px}
+  .process-step{display:flex;gap:8px;margin-bottom:6px}
+  .step-num{font-weight:700;color:#1d4ed8;min-width:20px}
+  .note-item{padding-left:12px;position:relative;margin-bottom:4px}
+  .note-item::before{content:'•';position:absolute;left:0;color:#64748b}
+  .footer{margin-top:20px;padding-top:8px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;display:flex;justify-content:space-between}
+  .cost-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .cost-box-label{font-size:10.5px;font-weight:700;text-transform:uppercase;color:#1d4ed8}
+  .cost-box-value{font-size:16px;font-weight:700;color:#1d4ed8}
+</style></head><body>
+<div class="header">
+  <div class="header-left">
+    <h1>${receta.legacyName || "Sin nombre"}</h1>
+    <div class="badges">
+      ${rendimientoData ? `<span class="badge badge-blue">👥 ${rendimientoData.porcion || 1} porción(es) · ${rendimientoData.cantidad} ${rendimientoData.unidades}</span>` : ""}
+      ${receta.ProcessTime ? `<span class="badge badge-gray">⏱ ${receta.ProcessTime} min</span>` : ""}
+      ${receta.autor ? `<span class="badge badge-gray">👨‍🍳 ${receta.autor}</span>` : ""}
+    </div>
+  </div>
+  ${foto ? `<img src="${foto}" alt="Foto del plato" />` : ""}
+</div>
+
+<div class="grid2">
+  <div>
+    ${ingRows ? `<h2>Ingredientes</h2><table><thead><tr><th>Ingrediente</th><th class="num">Cantidad</th><th class="num">Costo</th></tr></thead><tbody>${ingRows}</tbody></table>` : ""}
+    ${prodRows ? `<h2>Producción Interna</h2><table><thead><tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Costo</th></tr></thead><tbody>${prodRows}</tbody></table>` : ""}
+    ${calculoDetalles ? `
+    <h2>Análisis de Costos</h2>
+    <table><tbody>
+      <tr><td>%CMP Establecido</td><td class="num">${calculoDetalles.pCMPInicial}%</td></tr>
+      <tr><td>%CMP Real</td><td class="num">${calculoDetalles.pCMPReal}%</td></tr>
+      <tr><td>Valor CMP</td><td class="num">${formatCurrency(calculoDetalles.vCMP)}</td></tr>
+      <tr><td>Mano de Obra</td><td class="num">${formatCurrency(calculoDetalles.vCMO)}</td></tr>
+      <tr><td>Utilidad Bruta</td><td class="num">${formatCurrency(calculoDetalles.vIB)}</td></tr>
+    </tbody></table>
+    <div class="cost-box"><span class="cost-box-label">Precio de Venta</span><span class="cost-box-value">${formatCurrency(precioVentaFinal)}</span></div>
+    ` : recetaSource === "RecetasProduccion" ? `
+    <div class="cost-box"><span class="cost-box-label">Costo de Producción</span><span class="cost-box-value">${formatCurrency(costoProduccion)}</span></div>
+    ` : ""}
+  </div>
+  <div>
+    ${processSteps.length > 0 ? `<h2>Proceso de Preparación</h2>${processSteps.map((p, i) => `<div class="process-step"><span class="step-num">${i + 1}.</span><span>${p}</span></div>`).join("")}` : ""}
+    ${notes.length > 0 ? `<h2>Notas del Chef</h2>${notes.map(n => `<div class="note-item">${n}</div>`).join("")}` : ""}
+    ${receta.emplatado ? `<h2>Emplatado</h2>${emplatadoHtml}` : ""}
+  </div>
+</div>
+
+<div class="footer">
+  <span>ID Receta: ${receta._id}</span>
+  <span>Generado: ${new Date().toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" })}</span>
+</div>
+</body></html>`;
+
+    const win = window.open("", "_blank");
+    win.document.documentElement.innerHTML = html;
+    win.onload = () => { win.focus(); win.print(); };
   };
 
+  // ─── Helpers UI ─────────────────────────────────────────────────────────────
   const rendimientoDisplay = (() => {
     if (!receta?.rendimiento) return null;
     try { const r = JSON.parse(receta.rendimiento); return `${r.porcion || 1} porción · ${r.cantidad} ${r.unidades}`; }
     catch { return null; }
   })();
+
+  const costoTotal = recetaSource === "RecetasProduccion"
+    ? costoProduccion
+    : (precioVentaFinal || 0);
 
   if (loading) return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -481,38 +582,101 @@ function RecetaModal({ item, onClose }) {
       <div className="bg-slate-50 w-screen h-screen flex flex-col overflow-hidden">
 
         {/* ── Header ── */}
-        <RecetaHeader
-          receta={receta}
-          rendimientoDisplay={rendimientoDisplay}
-          recetaSource={recetaSource}
-          formatCurrency={formatCurrency}
-          updateInfoField={updateInfoField}
-          permanentEditMode={permanentEditMode}
-          isUpdating={isUpdating}
-          porcentaje={porcentaje}
-          setPorcentaje={setPorcentaje}
-          editShow={editShow}
-          setEditShow={setEditShow}
-          handleEnablePermanentEdit={handleEnablePermanentEdit}
-          handleCancelEdit={handleCancelEdit}
-          showPinInput={showPinInput}
-          pinCode={pinCode}
-          setPinCode={setPinCode}
-          handlePinVerification={handlePinVerification}
-          setShowImportModal={setShowImportModal}
-          handlePrintReceta={handlePrint}
-          onClose={onClose}
-          navigate={navigate}
-        />
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-3 flex items-center justify-between flex-shrink-0 shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-1.5 bg-white/10 rounded-lg flex-shrink-0">
+              <ChefHat className="h-5 w-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-base font-bold text-white truncate">
+                <EditableText value={receta.legacyName || ""} onSave={(v) => updateInfoField("legacyName", v)}
+                  isEditable={permanentEditMode} placeholder="Nombre de la receta..." multiline={false} disabled={isUpdating} />
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                {rendimientoDisplay && (
+                  <span className="flex items-center gap-1 text-[9px] font-medium bg-white/15 text-white/80 px-2 py-0.5 rounded-full">
+                    <Users className="h-2.5 w-2.5" />{rendimientoDisplay}
+                  </span>
+                )}
+                {receta.ProcessTime > 0 && (
+                  <span className="flex items-center gap-1 text-[9px] font-medium bg-white/15 text-white/80 px-2 py-0.5 rounded-full">
+                    <Clock className="h-2.5 w-2.5" />{receta.ProcessTime} min
+                  </span>
+                )}
+                {recetaSource === "RecetasProduccion" && (
+                  <span className="text-[9px] font-bold bg-amber-500/80 text-white px-2 py-0.5 rounded-full">Producción</span>
+                )}
+                {receta.precioUnitario > 0 && (
+                  <span className="flex items-center gap-1 text-[9px] font-medium bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                    <DollarSign className="h-2.5 w-2.5" />{formatCurrency(receta.precioUnitario)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* Porcentaje */}
+            <div className="flex items-center gap-1.5 bg-white/10 rounded-lg px-2 py-1">
+              <span className="text-[10px] text-white/70 font-medium">%</span>
+              <input type="number" min={1} value={porcentaje}
+                onChange={(e) => setPorcentaje(Number(e.target.value))}
+                className="w-14 h-6 text-xs text-center bg-white/10 text-white rounded border border-white/20 focus:outline-none focus:border-white/50" />
+            </div>
+
+            {/* Edición simple */}
+            <button onClick={() => setEditShow(p => !p)} disabled={permanentEditMode}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${editShow && !permanentEditMode ? "bg-blue-500 text-white" : "bg-white/10 hover:bg-white/20 text-white/80"} disabled:opacity-40`}>
+              {editShow ? "✓ Ed. Simple" : "Editar"}
+            </button>
+
+            {/* Edición avanzada */}
+            <button onClick={permanentEditMode ? handleCancelEdit : handleEnablePermanentEdit} disabled={isUpdating || (showPinInput && !permanentEditMode)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${permanentEditMode ? "bg-emerald-500 text-white" : "bg-amber-500/80 hover:bg-amber-500 text-white"} disabled:opacity-50`}>
+              {permanentEditMode ? <><Unlock className="h-3 w-3" />Avanzado</> : <><Lock className="h-3 w-3" />Avanzado</>}
+            </button>
+
+            {showPinInput && !permanentEditMode && (
+              <div className="flex items-center gap-1">
+                <input type="password" placeholder="PIN" value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value.replace(/\D/g, "").substring(0, 4))}
+                  onKeyDown={(e) => { if (e.key === "Enter") handlePinVerification(); }}
+                  maxLength={4} autoFocus
+                  className="w-16 h-7 text-xs text-center bg-white/10 text-white border border-white/30 rounded focus:outline-none focus:border-white/60" />
+                <button onClick={handlePinVerification} disabled={pinCode.length !== 4}
+                  className="h-7 px-2 bg-white/20 hover:bg-white/30 text-white text-xs rounded disabled:opacity-40">OK</button>
+              </div>
+            )}
+
+            {/* Import JSON */}
+            <button onClick={() => setShowImportModal(true)}
+              className="p-1.5 bg-white/10 hover:bg-white/20 text-white/80 rounded-lg transition-colors" title="Importar desde JSON">
+              <FileJson className="h-4 w-4" />
+            </button>
+
+            {/* Print */}
+            <button onClick={handlePrintReceta}
+              className="p-1.5 bg-white/10 hover:bg-white/20 text-white/80 rounded-lg transition-colors" title="Imprimir receta (PDF carta)">
+              <Printer className="h-4 w-4" />
+            </button>
+
+            {/* Close */}
+            <button onClick={onClose || (() => navigate(-1))}
+              className="p-1.5 bg-white/10 hover:bg-red-500/70 text-white/80 hover:text-white rounded-lg transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
 
         {/* ── Content grid ── */}
         <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-0">
 
-          {/* Col 1: Ingredientes & Costos */}
+          {/* Col 1: Ingredientes */}
           <div className="lg:col-span-1 overflow-y-auto custom-scrollbar border-r border-slate-200 bg-white">
             <div className="p-4 space-y-4">
               {permanentEditMode ? (
                 <>
+                  {/* Edit mode ingredient header */}
                   <div className="flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-slate-100">
                     <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Editando Ingredientes</h3>
                     <div className="flex gap-1.5">
@@ -577,59 +741,222 @@ function RecetaModal({ item, onClose }) {
               )}
 
               {/* Cálculo de costos */}
-              <RecetaCostosCard
-                recetaSource={recetaSource}
-                permanentEditMode={permanentEditMode}
-                tiempoProceso={tiempoProceso}
-                setTiempoProceso={setTiempoProceso}
-                costoManualCMP={costoManualCMP}
-                setCostoManualCMP={setCostoManualCMP}
-                costoProduccion={costoProduccion}
-                handleCalculateUnitValue={handleCalculateUnitValue}
-                isUpdating={isUpdating}
-                rendimientoCantidad={rendimientoCantidad}
-                calculoDetalles={calculoDetalles}
-                precioVentaFinal={precioVentaFinal}
-                formatCurrency={formatCurrency}
-              />
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 space-y-2">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <DollarSign className="h-3 w-3" /> Cálculo de Costos
+                </h4>
+
+                {permanentEditMode && (
+                  <div className="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200">
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-400 uppercase">Tiempo (min)</label>
+                      <Input type="number" value={tiempoProceso} onChange={(e) => setTiempoProceso(Number(e.target.value))} className="h-7 text-xs mt-0.5" />
+                    </div>
+                    {recetaSource !== "RecetasProduccion" && (
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-400 uppercase">%CMP Manual</label>
+                        <Input type="number" value={costoManualCMP} onChange={(e) => setCostoManualCMP(e.target.value)} placeholder="Ej: 35" className="h-7 text-xs mt-0.5" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {recetaSource === "RecetasProduccion" ? (
+                  <div className="flex flex-col gap-2 bg-blue-50 rounded-lg px-3 py-2 border border-blue-100">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-blue-700">Costo de Producción</span>
+                      <span className="text-base font-bold text-blue-700">{formatCurrency(costoProduccion)}</span>
+                    </div>
+                    {permanentEditMode && (
+                      <Button
+                        size="sm"
+                        onClick={handleCalculateUnitValue}
+                        disabled={isUpdating || !rendimientoCantidad || Number(rendimientoCantidad) <= 0}
+                        className="w-full h-7 text-[10px] bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isUpdating ? "animate-spin" : ""}`} />
+                        Calcular y Guardar Valor x Unidad
+                      </Button>
+                    )}
+                  </div>
+                ) : calculoDetalles ? (
+                  <div className="space-y-1">
+                    {[
+                      { label: "%CMP Establecido", value: `${calculoDetalles.pCMPInicial}%`, color: "bg-slate-100" },
+                      { label: "%CMP Real", value: `${calculoDetalles.pCMPReal}%`, color: "bg-slate-100" },
+                      { label: "Valor CMP", value: formatCurrency(calculoDetalles.vCMP), color: "bg-green-50" },
+                      { label: "Mano de Obra", value: formatCurrency(calculoDetalles.vCMO), color: "bg-green-50" },
+                      { label: "Utilidad Bruta", value: formatCurrency(calculoDetalles.vIB), color: "bg-green-50" },
+                      { label: "% Util. Bruta", value: `${calculoDetalles.pIB}%`, color: "bg-green-50" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className={`flex justify-between items-center px-2 py-1 rounded ${color}`}>
+                        <span className="text-[10px] text-slate-600">{label}</span>
+                        <span className="text-[10px] font-bold text-slate-800">{value}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-1">
+                      <span className="text-xs font-bold text-amber-700">Precio Venta Final</span>
+                      <span className="text-base font-bold text-amber-700">{formatCurrency(precioVentaFinal)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400 italic text-center py-2">Ajusta ingredientes para calcular.</p>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Col 2: Procesos & Notas */}
           <div className="lg:col-span-1 overflow-y-auto custom-scrollbar border-r border-slate-200 bg-white">
-            <RecetaProcesosNotas
-              receta={receta}
-              permanentEditMode={permanentEditMode}
-              updateProcessOrNote={updateProcessOrNote}
-              updateField={updateField}
-              isUpdating={isUpdating}
-            />
+            <div className="p-4 space-y-4">
+              {/* Procesos */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3">Procesos</h3>
+                <div className="space-y-2">
+                  {Array.from({ length: 20 }, (_, i) => i + 1).map((i) =>
+                    (receta[`proces${i}`] || permanentEditMode) && (
+                      <div key={`process-${i}`} className="flex items-start gap-2 group">
+                        <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-700 rounded-full text-[9px] font-bold flex items-center justify-center mt-0.5">{i}</span>
+                        <div className="flex-1 text-xs text-slate-700">
+                          <EditableText value={receta[`proces${i}`] || ""} onSave={(v) => updateProcessOrNote("process", i, v)}
+                            isEditable={permanentEditMode} placeholder={`Proceso ${i}...`} multiline={true} disabled={isUpdating} />
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Notas */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3">Notas</h3>
+                <div className="space-y-2">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((i) =>
+                    (receta[`nota${i}`] || permanentEditMode) && (
+                      <div key={`note-${i}`} className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5"></span>
+                        <div className="flex-1 text-xs text-slate-700">
+                          <EditableText value={receta[`nota${i}`] || ""} onSave={(v) => updateProcessOrNote("note", i, v)}
+                            isEditable={permanentEditMode} placeholder={`Nota ${i}...`} multiline={true} disabled={isUpdating} />
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Fuentes */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3 mt-4">Fuentes</h3>
+                <div className="pl-2">
+                  <FuentesEditor 
+                    fuentes={receta.fuentes || []} 
+                    onSave={(v) => updateField({ fuentes: v })} 
+                    isEditable={permanentEditMode} 
+                    disabled={isUpdating} 
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Col 3: Info, Imagen, Rendimiento, Emplatado */}
           <div className="lg:col-span-1 overflow-y-auto custom-scrollbar bg-white">
-            <RecetaSidebarMeta
-              receta={receta}
-              id={id}
-              foto={foto}
-              imagenUrl={imagenUrl}
-              setImagenUrl={setImagenUrl}
-              permanentEditMode={permanentEditMode}
-              isUpdating={isUpdating}
-              uploadingImage={uploadingImage}
-              setShowGallery={setShowGallery}
-              updateImagenUrl={updateImagenUrl}
-              updateInfoField={updateInfoField}
-              rendimientoPorcion={rendimientoPorcion}
-              setRendimientoPorcion={setRendimientoPorcion}
-              rendimientoCantidad={rendimientoCantidad}
-              setRendimientoCantidad={setRendimientoCantidad}
-              rendimientoUnidades={rendimientoUnidades}
-              setRendimientoUnidades={setRendimientoUnidades}
-              updateRendimiento={updateRendimiento}
-              rendimientoDisplay={rendimientoDisplay}
-              recetaSource={recetaSource}
-            />
+            <div className="p-4 space-y-4">
+              {/* Imagen */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-3">Imagen del Plato</h3>
+                {permanentEditMode ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input type="url" placeholder="URL de la imagen" value={imagenUrl}
+                        onChange={(e) => setImagenUrl(e.target.value)} disabled={isUpdating || uploadingImage}
+                        className="flex-1 h-8 text-xs" />
+                      <Button 
+                        type="button"
+                        size="sm" 
+                        onClick={() => setShowGallery(true)} 
+                        disabled={isUpdating || uploadingImage} 
+                        className="h-8 text-xs px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                      >
+                        Galería
+                      </Button>
+                      <Button size="sm" onClick={updateImagenUrl} disabled={isUpdating || uploadingImage} className="h-8 text-xs px-3">
+                        {isUpdating ? "..." : "Guardar"}
+                      </Button>
+                    </div>
+                    {(foto || imagenUrl) && (
+                      <img src={imagenUrl || foto} alt="Preview"
+                        className="w-full h-40 object-cover rounded-xl shadow-sm" onError={(e) => { e.target.style.display = "none"; }} />
+                    )}
+                  </div>
+                ) : foto ? (
+                  <img src={foto} alt="Imagen del plato" className="w-full h-44 object-cover rounded-xl shadow-sm" />
+                ) : (
+                  <div className="w-full h-32 bg-slate-100 rounded-xl flex items-center justify-center">
+                    <ChefHat className="h-10 w-10 text-slate-300" />
+                  </div>
+                )}
+              </div>
+
+              {/* Autor */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Autor</h3>
+                <div className="text-xs text-slate-700">
+                  <EditableText value={receta.autor || ""} onSave={(v) => updateInfoField("autor", v)}
+                    isEditable={permanentEditMode} placeholder="Nombre del autor..." multiline={false} disabled={isUpdating} />
+                </div>
+              </div>
+
+              {/* Rendimiento */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Rendimiento</h3>
+                {permanentEditMode ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <div>
+                        <label className="text-[9px] text-slate-400 font-bold uppercase">Porción</label>
+                        <Input type="number" value={rendimientoPorcion} onChange={(e) => setRendimientoPorcion(e.target.value)} disabled={isUpdating} className="h-7 text-xs mt-0.5" />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-slate-400 font-bold uppercase">Cantidad</label>
+                        <Input type="number" value={rendimientoCantidad} onChange={(e) => setRendimientoCantidad(e.target.value)} disabled={isUpdating} className="h-7 text-xs mt-0.5" />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-slate-400 font-bold uppercase">Unidad</label>
+                        <Input type="text" value={rendimientoUnidades} onChange={(e) => setRendimientoUnidades(e.target.value)} disabled={isUpdating} className="h-7 text-xs mt-0.5" />
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={updateRendimiento} disabled={isUpdating} className="w-full h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                      {isUpdating ? "Guardando..." : "Guardar Rendimiento"}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-600">{rendimientoDisplay || <span className="text-slate-400 italic">No especificado</span>}</p>
+                )}
+              </div>
+
+              {/* Emplatado */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-2">Emplatado</h3>
+                <EmplatadoEditor value={receta.emplatado || ""} onSave={(v) => updateInfoField("emplatado", v)}
+                  isEditable={permanentEditMode} placeholder="Describir emplatado..." disabled={isUpdating} />
+              </div>
+
+              {/* Véase / Relacionados */}
+              <div>
+                <VeaseSection sourceId={receta._id || id} sourceType="receta" />
+              </div>
+
+              {/* Meta */}
+              <div className="bg-slate-50 rounded-lg p-2.5 space-y-1 border border-slate-100">
+                <div className="flex justify-between text-[9px] text-slate-400">
+                  <span>Fuente: {recetaSource}</span>
+                  {receta.actualizacion && <span>Act: {new Date(receta.actualizacion).toLocaleDateString("es-CO")}</span>}
+                </div>
+                <div className="text-[8px] text-slate-300 font-mono truncate">ID: {receta._id}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

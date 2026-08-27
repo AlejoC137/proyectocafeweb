@@ -109,15 +109,14 @@ export default function AIAssistantChat({ isOpen, onClose, currentPath }) {
         content: m.content
       }));
 
-      const res = await fetch("/api/deepseek", {
+      const res = await fetch("/api/claude", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           messages: apiMessages,
-          systemContext: fullContext.contextString,
-          temperature: 0.7
+          systemContext: fullContext.contextString
         })
       });
 
