@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import VeaseSection from "./VeaseSection";
-import HorizontalGallery from "../../views/bajas/HorizontalGallery";
+import VeaseSection from "@/components/Vease/VeaseSection";
+import HorizontalGallery from "../Menu/MenuPrintHorizontal/HorizontalGallery";
 import supabase from "../../../config/supabaseClient";
 
 export default ItemsModal;
