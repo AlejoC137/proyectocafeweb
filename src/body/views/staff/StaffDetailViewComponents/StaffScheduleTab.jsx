@@ -1,6 +1,5 @@
 import React from "react";
 import * as Tabs from '@radix-ui/react-tabs';
-import { AlertTriangle } from 'lucide-react';
 import WeeklyTimeGrid from '../../../components/staff/WeeklyTimeGrid';
 import { SectionTitle, calculateDuration } from './StaffDetailHelpers';
 
@@ -43,12 +42,6 @@ export const StaffScheduleTab = ({
           setFormData(prev => ({ ...prev, TurnosSet: newSchedule }));
         }}
       />
-      <div className="bg-blue-50 p-4 border border-blue-100 rounded-xl flex items-center gap-3">
-        <AlertTriangle className="text-blue-500 w-5 h-5 shrink-0" />
-        <p className="text-sm text-blue-800">
-          Este horario base será utilizado en el <strong>Calendario de Producción</strong> para conocer la disponibilidad del personal en las diferentes estaciones.
-        </p>
-      </div>
     </Tabs.Content>
   );
 };

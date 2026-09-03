@@ -6,7 +6,7 @@ import { getAllFromTable, updateStaff, deleteStaff } from "../../../redux/action
 import { STAFF } from "../../../redux/actions-types";
 import {
     X, User, CreditCard, Calendar, Edit2, Save, Trash2,
-    AlertTriangle, ArrowLeft, Phone, MapPin, CheckCircle2, Calculator
+    ArrowLeft, Phone, MapPin, CheckCircle2, Calculator
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/button';
@@ -785,12 +785,6 @@ const StaffDetailView = () => {
                                         setFormData(prev => ({ ...prev, TurnosSet: newSchedule }));
                                     }} 
                                 />
-                                <div className="bg-blue-50 p-4 border border-blue-100 rounded-xl flex items-center gap-3">
-                                    <AlertTriangle className="text-blue-500 w-5 h-5 shrink-0" />
-                                    <p className="text-sm text-blue-800">
-                                        Este horario base será utilizado en el <strong>Calendario de Producción</strong> para conocer la disponibilidad del personal en las diferentes estaciones.
-                                    </p>
-                                </div>
                             </Tabs.Content>
                         </div>
                     </Tabs.Root>
