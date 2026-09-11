@@ -1,0 +1,129 @@
+[
+  {
+    "id": "horno-padrino",
+    "nombre": "Horno Padrino Doble Cámara Pizza (70x85 cm)",
+    "tipo": "HORNO",
+    "dimensiones": "0.70m x 0.85m",
+    "camaras": 2,
+    "capacidadTartasVascas": 8,
+    "capacidadCroissants": 24,
+    "tiempoCicloMin": 38,
+    "potenciaGas": "35.000 BTU/h (Pipeta GLP)",
+    "cuelloDeBotellaDesc": "Capacidad de horneado limitada a 2 cámaras (8 tartas vascas por horneada de 38 min).",
+    "posicion": {
+      "x": 12,
+      "y": 10,
+      "width": 26,
+      "height": 28,
+      "rotacion": 0,
+      "color": "#ea580c"
+    }
+  },
+  {
+    "id": "pipeta-gas",
+    "nombre": "Pipeta de Gas GLP (40 lb)",
+    "tipo": "ENERGIA",
+    "dimensiones": "0.35m x 0.35m",
+    "tiempoCicloMin": 0,
+    "cuelloDeBotellaDesc": "Alimentación autónoma de gas propano para el horno.",
+    "posicion": {
+      "x": 14,
+      "y": 38,
+      "width": 16,
+      "height": 10,
+      "rotacion": 0,
+      "color": "#ef4444"
+    }
+  },
+  {
+    "id": "meson-central",
+    "nombre": "Mesón Central de Trabajo Inox (80x110 cm)",
+    "tipo": "AREA_PREPARACION",
+    "dimensiones": "0.80m x 1.10m",
+    "material": "Acero Inox AISI 304",
+    "capacidadTartasVascas": 8,
+    "capacidadCroissants": 36,
+    "tiempoCicloMin": 15,
+    "cuelloDeBotellaDesc": "Área útil para pesado, laminado, porcionado y enmoldado.",
+    "posicion": {
+      "x": 42,
+      "y": 38,
+      "width": 24,
+      "height": 34,
+      "rotacion": 0,
+      "color": "#10b981"
+    }
+  },
+  {
+    "id": "nevera-vertical",
+    "nombre": "Nevera Vertical (70x70 cm)",
+    "tipo": "REFRIGERACION",
+    "dimensiones": "0.70m x 0.70m",
+    "capacidadLitros": 420,
+    "capacidadTartasVascas": 16,
+    "capacidadCroissants": 48,
+    "tiempoCicloMin": 60,
+    "cuelloDeBotellaDesc": "Espacio de refrigeración para reposo y enfriamiento de tartas.",
+    "posicion": {
+      "x": 72,
+      "y": 10,
+      "width": 22,
+      "height": 24,
+      "rotacion": 0,
+      "color": "#06b6d4"
+    }
+  },
+  {
+    "id": "pocetas-aux",
+    "nombre": "Superficie Auxiliar y Almacenamiento (2 Pocetas)",
+    "tipo": "LAVADO_ALMACEN",
+    "dimensiones": "1.80m x 0.50m",
+    "tiempoCicloMin": 10,
+    "cuelloDeBotellaDesc": "Zona de lavado e inocuidad BPM en pared norte.",
+    "posicion": {
+      "x": 34,
+      "y": 10,
+      "width": 38,
+      "height": 14,
+      "rotacion": 0,
+      "color": "#8b5cf6"
+    }
+  },
+  {
+    "id": "batidora-6l",
+    "nombre": "Batidora Planetaria 6 Litros",
+    "tipo": "BATIDORA",
+    "dimensiones": "0.45m x 0.35m",
+    "capacidadBowlLitros": 6,
+    "capacidadMasaBatidaKg": 4,
+    "capacidadTartasVascas": 4,
+    "capacidadCroissants": 24,
+    "tiempoCicloMin": 18,
+    "potenciaElectrica": "800 W / 110V",
+    "cuelloDeBotellaDesc": "Bowl de 6L bate aprox 3.8 kg (máximo 4 tartas vascas por tanda).",
+    "posicion": {
+      "x": 74,
+      "y": 54,
+      "width": 18,
+      "height": 22,
+      "rotacion": 0,
+      "color": "#3b82f6"
+    }
+  },
+  {
+    "id": "estanteria-secos",
+    "nombre": "Estantería de Secos y Moldes",
+    "tipo": "ALMACEN_SECOS",
+    "dimensiones": "0.90m x 0.35m",
+    "tiempoCicloMin": 0,
+    "cuelloDeBotellaDesc": "Almacenamiento de harinas, azúcares y moldes.",
+    "posicion": {
+      "x": 12,
+      "y": 48,
+      "width": 14,
+      "height": 24,
+      "rotacion": 0,
+      "color": "#eab308"
+    }
+  }
+]

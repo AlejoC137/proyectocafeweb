@@ -69,6 +69,7 @@ const AnalisisAlmuerzo = lazy(() => import('./body/views/lunchByOrder/AnalisisAl
 const ReviewProyectoCafe = lazy(() => import('./body/views/reviewProyectoCafe/ReviewProyectoCafe'));
 const CalculadorRecetaHelados = lazy(() => import('./body/views/ventaCompra/CalculadorRecetaHelados'));
 const BajasManager = lazy(() => import('./body/views/bajas/BajasManager'));
+const PlantaProduccion = lazy(() => import('./body/views/planta/PlantaProduccion'));
 
 const ProyectoRadio = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager = lazy(() => import('./components/RadioManager'));
@@ -209,6 +210,8 @@ function App() {
                   <Route path="/review_ProyectoCafe" element={<ReviewProyectoCafe />} />
                   <Route path="/bajas" element={<BajasManager />} />
                   <Route path="/Bajas" element={<BajasManager />} />
+                  <Route path="/planta" element={<PlantaProduccion />} />
+                  <Route path="/Planta" element={<PlantaProduccion />} />
 
                   <Route path="*" element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
                 </Routes>

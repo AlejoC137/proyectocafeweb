@@ -1,0 +1,1584 @@
+{
+  "viewBox": "-20 -20 360 350",
+  "interiorWidthCm": 320,
+  "interiorHeightCm": 310,
+  "modelLines": [
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 0.0,
+      "y1": 0.0,
+      "x2": 104.22,
+      "y2": -0.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 104.22,
+      "y1": -0.0,
+      "x2": 104.22,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 104.22,
+      "y1": -15.0,
+      "x2": -15.0,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 204.22,
+      "y1": -0.0,
+      "x2": 320.0,
+      "y2": -0.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 335.0,
+      "y1": -15.0,
+      "x2": 204.22,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 204.22,
+      "y1": -15.0,
+      "x2": 204.22,
+      "y2": -0.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 333.5,
+      "y1": -13.5,
+      "x2": 204.22,
+      "y2": -13.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 205.72,
+      "y1": -7.5,
+      "x2": 205.72,
+      "y2": -1.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 205.72,
+      "y1": -1.5,
+      "x2": 321.5,
+      "y2": -1.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 104.22,
+      "y1": -13.5,
+      "x2": -13.5,
+      "y2": -13.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 205.72,
+      "y1": -7.5,
+      "x2": 204.22,
+      "y2": -7.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 104.22,
+      "y1": -7.5,
+      "x2": 102.72,
+      "y2": -7.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 102.72,
+      "y1": -1.5,
+      "x2": 102.72,
+      "y2": -7.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": -1.5,
+      "y1": -1.5,
+      "x2": 102.72,
+      "y2": -1.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_PROJ",
+      "source": "model",
+      "x1": 204.22,
+      "y1": -0.0,
+      "x2": 104.22,
+      "y2": -0.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_PROJ",
+      "source": "model",
+      "x1": 104.22,
+      "y1": -15.0,
+      "x2": 204.22,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 155.0,
+      "y1": 315.6,
+      "x2": 155.0,
+      "y2": 310.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 155.0,
+      "y1": 310.0,
+      "x2": 70.0,
+      "y2": 310.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 70.0,
+      "y1": 310.0,
+      "x2": 70.0,
+      "y2": 315.6
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 335.0,
+      "y1": 315.6,
+      "x2": 335.0,
+      "y2": 310.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 335.0,
+      "y1": 310.0,
+      "x2": 255.0,
+      "y2": 310.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 255.0,
+      "y1": 310.0,
+      "x2": 255.0,
+      "y2": 315.6
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 0.0,
+      "y1": 311.5,
+      "x2": -1.5,
+      "y2": 311.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 155.0,
+      "y1": 311.5,
+      "x2": 70.0,
+      "y2": 311.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 335.0,
+      "y1": 311.5,
+      "x2": 255.0,
+      "y2": 311.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_PROJ",
+      "source": "model",
+      "x1": 155.0,
+      "y1": 310.0,
+      "x2": 255.0,
+      "y2": 310.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-PISOS_PROJ",
+      "source": "model",
+      "x1": 387.25,
+      "y1": 202.07,
+      "x2": 335.0,
+      "y2": 202.07
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": -15.0,
+      "y1": -15.0,
+      "x2": -15.0,
+      "y2": 315.6
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 0.0,
+      "y1": 315.6,
+      "x2": 0.0,
+      "y2": 0.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": -13.5,
+      "y1": 315.6,
+      "x2": -13.5,
+      "y2": -13.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": -1.5,
+      "y1": 311.5,
+      "x2": -1.5,
+      "y2": -1.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 320.0,
+      "y1": -0.0,
+      "x2": 320.0,
+      "y2": 240.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 320.0,
+      "y1": 240.0,
+      "x2": 335.0,
+      "y2": 240.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 335.0,
+      "y1": 240.0,
+      "x2": 335.0,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 321.5,
+      "y1": -1.5,
+      "x2": 321.5,
+      "y2": 240.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 327.5,
+      "y1": 238.5,
+      "x2": 327.5,
+      "y2": 240.0
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 333.5,
+      "y1": 238.5,
+      "x2": 333.5,
+      "y2": -13.5
+    },
+    {
+      "type": "line",
+      "layer": "X-ARQ-MURO_CUT",
+      "source": "model",
+      "x1": 327.5,
+      "y1": 238.5,
+      "x2": 333.5,
+      "y2": 238.5
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 82.2,
+      "y1": 2.29,
+      "x2": 242.2,
+      "y2": 2.29
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 82.2,
+      "y1": 52.29,
+      "x2": 82.2,
+      "y2": 2.29
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 242.2,
+      "y1": 52.29,
+      "x2": 82.2,
+      "y2": 52.29
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 242.2,
+      "y1": 2.29,
+      "x2": 242.2,
+      "y2": 52.29
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 316.0,
+      "y1": 152.08,
+      "x2": 316.0,
+      "y2": 232.08
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 266.0,
+      "y1": 152.08,
+      "x2": 316.0,
+      "y2": 152.08
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 266.0,
+      "y1": 232.08,
+      "x2": 266.0,
+      "y2": 152.08
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 316.0,
+      "y1": 232.08,
+      "x2": 266.0,
+      "y2": 232.08
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 81.7,
+      "y1": 287.5,
+      "x2": 241.7,
+      "y2": 287.5
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 81.7,
+      "y1": 307.5,
+      "x2": 81.7,
+      "y2": 287.5
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 241.7,
+      "y1": 307.5,
+      "x2": 81.7,
+      "y2": 307.5
+    },
+    {
+      "type": "line",
+      "layer": "0",
+      "source": "model",
+      "x1": 241.7,
+      "y1": 287.5,
+      "x2": 241.7,
+      "y2": 307.5
+    },
+    {
+      "type": "line",
+      "layer": "X-PLANO1",
+      "source": "model",
+      "x1": -15.0,
+      "y1": -15.0,
+      "x2": -86.43,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-PLANO1",
+      "source": "model",
+      "x1": -86.43,
+      "y1": -15.0,
+      "x2": 335.0,
+      "y2": -15.0
+    },
+    {
+      "type": "line",
+      "layer": "X-PLANO1",
+      "source": "model",
+      "x1": 335.0,
+      "y1": -15.0,
+      "x2": 335.0,
+      "y2": 202.07
+    },
+    {
+      "type": "line",
+      "layer": "X-PLANO1",
+      "source": "model",
+      "x1": 335.0,
+      "y1": 202.07,
+      "x2": 387.25,
+      "y2": 202.07
+    }
+  ],
+  "blockInstances": [
+    {
+      "name": "AE_PUERTA BATIENTE MADERA - AE_PUERTA BATIENTE MADERA 0_70X2_20-8696333-Piso 1 - Arq",
+      "layer": "X-ARQ-PROYECCIONES",
+      "lines": [
+        {
+          "x1": 70.0,
+          "y1": 311.0,
+          "x2": 69.0,
+          "y2": 311.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 69.0,
+          "y1": 311.0,
+          "x2": 69.0,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 69.0,
+          "y1": 310.0,
+          "x2": 67.5,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 67.5,
+          "y1": 310.0,
+          "x2": 67.5,
+          "y2": 315.6,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 2.5,
+          "y1": 315.6,
+          "x2": 2.5,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 2.5,
+          "y1": 310.0,
+          "x2": 1.0,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 1.0,
+          "y1": 310.0,
+          "x2": 1.0,
+          "y2": 311.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 1.0,
+          "y1": 311.0,
+          "x2": 0.0,
+          "y2": 311.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 67.0,
+          "y1": 315.6,
+          "x2": 67.0,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 67.0,
+          "y1": 310.0,
+          "x2": 3.0,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 3.0,
+          "y1": 310.0,
+          "x2": 3.0,
+          "y2": 315.6,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 0.0,
+          "y1": 310.0,
+          "x2": 70.0,
+          "y2": 310.0,
+          "layer": "X-ARQ-PROYECCIONES"
+        }
+      ],
+      "arcs": [
+        {
+          "cx": 3.0,
+          "cy": 310.0,
+          "r": 64.0,
+          "a1": 3.18e-14,
+          "a2": 90.00000000000006,
+          "layer": "X-ARQ-PROYECCIONES"
+        }
+      ]
+    },
+    {
+      "name": "Horno Padrino - Horno Padrino-8709530-Piso 1 - Arq",
+      "layer": "X-ARQ-MOBILIARIO_PROJ",
+      "lines": [
+        {
+          "x1": 70.68,
+          "y1": 91.79,
+          "x2": 70.68,
+          "y2": 115.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 8.68,
+          "y1": 115.79,
+          "x2": 8.68,
+          "y2": 91.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 8.68,
+          "y1": 115.79,
+          "x2": 70.68,
+          "y2": 115.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 44.18,
+          "y1": 92.09,
+          "x2": 44.18,
+          "y2": 91.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 35.18,
+          "y1": 91.79,
+          "x2": 35.18,
+          "y2": 92.09,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 35.18,
+          "y1": 92.09,
+          "x2": 44.18,
+          "y2": 92.09,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 77.68,
+          "y1": 2.29,
+          "x2": 77.68,
+          "y2": 90.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 1.68,
+          "y1": 2.29,
+          "x2": 77.68,
+          "y2": 2.29,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 1.68,
+          "y1": 90.79,
+          "x2": 1.68,
+          "y2": 2.29,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 1.68,
+          "y1": 90.79,
+          "x2": 77.68,
+          "y2": 90.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 1.18,
+          "y1": 89.79,
+          "x2": 1.18,
+          "y2": 91.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 78.18,
+          "y1": 91.79,
+          "x2": 1.18,
+          "y2": 91.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 78.18,
+          "y1": 91.79,
+          "x2": 78.18,
+          "y2": 89.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 78.18,
+          "y1": 89.79,
+          "x2": 77.68,
+          "y2": 89.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 1.68,
+          "y1": 89.79,
+          "x2": 1.18,
+          "y2": 89.79,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        }
+      ],
+      "arcs": []
+    },
+    {
+      "name": "A_Surface rec - A_Surface rec-7537305-Piso 1 - Arq",
+      "layer": "X-ARQ-MOBILIARIO_PROJ",
+      "lines": [
+        {
+          "x1": 120.3,
+          "y1": 209.69,
+          "x2": 198.88,
+          "y2": 209.69,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 198.88,
+          "y1": 209.69,
+          "x2": 198.88,
+          "y2": 101.1,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 198.88,
+          "y1": 101.1,
+          "x2": 120.3,
+          "y2": 101.1,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 120.3,
+          "y1": 101.1,
+          "x2": 120.3,
+          "y2": 209.69,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 119.59,
+          "y1": 210.4,
+          "x2": 199.59,
+          "y2": 210.4,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 199.59,
+          "y1": 210.4,
+          "x2": 198.88,
+          "y2": 209.69,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 199.59,
+          "y1": 210.4,
+          "x2": 199.59,
+          "y2": 100.4,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 199.59,
+          "y1": 100.4,
+          "x2": 198.88,
+          "y2": 101.1,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 199.59,
+          "y1": 100.4,
+          "x2": 119.59,
+          "y2": 100.4,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 119.59,
+          "y1": 100.4,
+          "x2": 120.3,
+          "y2": 101.1,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 119.59,
+          "y1": 100.4,
+          "x2": 119.59,
+          "y2": 210.4,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 120.3,
+          "y1": 209.69,
+          "x2": 119.59,
+          "y2": 210.4,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        }
+      ],
+      "arcs": []
+    },
+    {
+      "name": "AE_PUERTA BATIENTE MADERA - AE_PUERTA BATIENTE MADERA 0_70X2_20-8714395-Piso 1 - Arq",
+      "layer": "X-ARQ-PROYECCIONES",
+      "lines": [
+        {
+          "x1": 326.5,
+          "y1": 244.0,
+          "x2": 335.0,
+          "y2": 244.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 335.0,
+          "y1": 244.0,
+          "x2": 335.0,
+          "y2": 241.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 335.0,
+          "y1": 241.0,
+          "x2": 334.0,
+          "y2": 241.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 334.0,
+          "y1": 241.0,
+          "x2": 334.0,
+          "y2": 240.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 321.0,
+          "y1": 240.0,
+          "x2": 321.0,
+          "y2": 241.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 321.0,
+          "y1": 241.0,
+          "x2": 320.0,
+          "y2": 241.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 241.0,
+          "x2": 320.0,
+          "y2": 242.5,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 242.5,
+          "x2": 326.5,
+          "y2": 242.5,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 326.5,
+          "y1": 242.5,
+          "x2": 326.5,
+          "y2": 244.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 326.5,
+          "y1": 306.0,
+          "x2": 326.5,
+          "y2": 307.5,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 326.5,
+          "y1": 307.5,
+          "x2": 320.0,
+          "y2": 307.5,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 307.5,
+          "x2": 320.0,
+          "y2": 309.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 309.0,
+          "x2": 321.0,
+          "y2": 309.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 321.0,
+          "y1": 309.0,
+          "x2": 321.0,
+          "y2": 310.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 334.0,
+          "y1": 310.0,
+          "x2": 334.0,
+          "y2": 309.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 334.0,
+          "y1": 309.0,
+          "x2": 335.0,
+          "y2": 309.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 335.0,
+          "y1": 309.0,
+          "x2": 335.0,
+          "y2": 306.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 335.0,
+          "y1": 306.0,
+          "x2": 326.5,
+          "y2": 306.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 326.0,
+          "y1": 307.0,
+          "x2": 326.0,
+          "y2": 243.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 326.0,
+          "y1": 243.0,
+          "x2": 320.0,
+          "y2": 243.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 243.0,
+          "x2": 320.0,
+          "y2": 307.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 307.0,
+          "x2": 326.0,
+          "y2": 307.0,
+          "layer": "X-ARQ-PUERTAS_CUT"
+        },
+        {
+          "x1": 320.0,
+          "y1": 310.0,
+          "x2": 320.0,
+          "y2": 240.0,
+          "layer": "X-ARQ-PROYECCIONES"
+        },
+        {
+          "x1": 335.0,
+          "y1": 310.0,
+          "x2": 335.0,
+          "y2": 240.0,
+          "layer": "X-ARQ-PROYECCIONES"
+        }
+      ],
+      "arcs": [
+        {
+          "cx": 320.0,
+          "cy": 307.0,
+          "r": 64.0,
+          "a1": 90.00000000000021,
+          "a2": 180.00000000000023,
+          "layer": "X-ARQ-PROYECCIONES"
+        }
+      ]
+    },
+    {
+      "name": "EQU_NEVERA - EQU_NEVERA-7909127-Piso 1 - Arq",
+      "layer": "X-ARQ-PROYECCIONES",
+      "lines": [
+        {
+          "x1": 318.18,
+          "y1": 1.79,
+          "x2": 248.18,
+          "y2": 1.79,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 248.18,
+          "y1": 1.79,
+          "x2": 248.18,
+          "y2": 65.8,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 248.18,
+          "y1": 65.8,
+          "x2": 318.18,
+          "y2": 65.8,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 318.18,
+          "y1": 65.8,
+          "x2": 318.18,
+          "y2": 1.79,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 318.18,
+          "y1": 71.79,
+          "x2": 318.18,
+          "y2": 66.8,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 318.18,
+          "y1": 66.8,
+          "x2": 248.18,
+          "y2": 66.8,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 248.18,
+          "y1": 66.8,
+          "x2": 248.18,
+          "y2": 71.79,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 248.18,
+          "y1": 71.79,
+          "x2": 318.18,
+          "y2": 71.79,
+          "layer": "X-TEC-GEN"
+        },
+        {
+          "x1": 318.18,
+          "y1": 71.79,
+          "x2": 318.18,
+          "y2": 141.79,
+          "layer": "X-ARQ-PROYECCIONES"
+        }
+      ],
+      "arcs": [
+        {
+          "cx": 318.18,
+          "cy": 71.79,
+          "r": 70.0,
+          "a1": 179.9999999999994,
+          "a2": 269.9999999999992,
+          "layer": "X-ARQ-PROYECCIONES"
+        }
+      ]
+    },
+    {
+      "name": "Canastillas pl\u00e1sticas  31 - 31 x 40 x 60 - LAT HOLE - 3 STACK-8039155-Piso 1 - Arq",
+      "layer": "X-ARQ-MOBILIARIO_PROJ",
+      "lines": [
+        {
+          "x1": 180.2,
+          "y1": 42.07,
+          "x2": 180.2,
+          "y2": 6.57,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 182.7,
+          "y1": 4.07,
+          "x2": 237.7,
+          "y2": 4.07,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 240.2,
+          "y1": 6.57,
+          "x2": 240.2,
+          "y2": 42.06,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 238.19,
+          "y1": 44.07,
+          "x2": 182.2,
+          "y2": 44.07,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 181.95,
+          "y1": 6.57,
+          "x2": 181.95,
+          "y2": 42.07,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 237.7,
+          "y1": 5.82,
+          "x2": 182.7,
+          "y2": 5.82,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 238.45,
+          "y1": 42.06,
+          "x2": 238.45,
+          "y2": 6.57,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 182.2,
+          "y1": 42.32,
+          "x2": 238.19,
+          "y2": 42.32,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        }
+      ],
+      "arcs": [
+        {
+          "cx": 182.7,
+          "cy": 6.57,
+          "r": 0.75,
+          "a1": 89.9999999999992,
+          "a2": 179.99999999999932,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 237.7,
+          "cy": 6.57,
+          "r": 0.75,
+          "a1": 2.2737367544323206e-13,
+          "a2": 89.99999999999937,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 238.19,
+          "cy": 42.06,
+          "r": 0.25,
+          "a1": 270.0,
+          "a2": 0.0,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 182.2,
+          "cy": 42.07,
+          "r": 0.25,
+          "a1": 179.99999999999898,
+          "a2": 270.0000000000006,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 182.2,
+          "cy": 42.07,
+          "r": 2.0,
+          "a1": 179.9999999999992,
+          "a2": 269.99999999999955,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 182.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 89.99999999999909,
+          "a2": 179.99999999999932,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 237.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 3.410605131648481e-13,
+          "a2": 89.99999999999949,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 238.19,
+          "cy": 42.06,
+          "r": 2.0,
+          "a1": 269.99999999999994,
+          "a2": 0.0,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 237.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 359.9999999999998,
+          "a2": 89.99999999999892,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 182.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 89.9999999999988,
+          "a2": 179.99999999999886,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 182.2,
+          "cy": 42.07,
+          "r": 2.0,
+          "a1": 179.99999999999886,
+          "a2": 269.99999999999926,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 238.19,
+          "cy": 42.06,
+          "r": 2.0,
+          "a1": 269.9999999999995,
+          "a2": 359.9999999999996,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        }
+      ]
+    },
+    {
+      "name": "Canastillas pl\u00e1sticas  31 - 31 x 40 x 60 - LAT HOLE - 3 STACK-8039155-Piso 1 - Arq",
+      "layer": "X-ARQ-MOBILIARIO_PROJ",
+      "lines": [
+        {
+          "x1": 114.2,
+          "y1": 42.07,
+          "x2": 114.2,
+          "y2": 6.57,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 116.7,
+          "y1": 4.07,
+          "x2": 171.7,
+          "y2": 4.07,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 174.2,
+          "y1": 6.57,
+          "x2": 174.2,
+          "y2": 42.06,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 172.19,
+          "y1": 44.07,
+          "x2": 116.2,
+          "y2": 44.07,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 115.95,
+          "y1": 6.57,
+          "x2": 115.95,
+          "y2": 42.07,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 171.7,
+          "y1": 5.82,
+          "x2": 116.7,
+          "y2": 5.82,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 172.45,
+          "y1": 42.06,
+          "x2": 172.45,
+          "y2": 6.57,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 116.2,
+          "y1": 42.32,
+          "x2": 172.19,
+          "y2": 42.32,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        }
+      ],
+      "arcs": [
+        {
+          "cx": 116.7,
+          "cy": 6.57,
+          "r": 0.75,
+          "a1": 89.9999999999992,
+          "a2": 179.99999999999932,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 171.7,
+          "cy": 6.57,
+          "r": 0.75,
+          "a1": 2.2737367544323206e-13,
+          "a2": 89.99999999999937,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 172.19,
+          "cy": 42.06,
+          "r": 0.25,
+          "a1": 270.0,
+          "a2": 0.0,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 116.2,
+          "cy": 42.07,
+          "r": 0.25,
+          "a1": 179.99999999999898,
+          "a2": 270.0000000000006,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 116.2,
+          "cy": 42.07,
+          "r": 2.0,
+          "a1": 179.9999999999992,
+          "a2": 269.99999999999955,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 116.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 89.99999999999909,
+          "a2": 179.99999999999932,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 171.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 3.410605131648481e-13,
+          "a2": 89.99999999999949,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 172.19,
+          "cy": 42.06,
+          "r": 2.0,
+          "a1": 269.99999999999994,
+          "a2": 0.0,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 171.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 359.9999999999998,
+          "a2": 89.99999999999892,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 116.7,
+          "cy": 6.57,
+          "r": 2.5,
+          "a1": 89.9999999999988,
+          "a2": 179.99999999999886,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 116.2,
+          "cy": 42.07,
+          "r": 2.0,
+          "a1": 179.99999999999886,
+          "a2": 269.99999999999926,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "cx": 172.19,
+          "cy": 42.06,
+          "r": 2.0,
+          "a1": 269.9999999999995,
+          "a2": 359.9999999999996,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        }
+      ]
+    },
+    {
+      "name": "Repiza - Repiza-8718733-Piso 1 - Arq",
+      "layer": "X-ARQ-MOBILIARIO_PROJ",
+      "lines": [
+        {
+          "x1": 1.0,
+          "y1": 143.33,
+          "x2": 1.0,
+          "y2": 227.93,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 3.7,
+          "y1": 230.63,
+          "x2": 28.3,
+          "y2": 230.63,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 31.0,
+          "y1": 227.93,
+          "x2": 31.0,
+          "y2": 143.33,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 28.3,
+          "y1": 140.63,
+          "x2": 3.7,
+          "y2": 140.63,
+          "layer": "X-ARQ-MOBILIARIO_PROJ"
+        },
+        {
+          "x1": 1.0,
+          "y1": 143.33,
+          "x2": 1.0,
+          "y2": 140.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 1.0,
+          "y1": 140.63,
+          "x2": 3.7,
+          "y2": 140.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 3.7,
+          "y1": 140.63,
+          "x2": 3.7,
+          "y2": 140.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 3.7,
+          "y1": 140.33,
+          "x2": 0.7,
+          "y2": 140.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 0.7,
+          "y1": 140.33,
+          "x2": 0.7,
+          "y2": 143.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 0.7,
+          "y1": 143.33,
+          "x2": 1.0,
+          "y2": 143.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 3.7,
+          "y1": 230.63,
+          "x2": 1.0,
+          "y2": 230.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 1.0,
+          "y1": 230.63,
+          "x2": 1.0,
+          "y2": 227.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 1.0,
+          "y1": 227.93,
+          "x2": 0.7,
+          "y2": 227.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 0.7,
+          "y1": 227.93,
+          "x2": 0.7,
+          "y2": 230.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 0.7,
+          "y1": 230.93,
+          "x2": 3.7,
+          "y2": 230.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 3.7,
+          "y1": 230.93,
+          "x2": 3.7,
+          "y2": 230.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.0,
+          "y1": 227.93,
+          "x2": 31.0,
+          "y2": 230.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.0,
+          "y1": 230.63,
+          "x2": 28.3,
+          "y2": 230.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 28.3,
+          "y1": 230.63,
+          "x2": 28.3,
+          "y2": 230.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 28.3,
+          "y1": 230.93,
+          "x2": 31.3,
+          "y2": 230.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.3,
+          "y1": 230.93,
+          "x2": 31.3,
+          "y2": 227.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.3,
+          "y1": 227.93,
+          "x2": 31.0,
+          "y2": 227.93,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 28.3,
+          "y1": 140.63,
+          "x2": 31.0,
+          "y2": 140.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.0,
+          "y1": 140.63,
+          "x2": 31.0,
+          "y2": 143.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.0,
+          "y1": 143.33,
+          "x2": 31.3,
+          "y2": 143.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.3,
+          "y1": 143.33,
+          "x2": 31.3,
+          "y2": 140.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 31.3,
+          "y1": 140.33,
+          "x2": 28.3,
+          "y2": 140.33,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        },
+        {
+          "x1": 28.3,
+          "y1": 140.33,
+          "x2": 28.3,
+          "y2": 140.63,
+          "layer": "X-ARQ-MOBILIARIO_CUT"
+        }
+      ],
+      "arcs": []
+    }
+  ]
+}

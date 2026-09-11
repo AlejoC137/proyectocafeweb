@@ -43,6 +43,8 @@ const pageTitles = {
   "CALCULADORRECETAHELADOS": { [ESP]: "Formulador de Helados", [ENG]: "Ice Cream Formulator" },
   "BAJAS": { [ESP]: "Gestión de Bajas", [ENG]: "Withdrawals & Offboarding" },
   "bajas": { [ESP]: "Gestión de Bajas", [ENG]: "Withdrawals & Offboarding" },
+  "PLANTA": { [ESP]: "Planta de Producción", [ENG]: "Production Plant" },
+  "planta": { [ESP]: "Planta de Producción", [ENG]: "Production Plant" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -131,7 +133,8 @@ export default function TopNav() {
     { label: "Mes", path: "/MesResumen" },
     { label: "Modelo Proyecto", path: "/ModeloProyecto" },
     { label: "Cotizaciones", path: "/Cotizaciones" },
-    { label: "Formulador Helados (Dubovik)", path: "/CalculadorRecetaHelados" }
+    { label: "Formulador Helados (Dubovik)", path: "/CalculadorRecetaHelados" },
+    { label: "Planta de Producción", path: "/Planta" }
   ];
 
   return (
