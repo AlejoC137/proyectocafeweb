@@ -19,7 +19,14 @@ import {
   Filter,
   BookOpen,
   Receipt,
-  ExternalLink
+  ExternalLink,
+  Calendar,
+  Users,
+  Coins,
+  Percent,
+  Printer,
+  ShieldCheck,
+  Award
 } from "lucide-react";
 import RecetaModal from "../RecetaModal";
 
@@ -33,40 +40,140 @@ export default function VentasHeladosTab({
   allComanda = []
 }) {
   const navigate = useNavigate();
+
+  // Filters State
   const [searchTerm, setSearchTerm] = useState("");
   const [filterHeladosOnly, setFilterHeladosOnly] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState("ALL"); // 'ALL' | 'THIS_MONTH' | 'LAST_MONTH'
+  const [selectedPeriod, setSelectedPeriod] = useState("THIS_MONTH"); // 'ALL' | 'TODAY' | 'THIS_WEEK' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS' | 'CUSTOM'
+  
+  // Custom Date Range Pickers (Desde - Hasta)
+  const now = new Date();
+  const defaultFirstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+  const defaultLastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(defaultFirstDay);
+  const [endDate, setEndDate] = useState(defaultLastDay);
+
+  // Sociedad / Repartición Config State
+  const [pctProyectoCafe, setPctProyectoCafe] = useState(50);
+  const [pctReserva, setPctReserva] = useState(0);
+  const [modoPayback, setModoPayback] = useState(false); // Payback mode: 70% Inversionista / 30% Café
+  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedRecetaModal, setSelectedRecetaModal] = useState(null);
 
-  // Filter sales by selected time period
+  // Quick Period Presets Selector Handler
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    const currentDate = new Date();
+
+    if (period === "TODAY") {
+      const todayStr = currentDate.toISOString().split("T")[0];
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (period === "THIS_WEEK") {
+      const firstDay = new Date(currentDate);
+      const day = currentDate.getDay();
+      const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1);
+      firstDay.setDate(diff);
+      setStartDate(firstDay.toISOString().split("T")[0]);
+      setEndDate(currentDate.toISOString().split("T")[0]);
+    } else if (period === "THIS_MONTH") {
+      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      setStartDate(firstDay.toISOString().split("T")[0]);
+      setEndDate(lastDay.toISOString().split("T")[0]);
+    } else if (period === "LAST_MONTH") {
+      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+      setStartDate(firstDay.toISOString().split("T")[0]);
+      setEndDate(lastDay.toISOString().split("T")[0]);
+    } else if (period === "LAST_30_DAYS") {
+      const past30 = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      setStartDate(past30.toISOString().split("T")[0]);
+      setEndDate(currentDate.toISOString().split("T")[0]);
+    } else if (period === "ALL") {
+      setStartDate("");
+      setEndDate("");
+    }
+  };
+
+  // Filter sales by selected time period / exact dates
   const filteredVentas = useMemo(() => {
     if (!allVentas || !Array.isArray(allVentas)) return [];
-    if (selectedPeriod === "ALL") return allVentas;
+    if (selectedPeriod === "ALL" && !startDate && !endDate) return allVentas;
 
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    const currentDate = new Date();
+    const todayStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+    const todayEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
 
     return allVentas.filter((v) => {
-      if (!v || !v.Date) return false;
-      const vDate = new Date(v.Date);
-      if (selectedPeriod === "THIS_MONTH") {
-        return vDate.getMonth() === currentMonth && vDate.getFullYear() === currentYear;
+      if (!v) return false;
+      const rawDateStr = v.Date || v.Fecha || v.created_at;
+      if (!rawDateStr) return true;
+
+      const vDate = new Date(rawDateStr);
+      if (isNaN(vDate.getTime())) return true;
+
+      if (selectedPeriod === "TODAY") {
+        return vDate >= todayStart && vDate <= todayEnd;
       }
+
+      if (selectedPeriod === "THIS_WEEK") {
+        const firstDayOfWeek = new Date(currentDate);
+        const day = currentDate.getDay();
+        const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1);
+        firstDayOfWeek.setDate(diff);
+        firstDayOfWeek.setHours(0, 0, 0, 0);
+        return vDate >= firstDayOfWeek;
+      }
+
+      if (selectedPeriod === "THIS_MONTH") {
+        return vDate.getMonth() === currentDate.getMonth() && vDate.getFullYear() === currentDate.getFullYear();
+      }
+
       if (selectedPeriod === "LAST_MONTH") {
-        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        const lastMonth = currentDate.getMonth() === 0 ? 11 : currentDate.getMonth() - 1;
+        const lastMonthYear = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
         return vDate.getMonth() === lastMonth && vDate.getFullYear() === lastMonthYear;
       }
+
+      if (selectedPeriod === "LAST_30_DAYS") {
+        const past30 = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return vDate >= past30;
+      }
+
+      if (selectedPeriod === "CUSTOM" || startDate || endDate) {
+        if (startDate) {
+          const s = new Date(startDate + "T00:00:00");
+          if (vDate < s) return false;
+        }
+        if (endDate) {
+          const e = new Date(endDate + "T23:59:59");
+          if (vDate > e) return false;
+        }
+        return true;
+      }
+
       return true;
     });
-  }, [allVentas, selectedPeriod]);
+  }, [allVentas, selectedPeriod, startDate, endDate]);
+
+  // Count of Days in selected period
+  const diasPeriodo = useMemo(() => {
+    if (startDate && endDate) {
+      const s = new Date(startDate + "T00:00:00");
+      const e = new Date(endDate + "T23:59:59");
+      const diffMs = e.getTime() - s.getTime();
+      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      return days > 0 ? days : 1;
+    }
+    return 30;
+  }, [startDate, endDate]);
 
   // Aggregate Sales per Menu Item
   const salesMap = useMemo(() => {
     const map = {};
 
-    // 1. From allVentas table
     filteredVentas.forEach((venta) => {
       if (!venta.Productos) return;
       try {
@@ -91,12 +198,10 @@ export default function VentasHeladosTab({
       }
     });
 
-    // 2. Fallback / supplement from allComanda if available
     if (allComanda && Array.isArray(allComanda)) {
       allComanda.forEach((cmd) => {
         const name = cmd.NombreES || cmd.Nombre || cmd.nombre;
         if (!name) return;
-        const qty = parseFloat(cmd.Cantidad || cmd.cantidad || 1);
         if (!map[name]) {
           map[name] = { qty: 0, revenue: 0, ordersCount: 0 };
         }
@@ -107,14 +212,13 @@ export default function VentasHeladosTab({
     return map;
   }, [filteredVentas, allComanda]);
 
-  // Determine if a Menu item belongs strictly to Helado category (MICHELADO IS NOT HELADO)
+  // Helper: check if menu item is ice cream (strictly excludes Michelado)
   const isHeladoMenuItem = (item) => {
     if (!item) return false;
     const name = (item.NombreES || "").toLowerCase();
     const g = (item.GRUPO || "").toUpperCase();
     const sub = (item.SUB_GRUPO || "").toUpperCase();
 
-    // EXPLICIT EXCLUSION: Michelado / Michelada AND ADICIONES (Grupo or SubGrupo) are NOT Ice Cream
     if (
       name.includes("michelad") ||
       sub.includes("MICHELAD") ||
@@ -163,11 +267,8 @@ export default function VentasHeladosTab({
         const name = item.NombreES || "Sin Nombre";
         const price = parseFloat(item.Precio || 0);
         const salesData = salesMap[name] || { qty: 0, revenue: 0, ordersCount: 0 };
-        
-        // Calculated revenue fallback if price exists
         const totalRevenue = salesData.revenue > 0 ? salesData.revenue : salesData.qty * price;
 
-        // Recipe matching
         const receta =
           allRecetasMenu.find((r) => r._id === item.Receta || r.forId === item._id) ||
           allRecetasProduccion.find((r) => r._id === item.Receta || r.forId === item._id);
@@ -209,7 +310,7 @@ export default function VentasHeladosTab({
       .sort((a, b) => b.ingresosTotales - a.ingresosTotales);
   }, [allMenu, salesMap, filterHeladosOnly, searchTerm, allRecetasMenu, allRecetasProduccion]);
 
-  // Identify Ice Cream Production Items (Base Helados en ProduccionInterna)
+  // Identify Ice Cream Production Items
   const produccionHelados = useMemo(() => {
     return allProduccion.filter((p) => {
       const g = (p.GRUPO || "").toUpperCase();
@@ -233,24 +334,20 @@ export default function VentasHeladosTab({
     });
   }, [allProduccion]);
 
-  // Track usage of Ice Cream Production items as ingredients in other recipes (Recetas Secundarias)
+  // Track usage of Ice Cream Production items as ingredients in other recipes
   const consumoHeladoEnRecetas = useMemo(() => {
     const usageList = [];
 
-    // Search through all Menu recipes and Production recipes
     const combinedRecipes = [
       ...allRecetasMenu.map((r) => ({ ...r, origin: "Menu" })),
       ...allRecetasProduccion.map((r) => ({ ...r, origin: "Produccion" }))
     ];
 
     combinedRecipes.forEach((receta) => {
-      // Find parent item
       const parentMenu = allMenu.find((m) => m._id === receta.forId || m.Receta === receta._id);
       const parentProd = allProduccion.find((p) => p._id === receta.forId || p.Receta === receta._id);
-
       const parentName = parentMenu?.NombreES || parentProd?.Nombre_del_producto || receta.legacyName || "Receta #" + receta._id;
 
-      // Check ingredients details
       let details = [];
       if (receta.detalles) {
         details = typeof receta.detalles === "string" ? JSON.parse(receta.detalles) : receta.detalles;
@@ -266,10 +363,8 @@ export default function VentasHeladosTab({
         const ingName = (ing.nombre || ing.ingNombre || "").toLowerCase();
         const ingId = ing.inventarioItemId || ing.ingId || ing.id;
 
-        // Exclude michelado and adiciones from ingredients search
         if (ingName.includes("michelad") || ingName.includes("adicion")) return;
 
-        // Check if ingredient is an Ice Cream production item
         const isHeladoProd = produccionHelados.some(
           (ph) => ph._id === ingId || (ph.Nombre_del_producto && ph.Nombre_del_producto.toLowerCase() === ingName)
         ) || ingName.includes("helado") || ingName.includes("gelato") || ingName.includes("soft");
@@ -326,6 +421,49 @@ export default function VentasHeladosTab({
     };
   }, [menuHeladosList, consumoHeladoEnRecetas]);
 
+  // Calculated Sociedad Equity / Dividend Percentages
+  const pctInvCalculado = useMemo(() => {
+    if (modoPayback) return 70;
+    return 100 - pctProyectoCafe;
+  }, [modoPayback, pctProyectoCafe]);
+
+  const pctCafeCalculado = useMemo(() => {
+    if (modoPayback) return 30;
+    return pctProyectoCafe;
+  }, [modoPayback, pctProyectoCafe]);
+
+  // Dividend Repartición Summary for Selected Date Range
+  const reparticionSociedad = useMemo(() => {
+    const utilidadTotal = summaryKPIs.totalGananciaDirecta;
+    const ingresosTotal = summaryKPIs.totalIngresosDirectos;
+    const costoTotal = summaryKPIs.totalIngresosDirectos - summaryKPIs.totalGananciaDirecta;
+
+    const montoReserva = utilidadTotal * (pctReserva / 100);
+    const utilidadDistribuible = Math.max(0, utilidadTotal - montoReserva);
+
+    const montoProyectoCafe = utilidadDistribuible * (pctCafeCalculado / 100);
+    const montoInversionista = utilidadDistribuible * (pctInvCalculado / 100);
+
+    const promedioDiarioDistribuible = utilidadDistribuible / (diasPeriodo || 1);
+    const promedioDiarioCafe = montoProyectoCafe / (diasPeriodo || 1);
+    const promedioDiarioInv = montoInversionista / (diasPeriodo || 1);
+
+    return {
+      utilidadTotal,
+      ingresosTotal,
+      costoTotal,
+      montoReserva,
+      utilidadDistribuible,
+      montoProyectoCafe,
+      montoInversionista,
+      promedioDiarioDistribuible,
+      promedioDiarioCafe,
+      promedioDiarioInv,
+      pctCafeCalculado,
+      pctInvCalculado
+    };
+  }, [summaryKPIs, pctReserva, pctCafeCalculado, pctInvCalculado, diasPeriodo]);
+
   return (
     <div className="space-y-6 font-SpaceGrotesk">
       {/* HEADER BANNER & PERIOD FILTER */}
@@ -336,44 +474,226 @@ export default function VentasHeladosTab({
             Control de Ventas & Consumo de Helados (Dubovik Analytics)
           </h2>
           <p className="text-xs text-amber-900 font-medium">
-            Monitoreo en tiempo real de ventas directas y consumo en recetas. <strong>Nota:</strong> Los filtros excluyen estrictamente adiciones de bebidas como Michelado.
+            Monitoreo de ventas directas, consumo en recetas y <strong>repartición de dividendos por período</strong>.
           </p>
         </div>
 
-        {/* PERIOD SELECTOR & QUICK NAV */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 bg-white border-2 border-black p-1.5 shadow-sm text-xs font-bold shrink-0">
-            <Filter className="h-4 w-4 text-amber-800" />
-            <span className="text-gray-700">Período:</span>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="bg-amber-100 text-amber-950 font-bold border border-black px-2 py-1 cursor-pointer focus:outline-none"
-            >
-              <option value="ALL">🗓️ Todo el Histórico</option>
-              <option value="THIS_MONTH">📅 Este Mes</option>
-              <option value="LAST_MONTH">⏮️ Mes Anterior</option>
-            </select>
-          </div>
-
           <button
             onClick={() => navigate('/Recetas')}
             className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs border-2 border-black shadow-solid flex items-center gap-1.5 transition-all"
-            title="Ir al Libro de Recetas"
           >
             <BookOpen className="h-4 w-4" /> 📕 Ir a Libro (Recetas)
           </button>
           <button
             onClick={() => navigate('/VentaCompra')}
             className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs border-2 border-black shadow-solid flex items-center gap-1.5 transition-all"
-            title="Ir a la Caja POS / Ventas"
           >
             <ShoppingCart className="h-4 w-4" /> 💵 Ir a Caja
           </button>
         </div>
       </div>
 
-      {/* TOP SUMMARY KPIS */}
+      {/* CONTROLES DE FECHAS CLARAS Y SELECCIÓN DE PERÍODO */}
+      <div className="bg-white border-2 border-black p-4 shadow-solid space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-2 border-black pb-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-amber-600" />
+            <h3 className="font-extrabold text-sm md:text-base text-gray-900 uppercase tracking-wide">
+              🗓️ Rango de Fechas & Período de Ventas
+            </h3>
+          </div>
+          <div className="text-xs font-mono font-bold bg-amber-100 px-3 py-1 border border-black text-amber-950">
+            {startDate && endDate ? `Del ${startDate} al ${endDate} (${diasPeriodo} días)` : "Ventas Históricas Totales"}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Quick Presets Dropdown */}
+          <div className="flex items-center gap-1.5 text-xs font-bold">
+            <span className="text-gray-700 shrink-0">Período Rápido:</span>
+            <select
+              value={selectedPeriod}
+              onChange={(e) => handlePeriodChange(e.target.value)}
+              className="bg-amber-50 text-amber-950 font-bold border-2 border-black px-2.5 py-1.5 cursor-pointer focus:outline-none text-xs"
+            >
+              <option value="THIS_MONTH">📅 Este Mes</option>
+              <option value="TODAY">☀️ Hoy</option>
+              <option value="THIS_WEEK">📆 Esta Semana</option>
+              <option value="LAST_MONTH">⏮️ Mes Anterior</option>
+              <option value="LAST_30_DAYS">📊 Últimos 30 Días</option>
+              <option value="CUSTOM">⚙️ Rango Personalizado</option>
+              <option value="ALL">🌐 Todo el Histórico</option>
+            </select>
+          </div>
+
+          {/* Date Pickers Desde - Hasta */}
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <span className="text-gray-700">Desde:</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setSelectedPeriod("CUSTOM");
+              }}
+              className="bg-white text-black font-mono font-bold border-2 border-black px-2 py-1 focus:bg-amber-50 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <span className="text-gray-700">Hasta:</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setSelectedPeriod("CUSTOM");
+              }}
+              className="bg-white text-black font-mono font-bold border-2 border-black px-2 py-1 focus:bg-amber-50 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* TARJETA DE REPARTICIÓN DE GANANCIAS DE LA SOCIEDAD PARA EL PERÍODO SELECCIONADO */}
+      <div className="bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-100 border-2 border-black p-4 md:p-5 shadow-solid space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-2 border-black pb-3">
+          <div>
+            <h3 className="font-black text-base md:text-lg text-amber-950 flex items-center gap-2">
+              <Coins className="h-6 w-6 text-amber-700" />
+              Calculadora & Repartición de Dividendos por Período Seleccionado
+            </h3>
+            <p className="text-xs text-amber-900">
+              Distribución exacta de utilidades netas generadas por heladería durante los <strong>{diasPeriodo} días</strong> seleccionados.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setModoPayback(!modoPayback)}
+              className={`px-3 py-1.5 border-2 border-black text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5 ${
+                modoPayback
+                  ? "bg-purple-600 text-white"
+                  : "bg-white text-gray-900 hover:bg-gray-100"
+              }`}
+            >
+              <Award className="h-4 w-4" /> {modoPayback ? "Modo Payback Activo (70/30)" : "Modo Normal (Configured %)"}
+            </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-black border-2 border-black font-extrabold text-xs shadow-solid flex items-center gap-1.5 transition-all"
+            >
+              <Printer className="h-4 w-4" /> Imprimir Ficha de Repartición
+            </button>
+          </div>
+        </div>
+
+        {/* PARÁMETROS DE REPARTICIÓN (SLIDERS & CONFIG) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 border-2 border-black text-xs font-bold">
+          <div>
+            <label className="block text-gray-700 mb-1">
+              ☕ Participación Proyecto Café: <span className="text-amber-950 text-sm font-black">{reparticionSociedad.pctCafeCalculado}%</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              disabled={modoPayback}
+              value={pctProyectoCafe}
+              onChange={(e) => setPctProyectoCafe(Number(e.target.value))}
+              className="w-full accent-amber-600 cursor-pointer disabled:opacity-50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-1">
+              🍦 Participación Socio Inversionista: <span className="text-sky-900 text-sm font-black">{reparticionSociedad.pctInvCalculado}%</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              disabled={true}
+              value={reparticionSociedad.pctInvCalculado}
+              className="w-full accent-sky-600 cursor-not-allowed opacity-75"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-1">
+              🛠️ Reserva Mantenimiento/Fondo: <span className="text-amber-800 text-sm font-black">{pctReserva}%</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="30"
+              value={pctReserva}
+              onChange={(e) => setPctReserva(Number(e.target.value))}
+              className="w-full accent-orange-600 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {/* TARJETAS DE REPARTICIÓN MONETARIA */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* MONTO PROYECTO CAFÉ */}
+          <div className="bg-amber-50 border-2 border-black p-3.5 shadow-sm space-y-1">
+            <div className="flex items-center justify-between text-xs font-extrabold text-amber-900">
+              <span>☕ Repartición Proyecto Café</span>
+              <span className="px-2 py-0.5 bg-amber-200 border border-black font-mono">{reparticionSociedad.pctCafeCalculado}%</span>
+            </div>
+            <p className="text-xl md:text-2xl font-black text-amber-950 font-mono">
+              ${reparticionSociedad.montoProyectoCafe.toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-amber-800 font-bold">
+              Promedio: ${reparticionSociedad.promedioDiarioCafe.toLocaleString("es-CO", { minimumFractionDigits: 0 })} / día
+            </p>
+          </div>
+
+          {/* MONTO SOCIO INVERSIONISTA */}
+          <div className="bg-sky-50 border-2 border-black p-3.5 shadow-sm space-y-1">
+            <div className="flex items-center justify-between text-xs font-extrabold text-sky-900">
+              <span>🍦 Repartición Socio Inversionista</span>
+              <span className="px-2 py-0.5 bg-sky-200 border border-black font-mono">{reparticionSociedad.pctInvCalculado}%</span>
+            </div>
+            <p className="text-xl md:text-2xl font-black text-sky-950 font-mono">
+              ${reparticionSociedad.montoInversionista.toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-sky-800 font-bold">
+              Promedio: ${reparticionSociedad.promedioDiarioInv.toLocaleString("es-CO", { minimumFractionDigits: 0 })} / día
+            </p>
+          </div>
+
+          {/* MONTO RESERVA */}
+          <div className="bg-orange-50 border-2 border-black p-3.5 shadow-sm space-y-1">
+            <div className="flex items-center justify-between text-xs font-extrabold text-orange-900">
+              <span>🛠️ Fondo de Reserva</span>
+              <span className="px-2 py-0.5 bg-orange-200 border border-black font-mono">{pctReserva}%</span>
+            </div>
+            <p className="text-xl md:text-2xl font-black text-orange-950 font-mono">
+              ${reparticionSociedad.montoReserva.toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-orange-800 font-bold">Destinado a mantto / imprevistos</p>
+          </div>
+
+          {/* TOTAL DISTRIBUIBLE DEL PERÍODO */}
+          <div className="bg-emerald-50 border-2 border-black p-3.5 shadow-sm space-y-1">
+            <div className="flex items-center justify-between text-xs font-extrabold text-emerald-900">
+              <span>💰 Utilidad Distribuible Total</span>
+              <span className="px-2 py-0.5 bg-emerald-200 border border-black font-mono">100%</span>
+            </div>
+            <p className="text-xl md:text-2xl font-black text-emerald-950 font-mono">
+              ${reparticionSociedad.utilidadDistribuible.toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-emerald-800 font-bold">
+              Promedio general: ${reparticionSociedad.promedioDiarioDistribuible.toLocaleString("es-CO", { minimumFractionDigits: 0 })} / día
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* TOP SUMMARY KPIS DE VENTAS DIRECTAS Y CONSUMO */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1 */}
         <div className="bg-white border-2 border-black p-4 shadow-solid flex items-center justify-between">
@@ -692,6 +1012,70 @@ export default function VentasHeladosTab({
           </table>
         </div>
       </div>
+
+      {/* MODAL FICHA DE REPARTICIÓN DE DIVIDENDOS IMPRIMIBLE */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-black p-6 w-full max-w-xl shadow-2xl space-y-4 rounded-none">
+            <div className="border-b-2 border-black pb-3 flex items-center justify-between">
+              <h3 className="font-extrabold text-base md:text-lg text-amber-950 flex items-center gap-2">
+                <Printer className="h-5 w-5 text-amber-600" /> Ficha de Repartición de Ganancias — Helados Dubovik
+              </h3>
+              <button onClick={() => setShowExportModal(false)} className="px-2.5 py-1 bg-gray-200 border border-black font-bold text-xs">✕</button>
+            </div>
+
+            <div className="bg-amber-50 p-4 border-2 border-black space-y-3 text-xs font-mono">
+              <div className="flex justify-between border-b border-gray-300 pb-1">
+                <span>Rango de Fechas:</span>
+                <span className="font-bold">{startDate && endDate ? `Del ${startDate} al ${endDate}` : "Todo el Histórico"} ({diasPeriodo} días)</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-300 pb-1">
+                <span>Ingresos Totales Ventas:</span>
+                <span className="font-bold">${reparticionSociedad.ingresosTotal.toLocaleString("es-CO")} COP</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-300 pb-1">
+                <span>Costos de Producción / Insumos:</span>
+                <span className="font-bold">${reparticionSociedad.costoTotal.toLocaleString("es-CO")} COP</span>
+              </div>
+              <div className="flex justify-between border-b border-black pb-1 text-sm font-black text-amber-950">
+                <span>Utilidad Neta a Repartir:</span>
+                <span>${reparticionSociedad.utilidadDistribuible.toLocaleString("es-CO")} COP</span>
+              </div>
+              <div className="pt-2 space-y-1.5">
+                <div className="flex justify-between text-amber-900 font-bold bg-amber-200/60 p-1.5 border border-black">
+                  <span>☕ Proyecto Café ({reparticionSociedad.pctCafeCalculado}%):</span>
+                  <span>${reparticionSociedad.montoProyectoCafe.toLocaleString("es-CO")} COP</span>
+                </div>
+                <div className="flex justify-between text-sky-900 font-bold bg-sky-200/60 p-1.5 border border-black">
+                  <span>🍦 Socio Inversionista ({reparticionSociedad.pctInvCalculado}%):</span>
+                  <span>${reparticionSociedad.montoInversionista.toLocaleString("es-CO")} COP</span>
+                </div>
+                {reparticionSociedad.montoReserva > 0 && (
+                  <div className="flex justify-between text-orange-900 font-bold bg-orange-200/60 p-1.5 border border-black">
+                    <span>🛠️ Fondo Reserva ({pctReserva}%):</span>
+                    <span>${reparticionSociedad.montoReserva.toLocaleString("es-CO")} COP</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-amber-400 text-black border-2 border-black font-extrabold text-xs shadow-solid flex items-center gap-1.5"
+              >
+                <Printer className="h-4 w-4" /> Imprimir Ficha
+              </button>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 bg-gray-200 text-black border-2 border-black font-bold text-xs"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* RECETA MODAL INTERACTIVO AL HACER CLIC EN 'RECETA MODAL' */}
       {selectedRecetaModal && (
