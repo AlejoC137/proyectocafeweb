@@ -13,7 +13,7 @@ import SourceTabs from './radio/SourceTabs';
 
 export default function ProyectoRadio() {
   // 1. Sync
-  const { currentPlay, broadcastPlay, broadcastStop, isSyncing } = useRadioSync();
+  const { currentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync();
   const isApplyingRemoteChange = useRef(false);
 
   // 2. Tab Local
@@ -54,7 +54,8 @@ export default function ProyectoRadio() {
     broadcastStop,
     isApplyingRemoteChange,
     currentTrackIndex,
-    setCurrentTrackIndex
+    setCurrentTrackIndex,
+    broadcastVolume
   );
 
   // Override player's states with hoisted states
@@ -98,6 +99,7 @@ export default function ProyectoRadio() {
     if (player.audioRef.current && remoteTrack.url) {
       player.audioRef.current.src = remoteTrack.url;
       player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
+      player.audioRef.current.load();
     }
 
     if (player.showAutoStart) {
@@ -106,8 +108,7 @@ export default function ProyectoRadio() {
       if (currentPlay.is_playing && player.audioRef.current) {
         setIsPlaying(true);
         player.audioRef.current.play().catch((err) => {
-          console.warn('[RadioSync] Autoplay bloqueado:', err.message);
-          setIsPlaying(false);
+          console.warn('[RadioSync] Autoplay continuo:', err.message);
         });
       } else {
         player.audioRef.current?.pause();
@@ -129,6 +130,12 @@ export default function ProyectoRadio() {
       }
     }
   }, [currentPlay, radioData.currentPlaylist]);
+
+  // Sincronizar volumen remoto global
+  React.useEffect(() => {
+    if (!remoteVolume) return;
+    player.applyRemoteVolume(remoteVolume.volume, remoteVolume.isMuted);
+  }, [remoteVolume]);
 
   // Escuchar evento de reinicio forzado global
   React.useEffect(() => {
@@ -306,6 +313,7 @@ export default function ProyectoRadio() {
             <SourceTabs 
               activeTab={activeTab}
               handleTabChange={handleTabChange}
+              currentPlay={currentPlay}
               currentTrackIndex={currentTrackIndex}
               setCurrentTrackIndex={setCurrentTrackIndex}
               setIsPlaying={setIsPlaying}

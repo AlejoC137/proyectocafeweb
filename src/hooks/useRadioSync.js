@@ -12,9 +12,12 @@ const SYNC_ROW_ID = 1;
  */
 export function useRadioSync() {
   const [currentPlay, setCurrentPlay] = useState(null);
+  const [remoteVolume, setRemoteVolume] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(null);
   const channelRef = useRef(null);
+  const clientId = useRef('client-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now()).current;
+  const hasVolumeColumnRef = useRef(true);
 
   // Leer estado actual de Supabase al montar
   useEffect(() => {
@@ -33,6 +36,13 @@ export function useRadioSync() {
 
         if (data) {
           setCurrentPlay(data);
+          if (data.volume !== undefined && data.volume !== null) {
+            setRemoteVolume({
+              volume: Number(data.volume),
+              isMuted: Boolean(data.is_muted),
+              timestamp: Date.now()
+            });
+          }
         }
       } catch (err) {
         console.warn('[RadioSync] Error al leer estado inicial:', err.message);
@@ -62,6 +72,13 @@ export function useRadioSync() {
             return;
           }
           setCurrentPlay(payload.new);
+          if (payload.new?.volume !== undefined && payload.new?.volume !== null) {
+            setRemoteVolume({
+              volume: Number(payload.new.volume),
+              isMuted: Boolean(payload.new.is_muted),
+              timestamp: Date.now()
+            });
+          }
         }
       )
       .on(
@@ -77,11 +94,28 @@ export function useRadioSync() {
             return;
           }
           setCurrentPlay(payload.new);
+          if (payload.new?.volume !== undefined && payload.new?.volume !== null) {
+            setRemoteVolume({
+              volume: Number(payload.new.volume),
+              isMuted: Boolean(payload.new.is_muted),
+              timestamp: Date.now()
+            });
+          }
         }
       )
       .on('broadcast', { event: 'FORCE_RELOAD' }, () => {
         console.log('[RadioSync] Broadcast FORCE_RELOAD recibido. Recargando página (F5)...');
         window.location.reload();
+      })
+      .on('broadcast', { event: 'VOLUME_CHANGE' }, ({ payload }) => {
+        if (payload && payload.senderId !== clientId) {
+          console.log('[RadioSync] Broadcast VOLUME_CHANGE recibido:', payload);
+          setRemoteVolume({
+            volume: payload.volume,
+            isMuted: Boolean(payload.isMuted),
+            timestamp: payload.timestamp || Date.now()
+          });
+        }
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -93,14 +127,27 @@ export function useRadioSync() {
 
     channelRef.current = channel;
 
-    // Escuchador BroadcastChannel local entre pestañas del mismo navegador
-    let bc;
+    // Escuchadores BroadcastChannel local entre pestañas del mismo navegador
+    let bcReload;
+    let bcVolume;
     try {
-      bc = new BroadcastChannel('radio-reload-channel');
-      bc.onmessage = (event) => {
+      bcReload = new BroadcastChannel('radio-reload-channel');
+      bcReload.onmessage = (event) => {
         if (event.data?.type === 'FORCE_RELOAD') {
           console.log('[RadioSync] BroadcastChannel local FORCE_RELOAD recibido. Recargando (F5)...');
           window.location.reload();
+        }
+      };
+
+      bcVolume = new BroadcastChannel('radio-volume-channel');
+      bcVolume.onmessage = (event) => {
+        if (event.data?.type === 'VOLUME_CHANGE' && event.data?.senderId !== clientId) {
+          console.log('[RadioSync] BroadcastChannel local VOLUME_CHANGE recibido:', event.data);
+          setRemoteVolume({
+            volume: event.data.volume,
+            isMuted: Boolean(event.data.isMuted),
+            timestamp: event.data.timestamp || Date.now()
+          });
         }
       };
     } catch (e) {}
@@ -109,16 +156,79 @@ export function useRadioSync() {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
-      if (bc) {
-        bc.close();
+      if (bcReload) {
+        bcReload.close();
+      }
+      if (bcVolume) {
+        bcVolume.close();
       }
     };
   }, []);
 
-  const broadcastPlay = async (station, tab, playing = true) => {
+  const broadcastVolume = async (volume, isMuted = false) => {
+    const timestamp = Date.now();
+
+    // 1. Emitir por BroadcastChannel local (inter-pestañas)
+    try {
+      const bc = new BroadcastChannel('radio-volume-channel');
+      bc.postMessage({
+        type: 'VOLUME_CHANGE',
+        volume,
+        isMuted,
+        senderId: clientId,
+        timestamp
+      });
+      bc.close();
+    } catch (e) {}
+
+    // 2. Emitir por Supabase Realtime Broadcast (WebSockets a todos los clientes)
+    try {
+      if (channelRef.current) {
+        await channelRef.current.send({
+          type: 'broadcast',
+          event: 'VOLUME_CHANGE',
+          payload: {
+            volume,
+            isMuted,
+            senderId: clientId,
+            timestamp
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[RadioSync] Error en broadcastRealtime de volumen:', e.message);
+    }
+
+    // 3. Persistir en tabla radio_current_play si la columna existe
+    if (hasVolumeColumnRef.current) {
+      try {
+        const { error } = await supabase
+          .from(SYNC_TABLE)
+          .update({
+            volume,
+            is_muted: isMuted,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', SYNC_ROW_ID);
+
+        if (error) {
+          if (error.code === '42703') {
+            // Columna no existe en la base de datos
+            hasVolumeColumnRef.current = false;
+          } else {
+            console.warn('[RadioSync] Error al actualizar volumen en BD:', error.message);
+          }
+        }
+      } catch (err) {
+        hasVolumeColumnRef.current = false;
+      }
+    }
+  };
+
+  const broadcastPlay = async (station, tab, playing = true, currentVolume, currentMuted) => {
     if (!station) return;
 
-    const payload = {
+    const basePayload = {
       id: SYNC_ROW_ID,
       tab: tab || 'supabase',
       station_url: station.url || '',
@@ -129,11 +239,23 @@ export function useRadioSync() {
       updated_at: new Date().toISOString(),
     };
 
+    const payloadWithVolume = (hasVolumeColumnRef.current && currentVolume !== undefined)
+      ? { ...basePayload, volume: currentVolume, is_muted: Boolean(currentMuted) }
+      : basePayload;
+
     try {
       setIsSyncing(true);
-      const { error } = await supabase
+      let { error } = await supabase
         .from(SYNC_TABLE)
-        .upsert(payload, { onConflict: 'id' });
+        .upsert(payloadWithVolume, { onConflict: 'id' });
+
+      if (error && error.code === '42703') {
+        hasVolumeColumnRef.current = false;
+        const fallbackRes = await supabase
+          .from(SYNC_TABLE)
+          .upsert(basePayload, { onConflict: 'id' });
+        error = fallbackRes.error;
+      }
 
       if (error) {
         console.warn('[RadioSync] Error al publicar:', error.message);
@@ -206,8 +328,10 @@ export function useRadioSync() {
 
   return {
     currentPlay,
+    remoteVolume,
     broadcastPlay,
     broadcastStop,
+    broadcastVolume,
     broadcastForceReload,
     isSyncing,
     syncError,

@@ -161,6 +161,24 @@ export default function PlayerCenter({
     }
   }, [isPlaying, isYoutubeTrack]);
 
+  // Sincronización continua de Volumen y Mute con el reproductor YT.Player
+  useEffect(() => {
+    if (!isYoutubeTrack || !ytPlayerRef.current) return;
+    try {
+      const volVal = isMuted ? 0 : Math.round(volume * 100);
+      if (typeof ytPlayerRef.current.setVolume === 'function') {
+        ytPlayerRef.current.setVolume(volVal);
+      }
+      if (typeof ytPlayerRef.current.mute === 'function' && typeof ytPlayerRef.current.unMute === 'function') {
+        if (isMuted || volume === 0) {
+          ytPlayerRef.current.mute();
+        } else {
+          ytPlayerRef.current.unMute();
+        }
+      }
+    } catch (e) {}
+  }, [volume, isMuted, isYoutubeTrack]);
+
   // Escuchar eventos e info de tiempo del IFrame de YouTube API
   useEffect(() => {
     const handleYoutubeEvent = (event) => {
@@ -295,21 +313,39 @@ export default function PlayerCenter({
 
   const handleVolumeChangeWrapper = (e) => {
     handleVolumeChange(e);
-    if (isYoutubeTrack && iframeRef.current?.contentWindow) {
+    if (isYoutubeTrack) {
       const val = parseFloat(e.target.value);
-      try {
-        iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"setVolume","args":[${Math.round(val * 100)}]}`, '*');
-      } catch (err) {}
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.setVolume === 'function') {
+        try {
+          ytPlayerRef.current.setVolume(Math.round(val * 100));
+        } catch (err) {}
+      }
+      if (iframeRef?.current?.contentWindow) {
+        try {
+          iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"setVolume","args":[${Math.round(val * 100)}]}`, '*');
+        } catch (err) {}
+      }
     }
   };
 
   const toggleMuteWrapper = () => {
     toggleMute();
-    if (isYoutubeTrack && iframeRef.current?.contentWindow) {
-      try {
-        const command = !isMuted ? 'mute' : 'unMute';
-        iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"${command}","args":""}`, '*');
-      } catch (err) {}
+    if (isYoutubeTrack) {
+      if (ytPlayerRef.current) {
+        try {
+          if (!isMuted) {
+            ytPlayerRef.current.mute();
+          } else {
+            ytPlayerRef.current.unMute();
+          }
+        } catch (err) {}
+      }
+      if (iframeRef?.current?.contentWindow) {
+        try {
+          const command = !isMuted ? 'mute' : 'unMute';
+          iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"${command}","args":""}`, '*');
+        } catch (err) {}
+      }
     }
   };
 

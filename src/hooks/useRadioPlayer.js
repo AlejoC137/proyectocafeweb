@@ -7,7 +7,8 @@ export function useRadioPlayer(
   broadcastStop, 
   isApplyingRemoteChange,
   externalTrackIndex,
-  externalSetTrackIndex
+  externalSetTrackIndex,
+  broadcastVolume
 ) {
   const [internalTrackIndex, setInternalTrackIndex] = useState(0);
   const currentTrackIndex = externalTrackIndex !== undefined ? externalTrackIndex : internalTrackIndex;
@@ -17,8 +18,24 @@ export function useRadioPlayer(
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [volume, setVolume] = useState(0.85);
-  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(() => {
+    try {
+      const saved = localStorage.getItem('proyecto_radio_volume');
+      return saved !== null ? parseFloat(saved) : 0.85;
+    } catch (e) {
+      return 0.85;
+    }
+  });
+  const [isMuted, setIsMuted] = useState(() => {
+    try {
+      return localStorage.getItem('proyecto_radio_muted') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const volumeDebounceTimer = useRef(null);
+  const isApplyingRemoteVolume = useRef(false);
 
   // Opciones
   const [isDailyLoop, setIsDailyLoop] = useState(true);
@@ -32,6 +49,14 @@ export function useRadioPlayer(
   const pendingPlayRef = useRef(null); 
   const currentTrack = currentPlaylist[currentTrackIndex] || currentPlaylist[0];
 
+  useEffect(() => {
+    return () => {
+      if (volumeDebounceTimer.current) {
+        clearTimeout(volumeDebounceTimer.current);
+      }
+    };
+  }, []);
+
   const togglePlay = () => {
     if (!currentTrack?.url || !audioRef.current) return;
 
@@ -44,6 +69,7 @@ export function useRadioPlayer(
         broadcastStop();
       }
     } else {
+      setShowAutoStart(false);
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise
@@ -51,7 +77,7 @@ export function useRadioPlayer(
             setIsPlaying(true);
             // Broadcast reproducción global
             if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
-              broadcastPlay(currentTrack, activeTab, true);
+              broadcastPlay(currentTrack, activeTab, true, volume, isMuted);
             }
           })
           .catch((err) => {
@@ -80,7 +106,7 @@ export function useRadioPlayer(
     // Broadcast cambio de pista
     const nextStation = currentPlaylist[newIdx];
     if (nextStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
-      broadcastPlay(nextStation, activeTab, true);
+      broadcastPlay(nextStation, activeTab, true, volume, isMuted);
     }
   };
 
@@ -93,7 +119,7 @@ export function useRadioPlayer(
     // Broadcast cambio de pista
     const prevStation = currentPlaylist[newIdx];
     if (prevStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
-      broadcastPlay(prevStation, activeTab, true);
+      broadcastPlay(prevStation, activeTab, true, volume, isMuted);
     }
   };
 
@@ -119,21 +145,67 @@ export function useRadioPlayer(
   const handleVolumeChange = (e) => {
     const val = parseFloat(e.target.value);
     setVolume(val);
+    const muted = val === 0;
+    setIsMuted(muted);
     if (audioRef.current) {
       audioRef.current.volume = val;
     }
-    setIsMuted(val === 0);
+    try {
+      localStorage.setItem('proyecto_radio_volume', String(val));
+      localStorage.setItem('proyecto_radio_muted', String(muted));
+    } catch (err) {}
+
+    // Emitir cambio de volumen con debounce/throttle si no proviene de un evento remoto
+    if (broadcastVolume && !isApplyingRemoteVolume.current) {
+      if (volumeDebounceTimer.current) {
+        clearTimeout(volumeDebounceTimer.current);
+      }
+      volumeDebounceTimer.current = setTimeout(() => {
+        broadcastVolume(val, muted);
+      }, 75);
+    }
   };
 
   const toggleMute = () => {
-    if (!audioRef.current) return;
-    if (isMuted) {
-      audioRef.current.volume = volume || 0.85;
-      setIsMuted(false);
-    } else {
-      audioRef.current.volume = 0;
-      setIsMuted(true);
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    const effectiveVol = nextMuted ? 0 : (volume || 0.85);
+    if (audioRef.current) {
+      audioRef.current.volume = effectiveVol;
     }
+    try {
+      localStorage.setItem('proyecto_radio_muted', String(nextMuted));
+    } catch (err) {}
+
+    if (broadcastVolume && !isApplyingRemoteVolume.current) {
+      if (volumeDebounceTimer.current) {
+        clearTimeout(volumeDebounceTimer.current);
+      }
+      broadcastVolume(volume || 0.85, nextMuted);
+    }
+  };
+
+  const applyRemoteVolume = (newVolume, newIsMuted) => {
+    if (newVolume === undefined || newVolume === null || isNaN(newVolume)) return;
+    const clampedVol = Math.max(0, Math.min(1, Number(newVolume)));
+    const muted = Boolean(newIsMuted);
+
+    isApplyingRemoteVolume.current = true;
+    setVolume(clampedVol);
+    setIsMuted(muted);
+
+    if (audioRef.current) {
+      audioRef.current.volume = muted ? 0 : clampedVol;
+    }
+
+    try {
+      localStorage.setItem('proyecto_radio_volume', String(clampedVol));
+      localStorage.setItem('proyecto_radio_muted', String(muted));
+    } catch (err) {}
+
+    setTimeout(() => {
+      isApplyingRemoteVolume.current = false;
+    }, 150);
   };
 
   useEffect(() => {
@@ -231,6 +303,9 @@ export function useRadioPlayer(
     handleSeek,
     handleVolumeChange,
     toggleMute,
+    applyRemoteVolume,
+    setVolume,
+    setIsMuted,
     handleTrackEnded,
     formatTime
   };

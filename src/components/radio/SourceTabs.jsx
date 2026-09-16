@@ -1,13 +1,15 @@
 import React from 'react';
-import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles } from 'lucide-react';
+import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles, Radio } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
 import AlejoSpotifySearch from './AlejoSpotifySearch';
+import RadioStationSelector from './RadioStationSelector';
 
 
 export default function SourceTabs({
   activeTab,
   handleTabChange,
+  currentPlay = null,
   supabasePlaylist = [],
   filteredSupabasePlaylist,
   supabaseSearchQuery,
@@ -75,33 +77,14 @@ export default function SourceTabs({
 
       {/* CONTENIDO DEL TAB */}
       <div className="border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] rounded-none transition-colors">
-        {/* TAB: SUPABASE (Buscador Tipo Spotify Confinado a Este Espacio) */}
+        {/* TAB: RADIO STATION (Selector interactivo de la emisora) */}
         {activeTab === 'supabase' && (
-          <AlejoSpotifySearch
+          <RadioStationSelector
             supabasePlaylist={supabasePlaylist}
-            filteredSupabasePlaylist={filteredSupabasePlaylist}
-            supabaseSearchQuery={supabaseSearchQuery}
-            setSupabaseSearchQuery={setSupabaseSearchQuery}
-            selectedGenre={selectedGenre}
-            setSelectedGenre={setSelectedGenre}
-            selectedArtist={selectedArtist}
-            setSelectedArtist={setSelectedArtist}
-            selectedAlbum={selectedAlbum}
-            setSelectedAlbum={setSelectedAlbum}
-            activeView={activeView}
-            setActiveView={setActiveView}
-            loadingSupabase={loadingSupabase}
-            currentTrackIndex={currentTrackIndex}
-            setCurrentTrackIndex={setCurrentTrackIndex}
+            currentPlay={currentPlay}
             setIsPlaying={setIsPlaying}
             broadcastPlay={broadcastPlay}
             isApplyingRemoteChange={isApplyingRemoteChange}
-            moveSongOrder={moveSongOrder}
-            handleDeleteSong={handleDeleteSong}
-            updateAlbumData={updateAlbumData}
-            toggleFavorite={toggleFavorite}
-            navigate={navigate}
-            activeTab={activeTab}
           />
         )}
 
