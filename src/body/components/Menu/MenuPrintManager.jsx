@@ -3,15 +3,17 @@ import supabase from "../../../config/supabaseClient";
 import MenuPrint from "./MenuPrint";
 import MenuPrintHorizontal from "./MenuPrintHorizontal";
 import MenuPrintIaModal from "./MenuPrintIaModal";
+import FlyerCreator from "./FlyerCreator/FlyerCreator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Coffee, Layers, Plus, Trash2, Edit, Check, X, Copy, Sparkles } from "lucide-react";
+import { Coffee, Layers, Plus, Trash2, Edit, Check, X, Copy, Sparkles, Palette } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 
 function MenuPrintManager() {
   const { menuId: urlMenuId } = useParams();
   const navigate = useNavigate();
-  const activeMenuId = urlMenuId ? Number(urlMenuId) : 2;
+  const isFlyerMode = urlMenuId === "flyer";
+  const activeMenuId = isFlyerMode ? "flyer" : urlMenuId ? Number(urlMenuId) : 2;
 
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,8 +65,10 @@ function MenuPrintManager() {
       loadedMenus.sort((a, b) => a.id - b.id);
       setMenus(loadedMenus);
 
-      // If currentActiveId is not in the list, navigate to first one
-      if (!loadedMenus.some((m) => m.id === currentActiveId)) {
+      // If currentActiveId is not in the list, navigate to first one (unless in flyer mode)
+      if (isFlyerMode) {
+        // En modo flyer permanecemos en /MenuPrint/flyer
+      } else if (!loadedMenus.some((m) => m.id === currentActiveId)) {
         const fallbackId = loadedMenus[0]?.id || 2;
         navigate(`/MenuPrint/${fallbackId}`, { replace: true });
       } else if (!urlMenuId || Number(urlMenuId) !== currentActiveId) {
@@ -78,6 +82,7 @@ function MenuPrintManager() {
   };
 
   const getMenuDisplayName = (menu) => {
+    if (isFlyerMode || menu.id === "flyer") return "🎨 Creador de Flyers (Canva)";
     if (menu.group_descriptions?.__layout?.name) {
       return menu.group_descriptions.__layout.name;
     }
@@ -88,12 +93,13 @@ function MenuPrintManager() {
   };
 
   const getMenuType = (menu) => {
+    if (isFlyerMode || menu.id === "flyer") return "flyer";
     if (menu.id === 1) return "vertical";
     if (menu.id === 2) return "horizontal";
     return menu.group_descriptions?.__layout?.type || "horizontal";
   };
 
-  const activeMenu = menus.find((m) => m.id === activeMenuId) || { id: activeMenuId };
+  const activeMenu = isFlyerMode ? { id: "flyer" } : menus.find((m) => m.id === activeMenuId) || { id: activeMenuId };
   const activeMenuType = getMenuType(activeMenu);
 
   const startEditName = () => {
@@ -269,8 +275,24 @@ function MenuPrintManager() {
 
         {/* Center: Scrollable Tabs */}
         <div className="flex-1 mx-6 flex items-center justify-start overflow-x-auto gap-2 py-2 no-scrollbar scroll-smooth">
+          {/* Dedicated Tab for Flyer Studio */}
+          <button
+            onClick={() => {
+              navigate(`/MenuPrint/flyer`);
+              setIsEditingName(false);
+            }}
+            className={`flex items-center gap-1.5 shrink-0 px-3.5 py-1.5 border-2 border-black font-black uppercase text-[10px] tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
+              isFlyerMode
+                ? "bg-purple-400 text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                : "bg-purple-100 hover:bg-purple-200 text-black"
+            }`}
+          >
+            <span>🎨</span>
+            <span>CREADOR DE FLYERS (CANVA)</span>
+          </button>
+
           {menus.map((m) => {
-            const isActive = m.id === activeMenuId;
+            const isActive = !isFlyerMode && m.id === activeMenuId;
             const isVertical = getMenuType(m) === "vertical";
             return (
               <button
@@ -294,41 +316,49 @@ function MenuPrintManager() {
 
         {/* Right Side: IA & Clone & Delete Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            onClick={() => setShowIaModal(true)}
-            className="bg-yellow-300 hover:bg-yellow-400 text-black border-2 border-black font-black uppercase text-xs h-9 px-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
-            title="Diagramar o Importar Layout con Gemini IA"
-          >
-            <Sparkles size={14} className="text-black" />
-            <span className="hidden sm:inline">IA Layout / Importar</span>
-          </Button>
+          {!isFlyerMode && (
+            <>
+              <Button
+                onClick={() => setShowIaModal(true)}
+                className="bg-yellow-300 hover:bg-yellow-400 text-black border-2 border-black font-black uppercase text-xs h-9 px-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
+                title="Diagramar o Importar Layout con Gemini IA"
+              >
+                <Sparkles size={14} className="text-black" />
+                <span className="hidden sm:inline">IA Layout / Importar</span>
+              </Button>
 
-          <Button
-            onClick={() => {
-              setCloneSourceId(activeMenuType === "horizontal" ? activeMenuId : 2);
-              setShowCloneModal(true);
-            }}
-            className="bg-green-400 hover:bg-green-500 text-black border-2 border-black font-black uppercase text-xs h-9 px-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
-          >
-            <Plus size={14} />
-            <span className="hidden sm:inline">Clonar Horizontal</span>
-          </Button>
+              <Button
+                onClick={() => {
+                  setCloneSourceId(activeMenuType === "horizontal" ? activeMenuId : 2);
+                  setShowCloneModal(true);
+                }}
+                className="bg-green-400 hover:bg-green-500 text-black border-2 border-black font-black uppercase text-xs h-9 px-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
+              >
+                <Plus size={14} />
+                <span className="hidden sm:inline">Clonar Horizontal</span>
+              </Button>
 
-          {activeMenuId !== 1 && activeMenuId !== 2 && (
-            <Button
-              onClick={handleDeleteMenu}
-              className="bg-red-400 hover:bg-red-500 text-black border-2 border-black font-black uppercase text-xs h-9 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
-              title="Eliminar Menú"
-            >
-              <Trash2 size={14} />
-            </Button>
+              {activeMenuId !== 1 && activeMenuId !== 2 && (
+                <Button
+                  onClick={handleDeleteMenu}
+                  className="bg-red-400 hover:bg-red-500 text-black border-2 border-black font-black uppercase text-xs h-9 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-md transition-all flex items-center gap-1.5"
+                  title="Eliminar Menú"
+                >
+                  <Trash2 size={14} />
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/* Main View Area */}
       <div className="flex-1 w-full flex flex-col">
-        {activeMenuType === "vertical" ? (
+        {isFlyerMode ? (
+          <div className="pt-[64px]">
+            <FlyerCreator />
+          </div>
+        ) : activeMenuType === "vertical" ? (
           <div className="pt-[64px]">
             <MenuPrint key={activeMenuId} menuId={activeMenuId} />
           </div>
