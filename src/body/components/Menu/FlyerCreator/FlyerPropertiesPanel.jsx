@@ -216,6 +216,55 @@ export default function FlyerPropertiesPanel({
         />
       </div>
 
+      {/* Control de Ancho (Width) */}
+      <div className="flex flex-col gap-1 p-2 bg-white border-2 border-black rounded-lg">
+        <div className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-700">
+          <span>Ancho del Elemento (px)</span>
+          <span className="font-mono text-zinc-600 font-bold">
+            {selectedElement.width || (selectedElement.type === "container" ? 780 : 850)}px
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min="160"
+            max={canvasConfig.width || 1080}
+            step="10"
+            value={selectedElement.width || (selectedElement.type === "container" ? 780 : 850)}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              onUpdateElement({
+                ...selectedElement,
+                width: val,
+                style: {
+                  ...(selectedElement.style || {}),
+                  width: val
+                }
+              });
+            }}
+            className="flex-1 accent-black cursor-pointer"
+          />
+          <Input
+            type="number"
+            min="100"
+            max={canvasConfig.width || 1080}
+            value={selectedElement.width || (selectedElement.type === "container" ? 780 : 850)}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              onUpdateElement({
+                ...selectedElement,
+                width: val,
+                style: {
+                  ...(selectedElement.style || {}),
+                  width: val
+                }
+              });
+            }}
+            className="w-16 h-7 text-[11px] font-bold border border-black bg-white px-1"
+          />
+        </div>
+      </div>
+
       {/* Selector de Fuente */}
       <div className="flex flex-col gap-1.5">
         <label className="text-[11px] font-black uppercase text-zinc-700">

@@ -31,8 +31,10 @@ import FlyerPropertiesPanel from "./FlyerPropertiesPanel";
 import FlyerPromptWizardModal from "./FlyerPromptWizardModal";
 import FlyerMediaModal from "./FlyerMediaModal";
 import FlyerCopyModal from "./FlyerCopyModal";
+import FlyerLibraryModal from "./FlyerLibraryModal";
 import { FLYER_FORMATS, generateSmartCopiesFromData } from "./flyerAiPromptEngine";
 import { STARTER_TEMPLATES } from "./FlyerTemplates";
+import { Folder } from "lucide-react";
 
 export default function FlyerCreator({ initialFormat = "9:16" }) {
   // Estado general del lienzo
@@ -43,7 +45,7 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
   const [copies, setCopies] = useState(defaultTemplate.copies);
 
   const [selectedElementId, setSelectedElementId] = useState(null);
-  const [scale, setScale] = useState(0.45);
+  const [scale, setScale] = useState(0.42);
   const [isExporting, setIsExporting] = useState(false);
 
   // Historial de cambios (Undo / Redo)
@@ -55,22 +57,28 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState("background"); // "background" | "element"
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [activeFlyerId, setActiveFlyerId] = useState(null);
 
   const printAreaRef = useRef(null);
 
-  // Auto-ajustar zoom según el tamaño de la ventana
+  // Auto-ajustar zoom según el tamaño de la ventana y el formato del flyer
   useEffect(() => {
     const handleResize = () => {
-      const w = window.innerWidth;
-      if (w < 640) setScale(0.28);
-      else if (w < 1024) setScale(0.38);
-      else setScale(0.45);
+      const availH = window.innerHeight - 150; // descontando barra superior y margen
+      const targetH = canvasConfig.height || 1920;
+      const fitRatio = Number((availH / targetH).toFixed(2));
+      setScale(Math.max(0.2, Math.min(0.85, fitRatio)));
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [canvasConfig.height]);
+
+  const handleZoomDelta = (delta) => {
+    setScale((s) => Math.max(0.15, Math.min(1.5, Number((s + delta).toFixed(2)))));
+  };
 
   // Guardar estado en historial para Undo/Redo
   const pushHistory = (newElements, newConfig) => {
@@ -402,6 +410,16 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
           </Button>
 
           <Button
+            onClick={() => setIsLibraryOpen(true)}
+            className="bg-amber-300 hover:bg-amber-400 text-black border-2 border-black font-black uppercase text-xs h-8 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] flex items-center gap-1.5"
+            title="Abrir Biblioteca de Flyers guardados en Supabase"
+          >
+            <Folder size={13} />
+            <span className="hidden lg:inline">Mis Flyers</span>
+            <span className="lg:hidden">Posters</span>
+          </Button>
+
+          <Button
             onClick={() => setIsCopyModalOpen(true)}
             className="bg-pink-300 hover:bg-pink-400 text-black border-2 border-black font-black uppercase text-xs h-8 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] flex items-center gap-1.5"
             title="Ver y copiar textos promocionales para Instagram y WhatsApp"
@@ -464,8 +482,9 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
           {/* Zoom controls */}
           <div className="hidden md:flex items-center gap-1 border-2 border-black rounded bg-white px-1.5 h-8">
             <button
-              onClick={() => setScale((s) => Math.max(0.2, s - 0.05))}
+              onClick={() => handleZoomDelta(-0.05)}
               className="p-0.5 hover:bg-zinc-100 rounded font-black text-xs"
+              title="Alejar"
             >
               -
             </button>
@@ -473,12 +492,23 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
               {Math.round(scale * 100)}%
             </span>
             <button
-              onClick={() => setScale((s) => Math.min(1.0, s + 0.05))}
+              onClick={() => handleZoomDelta(0.05)}
               className="p-0.5 hover:bg-zinc-100 rounded font-black text-xs"
+              title="Acercar"
             >
               +
             </button>
           </div>
+
+          {/* Botón Guardar en Supabase */}
+          <Button
+            onClick={() => setIsLibraryOpen(true)}
+            className="bg-emerald-400 hover:bg-emerald-500 text-black border-2 border-black font-black uppercase text-xs h-8 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] flex items-center gap-1"
+            title="Guardar este Flyer en Supabase"
+          >
+            <Folder size={13} />
+            <span className="hidden sm:inline">Guardar</span>
+          </Button>
 
           {/* Botones de Descarga */}
           <Button
@@ -521,8 +551,8 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
       {/* Área Principal de Trabajo: Lienzo (Centro) + Panel de Propiedades (Derecha) */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Lienzo Interactivo con Drag and Drop */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-auto">
+        {/* Lienzo Interactivo con Drag and Drop y Zoom Scroll */}
+        <div className="flex-1 flex flex-col items-center justify-center p-2 overflow-hidden">
           <FlyerCanvas
             canvasConfig={canvasConfig}
             elements={elements}
@@ -531,6 +561,7 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
             onUpdateElement={handleUpdateElement}
             printRef={printAreaRef}
             scale={scale}
+            onZoom={handleZoomDelta}
           />
         </div>
 
@@ -584,6 +615,26 @@ export default function FlyerCreator({ initialFormat = "9:16" }) {
         copies={copies}
         onUpdateCopies={setCopies}
         flyerTitle={mainTitleText}
+      />
+
+      {/* MODAL 4: Biblioteca de Flyers en Supabase */}
+      <FlyerLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onLoadFlyer={({ canvas, elements: newElems, copies: newCopies }) => {
+          setCanvasConfig(canvas);
+          setElements(newElems);
+          if (newCopies) setCopies(newCopies);
+          setSelectedElementId(null);
+          pushHistory(newElems, canvas);
+        }}
+        currentFlyerData={{
+          canvas: canvasConfig,
+          elements,
+          copies
+        }}
+        activeFlyerId={activeFlyerId}
+        setActiveFlyerId={setActiveFlyerId}
       />
 
     </div>

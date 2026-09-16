@@ -72,6 +72,7 @@ export const STARTER_TEMPLATES = {
         type: "container",
         x: 540,
         y: 840,
+        width: 820,
         style: {
           backgroundColor: "rgba(35, 25, 18, 0.85)",
           borderColor: "#c59b27",
@@ -202,6 +203,7 @@ export const STARTER_TEMPLATES = {
         type: "container",
         x: 540,
         y: 520,
+        width: 840,
         style: {
           backgroundColor: "rgba(40, 54, 24, 0.9)",
           borderColor: "#dda15e",
@@ -332,6 +334,7 @@ export const STARTER_TEMPLATES = {
         type: "container",
         x: 540,
         y: 560,
+        width: 840,
         style: {
           backgroundColor: "#ffffff",
           borderColor: "#111111",
@@ -462,6 +465,7 @@ export const STARTER_TEMPLATES = {
         type: "container",
         x: 960,
         y: 590,
+        width: 1100,
         style: {
           backgroundColor: "rgba(22, 22, 32, 0.9)",
           borderColor: "#00f0ff",
@@ -561,6 +565,7 @@ export const STARTER_TEMPLATES = {
         type: "container",
         x: 600,
         y: 620,
+        width: 880,
         style: {
           backgroundColor: "#3b2615",
           borderColor: "#abd1c6",

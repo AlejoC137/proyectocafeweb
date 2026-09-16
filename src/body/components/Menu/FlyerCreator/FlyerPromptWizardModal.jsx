@@ -45,6 +45,9 @@ export default function FlyerPromptWizardModal({
   const [agendaEvents, setAgendaEvents] = useState([]);
   const [selectedAgendaId, setSelectedAgendaId] = useState("");
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [aliadosList, setAliadosList] = useState([]);
+  const [showAlliesSearch, setShowAlliesSearch] = useState(false);
+  const [showParticipantsSearch, setShowParticipantsSearch] = useState(false);
 
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
@@ -90,8 +93,18 @@ export default function FlyerPromptWizardModal({
       if (!error && data) {
         setAgendaEvents(data);
       }
+
+      // Consulta de sólo lectura de Aliados (no cambia la tabla Aliados)
+      const { data: dataAliados, error: errAliados } = await supabase
+        .from("Aliados")
+        .select("*")
+        .order("nombre", { ascending: true });
+
+      if (!errAliados && dataAliados) {
+        setAliadosList(dataAliados);
+      }
     } catch (err) {
-      console.error("Error al cargar eventos de Agenda:", err);
+      console.error("Error al cargar eventos de Agenda o Aliados:", err);
     } finally {
       setLoadingEvents(false);
     }
@@ -111,6 +124,17 @@ export default function FlyerPromptWizardModal({
     setRegistrationLink(ev.linkInscripcion || "");
     if (ev.bannerIMG) {
       setBackgroundImageUrl(ev.bannerIMG);
+    }
+
+    // Si el evento tiene un aliado vinculado, autocompletar
+    if (ev.aliado_id && aliadosList.length > 0) {
+      const foundAlly = aliadosList.find((a) => String(a.id) === String(ev.aliado_id));
+      if (foundAlly) {
+        setAllies(foundAlly.nombre);
+        if (foundAlly.instagram) {
+          setSocials(`@proyectocafe · @${foundAlly.instagram.replace(/^@/, '')}`);
+        }
+      }
     }
   };
 
@@ -380,16 +404,48 @@ export default function FlyerPromptWizardModal({
                   />
                 </div>
 
-                <div>
+                <div className="relative">
                   <label className="text-xs font-black uppercase text-zinc-800 block mb-1">
                     Artistas / Ponentes / Invitados
                   </label>
                   <Input
                     value={participants}
-                    onChange={(e) => setParticipants(e.target.value)}
+                    onChange={(e) => {
+                      setParticipants(e.target.value);
+                      setShowParticipantsSearch(true);
+                    }}
+                    onFocus={() => setShowParticipantsSearch(true)}
+                    onBlur={() => setTimeout(() => setShowParticipantsSearch(false), 250)}
                     placeholder="Ej. Trío Melao, Barista Juan Gómez"
                     className="border-2 border-black font-bold text-xs bg-white h-9"
                   />
+                  {showParticipantsSearch && participants.trim() && aliadosList.length > 0 && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 max-h-40 overflow-y-auto">
+                      {aliadosList
+                        .filter((a) =>
+                          (a.nombre || "").toLowerCase().includes(participants.toLowerCase().trim()) ||
+                          (a.categoria || "").toLowerCase().includes(participants.toLowerCase().trim())
+                        )
+                        .slice(0, 5)
+                        .map((a) => (
+                          <div
+                            key={a.id}
+                            onMouseDown={() => {
+                              setParticipants(a.nombre);
+                              setShowParticipantsSearch(false);
+                            }}
+                            className="p-2 hover:bg-yellow-100 cursor-pointer border-b border-zinc-100 last:border-none flex items-center justify-between transition-colors"
+                          >
+                            <span className="font-bold text-xs text-black">{a.nombre}</span>
+                            {a.categoria && (
+                              <span className="text-[9px] font-black uppercase bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-600">
+                                {a.categoria}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -448,16 +504,59 @@ export default function FlyerPromptWizardModal({
                   />
                 </div>
 
-                <div>
+                <div className="relative">
                   <label className="text-xs font-black uppercase text-zinc-800 block mb-1">
                     Aliados / Patrocinadores
                   </label>
                   <Input
                     value={allies}
-                    onChange={(e) => setAllies(e.target.value)}
+                    onChange={(e) => {
+                      setAllies(e.target.value);
+                      setShowAlliesSearch(true);
+                    }}
+                    onFocus={() => setShowAlliesSearch(true)}
+                    onBlur={() => setTimeout(() => setShowAlliesSearch(false), 250)}
                     placeholder="Ej. Proyecto Café · Alianza Cultural"
                     className="border-2 border-black font-bold text-xs bg-white h-9"
                   />
+                  {showAlliesSearch && allies.trim() && aliadosList.length > 0 && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 max-h-44 overflow-y-auto">
+                      {aliadosList
+                        .filter((a) =>
+                          (a.nombre || "").toLowerCase().includes(allies.toLowerCase().trim()) ||
+                          (a.categoria || "").toLowerCase().includes(allies.toLowerCase().trim()) ||
+                          (a.instagram || "").toLowerCase().includes(allies.toLowerCase().trim())
+                        )
+                        .slice(0, 6)
+                        .map((a) => (
+                          <div
+                            key={a.id}
+                            onMouseDown={() => {
+                              setAllies(a.nombre);
+                              if (a.instagram) {
+                                setSocials(`@proyectocafe · @${a.instagram.replace(/^@/, "")}`);
+                              }
+                              setShowAlliesSearch(false);
+                            }}
+                            className="p-2 hover:bg-yellow-100 cursor-pointer border-b border-zinc-100 last:border-none flex items-center justify-between transition-colors"
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-bold text-xs text-black">{a.nombre}</span>
+                              {a.instagram && (
+                                <span className="text-[10px] text-zinc-500 font-mono">
+                                  @{a.instagram.replace(/^@/, "")}
+                                </span>
+                              )}
+                            </div>
+                            {a.categoria && (
+                              <span className="text-[9px] font-black uppercase bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-600">
+                                {a.categoria}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">

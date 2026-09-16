@@ -1,11 +1,10 @@
 // =========================================================
 // LIENZO INTERACTIVO WYSIWYG PARA FLYER STUDIO
-// Renderizado exacto con escalado vectorial, drag & drop
-// y soporte de exportación a alta resolución (html2canvas)
+// Renderizado exacto, redimensionamiento interactivo de elementos,
+// prevención de deformación, zoom con scroll y ajuste perfecto de espacio.
 // =========================================================
 
 import React, { useRef, useState, useEffect } from "react";
-import { FLYER_FORMATS } from "./flyerAiPromptEngine";
 
 export default function FlyerCanvas({
   canvasConfig = {},
@@ -14,16 +13,22 @@ export default function FlyerCanvas({
   onSelectElement = () => {},
   onUpdateElement = () => {},
   printRef = null,
-  scale = 0.5
+  scale = 0.5,
+  onZoom = () => {}
 }) {
   const containerRef = useRef(null);
+  
+  // Estado para arrastrar (mover)
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  // Estado para redimensionar ancho de elementos
+  const [resizing, setResizing] = useState(null); // { id, direction, startX, startWidth }
 
   const nominalWidth = canvasConfig.width || 1080;
   const nominalHeight = canvasConfig.height || 1920;
 
-  // Manejo de Drag & Drop de elementos en el lienzo
+  // Iniciar Arrastre de Movimiento
   const handleMouseDown = (e, el) => {
     e.stopPropagation();
     onSelectElement(el.id);
@@ -37,32 +42,67 @@ export default function FlyerCanvas({
     });
   };
 
+  // Iniciar Redimensionamiento de Elemento
+  const handleResizeStart = (e, el, direction, currentWidth) => {
+    e.stopPropagation();
+    setResizing({
+      id: el.id,
+      direction,
+      startX: e.clientX,
+      startWidth: currentWidth || (el.type === "container" ? 780 : 850)
+    });
+  };
+
+  // Event Listeners globales para Arrastrar y Redimensionar
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (!draggingId) return;
+      // 1. Manejar Redimensionamiento
+      if (resizing) {
+        const deltaScreenX = e.clientX - resizing.startX;
+        const deltaNominalX = Math.round(deltaScreenX / scale);
+        // Como el elemento tiene transform translate(-50%, -50%), expandir hacia la derecha duplica delta
+        const factor = resizing.direction === "left" ? -2 : 2;
+        const newWidth = Math.max(160, Math.min(nominalWidth, resizing.startWidth + deltaNominalX * factor));
 
-      const deltaScreenX = e.clientX - dragOffset.startX;
-      const deltaScreenY = e.clientY - dragOffset.startY;
+        const targetEl = elements.find((el) => el.id === resizing.id);
+        if (targetEl) {
+          onUpdateElement({
+            ...targetEl,
+            width: newWidth,
+            style: {
+              ...(targetEl.style || {}),
+              width: newWidth
+            }
+          });
+        }
+        return;
+      }
 
-      // Convertir el desplazamiento en pantalla al espacio nominal del canvas
-      const deltaNominalX = Math.round(deltaScreenX / scale);
-      const deltaNominalY = Math.round(deltaScreenY / scale);
+      // 2. Manejar Movimiento (Drag)
+      if (draggingId) {
+        const deltaScreenX = e.clientX - dragOffset.startX;
+        const deltaScreenY = e.clientY - dragOffset.startY;
 
-      const targetEl = elements.find((el) => el.id === draggingId);
-      if (targetEl) {
-        onUpdateElement({
-          ...targetEl,
-          x: Math.max(0, Math.min(nominalWidth, dragOffset.origX + deltaNominalX)),
-          y: Math.max(0, Math.min(nominalHeight, dragOffset.origY + deltaNominalY))
-        });
+        const deltaNominalX = Math.round(deltaScreenX / scale);
+        const deltaNominalY = Math.round(deltaScreenY / scale);
+
+        const targetEl = elements.find((el) => el.id === draggingId);
+        if (targetEl) {
+          onUpdateElement({
+            ...targetEl,
+            x: Math.max(0, Math.min(nominalWidth, dragOffset.origX + deltaNominalX)),
+            y: Math.max(0, Math.min(nominalHeight, dragOffset.origY + deltaNominalY))
+          });
+        }
       }
     };
 
     const handleMouseUp = () => {
       setDraggingId(null);
+      setResizing(null);
     };
 
-    if (draggingId) {
+    if (draggingId || resizing) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     }
@@ -71,7 +111,15 @@ export default function FlyerCanvas({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [draggingId, dragOffset, elements, scale, nominalWidth, nominalHeight, onUpdateElement]);
+  }, [draggingId, dragOffset, resizing, elements, scale, nominalWidth, nominalHeight, onUpdateElement]);
+
+  // Manejar Zoom mediante Rueda de Desplazamiento (Scroll Wheel)
+  const handleWheel = (e) => {
+    // Si la rueda gira sobre el lienzo, ajustar el zoom
+    e.preventDefault();
+    const zoomDelta = e.deltaY < 0 ? 0.04 : -0.04;
+    onZoom(zoomDelta);
+  };
 
   const renderElementContent = (el) => {
     const s = el.style || {};
@@ -107,8 +155,9 @@ export default function FlyerCanvas({
             border: `${s.borderWidth || 2}px solid ${s.borderColor || "#c59b27"}`,
             borderRadius: `${s.borderRadius || 16}px`,
             padding: `${s.paddingY || 20}px ${s.paddingX || 40}px`,
-            maxWidth: `${s.maxWidth || Math.round(nominalWidth * 0.85)}px`,
-            textAlign: "center",
+            width: "100%",
+            boxSizing: "border-box",
+            textAlign: s.textAlign || "center",
             boxShadow: "0 8px 30px rgba(0,0,0,0.4)"
           }}
         >
@@ -160,12 +209,13 @@ export default function FlyerCanvas({
       return (
         <div
           style={{
+            width: "100%",
+            boxSizing: "border-box",
             fontSize: `${s.fontSize || 22}px`,
             color: s.color || "#d6c7b2",
-            textAlign: "center",
+            textAlign: s.textAlign || "center",
             lineHeight: 1.4,
-            fontWeight: "600",
-            maxWidth: `${s.maxWidth || Math.round(nominalWidth * 0.9)}px`
+            fontWeight: "600"
           }}
         >
           {el.allies && <div style={{ marginBottom: "6px", textTransform: "uppercase", letterSpacing: "1px" }}>{el.allies}</div>}
@@ -178,6 +228,8 @@ export default function FlyerCanvas({
     return (
       <div
         style={{
+          width: "100%",
+          boxSizing: "border-box",
           fontSize: `${s.fontSize || 28}px`,
           fontFamily: s.fontFamily || "'Space Grotesk', sans-serif",
           fontWeight: s.fontWeight || "normal",
@@ -186,7 +238,6 @@ export default function FlyerCanvas({
           textTransform: s.textTransform || "none",
           letterSpacing: `${s.letterSpacing || 0}px`,
           lineHeight: s.lineHeight || 1.2,
-          maxWidth: s.maxWidth ? `${s.maxWidth}px` : `${Math.round(nominalWidth * 0.9)}px`,
           backgroundColor: s.backgroundColor !== "transparent" ? s.backgroundColor : undefined,
           borderRadius: s.borderRadius ? `${s.borderRadius}px` : undefined,
           padding: s.paddingY ? `${s.paddingY}px ${s.paddingX}px` : undefined,
@@ -203,84 +254,137 @@ export default function FlyerCanvas({
     <div
       ref={containerRef}
       onClick={() => onSelectElement(null)}
-      className="relative flex items-center justify-center p-8 overflow-auto select-none min-h-[500px]"
+      onWheel={handleWheel}
+      className="w-full h-full flex-1 flex items-center justify-center p-6 overflow-auto select-none"
       style={{
         background: "radial-gradient(#d4d4d8 1.5px, transparent 1.5px)",
         backgroundSize: "24px 24px"
       }}
     >
-      {/* Visual Canvas Paper */}
+      {/* Contenedor Sizer que ocupa EXACTAMENTE las dimensiones visuales escaladas (evita márgenes fantasma) */}
       <div
-        ref={printRef}
-        id="flyer-canvas-export-area"
         style={{
-          width: `${nominalWidth}px`,
-          height: `${nominalHeight}px`,
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
-          backgroundColor: canvasConfig.backgroundColor || "#1c140e",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(0,0,0,0.8)",
+          width: `${Math.round(nominalWidth * scale)}px`,
+          height: `${Math.round(nominalHeight * scale)}px`,
           position: "relative",
-          overflow: "hidden"
+          margin: "auto",
+          flexShrink: 0
         }}
-        className="rounded-none transition-transform duration-75 shrink-0"
       >
-        {/* Background Image & Overlay */}
-        {canvasConfig.backgroundImageUrl && (
+        {/* Hoja de diseño exportable con transform-origin top-left */}
+        <div
+          ref={printRef}
+          id="flyer-canvas-export-area"
+          style={{
+            width: `${nominalWidth}px`,
+            height: `${nominalHeight}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            backgroundColor: canvasConfig.backgroundColor || "#1c140e",
+            boxShadow: "0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(0,0,0,0.8)",
+            overflow: "hidden"
+          }}
+          className="rounded-none transition-none select-none"
+        >
+          {/* Imagen de Fondo */}
+          {canvasConfig.backgroundImageUrl && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: `url(${canvasConfig.backgroundImageUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: canvasConfig.backgroundBlur ? `blur(${canvasConfig.backgroundBlur}px)` : undefined,
+                zIndex: 0
+              }}
+            />
+          )}
+
+          {/* Capa de Oscurecimiento (Overlay) */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              backgroundImage: `url(${canvasConfig.backgroundImageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              filter: canvasConfig.backgroundBlur ? `blur(${canvasConfig.backgroundBlur}px)` : undefined,
-              zIndex: 0
+              backgroundColor: canvasConfig.backgroundOverlay || "rgba(0,0,0,0.35)",
+              zIndex: 1,
+              pointerEvents: "none"
             }}
           />
-        )}
 
-        {/* Darkness / Color Overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: canvasConfig.backgroundOverlay || "rgba(0,0,0,0.35)",
-            zIndex: 1,
-            pointerEvents: "none"
-          }}
-        />
+          {/* Capa de Elementos del Flyer */}
+          <div className="absolute inset-0 z-10">
+            {elements.map((el) => {
+              const isSelected = selectedElementId === el.id;
 
-        {/* Flyer Elements Layer */}
-        <div className="absolute inset-0 z-10">
-          {elements.map((el) => {
-            const isSelected = selectedElementId === el.id;
+              // Ancho fijo e inmutable durante el movimiento para que NO se deforme ni encoja
+              const isBadge = el.type === "badge" && !el.width;
+              const currentWidth = el.width || el.style?.width || (
+                el.type === "container" ? 780 :
+                el.type === "text" ? (el.style?.maxWidth || 850) :
+                el.type === "footer" ? 900 :
+                undefined
+              );
 
-            return (
-              <div
-                key={el.id}
-                onMouseDown={(e) => handleMouseDown(e, el)}
-                style={{
-                  position: "absolute",
-                  left: `${el.x}px`,
-                  top: `${el.y}px`,
-                  transform: "translate(-50%, -50%)",
-                  zIndex: el.zIndex || 10,
-                  cursor: draggingId === el.id ? "grabbing" : "grab"
-                }}
-                className={`group transition-shadow ${
-                  isSelected ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-black rounded-lg" : ""
-                }`}
-              >
-                {renderElementContent(el)}
+              return (
+                <div
+                  key={el.id}
+                  onMouseDown={(e) => handleMouseDown(e, el)}
+                  style={{
+                    position: "absolute",
+                    left: `${el.x}px`,
+                    top: `${el.y}px`,
+                    transform: "translate(-50%, -50%)",
+                    width: isBadge ? "max-content" : `${currentWidth}px`,
+                    maxWidth: "none",
+                    whiteSpace: isBadge ? "nowrap" : "normal",
+                    boxSizing: "border-box",
+                    zIndex: el.zIndex || 10,
+                    cursor: draggingId === el.id ? "grabbing" : "grab"
+                  }}
+                  className={`group ${
+                    isSelected ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-black rounded-lg" : ""
+                  }`}
+                >
+                  {renderElementContent(el)}
 
-                {/* Hover indicator */}
-                {!isSelected && (
-                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-yellow-300/80 rounded-lg pointer-events-none" />
-                )}
-              </div>
-            );
-          })}
+                  {/* Manetas de Redimensionamiento Interactivas (Estilo Canva) */}
+                  {isSelected && !isBadge && (
+                    <>
+                      {/* Maneta derecha */}
+                      <div
+                        onMouseDown={(e) => handleResizeStart(e, el, "right", currentWidth)}
+                        className="absolute top-1/2 -right-3 -translate-y-1/2 w-4 h-8 bg-yellow-400 border-2 border-black rounded-full cursor-ew-resize z-30 shadow-md hover:scale-110 active:bg-yellow-500"
+                        title="Arrastra para cambiar ancho"
+                      />
+
+                      {/* Maneta izquierda */}
+                      <div
+                        onMouseDown={(e) => handleResizeStart(e, el, "left", currentWidth)}
+                        className="absolute top-1/2 -left-3 -translate-y-1/2 w-4 h-8 bg-yellow-400 border-2 border-black rounded-full cursor-ew-resize z-30 shadow-md hover:scale-110 active:bg-yellow-500"
+                        title="Arrastra para cambiar ancho"
+                      />
+
+                      {/* Maneta esquina inferior derecha */}
+                      <div
+                        onMouseDown={(e) => handleResizeStart(e, el, "corner", currentWidth)}
+                        className="absolute -bottom-2 -right-2 w-5 h-5 bg-yellow-400 border-2 border-black rounded-full cursor-nwse-resize z-30 shadow-md hover:scale-110 active:bg-yellow-500"
+                        title="Arrastra para redimensionar"
+                      />
+                    </>
+                  )}
+
+                  {/* Indicador de hover */}
+                  {!isSelected && (
+                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-yellow-300/80 rounded-lg pointer-events-none" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

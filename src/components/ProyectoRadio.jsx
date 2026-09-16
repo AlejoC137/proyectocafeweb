@@ -8,6 +8,7 @@ import { Radio, Play } from 'lucide-react';
 import RadioHeader from './radio/RadioHeader';
 import AgendaColumn from './radio/AgendaColumn';
 import MenuColumn from './radio/MenuColumn';
+import RadioMenuDelDia from './radio/RadioMenuDelDia';
 import PlayerCenter from './radio/PlayerCenter';
 import SourceTabs from './radio/SourceTabs';
 
@@ -326,7 +327,10 @@ export default function ProyectoRadio() {
           </div>
 
           <div className={`${mobileTab === 'menu' ? 'block' : 'hidden'} lg:block`}>
-            <MenuColumn {...cafeData} />
+            {/* Componente original preservado (descomentar para reactivar Carta de Hoy + carrusel):
+                <MenuColumn {...cafeData} />
+            */}
+            <RadioMenuDelDia todaysLunch={cafeData.todaysLunch} />
           </div>
         </div>
       </div>

@@ -27,19 +27,21 @@ export default function AgendaColumn({ currentEvent, agendaEvents = [], eventCar
       <div className="flex-1 bg-cream-bg dark:bg-[#0d0e15] relative overflow-hidden flex flex-col group transition-colors">
         {currentEvent ? (
           <>
-            {/* Imagen del Evento (Full Width 1:1 Bulletproof) */}
-            <div className={`w-full pt-[100%] border-b-[3px] ${borderColor} relative overflow-hidden bg-white dark:bg-[#12131C] group flex-shrink-0`}>
-              <div className="absolute inset-0">
-                {currentEvent.bannerIMG ? (
-                  <img src={currentEvent.bannerIMG} alt={currentEvent.nombreES} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-slate-800">
-                    <Calendar className="w-12 h-12 opacity-20 dark:text-white" />
-                  </div>
-                )}
-              </div>
+            {/* Imagen del Evento (Full Width, Altura Adaptativa sin recortes) */}
+            <div className={`w-full border-b-[3px] ${borderColor} relative overflow-hidden bg-white dark:bg-[#12131C] group flex-shrink-0`}>
+              {currentEvent.bannerIMG ? (
+                <img
+                  src={currentEvent.bannerIMG}
+                  alt={currentEvent.nombreES || 'Evento'}
+                  className="w-full h-auto block object-contain transition-all duration-700 group-hover:scale-[1.02]"
+                />
+              ) : (
+                <div className="w-full h-48 flex items-center justify-center bg-gray-200 dark:bg-slate-800">
+                  <Calendar className="w-12 h-12 opacity-20 dark:text-white" />
+                </div>
+              )}
               {/* Etiqueta Flotante sobre la imagen */}
-              <div className={`absolute top-4 right-4 bg-yellow-100 dark:bg-yellow-400 text-black border-[3px] ${borderColor} px-4 py-2 shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] z-10`}>
+              <div className={`absolute top-4 right-4 bg-yellow-100 dark:bg-yellow-400 text-black border-[3px] ${borderColor} px-4 py-2 shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] z-10 pointer-events-none`}>
                 <span className="text-lg lg:text-xl font-black uppercase tracking-widest flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   {currentEvent.fecha ? new Date(currentEvent.fecha + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Next'}
