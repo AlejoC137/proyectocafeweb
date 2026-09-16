@@ -40,13 +40,6 @@ export default function AgendaColumn({ currentEvent, agendaEvents = [], eventCar
                   <Calendar className="w-12 h-12 opacity-20 dark:text-white" />
                 </div>
               )}
-              {/* Etiqueta Flotante sobre la imagen */}
-              <div className={`absolute top-4 right-4 bg-yellow-100 dark:bg-yellow-400 text-black border-[3px] ${borderColor} px-4 py-2 shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)] z-10 pointer-events-none`}>
-                <span className="text-lg lg:text-xl font-black uppercase tracking-widest flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  {currentEvent.fecha ? new Date(currentEvent.fecha + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Next'}
-                </span>
-              </div>
             </div>
 
             {/* Lista de Eventos */}
@@ -73,6 +66,14 @@ export default function AgendaColumn({ currentEvent, agendaEvents = [], eventCar
                           <MapPin className={`w-3 h-3 transition-colors text-black dark:text-yellow-400 ${isSelected ? 'drop-shadow-[0.7px_0.7px_0px_#FF0000]' : 'group-hover:drop-shadow-[0.7px_0.7px_0px_#FF0000]'}`} />
                           <span className={`text-[9px] font-black uppercase tracking-widest transition-all text-black dark:text-white ${isSelected ? '[text-shadow:0.7px_0.7px_0px_#FF0000]' : 'group-hover:[text-shadow:0.7px_0.7px_0px_#FF0000]'}`}>Proyecto Café</span>
                         </div>
+                        {evt.fecha && (
+                          <div className={`flex items-center gap-1 border-[2px] px-2 py-1 shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.1)] transition-colors bg-yellow-100 dark:bg-yellow-400 border-[#1F2937] dark:border-slate-600 text-black`}>
+                            <Calendar className={`w-3 h-3 transition-colors text-black ${isSelected ? 'drop-shadow-[0.7px_0.7px_0px_#FF0000]' : 'group-hover:drop-shadow-[0.7px_0.7px_0px_#FF0000]'}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest transition-all text-black ${isSelected ? '[text-shadow:0.7px_0.7px_0px_#FF0000]' : 'group-hover:[text-shadow:0.7px_0.7px_0px_#FF0000]'}`}>
+                              {new Date(evt.fecha + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
