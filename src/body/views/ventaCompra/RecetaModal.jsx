@@ -25,7 +25,7 @@ import RecetaSidebarMeta from "./RecetaModalComponents/RecetaSidebarMeta";
 function RecetaModal({ item, onClose }) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const id = item?.Receta || paramId;
+  const id = item?.Receta || item?._id || paramId;
 
   const dispatch = useDispatch();
   const allItems = useSelector((state) => state.allItems || []);
@@ -166,8 +166,9 @@ function RecetaModal({ item, onClose }) {
         if (!result) throw new Error("Receta no encontrada");
         setReceta(result); setRecetaSource(source); setTiempoProceso(result.ProcessTime || 0);
         if (result.forId) {
-          const plato = await getRecepie(result.forId, "Menu");
-          if (plato) { setFoto(plato.Foto); setMenuItem(plato); }
+          let plato = await getRecepie(result.forId, source === "RecetasProduccion" ? PRODUCCION : MENU);
+          if (!plato) plato = await getRecepie(result.forId, source === "RecetasProduccion" ? MENU : PRODUCCION);
+          if (plato) { setFoto(plato.Foto || plato.foto || null); setMenuItem(plato); }
         }
       } catch (err) { setError("Error al obtener la receta."); console.error(err); }
       finally { setLoading(false); }
@@ -181,21 +182,53 @@ function RecetaModal({ item, onClose }) {
       for (let i = 1; i <= count; i++) {
         const itemId = recetaData[`${prefix}${i}_Id`];
         const cuantityUnitsRaw = recetaData[`${prefix}${i}_Cuantity_Units`];
-        if (itemId && cuantityUnitsRaw) {
-          const itemData = buscarPorId(itemId);
-          if (itemData) {
+        if (itemId || cuantityUnitsRaw) {
+          let cuantityUnits = null;
+          if (cuantityUnitsRaw) {
             try {
-              const cuantityUnits = JSON.parse(cuantityUnitsRaw);
-              parsedList.push({
-                key: `${prefix}-${i}`, originalIndex: i, item_Id: itemId,
-                nombre: itemData.Nombre_del_producto,
-                originalQuantity: cuantityUnits.metric.cuantity,
-                unidades: cuantityUnits.metric.units,
-                precioUnitario: Number(itemData.precioUnitario) || 0,
-                isChecked: false,
-              });
-            } catch (e) { console.warn(`Error parseando JSON: `, cuantityUnitsRaw); }
+              cuantityUnits = typeof cuantityUnitsRaw === "string" 
+                ? JSON.parse(cuantityUnitsRaw) 
+                : cuantityUnitsRaw;
+            } catch (e) {
+              console.warn(`Error parseando JSON: `, cuantityUnitsRaw);
+            }
           }
+
+          const itemData = itemId ? buscarPorId(itemId) : null;
+          const nombre = itemData?.Nombre_del_producto 
+            || itemData?.nombre 
+            || cuantityUnits?.legacyName 
+            || `Ingrediente ${i}`;
+
+          const originalQuantity = Number(
+            cuantityUnits?.metric?.cuantity 
+            ?? cuantityUnits?.cuantity 
+            ?? cuantityUnits?.cantidad 
+            ?? 0
+          );
+
+          const unidades = cuantityUnits?.metric?.units 
+            || cuantityUnits?.units 
+            || cuantityUnits?.unidades 
+            || itemData?.UNIDADES 
+            || "g";
+
+          const precioUnitario = Number(itemData?.precioUnitario) 
+            || Number(itemData?.Precio) 
+            || Number(itemData?.COSTO) 
+            || Number(cuantityUnits?.precioUnitario) 
+            || 0;
+
+          parsedList.push({
+            key: `${prefix}-${i}`,
+            originalIndex: i,
+            item_Id: itemId || null,
+            nombre,
+            originalQuantity,
+            unidades,
+            precioUnitario,
+            isChecked: false,
+          });
         }
       }
       return parsedList;
@@ -214,7 +247,7 @@ function RecetaModal({ item, onClose }) {
     if (permanentEditMode && receta) {
       if (receta.rendimiento) {
         try {
-          const d = JSON.parse(receta.rendimiento);
+          const d = typeof receta.rendimiento === "string" ? JSON.parse(receta.rendimiento) : receta.rendimiento;
           setRendimientoCantidad(d.cantidad?.toString() || "");
           setRendimientoUnidades(d.unidades || "");
           setRendimientoPorcion(d.porcion?.toString() || "1");
@@ -229,8 +262,12 @@ function RecetaModal({ item, onClose }) {
       setCalculoDetalles(null); setPrecioVentaFinal(0); return;
     }
     const itemsParaCalcular = [...editableIngredientes, ...editableProduccion]
-      .filter(i => i.item_Id && i.originalQuantity > 0)
-      .map(i => ({ ...i, cuantity: i.originalQuantity, precioUnitario: buscarPorId(i.item_Id)?.precioUnitario || 0 }));
+      .filter(i => (i.item_Id || i.precioUnitario > 0 || i.originalQuantity > 0) && i.originalQuantity > 0)
+      .map(i => ({ 
+        ...i, 
+        cuantity: i.originalQuantity, 
+        precioUnitario: (i.item_Id ? (buscarPorId(i.item_Id)?.precioUnitario || i.precioUnitario) : i.precioUnitario) || 0 
+      }));
     const resultado = recetaMariaPaula(itemsParaCalcular, menuItem.GRUPO, costoManualCMP ? `.${costoManualCMP}` : null, tiempoProceso);
     setCalculoDetalles(resultado.detalles);
     setPrecioVentaFinal(resultado.consolidado);
@@ -239,11 +276,19 @@ function RecetaModal({ item, onClose }) {
   useEffect(() => {
     if (recetaSource !== "RecetasProduccion") { setCostoProduccion(0); return; }
     const itemsParaCalcular = [...editableIngredientes, ...editableProduccion]
-      .filter(i => i.item_Id && i.originalQuantity > 0)
-      .map(i => ({ cuantity: i.originalQuantity, precioUnitario: buscarPorId(i.item_Id)?.precioUnitario || 0 }));
+      .filter(i => (i.item_Id || i.precioUnitario > 0 || i.originalQuantity > 0) && i.originalQuantity > 0)
+      .map(i => ({ 
+        cuantity: i.originalQuantity, 
+        precioUnitario: (i.item_Id ? (buscarPorId(i.item_Id)?.precioUnitario || i.precioUnitario) : i.precioUnitario) || 0 
+      }));
     const resultado = recetaMariaPaula(itemsParaCalcular, null, null, tiempoProceso, null, null, 1, 0, 0, 0, true);
-    if (resultado && typeof resultado.COSTO === "number") setCostoProduccion(resultado.COSTO);
-  }, [editableIngredientes, editableProduccion, tiempoProceso, recetaSource, allOptions]);
+    if (resultado && typeof resultado.COSTO === "number" && resultado.COSTO > 0) {
+      setCostoProduccion(resultado.COSTO);
+    } else if (receta && receta.costo) {
+      const numCosto = Number(receta.costo);
+      if (!isNaN(numCosto) && numCosto > 0) setCostoProduccion(numCosto);
+    }
+  }, [editableIngredientes, editableProduccion, tiempoProceso, recetaSource, allOptions, receta]);
 
   const ingredientesAjustados = useMemo(() => ingredientes.map(ing => ({ ...ing, cantidad: (ing.originalQuantity * porcentaje) / 100 })), [ingredientes, porcentaje]);
   const produccionAjustada = useMemo(() => produccion.map(prod => ({ ...prod, cantidad: (prod.originalQuantity * porcentaje) / 100 })), [produccion, porcentaje]);

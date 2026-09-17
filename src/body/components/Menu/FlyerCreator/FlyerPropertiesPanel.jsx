@@ -8,6 +8,7 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify,
   Bold,
   Trash2,
   Copy,
@@ -18,7 +19,9 @@ import {
   Move,
   Type,
   Palette,
-  Maximize2
+  Maximize2,
+  Smile,
+  Box
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,12 +44,13 @@ export default function FlyerPropertiesPanel({
   onSendBackward = () => {},
   canvasConfig = {},
   onUpdateCanvasConfig = () => {},
-  onOpenMediaModal = () => {}
+  onOpenMediaModal = () => {},
+  onOpenEmojiModal = () => {}
 }) {
   if (!selectedElement) {
     // Modo configuración general del lienzo
     return (
-      <div className="w-80 bg-[#fcf8f2] border-l-4 border-black p-4 flex flex-col gap-5 overflow-y-auto h-full text-black">
+      <div className="w-80 shrink-0 bg-[#fcf8f2] border-l-4 border-black p-4 flex flex-col gap-5 overflow-y-auto h-full max-h-full text-black">
         <div className="flex items-center gap-2 border-b-2 border-black pb-2">
           <Palette size={18} />
           <h3 className="font-black uppercase italic text-sm tracking-wide">
@@ -156,7 +160,7 @@ export default function FlyerPropertiesPanel({
   };
 
   return (
-    <div className="w-80 bg-[#fcf8f2] border-l-4 border-black p-4 flex flex-col gap-4 overflow-y-auto h-full text-black">
+    <div className="w-80 shrink-0 bg-[#fcf8f2] border-l-4 border-black p-4 flex flex-col gap-4 overflow-y-auto h-full max-h-full text-black">
       
       {/* Element Header & Actions */}
       <div className="flex items-center justify-between border-b-2 border-black pb-2">
@@ -203,67 +207,227 @@ export default function FlyerPropertiesPanel({
         </div>
       </div>
 
+      {/* Botón Acceso Rápido a Emojis & Recursos */}
+      <Button
+        onClick={() => onOpenEmojiModal()}
+        className="w-full bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-300 hover:from-amber-400 hover:to-yellow-400 text-black border-2 border-black font-black uppercase text-xs h-9 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] flex items-center justify-center gap-1.5"
+      >
+        <Smile size={16} />
+        <span>Panel Emojis & Recursos Gráficos</span>
+      </Button>
+
+      {/* Selector de Tipo de Texto: Suelto vs Caja Rectangular Justificada */}
+      {selectedElement.type === "text" && (
+        <div className="flex flex-col gap-1.5 p-2 bg-yellow-50 border-2 border-black rounded-lg">
+          <label className="text-[10px] font-black uppercase text-zinc-800 flex items-center justify-between">
+            <span>Tipo de Bloque de Texto</span>
+            <span className="text-[9px] font-bold text-amber-800">
+              {selectedElement.textType === "area" ? "⬛ Caja de Párrafo" : "📌 Texto Suelto"}
+            </span>
+          </label>
+
+          <div className="grid grid-cols-2 gap-1 bg-zinc-200 p-1 rounded border border-black">
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateElement({
+                  ...selectedElement,
+                  textType: "point",
+                  style: {
+                    ...(selectedElement.style || {}),
+                    textAlign: selectedElement.style?.textAlign === "justify" ? "center" : (selectedElement.style?.textAlign || "center")
+                  }
+                });
+              }}
+              className={`py-1.5 px-2 text-[10px] font-black uppercase rounded flex items-center justify-center gap-1 transition-all ${
+                selectedElement.textType !== "area"
+                  ? "bg-black text-yellow-300 shadow"
+                  : "bg-white/80 hover:bg-white text-zinc-700"
+              }`}
+            >
+              <span>📌 Texto Suelto</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateElement({
+                  ...selectedElement,
+                  textType: "area",
+                  width: selectedElement.width || 720,
+                  height: selectedElement.height || 180,
+                  style: {
+                    ...(selectedElement.style || {}),
+                    textAlign: "justify",
+                    lineHeight: selectedElement.style?.lineHeight || 1.3
+                  }
+                });
+              }}
+              className={`py-1.5 px-2 text-[10px] font-black uppercase rounded flex items-center justify-center gap-1 transition-all ${
+                selectedElement.textType === "area"
+                  ? "bg-black text-yellow-300 shadow"
+                  : "bg-white/80 hover:bg-white text-zinc-700"
+              }`}
+            >
+              <span>⬛ Caja Justificada</span>
+            </button>
+          </div>
+
+          <p className="text-[9px] text-zinc-600 leading-tight">
+            {selectedElement.textType === "area"
+              ? "El texto se justifica y distribuye automáticamente dentro del rectángulo de ancho y alto fijado por los 8 nodos."
+              : "Texto sin caja fija. Escala proporcionalmente arrastrando las esquinas del nodo en el lienzo."}
+          </p>
+        </div>
+      )}
+
       {/* Contenido de Texto */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-black uppercase text-zinc-700">
-          Texto
-        </label>
+        <div className="flex justify-between items-center text-[11px] font-black uppercase text-zinc-700">
+          <span>Texto</span>
+          <span className="text-[9px] font-mono text-zinc-500">Doble clic en lienzo para editar</span>
+        </div>
         <textarea
           value={selectedElement.text || ""}
-          onChange={(e) => onUpdateElement({ ...selectedElement, text: e.target.value })}
+          onChange={(e) => {
+            const val = e.target.value;
+            onUpdateElement({ ...selectedElement, text: val, html: undefined });
+          }}
           rows={3}
           className="w-full p-2 border-2 border-black rounded font-sans text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black"
         />
       </div>
 
-      {/* Control de Ancho (Width) */}
-      <div className="flex flex-col gap-1 p-2 bg-white border-2 border-black rounded-lg">
-        <div className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-700">
-          <span>Ancho del Elemento (px)</span>
-          <span className="font-mono text-zinc-600 font-bold">
-            {selectedElement.width || (selectedElement.type === "container" ? 780 : 850)}px
-          </span>
+      {/* Controles de Nodos: Ancho y Alto */}
+      {(selectedElement.textType === "area" || selectedElement.type === "container") ? (
+        <div className="flex flex-col gap-2 p-2 bg-white border-2 border-black rounded-lg">
+          <div className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-800 border-b pb-1">
+            <span>Dimensiones por Nodos</span>
+            <span className="text-[9px] font-mono text-zinc-500">8 Manetas activas</span>
+          </div>
+
+          {/* Ancho */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center text-[10px] font-bold text-zinc-700">
+              <span>Ancho (Width):</span>
+              <span className="font-mono text-zinc-600">{selectedElement.width || 720}px</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="160"
+                max={canvasConfig.width || 1080}
+                step="10"
+                value={selectedElement.width || 720}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  onUpdateElement({
+                    ...selectedElement,
+                    width: val,
+                    style: { ...(selectedElement.style || {}), width: val }
+                  });
+                }}
+                className="flex-1 accent-black cursor-pointer"
+              />
+              <Input
+                type="number"
+                min="100"
+                max={canvasConfig.width || 1080}
+                value={selectedElement.width || 720}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  onUpdateElement({
+                    ...selectedElement,
+                    width: val,
+                    style: { ...(selectedElement.style || {}), width: val }
+                  });
+                }}
+                className="w-16 h-7 text-[11px] font-bold border border-black bg-white px-1"
+              />
+            </div>
+          </div>
+
+          {/* Alto */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center text-[10px] font-bold text-zinc-700">
+              <span>Alto (Height):</span>
+              <span className="font-mono text-zinc-600">{selectedElement.height || 180}px</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="60"
+                max={canvasConfig.height || 1920}
+                step="10"
+                value={selectedElement.height || 180}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  onUpdateElement({
+                    ...selectedElement,
+                    height: val,
+                    style: { ...(selectedElement.style || {}), height: val }
+                  });
+                }}
+                className="flex-1 accent-black cursor-pointer"
+              />
+              <Input
+                type="number"
+                min="40"
+                max={canvasConfig.height || 1920}
+                value={selectedElement.height || 180}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  onUpdateElement({
+                    ...selectedElement,
+                    height: val,
+                    style: { ...(selectedElement.style || {}), height: val }
+                  });
+                }}
+                className="w-16 h-7 text-[11px] font-bold border border-black bg-white px-1"
+              />
+            </div>
+          </div>
+
+          {/* Alineación vertical dentro del rectángulo */}
+          <div className="flex flex-col gap-1 pt-1 border-t border-zinc-200">
+            <label className="text-[10px] font-black uppercase text-zinc-700">
+              Alineación Vertical en Caja
+            </label>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                type="button"
+                onClick={() => handleStyleChange("verticalAlign", "top")}
+                className={`py-1 text-[10px] font-bold rounded border border-black ${
+                  !style.verticalAlign || style.verticalAlign === "top" ? "bg-black text-white" : "bg-zinc-100 hover:bg-zinc-200"
+                }`}
+              >
+                Arriba
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStyleChange("verticalAlign", "center")}
+                className={`py-1 text-[10px] font-bold rounded border border-black ${
+                  style.verticalAlign === "center" ? "bg-black text-white" : "bg-zinc-100 hover:bg-zinc-200"
+                }`}
+              >
+                Centro
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStyleChange("verticalAlign", "bottom")}
+                className={`py-1 text-[10px] font-bold rounded border border-black ${
+                  style.verticalAlign === "bottom" ? "bg-black text-white" : "bg-zinc-100 hover:bg-zinc-200"
+                }`}
+              >
+                Abajo
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="range"
-            min="160"
-            max={canvasConfig.width || 1080}
-            step="10"
-            value={selectedElement.width || (selectedElement.type === "container" ? 780 : 850)}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              onUpdateElement({
-                ...selectedElement,
-                width: val,
-                style: {
-                  ...(selectedElement.style || {}),
-                  width: val
-                }
-              });
-            }}
-            className="flex-1 accent-black cursor-pointer"
-          />
-          <Input
-            type="number"
-            min="100"
-            max={canvasConfig.width || 1080}
-            value={selectedElement.width || (selectedElement.type === "container" ? 780 : 850)}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              onUpdateElement({
-                ...selectedElement,
-                width: val,
-                style: {
-                  ...(selectedElement.style || {}),
-                  width: val
-                }
-              });
-            }}
-            className="w-16 h-7 text-[11px] font-bold border border-black bg-white px-1"
-          />
+      ) : (
+        <div className="p-2.5 bg-zinc-100 border-2 border-dashed border-black rounded-lg text-[10px] text-zinc-700 leading-snug">
+          📌 <strong>Texto Suelto:</strong> Sin ancho fijo. Arrastra las manetas de las esquinas en el lienzo para agrandar o reducir el tamaño de la tipografía proporcionalmente.
         </div>
-      </div>
+      )}
 
       {/* Selector de Fuente */}
       <div className="flex flex-col gap-1.5">
@@ -344,6 +508,15 @@ export default function FlyerPropertiesPanel({
           title="Alinear Derecha"
         >
           <AlignRight size={14} />
+        </button>
+        <button
+          onClick={() => handleStyleChange("textAlign", "justify")}
+          className={`flex-1 py-1 rounded flex justify-center ${
+            style.textAlign === "justify" ? "bg-black text-white" : "hover:bg-zinc-100 text-black"
+          }`}
+          title="Justificar Texto (Bloque Rectangular)"
+        >
+          <AlignJustify size={14} />
         </button>
         <button
           onClick={() =>

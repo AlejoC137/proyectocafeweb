@@ -115,7 +115,7 @@ export default function FlyerPromptWizardModal({
     const ev = agendaEvents.find((e) => String(e._id) === String(eventId));
     if (!ev) return;
 
-    setTitle(ev.nombre || "");
+    setTitle(ev.nombreES || ev.nombre || ev.nombreEN || "");
     setDate(ev.fecha || "");
     setTime(ev.horaInicio ? `${ev.horaInicio} a ${ev.horaFinal || ''}` : "");
     setParticipants(ev.autores || ev.nombreCliente || "");
@@ -355,7 +355,7 @@ export default function FlyerPromptWizardModal({
                   <option value="">-- Seleccionar de Agenda --</option>
                   {agendaEvents.map((ev) => (
                     <option key={ev._id} value={ev._id}>
-                      {ev.fecha} · {ev.nombre}
+                      {ev.fecha ? `[${ev.fecha}] ` : ""}{ev.nombreES || ev.nombre || ev.nombreEN || "Evento sin título"}
                     </option>
                   ))}
                 </select>

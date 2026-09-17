@@ -53,6 +53,7 @@ import ModeloFinancieroProyecciones from "./CalculadorRecetaHelados/ModeloFinanc
 import VentasHeladosTab from "./CalculadorRecetaHelados/VentasHeladosTab";
 import MenuPrint from "../../components/Menu/MenuPrint";
 import MenuPrintHorizontal from "../../components/Menu/MenuPrintHorizontal";
+import RecetaModal from "./RecetaModal";
 
 export default function CalculadorRecetaHelados() {
   const dispatch = useDispatch();
@@ -98,6 +99,18 @@ export default function CalculadorRecetaHelados() {
   const [activeTab, setActiveTab] = useState("formulador"); // 'formulador' | 'costeo'
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
   const [selectedProductTarget, setSelectedProductTarget] = useState(""); // Menu or Produccion ID to link
+  const [selectedRecetaModal, setSelectedRecetaModal] = useState(null); // Receta Modal inspection
+
+  // Detect selected product object & if it already has a recipe
+  const selectedTargetProductObj = useMemo(() => {
+    if (!selectedProductTarget) return null;
+    const isMenu = selectedProductTarget.startsWith("menu_");
+    const cleanTargetId = selectedProductTarget.replace(/^(menu_|prod_)/, "");
+    const list = isMenu ? allMenu : allProduccion;
+    return list.find((p) => String(p._id) === String(cleanTargetId)) || null;
+  }, [selectedProductTarget, allMenu, allProduccion]);
+
+  const existingRecipeId = selectedTargetProductObj?.Receta || null;
 
   // Ingredients catalog state
   const [ingredientesDB, setIngredientesDB] = useState(DEFAULT_INGREDIENTS);
@@ -528,58 +541,80 @@ export default function CalculadorRecetaHelados() {
     if (targetProduct && targetProduct.Receta) {
       const productName = targetProduct.NombreES || targetProduct.Nombre_del_producto || targetProduct.nombre || "Seleccionado";
       const confirmOverwrite = window.confirm(
-        `⚠️ CONFIRMACIÓN REQUERIDA:\n\nEl producto "${productName}" ya tiene una receta vinculada en Supabase (ID: ${targetProduct.Receta}).\n\n¿Estás seguro de que deseas reemplazar la receta existente por esta nueva formulación balanceada de Dubovik?`
+        `⚠️ CONFIRMACIÓN REQUERIDA:\n\nEl producto "${productName}" ya tiene una receta vinculada en Supabase (ID: ${targetProduct.Receta}).\n\n¿Estás seguro de que deseas actualizar y sincronizar la receta existente con esta nueva formulación balanceada de Dubovik?`
       );
       if (!confirmOverwrite) return;
     }
 
     setSavingRecipe(true);
     try {
-      // Build standard legacy item fields (item1_Id, item1_Cuantity_Units, etc.) for cross-view compatibility
+      // 1. Build standard legacy item fields (item1..30, producto_interno1..20)
       const legacyItemFields = {};
+      for (let i = 1; i <= 30; i++) {
+        legacyItemFields[`item${i}_Id`] = null;
+        legacyItemFields[`item${i}_Cuantity_Units`] = null;
+      }
+      for (let p = 1; p <= 20; p++) {
+        legacyItemFields[`producto_interno${p}_Id`] = null;
+        legacyItemFields[`producto_interno${p}_Cuantity_Units`] = null;
+      }
+
       let iCounter = 1;
       let pCounter = 1;
 
       calculations.linesDetail.forEach((line) => {
         const rawInvId = line.inventarioItemId || "";
-        const isProd = rawInvId.startsWith("prod_") || allProduccion.some((p) => String(p._id) === String(rawInvId));
-        const cleanId = rawInvId.replace(/^(inv_|prod_)/, "");
+        let isProd = false;
+        let cleanId = null;
 
-        if (cleanId) {
-          if (isProd && pCounter <= 20) {
-            legacyItemFields[`producto_interno${pCounter}_Id`] = cleanId;
-            legacyItemFields[`producto_interno${pCounter}_Cuantity_Units`] = JSON.stringify({
-              metric: { cuantity: line.cantidad, units: "g" },
-              legacyName: line.ingNombre
-            });
-            pCounter++;
-          } else if (!isProd && iCounter <= 30) {
-            legacyItemFields[`item${iCounter}_Id`] = cleanId;
-            legacyItemFields[`item${iCounter}_Cuantity_Units`] = JSON.stringify({
-              metric: { cuantity: line.cantidad, units: "g" },
-              legacyName: line.ingNombre
-            });
-            iCounter++;
+        if (rawInvId) {
+          isProd = rawInvId.startsWith("prod_") || allProduccion.some((p) => String(p._id) === String(rawInvId));
+          cleanId = rawInvId.replace(/^(inv_|prod_)/, "");
+        } else {
+          // Coincidencia automática por nombre en inventario o producción
+          const rawName = (line.ingNombre || "").replace(/^[🧪🛒🥘]\s*/, "").trim().toLowerCase();
+          const foundItem = allItems.find((i) => (i.Nombre_del_producto || "").trim().toLowerCase() === rawName)
+            || allItems.find((i) => (i.Nombre_del_producto || "").toLowerCase().includes(rawName));
+          if (foundItem) {
+            cleanId = foundItem._id;
+            isProd = false;
+          } else {
+            const foundProd = allProduccion.find((p) => (p.Nombre_del_producto || "").trim().toLowerCase() === rawName)
+              || allProduccion.find((p) => (p.Nombre_del_producto || "").toLowerCase().includes(rawName));
+            if (foundProd) {
+              cleanId = foundProd._id;
+              isProd = true;
+            }
           }
+        }
+
+        const cleanIngName = (line.ingNombre || "").replace(/^[🧪🛒🥘]\s*/, "").trim();
+        const cuantityUnitsObj = {
+          metric: { cuantity: line.cantidad, units: "g" },
+          legacyName: cleanIngName,
+          precioUnitario: line.itemCostoKg ? (line.itemCostoKg / 1000) : 0
+        };
+        const cuantityUnitsStr = JSON.stringify(cuantityUnitsObj);
+
+        if (isProd && pCounter <= 20) {
+          legacyItemFields[`producto_interno${pCounter}_Id`] = cleanId || null;
+          legacyItemFields[`producto_interno${pCounter}_Cuantity_Units`] = cuantityUnitsStr;
+          pCounter++;
+        } else if (iCounter <= 30) {
+          legacyItemFields[`item${iCounter}_Id`] = cleanId || null;
+          legacyItemFields[`item${iCounter}_Cuantity_Units`] = cuantityUnitsStr;
+          iCounter++;
         }
       });
 
-      const baseRecipeData = {
-        legacyName: nombreReceta,
-        nombre: nombreReceta,
-        ...legacyItemFields,
-        detalles: calculations.linesDetail.map((line) => ({
-          nombre: line.ingNombre,
-          cantidad: line.cantidad,
-          ingId: line.ingId,
-          inventarioItemId: line.inventarioItemId || null,
-          grasa: line.grasa,
-          solidos: line.solidos,
-          podContrib: line.podContrib,
-          pacContrib: line.pacContrib,
-          itemCostoKg: line.itemCostoKg,
-          lineCost: line.lineCost
-        })),
+      // 2. Dubovik Balance Summary & JSON Metadata
+      const balanceSummary = `🍨 Balance Dubovik [${tipoHelado}]: Peso: ${calculations.pesoTotal}g | Grasa: ${calculations.grasaPct.toFixed(1)}% | Sólidos: ${calculations.solidosPct.toFixed(1)}% | Agua: ${calculations.aguaPct.toFixed(1)}% | POD: ${calculations.pod.toFixed(1)} | PAC: ${calculations.pac.toFixed(1)} | Temp. Serv: ${calculations.tempServicio.toFixed(1)}°C`;
+      
+      const balanceMetaJson = JSON.stringify({
+        tipoHelado,
+        pesoTotal: calculations.pesoTotal,
+        costoTotalLote: calculations.costoTotalLote,
+        costoPorKg: calculations.costoPorKg,
         balance: {
           grasaPct: calculations.grasaPct,
           solidosPct: calculations.solidosPct,
@@ -587,23 +622,98 @@ export default function CalculadorRecetaHelados() {
           pod: calculations.pod,
           pac: calculations.pac,
           tempServicio: calculations.tempServicio,
-          tipoHelado: tipoHelado
         },
+        linesDetail: calculations.linesDetail.map((l) => ({
+          nombre: l.ingNombre,
+          cantidad: l.cantidad,
+          ingId: l.ingId,
+          inventarioItemId: l.inventarioItemId || null,
+          grasa: l.grasa,
+          solidos: l.solidos,
+          podContrib: l.podContrib,
+          pacContrib: l.pacContrib,
+          itemCostoKg: l.itemCostoKg,
+          lineCost: l.lineCost
+        }))
+      });
+
+      // 3. Exact schema columns accepted by Supabase Recetas / RecetasProduccion
+      const baseRecipeData = {
+        legacyName: nombreReceta,
+        ...legacyItemFields,
+        rendimiento: JSON.stringify({
+          porcion: 1,
+          cantidad: calculations.pesoTotal,
+          unidades: "g"
+        }),
         costo: isMenu 
-          ? JSON.stringify({ COSTO: calculations.costoTotalLote, COSTO_KG: calculations.costoPorKg }) 
-          : calculations.costoTotalLote,
-        pesoTotal: calculations.pesoTotal,
+          ? JSON.stringify({ 
+              COSTO: calculations.costoTotalLote, 
+              COSTO_KG: calculations.costoPorKg,
+              totalLote: calculations.costoTotalLote 
+            }) 
+          : Math.round(calculations.costoTotalLote * 100) / 100,
+        nota1: balanceSummary,
+        nota2: balanceMetaJson,
+        proces1: "1. Pesar todos los ingredientes con precisión gramera.",
+        proces2: "2. Mezclar los ingredientes secos (azúcares, estabilizantes, cacao) de manera homogénea.",
+        proces3: "3. Incorporar los componentes líquidos y pasteurizar a 65°C-85°C según formulación.",
+        proces4: "4. Emulsionar con mixer/turmix de alta velocidad y madurar en frío a 4°C por 4-12 horas.",
+        proces5: "5. Mantecar a la temperatura de servicio óptima calculada por Dubovik.",
+        ProcessTime: 30,
+        actualizacion: new Date().toISOString()
       };
 
-      const savedRecipe = await dispatch(createRecipeForProduct(baseRecipeData, targetId, productTable, recipeTable));
+      if (!isMenu) {
+        baseRecipeData.precioUnitario = calculations.costoPorKg ? (calculations.costoPorKg / 1000) : 0;
+        baseRecipeData.UNIDADES = "g";
+      }
 
-      if (savedRecipe) {
-        if (!isMenu) {
-          await dispatch(updateItem(targetId, { COSTO: calculations.costoTotalLote, precioUnitario: calculations.costoPorKg }, PRODUCCION));
+      let savedRecipeId = null;
+
+      // Si el producto ya tiene una receta vinculada, intentamos actualizarla directamente
+      if (targetProduct && targetProduct.Receta) {
+        const { data: updatedRecipe, error: updateErr } = await supabase
+          .from(recipeTable)
+          .update(baseRecipeData)
+          .eq("_id", targetProduct.Receta)
+          .select()
+          .maybeSingle();
+
+        if (updateErr) {
+          console.warn("No se pudo actualizar receta existente en Supabase, creando nueva:", updateErr);
+        } else if (updatedRecipe) {
+          savedRecipeId = updatedRecipe._id;
         }
+      }
+
+      // Si no existía o no se pudo actualizar, creamos la nueva receta
+      if (!savedRecipeId) {
+        const savedRecipe = await dispatch(createRecipeForProduct(baseRecipeData, targetId, productTable, recipeTable));
+        if (savedRecipe) {
+          savedRecipeId = savedRecipe._id;
+        }
+      }
+
+      if (savedRecipeId) {
+        if (!isMenu) {
+          await dispatch(updateItem(targetId, { 
+            COSTO: calculations.costoTotalLote, 
+            precioUnitario: calculations.costoPorKg ? (calculations.costoPorKg / 1000) : 0,
+            Cantidad: calculations.pesoTotal,
+            UNIDADES: "g"
+          }, PRODUCCION));
+        } else {
+          await dispatch(updateItem(targetId, { Receta: savedRecipeId }, MENU));
+        }
+
+        // Recargar datos para mantener estado Redux sincronizado
+        dispatch(getAllFromTable(recipeTable));
+        dispatch(getAllFromTable(productTable));
 
         setNotification({
           type: "success",
+          recipeId: savedRecipeId,
           message: `🎉 ¡Receta "${nombreReceta}" enviada y enlazada con éxito al producto de ${isMenu ? "Menú" : "Producción Interna"}!`
         });
       }
@@ -729,17 +839,29 @@ export default function CalculadorRecetaHelados() {
 
       {/* NOTIFICATION SUCCESS BANNER */}
       {notification && (
-        <div className="bg-emerald-100 border-2 border-black p-3 shadow-solid flex items-center justify-between font-bold text-xs text-emerald-950 animate-fadeIn">
+        <div className="bg-emerald-100 border-2 border-black p-3 shadow-solid flex flex-col md:flex-row items-start md:items-center justify-between gap-2 font-bold text-xs text-emerald-950 animate-fadeIn">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-700 shrink-0" />
             <span>{notification.message}</span>
           </div>
-          <button
-            onClick={() => setNotification(null)}
-            className="text-xs bg-emerald-200 hover:bg-emerald-300 px-2 py-0.5 border border-black"
-          >
-            ✕ Cerrar
-          </button>
+          <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+            {notification.recipeId && (
+              <button
+                type="button"
+                onClick={() => setSelectedRecetaModal({ Receta: notification.recipeId })}
+                className="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-black border border-black shadow-sm font-extrabold flex items-center gap-1.5 transition-all text-xs"
+              >
+                <BookOpen className="h-3.5 w-3.5" /> Ver en Receta Modal
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              className="text-xs bg-emerald-200 hover:bg-emerald-300 px-2.5 py-1 border border-black"
+            >
+              ✕ Cerrar
+            </button>
+          </div>
         </div>
       )}
 
@@ -770,21 +892,34 @@ export default function CalculadorRecetaHelados() {
           </div>
         </div>
 
-        <button
-          disabled={savingRecipe}
-          onClick={handleSaveRecipeToSupabase}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-black text-xs md:text-sm border-2 border-black shadow-solid transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 active:translate-y-0.5"
-        >
-          {savingRecipe ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" /> Mandando Receta...
-            </>
-          ) : (
-            <>
-              📕 Mandar Receta <ArrowRight className="h-4 w-4 stroke-[3]" />
-            </>
+        <div className="flex items-center gap-2">
+          {existingRecipeId && (
+            <button
+              type="button"
+              onClick={() => setSelectedRecetaModal({ Receta: existingRecipeId })}
+              className="px-4 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black text-xs md:text-sm border-2 border-black shadow-solid transition-all flex items-center justify-center gap-1.5 shrink-0"
+              title="Ver receta actual vinculada a este producto en Receta Modal"
+            >
+              <BookOpen className="h-4 w-4" /> Ver Receta Modal
+            </button>
           )}
-        </button>
+
+          <button
+            disabled={savingRecipe}
+            onClick={handleSaveRecipeToSupabase}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-black text-xs md:text-sm border-2 border-black shadow-solid transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 active:translate-y-0.5"
+          >
+            {savingRecipe ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" /> Mandando Receta...
+              </>
+            ) : (
+              <>
+                📕 Mandar Receta <ArrowRight className="h-4 w-4 stroke-[3]" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ICON LEGEND BANNER */}
@@ -1208,21 +1343,34 @@ export default function CalculadorRecetaHelados() {
                 />
               </div>
 
-              <button
-                disabled={savingRecipe}
-                onClick={handleSaveRecipeToSupabase}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs border-2 border-black shadow-solid transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
-              >
-                {savingRecipe ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Mandando Receta...
-                  </>
-                ) : (
-                  <>
-                    📕 Mandar Receta <ArrowRight className="h-4 w-4 stroke-[3]" />
-                  </>
+              <div className="flex items-center gap-2">
+                {existingRecipeId && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRecetaModal({ Receta: existingRecipeId })}
+                    className="px-4 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-black font-black text-xs border-2 border-black shadow-solid transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    title="Ver receta actual vinculada a este producto en Receta Modal"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" /> Ver Receta Modal
+                  </button>
                 )}
-              </button>
+
+                <button
+                  disabled={savingRecipe}
+                  onClick={handleSaveRecipeToSupabase}
+                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-extrabold text-xs border-2 border-black shadow-solid transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 active:translate-y-0.5"
+                >
+                  {savingRecipe ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Mandando Receta...
+                    </>
+                  ) : (
+                    <>
+                      📕 Mandar Receta <ArrowRight className="h-4 w-4 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1360,6 +1508,14 @@ export default function CalculadorRecetaHelados() {
         onClose={() => setShowImportModal(false)}
         onImportRecipe={handleImportRecipe}
       />
+
+      {/* RECETA MODAL (VISUALIZADOR Y EDITOR UNIFICADO) */}
+      {selectedRecetaModal && (
+        <RecetaModal 
+          item={selectedRecetaModal} 
+          onClose={() => setSelectedRecetaModal(null)} 
+        />
+      )}
     </div>
   );
 }

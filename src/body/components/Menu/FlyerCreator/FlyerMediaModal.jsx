@@ -4,7 +4,7 @@
 // =========================================================
 
 import React, { useState, useEffect } from "react";
-import { Upload, Image as ImageIcon, Link as LinkIcon, Sparkles, X, Check, Trash2 } from "lucide-react";
+import { Upload, Image as ImageIcon, Link as LinkIcon, Sparkles, X, Check, Trash2, Search, RefreshCw, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import supabase from "../../../../config/supabaseClient";
@@ -18,6 +18,8 @@ export default function FlyerMediaModal({
   const [activeTab, setActiveTab] = useState("gallery"); // "gallery" | "upload" | "url" | "stickers"
   const [galleryImages, setGalleryImages] = useState([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all"); // "all" | "agenda" | "menu" | "curated"
   const [customUrl, setCustomUrl] = useState("");
   const [urlPreviewError, setUrlPreviewError] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -35,76 +37,151 @@ export default function FlyerMediaModal({
       const allFound = [];
       const seenUrls = new Set();
 
-      // 1. Obtener de menu_print_config
-      const { data: menuConfigs } = await supabase.from("menu_print_config").select("images");
-      if (menuConfigs) {
-        menuConfigs.forEach((m) => {
-          if (Array.isArray(m.images)) {
-            m.images.forEach((img) => {
-              if (img.url && !seenUrls.has(img.url)) {
-                seenUrls.add(img.url);
+      // 1. Obtener de eventos de Agenda que tengan bannerIMG (usando columnas reales: nombreES, nombreEN, nombreCliente)
+      try {
+        const { data: agendaEvents, error: agErr } = await supabase
+          .from("Agenda")
+          .select("_id, bannerIMG, nombreES, nombreEN, nombreCliente, fecha")
+          .not("bannerIMG", "is", null)
+          .order("fecha", { ascending: false, nullsFirst: false })
+          .limit(60);
+
+        if (!agErr && agendaEvents) {
+          agendaEvents.forEach((ev) => {
+            if (
+              ev.bannerIMG &&
+              typeof ev.bannerIMG === "string" &&
+              ev.bannerIMG.trim() !== "" &&
+              !seenUrls.has(ev.bannerIMG)
+            ) {
+              seenUrls.add(ev.bannerIMG);
+              allFound.push({
+                url: ev.bannerIMG,
+                name: ev.nombreES || ev.nombreEN || ev.nombreCliente || "Evento Agenda",
+                source: "Eventos Agenda",
+                category: "agenda",
+                date: ev.fecha
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Error cargando eventos de agenda:", e);
+      }
+
+      // 2. Obtener imágenes directamente del bucket Images_eventos en Supabase Storage
+      try {
+        const { data: storageFiles } = await supabase.storage
+          .from("Images_eventos")
+          .list("", { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+
+        if (storageFiles) {
+          storageFiles.forEach((file) => {
+            if (file.name && /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(file.name)) {
+              const { data } = supabase.storage.from("Images_eventos").getPublicUrl(file.name);
+              if (data?.publicUrl && !seenUrls.has(data.publicUrl)) {
+                seenUrls.add(data.publicUrl);
                 allFound.push({
-                  url: img.url,
-                  name: img.nameES || "Foto Menú",
-                  source: "Menú"
+                  url: data.publicUrl,
+                  name: file.name.replace(/^banner_\d+_/, "Banner ").replace(/\.[^.]+$/, ""),
+                  source: "Storage Eventos",
+                  category: "agenda"
                 });
               }
-            });
-          }
-        });
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Error listando bucket Images_eventos:", e);
       }
 
-      // 2. Obtener de eventos de Agenda que tengan bannerIMG
-      const { data: agendaEvents } = await supabase
-        .from("Agenda")
-        .select("bannerIMG, nombre")
-        .not("bannerIMG", "is", null)
-        .limit(20);
+      // 3. Obtener imágenes de subcarpeta menu_print_images en Images_eventos
+      try {
+        const { data: menuFiles } = await supabase.storage
+          .from("Images_eventos")
+          .list("menu_print_images", { limit: 50 });
 
-      if (agendaEvents) {
-        agendaEvents.forEach((ev) => {
-          if (ev.bannerIMG && !seenUrls.has(ev.bannerIMG)) {
-            seenUrls.add(ev.bannerIMG);
-            allFound.push({
-              url: ev.bannerIMG,
-              name: ev.nombre || "Evento Agenda",
-              source: "Agenda"
-            });
-          }
-        });
+        if (menuFiles) {
+          menuFiles.forEach((file) => {
+            if (file.name && /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(file.name)) {
+              const { data } = supabase.storage.from("Images_eventos").getPublicUrl(`menu_print_images/${file.name}`);
+              if (data?.publicUrl && !seenUrls.has(data.publicUrl)) {
+                seenUrls.add(data.publicUrl);
+                allFound.push({
+                  url: data.publicUrl,
+                  name: "Foto Menú Print",
+                  source: "Menú Print",
+                  category: "menu"
+                });
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Error listando menu_print_images:", e);
       }
 
-      // 3. Imágenes curated default de Unsplash para cafés y eventos
+      // 4. Obtener de menu_print_config
+      try {
+        const { data: menuConfigs } = await supabase.from("menu_print_config").select("images");
+        if (menuConfigs) {
+          menuConfigs.forEach((m) => {
+            if (Array.isArray(m.images)) {
+              m.images.forEach((img) => {
+                if (img.url && !seenUrls.has(img.url)) {
+                  seenUrls.add(img.url);
+                  allFound.push({
+                    url: img.url,
+                    name: img.nameES || "Foto Producto Menú",
+                    source: "Menú",
+                    category: "menu"
+                  });
+                }
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Error cargando menu_print_config:", e);
+      }
+
+      // 5. Imágenes curated default de Unsplash para cafés y eventos
       const defaultCurated = [
         {
           url: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&q=80",
           name: "Guitarra & Café Íntimo",
-          source: "Colección Café"
+          source: "Colección Café",
+          category: "curated"
         },
         {
           url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1200&q=80",
           name: "Libros & Café Caliente",
-          source: "Colección Café"
+          source: "Colección Café",
+          category: "curated"
         },
         {
           url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80",
           name: "Luces Neón de Noche",
-          source: "Colección Café"
+          source: "Colección Café",
+          category: "curated"
         },
         {
           url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1200&q=80",
           name: "Barista Latte Art",
-          source: "Colección Café"
+          source: "Colección Café",
+          category: "curated"
         },
         {
           url: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=1200&q=80",
           name: "Mesa de Brunch Artesanal",
-          source: "Colección Café"
+          source: "Colección Café",
+          category: "curated"
         },
         {
           url: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&q=80",
           name: "Tostaduría & Granos de Café",
-          source: "Colección Café"
+          source: "Colección Café",
+          category: "curated"
         }
       ];
 
@@ -246,50 +323,167 @@ export default function FlyerMediaModal({
         <div className="p-6 flex-1 overflow-y-auto bg-[#faf7f2]">
           {/* TAB 1: Galería */}
           {activeTab === "gallery" && (
-            <div>
+            <div className="flex flex-col gap-4">
+              {/* Barra de Búsqueda y Filtros Rápidos */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 border-2 border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <div className="relative w-full sm:w-72">
+                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar evento, fecha o foto..."
+                    className="pl-8 h-8 text-xs font-bold border-2 border-black bg-zinc-50 focus:bg-white"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black font-black text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Categorías / Pastillas de filtro */}
+                <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
+                  <button
+                    onClick={() => setSelectedCategory("all")}
+                    className={`px-2.5 py-1 text-[11px] font-black uppercase rounded-md border-2 border-black transition-all ${
+                      selectedCategory === "all"
+                        ? "bg-black text-yellow-300"
+                        : "bg-white hover:bg-zinc-100 text-black"
+                    }`}
+                  >
+                    Todos ({galleryImages.length})
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCategory("agenda")}
+                    className={`px-2.5 py-1 text-[11px] font-black uppercase rounded-md border-2 border-black transition-all ${
+                      selectedCategory === "agenda"
+                        ? "bg-amber-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "bg-white hover:bg-amber-50 text-black"
+                    }`}
+                  >
+                    📅 Eventos ({galleryImages.filter((i) => i.category === "agenda").length})
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCategory("menu")}
+                    className={`px-2.5 py-1 text-[11px] font-black uppercase rounded-md border-2 border-black transition-all ${
+                      selectedCategory === "menu"
+                        ? "bg-amber-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "bg-white hover:bg-amber-50 text-black"
+                    }`}
+                  >
+                    ☕ Menú ({galleryImages.filter((i) => i.category === "menu").length})
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCategory("curated")}
+                    className={`px-2.5 py-1 text-[11px] font-black uppercase rounded-md border-2 border-black transition-all ${
+                      selectedCategory === "curated"
+                        ? "bg-amber-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "bg-white hover:bg-amber-50 text-black"
+                    }`}
+                  >
+                    ✨ Curadas ({galleryImages.filter((i) => i.category === "curated").length})
+                  </button>
+
+                  <button
+                    onClick={fetchCafeGallery}
+                    className="p-1.5 bg-zinc-100 hover:bg-zinc-200 border-2 border-black rounded-md ml-auto sm:ml-1"
+                    title="Actualizar fotos de Supabase"
+                  >
+                    <RefreshCw size={14} className={loadingGallery ? "animate-spin" : ""} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid de Imágenes */}
               {loadingGallery ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
                   <span className="font-black uppercase text-xs text-zinc-600 animate-pulse">
-                    Cargando Galería de Proyecto Café...
+                    Cargando Galería de Proyecto Café & Eventos...
                   </span>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {galleryImages.map((img, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        onSelectImage(img.url);
-                        onClose();
-                      }}
-                      className="group border-2 border-black rounded-lg overflow-hidden bg-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex flex-col"
-                    >
-                      <div className="aspect-video w-full bg-zinc-100 overflow-hidden relative border-b border-black">
-                        <img
-                          src={img.url}
-                          alt={img.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <span className="bg-yellow-300 text-black font-black text-[10px] uppercase px-2.5 py-1 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            Usar Esta Foto
-                          </span>
+              ) : (() => {
+                const filtered = galleryImages.filter((img) => {
+                  if (selectedCategory !== "all" && img.category !== selectedCategory) {
+                    return false;
+                  }
+                  if (searchQuery.trim()) {
+                    const q = searchQuery.toLowerCase();
+                    const matchName = img.name?.toLowerCase().includes(q);
+                    const matchSource = img.source?.toLowerCase().includes(q);
+                    const matchDate = img.date?.toLowerCase().includes(q);
+                    return matchName || matchSource || matchDate;
+                  }
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-12 text-center bg-white border-2 border-black rounded-lg p-6">
+                      <ImageIcon size={32} className="text-zinc-400 mb-2" />
+                      <p className="font-black uppercase text-xs text-zinc-700">
+                        No se encontraron imágenes con ese criterio
+                      </p>
+                      <span className="text-[11px] text-zinc-500 mt-1">
+                        Prueba seleccionando otra categoría o borrando el texto de búsqueda.
+                      </span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {filtered.map((img, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          onSelectImage(img.url);
+                          onClose();
+                        }}
+                        className="group border-2 border-black rounded-lg overflow-hidden bg-white hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex flex-col hover:-translate-y-0.5"
+                      >
+                        <div className="aspect-video w-full bg-zinc-200 overflow-hidden relative border-b-2 border-black">
+                          <img
+                            src={img.url}
+                            alt={img.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span className="bg-yellow-300 text-black font-black text-[10px] uppercase px-2.5 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                              Usar Esta Foto
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 flex flex-col justify-between flex-1 gap-1">
+                          <div>
+                            <span className="text-[11px] font-black text-black line-clamp-2 block leading-snug" title={img.name}>
+                              {img.name}
+                            </span>
+                            {img.date && (
+                              <span className="text-[10px] font-bold text-zinc-500 mt-0.5 block">
+                                📅 {img.date}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center justify-between">
+                            <span className="text-[9px] font-black uppercase text-zinc-600 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-300">
+                              {img.source}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="p-2 flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-zinc-800 truncate max-w-[120px]">
-                          {img.name}
-                        </span>
-                        <span className="text-[9px] font-black uppercase text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-300">
-                          {img.source}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
