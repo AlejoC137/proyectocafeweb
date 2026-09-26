@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 export function useRadioPlayer(
   currentPlaylist, 
@@ -45,6 +45,11 @@ export function useRadioPlayer(
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showAutoStart, setShowAutoStart] = useState(true);
 
+  // Historial y Cola para Shuffle & Buffer de 10 canciones
+  const [shuffleHistory, setShuffleHistory] = useState([]);
+  const unplayedShuffleRef = useRef([]);
+  const preloaderPoolRef = useRef([]);
+
   const audioRef = useRef(null);
   const pendingPlayRef = useRef(null); 
   const currentTrack = currentPlaylist[currentTrackIndex] || currentPlaylist[0];
@@ -57,6 +62,95 @@ export function useRadioPlayer(
     };
   }, []);
 
+  // Reinicializar pool de shuffle cuando cambie la lista o se active shuffle
+  useEffect(() => {
+    if (currentPlaylist && currentPlaylist.length > 0) {
+      unplayedShuffleRef.current = currentPlaylist
+        .map((_, idx) => idx)
+        .filter(idx => idx !== currentTrackIndex);
+    }
+  }, [currentPlaylist?.length, isShuffle]);
+
+  // Precargar las siguientes canciones en memoria para cambio instantáneo sin lentitud
+  useEffect(() => {
+    if (!currentPlaylist || currentPlaylist.length === 0 || activeTab === 'youtube') return;
+
+    const total = currentPlaylist.length;
+    const next1Idx = (currentTrackIndex + 1) % total;
+    const next2Idx = (currentTrackIndex + 2) % total;
+
+    const tracksToPreload = [currentPlaylist[next1Idx], currentPlaylist[next2Idx]].filter(
+      t => t && t.url && !t.type?.includes('youtube') && !t.isLiveStream
+    );
+
+    // Reutilizar o crear elementos de audio para caché en segundo plano
+    tracksToPreload.forEach((track, i) => {
+      try {
+        if (!preloaderPoolRef.current[i]) {
+          preloaderPoolRef.current[i] = new Audio();
+        }
+        const preAudio = preloaderPoolRef.current[i];
+        if (preAudio.src !== track.url) {
+          preAudio.src = track.url;
+          preAudio.preload = 'auto';
+        }
+      } catch (e) {}
+    });
+  }, [currentPlaylist, currentTrackIndex, activeTab]);
+
+  // Cola de 10 canciones: 5 anteriores (historial) y 5 siguientes (en espera)
+  const queueWindow = useMemo(() => {
+    if (!currentPlaylist || currentPlaylist.length === 0) {
+      return { history: [], current: null, upcoming: [], allInQueue: [] };
+    }
+
+    const total = currentPlaylist.length;
+    const history = [];
+    const upcoming = [];
+
+    // 5 hacia atrás (historial)
+    if (isShuffle && shuffleHistory.length > 0) {
+      const recentHistory = shuffleHistory.slice(-5);
+      for (let i = recentHistory.length - 1; i >= 0; i--) {
+        const idx = recentHistory[i];
+        if (currentPlaylist[idx]) {
+          history.push({ ...currentPlaylist[idx], playlistIndex: idx, queueType: 'history' });
+        }
+      }
+    } else {
+      const countBack = Math.min(5, total - 1);
+      for (let i = countBack; i >= 1; i--) {
+        const idx = (currentTrackIndex - i + total) % total;
+        history.push({ ...currentPlaylist[idx], playlistIndex: idx, queueType: 'history' });
+      }
+    }
+
+    // 5 hacia adelante
+    const countForward = Math.min(5, total - 1);
+    for (let i = 1; i <= countForward; i++) {
+      let idx;
+      if (isShuffle && unplayedShuffleRef.current.length >= i) {
+        idx = unplayedShuffleRef.current[i - 1];
+      } else {
+        idx = (currentTrackIndex + i) % total;
+      }
+      if (currentPlaylist[idx]) {
+        upcoming.push({ ...currentPlaylist[idx], playlistIndex: idx, queueType: 'upcoming' });
+      }
+    }
+
+    const currentItem = currentPlaylist[currentTrackIndex] 
+      ? { ...currentPlaylist[currentTrackIndex], playlistIndex: currentTrackIndex, queueType: 'current' }
+      : null;
+
+    return {
+      history,
+      current: currentItem,
+      upcoming,
+      allInQueue: [...history, currentItem, ...upcoming].filter(Boolean)
+    };
+  }, [currentPlaylist, currentTrackIndex, isShuffle, shuffleHistory]);
+
   const togglePlay = () => {
     if (!currentTrack?.url || !audioRef.current) return;
 
@@ -64,7 +158,7 @@ export function useRadioPlayer(
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
-      // Broadcast pausa global (solo si no estamos aplicando cambio remoto)
+      // Broadcast pausa global
       if (broadcastStop && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
         broadcastStop();
       }
@@ -92,36 +186,81 @@ export function useRadioPlayer(
     }
   };
 
-  const nextTrack = () => {
-    if (currentPlaylist.length === 0) return;
+  const nextTrack = useCallback(() => {
+    if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
     let newIdx;
-    if (isShuffle) {
-      newIdx = Math.floor(Math.random() * currentPlaylist.length);
+
+    if (isShuffle && currentPlaylist.length > 1) {
+      // Guardar el actual en el historial de shuffle
+      setShuffleHistory(prev => [...prev, currentTrackIndex]);
+
+      // Filtrar los que no han sonado
+      let pool = unplayedShuffleRef.current.filter(idx => idx !== currentTrackIndex && idx < currentPlaylist.length);
+      if (pool.length === 0) {
+        // Refrescar el pool con todos los índices disponibles excepto el actual
+        pool = currentPlaylist
+          .map((_, i) => i)
+          .filter(i => i !== currentTrackIndex);
+      }
+
+      // Elegir aleatoriamente
+      const randomPos = Math.floor(Math.random() * pool.length);
+      newIdx = pool[randomPos];
+
+      // Actualizar pool restante
+      unplayedShuffleRef.current = pool.filter((_, i) => i !== randomPos);
     } else {
       newIdx = currentTrackIndex === currentPlaylist.length - 1 ? 0 : currentTrackIndex + 1;
     }
+
     setCurrentTrackIndex(newIdx);
     setIsPlaying(true);
-    // Broadcast cambio de pista
+
     const nextStation = currentPlaylist[newIdx];
     if (nextStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(nextStation, activeTab, true, volume, isMuted);
     }
-  };
+  }, [currentPlaylist, currentTrackIndex, isShuffle, broadcastPlay, isApplyingRemoteChange, activeTab, volume, isMuted, setCurrentTrackIndex]);
 
-  const prevTrack = () => {
-    if (currentPlaylist.length === 0) return;
+  const prevTrack = useCallback(() => {
+    if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
-    const newIdx = currentTrackIndex === 0 ? currentPlaylist.length - 1 : currentTrackIndex - 1;
+    let newIdx;
+
+    if (isShuffle && shuffleHistory.length > 0) {
+      // Regresar al último reproducido en modo aleatorio
+      newIdx = shuffleHistory[shuffleHistory.length - 1];
+      setShuffleHistory(prev => prev.slice(0, -1));
+    } else {
+      newIdx = currentTrackIndex === 0 ? currentPlaylist.length - 1 : currentTrackIndex - 1;
+    }
+
+    if (newIdx >= currentPlaylist.length) newIdx = 0;
+
     setCurrentTrackIndex(newIdx);
     setIsPlaying(true);
-    // Broadcast cambio de pista
+
     const prevStation = currentPlaylist[newIdx];
     if (prevStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(prevStation, activeTab, true, volume, isMuted);
     }
-  };
+  }, [currentPlaylist, currentTrackIndex, isShuffle, shuffleHistory, broadcastPlay, isApplyingRemoteChange, activeTab, volume, isMuted, setCurrentTrackIndex]);
+
+  const jumpToTrack = useCallback((index) => {
+    if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
+    setAudioError(null);
+    if (isShuffle) {
+      setShuffleHistory(prev => [...prev, currentTrackIndex]);
+    }
+    setCurrentTrackIndex(index);
+    setIsPlaying(true);
+
+    const targetStation = currentPlaylist[index];
+    if (targetStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
+      broadcastPlay(targetStation, activeTab, true, volume, isMuted);
+    }
+  }, [currentPlaylist, currentTrackIndex, isShuffle, broadcastPlay, isApplyingRemoteChange, activeTab, volume, isMuted, setCurrentTrackIndex]);
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
@@ -245,14 +384,10 @@ export function useRadioPlayer(
     if (isRepeatSingle) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
-        audioRef.current.play();
+        audioRef.current.play().catch(() => {});
       }
     } else if (isDailyLoop) {
-      if (currentTrackIndex === currentPlaylist.length - 1) {
-        setCurrentTrackIndex(0);
-      } else {
-        nextTrack();
-      }
+      nextTrack();
     } else {
       nextTrack();
     }
@@ -299,6 +434,8 @@ export function useRadioPlayer(
     togglePlay,
     nextTrack,
     prevTrack,
+    jumpToTrack,
+    queueWindow,
     handleTimeUpdate,
     handleSeek,
     handleVolumeChange,

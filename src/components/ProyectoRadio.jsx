@@ -305,6 +305,8 @@ export default function ProyectoRadio() {
               prevTrack={player.prevTrack}
               togglePlay={player.togglePlay}
               nextTrack={player.nextTrack}
+              jumpToTrack={player.jumpToTrack}
+              queueWindow={player.queueWindow}
               isRepeatSingle={player.isRepeatSingle}
               setIsRepeatSingle={player.setIsRepeatSingle}
               audioError={audioError}
@@ -322,6 +324,10 @@ export default function ProyectoRadio() {
               isApplyingRemoteChange={isApplyingRemoteChange}
               formattedTotalPlaylistTime={player.formatTime(radioData.totalPlaylistSeconds)}
               quotaPercent={Math.min(100, Math.round((radioData.totalPlaylistSeconds / 14400) * 100))}
+              isShuffle={player.isShuffle}
+              setIsShuffle={player.setIsShuffle}
+              queueWindow={player.queueWindow}
+              jumpToTrack={player.jumpToTrack}
               {...radioData}
             />
           </div>
@@ -381,7 +387,7 @@ export default function ProyectoRadio() {
       {/* AUDIO ELEMENT */}
       <audio
         ref={player.audioRef}
-        preload="metadata"
+        preload="auto"
         referrerPolicy="no-referrer"
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {

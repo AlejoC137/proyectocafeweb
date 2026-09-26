@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, Youtube } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Shuffle, Repeat, Youtube, ListMusic, X } from 'lucide-react';
 import { extractYoutubeId, extractPlaylistId } from '../../utils/youtubeHelpers';
 
 export default function PlayerCenter({
@@ -21,12 +21,15 @@ export default function PlayerCenter({
   prevTrack,
   togglePlay,
   nextTrack,
+  jumpToTrack,
+  queueWindow,
   isRepeatSingle,
   setIsRepeatSingle,
   audioError,
   activeTab
 }) {
   const [showVolume, setShowVolume] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
   const [ytCurrentTime, setYtCurrentTime] = useState(0);
   const [ytDuration, setYtDuration] = useState(0);
 
@@ -179,98 +182,17 @@ export default function PlayerCenter({
     } catch (e) {}
   }, [volume, isMuted, isYoutubeTrack]);
 
-  // Escuchar eventos e info de tiempo del IFrame de YouTube API
-  useEffect(() => {
-    const handleYoutubeEvent = (event) => {
-      if (!isYoutubeTrack) return;
-      try {
-        let payload = event.data;
-        if (typeof payload === 'string') {
-          payload = JSON.parse(payload);
-        }
-        if (payload) {
-          const evt = payload.event;
-          const info = payload.info;
-          let curTime = ytCurrentTime;
-          let dur = ytDuration;
-
-          if (info && typeof info === 'object') {
-            if (typeof info.currentTime === 'number') {
-              curTime = info.currentTime;
-              setYtCurrentTime(curTime);
-            }
-            if (typeof info.duration === 'number' && info.duration > 0) {
-              dur = info.duration;
-              setYtDuration(dur);
-            }
-            if (typeof info.playerState === 'number') {
-              const pState = info.playerState;
-              if (pState === 1 && !isPlaying) {
-                if (setIsPlaying) setIsPlaying(true);
-              } else if (pState === 2 && isPlaying) {
-                if (setIsPlaying) setIsPlaying(false);
-              }
-            }
-          } else if (typeof payload.info === 'number') {
-            if (payload.func === 'getCurrentTime') {
-              curTime = payload.info;
-              setYtCurrentTime(curTime);
-            } else if (payload.func === 'getDuration') {
-              dur = payload.info;
-              setYtDuration(dur);
-            }
-          }
-
-          const state = info?.playerState ?? payload.infoState ?? (typeof info === 'number' ? info : undefined);
-          const isEnded = state === 0 || (dur > 3 && curTime >= dur - 1.2);
-
-          if ((evt === 'onReady' || evt === 'initialDelivery') && isPlaying) {
-            iframeRef.current?.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          }
-
-          // State 0 === ENDED o tiempo alcanzado -> Avanzar automáticamente al siguiente video
-          if (isEnded && !hasTriggeredNextRef.current) {
-            hasTriggeredNextRef.current = true;
-            if (isRepeatSingle) {
-              if (iframeRef.current?.contentWindow) {
-                iframeRef.current.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[0, true]}', '*');
-                iframeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-              }
-              setTimeout(() => { hasTriggeredNextRef.current = false; }, 2000);
-            } else if (nextTrack) {
-              console.log("🎵 Video de YouTube finalizado. Avanzando automáticamente al siguiente tema...");
-              nextTrack();
-            }
-          }
-        }
-      } catch (e) {}
-    };
-
-    window.addEventListener('message', handleYoutubeEvent);
-    return () => window.removeEventListener('message', handleYoutubeEvent);
-  }, [isYoutubeTrack, nextTrack, isPlaying, isRepeatSingle, setIsPlaying, ytCurrentTime, ytDuration]);
-
-  // Escuchar inicio forzado desde el modal AutoStart
-  useEffect(() => {
-    const handleForcePlay = () => {
-      if (iframeRef.current?.contentWindow) {
-        try {
-          iframeRef.current.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        } catch (e) {}
-      }
-    };
-    window.addEventListener('YT_FORCE_PLAY', handleForcePlay);
-    return () => window.removeEventListener('YT_FORCE_PLAY', handleForcePlay);
-  }, []);
-
   const handleMainPlayToggle = () => {
     if (isYoutubeTrack) {
       const nextState = !isPlaying;
       if (setIsPlaying) setIsPlaying(nextState);
-      if (iframeRef.current?.contentWindow) {
+      if (ytPlayerRef.current) {
         try {
-          const command = nextState ? 'playVideo' : 'pauseVideo';
-          iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"${command}","args":""}`, '*');
+          if (nextState && typeof ytPlayerRef.current.playVideo === 'function') {
+            ytPlayerRef.current.playVideo();
+          } else if (!nextState && typeof ytPlayerRef.current.pauseVideo === 'function') {
+            ytPlayerRef.current.pauseVideo();
+          }
         } catch (e) {}
       }
     } else {
@@ -279,20 +201,10 @@ export default function PlayerCenter({
   };
 
   const handleNextWrapper = () => {
-    if (isYoutubeTrack && listId && iframeRef.current?.contentWindow) {
-      try {
-        iframeRef.current.contentWindow.postMessage('{"event":"command","func":"nextVideo","args":""}', '*');
-      } catch (e) {}
-    }
     if (nextTrack) nextTrack();
   };
 
   const handlePrevWrapper = () => {
-    if (isYoutubeTrack && listId && iframeRef.current?.contentWindow) {
-      try {
-        iframeRef.current.contentWindow.postMessage('{"event":"command","func":"previousVideo","args":""}', '*');
-      } catch (e) {}
-    }
     if (prevTrack) prevTrack();
   };
 
@@ -300,9 +212,9 @@ export default function PlayerCenter({
     if (isYoutubeTrack) {
       const seekPercent = parseFloat(e.target.value);
       const targetTime = (seekPercent / 100) * (ytDuration || 0);
-      if (iframeRef.current?.contentWindow) {
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
         try {
-          iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${targetTime}, true]}`, '*');
+          ytPlayerRef.current.seekTo(targetTime, true);
         } catch (err) {}
       }
       setYtCurrentTime(targetTime);
@@ -320,32 +232,19 @@ export default function PlayerCenter({
           ytPlayerRef.current.setVolume(Math.round(val * 100));
         } catch (err) {}
       }
-      if (iframeRef?.current?.contentWindow) {
-        try {
-          iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"setVolume","args":[${Math.round(val * 100)}]}`, '*');
-        } catch (err) {}
-      }
     }
   };
 
   const toggleMuteWrapper = () => {
     toggleMute();
-    if (isYoutubeTrack) {
-      if (ytPlayerRef.current) {
-        try {
-          if (!isMuted) {
-            ytPlayerRef.current.mute();
-          } else {
-            ytPlayerRef.current.unMute();
-          }
-        } catch (err) {}
-      }
-      if (iframeRef?.current?.contentWindow) {
-        try {
-          const command = !isMuted ? 'mute' : 'unMute';
-          iframeRef.current.contentWindow.postMessage(`{"event":"command","func":"${command}","args":""}`, '*');
-        } catch (err) {}
-      }
+    if (isYoutubeTrack && ytPlayerRef.current) {
+      try {
+        if (!isMuted) {
+          ytPlayerRef.current.mute();
+        } else {
+          ytPlayerRef.current.unMute();
+        }
+      } catch (err) {}
     }
   };
 
@@ -354,12 +253,7 @@ export default function PlayerCenter({
   const activeTimeStr = isYoutubeTrack ? formatTime(ytCurrentTime) : formatTime(currentTime);
   const activeDurStr = isYoutubeTrack ? formatTime(ytDuration) : formatTime(duration);
 
-  // Si listId empieza con RD (YouTube Mix / Radio Mix automático), YouTube prohíbe el parámetro &list= en incrustaciones.
-  // En ese caso, incrustamos el vídeo directamente para garantizar la reproducción fluida.
   const isYoutubeMix = listId && listId.startsWith('RD');
-  const validListParam = (listId && !isYoutubeMix) ? `&list=${listId}` : '';
-  const originParam = typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : '';
-  const iframeSrc = `https://www.youtube-nocookie.com/embed/${ytId || ''}?autoplay=1&controls=1&enablejsapi=1&origin=${originParam}&rel=0&playsinline=1&modestbranding=1${validListParam}`;
 
   return (
     <div className={`rounded-none border-[3px] ${borderColor} ${shadowColor} relative w-full pt-[100%] overflow-hidden bg-black group flex-shrink-0 transition-all`}>
@@ -380,7 +274,7 @@ export default function PlayerCenter({
         {/* Degradado para visibilidad de texto y controles */}
         <div className={`absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none z-10 ${isYoutubeTrack ? 'opacity-30 hover:opacity-60 transition-opacity' : 'opacity-90'}`} />
 
-        {/* Top Bar: Badge EN VIVO / YOUTUBE / MIX + Volumen */}
+        {/* Top Bar: Badge EN VIVO / YOUTUBE / MIX + Botón Cola (10) + Volumen */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
           {isYoutubeTrack ? (
             <div className="bg-[#FF0000] border-[2px] border-black text-white px-3 py-1 flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] pointer-events-auto">
@@ -396,27 +290,133 @@ export default function PlayerCenter({
             </div>
           ) : <div />}
 
-          {/* Control de Volumen Vertical Interactivo */}
-          <div 
-            className="pointer-events-auto relative flex flex-col items-center bg-white dark:bg-[#1e1f2e] border-[3px] border-[#1F2937] dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] p-2 transition-all duration-300"
-            onMouseEnter={() => setShowVolume(true)}
-            onMouseLeave={() => setShowVolume(false)}
-          >
-            <button onClick={toggleMuteWrapper} className="text-black dark:text-white hover:scale-110 transition-transform">
-              {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-red-600" /> : <Volume2 className="w-5 h-5" />}
+          <div className="flex items-center gap-2 pointer-events-auto">
+            {/* Botón Cola de Reproducción (10 canciones: 5 atrás y 5 adelante) */}
+            <button
+              onClick={() => setShowQueue(!showQueue)}
+              title="Cola de reproducción (10 canciones: 5 anteriores y 5 siguientes)"
+              className={`px-2.5 py-1.5 border-[2.5px] border-black text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:scale-105 rounded-none ${
+                showQueue ? 'bg-yellow-400 text-black' : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white'
+              }`}
+            >
+              <ListMusic className="w-4 h-4 text-amber-500" />
+              <span className="hidden sm:inline">Cola</span>
+              <span className="bg-black text-yellow-300 dark:bg-yellow-400 dark:text-black px-1 text-[10px] font-mono">10</span>
             </button>
-            <div className={`overflow-hidden transition-all duration-300 flex flex-col items-center ${showVolume ? 'h-24 mt-3' : 'h-0 mt-0'}`}>
-              <input 
-                type="range" 
-                min="0" max="1" step="0.05" 
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChangeWrapper}
-                className="appearance-none cursor-pointer w-20 h-2 bg-gray-200 dark:bg-slate-700 border-[2px] border-[#1F2937] dark:border-slate-500 -rotate-90 origin-center translate-y-10"
-                style={{ accentColor: '#1F2937' }}
-              />
+
+            {/* Control de Volumen Vertical Interactivo */}
+            <div 
+              className="relative flex flex-col items-center bg-white dark:bg-[#1e1f2e] border-[3px] border-[#1F2937] dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] p-2 transition-all duration-300 rounded-none"
+              onMouseEnter={() => setShowVolume(true)}
+              onMouseLeave={() => setShowVolume(false)}
+            >
+              <button onClick={toggleMuteWrapper} className="text-black dark:text-white hover:scale-110 transition-transform">
+                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-red-600" /> : <Volume2 className="w-5 h-5" />}
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 flex flex-col items-center ${showVolume ? 'h-24 mt-3' : 'h-0 mt-0'}`}>
+                <input 
+                  type="range" 
+                  min="0" max="1" step="0.05" 
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChangeWrapper}
+                  className="appearance-none cursor-pointer w-20 h-2 bg-gray-200 dark:bg-slate-700 border-[2px] border-[#1F2937] dark:border-slate-500 -rotate-90 origin-center translate-y-10"
+                  style={{ accentColor: '#1F2937' }}
+                />
+              </div>
             </div>
           </div>
         </div>
+
+        {/* OVERLAY INTERACTIVO: COLA DE REPRODUCCIÓN (10 PISTAS: 5 ATRÁS Y 5 ADELANTE) */}
+        {showQueue && queueWindow && (
+          <div className="absolute inset-0 z-40 bg-black/95 backdrop-blur-md p-4 flex flex-col justify-between overflow-hidden pointer-events-auto text-white border-[4px] border-yellow-400 animate-fade-in">
+            <div className="flex items-center justify-between border-b-2 border-white/20 pb-2 mb-2">
+              <div className="flex items-center gap-2">
+                <ListMusic className="w-5 h-5 text-yellow-400" />
+                <h4 className="font-black text-sm uppercase tracking-widest text-yellow-400" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                  Cola de Reproducción (10 Pistas)
+                </h4>
+              </div>
+              <button 
+                onClick={() => setShowQueue(false)}
+                className="p-1 px-2 border-2 border-white bg-black hover:bg-white hover:text-black font-black text-[11px] uppercase transition-colors flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" /> Cerrar
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
+              {/* 5 CANCIONES ANTERIORES (HISTORIAL) */}
+              {queueWindow.history && queueWindow.history.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-white/10 pb-0.5">
+                    <SkipBack className="w-3 h-3 text-gray-400" /> 5 Anteriores (Historial reciente)
+                  </p>
+                  {queueWindow.history.map((t, idx) => (
+                    <div 
+                      key={`hist-${t.id || idx}`}
+                      onClick={() => { if (jumpToTrack) jumpToTrack(t.playlistIndex); setShowQueue(false); }}
+                      className="p-1.5 bg-white/5 hover:bg-white/20 cursor-pointer border-l-2 border-gray-500 flex items-center justify-between truncate transition-colors"
+                      title="Saltar a esta canción del historial"
+                    >
+                      <div className="truncate flex items-center gap-2">
+                        <span className="font-mono text-[9px] text-gray-400">-{queueWindow.history.length - idx}</span>
+                        <span className="truncate opacity-75">{t.title}</span>
+                      </div>
+                      <span className="text-[9px] text-gray-400 font-mono flex-shrink-0 ml-2">Historial</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* CANCIÓN ACTUAL */}
+              {queueWindow.current && (
+                <div className="p-2 bg-yellow-400 text-black border-[2px] border-black font-black flex items-center justify-between shadow-[2px_2px_0px_0px_rgba(255,255,255,0.8)] my-1">
+                  <div className="flex items-center gap-2 truncate">
+                    <Volume2 className="w-4 h-4 animate-bounce flex-shrink-0" />
+                    <span className="truncate uppercase text-xs">{queueWindow.current.title}</span>
+                  </div>
+                  <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 uppercase tracking-wider flex-shrink-0 animate-pulse">
+                    AL AIRE
+                  </span>
+                </div>
+              )}
+
+              {/* 5 CANCIONES SIGUIENTES (EN ESPERA PRECARGADAS) */}
+              {queueWindow.upcoming && queueWindow.upcoming.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-yellow-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-white/10 pb-0.5">
+                    <SkipForward className="w-3 h-3 text-yellow-400" /> 5 Siguientes (Precargadas en buffer)
+                  </p>
+                  {queueWindow.upcoming.map((t, idx) => (
+                    <div 
+                      key={`up-${t.id || idx}`}
+                      onClick={() => { if (jumpToTrack) jumpToTrack(t.playlistIndex); setShowQueue(false); }}
+                      className="p-1.5 bg-white/10 hover:bg-yellow-400 hover:text-black cursor-pointer border-l-2 border-yellow-400 flex items-center justify-between truncate transition-colors group"
+                      title="Reproducir ahora (Precargada)"
+                    >
+                      <div className="truncate flex items-center gap-2">
+                        <span className="font-mono text-[9px] text-yellow-400 group-hover:text-black">+{idx + 1}</span>
+                        <span className="truncate font-semibold">{t.title}</span>
+                      </div>
+                      <span className="text-[9px] opacity-75 group-hover:opacity-100 flex-shrink-0 ml-2 font-mono">En espera</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-white/20 flex items-center justify-between text-[10px] text-gray-300">
+              <span>{isShuffle ? 'Modo Aleatorio ACTIVO' : 'Modo Secuencial'}</span>
+              <button 
+                onClick={() => setIsShuffle(!isShuffle)}
+                className="underline hover:text-yellow-400 font-bold"
+              >
+                Cambiar a {isShuffle ? 'Orden Secuencial' : 'Aleatorio'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Mensaje de Error */}
         {audioError && (
@@ -465,42 +465,62 @@ export default function PlayerCenter({
           </div>
         )}
 
-        {/* Controles Principales SUPERPUESTOS (Ocultos ÚNICAMENTE cuando la pestaña activa es YouTube) */}
-        {!isYoutubeTrack && activeTab !== 'youtube' && (
-          <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 sm:gap-4 px-4 z-20">
-            <button onClick={() => setIsShuffle(!isShuffle)}
-              className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
-                isShuffle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
-              }`}
-            >
-              <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button onClick={handlePrevWrapper} disabled={!currentTrack?.url && !ytId}
-              className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
-            >
-              <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-            <button onClick={handleMainPlayToggle} disabled={!currentTrack?.url && !ytId}
-              className={`w-14 h-14 sm:w-16 sm:h-16 border-[3px] ${borderColor} shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.6)] flex items-center justify-center bg-yellow-100 text-black dark:bg-yellow-400 dark:text-black dark:border-yellow-400 transition-all ${buttonHover} rounded-none disabled:opacity-50`}
-            >
-              {isPlaying ? <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" /> : <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" />}
-            </button>
-            <button onClick={handleNextWrapper} disabled={!currentTrack?.url && !ytId}
-              className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
-            >
-              <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-            <button onClick={() => setIsRepeatSingle(!isRepeatSingle)}
-              className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
-                isRepeatSingle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
-              }`}
-            >
-              <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
-        )}
+        {/* Controles Principales SUPERPUESTOS (Disponibles tanto para Audio como para YouTube con Aleatorio) */}
+        <div className={`absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 sm:gap-4 px-4 z-20 ${
+          isYoutubeTrack ? 'bg-black/60 backdrop-blur-sm py-2' : ''
+        }`}>
+          <button 
+            onClick={() => setIsShuffle(!isShuffle)}
+            title={isShuffle ? "Modo aleatorio (Shuffle) ACTIVADO" : "Activar modo aleatorio (Shuffle)"}
+            className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
+              isShuffle 
+                ? 'bg-yellow-400 text-black border-yellow-400 font-black ring-2 ring-yellow-400' 
+                : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
+            }`}
+          >
+            <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+          
+          <button 
+            onClick={handlePrevWrapper} 
+            disabled={!currentTrack?.url && !ytId}
+            title="Pista anterior"
+            className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
+          >
+            <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+          
+          <button 
+            onClick={handleMainPlayToggle} 
+            disabled={!currentTrack?.url && !ytId}
+            title={isPlaying ? "Pausar" : "Reproducir"}
+            className={`w-14 h-14 sm:w-16 sm:h-16 border-[3px] ${borderColor} shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.6)] flex items-center justify-center ${
+              isYoutubeTrack ? 'bg-red-600 text-white border-black' : 'bg-yellow-100 text-black dark:bg-yellow-400 dark:text-black dark:border-yellow-400'
+            } transition-all ${buttonHover} rounded-none disabled:opacity-50`}
+          >
+            {isPlaying ? <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" /> : <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" />}
+          </button>
+          
+          <button 
+            onClick={handleNextWrapper} 
+            disabled={!currentTrack?.url && !ytId}
+            title="Siguiente pista"
+            className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
+          >
+            <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+          
+          <button 
+            onClick={() => setIsRepeatSingle(!isRepeatSingle)}
+            title={isRepeatSingle ? "Repetir 1 canción activado" : "Repetir 1 canción"}
+            className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
+              isRepeatSingle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
+            }`}
+          >
+            <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-

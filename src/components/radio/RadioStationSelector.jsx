@@ -11,7 +11,13 @@ import {
   Flame, 
   CheckCircle2, 
   Clock, 
-  Folder
+  Folder,
+  ListMusic,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import supabase from '../../config/supabaseClient';
 
@@ -20,17 +26,30 @@ export default function RadioStationSelector({
   currentPlay = null,
   setIsPlaying,
   broadcastPlay,
-  isApplyingRemoteChange
+  isApplyingRemoteChange,
+  queueWindow = null,
+  jumpToTrack = null,
+  isShuffle = false,
+  setIsShuffle = null
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [requestingTrackId, setRequestingTrackId] = useState(null);
   const [requestSuccess, setRequestSuccess] = useState(null);
+  const [showQueueSection, setShowQueueSection] = useState(true);
 
-  // Filtrar canciones según el buscador
+  // Filtrar canciones deduplicando estrictamente por título y álbum
   const filteredTracks = useMemo(() => {
-    if (!searchQuery.trim()) return supabasePlaylist;
+    const seen = new Set();
+    const uniqueList = (supabasePlaylist || []).filter(t => {
+      const key = `${(t.title || '').trim().toLowerCase()}__${(t.album || '').trim().toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    if (!searchQuery.trim()) return uniqueList;
     const q = searchQuery.toLowerCase();
-    return supabasePlaylist.filter(t => 
+    return uniqueList.filter(t => 
       (t.title && t.title.toLowerCase().includes(q)) ||
       (t.artist && t.artist.toLowerCase().includes(q)) ||
       (t.album && t.album.toLowerCase().includes(q))
@@ -105,8 +124,24 @@ export default function RadioStationSelector({
             </div>
           </div>
 
-          <div className="bg-black text-white px-3 py-1.5 border-[2px] border-black font-mono text-xs font-bold self-start sm:self-auto">
-            {supabasePlaylist.length} PISTAS DISPONIBLES
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Botón de Aleatorio */}
+            {setIsShuffle && (
+              <button
+                onClick={() => setIsShuffle(!isShuffle)}
+                className={`px-3 py-1.5 border-[2px] border-black font-black text-xs uppercase flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                  isShuffle ? 'bg-black text-yellow-300' : 'bg-white text-black hover:bg-yellow-200'
+                }`}
+                title="Activar o desactivar reproducción aleatoria"
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+                <span>{isShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
+              </button>
+            )}
+
+            <div className="bg-black text-white px-3 py-1.5 border-[2px] border-black font-mono text-xs font-bold self-start sm:self-auto">
+              {filteredTracks.length} PISTAS
+            </div>
           </div>
         </div>
 
@@ -123,6 +158,90 @@ export default function RadioStationSelector({
           </div>
         )}
       </div>
+
+      {/* SECCIÓN COLA DE REPRODUCCIÓN (10 CANCIONES: 5 ATRÁS Y 5 ADELANTE) */}
+      {queueWindow && (queueWindow.history?.length > 0 || queueWindow.upcoming?.length > 0) && (
+        <div className="border-[3px] border-black dark:border-slate-700 bg-cream-bg dark:bg-[#181926] p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-4 transition-colors">
+          <div 
+            onClick={() => setShowQueueSection(!showQueueSection)}
+            className="flex items-center justify-between cursor-pointer select-none border-b-2 border-black/10 dark:border-white/10 pb-2 mb-2"
+          >
+            <div className="flex items-center gap-2">
+              <ListMusic className="w-4 h-4 text-amber-500" />
+              <h4 className="font-black text-xs uppercase tracking-wider text-black dark:text-white">
+                Cola Activa de Reproducción (10 Pistas en Buffer)
+              </h4>
+              <span className="text-[10px] bg-black text-white dark:bg-yellow-400 dark:text-black px-1.5 py-0.2 font-mono font-bold">
+                5 atrás • 5 adelante
+              </span>
+            </div>
+            <button className="text-black dark:text-white p-1">
+              {showQueueSection ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {showQueueSection && (
+            <div className="space-y-3 pt-1">
+              {/* 5 ANTERIORES */}
+              {queueWindow.history && queueWindow.history.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                    <SkipBack className="w-3 h-3" /> 5 Anteriores (Historial)
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5">
+                    {queueWindow.history.map((t, idx) => (
+                      <div 
+                        key={`q-hist-${t.id || idx}`}
+                        onClick={() => jumpToTrack && jumpToTrack(t.playlistIndex)}
+                        className="p-1.5 border-[1.5px] border-black/40 dark:border-slate-600 bg-white/70 dark:bg-[#12131C] hover:bg-yellow-100 dark:hover:bg-slate-700 cursor-pointer text-[10px] truncate transition-colors flex items-center gap-1.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+                        title={`Volver a: ${t.title}`}
+                      >
+                        <span className="text-gray-400 font-mono text-[9px]">-{queueWindow.history.length - idx}</span>
+                        <span className="truncate font-bold opacity-80">{t.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CANCIÓN ACTUAL */}
+              {queueWindow.current && (
+                <div className="p-2 border-[2.5px] border-black bg-yellow-300 text-black flex items-center justify-between shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <Volume2 className="w-4 h-4 animate-bounce flex-shrink-0" />
+                    <span className="truncate uppercase">{queueWindow.current.title}</span>
+                  </div>
+                  <span className="bg-red-600 text-white text-[9px] px-2 py-0.5 uppercase tracking-wider flex-shrink-0 animate-pulse">
+                    AL AIRE
+                  </span>
+                </div>
+              )}
+
+              {/* 5 SIGUIENTES */}
+              {queueWindow.upcoming && queueWindow.upcoming.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-black uppercase text-yellow-600 dark:text-yellow-400 mb-1 flex items-center gap-1">
+                    <SkipForward className="w-3 h-3" /> 5 Siguientes (Precargadas en Memoria)
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5">
+                    {queueWindow.upcoming.map((t, idx) => (
+                      <div 
+                        key={`q-up-${t.id || idx}`}
+                        onClick={() => jumpToTrack && jumpToTrack(t.playlistIndex)}
+                        className="p-1.5 border-[1.5px] border-black/60 dark:border-slate-500 bg-white dark:bg-[#1e1f2e] hover:bg-yellow-300 hover:text-black cursor-pointer text-[10px] truncate transition-colors flex items-center gap-1.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] font-bold group"
+                        title={`Reproducir siguiente: ${t.title}`}
+                      >
+                        <span className="text-yellow-600 dark:text-yellow-400 group-hover:text-black font-mono text-[9px]">+{idx + 1}</span>
+                        <span className="truncate">{t.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* NOTIFICACIÓN TOAST DE PETICIÓN */}
       {requestSuccess && (

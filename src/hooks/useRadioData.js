@@ -53,7 +53,19 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
       }
 
       if (error) throw error;
-      setSupabasePlaylist(data || []);
+
+      // Deduplicar canciones por título y álbum para evitar que canciones de Alcolirykoz u otros aparezcan repetidas
+      const seen = new Set();
+      const uniqueData = (data || []).filter(item => {
+        const titleKey = (item.title || '').trim().toLowerCase();
+        const albumKey = (item.album || '').trim().toLowerCase();
+        const key = `${titleKey}__${albumKey}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setSupabasePlaylist(uniqueData);
     } catch (err) {
       console.warn("Supabase playlist no disponible:", err.message);
       setSupabaseError(err.message);

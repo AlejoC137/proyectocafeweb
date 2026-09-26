@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles, Radio } from 'lucide-react';
+import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles, Radio, Shuffle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
 import AlejoSpotifySearch from './AlejoSpotifySearch';
@@ -39,6 +39,10 @@ export default function SourceTabs({
   handleSearchSubmit,
   apiStations = [],
   loadingApi = false,
+  isShuffle,
+  setIsShuffle,
+  queueWindow,
+  jumpToTrack,
   // Props de YouTube
   youtubePlaylist = [],
   filteredYoutubePlaylist = [],
@@ -85,6 +89,10 @@ export default function SourceTabs({
             setIsPlaying={setIsPlaying}
             broadcastPlay={broadcastPlay}
             isApplyingRemoteChange={isApplyingRemoteChange}
+            queueWindow={queueWindow}
+            jumpToTrack={jumpToTrack}
+            isShuffle={isShuffle}
+            setIsShuffle={setIsShuffle}
           />
         )}
 
@@ -191,6 +199,19 @@ export default function SourceTabs({
               </h3>
               
               <div className="flex items-center gap-2.5 ml-auto sm:ml-0 flex-shrink-0">
+                <button 
+                  onClick={() => setIsShuffle && setIsShuffle(!isShuffle)}
+                  className={`px-3 py-1.5 text-xs font-black uppercase tracking-widest transition border-[2.5px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none flex items-center gap-1.5 ${
+                    isShuffle 
+                      ? 'bg-yellow-400 text-black ring-2 ring-yellow-400 font-black' 
+                      : 'bg-white text-black hover:bg-yellow-100'
+                  }`}
+                  title="Activar o desactivar reproducción aleatoria en YouTube"
+                >
+                  <Shuffle className="w-3.5 h-3.5" />
+                  <span>{isShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
+                </button>
+
                 <button onClick={() => navigate('/RadioManager')}
                   className="px-3 py-1.5 text-xs font-black uppercase tracking-widest transition border-[2.5px] border-black dark:border-red-600 bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black rounded-none flex items-center gap-1"
                 >
