@@ -1035,75 +1035,75 @@ export default function RadioManager() {
     return null;
   };
 
-  // Manejo de Reproducción Preview / Pre-escucha CUE en Radio Manager (Modo Azul)
+  // Manejo de Reproducción / Poner canción seleccionada de la Biblioteca vía BAT
   const handlePlayPreview = async (song) => {
     if (!song) return;
 
-    // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca / Pre-escucha)
-    setBottomPlayerMode('preview');
+    // Cambiar la barra inferior inmediatamente a MODO LIVE (para sintonizar la emisión del BAT en cabina)
+    setBottomPlayerMode('live');
     setPreviewTrack(song);
     setPreviewDuration(song.duration || 0);
 
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const audioUrl = getPreviewAudioUrl(song);
-    if (!audioUrl) {
-      setError(`No se encontró ruta de audio para pre-escuchar "${song.title}".`);
-      setIsPlayingPreview(false);
-      return;
+    const airAudio = masterAirAudioRef.current;
+    if (airAudio) {
+      airAudio.muted = false;
+      airAudio.volume = isMutedRef.current ? 0 : volumeRef.current;
     }
+    setIsPlayingLiveSignal(true);
+    isPlayingLiveSignalRef.current = true;
 
-    const isSameTrack = previewTrack && (
-      previewTrack.title === song.title || 
-      previewTrack.fileName === song.fileName ||
-      (previewTrack.id && song.id && previewTrack.id === song.id)
-    );
+    // Actualizar datos de inmediato en el estado local del reproductor
+    setOnAirTrack(prev => ({
+      ...(prev || {}),
+      station_name: song.title,
+      station_artist: song.artist || song.albumArtist || 'Radio Café',
+      station_cover: song.cover || prev?.station_cover || '',
+      is_playing: true,
+      updated_at: new Date().toISOString()
+    }));
 
-    if (isSameTrack && audio.src && !audio.paused) {
-      audio.pause();
-      setIsPlayingPreview(false);
-      return;
-    }
-
+    // Enviar solicitud inmediata al .bat vía Supabase para que cargue la canción seleccionada
     try {
-      audio.pause();
-      audio.src = audioUrl;
-      audio.currentTime = 0;
-      setPreviewTime(0);
-      audio.muted = false;
-      audio.volume = isMuted ? 0 : volume;
+      const fileInfo = song.fileName || song.filePath || '';
+      const requestPayload = `REQUEST:${song.title}||${song.artist || song.albumArtist || ''}||${fileInfo}`;
 
-      await audio.play();
-      setIsPlayingPreview(true);
-      setSuccess(`🎧 Modo Azul: Pre-escuchando "${song.title}"`);
+      await supabase.from('radio_current_play').update({
+        station_name: song.title,
+        station_artist: requestPayload,
+        station_cover: song.cover || '',
+        station_url: '',
+        is_playing: true,
+        updated_at: new Date().toISOString()
+      }).eq('id', 1);
+
+      setSuccess(`📻 Transmitiendo desde biblioteca: "${song.title}"`);
     } catch (err) {
-      console.warn("Error en reproducción preview:", err);
-      audio.addEventListener('canplay', () => {
-        audio.play().then(() => setIsPlayingPreview(true)).catch(() => {});
-      }, { once: true });
+      console.error("Error enviando solicitud de biblioteca al BAT:", err);
+      setError("Error solicitando canción al .bat: " + err.message);
     }
   };
 
-  // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PRE-ESCUCHA INTERNA MODO AZUL) ---
+  // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PLAY, NEXT, ALEATORIO VÍA BAT) ---
   const handleToggleLibraryPreview = () => {
-    setBottomPlayerMode('preview');
-    if (isPlayingPreview) {
-      audioRef.current?.pause();
-      setIsPlayingPreview(false);
+    const airAudio = masterAirAudioRef.current;
+    if (isPlayingLiveSignal && airAudio && !airAudio.paused) {
+      airAudio.pause();
+      setIsPlayingLiveSignal(false);
+      isPlayingLiveSignalRef.current = false;
+      setSuccess("⏸ Emisión pausada.");
       return;
     }
-    if (previewTrack) {
-      handlePlayPreview(previewTrack);
-      return;
-    }
-    const target = (filteredLibraryTracks && filteredLibraryTracks[0]) || 
+    const currentTitle = onAirTrack?.station_name || previewTrack?.title;
+    const currentTrack = filteredLibraryTracks.find(t => t.title === currentTitle);
+    const target = currentTrack || 
+                   (filteredLibraryTracks && filteredLibraryTracks[0]) || 
                    (libraryTracks && libraryTracks[0]) || 
                    (batCatalog && batCatalog[0]?.tracks && batCatalog[0].tracks[0]);
     if (target) {
       handlePlayPreview(target);
     }
   };
+
 
   const handleNextLibraryPreview = () => {
     if (filteredLibraryTracks.length === 0) return;
@@ -1415,15 +1415,18 @@ export default function RadioManager() {
     }
   };
 
-  // Añadir pista a la cola de emisión (aparece abajo en la lista y sincroniza a Proyecto Radio sin interrumpir)
-  const handleAddTrackToQueue = async (track, playImmediately = false) => {
+  // Añadir pista a la cola de emisión: se coloca abajo al final de la lista, NO altera el orden ni interrumpe la emisión actual
+  const handleAddTrackToQueue = async (track) => {
     try {
-      const nextIndex = songs.length;
+      // 1. Obtener el orden máximo actual para asegurar que quede al final estricto
+      const maxOrder = songs.reduce((max, s) => Math.max(max, Number(s.order_index) ?? -1), -1);
+      const nextIndex = maxOrder + 1;
+
       const cleanTrack = {
         title: track.title,
         artist: track.artist || track.albumArtist || 'Radio Café',
         album: track.album || 'Sencillo',
-        url: track.url || `local://${encodeURIComponent(track.fileName)}`,
+        url: track.url || `local://${encodeURIComponent(track.fileName || track.title)}`,
         duration: track.duration || 210,
         cover: track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
         order_index: nextIndex
@@ -1434,19 +1437,13 @@ export default function RadioManager() {
 
       const inserted = data?.[0] || { ...cleanTrack, id: `queue-${Date.now()}` };
 
-      // Actualizar inmediatamente la cola local de RadioManager (aparece abajo)
+      // 2. Colocar al final abajo de la lista de RadioManager
       setSongs(prev => [...prev, inserted]);
 
-      // Notificar a Proyecto Radio para que aparezca abajo de inmediato
+      // 3. Notificar inmediatamente a Proyecto Radio para actualizar la lista en tiempo real
       await notifyPlaylistUpdate();
 
-      if (playImmediately) {
-        setBottomPlayerMode('live');
-        await handlePlayAirSong(inserted);
-        setSuccess(`➕ Canción "${track.title}" añadida y sonando al aire de inmediato.`);
-      } else {
-        setSuccess(`➕ Canción "${track.title}" añadida abajo en la cola de emisión.`);
-      }
+      setSuccess(`➕ Canción "${track.title}" añadida al final de la cola (sonará en su turno).`);
     } catch (e) {
       setError("Error al añadir canción a la cola: " + e.message);
     }
