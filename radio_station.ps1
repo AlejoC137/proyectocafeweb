@@ -211,18 +211,17 @@ function Match-TracksToLocalFiles($dbList, $localFilesList) {
         }
 
         if ($foundFile) {
-            $safeCover = [System.Text.RegularExpressions.Regex]::Replace($foundFile.Directory.Name, "[^a-zA-Z0-9_\-]", "_") + ".jpg"
-            $pubCover = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/covers/$safeCover"
             $matched.Add([PSCustomObject]@{
                 id          = $dbSong.id
                 title       = $dbSong.title
                 artist      = if ($dbSong.artist) { $dbSong.artist } else { "Radio Cafe" }
                 album       = if ($dbSong.album) { $dbSong.album } else { "Radio Cafe" }
+                $safeCover = [System.Text.RegularExpressions.Regex]::Replace($foundFile.Directory.Name, "[^a-zA-Z0-9_\-]", "_") + ".jpg"
+                $pubCover = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/covers/$safeCover"
                 cover       = if ($dbSong.cover -and $dbSong.cover.StartsWith("http")) { $dbSong.cover } else { $pubCover }
                 filePath    = $foundFile.FullName
                 order_index = $dbSong.order_index
             })
-        }
         } elseif ($url -and $url.StartsWith("http")) {
             $matched.Add([PSCustomObject]@{
                 id          = $dbSong.id
