@@ -156,7 +156,6 @@ function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $t
 # Enviar latido de vida localmente sin alterar la estampa de inicio de cancion en Supabase
 function Send-BatHeartbeat($sec = 0, $duration = 180, $currentTitle = "") {
     try {
-        $hbFile = Join-Path $PSScriptRoot "bat_heartbeat.json"
         $hbData = @{
             online    = $true
             sec       = $sec
@@ -164,7 +163,14 @@ function Send-BatHeartbeat($sec = 0, $duration = 180, $currentTitle = "") {
             title     = $currentTitle
             timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
         } | ConvertTo-Json -Compress
-        [System.IO.File]::WriteAllText($hbFile, $hbData, [System.Text.Encoding]::UTF8)
+
+        $destPaths = @(
+            (Join-Path $PSScriptRoot "bat_heartbeat.json"),
+            "G:\Mi unidad\Radio\bat_heartbeat.json"
+        )
+        foreach ($p in $destPaths) {
+            try { [System.IO.File]::WriteAllText($p, $hbData, [System.Text.Encoding]::UTF8) } catch {}
+        }
     } catch {}
 }
 
@@ -570,24 +576,38 @@ try {
                     $cmdName = [string]$currentRemote.station_name
 
                     # 1. Peticion instantanea de una cancion especifica (clic en cola o biblioteca)
-                    if ($cmdArtist.StartsWith("REQUEST:")) {
-                        $reqPayload = $cmdArtist.Substring(8).Trim()
-                        $reqParts = $reqPayload -split '\|\|', 2
+                    if ($cmdArtist.StartsWith("REQUEST:") -or $cmdArtist.StartsWith("LIBRARY_REQUEST:") -or $cmdArtist.StartsWith("PREVIEW:")) {
+                        $prefixLen = if ($cmdArtist.StartsWith("LIBRARY_REQUEST:")) { 16 } elseif ($cmdArtist.StartsWith("PREVIEW:")) { 8 } else { 8 }
+                        $reqPayload = $cmdArtist.Substring($prefixLen).Trim()
+                        $reqParts = $reqPayload -split '\|\|', 3
                         $reqTitle = $reqParts[0].Trim()
                         $reqArtist = if ($reqParts.Count -gt 1 -and $reqParts[1].Trim()) { $reqParts[1].Trim() } else { "" }
+                        $reqFile = if ($reqParts.Count -gt 2 -and $reqParts[2].Trim()) { $reqParts[2].Trim() } else { "" }
 
-                        Write-Host "`n>>> [SOLICITUD WEB] Cambio inmediato solicitado: $reqTitle" -ForegroundColor Magenta
-                        
-                        $reqNorm = Normalize-Text $reqTitle
-                        $matchedReq = $allLocalFiles | Where-Object {
-                            $fClean = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
-                            $fNorm = Normalize-Text $fClean
-                            ($fClean -like "*$reqTitle*") -or 
-                            ($reqTitle -like "*$fClean*") -or 
-                            ($fNorm -eq $reqNorm) -or
-                            ($fNorm.Contains($reqNorm)) -or
-                            ($reqNorm.Contains($fNorm))
-                        } | Select-Object -First 1
+                        Write-Host "`n>>> [SOLICITUD BIBLIOTECA / WEB] Pista solicitada: $reqTitle" -ForegroundColor Magenta
+
+                        $matchedReq = $null
+                        if ($reqFile) {
+                            $matchedReq = $allLocalFiles | Where-Object {
+                                $_.FullName -eq $reqFile -or 
+                                $_.Name -eq $reqFile -or
+                                ($_.FullName.IndexOf($reqFile, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or
+                                ($_.Name.IndexOf($reqFile, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+                            } | Select-Object -First 1
+                        }
+
+                        if (-not $matchedReq) {
+                            $reqNorm = Normalize-Text $reqTitle
+                            $matchedReq = $allLocalFiles | Where-Object {
+                                $fClean = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+                                $fNorm = Normalize-Text $fClean
+                                ($fClean.IndexOf($reqTitle, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or 
+                                ($reqTitle.IndexOf($fClean, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or 
+                                ($reqNorm -and $fNorm -eq $reqNorm) -or
+                                ($reqNorm -and $fNorm.Contains($reqNorm)) -or
+                                ($reqNorm -and $reqNorm.Contains($fNorm))
+                            } | Select-Object -First 1
+                        }
 
                         if ($matchedReq) {
                             Write-Host " [ENCONTRADO] $($matchedReq.FullName)" -ForegroundColor Green
@@ -604,7 +624,7 @@ try {
 
                             $requestedTrack = [PSCustomObject]@{
                                 id          = 999
-                                title       = $reqTitle
+                                title       = if ($reqTitle) { $reqTitle } else { [System.IO.Path]::GetFileNameWithoutExtension($matchedReq.Name) }
                                 artist      = $reqArtist
                                 album       = $matchedReq.Directory.Name
                                 cover       = if ($currentRemote.station_cover) { $currentRemote.station_cover } else { "" }
@@ -639,8 +659,13 @@ finally {
     Cleanup-OrphanLiveFiles
     # Limpiar latido local
     try {
-        $hbFile = Join-Path $PSScriptRoot "bat_heartbeat.json"
-        if (Test-Path $hbFile) { Remove-Item $hbFile -Force -ErrorAction SilentlyContinue }
+        $destPaths = @(
+            (Join-Path $PSScriptRoot "bat_heartbeat.json"),
+            "G:\Mi unidad\Radio\bat_heartbeat.json"
+        )
+        foreach ($p in $destPaths) {
+            if (Test-Path $p) { Remove-Item $p -Force -ErrorAction SilentlyContinue }
+        }
     } catch {}
     # Notificar que el BAT se cerro de inmediato
     Update-CurrentPlay -title "Estacion Desconectada" -artist "OFFLINE" -cover "" -publicUrl "" -isPlaying $false

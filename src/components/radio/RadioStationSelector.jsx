@@ -99,14 +99,23 @@ export default function RadioStationSelector({
 
       const payload = {
         id: 1,
-        station_artist: `REQUEST:${track.title}`,
+        station_name: track.title,
+        station_artist: `REQUEST:${track.title}||${track.artist || ''}`,
+        station_cover: track.cover || '',
+        station_url: track.url || '',
+        is_playing: true,
         updated_at: new Date().toISOString()
       };
 
       await supabase.from('radio_current_play').update(payload).eq('id', 1);
 
-      if (jumpToTrack && track.playlistOriginalIndex !== undefined) {
-        jumpToTrack(track.playlistOriginalIndex);
+      if (jumpToTrack) {
+        if (track.playlistOriginalIndex !== undefined) {
+          jumpToTrack(track.playlistOriginalIndex);
+        } else {
+          const foundIdx = (supabasePlaylist || []).findIndex(t => t.id === track.id || t.url === track.url || t.title === track.title);
+          if (foundIdx !== -1) jumpToTrack(foundIdx);
+        }
       }
 
       setTimeout(() => {

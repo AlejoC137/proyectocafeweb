@@ -373,15 +373,21 @@ export default function ProyectoRadio() {
     }, 400);
   }, [currentPlay?.station_url, currentPlay?.station_name, currentPlay?.is_playing]);
 
-  // Sincronizar el index local si la playlist actual contiene la estación global
+  // Sincronizar el index local si la playlist actual contiene la canción o estación global al aire
   React.useEffect(() => {
     if (currentPlay && radioData.currentPlaylist.length > 0) {
-      const idx = radioData.currentPlaylist.findIndex(t => (t.url || t.stream_url) === currentPlay.station_url);
+      const idx = radioData.currentPlaylist.findIndex(t => 
+        (t.url && (t.url === currentPlay.station_url || t.stream_url === currentPlay.station_url)) ||
+        (t.title && currentPlay.station_name && (
+          t.title.toLowerCase() === currentPlay.station_name.toLowerCase() ||
+          currentPlay.station_name.toLowerCase().includes(t.title.toLowerCase())
+        ))
+      );
       if (idx !== -1 && idx !== currentTrackIndex) {
         setCurrentTrackIndex(idx);
       }
     }
-  }, [currentPlay, radioData.currentPlaylist]);
+  }, [currentPlay?.station_url, currentPlay?.station_name, radioData.currentPlaylist]);
 
   // Sincronizar volumen remoto global
   React.useEffect(() => {

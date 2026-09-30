@@ -119,6 +119,28 @@ export default function RadioManager() {
   const audioRef = useRef(new Audio());
   const masterAirAudioRef = useRef(new Audio());
 
+  // Referencias para evitar cierres obsoletos (stale closures) en eventos Realtime
+  const isPlayingLiveSignalRef = useRef(false);
+  const isPlayingPreviewRef = useRef(false);
+  const volumeRef = useRef(0.8);
+  const isMutedRef = useRef(false);
+
+  useEffect(() => {
+    isPlayingLiveSignalRef.current = isPlayingLiveSignal;
+  }, [isPlayingLiveSignal]);
+
+  useEffect(() => {
+    isPlayingPreviewRef.current = isPlayingPreview;
+  }, [isPlayingPreview]);
+
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
   // Referencias para Drag & Drop y carpetas
   const dragItem = useRef(null);
   const dragOverItem = useRef(null);
@@ -183,6 +205,23 @@ export default function RadioManager() {
     sendRemoteCommand,
     broadcastForceReload
   } = useRadioSync({ isManager: true });
+
+  // Notificador universal de cambios en la lista de reproducción hacia Proyecto Radio
+  const notifyPlaylistUpdate = async (extraPayload = {}) => {
+    try {
+      const bc = new BroadcastChannel('radio-playlist-channel');
+      bc.postMessage({ type: 'PLAYLIST_UPDATED', timestamp: Date.now(), ...extraPayload });
+      bc.close();
+    } catch (e) {}
+
+    try {
+      await sendRemoteCommand({
+        type: 'PLAYLIST_UPDATED',
+        targetClientId: 'all',
+        payload: extraPayload
+      });
+    } catch (e) {}
+  };
 
   const [showListenersModal, setShowListenersModal] = useState(false);
   const [selectedTargetListForRemote, setSelectedTargetListForRemote] = useState('queue');
@@ -342,11 +381,15 @@ export default function RadioManager() {
         if (json && json.online) {
           setIsBatOnline(true);
           return true;
+        } else {
+          // El servidor Vite local confirma que el BAT no está corriendo
+          setIsBatOnline(false);
+          return false;
         }
       }
     } catch (e) {}
 
-    // 2. Si no responde local, verificar estado remoto en Supabase
+    // 2. Si no responde local (ej. en Vercel producción donde no hay servidor local), verificar estado en Supabase
     if (!record) {
       setIsBatOnline(false);
       return false;
@@ -1189,25 +1232,48 @@ export default function RadioManager() {
         setIsPlayingPreview(false);
       }
 
+      const directAudioUrl = getPreviewAudioUrl(song) || song.url || '';
+
       setOnAirTrack(prev => ({
         ...(prev || {}),
         station_name: song.title,
         station_artist: song.artist || 'Radio Café',
         station_cover: song.cover || '',
-        station_url: '', // Vaciamos para esperar la URL nueva del .bat
+        station_url: directAudioUrl,
         is_playing: true,
         updated_at: new Date().toISOString()
       }));
 
-      // 2. Notificar inmediatamente al transmisor .bat
+      // Reproducir inmediatamente en el monitor de cabina si está activo
+      if (airAudio && directAudioUrl) {
+        airAudio.src = directAudioUrl;
+        airAudio.muted = false;
+        airAudio.volume = isMuted ? 0 : volume;
+        airAudio.play().catch(() => {});
+        setIsPlayingLiveSignal(true);
+      }
+
+      // 2. Notificar inmediatamente al transmisor .bat y a Supabase
       await supabase.from('radio_current_play').update({
         station_name: song.title,
         station_artist: `REQUEST:${song.title}||${song.artist || ''}`,
         station_cover: song.cover || '',
-        station_url: '',
+        station_url: directAudioUrl,
         is_playing: true,
         updated_at: new Date().toISOString()
       }).eq('id', 1);
+
+      // Reiniciar reloj local a 0s
+      setAirTime(0);
+
+      // Notificar reinicio de tiempo a 0s a todos los oyentes de Proyecto Radio
+      try {
+        await sendRemoteCommand({
+          type: 'SEEK_TO',
+          targetClientId: 'all',
+          payload: { time: 0, title: song.title, artist: song.artist }
+        });
+      } catch (e) {}
 
       setIsPlayingLiveSignal(true);
       setSuccess(`📻 Al aire: "${song.title}"`);
@@ -1260,9 +1326,14 @@ export default function RadioManager() {
       setIsPlayingPreview(false);
     }
 
+    const currentSong = songs.find(s => 
+      s.title === onAirTrack?.station_name || 
+      (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase()))
+    ) || songs[0];
+
     const liveUrl = (onAirTrack?.station_url && onAirTrack.station_url.startsWith('http'))
       ? onAirTrack.station_url
-      : (songs[0] ? getPreviewAudioUrl(songs[0]) : null);
+      : (currentSong ? getPreviewAudioUrl(currentSong) : null);
 
     if (!liveUrl) {
       setError("No hay señal al aire disponible aún. Inicia el transmisor .bat.");
@@ -1278,7 +1349,7 @@ export default function RadioManager() {
       airAudio.volume = isMuted ? 0 : volume;
       await airAudio.play();
       setIsPlayingLiveSignal(true);
-      setSuccess(`📻 🔊 Monitor de cabina activado: escuchando "${onAirTrack?.station_name || songs[0]?.title || 'Radio al Aire'}"`);
+      setSuccess(`📻 🔊 Monitor de cabina activado: escuchando "${onAirTrack?.station_name || currentSong?.title || 'Radio al Aire'}"`);
     } catch (err) {
       setError("No se pudo activar el monitor en vivo: " + err.message);
       setIsPlayingLiveSignal(false);
@@ -1296,9 +1367,14 @@ export default function RadioManager() {
       setIsPlayingLiveSignal(false);
       setSuccess("⏸ Monitor de cabina pausado (la transmisión al aire continúa).");
     } else {
+      const currentSong = songs.find(s => 
+        s.title === onAirTrack?.station_name || 
+        (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase()))
+      ) || songs[0];
+
       const liveUrl = (onAirTrack?.station_url && onAirTrack.station_url.startsWith('http'))
         ? onAirTrack.station_url
-        : (songs[0] ? getPreviewAudioUrl(songs[0]) : null);
+        : (currentSong ? getPreviewAudioUrl(currentSong) : null);
 
       if (!liveUrl) {
         setError("No hay canción al aire para reproducir.");
@@ -1351,7 +1427,8 @@ export default function RadioManager() {
     }
   };
 
-  const handleAddTrackToQueue = async (track, playImmediately = true) => {
+  // Añadir pista a la cola de emisión (aparece abajo en la lista y sincroniza a Proyecto Radio sin interrumpir)
+  const handleAddTrackToQueue = async (track, playImmediately = false) => {
     try {
       const nextIndex = songs.length;
       const cleanTrack = {
@@ -1363,15 +1440,25 @@ export default function RadioManager() {
         cover: track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
         order_index: nextIndex
       };
-      const { error } = await supabase.from('playlist_radio').insert([cleanTrack]);
+      
+      const { data, error } = await supabase.from('playlist_radio').insert([cleanTrack]).select();
       if (error) throw error;
 
-      await fetchSongs();
+      const inserted = data?.[0] || { ...cleanTrack, id: `queue-${Date.now()}` };
 
-      // Poner al aire de inmediato
-      setBottomPlayerMode('live');
-      await handlePlayAirSong(cleanTrack);
-      setSuccess(`➕ Canción "${track.title}" añadida y sonando al aire de inmediato.`);
+      // Actualizar inmediatamente la cola local de RadioManager (aparece abajo)
+      setSongs(prev => [...prev, inserted]);
+
+      // Notificar a Proyecto Radio para que aparezca abajo de inmediato
+      await notifyPlaylistUpdate();
+
+      if (playImmediately) {
+        setBottomPlayerMode('live');
+        await handlePlayAirSong(inserted);
+        setSuccess(`➕ Canción "${track.title}" añadida y sonando al aire de inmediato.`);
+      } else {
+        setSuccess(`➕ Canción "${track.title}" añadida abajo en la cola de emisión.`);
+      }
     } catch (e) {
       setError("Error al añadir canción a la cola: " + e.message);
     }
@@ -1398,16 +1485,21 @@ export default function RadioManager() {
         year: t.year || albumItem.year || '2024',
         order_index: idx
       }));
-      const { error: insErr } = await supabase.from('playlist_radio').insert(tracksToInsert);
+      const { data: insData, error: insErr } = await supabase.from('playlist_radio').insert(tracksToInsert).select();
       if (insErr) throw insErr;
-      await supabase.from('radio_current_play').update({
-        station_artist: `ALBUM:${albumItem.albumName}`,
-        station_name: `Cambiando a ${albumItem.albumName}...`,
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-      await fetchSongs();
-      setSuccess(`📻 ¡Álbum "${albumItem.albumName}" cargado en la cola al aire!`);
+
+      const newSongs = insData || tracksToInsert;
+      setSongs(newSongs);
+
+      // Notificar a Proyecto Radio
+      await notifyPlaylistUpdate();
+
+      if (newSongs.length > 0) {
+        setBottomPlayerMode('live');
+        await handlePlayAirSong(newSongs[0]);
+      }
+
+      setSuccess(`📻 ¡Álbum "${albumItem.albumName}" cargado en la cola al aire (${newSongs.length} pistas)!`);
     } catch (err) {
       setError("Error al poner álbum: " + err.message);
     } finally {
@@ -1444,14 +1536,17 @@ export default function RadioManager() {
         cover: t.cover || t.albumCover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
         order_index: idx
       }));
-      await supabase.from('playlist_radio').insert(tracksToInsert);
-      await supabase.from('radio_current_play').update({
-        station_artist: 'START_BROADCAST',
-        station_name: 'Mix Aleatorio Dinámico',
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-      await fetchSongs();
+      const { data: insData } = await supabase.from('playlist_radio').insert(tracksToInsert).select();
+      const newSongs = insData || tracksToInsert;
+      setSongs(newSongs);
+
+      await notifyPlaylistUpdate();
+
+      if (newSongs.length > 0) {
+        setBottomPlayerMode('live');
+        await handlePlayAirSong(newSongs[0]);
+      }
+
       setSuccess(`🔀 ¡Cola aleatoria de ${selected.length} canciones cargada y transmitiendo al aire!`);
     } catch (err) {
       setError("Error generando cola: " + err.message);
@@ -1468,11 +1563,8 @@ export default function RadioManager() {
       for (let i = 0; i < shuffled.length; i++) {
         await supabase.from('playlist_radio').update({ order_index: i }).eq('id', shuffled[i].id);
       }
-      await supabase.from('radio_current_play').update({
-        station_artist: "SYNC",
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-      await fetchSongs();
+      setSongs(shuffled);
+      await notifyPlaylistUpdate();
       setSuccess("🔀 ¡Cola de reproducción mezclada aleatoriamente!");
     } catch (err) {
       setError("Error al mezclar cola: " + err.message);
