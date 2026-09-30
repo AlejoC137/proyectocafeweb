@@ -10,6 +10,30 @@ function localAudioDevPlugin() {
     name: 'local-audio-dev',
     apply: 'serve',
     configureServer(server) {
+      server.middlewares.use('/api/bat-status', (req, res) => {
+        try {
+          const hbFile = 'G:\\Mi unidad\\Radio\\bat_heartbeat.json'
+          if (fs.existsSync(hbFile)) {
+            const stat = fs.statSync(hbFile)
+            if (Date.now() - stat.mtimeMs < 4000) {
+              const data = fs.readFileSync(hbFile, 'utf8')
+              res.writeHead(200, {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+              })
+              res.end(data)
+              return
+            }
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+          res.end(JSON.stringify({ online: false }))
+        } catch (e) {
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+          res.end(JSON.stringify({ online: false }))
+        }
+      })
+
       server.middlewares.use('/api/local-catalog', (req, res) => {
         try {
           const catalogPath = 'G:\\Mi unidad\\Radio\\catalog.json'
@@ -18,7 +42,10 @@ function localAudioDevPlugin() {
             res.end(JSON.stringify({ error: 'Catalog file not found' }))
             return
           }
-          const content = fs.readFileSync(catalogPath, 'utf8')
+          let content = fs.readFileSync(catalogPath, 'utf8')
+          if (content.charCodeAt(0) === 0xFEFF) {
+            content = content.slice(1)
+          }
           res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',
             'Access-Control-Allow-Origin': '*',
