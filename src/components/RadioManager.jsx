@@ -448,6 +448,9 @@ export default function RadioManager() {
     try {
       if (!silent) setLoadingCatalog(true);
 
+      const fallbackList = Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [];
+      const fallbackTracks = fallbackList.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
+
       // 1. Intentar cargar desde el endpoint local de Vite o catálogo público de la web
       try {
         let localRes = await fetch(`/api/local-audio?file=catalog.json&t=${Date.now()}`);
@@ -460,36 +463,46 @@ export default function RadioManager() {
         if (localRes.ok) {
           const localData = await localRes.json();
           if (Array.isArray(localData) && localData.length > 0) {
-            setBatCatalog(localData);
-            setSelectedAirAlbumFolder(prev => prev || localData[0]?.folderName || '');
-            if (!silent) {
-              const totalTracks = localData.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
-              setSuccess(`¡Biblioteca completa cargada! (${localData.length} álbumes, ${totalTracks} canciones).`);
+            const localTracks = localData.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
+            if (localTracks >= fallbackTracks && localData.length >= fallbackList.length) {
+              setBatCatalog(localData);
+              setSelectedAirAlbumFolder(prev => prev || localData[0]?.folderName || '');
+              if (!silent) {
+                setSuccess(`¡Biblioteca completa cargada! (${localData.length} álbumes, ${localTracks} canciones).`);
+              }
+              return;
             }
-            return;
           }
         }
       } catch (e) {}
 
-      // 2. Usar catálogo empaquetado si tiene la colección completa
-      if (Array.isArray(fallbackCatalogData) && fallbackCatalogData.length > 0) {
-        setBatCatalog(fallbackCatalogData);
-        setSelectedAirAlbumFolder(prev => prev || fallbackCatalogData[0]?.folderName || '');
+      // 2. Usar catálogo empaquetado si tiene la colección completa (544 canciones)
+      if (fallbackList.length > 0) {
+        setBatCatalog(fallbackList);
+        setSelectedAirAlbumFolder(prev => prev || fallbackList[0]?.folderName || '');
         if (!silent) {
-          const totalTracks = fallbackCatalogData.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
-          setSuccess(`¡Biblioteca completa cargada! (${fallbackCatalogData.length} álbumes, ${totalTracks} canciones).`);
+          setSuccess(`¡Biblioteca completa cargada! (${fallbackList.length} álbumes, ${fallbackTracks} canciones).`);
         }
       }
 
-      // 3. Fallback a Supabase Storage sólo si tiene igual o más álbumes que el actual
+      // 3. Fallback a Supabase Storage sólo si tiene IGUAL O MÁS canciones que la colección completa
       try {
         const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/catalog.json?t=${Date.now()}`;
         const res = await fetch(storageUrl);
         if (res.ok) {
           const data = await res.json();
-          if (data && Array.isArray(data) && data.length > 0) {
-            setBatCatalog(data);
-            setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
+          if (Array.isArray(data) && data.length > 0) {
+            const storageTracks = data.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
+            // Solo sobreescribir si la versión remota es igual o más grande que la local empaquetada
+            if (storageTracks >= fallbackTracks && data.length >= fallbackList.length) {
+              setBatCatalog(data);
+              setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
+              if (!silent) {
+                setSuccess(`¡Biblioteca remota sincronizada! (${data.length} álbumes, ${storageTracks} canciones).`);
+              }
+            } else {
+              console.log(`[RadioManager] Catálogo de Storage ignorado porque tiene menos canciones (${storageTracks}) que la biblioteca completa (${fallbackTracks}).`);
+            }
           }
         }
       } catch (e) {}
@@ -1739,10 +1752,7 @@ export default function RadioManager() {
       const { data } = await supabase.from('radio_current_play').select('*').eq('id', 1).single();
       const online = checkBatHeartbeat(data);
       if (!online) {
-        setBatCatalog([]);
-        setError("El .bat no está abierto. Inicia 'iniciar_radio.bat' en G:\\Mi unidad\\Radio para conectar la biblioteca.");
-        setIsUpdatingAirList(false);
-        return;
+        console.warn("El bat no reporta latido activo en este momento.");
       }
       await fetchBatCatalog(false);
       await fetchSongs();
