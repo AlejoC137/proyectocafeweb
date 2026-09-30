@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.1.0)
 # ==============================================================================
 # - Carga Instantanea: Reutiliza catalogo local o re-escanea bajo demanda con [C].

@@ -893,50 +893,11 @@ export default function RadioManager() {
     return null;
   };
 
-  // Manejo de Reproducción Preview / Pre-escucha CUE en Radio Manager (Modo Azul / Emisión)
+  // Manejo de Reproducción Preview / Pre-escucha CUE en Radio Manager (Modo Azul)
   const handlePlayPreview = async (song) => {
     if (!song) return;
 
-    const isLocalHost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-    setPreviewTrack(song);
-
-    // En entorno de PRODUCCIÓN DEPLOY (Vercel):
-    // El navegador web no tiene acceso al disco local del usuario vía HTTP local.
-    // Enviamos la petición directa al Transmisor .bat local para que emita la pista al aire inmediatamente.
-    if (!isLocalHost) {
-      if (onAirTrack?.station_name === song.title && onAirTrack?.is_playing) {
-        await handleAirPlayPause();
-        return;
-      }
-      setBottomPlayerMode('live');
-      setIsPlayingLiveSignal(true);
-      try {
-        const startedAt = new Date().toISOString();
-        const requestPayload = {
-          station_name: song.title,
-          station_artist: `REQUEST:${song.title}`,
-          station_cover: song.cover || '',
-          is_playing: true,
-          updated_at: startedAt,
-          tab: 'supabase'
-        };
-
-        setOnAirTrack(prev => ({
-          ...(prev || {}),
-          ...requestPayload
-        }));
-
-        await supabase.from('radio_current_play').update(requestPayload).eq('id', 1);
-        setSuccess(`📻 Emitiendo desde la biblioteca: "${song.title}"`);
-      } catch (err) {
-        console.warn("Error enviando solicitud de reproducción:", err);
-      }
-      return;
-    }
-
-    // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca en Localhost)
+    // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca)
     setBottomPlayerMode('preview');
 
     if (previewTrack?.id === song.id && (previewTrack?.title === song.title || previewTrack?.fileName === song.fileName)) {
@@ -961,6 +922,7 @@ export default function RadioManager() {
       return;
     }
 
+    setPreviewTrack(song);
     const audioUrl = getPreviewAudioUrl(song);
     if (!audioUrl) {
       setError(`No se encontró ruta de audio para pre-escuchar "${song.title}". Asegúrate de que existe en la carpeta de música.`);
@@ -1544,6 +1506,23 @@ export default function RadioManager() {
       };
       const { error } = await supabase.from('playlist_radio').insert([cleanTrack]);
       if (error) throw error;
+      await supabase.from('radio_current_play').update({
+        station_artist: 'SYNC',
+        updated_at: new Date().toISOString()
+      }).eq('id', 1);
+
+      // Notificar de inmediato a otras pestañas (como ProyectoRadio) para que agreguen la canción en caliente sin recargar la página
+      try {
+        const bc = new BroadcastChannel('radio-playlist-channel');
+        bc.postMessage({ type: 'PLAYLIST_UPDATED', track: cleanTrack, timestamp: Date.now() });
+        bc.close();
+      } catch (e) {}
+
+      await sendRemoteCommand({
+        type: 'PLAYLIST_UPDATED',
+        targetClientId: 'all',
+        payload: { track: cleanTrack }
+      });
 
       await fetchSongs();
       setSuccess(`➕ Canción "${track.title}" añadida a la cola.`);
@@ -1643,6 +1622,10 @@ export default function RadioManager() {
       for (let i = 0; i < shuffled.length; i++) {
         await supabase.from('playlist_radio').update({ order_index: i }).eq('id', shuffled[i].id);
       }
+      await supabase.from('radio_current_play').update({
+        station_artist: "SYNC",
+        updated_at: new Date().toISOString()
+      }).eq('id', 1);
       await fetchSongs();
       setSuccess("🔀 ¡Cola de reproducción mezclada aleatoriamente!");
     } catch (err) {

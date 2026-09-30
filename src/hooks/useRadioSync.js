@@ -130,14 +130,11 @@ export function useRadioSync(options = {}) {
           }
           setCurrentPlay(payload.new);
           if (payload.new?.volume !== undefined && payload.new?.volume !== null) {
-            const volChanged = !payload.old || payload.new.volume !== payload.old.volume || payload.new.is_muted !== payload.old.is_muted;
-            if (volChanged) {
-              setRemoteVolume({
-                volume: Number(payload.new.volume),
-                isMuted: Boolean(payload.new.is_muted),
-                timestamp: Date.now()
-              });
-            }
+            setRemoteVolume({
+              volume: Number(payload.new.volume),
+              isMuted: Boolean(payload.new.is_muted),
+              timestamp: Date.now()
+            });
           }
         }
       )
@@ -155,14 +152,11 @@ export function useRadioSync(options = {}) {
           }
           setCurrentPlay(payload.new);
           if (payload.new?.volume !== undefined && payload.new?.volume !== null) {
-            const volChanged = !payload.old || payload.new.volume !== payload.old.volume || payload.new.is_muted !== payload.old.is_muted;
-            if (volChanged) {
-              setRemoteVolume({
-                volume: Number(payload.new.volume),
-                isMuted: Boolean(payload.new.is_muted),
-                timestamp: Date.now()
-              });
-            }
+            setRemoteVolume({
+              volume: Number(payload.new.volume),
+              isMuted: Boolean(payload.new.is_muted),
+              timestamp: Date.now()
+            });
           }
         }
       )
