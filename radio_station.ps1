@@ -128,16 +128,15 @@ function Cleanup-OrphanLiveFiles {
     } catch {}
 }
 
-# Notificar estado en radio_current_play
+# Notificar estado en radio_current_play (solo campos de emisión al aire, sin tocar tab ni pre-escucha)
 function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $true) {
     $isoNow = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
     $headersSync = @{
         "Authorization" = "Bearer $SUPABASE_API_KEY"
         "apikey"        = "$SUPABASE_API_KEY"
-        "Prefer"        = "resolution=merge-duplicates"
+        "Content-Type"  = "application/json; charset=utf-8"
     }
     $payload = @{
-        id             = 1
         station_url    = $publicUrl
         station_name   = $title
         station_artist = $artist
@@ -148,8 +147,8 @@ function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $t
     $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
 
     try {
-        $urlCurrent = "$SUPABASE_URL/rest/v1/radio_current_play?on_conflict=id"
-        Invoke-RestMethod -Uri $urlCurrent -Method Post -Headers $headersSync -ContentType "application/json; charset=utf-8" -Body $payloadBytes | Out-Null
+        $urlCurrent = "$SUPABASE_URL/rest/v1/radio_current_play?id=eq.1"
+        Invoke-RestMethod -Uri $urlCurrent -Method Patch -Headers $headersSync -Body $payloadBytes | Out-Null
     } catch {}
 }
 

@@ -643,6 +643,24 @@ export default function RadioManager() {
         checkBatHeartbeat(data);
         fetchBatCatalog(true); // Siempre cargar el catálogo disponible de canciones locales/en la nube
 
+        // Cargar estado inicial de pre-escucha si ya existía una activa en el BAT
+        if (data.tab && data.tab.startsWith('PREVIEW_READY:')) {
+          const parts = data.tab.substring(14).split('||');
+          const previewUrl = parts[0];
+          const previewTitle = parts[1] || '';
+          const previewArtist = parts[2] || '';
+          const previewDur = Number(parts[3]) || 180;
+          if (previewUrl && audioRef.current) {
+            audioRef.current.src = previewUrl;
+            setPreviewDuration(previewDur);
+            setPreviewTrack({
+              title: previewTitle,
+              artist: previewArtist,
+              duration: previewDur
+            });
+          }
+        }
+
         // Si la señal al aire está activa en la base de datos, reanudar motor de emisión continua de fondo
         if (data.is_playing && data.station_url) {
           const liveUrl = getPreviewAudioUrl({ url: data.station_url });
