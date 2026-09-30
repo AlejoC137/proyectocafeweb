@@ -1,12 +1,11 @@
 ﻿# ==============================================================================
-# RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.2.0)
+# RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.3.0)
 # ==============================================================================
-# - Emision Ininterrumpida 24/7: Nada interrumpe la transmision al aire.
-# - Independiente de ON/OFF AIR: El estado ON AIR es potestad exclusiva del usuario web.
-# - Carga Instantanea: Lee catalogo local en milisegundos o re-indexa con [C].
+# - Deteccion Instantanea de Estado: Conectado/Desconectado en tiempo real.
+# - Cambio Inmediato de Pista: Soporte total para NEXT, PREV y REQUEST sin trabas.
+# - Emision Ininterrumpida 24/7: Sincronizado con Supabase Storage y Proyecto Radio.
 # - Multi-Carpeta en Paralelo: Escanea y unifica multiples fuentes locales de audio.
-# - Auto-Rotacion Continua: Si la cola web esta vacia, transmite de tu coleccion local.
-# - Uso Minimo de Supabase: Maximo 1 archivo de audio en Storage (cero acumulacion).
+# - Cero Archivos Basura: Maximo 1 archivo en Storage (reemplazo y borrado automatico).
 # ==============================================================================
 
 $ProgressPreference = 'SilentlyContinue'
@@ -32,12 +31,10 @@ $headers = @{
 function Get-ConfiguredFolders {
     $folders = [System.Collections.Generic.List[string]]::new()
     
-    # Carpeta por defecto
     $defaultMusica = Join-Path $PSScriptRoot "musica"
     if (Test-Path $defaultMusica) { $folders.Add($defaultMusica) }
     $folders.Add($PSScriptRoot)
 
-    # Archivo de configuracion carpetas_musica.txt si existe
     if (Test-Path $CONFIG_FILE) {
         $lines = Get-Content $CONFIG_FILE | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith("#") }
         foreach ($line in $lines) {
@@ -131,7 +128,7 @@ function Cleanup-OrphanLiveFiles {
     } catch {}
 }
 
-# Notificar estado en radio_current_play SIN tocar la columna tab (para preservar ON_AIR / OFF_AIR del usuario)
+# Notificar estado en radio_current_play
 function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $true) {
     $isoNow = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
     $headersSync = @{
@@ -156,7 +153,23 @@ function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $t
     } catch {}
 }
 
-# Normalizar texto para comparacion
+# Enviar latido de vida SIN sobreescribir titulos ni peticiones de la web
+function Send-BatHeartbeat {
+    $isoNow = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+    $headersSync = @{
+        "Authorization" = "Bearer $SUPABASE_API_KEY"
+        "apikey"        = "$SUPABASE_API_KEY"
+    }
+    $payload = @{
+        updated_at = $isoNow
+    } | ConvertTo-Json -Compress
+    try {
+        $urlPatch = "$SUPABASE_URL/rest/v1/radio_current_play?id=eq.1"
+        Invoke-RestMethod -Uri $urlPatch -Method Patch -Headers $headersSync -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($payload)) | Out-Null
+    } catch {}
+}
+
+# Normalizar texto para comparacion flexible
 function Normalize-Text($text) {
     if (-not $text) { return "" }
     $clean = $text.ToLower().Trim()
@@ -270,7 +283,6 @@ function Build-And-Upload-MultiCatalog($folderList) {
         $albumArtist = if ($albumParts.Count -ge 1) { $albumParts[0].Trim() } else { "Varios Artistas" }
         $albumTitle  = if ($albumParts.Count -ge 2) { $albumParts[1].Trim() } else { $alb.Name }
 
-        # Buscar caratula
         $coverFiles = @(Get-ChildItem -Path $alb.FullName -File | Where-Object { $_.Extension -match '\.(jpg|jpeg|png|webp)$' })
         $albumCoverUrl = ""
         if ($coverFiles.Count -gt 0) {
@@ -323,13 +335,11 @@ function Build-And-Upload-MultiCatalog($folderList) {
 
     $jsonCatalog = $catalogList | ConvertTo-Json -Depth 5 -Compress
 
-    # 1. Guardar localmente
     try {
         [System.IO.File]::WriteAllText($LOCAL_CATALOG, $jsonCatalog, [System.Text.Encoding]::UTF8)
         Write-Host " [OK] Catalogo local guardado: $($catalogList.Count) albumes, $totalSongsCount canciones." -ForegroundColor Green
     } catch {}
 
-    # 2. Copiar al repositorio git
     if (Test-Path (Split-Path $WEB_REPO_CATALOG)) {
         try { [System.IO.File]::WriteAllText($WEB_REPO_CATALOG, $jsonCatalog, [System.Text.Encoding]::UTF8) } catch {}
     }
@@ -337,7 +347,6 @@ function Build-And-Upload-MultiCatalog($folderList) {
         try { [System.IO.File]::WriteAllText($WEB_PUBLIC_CATALOG, $jsonCatalog, [System.Text.Encoding]::UTF8) } catch {}
     }
 
-    # 3. Subir a Supabase Storage
     try {
         $urlStorage = "$SUPABASE_URL/storage/v1/object/Radio/catalog.json"
         $headersUpload = @{
@@ -374,10 +383,9 @@ function Show-DashboardHeader($version, $configuredFolders, $catalogCount, $song
 # ==============================================================================
 # INICIO DE LA ESTACION
 # ==============================================================================
-$VERSION = "v3.2.0 [Continuous Uninterrupted Live Stream]"
+$VERSION = "v3.3.0 [Instant Sync & Real-Time Skip]"
 $folders = Get-ConfiguredFolders
 
-# Cargar catalogo: si existe en disco se carga en milisegundos
 $fullCatalog = $null
 if (Test-Path $LOCAL_CATALOG) {
     try {
@@ -397,7 +405,6 @@ foreach ($alb in $fullCatalog) {
     elseif ($alb.tracks) { $totalSongs += [int]$alb.tracks.Count }
 }
 
-# Escanear archivos MP3 disponibles para reproduccion
 $allLocalFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
 foreach ($f in $folders) {
     if (Test-Path $f) {
@@ -406,7 +413,6 @@ foreach ($f in $folders) {
     }
 }
 
-# Limpiar posibles restos huerfanos en Storage para iniciar limpios
 Cleanup-OrphanLiveFiles
 
 Show-DashboardHeader -version $VERSION -configuredFolders $folders -catalogCount $fullCatalog.Count -songCount $totalSongs
@@ -427,7 +433,6 @@ try {
         $dbTracks = Get-SupabaseQueue
         $matchedTracks = Match-TracksToLocalFiles -dbList $dbTracks -localFilesList $allLocalFiles
 
-        # 2. Si la cola web esta vacia, usar modo Auto-Rotacion continua con la biblioteca local
         $isAutoRotation = ($matchedTracks.Count -eq 0)
         if ($isAutoRotation) {
             if ($allLocalFiles.Count -eq 0) {
@@ -435,7 +440,6 @@ try {
                 Start-Sleep -Seconds 3
                 continue
             }
-            # Seleccionar archivo aleatorio de la biblioteca
             $randomFile = $allLocalFiles | Get-Random
             $cName = [System.IO.Path]::GetFileNameWithoutExtension($randomFile.Name)
             $cClean = [System.Text.RegularExpressions.Regex]::Replace($cName, "^\d+[\s\-_.]*", "")
@@ -460,7 +464,6 @@ try {
         $trackIndex = 0
 
         while ($trackIndex -lt $matchedTracks.Count) {
-            # Peticion instantanea de usuario en Radio Manager
             if ($requestedTrack) {
                 $currentTrack = $requestedTrack
                 $requestedTrack = $null
@@ -478,7 +481,7 @@ try {
 
                 Write-Host "`n-------------------------------------------------------------------------------" -ForegroundColor DarkCyan
                 if ($isAutoRotation) {
-                    Write-Host " [ON AIR - AUTO ROTACION] Transmitiendo pista de tu coleccion local" -ForegroundColor Cyan
+                    Write-Host " [ON AIR - AUTO ROTACION] Transmitiendo pista de coleccion local" -ForegroundColor Cyan
                 } else {
                     Write-Host " [ON AIR - COLA WEB] Pista $trackIndex de $($matchedTracks.Count)" -ForegroundColor Green
                 }
@@ -496,7 +499,7 @@ try {
 
                 $publicUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/$remoteFilename"
 
-                # Borrar pista anterior para no gastar espacio en Supabase
+                # Borrar pista anterior inmediatamente
                 if ($previousRemoteFilename -and ($previousRemoteFilename -ne $remoteFilename)) {
                     Delete-Track -remoteFilename $previousRemoteFilename
                 }
@@ -506,12 +509,11 @@ try {
                 Write-Host "`n>>> [EMITIENDO REMOTO] $($currentTrack.title)" -ForegroundColor Yellow
             }
 
-            # Notificar a Supabase (is_playing = $true siempre mientras la emisora transmita)
+            # Notificar nueva pista activa a Supabase
             Update-CurrentPlay -title $currentTrack.title -artist $currentTrack.artist -cover $currentTrack.cover -publicUrl $publicUrl -isPlaying $true
             Write-Host " [TRANSMITIENDO EN VIVO] Sincronizado con pagina web y oyentes.`n" -ForegroundColor Green
 
             # Monitoreo de reproduccion con VU meter DJ
-            $checkWebCounter = 0
             for ($sec = 0; $sec -lt $duration; $sec++) {
                 $pct = [math]::Round(($sec / $duration) * 100)
                 $barsCount = [int]($pct / 5)
@@ -559,62 +561,57 @@ try {
                     }
                 }
 
-                # Chequeo de senales desde la web cada 2 segundos
-                $checkWebCounter++
-                if ($checkWebCounter -ge 2) {
-                    $checkWebCounter = 0
-                    try {
-                        $checkUrl = "$SUPABASE_URL/rest/v1/radio_current_play?select=station_artist,station_name,station_cover,station_url&id=eq.1"
-                        $currentRemote = Invoke-RestMethod -Uri $checkUrl -Headers $headers
+                # Chequeo de senales desde la web cada 1 segundo
+                try {
+                    $checkUrl = "$SUPABASE_URL/rest/v1/radio_current_play?select=station_artist,station_name,station_cover,station_url&id=eq.1"
+                    $rawResp = Invoke-RestMethod -Uri $checkUrl -Headers $headers
+                    $currentRemote = if ($rawResp -is [System.Array]) { $rawResp[0] } else { $rawResp }
 
-                        # 1. Peticion instantanea de una cancion especifica (clic en biblioteca o rocola)
-                        if ($currentRemote.station_artist -like "REQUEST:*") {
-                            $reqTitle = $currentRemote.station_artist.Substring(8).Trim()
-                            Write-Host "`n>>> [SOLICITUD WEB] Cambio inmediato solicitado: $reqTitle" -ForegroundColor Magenta
-                            
-                            $matchedReq = $allLocalFiles | Where-Object {
-                                $fClean = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
-                                $fClean -like "*$reqTitle*" -or (Normalize-Text $fClean) -eq (Normalize-Text $reqTitle)
-                            } | Select-Object -First 1
+                    $cmdArtist = [string]$currentRemote.station_artist
+                    $cmdName = [string]$currentRemote.station_name
 
-                            if ($matchedReq) {
-                                $requestedTrack = [PSCustomObject]@{
-                                    id          = 999
-                                    title       = $reqTitle
-                                    artist      = if ($currentRemote.station_name -and $currentRemote.station_name -ne $reqTitle) { $currentRemote.station_name } else { "Radio Cafe" }
-                                    album       = $matchedReq.Directory.Name
-                                    cover       = if ($currentRemote.station_cover) { $currentRemote.station_cover } else { "" }
-                                    filePath    = $matchedReq.FullName
-                                    order_index = 0
-                                }
-                                break
+                    # 1. Peticion instantanea de una cancion especifica (clic en cola o biblioteca)
+                    if ($cmdArtist.StartsWith("REQUEST:")) {
+                        $reqTitle = $cmdArtist.Substring(8).Trim()
+                        Write-Host "`n>>> [SOLICITUD WEB] Cambio inmediato solicitado: $reqTitle" -ForegroundColor Magenta
+                        
+                        $reqNorm = Normalize-Text $reqTitle
+                        $matchedReq = $allLocalFiles | Where-Object {
+                            $fClean = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+                            $fNorm = Normalize-Text $fClean
+                            ($fClean -like "*$reqTitle*") -or 
+                            ($reqTitle -like "*$fClean*") -or 
+                            ($fNorm -eq $reqNorm) -or
+                            ($fNorm.Contains($reqNorm)) -or
+                            ($reqNorm.Contains($fNorm))
+                        } | Select-Object -First 1
+
+                        if ($matchedReq) {
+                            Write-Host " [ENCONTRADO] $($matchedReq.FullName)" -ForegroundColor Green
+                            $requestedTrack = [PSCustomObject]@{
+                                id          = 999
+                                title       = $reqTitle
+                                artist      = if ($cmdName -and $cmdName -ne $reqTitle) { $cmdName } else { "Radio Cafe" }
+                                album       = $matchedReq.Directory.Name
+                                cover       = if ($currentRemote.station_cover) { $currentRemote.station_cover } else { "" }
+                                filePath    = $matchedReq.FullName
+                                order_index = 0
                             }
-                        }
-                        # 2. Salto a siguiente cancion desde la web
-                        elseif ($currentRemote.station_artist -eq "NEXT_TRACK" -or $currentRemote.station_name -eq "NEXT_TRACK") {
-                            Write-Host "`n>>> [RADIO MANAGER] Siguiente pista solicitada." -ForegroundColor Cyan
                             break
+                        } else {
+                            Write-Host " [AVISO] Archivo para '$reqTitle' no encontrado en disco." -ForegroundColor Yellow
                         }
-                        # 3. Deteccion de nueva cola web si estabamos en auto-rotacion
-                        elseif ($isAutoRotation) {
-                            $freshQueue = Get-SupabaseQueue
-                            if ($freshQueue.Count -gt 0) {
-                                $matchedFresh = Match-TracksToLocalFiles -dbList $freshQueue -localFilesList $allLocalFiles
-                                if ($matchedFresh.Count -gt 0) {
-                                    Write-Host "`n>>> [COLA WEB DETECTADA] Canciones recibidas desde Radio Manager!" -ForegroundColor Green
-                                    $matchedTracks = $matchedFresh
-                                    $isAutoRotation = $false
-                                    $trackIndex = 0
-                                    break
-                                }
-                            }
-                        }
-                        else {
-                            # Heartbeat continuo para mantener actualizada la hora
-                            Update-CurrentPlay -title $currentTrack.title -artist $currentTrack.artist -cover $currentTrack.cover -publicUrl $publicUrl -isPlaying $true
-                        }
-                    } catch {}
-                }
+                    }
+                    # 2. Salto a siguiente cancion solicitado desde la web
+                    elseif ($cmdArtist -eq "NEXT_TRACK" -or $cmdName -eq "NEXT_TRACK") {
+                        Write-Host "`n>>> [RADIO MANAGER] Siguiente pista solicitada." -ForegroundColor Cyan
+                        break
+                    }
+                    else {
+                        # Latido de vida liviano para actualizar la estampa de tiempo
+                        Send-BatHeartbeat
+                    }
+                } catch {}
 
                 Start-Sleep -Seconds 1
             }
@@ -626,5 +623,7 @@ finally {
     if ($previousRemoteFilename) { Delete-Track -remoteFilename $previousRemoteFilename }
     if ($remoteFilename) { Delete-Track -remoteFilename $remoteFilename }
     Cleanup-OrphanLiveFiles
-    Write-Host " [OK] Estacion desconectada y almacenamiento limpio." -ForegroundColor Green
+    # Notificar que el BAT se cerro de inmediato
+    Update-CurrentPlay -title "Estacion Desconectada" -artist "OFFLINE" -cover "" -publicUrl "" -isPlaying $false
+    Write-Host " [OK] Estacion desconectada y estado OFFLINE notificado a la web." -ForegroundColor Green
 }

@@ -258,20 +258,20 @@ export default function RadioManager() {
     setSuccess(`Comando SIGUIENTE enviado a la instancia.`);
   };
 
-  // Comprobar latido activo del .bat (tolerante para evitar falsas desconexiones)
+  // Comprobar latido activo del .bat (detección inmediata y ventana precisa de 8s)
   const checkBatHeartbeat = (record) => {
     if (!record) {
       setIsBatOnline(false);
       return false;
     }
-    if (record.station_artist === 'OFFLINE') {
+    if (record.station_artist === 'OFFLINE' || record.station_name === 'Estacion Desconectada') {
       setIsBatOnline(false);
       return false;
     }
     const updatedAt = record.updated_at ? new Date(record.updated_at).getTime() : 0;
     const diff = Date.now() - updatedAt;
-    // 40 segundos de tolerancia para absorber cambios de pista y subidas mp3
-    const online = diff < 40000;
+    // Ventana precisa de 8 segundos para detectar si el BAT fue cerrado
+    const online = diff < 8000;
     setIsBatOnline(online);
     return online;
   };
@@ -893,60 +893,51 @@ export default function RadioManager() {
     return null;
   };
 
-  // Manejo de Reproducción Preview / Pre-escucha en Radio Manager
+  // Manejo de Reproducción Preview / Pre-escucha CUE en Radio Manager (Modo Azul)
   const handlePlayPreview = async (song) => {
     if (!song) return;
 
-    const isLocalHost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
+    // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca / Pre-escucha)
+    setBottomPlayerMode('preview');
     setPreviewTrack(song);
 
-    if (isLocalHost) {
-      setBottomPlayerMode('preview');
-      if (previewTrack?.id === song.id && (previewTrack?.title === song.title || previewTrack?.fileName === song.fileName)) {
-        if (isPlayingPreview) {
-          audioRef.current?.pause();
-          setIsPlayingPreview(false);
-        } else {
-          try {
-            await audioRef.current?.play();
-            setIsPlayingPreview(true);
-          } catch (e) {}
+    if (previewTrack?.id === song.id && (previewTrack?.title === song.title || previewTrack?.fileName === song.fileName)) {
+      if (isPlayingPreview) {
+        audioRef.current?.pause();
+        setIsPlayingPreview(false);
+      } else {
+        try {
+          await audioRef.current?.play();
+          setIsPlayingPreview(true);
+        } catch (e) {
+          console.warn("Error reanudando preview:", e);
         }
-        return;
       }
+      return;
+    }
 
-      const audioUrl = getPreviewAudioUrl(song);
-      if (audioUrl && audioRef.current) {
+    const audioUrl = getPreviewAudioUrl(song);
+    if (!audioUrl) {
+      setError(`No se encontró ruta de audio para pre-escuchar "${song.title}".`);
+      setIsPlayingPreview(false);
+      return;
+    }
+
+    try {
+      if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = audioUrl;
         audioRef.current.currentTime = 0;
         audioRef.current.muted = false;
         audioRef.current.volume = isMuted ? 0 : volume;
         audioRef.current.load();
-        await audioRef.current.play().catch(() => {});
+        await audioRef.current.play();
         setIsPlayingPreview(true);
-        setSuccess(`🎧 Pre-escuchando "${song.title}"`);
-        return;
+        setSuccess(`🎧 Modo Azul: Pre-escuchando "${song.title}"`);
       }
-    }
-
-    // En deploy (Vercel): Emitir de inmediato la canción seleccionada a través del transmisor local .bat
-    setBottomPlayerMode('live');
-    try {
-      await supabase.from('radio_current_play').update({
-        station_name: song.title,
-        station_artist: `REQUEST:${song.title}`,
-        station_cover: song.cover || '',
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-
-      setIsPlayingLiveSignal(true);
-      setSuccess(`📡 Transmitiendo "${song.title}" desde la biblioteca...`);
-    } catch (e) {
-      setError("Error solicitando pista: " + e.message);
+    } catch (err) {
+      console.warn("Error en reproducción preview:", err);
+      setIsPlayingPreview(false);
     }
   };
 
@@ -1063,62 +1054,62 @@ export default function RadioManager() {
     } catch (e) {}
   };
 
+  // Emitir inmediatamente una pista de la cola al aire
+  const handlePlayAirSong = async (song) => {
+    if (!song) return;
+    try {
+      // 1. Pausar y limpiar audio anterior inmediatamente para evitar que vuelva a sonar
+      const airAudio = masterAirAudioRef.current;
+      if (airAudio) {
+        airAudio.pause();
+        airAudio.currentTime = 0;
+      }
+
+      setOnAirTrack(prev => ({
+        ...(prev || {}),
+        station_name: song.title,
+        station_artist: song.artist || 'Radio Café',
+        station_cover: song.cover || '',
+        station_url: '', // Vaciamos para esperar la URL nueva del .bat
+        is_playing: true,
+        updated_at: new Date().toISOString()
+      }));
+
+      // 2. Notificar inmediatamente al transmisor .bat
+      await supabase.from('radio_current_play').update({
+        station_name: song.title,
+        station_artist: `REQUEST:${song.title}`,
+        station_cover: song.cover || '',
+        station_url: '',
+        is_playing: true,
+        updated_at: new Date().toISOString()
+      }).eq('id', 1);
+
+      setIsPlayingLiveSignal(true);
+      setSuccess(`📻 Al aire: "${song.title}"`);
+    } catch (e) {
+      setError("Error emitiendo canción: " + e.message);
+    }
+  };
+
   const handleAirPrev = async () => {
     const airAudio = masterAirAudioRef.current;
-    if (airAudio.currentTime > 3) {
+    if (airAudio && airAudio.currentTime > 3) {
       await handleSeekAir(0);
       return;
     }
     if (songs.length === 0) return;
     try {
-      const prevSong = songs[songs.length - 1];
-      const updatedSongs = [prevSong, ...songs.slice(0, songs.length - 1)];
-      setSongs(updatedSongs);
+      let currentIdx = songs.findIndex(s => 
+        s.title === onAirTrack?.station_name || 
+        (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase())) ||
+        (onAirTrack?.station_name && s.title && s.title.toLowerCase().includes(onAirTrack.station_name.toLowerCase()))
+      );
+      if (currentIdx === -1) currentIdx = 0;
+      const prevIdx = (currentIdx - 1 + songs.length) % songs.length;
+      const prevSong = songs[prevIdx];
 
-      setOnAirTrack(prev => ({
-        ...(prev || {}),
-        station_name: prevSong.title,
-        station_artist: prevSong.artist || 'Radio Café',
-        station_url: (prevSong.url && prevSong.url.startsWith('http')) ? prevSong.url : (prev?.station_url || ''),
-        station_cover: prevSong.cover || '',
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      }));
-
-      const nextUrl = getPreviewAudioUrl(prevSong);
-      if (nextUrl) {
-        airAudio.src = nextUrl;
-        airAudio.currentTime = 0;
-        airAudio.muted = isMuted;
-        airAudio.volume = isMuted ? 0 : volume;
-        setIsPlayingLiveSignal(true);
-        airAudio.load();
-        airAudio.play().catch(() => {});
-      }
-
-      const validPrevUrl = (prevSong.url && prevSong.url.startsWith('http')) 
-        ? prevSong.url 
-        : ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null);
-
-      const prevPayload = {
-        station_name: prevSong.title,
-        station_artist: `REQUEST:${prevSong.title}`,
-        station_cover: prevSong.cover || '',
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      };
-      if (validPrevUrl) {
-        prevPayload.station_url = validPrevUrl;
-      }
-
-      await supabase.from('radio_current_play').update(prevPayload).eq('id', 1);
-
-      await sendRemoteCommand({
-        type: 'NEXT',
-        targetClientId: 'all',
-        payload: { track: prevSong }
-      });
-
+      await handlePlayAirSong(prevSong);
       setSuccess(`⏮ Al aire: "${prevSong.title}" - ${prevSong.artist || 'Radio Café'}`);
     } catch (e) {
       setError("Error retrocediendo canción: " + e.message);
@@ -1212,58 +1203,16 @@ export default function RadioManager() {
       return;
     }
     try {
-      const nextSong = songs[1] || songs[0];
-      const updatedSongs = songs.length > 1 ? [...songs.slice(1), songs[0]] : songs;
-      setSongs(updatedSongs);
+      let currentIdx = songs.findIndex(s => 
+        s.title === onAirTrack?.station_name || 
+        (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase())) ||
+        (onAirTrack?.station_name && s.title && s.title.toLowerCase().includes(onAirTrack.station_name.toLowerCase()))
+      );
+      if (currentIdx === -1) currentIdx = 0;
+      const nextIdx = (currentIdx + 1) % songs.length;
+      const nextSong = songs[nextIdx];
 
-      setOnAirTrack(prev => ({
-        ...(prev || {}),
-        station_name: nextSong.title,
-        station_artist: nextSong.artist || 'Radio Café',
-        station_url: (nextSong.url && nextSong.url.startsWith('http')) ? nextSong.url : (prev?.station_url || ''),
-        station_cover: nextSong.cover || '',
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      }));
-
-      // Actualizar el motor maestro de emisión continua
-      const airAudio = masterAirAudioRef.current;
-      const nextUrl = getPreviewAudioUrl(nextSong);
-      if (nextUrl) {
-        airAudio.src = nextUrl;
-        airAudio.currentTime = 0;
-        airAudio.muted = isMuted;
-        airAudio.volume = isMuted ? 0 : volume;
-        setIsPlayingLiveSignal(true);
-        airAudio.load();
-        airAudio.play().catch(() => {});
-      }
-
-      const validNextUrl = (nextSong.url && nextSong.url.startsWith('http')) 
-        ? nextSong.url 
-        : ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null);
-
-      const nextPayload = {
-        station_name: nextSong.title,
-        station_artist: `REQUEST:${nextSong.title}`,
-        station_cover: nextSong.cover || '',
-        is_playing: true,
-        updated_at: new Date().toISOString()
-      };
-      if (validNextUrl) {
-        nextPayload.station_url = validNextUrl;
-      }
-
-      await supabase.from('radio_current_play').update(nextPayload).eq('id', 1);
-
-      await sendRemoteCommand({
-        type: 'NEXT',
-        targetClientId: 'all',
-        payload: {
-          track: nextSong
-        }
-      });
-
+      await handlePlayAirSong(nextSong);
       setSuccess(`⏭ Al aire: "${nextSong.title}" - ${nextSong.artist || 'Radio Café'}`);
     } catch (e) {
       setError("Error saltando canción: " + e.message);
