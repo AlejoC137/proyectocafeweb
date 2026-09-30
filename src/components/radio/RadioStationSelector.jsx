@@ -92,26 +92,6 @@ export default function RadioStationSelector({
 
   const currentLiveTitle = currentPlay?.station_name || '';
 
-  // Formato de cola al aire: la canción actual al aire queda arriba y solo se muestran las siguientes
-  const displayedQueueTracks = useMemo(() => {
-    if (searchQuery.trim()) return filteredQueueTracks;
-
-    const currentIdx = filteredQueueTracks.findIndex(track =>
-      Boolean(
-        currentLiveTitle && (
-          (track.title && currentLiveTitle.toLowerCase().includes(track.title.toLowerCase())) ||
-          (currentLiveTitle.toLowerCase().includes((track.title || '').toLowerCase())) ||
-          (track.url && currentPlay?.station_url && track.url === currentPlay.station_url)
-        )
-      )
-    );
-
-    if (currentIdx > 0) {
-      return filteredQueueTracks.slice(currentIdx);
-    }
-    return filteredQueueTracks;
-  }, [filteredQueueTracks, searchQuery, currentLiveTitle, currentPlay]);
-
   const handleSelectSong = async (track) => {
     try {
       setRequestingTrackId(track.id);
@@ -220,7 +200,7 @@ export default function RadioStationSelector({
             </div>
           ) : (
             <div className="flex flex-col divide-y-[3px] divide-black dark:divide-slate-700 border-[3px] border-black dark:border-slate-700">
-              {displayedQueueTracks.map((track, idx) => {
+              {filteredQueueTracks.map((track, idx) => {
                 const isCurrentPlaying = Boolean(
                   currentLiveTitle && (
                     (track.title && currentLiveTitle.toLowerCase().includes(track.title.toLowerCase())) ||

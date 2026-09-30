@@ -338,18 +338,16 @@ export default function PlayerCenter({
           ) : <div />}
 
           <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Botón Cola de Reproducción */}
+            {/* Botón Cola de Reproducción (10 canciones: 5 atrás y 5 adelante) */}
             <button
               onClick={() => setShowQueue(!showQueue)}
-              title="Cola de reproducción (Canción actual y siguientes)"
+              title="Cola de reproducción (10 canciones: 5 anteriores y 5 siguientes)"
               className={`px-2.5 py-1.5 border-[2.5px] border-black text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:scale-105 rounded-none ${showQueue ? 'bg-yellow-400 text-black' : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white'
                 }`}
             >
               <ListMusic className="w-4 h-4 text-amber-500" />
               <span className="hidden sm:inline">Cola</span>
-              <span className="bg-black text-yellow-300 dark:bg-yellow-400 dark:text-black px-1 text-[10px] font-mono">
-                {(queueWindow?.upcoming?.length || 0) + (queueWindow?.current ? 1 : 0)}
-              </span>
+              <span className="bg-black text-yellow-300 dark:bg-yellow-400 dark:text-black px-1 text-[10px] font-mono">10</span>
             </button>
 
             {/* Control de Volumen Vertical Interactivo */}
@@ -382,7 +380,7 @@ export default function PlayerCenter({
               <div className="flex items-center gap-2">
                 <ListMusic className="w-5 h-5 text-yellow-400" />
                 <h4 className="font-black text-sm uppercase tracking-widest text-yellow-400" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                  Cola de Reproducción ({(queueWindow?.upcoming?.length || 0) + (queueWindow?.current ? 1 : 0)} Pistas)
+                  Cola de Reproducción (10 Pistas)
                 </h4>
               </div>
               <button
@@ -394,7 +392,30 @@ export default function PlayerCenter({
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
-              {/* CANCIÓN ACTUAL (ARRIBA DE LA LISTA) */}
+              {/* 5 CANCIONES ANTERIORES (HISTORIAL) */}
+              {queueWindow.history && queueWindow.history.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-white/10 pb-0.5">
+                    <SkipBack className="w-3 h-3 text-gray-400" /> 5 Anteriores (Historial reciente)
+                  </p>
+                  {queueWindow.history.map((t, idx) => (
+                    <div
+                      key={`hist-${t.id || idx}`}
+                      onClick={() => { if (jumpToTrack) jumpToTrack(t.playlistIndex); setShowQueue(false); }}
+                      className="p-1.5 bg-white/5 hover:bg-white/20 cursor-pointer border-l-2 border-gray-500 flex items-center justify-between truncate transition-colors"
+                      title="Saltar a esta canción del historial"
+                    >
+                      <div className="truncate flex items-center gap-2">
+                        <span className="font-mono text-[9px] text-gray-400">-{queueWindow.history.length - idx}</span>
+                        <span className="truncate opacity-75">{t.title}</span>
+                      </div>
+                      <span className="text-[9px] text-gray-400 font-mono flex-shrink-0 ml-2">Historial</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* CANCIÓN ACTUAL */}
               {queueWindow.current && (
                 <div className="p-2 bg-yellow-400 text-black border-[2px] border-black font-black flex items-center justify-between shadow-[2px_2px_0px_0px_rgba(255,255,255,0.8)] my-1">
                   <div className="flex items-center gap-2 truncate">
@@ -407,11 +428,11 @@ export default function PlayerCenter({
                 </div>
               )}
 
-              {/* CANCIONES SIGUIENTES (EN ESPERA PRECARGADAS) */}
+              {/* 5 CANCIONES SIGUIENTES (EN ESPERA PRECARGADAS) */}
               {queueWindow.upcoming && queueWindow.upcoming.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-yellow-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-white/10 pb-0.5">
-                    <SkipForward className="w-3 h-3 text-yellow-400" /> Siguientes (Precargadas en buffer)
+                    <SkipForward className="w-3 h-3 text-yellow-400" /> 5 Siguientes (Precargadas en buffer)
                   </p>
                   {queueWindow.upcoming.map((t, idx) => (
                     <div
