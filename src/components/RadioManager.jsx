@@ -1822,44 +1822,17 @@ export default function RadioManager() {
     setIsUpdatingAirList(true);
     try {
       const { data } = await supabase.from('radio_current_play').select('*').eq('id', 1).single();
-      const online = checkBatHeartbeat(data);
-      if (!online) {
-        console.warn("El bat no reporta latido activo en este momento.");
+      if (data) {
+        checkBatHeartbeat(data);
       }
       await fetchBatCatalog(false);
       await fetchSongs();
-      await supabase.from('radio_current_play').update({
-        station_artist: "SYNC",
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-      setSuccess("🔄 ¡Sincronizado con el Bat en vivo!");
+      setSuccess("🔄 ¡Catálogo y cola sincronizados correctamente!");
     } catch (err) {
       setError("Error al sincronizar: " + err.message);
     } finally {
       setIsUpdatingAirList(false);
     }
-  };
-
-  const playNextPreview = () => {
-    if (filteredLibraryTracks.length === 0) return;
-    if (!previewTrack) {
-      handlePlayPreview(filteredLibraryTracks[0]);
-      return;
-    }
-    const currIdx = filteredLibraryTracks.findIndex(t => t.id === previewTrack.id || t.title === previewTrack.title);
-    const nextIdx = (currIdx + 1) % filteredLibraryTracks.length;
-    handlePlayPreview(filteredLibraryTracks[nextIdx]);
-  };
-
-  const playPrevPreview = () => {
-    if (filteredLibraryTracks.length === 0) return;
-    if (!previewTrack) {
-      handlePlayPreview(filteredLibraryTracks[0]);
-      return;
-    }
-    const currIdx = filteredLibraryTracks.findIndex(t => t.id === previewTrack.id || t.title === previewTrack.title);
-    const prevIdx = (currIdx - 1 + filteredLibraryTracks.length) % filteredLibraryTracks.length;
-    handlePlayPreview(filteredLibraryTracks[prevIdx]);
   };
 
     // Guardar Enlace YouTube
@@ -4206,6 +4179,13 @@ export default function RadioManager() {
         onNextTrackListener={handleNextTrackListener}
         currentMode={onAirTrack?.tab}
         onForceModeAll={handleForceModeAll}
+        onSetVolumeAll={async (vol) => {
+          await sendRemoteCommand({ type: 'SET_VOLUME', volume: vol, targetClientId: 'all' });
+          setSuccess(`🔊 Volumen de todas las instancias de oyentes fijado a ${Math.round(vol * 100)}%`);
+        }}
+        onSetVolumeListener={async (clientId, vol) => {
+          await sendRemoteCommand({ type: 'SET_VOLUME', volume: vol, targetClientId: clientId });
+        }}
       />
 
     </div>

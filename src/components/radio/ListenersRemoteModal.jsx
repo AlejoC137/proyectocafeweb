@@ -22,7 +22,9 @@ export default function ListenersRemoteModal({
   onTogglePlayListener,
   onNextTrackListener,
   currentMode,
-  onForceModeAll
+  onForceModeAll,
+  onSetVolumeAll,
+  onSetVolumeListener
 }) {
   if (!isOpen) return null;
 
@@ -195,6 +197,23 @@ export default function ListenersRemoteModal({
                 Recargar F5
               </button>
             </div>
+
+            <div className="flex items-center gap-3 pt-2 border-t border-white/10">
+              <span className="text-gray-300 font-bold text-xs flex items-center gap-1.5 shrink-0">
+                <Volume2 className="w-4 h-4 text-emerald-400" />
+                Volumen para Todos los Oyentes:
+              </span>
+              <input 
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                defaultValue="0.85"
+                onChange={(e) => onSetVolumeAll && onSetVolumeAll(Number(e.target.value))}
+                className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                title="Ajustar volumen en todas las instancias de oyentes"
+              />
+            </div>
           </div>
 
           {/* SECCIÓN 3: INSTANCIAS CONECTADAS EN VIVO */}
@@ -252,7 +271,20 @@ export default function ListenersRemoteModal({
                       </div>
 
                       {/* ACCIONES INDIVIDUALES PARA ESTA INSTANCIA */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="hidden sm:flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg border border-white/10" title="Ajustar volumen de esta instancia">
+                          <Volume2 className="w-3 h-3 text-blue-400" />
+                          <input 
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={listener.volume !== undefined ? listener.volume : 0.85}
+                            onChange={(e) => onSetVolumeListener && onSetVolumeListener(listener.clientId, Number(e.target.value))}
+                            className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-400"
+                          />
+                        </div>
+
                         <button
                           onClick={() => onTogglePlayListener(listener.clientId, Boolean(listener.isPlaying))}
                           className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white transition"

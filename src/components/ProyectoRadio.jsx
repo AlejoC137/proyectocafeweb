@@ -389,12 +389,6 @@ export default function ProyectoRadio() {
     }
   }, [currentPlay?.station_url, currentPlay?.station_name, radioData.currentPlaylist]);
 
-  // Sincronizar volumen remoto global
-  React.useEffect(() => {
-    if (!remoteVolume) return;
-    player.applyRemoteVolume(remoteVolume.volume, remoteVolume.isMuted);
-  }, [remoteVolume]);
-
   // Escuchar evento de reinicio forzado global
   React.useEffect(() => {
     const handleForceRestartEvent = () => {
@@ -458,9 +452,9 @@ export default function ProyectoRadio() {
     };
 
     const targetUrl =
+      (currentPlay?.station_url && (currentPlay.station_url.startsWith('http://') || currentPlay.station_url.startsWith('https://')) ? currentPlay.station_url : null) ||
       resolveUrl(currentTrack?.url) ||
       resolveUrl(player.pendingPlayRef.current) ||
-      resolveUrl(currentPlay?.station_url) ||
       resolveUrl(radioData.supabasePlaylist[0]?.url) ||
       // Last resort: whatever is already loaded in the audio element
       player.audioRef.current?.src || null;
