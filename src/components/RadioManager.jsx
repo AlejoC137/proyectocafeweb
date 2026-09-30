@@ -459,8 +459,8 @@ export default function RadioManager() {
     supabase.from('radio_current_play').select('*').eq('id', 1).single().then(({ data }) => {
       if (data) {
         setOnAirTrack(data);
-        const online = checkBatHeartbeat(data);
-        if (online) fetchBatCatalog(true);
+        checkBatHeartbeat(data);
+        fetchBatCatalog(true); // Siempre cargar el catálogo disponible de canciones locales/en la nube
 
         // Si la señal al aire está activa en la base de datos, reanudar motor de emisión continua de fondo
         if (data.is_playing && data.station_url) {
@@ -861,6 +861,9 @@ export default function RadioManager() {
   const handlePlayPreview = async (song) => {
     if (!song) return;
 
+    // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca)
+    setBottomPlayerMode('preview');
+
     if (previewTrack?.id === song.id && previewTrack?.title === song.title) {
       if (isPlayingPreview) {
         audioRef.current?.pause();
@@ -884,10 +887,12 @@ export default function RadioManager() {
         audioRef.current.pause();
         audioRef.current.src = audioUrl;
         audioRef.current.currentTime = 0;
+        audioRef.current.muted = false;
+        audioRef.current.volume = isMuted ? 0 : volume;
         audioRef.current.load();
         await audioRef.current.play();
         setIsPlayingPreview(true);
-        setSuccess(`🎧 Pre-escuchando en audífonos: "${song.title}"`);
+        setSuccess(`🎧 Pre-escuchando en audífonos (Modo Azul): "${song.title}"`);
       }
     } catch (err) {
       console.warn("Error en reproducción preview:", err);
@@ -898,6 +903,7 @@ export default function RadioManager() {
 
   // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PRE-ESCUCHA INTERNA) ---
   const handleToggleLibraryPreview = () => {
+    setBottomPlayerMode('preview');
     if (isPlayingPreview) {
       audioRef.current?.pause();
       setIsPlayingPreview(false);
