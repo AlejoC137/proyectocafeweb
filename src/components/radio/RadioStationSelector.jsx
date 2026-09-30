@@ -5,9 +5,13 @@ import {
   CheckCircle2, 
   ArrowLeft,
   Volume2,
-  Radio
+  Radio,
+  Grid,
+  List,
+  Music2
 } from 'lucide-react';
 import supabase from '../../config/supabaseClient';
+import fallbackCatalogData from '../../data/localMusicCatalog.json';
 
 export default function RadioStationSelector({
   supabasePlaylist = [],
@@ -27,6 +31,10 @@ export default function RadioStationSelector({
   const [requestSuccess, setRequestSuccess] = useState(null);
   const [djMixingTrack, setDjMixingTrack] = useState(null);
   const [showPreviousTracks, setShowPreviousTracks] = useState(false);
+  const [albumDisplayMode, setAlbumDisplayMode] = useState('grid'); // 'grid' | 'list'
+
+  // currentLiveTitle must be declared here so it's available in all hooks/helpers below
+  const currentLiveTitle = currentPlay?.station_name || '';
 
   // Lista dinámica de pistas de la cola filtradas por búsqueda
   const filteredQueueTracks = useMemo(() => {
@@ -97,6 +105,7 @@ export default function RadioStationSelector({
   // 1. Agrupar canciones en las Playlists / Álbumes creados en Radio Manager
   const playlistsFromManager = useMemo(() => {
     const groups = {};
+    const isRealCover = (url) => url && !url.startsWith('blob:') && !url.includes('images.unsplash.com') && url.trim() !== '';
 
     (supabasePlaylist || []).forEach((track, index) => {
       const albumName = (track.album || 'Playlists Variadas').trim();
@@ -104,18 +113,33 @@ export default function RadioStationSelector({
         groups[albumName] = {
           name: albumName,
           artist: track.artist || 'Varios Artistas',
-          cover: track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
+          cover: '',
           genre: track.genre || 'Radio',
           year: track.year || '',
           tracks: []
         };
+      }
+      // Pick best real cover seen so far in this album
+      if (!isRealCover(groups[albumName].cover) && isRealCover(track.cover)) {
+        groups[albumName].cover = track.cover;
       }
       groups[albumName].tracks.push({ ...track, playlistOriginalIndex: index });
     });
 
     return Object.values(groups).map(group => {
       const totalSecs = group.tracks.reduce((acc, t) => acc + (Number(t.duration) || 180), 0);
-      return { ...group, totalDuration: totalSecs, trackCount: group.tracks.length };
+
+      // If no real cover found yet, cross-reference fallbackCatalogData by albumName
+      let cover = group.cover;
+      if (!cover) {
+        const fallbackAlbum = (fallbackCatalogData || []).find(a =>
+          a.albumName?.toLowerCase().trim() === group.name.toLowerCase().trim() ||
+          a.folderName?.toLowerCase().includes(group.name.toLowerCase().trim())
+        );
+        cover = fallbackAlbum?.cover || '';
+      }
+
+      return { ...group, cover, totalDuration: totalSecs, trackCount: group.tracks.length };
     });
   }, [supabasePlaylist]);
 
@@ -146,7 +170,7 @@ export default function RadioStationSelector({
     }
   }, [playlistsFromManager, selectedPlaylist, searchQuery]);
 
-  const currentLiveTitle = currentPlay?.station_name || '';
+
 
   const handleSelectSong = async (track) => {
     try {
