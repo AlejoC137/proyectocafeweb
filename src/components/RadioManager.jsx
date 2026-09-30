@@ -113,15 +113,28 @@ export default function RadioManager() {
   const [previewDuration, setPreviewDuration] = useState(0);
   const [airTime, setAirTime] = useState(0);
   const [airDuration, setAirDuration] = useState(0);
-  const [bottomPlayerMode, setBottomPlayerMode] = useState('live'); // 'live' o 'preview'
+  const [bottomPlayerMode, setBottomPlayerMode] = useState('split'); // 'split', 'live' o 'preview'
+
+  // Volúmenes y silenciadores 100% independientes para los dos Decks
+  const [previewVolume, setPreviewVolume] = useState(0.8);
+  const [isPreviewMuted, setIsPreviewMuted] = useState(false);
+  const [airVolume, setAirVolume] = useState(0.9);
+  const [isAirMuted, setIsAirMuted] = useState(false);
+
+  // Compatibilidad general
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
+
   const audioRef = useRef(new Audio());
   const masterAirAudioRef = useRef(new Audio());
 
   // Referencias para evitar cierres obsoletos (stale closures) en eventos Realtime
   const isPlayingLiveSignalRef = useRef(false);
   const isPlayingPreviewRef = useRef(false);
+  const airVolumeRef = useRef(0.9);
+  const isAirMutedRef = useRef(false);
+  const previewVolumeRef = useRef(0.8);
+  const isPreviewMutedRef = useRef(false);
   const volumeRef = useRef(0.8);
   const isMutedRef = useRef(false);
 
@@ -132,6 +145,34 @@ export default function RadioManager() {
   useEffect(() => {
     isPlayingPreviewRef.current = isPlayingPreview;
   }, [isPlayingPreview]);
+
+  useEffect(() => {
+    airVolumeRef.current = airVolume;
+    if (masterAirAudioRef.current) {
+      masterAirAudioRef.current.volume = isAirMuted ? 0 : airVolume;
+    }
+  }, [airVolume, isAirMuted]);
+
+  useEffect(() => {
+    isAirMutedRef.current = isAirMuted;
+    if (masterAirAudioRef.current) {
+      masterAirAudioRef.current.muted = !isPlayingLiveSignal || isAirMuted;
+    }
+  }, [isAirMuted, isPlayingLiveSignal]);
+
+  useEffect(() => {
+    previewVolumeRef.current = previewVolume;
+    if (audioRef.current) {
+      audioRef.current.volume = isPreviewMuted ? 0 : previewVolume;
+    }
+  }, [previewVolume, isPreviewMuted]);
+
+  useEffect(() => {
+    isPreviewMutedRef.current = isPreviewMuted;
+    if (audioRef.current) {
+      audioRef.current.muted = isPreviewMuted;
+    }
+  }, [isPreviewMuted]);
 
   useEffect(() => {
     volumeRef.current = volume;
@@ -907,13 +948,6 @@ export default function RadioManager() {
     };
   }, [songs]);
 
-  useEffect(() => {
-    audioRef.current.volume = isMuted ? 0 : volume;
-    if (masterAirAudioRef.current) {
-      masterAirAudioRef.current.muted = !isPlayingLiveSignal || isMuted;
-      masterAirAudioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [volume, isMuted, isPlayingLiveSignal]);
 
   const [dbColumns, setDbColumns] = useState(null);
 
@@ -1253,11 +1287,7 @@ export default function RadioManager() {
         airAudio.currentTime = 0;
       }
 
-      // Detener pre-escucha si estaba activa para que no interfiera con la emision al aire
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlayingPreview(false);
-      }
+      // La emisión al aire NO interfiere con la pre-escucha de biblioteca (streams paralelos)
 
       const directAudioUrl = getPreviewAudioUrl(song) || song.url || '';
 
@@ -1347,12 +1377,6 @@ export default function RadioManager() {
       return;
     }
 
-    setBottomPlayerMode('live');
-    if (isPlayingPreview) {
-      audioRef.current?.pause();
-      setIsPlayingPreview(false);
-    }
-
     const currentSong = songs.find(s => 
       s.title === onAirTrack?.station_name || 
       (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase()))
@@ -1373,13 +1397,15 @@ export default function RadioManager() {
         airAudio.load();
       }
       airAudio.muted = false;
-      airAudio.volume = isMuted ? 0 : volume;
+      airAudio.volume = isAirMuted ? 0 : airVolume;
       await airAudio.play();
       setIsPlayingLiveSignal(true);
+      isPlayingLiveSignalRef.current = true;
       setSuccess(`📻 🔊 Monitor de cabina activado: escuchando "${onAirTrack?.station_name || currentSong?.title || 'Radio al Aire'}"`);
     } catch (err) {
       setError("No se pudo activar el monitor en vivo: " + err.message);
       setIsPlayingLiveSignal(false);
+      isPlayingLiveSignalRef.current = false;
     }
   };
 
@@ -3757,194 +3783,227 @@ export default function RadioManager() {
 
       </div>
 
-      {/* BARRA INFERIOR DE REPRODUCCION COMPARTIDA (MODO ROJO: AL AIRE | MODO AZUL: BIBLIOTECA) */}
+      {/* BARRA INFERIOR DE REPRODUCCIÓN DIVIDIDA EN 2 DECKS TOTALES: AZUL (BIBLIOTECA) Y ROJO (AL AIRE) */}
       {(previewTrack || onAirTrack?.station_name || songs.length > 0) && (() => {
-        const isLiveBottomActive = (bottomPlayerMode === 'live' || !previewTrack) && Boolean(onAirTrack?.station_name || songs.length > 0);
         const liveDisplayTrack = onAirTrack?.station_name ? onAirTrack : (songs[0] || null);
 
         return (
-          <div className={`fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t px-4 py-3 text-white flex items-center justify-between shadow-2xl animate-slide-up transition-all duration-300 ${
-            isLiveBottomActive 
-              ? 'border-red-500/50 bg-gradient-to-r from-neutral-950 via-[#1c0808]/95 to-neutral-950 shadow-red-950/30' 
-              : 'border-cyan-400/50 bg-gradient-to-r from-neutral-950 via-[#071926]/95 to-neutral-950 shadow-cyan-950/30 ring-1 ring-cyan-500/20'
-          }`}>
-            
-            {/* Info Pista */}
-            <div className="flex items-center gap-3 w-1/3 min-w-[220px] max-w-sm shrink-0">
-              <div className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border shadow-md transition-all ${
-                isLiveBottomActive ? 'border-red-500/40 ring-1 ring-red-500/30' : 'border-cyan-400/40 ring-1 ring-cyan-400/30'
-              }`}>
-                <img 
-                  src={isLiveBottomActive 
-                    ? (liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400')
-                    : (previewTrack?.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400')} 
-                  alt="cover" 
-                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'; }}
-                  className="w-full h-full object-cover"
-                />
-                {isLiveBottomActive ? (
-                  <div className="absolute inset-0 bg-red-600/30 flex items-center justify-center pointer-events-none">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center pointer-events-none">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  </div>
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <h4 className={`font-black text-xs truncate transition-colors ${isLiveBottomActive ? 'text-red-400' : 'text-cyan-400'}`} title={isLiveBottomActive ? (liveDisplayTrack?.station_name || liveDisplayTrack?.title) : previewTrack?.title}>
-                    {isLiveBottomActive 
-                      ? (liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café') 
-                      : (previewTrack?.title || 'Selecciona una canción')}
-                  </h4>
-                </div>
-                <p className="text-[11px] text-gray-400 truncate" title={isLiveBottomActive ? (liveDisplayTrack?.station_artist || liveDisplayTrack?.artist) : (previewTrack?.artist || previewTrack?.albumArtist)}>
-                  {isLiveBottomActive 
-                    ? (liveDisplayTrack?.station_artist || liveDisplayTrack?.artist || 'En Vivo') 
-                    : (previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local')}
-                </p>
-
-                {/* Badges y selector de modo */}
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  {isLiveBottomActive ? (
-                    <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-red-500/20 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                      🔴 EN VIVO AL AIRE
-                    </span>
-                  ) : (
-                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-cyan-500/20 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                      🎧 MODO AZUL (BIBLIOTECA)
-                    </span>
-                  )}
-
-                  {previewTrack && isLiveBottomActive && (
-                    <button 
-                      onClick={() => setBottomPlayerMode('preview')} 
-                      className="text-[9px] text-cyan-400 hover:text-cyan-300 font-bold underline ml-1 cursor-pointer shrink-0"
-                      title="Cambiar a la barra de pre-escucha de biblioteca"
-                    >
-                      Ir a Azul
-                    </button>
-                  )}
-                  {!isLiveBottomActive && (onAirTrack?.station_name || songs.length > 0) && (
-                    <button 
-                      onClick={() => setBottomPlayerMode('live')} 
-                      className="text-[9px] text-red-400 hover:text-red-300 font-bold underline ml-1 cursor-pointer shrink-0"
-                      title="Cambiar a la barra de transmisión al aire"
-                    >
-                      Ir a Rojo
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Controles de Reproducción y Barra de Tiempo */}
-            <div className="flex flex-col items-center gap-1.5 w-2/4 max-w-md">
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={isLiveBottomActive ? handleAirPrev : playPrevPreview} 
-                  className={`transition ${isLiveBottomActive ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-cyan-400'}`}
-                  title={isLiveBottomActive ? "Pista anterior en la cola al aire" : "Pista anterior en biblioteca"}
-                >
-                  <SkipBack className="w-4 h-4" />
-                </button>
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 backdrop-blur-2xl border-t border-white/10 px-2 sm:px-4 py-2 shadow-2xl animate-slide-up">
+            <div className="max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+              
+              {/* ===================== DECK AZUL: BIBLIOTECA (PRE-ESCUCHA / CUE EXCLUSIVO) ===================== */}
+              <div className="bg-gradient-to-r from-[#071926]/95 via-[#0b2438]/90 to-[#071926]/95 border-2 border-cyan-500/50 rounded-xl p-2.5 shadow-lg shadow-cyan-950/40 flex items-center justify-between gap-3 min-w-0">
                 
-                <button 
-                  onClick={isLiveBottomActive ? handleAirPlayPause : handleTogglePreviewPlay}
-                  className={`p-2.5 rounded-full shadow-lg transition-transform active:scale-95 ${
-                    isLiveBottomActive 
-                      ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30' 
-                      : 'bg-cyan-400 hover:bg-cyan-300 text-black shadow-cyan-400/30 ring-2 ring-cyan-300'
-                  }`}
-                  title={isLiveBottomActive ? (isPlayingLiveSignal ? "Pausar monitor de cabina" : "Escuchar monitor de cabina") : (isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha")}
-                >
-                  {isLiveBottomActive 
-                    ? (isPlayingLiveSignal ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />)
-                    : (isPlayingPreview ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />)}
-                </button>
+                {/* Info Canción Azul */}
+                <div className="flex items-center gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
+                  <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-cyan-400/40 ring-1 ring-cyan-400/30 bg-neutral-900 shadow-md">
+                    <img 
+                      src={previewTrack?.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'} 
+                      alt="cover biblioteca" 
+                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'; }}
+                      className="w-full h-full object-cover"
+                    />
+                    {isPlayingPreview && (
+                      <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      </div>
+                    )}
+                  </div>
 
-                <button 
-                  onClick={isLiveBottomActive ? handleAirNext : playNextPreview} 
-                  className={`transition ${isLiveBottomActive ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-cyan-400'}`}
-                  title={isLiveBottomActive ? "Siguiente canción al aire" : "Siguiente canción en biblioteca"}
-                >
-                  <SkipForward className="w-4 h-4" />
-                </button>
+                  <div className="min-w-0 flex-1">
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1 mb-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      🎧 DECK AZUL: BIBLIOTECA
+                    </span>
+                    <h4 className="font-black text-xs text-cyan-300 truncate" title={previewTrack?.title || 'Sin pre-escucha'}>
+                      {previewTrack?.title || 'Selecciona de Biblioteca'}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 truncate" title={previewTrack?.artist || previewTrack?.albumArtist}>
+                      {previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local (CUE)'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Controles Azul (Prev, Play/Pause, Next, Seek) */}
+                <div className="flex flex-col items-center gap-1 flex-1 max-w-xs min-w-0">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={playPrevPreview} 
+                      className="text-gray-400 hover:text-cyan-400 transition" 
+                      title="Pista anterior en biblioteca"
+                    >
+                      <SkipBack className="w-3.5 h-3.5" />
+                    </button>
+                    
+                    <button 
+                      onClick={handleTogglePreviewPlay}
+                      className="p-2 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300 transition-transform active:scale-95"
+                      title={isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha"}
+                    >
+                      {isPlayingPreview ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                    </button>
+
+                    <button 
+                      onClick={playNextPreview} 
+                      className="text-gray-400 hover:text-cyan-400 transition" 
+                      title="Siguiente pista en biblioteca"
+                    >
+                      <SkipForward className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Seek Azul */}
+                  <div className="w-full flex items-center gap-1.5 text-[9px] font-mono text-gray-400">
+                    <span className="text-cyan-400 w-8 text-right">{formatTime(previewTime)}</span>
+                    <input 
+                      type="range"
+                      min="0"
+                      max={previewDuration || 100}
+                      step="0.5"
+                      value={previewTime}
+                      onChange={(e) => {
+                        const newTime = Number(e.target.value);
+                        if (audioRef.current) audioRef.current.currentTime = newTime;
+                        setPreviewTime(newTime);
+                      }}
+                      className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                      title="Adelantar o retroceder pre-escucha de biblioteca"
+                    />
+                    <span className="w-8">{formatTime(previewDuration)}</span>
+                  </div>
+                </div>
+
+                {/* Volumen Azul */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => setIsPreviewMuted(!isPreviewMuted)} className="text-gray-400 hover:text-cyan-400 transition">
+                    {isPreviewMuted || previewVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={isPreviewMuted ? 0 : previewVolume}
+                    onChange={(e) => {
+                      setPreviewVolume(Number(e.target.value));
+                      setIsPreviewMuted(false);
+                    }}
+                    className="w-14 sm:w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    title="Volumen Pre-escucha Biblioteca"
+                  />
+                </div>
               </div>
 
-              {/* Barra de Tiempo / Seek */}
-              <div className="w-full flex items-center gap-2 text-[10px] font-mono text-gray-400">
-                <span className={isLiveBottomActive ? 'text-red-400' : 'text-cyan-400'}>
-                  {formatTime(isLiveBottomActive ? airTime : previewTime)}
-                </span>
-                <input 
-                  type="range"
-                  min="0"
-                  max={isLiveBottomActive ? (airDuration || liveDisplayTrack?.duration || 180) : (previewDuration || 100)}
-                  step="0.5"
-                  value={isLiveBottomActive ? airTime : previewTime}
-                  onChange={(e) => {
-                    const newTime = Number(e.target.value);
-                    if (isLiveBottomActive) {
-                      handleSeekAir(newTime);
-                    } else {
-                      audioRef.current.currentTime = newTime;
-                      setPreviewTime(newTime);
-                    }
-                  }}
-                  className={`w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer transition-all ${
-                    isLiveBottomActive ? 'accent-red-500' : 'accent-cyan-400'
-                  }`}
-                  title={isLiveBottomActive ? "Arrastra para mover dónde va la canción (sincroniza en vivo a Proyecto Radio)" : "Adelantar o retroceder pre-escucha"}
-                />
-                <span>{formatTime(isLiveBottomActive ? (airDuration || liveDisplayTrack?.duration || 180) : previewDuration)}</span>
+              {/* ===================== DECK ROJO: COLA DE EMISIÓN (AL AIRE) ===================== */}
+              <div className="bg-gradient-to-r from-[#1c0808]/95 via-[#260c0d]/90 to-[#1c0808]/95 border-2 border-red-500/50 rounded-xl p-2.5 shadow-lg shadow-red-950/40 flex items-center justify-between gap-3 min-w-0">
+                
+                {/* Info Canción Rojo */}
+                <div className="flex items-center gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
+                  <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-red-500/40 ring-1 ring-red-500/30 bg-neutral-900 shadow-md">
+                    <img 
+                      src={liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'} 
+                      alt="cover al aire" 
+                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-red-600/30 flex items-center justify-center pointer-events-none">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1 mb-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                      🔴 DECK ROJO: AL AIRE
+                    </span>
+                    <h4 className="font-black text-xs text-red-400 truncate" title={liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}>
+                      {liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 truncate" title={liveDisplayTrack?.station_artist || liveDisplayTrack?.artist}>
+                      {liveDisplayTrack?.station_artist || liveDisplayTrack?.artist || 'En Vivo (Cola)'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Controles Rojo (Prev, Play/Pause Monitor, Next, Seek) */}
+                <div className="flex flex-col items-center gap-1 flex-1 max-w-xs min-w-0">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={handleAirPrev} 
+                      className="text-gray-400 hover:text-red-400 transition" 
+                      title="Pista anterior en cola al aire"
+                    >
+                      <SkipBack className="w-3.5 h-3.5" />
+                    </button>
+                    
+                    <button 
+                      onClick={handleAirPlayPause}
+                      className="p-2 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-600/30 transition-transform active:scale-95"
+                      title={isPlayingLiveSignal ? "Silenciar monitor de cabina" : "Escuchar monitor al aire en cabina"}
+                    >
+                      {isPlayingLiveSignal ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                    </button>
+
+                    <button 
+                      onClick={handleAirNext} 
+                      className="text-gray-400 hover:text-red-400 transition" 
+                      title="Siguiente canción al aire"
+                    >
+                      <SkipForward className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Seek Rojo */}
+                  <div className="w-full flex items-center gap-1.5 text-[9px] font-mono text-gray-400">
+                    <span className="text-red-400 w-8 text-right">{formatTime(airTime)}</span>
+                    <input 
+                      type="range"
+                      min="0"
+                      max={airDuration || liveDisplayTrack?.duration || 180}
+                      step="0.5"
+                      value={airTime}
+                      onChange={(e) => handleSeekAir(Number(e.target.value))}
+                      className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
+                      title="Arrastra para mover el tiempo de la canción al aire"
+                    />
+                    <span className="w-8">{formatTime(airDuration || liveDisplayTrack?.duration || 180)}</span>
+                  </div>
+                </div>
+
+                {/* Monitor Cabina y Volumen Rojo */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleToggleListenLive}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider transition border ${
+                      isPlayingLiveSignal 
+                        ? 'bg-red-600/30 border-red-500 text-red-300' 
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                    title={isPlayingLiveSignal ? "Silenciar monitor de cabina" : "Escuchar emisión al aire en cabina"}
+                  >
+                    {isPlayingLiveSignal ? '🔊 Cabina ON' : '🔇 Cabina OFF'}
+                  </button>
+
+                  <button onClick={() => setIsAirMuted(!isAirMuted)} className="text-gray-400 hover:text-red-400 transition">
+                    {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={isAirMuted ? 0 : airVolume}
+                    onChange={(e) => {
+                      setAirVolume(Number(e.target.value));
+                      setIsAirMuted(false);
+                    }}
+                    className="w-14 sm:w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
+                    title="Volumen Monitor Al Aire"
+                  />
+                </div>
               </div>
+
             </div>
-
-            {/* Control Volumen y Monitor */}
-            <div className="flex items-center justify-end gap-3 w-1/4">
-              {isLiveBottomActive ? (
-                <button
-                  onClick={handleToggleListenLive}
-                  className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider transition border ${
-                    isPlayingLiveSignal 
-                      ? 'bg-red-600/30 border-red-500 text-red-300' 
-                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-                  }`}
-                  title={isPlayingLiveSignal ? "Silenciar audio del monitor de cabina" : "Escuchar la señal en vivo en tus audífonos"}
-                >
-                  {isPlayingLiveSignal ? '🔊 Monitor ON' : '🔇 Monitor OFF'}
-                </button>
-              ) : (
-                <span className="text-[10px] font-bold text-cyan-400/80 uppercase tracking-wider hidden sm:inline">
-                  🎧 Audífonos CUE
-                </span>
-              )}
-
-              <button onClick={() => setIsMuted(!isMuted)} className={`transition ${isLiveBottomActive ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-cyan-400'}`}>
-                {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
-              </button>
-              <input 
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={isMuted ? 0 : volume}
-                onChange={(e) => {
-                  setVolume(Number(e.target.value));
-                  setIsMuted(false);
-                }}
-                className={`w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer ${
-                  isLiveBottomActive ? 'accent-red-500' : 'accent-cyan-400'
-                }`}
-              />
-            </div>
-
           </div>
         );
       })()}
