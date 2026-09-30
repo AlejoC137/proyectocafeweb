@@ -446,7 +446,7 @@ export default function RadioManager() {
         const res = await fetch(storageUrl);
         if (res.ok) {
           const data = await res.json();
-          if (data && Array.isArray(data) && data.length >= 40) {
+          if (data && Array.isArray(data) && data.length > 0) {
             setBatCatalog(data);
             setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
           }
@@ -641,10 +641,21 @@ export default function RadioManager() {
           // Actualizar la fuente del monitor de cabina si se recibio la señal en vivo transmitida por el .bat
           if (row.station_url && (row.station_url.startsWith('http://') || row.station_url.startsWith('https://'))) {
             const airAudio = masterAirAudioRef.current;
-            if (airAudio && airAudio.src !== row.station_url) {
-              airAudio.src = row.station_url;
-              if (isPlayingLiveSignal && row.is_playing) {
-                airAudio.play().catch(() => {});
+            if (airAudio) {
+              const isDifferent = airAudio.src !== row.station_url;
+              if (isDifferent) {
+                airAudio.src = row.station_url;
+                airAudio.load();
+              }
+              if (isPlayingLiveSignalRef.current && row.is_playing) {
+                airAudio.muted = false;
+                airAudio.volume = isMutedRef.current ? 0 : volumeRef.current;
+                airAudio.play().catch(err => {
+                  console.warn("Autoplay diferido al recibir señal del BAT:", err);
+                  airAudio.addEventListener('canplay', () => {
+                    airAudio.play().catch(() => {});
+                  }, { once: true });
+                });
               }
             }
           }
@@ -1004,7 +1015,7 @@ export default function RadioManager() {
       }
     }
     if (song.filePath) {
-      return `/api/local-audio?path=${encodeURIComponent(song.filePath)}`;
+      return isLocalHost ? `/api/local-audio?path=${encodeURIComponent(song.filePath)}` : liveStreamUrl;
     }
     if (song.url) {
       if (song.url.startsWith('http://') || song.url.startsWith('https://') || song.url.startsWith('/')) {
@@ -1033,12 +1044,6 @@ export default function RadioManager() {
     setPreviewTrack(song);
     setPreviewDuration(song.duration || 0);
 
-    // Silenciar monitor de cabina para pre-escuchar en privado en audífonos (Modo Azul CUE)
-    if (isPlayingLiveSignal && masterAirAudioRef.current) {
-      masterAirAudioRef.current.pause();
-      setIsPlayingLiveSignal(false);
-    }
-
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -1049,30 +1054,18 @@ export default function RadioManager() {
       return;
     }
 
-    // Si ya es la misma canción cargada en el elemento de audio
     const isSameTrack = previewTrack && (
       previewTrack.title === song.title || 
       previewTrack.fileName === song.fileName ||
       (previewTrack.id && song.id && previewTrack.id === song.id)
     );
 
-    if (isSameTrack && audio.src && audio.src.includes(encodeURIComponent(song.fileName || song.title))) {
-      if (isPlayingPreview && !audio.paused) {
-        audio.pause();
-        setIsPlayingPreview(false);
-        return;
-      } else {
-        try {
-          await audio.play();
-          setIsPlayingPreview(true);
-          return;
-        } catch (e) {
-          console.warn("Reintentando reproducción desde inicio:", e);
-        }
-      }
+    if (isSameTrack && audio.src && !audio.paused) {
+      audio.pause();
+      setIsPlayingPreview(false);
+      return;
     }
 
-    // Cargar y reproducir nueva pista
     try {
       audio.pause();
       audio.src = audioUrl;
@@ -1081,23 +1074,14 @@ export default function RadioManager() {
       audio.muted = false;
       audio.volume = isMuted ? 0 : volume;
 
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlayingPreview(true);
-            setSuccess(`🎧 Modo Azul: Pre-escuchando "${song.title}"`);
-          })
-          .catch((err) => {
-            console.warn("Autoplay diferido para canplay:", err);
-            audio.addEventListener('canplay', () => {
-              audio.play().then(() => setIsPlayingPreview(true)).catch(() => {});
-            }, { once: true });
-          });
-      }
+      await audio.play();
+      setIsPlayingPreview(true);
+      setSuccess(`🎧 Modo Azul: Pre-escuchando "${song.title}"`);
     } catch (err) {
       console.warn("Error en reproducción preview:", err);
-      setIsPlayingPreview(false);
+      audio.addEventListener('canplay', () => {
+        audio.play().then(() => setIsPlayingPreview(true)).catch(() => {});
+      }, { once: true });
     }
   };
 
@@ -1110,14 +1094,7 @@ export default function RadioManager() {
       return;
     }
     if (previewTrack) {
-      if (!audioRef.current?.src || audioRef.current?.src === 'about:blank' || audioRef.current?.src === window.location.href) {
-        handlePlayPreview(previewTrack);
-      } else {
-        audioRef.current?.play().catch(() => {
-          handlePlayPreview(previewTrack);
-        });
-        setIsPlayingPreview(true);
-      }
+      handlePlayPreview(previewTrack);
       return;
     }
     const target = (filteredLibraryTracks && filteredLibraryTracks[0]) || 
@@ -1137,6 +1114,17 @@ export default function RadioManager() {
     const currIdx = filteredLibraryTracks.findIndex(t => t.id === previewTrack.id || t.title === previewTrack.title);
     const nextIdx = (currIdx + 1) % filteredLibraryTracks.length;
     handlePlayPreview(filteredLibraryTracks[nextIdx]);
+  };
+
+  const handlePrevLibraryPreview = () => {
+    if (filteredLibraryTracks.length === 0) return;
+    if (!previewTrack) {
+      handlePlayPreview(filteredLibraryTracks[0]);
+      return;
+    }
+    const currIdx = filteredLibraryTracks.findIndex(t => t.id === previewTrack.id || t.title === previewTrack.title);
+    const prevIdx = (currIdx - 1 + filteredLibraryTracks.length) % filteredLibraryTracks.length;
+    handlePlayPreview(filteredLibraryTracks[prevIdx]);
   };
 
   const handleRandomLibraryPreview = () => {
@@ -2778,7 +2766,16 @@ export default function RadioManager() {
                           </div>
                         ) : (
                           filteredLibraryTracks.map((track, idx) => {
-                            const isCurrentPreview = (previewTrack?.title === track.title || previewTrack?.fileName === track.fileName) && isPlayingPreview;
+                            const isCurrentPlaying = (
+                              (onAirTrack?.station_name && (
+                                track.title?.toLowerCase() === onAirTrack.station_name?.toLowerCase() ||
+                                onAirTrack.station_name?.toLowerCase().includes(track.title?.toLowerCase()) ||
+                                track.title?.toLowerCase().includes(onAirTrack.station_name?.toLowerCase()) ||
+                                (track.fileName && onAirTrack.station_name?.toLowerCase().includes(track.fileName?.toLowerCase()))
+                              )) ||
+                              (previewTrack && (previewTrack.title === track.title || previewTrack.fileName === track.fileName))
+                            ) && (isPlayingLiveSignal || isPlayingPreview);
+
                             return (
                               <div
                                 key={track.id || track.fileName || idx}
@@ -2786,15 +2783,21 @@ export default function RadioManager() {
                                 onDragStart={(e) => {
                                   e.dataTransfer.setData('application/json', JSON.stringify(track));
                                 }}
-                                onClick={() => handlePlayPreview(track)}
+                                onClick={() => {
+                                  if (isCurrentPlaying && isPlayingLiveSignal) {
+                                    handleAirPlayPause();
+                                  } else {
+                                    handlePlayPreview(track);
+                                  }
+                                }}
                                 className={`group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none ${
-                                  isCurrentPreview
+                                  isCurrentPlaying
                                     ? 'bg-cyan-500/15 border-cyan-400/60 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
                                     : 'bg-black/40 hover:bg-white/5 border-white/5 hover:border-cyan-500/30'
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <span className="text-[11px] font-mono text-gray-500 w-5 text-right shrink-0">
+                                  <span className={`text-[11px] font-mono w-5 text-right shrink-0 ${isCurrentPlaying ? 'text-cyan-400 font-bold' : 'text-gray-500'}`}>
                                     {idx + 1}
                                   </span>
 
@@ -2805,10 +2808,15 @@ export default function RadioManager() {
                                       onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
                                       className="w-full h-full object-cover"
                                     />
+                                    {isCurrentPlaying && (
+                                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+                                      </div>
+                                    )}
                                   </div>
 
                                   <div className="min-w-0 flex-1">
-                                    <p className={`text-xs font-bold truncate leading-tight ${isCurrentPreview ? 'text-cyan-400' : 'text-white'}`} title={track.title}>
+                                    <p className={`text-xs font-bold truncate leading-tight ${isCurrentPlaying ? 'text-cyan-400 font-black' : 'text-white'}`} title={track.title}>
                                       {track.title}
                                     </p>
                                     <p className="text-[11px] text-gray-400 truncate" title={`${track.artist || track.albumArtist} • ${track.album}`}>
@@ -2822,20 +2830,24 @@ export default function RadioManager() {
                                     {formatTime(track.duration || 210)}
                                   </span>
 
-                                  {/* BOTÓN PRE-ESCUCHA (HEADPHONES PREVIEW MODO AZUL) */}
+                                  {/* BOTÓN REPRODUCIR / PONER CANCIÓN EN LA EMISORA */}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handlePlayPreview(track);
+                                      if (isCurrentPlaying && isPlayingLiveSignal) {
+                                        handleAirPlayPause();
+                                      } else {
+                                        handlePlayPreview(track);
+                                      }
                                     }}
                                     className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                                      isCurrentPreview
+                                      isCurrentPlaying
                                         ? 'bg-cyan-400 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300'
                                         : 'bg-white/10 hover:bg-cyan-400 hover:text-black text-gray-300'
                                     }`}
-                                    title="Pre-escuchar en audífonos (Modo Azul)"
+                                    title={isCurrentPlaying ? "Pausar reproducción" : "Poner a sonar esta canción (vía Bat)"}
                                   >
-                                    {isCurrentPreview ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                                    {isCurrentPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
                                   </button>
 
                                   {/* BOTÓN AGREGAR A LA COLA */}
