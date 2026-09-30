@@ -73,7 +73,7 @@ export default function PlayerCenter({
       if (!isSubscribed || !window.YT || !window.YT.Player || !iframeContainerRef.current) return;
 
       if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
-        try { ytPlayerRef.current.destroy(); } catch (e) {}
+        try { ytPlayerRef.current.destroy(); } catch (e) { }
       }
 
       const isYoutubeMix = listId && listId.startsWith('RD');
@@ -100,7 +100,7 @@ export default function PlayerCenter({
                 event.target.setVolume(volVal);
                 if (isMuted) event.target.mute();
                 if (isPlaying) event.target.playVideo();
-              } catch (e) {}
+              } catch (e) { }
             },
             onStateChange: (event) => {
               // event.data === 0 (ENDED -> Video finalizado)
@@ -110,7 +110,7 @@ export default function PlayerCenter({
                   try {
                     event.target.seekTo(0, true);
                     event.target.playVideo();
-                  } catch (e) {}
+                  } catch (e) { }
                 } else if (nextTrackRef.current) {
                   nextTrackRef.current();
                 }
@@ -145,7 +145,7 @@ export default function PlayerCenter({
     return () => {
       isSubscribed = false;
       if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
-        try { ytPlayerRef.current.destroy(); } catch (e) {}
+        try { ytPlayerRef.current.destroy(); } catch (e) { }
       }
     };
   }, [ytId, listId, isYoutubeTrack]);
@@ -160,7 +160,7 @@ export default function PlayerCenter({
         } else if (!isPlaying && state === 1 && typeof ytPlayerRef.current.pauseVideo === 'function') {
           ytPlayerRef.current.pauseVideo();
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [isPlaying, isYoutubeTrack]);
 
@@ -179,7 +179,7 @@ export default function PlayerCenter({
           ytPlayerRef.current.unMute();
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }, [volume, isMuted, isYoutubeTrack]);
 
   const handleMainPlayToggle = () => {
@@ -193,7 +193,7 @@ export default function PlayerCenter({
           } else if (!nextState && typeof ytPlayerRef.current.pauseVideo === 'function') {
             ytPlayerRef.current.pauseVideo();
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     } else {
       togglePlay();
@@ -215,7 +215,7 @@ export default function PlayerCenter({
       if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
         try {
           ytPlayerRef.current.seekTo(targetTime, true);
-        } catch (err) {}
+        } catch (err) { }
       }
       setYtCurrentTime(targetTime);
     } else {
@@ -230,7 +230,7 @@ export default function PlayerCenter({
       if (ytPlayerRef.current && typeof ytPlayerRef.current.setVolume === 'function') {
         try {
           ytPlayerRef.current.setVolume(Math.round(val * 100));
-        } catch (err) {}
+        } catch (err) { }
       }
     }
   };
@@ -244,7 +244,7 @@ export default function PlayerCenter({
         } else {
           ytPlayerRef.current.unMute();
         }
-      } catch (err) {}
+      } catch (err) { }
     }
   };
 
@@ -263,14 +263,14 @@ export default function PlayerCenter({
             <div ref={iframeContainerRef} className="w-full h-full" />
           </div>
         ) : (
-          <img 
-            src={currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'} 
+          <img
+            src={currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'}
             alt={currentTrack?.title || 'Radio'}
             onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=900'; }}
             className="absolute inset-0 w-full h-full object-cover grayscale opacity-70"
           />
         )}
-        
+
         {/* Degradado para visibilidad de texto y controles */}
         <div className={`absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none z-10 ${isYoutubeTrack ? 'opacity-30 hover:opacity-60 transition-opacity' : 'opacity-90'}`} />
 
@@ -295,9 +295,8 @@ export default function PlayerCenter({
             <button
               onClick={() => setShowQueue(!showQueue)}
               title="Cola de reproducción (10 canciones: 5 anteriores y 5 siguientes)"
-              className={`px-2.5 py-1.5 border-[2.5px] border-black text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:scale-105 rounded-none ${
-                showQueue ? 'bg-yellow-400 text-black' : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white'
-              }`}
+              className={`px-2.5 py-1.5 border-[2.5px] border-black text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:scale-105 rounded-none ${showQueue ? 'bg-yellow-400 text-black' : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white'
+                }`}
             >
               <ListMusic className="w-4 h-4 text-amber-500" />
               <span className="hidden sm:inline">Cola</span>
@@ -305,7 +304,7 @@ export default function PlayerCenter({
             </button>
 
             {/* Control de Volumen Vertical Interactivo */}
-            <div 
+            <div
               className="relative flex flex-col items-center bg-white dark:bg-[#1e1f2e] border-[3px] border-[#1F2937] dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] p-2 transition-all duration-300 rounded-none"
               onMouseEnter={() => setShowVolume(true)}
               onMouseLeave={() => setShowVolume(false)}
@@ -314,9 +313,9 @@ export default function PlayerCenter({
                 {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-red-600" /> : <Volume2 className="w-5 h-5" />}
               </button>
               <div className={`overflow-hidden transition-all duration-300 flex flex-col items-center ${showVolume ? 'h-24 mt-3' : 'h-0 mt-0'}`}>
-                <input 
-                  type="range" 
-                  min="0" max="1" step="0.05" 
+                <input
+                  type="range"
+                  min="0" max="1" step="0.05"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChangeWrapper}
                   className="appearance-none cursor-pointer w-20 h-2 bg-gray-200 dark:bg-slate-700 border-[2px] border-[#1F2937] dark:border-slate-500 -rotate-90 origin-center translate-y-10"
@@ -337,7 +336,7 @@ export default function PlayerCenter({
                   Cola de Reproducción (10 Pistas)
                 </h4>
               </div>
-              <button 
+              <button
                 onClick={() => setShowQueue(false)}
                 className="p-1 px-2 border-2 border-white bg-black hover:bg-white hover:text-black font-black text-[11px] uppercase transition-colors flex items-center gap-1"
               >
@@ -353,7 +352,7 @@ export default function PlayerCenter({
                     <SkipBack className="w-3 h-3 text-gray-400" /> 5 Anteriores (Historial reciente)
                   </p>
                   {queueWindow.history.map((t, idx) => (
-                    <div 
+                    <div
                       key={`hist-${t.id || idx}`}
                       onClick={() => { if (jumpToTrack) jumpToTrack(t.playlistIndex); setShowQueue(false); }}
                       className="p-1.5 bg-white/5 hover:bg-white/20 cursor-pointer border-l-2 border-gray-500 flex items-center justify-between truncate transition-colors"
@@ -389,7 +388,7 @@ export default function PlayerCenter({
                     <SkipForward className="w-3 h-3 text-yellow-400" /> 5 Siguientes (Precargadas en buffer)
                   </p>
                   {queueWindow.upcoming.map((t, idx) => (
-                    <div 
+                    <div
                       key={`up-${t.id || idx}`}
                       onClick={() => { if (jumpToTrack) jumpToTrack(t.playlistIndex); setShowQueue(false); }}
                       className="p-1.5 bg-white/10 hover:bg-yellow-400 hover:text-black cursor-pointer border-l-2 border-yellow-400 flex items-center justify-between truncate transition-colors group"
@@ -408,7 +407,7 @@ export default function PlayerCenter({
 
             <div className="mt-2 pt-2 border-t border-white/20 flex items-center justify-between text-[10px] text-gray-300">
               <span>{isShuffle ? 'Modo Aleatorio ACTIVO' : 'Modo Secuencial'}</span>
-              <button 
+              <button
                 onClick={() => setIsShuffle(!isShuffle)}
                 className="underline hover:text-yellow-400 font-bold"
               >
@@ -445,56 +444,53 @@ export default function PlayerCenter({
 
 
         {/* Controles Principales SUPERPUESTOS */}
-        <div className={`absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 sm:gap-4 px-4 z-20 ${
-          isYoutubeTrack ? 'bg-black/60 backdrop-blur-sm py-2' : ''
-        }`}>
+        <div className={`absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 sm:gap-4 px-4 z-20 ${isYoutubeTrack ? 'bg-black/60 backdrop-blur-sm py-2' : ''
+          }`}>
           {isYoutubeTrack ? (
             <>
-              <button 
+              <button
                 onClick={() => setIsShuffle(!isShuffle)}
                 title={isShuffle ? "Modo aleatorio (Shuffle) ACTIVADO" : "Activar modo aleatorio (Shuffle)"}
-                className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
-                  isShuffle 
-                    ? 'bg-yellow-400 text-black border-yellow-400 font-black ring-2 ring-yellow-400' 
+                className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${isShuffle
+                    ? 'bg-yellow-400 text-black border-yellow-400 font-black ring-2 ring-yellow-400'
                     : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
-                }`}
+                  }`}
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              
-              <button 
-                onClick={handlePrevWrapper} 
+
+              <button
+                onClick={handlePrevWrapper}
                 disabled={!currentTrack?.url && !ytId}
                 title="Pista anterior"
                 className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
               >
                 <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
-              
-              <button 
-                onClick={handleMainPlayToggle} 
+
+              <button
+                onClick={handleMainPlayToggle}
                 disabled={!currentTrack?.url && !ytId}
                 title={isPlaying ? "Pausar" : "Reproducir"}
                 className={`w-14 h-14 sm:w-16 sm:h-16 border-[3px] ${borderColor} shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.6)] flex items-center justify-center bg-red-600 text-white border-black transition-all ${buttonHover} rounded-none disabled:opacity-50`}
               >
                 {isPlaying ? <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" /> : <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" />}
               </button>
-              
-              <button 
-                onClick={handleNextWrapper} 
+
+              <button
+                onClick={handleNextWrapper}
                 disabled={!currentTrack?.url && !ytId}
                 title="Siguiente pista"
                 className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
               >
                 <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => setIsRepeatSingle(!isRepeatSingle)}
                 title={isRepeatSingle ? "Repetir 1 canción activado" : "Repetir 1 canción"}
-                className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
-                  isRepeatSingle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
-                }`}
+                className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${isRepeatSingle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
+                  }`}
               >
                 <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -504,11 +500,10 @@ export default function PlayerCenter({
             <div className="flex flex-col items-center gap-1.5 w-full max-w-sm px-2">
               <button
                 onClick={toggleMuteWrapper}
-                className={`w-full py-3 px-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] rounded-none ${
-                  isMuted || volume === 0
+                className={`w-full py-3 px-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] rounded-none ${isMuted || volume === 0
                     ? 'bg-red-600 hover:bg-red-500 text-white'
                     : 'bg-yellow-400 hover:bg-yellow-300 text-black'
-                }`}
+                  }`}
                 title={isMuted ? "Activar audio" : "Silenciar audio"}
               >
                 {isMuted || volume === 0 ? (
@@ -525,7 +520,7 @@ export default function PlayerCenter({
               </button>
               <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/80 bg-black/80 px-2 py-0.5 border border-white/30">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-                <span>Señal en vivo continua · Control maestro desde Radio Manager</span>
+                <span>Señal en vivo </span>
               </div>
             </div>
           )}

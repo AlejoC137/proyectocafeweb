@@ -1,4 +1,6 @@
-﻿# ==============================================================================
+import os
+
+ps1_content = r'''# ==============================================================================
 # RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.1.0)
 # ==============================================================================
 # - Carga Instantanea: Reutiliza catalogo local o re-escanea bajo demanda con [C].
@@ -650,3 +652,15 @@ finally {
     Update-CurrentPlay -title "Estacion Lista" -artist "BAT_ONLINE" -cover "" -publicUrl "" -isPlaying $false
     Write-Host " [OK] Estacion desconectada y almacenamiento limpio." -ForegroundColor Green
 }
+'''
+
+with open('radio_station.ps1', 'w', encoding='utf-8-sig') as f:
+    f.write(ps1_content)
+
+drive_path = r'G:\Mi unidad\Radio\radio_station.ps1'
+if os.path.exists(os.path.dirname(drive_path)):
+    with open(drive_path, 'w', encoding='utf-8-sig') as f:
+        f.write(ps1_content)
+    print("SUCCESS: Updated both repo and G: Drive radio_station.ps1")
+else:
+    print("SUCCESS: Updated repo radio_station.ps1")
