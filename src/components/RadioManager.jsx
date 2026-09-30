@@ -856,7 +856,9 @@ export default function RadioManager() {
     if (!song) return null;
     const isLocalHost = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    const liveStreamUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/live_stream.mp3`;
+    const liveStreamUrl = (onAirTrack?.station_url && (onAirTrack.station_url.startsWith('http://') || onAirTrack.station_url.startsWith('https://')))
+      ? onAirTrack.station_url
+      : null;
 
     if (song.station_url) {
       if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://')) {
@@ -1058,8 +1060,9 @@ export default function RadioManager() {
             airAudio.load();
           }
           airAudio.currentTime = resumeFromSecond;
-          airAudio.muted = !isPlayingLiveSignal;
+          airAudio.muted = isMuted;
           airAudio.volume = isMuted ? 0 : volume;
+          setIsPlayingLiveSignal(true);
           await airAudio.play().catch(() => {});
         }
 
@@ -1167,8 +1170,9 @@ export default function RadioManager() {
       if (nextUrl) {
         airAudio.src = nextUrl;
         airAudio.currentTime = 0;
-        airAudio.muted = !isPlayingLiveSignal;
+        airAudio.muted = isMuted;
         airAudio.volume = isMuted ? 0 : volume;
+        setIsPlayingLiveSignal(true);
         airAudio.load();
         airAudio.play().catch(() => {});
       }
@@ -1360,8 +1364,9 @@ export default function RadioManager() {
           airAudio.load();
         }
         airAudio.currentTime = resumeFromSecond;
-        airAudio.muted = !isPlayingLiveSignal;
+        airAudio.muted = isMuted;
         airAudio.volume = isMuted ? 0 : volume;
+        setIsPlayingLiveSignal(true);
         await airAudio.play().catch(() => {});
       }
 
@@ -1441,8 +1446,9 @@ export default function RadioManager() {
       if (nextUrl) {
         airAudio.src = nextUrl;
         airAudio.currentTime = 0;
-        airAudio.muted = !isPlayingLiveSignal;
+        airAudio.muted = isMuted;
         airAudio.volume = isMuted ? 0 : volume;
+        setIsPlayingLiveSignal(true);
         airAudio.load();
         airAudio.play().catch(() => {});
       }

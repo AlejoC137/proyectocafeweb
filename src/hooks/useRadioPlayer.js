@@ -365,10 +365,23 @@ export function useRadioPlayer(
     }
 
     if (audioRef.current && currentTrack?.url) {
-      let playableUrl = currentTrack.url;
-      if (playableUrl.startsWith('local://')) {
+      const isLocalHost = typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+      let playableUrl = currentTrack.station_url || currentTrack.stream_url || currentTrack.url;
+      if (playableUrl && playableUrl.startsWith('local://')) {
         const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
-        playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        if (isLocalHost) {
+          playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        } else {
+          // En deploy: si ya existe una fuente de streaming válida al aire, preservarla
+          if (audioRef.current.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://')) && !audioRef.current.src.includes('/api/local-audio')) {
+            playableUrl = audioRef.current.src;
+          } else {
+            // No intentar reproducir /api/local-audio en Vercel
+            return;
+          }
+        }
       }
 
       const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';

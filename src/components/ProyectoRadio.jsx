@@ -575,13 +575,15 @@ export default function ProyectoRadio() {
         }}
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
-          // Si falló una URL en producción deploy, intentar reconectar a la emisión en vivo de Supabase
+          // Si falló una URL en producción deploy, reconectar a la emisión al aire de Supabase
           const audioEl = player.audioRef?.current;
-          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http') && audioEl.src !== currentPlay.station_url) {
-            console.warn('[ProyectoRadio] Error en fuente actual, reconectando a señal al aire:', currentPlay.station_url);
-            audioEl.src = currentPlay.station_url;
-            audioEl.play().catch(() => {});
-            return;
+          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http')) {
+            if (audioEl.src !== currentPlay.station_url) {
+              console.warn('[ProyectoRadio] Error en fuente, reconectando a señal al aire:', currentPlay.station_url);
+              audioEl.src = currentPlay.station_url;
+              audioEl.play().catch(() => {});
+              return;
+            }
           }
           if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {
             setAudioError(`No se pudo cargar "${currentTrack.title}". Verifica la conexión o inicia el transmisor local.`);
