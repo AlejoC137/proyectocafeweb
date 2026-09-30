@@ -1544,23 +1544,6 @@ export default function RadioManager() {
       };
       const { error } = await supabase.from('playlist_radio').insert([cleanTrack]);
       if (error) throw error;
-      await supabase.from('radio_current_play').update({
-        station_artist: 'SYNC',
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-
-      // Notificar de inmediato a otras pestañas (como ProyectoRadio) para que agreguen la canción en caliente sin recargar la página
-      try {
-        const bc = new BroadcastChannel('radio-playlist-channel');
-        bc.postMessage({ type: 'PLAYLIST_UPDATED', track: cleanTrack, timestamp: Date.now() });
-        bc.close();
-      } catch (e) {}
-
-      await sendRemoteCommand({
-        type: 'PLAYLIST_UPDATED',
-        targetClientId: 'all',
-        payload: { track: cleanTrack }
-      });
 
       await fetchSongs();
       setSuccess(`➕ Canción "${track.title}" añadida a la cola.`);
@@ -1660,10 +1643,6 @@ export default function RadioManager() {
       for (let i = 0; i < shuffled.length; i++) {
         await supabase.from('playlist_radio').update({ order_index: i }).eq('id', shuffled[i].id);
       }
-      await supabase.from('radio_current_play').update({
-        station_artist: "SYNC",
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
       await fetchSongs();
       setSuccess("🔀 ¡Cola de reproducción mezclada aleatoriamente!");
     } catch (err) {
