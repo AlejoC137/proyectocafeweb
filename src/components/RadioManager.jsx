@@ -631,9 +631,29 @@ export default function RadioManager() {
   }, [libraryTracks, librarySearchQuery]);
 
   const albumList = useMemo(() => {
+    const isRealCover = (url) => url && !url.startsWith('blob:') && !url.includes('images.unsplash.com') && url.trim() !== '';
+
     if (batCatalog && batCatalog.length > 0) {
-      return batCatalog;
+      // Build a quick lookup: albumName (lowercase) → best cover from songs
+      const songsCoverMap = new Map();
+      songs.forEach(song => {
+        if (isRealCover(song.cover)) {
+          const key = (song.album || '').toLowerCase().trim();
+          if (key && !songsCoverMap.has(key)) {
+            songsCoverMap.set(key, song.cover);
+          }
+        }
+      });
+
+      return batCatalog.map(alb => {
+        // Prefer the cover already on the catalog entry; if missing, pull from songs
+        const enrichedCover = isRealCover(alb.cover)
+          ? alb.cover
+          : (songsCoverMap.get((alb.albumName || alb.folderName || '').toLowerCase().trim()) || alb.cover || '');
+        return { ...alb, cover: enrichedCover };
+      });
     }
+
     const map = new Map();
     songs.forEach(song => {
       const albumName = song.album || 'Sencillo';
@@ -647,19 +667,23 @@ export default function RadioManager() {
           artistName,
           year: song.year || new Date().getFullYear().toString(),
           genre: song.genre || 'General',
-          cover: (song.cover && !song.cover.startsWith('blob:')) ? song.cover : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400',
+          cover: isRealCover(song.cover) ? song.cover : '',
           tracks: [],
           totalDuration: 0
         });
       }
 
       const item = map.get(key);
+      // Upgrade cover if we find a real one later in the song list
+      if (!isRealCover(item.cover) && isRealCover(song.cover)) {
+        item.cover = song.cover;
+      }
       item.tracks.push(song);
       item.totalDuration += (song.duration || 0);
     });
 
     return Array.from(map.values());
-  }, [songs]);
+  }, [batCatalog, songs]);
 
   useEffect(() => {
     fetchSongs();

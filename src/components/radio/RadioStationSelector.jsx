@@ -475,45 +475,141 @@ export default function RadioStationSelector({
         </div>
       )}
 
-      {/* VISTA B: GRID DE PLAYLISTS / ÁLBUMES */}
+      {/* VISTA B: GRID DE CARÁTULAS / ÁLBUMES */}
       {selectorTab === 'albums' && !selectedPlaylist && (
         <div>
-          <div className="flex items-start justify-between mb-3 gap-2">
+          {/* Header con toggle de vista */}
+          <div className="flex items-center justify-between mb-3 gap-2">
             <h4 className="font-black uppercase tracking-wider text-xs sm:text-sm text-black dark:text-white flex items-center gap-2 flex-shrink-0">
               <Disc className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span>Listas de Reproducción ({filteredPlaylists.length})</span>
+              <span>Álbumes ({filteredPlaylists.length})</span>
             </h4>
+            <div className="flex items-center gap-1 border-[2px] border-black dark:border-slate-600 overflow-hidden">
+              <button
+                onClick={() => setAlbumDisplayMode('grid')}
+                className={`p-1.5 transition ${albumDisplayMode === 'grid' ? 'bg-black text-white dark:bg-yellow-400 dark:text-black' : 'bg-white dark:bg-[#181926] text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+                title="Vista cuadrícula"
+              >
+                <Grid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setAlbumDisplayMode('list')}
+                className={`p-1.5 transition ${albumDisplayMode === 'list' ? 'bg-black text-white dark:bg-yellow-400 dark:text-black' : 'bg-white dark:bg-[#181926] text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+                title="Vista lista"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {filteredPlaylists.length === 0 ? (
             <div className="p-8 text-center border-[3px] border-dashed border-black dark:border-slate-700 bg-cream-bg dark:bg-[#181926] my-4">
               <Disc className="w-12 h-12 mx-auto text-gray-400 animate-spin mb-2" />
-              <p className="font-black uppercase text-sm">No se encontraron playlists</p>
+              <p className="font-black uppercase text-sm">No se encontraron álbumes</p>
               <p className="text-xs text-gray-500 mt-1 font-bold">Crea álbumes en Radio Manager para verlos aquí.</p>
             </div>
+          ) : albumDisplayMode === 'grid' ? (
+            /* ───── GRID VIEW ───── */
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {filteredPlaylists.map((playlist) => {
+                const isCurrentPlayingInAlbum = currentLiveTitle && playlist.tracks.some(t =>
+                  currentLiveTitle.toLowerCase().includes((t.title || '').toLowerCase()) ||
+                  (t.title || '').toLowerCase().includes(currentLiveTitle.toLowerCase())
+                );
+                const hasCover = playlist.cover && playlist.cover.trim() !== '';
+
+                return (
+                  <div
+                    key={playlist.name}
+                    onClick={() => setSelectedPlaylist(playlist)}
+                    className={`group relative cursor-pointer border-[3px] border-black dark:border-slate-600 bg-white dark:bg-[#181926] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:-translate-x-0.5 transition-all duration-200 active:scale-[0.97] select-none ${isCurrentPlayingInAlbum ? 'border-red-500 shadow-[3px_3px_0px_0px_rgba(220,38,38,0.8)]' : ''}`}
+                  >
+                    {/* Carátula square */}
+                    <div className="relative aspect-square w-full overflow-hidden bg-black">
+                      {hasCover ? (
+                        <img
+                          src={playlist.cover}
+                          alt={playlist.name}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : null}
+                      {/* Fallback placeholder */}
+                      <div className={`absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 items-center justify-center ${hasCover ? 'hidden' : 'flex'}`}>
+                        <Music2 className="w-10 h-10 text-slate-600" />
+                      </div>
+
+                      {/* Hover play overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <div className="w-10 h-10 bg-yellow-400 border-[3px] border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <Play className="w-5 h-5 fill-black text-black ml-0.5" />
+                        </div>
+                      </div>
+
+                      {/* AL AIRE badge */}
+                      {isCurrentPlayingInAlbum && (
+                        <div className="absolute top-2 left-2">
+                          <span className="px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-black uppercase animate-pulse shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                            AL AIRE
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Track count badge */}
+                      <div className="absolute bottom-2 right-2">
+                        <span className="px-1.5 py-0.5 bg-black/80 text-white text-[9px] font-mono font-bold">
+                          {playlist.trackCount} pistas
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Info debajo de la carátula */}
+                    <div className="p-2 pb-2.5">
+                      <p className="font-black text-[11px] uppercase tracking-wide text-black dark:text-white truncate leading-tight">
+                        {playlist.name}
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                        {playlist.artist}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
+            /* ───── LIST VIEW ───── */
             <div className="flex flex-col divide-y-[3px] divide-black dark:divide-slate-700 border-[3px] border-black dark:border-slate-700">
               {filteredPlaylists.map((playlist) => {
                 const isCurrentPlayingInAlbum = currentLiveTitle && playlist.tracks.some(t =>
                   currentLiveTitle.toLowerCase().includes((t.title || '').toLowerCase()) ||
                   (t.title || '').toLowerCase().includes(currentLiveTitle.toLowerCase())
                 );
+                const hasCover = playlist.cover && playlist.cover.trim() !== '';
 
                 return (
                   <div
                     key={playlist.name}
-                    className={`flex items-center gap-3 px-3 py-2.5 bg-white dark:bg-[#181926] transition-colors ${
-                      isCurrentPlayingInAlbum ? 'bg-yellow-50 dark:bg-yellow-400/10' : ''
-                    }`}
+                    onClick={() => setSelectedPlaylist(playlist)}
+                    className={`group flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors hover:bg-yellow-50 dark:hover:bg-yellow-400/5 active:scale-[0.99] select-none ${isCurrentPlayingInAlbum ? 'bg-yellow-50 dark:bg-yellow-400/10' : 'bg-white dark:bg-[#181926]'}`}
                   >
-                    {/* Miniatura */}
-                    <div className="w-10 h-10 flex-shrink-0 overflow-hidden border-[2px] border-black dark:border-slate-600 bg-black">
-                      <img
-                        src={playlist.cover}
-                        alt={playlist.name}
-                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
-                        className="w-full h-full object-cover"
-                      />
+                    {/* Miniatura cuadrada */}
+                    <div className="relative w-12 h-12 flex-shrink-0 overflow-hidden border-[2px] border-black dark:border-slate-600 bg-black">
+                      {hasCover ? (
+                        <img
+                          src={playlist.cover}
+                          alt={playlist.name}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                          <Music2 className="w-5 h-5 text-slate-600" />
+                        </div>
+                      )}
+                      {/* Hover play micro */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Play className="w-4 h-4 fill-white text-white" />
+                      </div>
                     </div>
 
                     {/* Info */}
@@ -547,47 +643,76 @@ export default function RadioStationSelector({
               })}
             </div>
           )}
-
         </div>
       )}
 
       {/* VISTA C: DETALLE DE CANCIONES DEL ÁLBUM SELECCIONADO */}
       {selectorTab === 'albums' && selectedPlaylist && (
         <div>
-          {/* Header con volver */}
-          <div className="border-[3px] border-black dark:border-slate-700 bg-cream-bg dark:bg-[#181926] p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <button
-                onClick={() => setSelectedPlaylist(null)}
-                className="p-2 bg-black hover:bg-yellow-400 text-white hover:text-black border-[2px] border-black transition flex-shrink-0"
-                title="Volver a todas las playlists"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <div className="w-10 h-10 border-[2px] border-black overflow-hidden flex-shrink-0 bg-black">
-                <img
-                  src={selectedPlaylist.cover}
-                  alt={selectedPlaylist.name}
-                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
-                  className="w-full h-full object-cover"
-                />
+          {/* Hero de Carátula + Info */}
+          <div className="mb-4">
+            {/* Botón volver */}
+            <button
+              onClick={() => setSelectedPlaylist(null)}
+              className="flex items-center gap-1.5 mb-3 text-xs font-black uppercase tracking-wider text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Todos los Álbumes</span>
+            </button>
+
+            {/* Hero card */}
+            <div className="border-[3px] border-black dark:border-slate-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-black">
+              {/* Carátula grande */}
+              <div className="relative aspect-[3/1] sm:aspect-[4/1] w-full overflow-hidden bg-slate-900">
+                {selectedPlaylist.cover ? (
+                  <img
+                    src={selectedPlaylist.cover}
+                    alt={selectedPlaylist.name}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    className="w-full h-full object-cover object-center opacity-60"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent flex items-center gap-4 p-4">
+                  {/* Portada cuadrada dentro del hero */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 border-[3px] border-white/30 overflow-hidden bg-slate-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)]">
+                    {selectedPlaylist.cover ? (
+                      <img
+                        src={selectedPlaylist.cover}
+                        alt={selectedPlaylist.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Music2 className="w-8 h-8 text-slate-500" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-yellow-400 mb-0.5">Álbum</p>
+                    <h4 className="font-black uppercase tracking-wide text-sm sm:text-base text-white truncate leading-tight">
+                      {selectedPlaylist.name}
+                    </h4>
+                    <p className="text-[11px] font-bold text-gray-300 truncate mt-0.5">
+                      {selectedPlaylist.artist} · {selectedPlaylist.trackCount} canciones · {formatTotalTime(selectedPlaylist.totalDuration)}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h4 className="font-black uppercase tracking-wider text-sm text-black dark:text-white truncate">
-                  {selectedPlaylist.name}
-                </h4>
-                <p className="text-[11px] font-bold text-gray-600 dark:text-gray-300 truncate">
-                  {selectedPlaylist.artist} · {selectedPlaylist.trackCount} canciones ({formatTotalTime(selectedPlaylist.totalDuration)})
+
+              {/* Acción reproducir */}
+              <div className="px-4 py-2.5 bg-black flex items-center gap-3">
+                <button
+                  onClick={() => handlePlayEntirePlaylist(selectedPlaylist)}
+                  className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 border-[2px] border-white/30 text-xs font-black uppercase text-black transition flex items-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 fill-black" />
+                  Reproducir
+                </button>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Toca una canción para mezclarla al aire
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => handlePlayEntirePlaylist(selectedPlaylist)}
-              className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 border-[2px] border-black text-xs font-black uppercase text-black transition flex items-center gap-1.5 flex-shrink-0 self-end sm:self-auto"
-            >
-              <Play className="w-4 h-4 fill-black" />
-              Reproducir Lista
-            </button>
           </div>
 
           {/* Lista de pistas */}
@@ -597,7 +722,7 @@ export default function RadioStationSelector({
               <p className="font-black uppercase text-xs">No hay canciones que coincidan</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="border-[3px] border-black dark:border-slate-700 divide-y-[2px] divide-black/10 dark:divide-slate-700 overflow-hidden">
               {activePlaylistTracks.map((track, idx) => {
                 const isCurrentPlaying = currentLiveTitle && (
                   currentLiveTitle.toLowerCase().includes((track.title || '').toLowerCase()) ||
@@ -607,25 +732,33 @@ export default function RadioStationSelector({
                 return (
                   <div
                     key={track.id || idx}
-                    className={`flex items-center justify-between p-3 border-[3px] transition-all ${
+                    className={`group flex items-center justify-between px-3 py-2.5 transition-all cursor-pointer select-none ${
                       isCurrentPlaying
-                        ? 'border-black bg-yellow-200 dark:bg-yellow-500/20 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
-                        : 'border-black dark:border-slate-700 bg-white dark:bg-[#191a27] hover:bg-cream-bg dark:hover:bg-[#202234] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                        ? 'bg-yellow-200 dark:bg-yellow-500/20'
+                        : 'bg-white dark:bg-[#191a27] hover:bg-yellow-50 dark:hover:bg-yellow-400/5'
                     }`}
+                    onClick={() => !isCurrentPlaying && handleSelectSong(track)}
                   >
                     <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
-                      <div className={`w-7 h-7 flex items-center justify-center font-black text-xs border-[2px] border-black flex-shrink-0 ${
-                        isCurrentPlaying ? 'bg-red-600 text-white' : 'bg-black text-white dark:bg-slate-700'
-                      }`}>
+                      {/* Número / indicador al aire */}
+                      <div className={`w-6 text-center shrink-0`}>
                         {isCurrentPlaying ? (
-                          <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
+                          <span className="flex items-center justify-center">
+                            <span className="w-2 h-2 bg-red-600 rounded-full animate-ping" />
+                          </span>
                         ) : (
-                          String(idx + 1).padStart(2, '0')
+                          <span className="font-mono font-bold text-xs text-gray-400 group-hover:hidden">{String(idx + 1).padStart(2, '0')}</span>
+                        )}
+                        {!isCurrentPlaying && (
+                          <span className="hidden group-hover:flex items-center justify-center text-red-600 dark:text-yellow-400">
+                            <Play className="w-3 h-3 fill-current" />
+                          </span>
                         )}
                       </div>
+
                       <div className="truncate flex-1 min-w-0">
                         <div className="flex items-center gap-2 truncate">
-                          <p className="font-black text-xs uppercase tracking-wider text-black dark:text-white truncate">
+                          <p className={`font-black text-xs uppercase tracking-wider truncate ${isCurrentPlaying ? 'text-red-600 dark:text-yellow-400' : 'text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-yellow-400 transition-colors'}`}>
                             {track.title}
                           </p>
                           {isCurrentPlaying && (
@@ -642,35 +775,23 @@ export default function RadioStationSelector({
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                      <span className="hidden sm:inline-block font-mono text-[11px] font-bold text-gray-500">
+                      <span className="hidden sm:inline-block font-mono text-[11px] font-bold text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors">
                         {formatDuration(track.duration)}
                       </span>
-                      <button
-                        onClick={() => handleSelectSong(track)}
-                        disabled={isCurrentPlaying || requestingTrackId === track.id}
-                        className={`px-3 py-1.5 font-black text-[10px] uppercase tracking-widest border-[2px] border-black flex items-center gap-1 transition-all ${
-                          isCurrentPlaying
-                            ? 'bg-black text-yellow-400 cursor-default'
-                            : 'bg-emerald-400 hover:bg-emerald-300 text-black cursor-pointer'
-                        }`}
-                      >
-                        {isCurrentPlaying ? (
-                          <>
-                            <Volume2 className="w-3 h-3" />
-                            <span>Sonando</span>
-                          </>
-                        ) : requestingTrackId === track.id ? (
-                          <>
-                            <span className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-                            <span>Poniendo...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-3 h-3 fill-black" />
-                            <span>Poner</span>
-                          </>
-                        )}
-                      </button>
+                      {isCurrentPlaying ? (
+                        <span className="px-2 py-1 bg-black text-yellow-400 text-[10px] font-black uppercase border-[2px] border-black flex items-center gap-1">
+                          <Volume2 className="w-3 h-3" /> Sonando
+                        </span>
+                      ) : requestingTrackId === track.id ? (
+                        <span className="px-2 py-1 bg-yellow-400 text-black text-[10px] font-black uppercase border-[2px] border-black flex items-center gap-1">
+                          <span className="w-2.5 h-2.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                          Poniendo
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-emerald-400 hover:bg-emerald-300 text-black text-[10px] font-black uppercase border-[2px] border-black flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="w-2.5 h-2.5 fill-black" /> Poner
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
