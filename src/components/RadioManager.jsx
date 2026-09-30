@@ -1325,7 +1325,16 @@ export default function RadioManager() {
   const handleRandomLibraryPreview = () => {
     const list = getActiveLibraryTrackList();
     if (!list || list.length === 0) return;
-    const randomIdx = Math.floor(Math.random() * list.length);
+    if (list.length === 1) {
+      handlePlayPreview(list[0], true);
+      return;
+    }
+    let randomIdx;
+    let attempts = 0;
+    do {
+      randomIdx = Math.floor(Math.random() * list.length);
+      attempts++;
+    } while (attempts < 10 && list[randomIdx]?.title === previewTrack?.title);
     handlePlayPreview(list[randomIdx], true);
   };
 
