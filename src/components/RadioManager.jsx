@@ -138,6 +138,7 @@ export default function RadioManager() {
   const volumeRef = useRef(0.8);
   const isMutedRef = useRef(false);
   const lastLoadedPreviewTabRef = useRef('');
+  const requestedPreviewTitleRef = useRef('');
 
   useEffect(() => {
     isPlayingLiveSignalRef.current = isPlayingLiveSignal;
@@ -715,13 +716,24 @@ export default function RadioManager() {
             if (row.tab === lastLoadedPreviewTabRef.current) {
               return; // Ya cargada previamente; evitar reiniciar la canción o repetir autoplay
             }
-            lastLoadedPreviewTabRef.current = row.tab;
 
             const parts = row.tab.substring(14).split('||');
             const previewUrl = parts[0];
             const previewTitle = parts[1] || '';
             const previewArtist = parts[2] || '';
             const previewDur = Number(parts[3]) || 180;
+
+            // Validar que la señal corresponda a la canción actualmente solicitada
+            const reqTitle = requestedPreviewTitleRef.current;
+            if (reqTitle && previewTitle) {
+              const pNorm = previewTitle.trim().toLowerCase();
+              if (!pNorm.includes(reqTitle) && !reqTitle.includes(pNorm)) {
+                console.log(`[Preview] Esperando "${reqTitle}", ignorando señal previa "${previewTitle}"`);
+                return;
+              }
+            }
+
+            lastLoadedPreviewTabRef.current = row.tab;
 
             if (previewUrl && audioRef.current) {
               audioRef.current.src = previewUrl;
@@ -1175,28 +1187,36 @@ export default function RadioManager() {
     setPreviewTrack(song);
     setPreviewDuration(song.duration || 0);
     setPreviewTime(0);
-    setIsPlayingPreview(true);
+    setIsPlayingPreview(false); // Pausa explícita mientras se recibe el audio del BAT
 
+    // Limpiar completamente el audio anterior para que NO pueda sonar de nuevo
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
 
-    // Resetear referencia de URL de pre-escucha para aceptar la nueva pista
+    // Registrar la pista solicitada para ignorar señales anteriores en tránsito
+    requestedPreviewTitleRef.current = (song.title || '').trim().toLowerCase();
     lastLoadedPreviewTabRef.current = '';
 
     // En localhost, si el endpoint de Vite está disponible, cargar audio directo
-    if (isLocalHost && (song.fileName || song.filePath)) {
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    if (isLocal && (song.fileName || song.filePath)) {
       const localAudioUrl = `/api/local-audio?file=${encodeURIComponent(song.fileName || song.filePath)}`;
       if (audioRef.current) {
         audioRef.current.src = localAudioUrl;
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(err => console.warn("Autoplay local diferido:", err));
+        setIsPlayingPreview(true);
         setSuccess(`🎧 Reproduciendo en Biblioteca: "${song.title}"`);
         return;
       }
     }
 
-    setSuccess(`🎧 Solicitando pista "${song.title}" al BAT...`);
+    setSuccess(`⏳ Solicitando pista "${song.title}" al BAT... (en pausa hasta recibir audio)`);
 
     // Enviar solicitud de pre-escucha en PARALELO vía columna 'tab' (SIN TOCAR station_artist ni el aire)
     try {
