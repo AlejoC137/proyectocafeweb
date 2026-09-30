@@ -214,9 +214,18 @@ export default function ProyectoRadio() {
     }
 
     let streamUrl = currentPlay.station_url;
-    if (streamUrl.startsWith('local://')) {
+    if (streamUrl && streamUrl.startsWith('local://')) {
+      const isLocalHost = typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const rawName = decodeURIComponent(streamUrl.replace('local://', ''));
-      streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+
+      if (isLocalHost) {
+        streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+      } else {
+        // En entorno de PRODUCCIÓN DEPLOY:
+        // Las URLs local:// no pueden ser resueltas por localhost. Fallback al bucket público de Supabase Storage.
+        streamUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/${encodeURIComponent(rawName)}`;
+      }
     }
 
     const audioEl = player.audioRef.current;
@@ -312,12 +321,17 @@ export default function ProyectoRadio() {
       return;
     }
 
-    // Resolve local:// URLs to the API proxy path (same as the rest of the codebase)
+    // Resolve local:// URLs to the API proxy path or Supabase Storage in production
     const resolveUrl = (raw) => {
       if (!raw) return null;
       if (raw.startsWith('local://')) {
+        const isLocalHost = typeof window !== 'undefined' && 
+          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
         const rawName = decodeURIComponent(raw.replace('local://', ''));
-        return `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        if (isLocalHost) {
+          return `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        }
+        return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/${encodeURIComponent(rawName)}`;
       }
       return raw;
     };
@@ -561,8 +575,16 @@ export default function ProyectoRadio() {
         }}
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
+          // Si falló una URL en producción deploy, intentar reconectar a la emisión en vivo de Supabase
+          const audioEl = player.audioRef?.current;
+          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http') && audioEl.src !== currentPlay.station_url) {
+            console.warn('[ProyectoRadio] Error en fuente actual, reconectando a señal al aire:', currentPlay.station_url);
+            audioEl.src = currentPlay.station_url;
+            audioEl.play().catch(() => {});
+            return;
+          }
           if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {
-            setAudioError(`No se pudo cargar "${currentTrack.title}". Prueba con otra señal.`);
+            setAudioError(`No se pudo cargar "${currentTrack.title}". Verifica la conexión o inicia el transmisor local.`);
             setIsPlaying(false);
           }
         }}

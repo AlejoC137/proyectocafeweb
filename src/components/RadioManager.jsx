@@ -10,6 +10,7 @@ import MusicCoversGalleryModal from './radio/MusicCoversGalleryModal';
 import AlbumTracklistModal from './radio/AlbumTracklistModal';
 import ListenersRemoteModal from './radio/ListenersRemoteModal';
 import { extractYoutubeId, getYoutubeThumbnail, fetchYoutubeMetadata, YOUTUBE_CATEGORIES } from '../utils/youtubeHelpers';
+import fallbackCatalogData from '../data/localMusicCatalog.json';
 import { 
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
   GripVertical, Search, Filter, Layers, Disc, Tag, Calendar, Sparkles, 
@@ -159,9 +160,13 @@ export default function RadioManager() {
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
 
   // Biblioteca y Cola Sincronizada con el Bat
-  const [batCatalog, setBatCatalog] = useState([]);
+  const [batCatalog, setBatCatalog] = useState(() => {
+    return Array.isArray(fallbackCatalogData) && fallbackCatalogData.length > 0 ? fallbackCatalogData : [];
+  });
   const [loadingCatalog, setLoadingCatalog] = useState(false);
-  const [selectedAirAlbumFolder, setSelectedAirAlbumFolder] = useState('');
+  const [selectedAirAlbumFolder, setSelectedAirAlbumFolder] = useState(() => {
+    return (Array.isArray(fallbackCatalogData) && fallbackCatalogData[0]?.folderName) || '';
+  });
   const [isUpdatingAirList, setIsUpdatingAirList] = useState(false);
   const [mp3ViewMode, setMp3ViewMode] = useState('split'); // 'split' (ambos lados), 'queue' o 'library'
   const [libraryViewType, setLibraryViewType] = useState('tracks'); // 'tracks' o 'albums'
@@ -303,7 +308,7 @@ export default function RadioManager() {
       const res = await fetch(storageUrl);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           setBatCatalog(data);
           setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
           if (!silent) {
@@ -313,8 +318,15 @@ export default function RadioManager() {
           return;
         }
       }
+
+      // 3. Fallback a catálogo empaquetado si sigue vacío
+      setBatCatalog(prev => {
+        if (prev && prev.length > 0) return prev;
+        return Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [];
+      });
     } catch (err) {
       console.warn("No se pudo cargar catalog.json:", err);
+      setBatCatalog(prev => (prev && prev.length > 0 ? prev : (Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [])));
     } finally {
       if (!silent) setLoadingCatalog(false);
     }
@@ -830,13 +842,20 @@ export default function RadioManager() {
   // Resolver URL de reproducción para preview privado o señal en vivo en Radio Manager
   const getPreviewAudioUrl = (song) => {
     if (!song) return null;
+    const isLocalHost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const storageBase = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio`;
+
     if (song.station_url) {
-      if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://') || song.station_url.startsWith('/')) {
+      if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://')) {
+        return song.station_url;
+      }
+      if (song.station_url.startsWith('/')) {
         return song.station_url;
       }
       if (song.station_url.startsWith('local://')) {
         const raw = decodeURIComponent(song.station_url.substring(8));
-        return `/api/local-audio?file=${encodeURIComponent(raw)}`;
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(raw)}` : `${storageBase}/${encodeURIComponent(raw)}`;
       }
     }
     if (song.filePath) {
@@ -848,41 +867,56 @@ export default function RadioManager() {
       }
       if (song.url.startsWith('local://')) {
         const fileName = song.fileName || decodeURIComponent(song.url.substring(8));
-        return `/api/local-audio?file=${encodeURIComponent(fileName)}`;
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(fileName)}` : `${storageBase}/${encodeURIComponent(fileName)}`;
       }
     }
     if (song.fileName) {
-      return `/api/local-audio?file=${encodeURIComponent(song.fileName)}`;
+      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.fileName)}` : `${storageBase}/${encodeURIComponent(song.fileName)}`;
+    }
+    if (song.title) {
+      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.title + '.mp3')}` : `${storageBase}/${encodeURIComponent(song.title + '.mp3')}`;
     }
     return null;
   };
 
-  // Manejo de Reproducción Preview / Pre-escucha CUE en Radio Manager
+  // Manejo de Reproducción Preview / Pre-escucha CUE en Radio Manager (Modo Azul)
   const handlePlayPreview = async (song) => {
     if (!song) return;
 
     // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca)
     setBottomPlayerMode('preview');
 
-    if (previewTrack?.id === song.id && previewTrack?.title === song.title) {
+    if (previewTrack?.id === song.id && (previewTrack?.title === song.title || previewTrack?.fileName === song.fileName)) {
       if (isPlayingPreview) {
         audioRef.current?.pause();
         setIsPlayingPreview(false);
       } else {
-        audioRef.current?.play().catch(() => {});
-        setIsPlayingPreview(true);
+        try {
+          if (!audioRef.current?.src || audioRef.current?.src === 'about:blank' || audioRef.current?.src === window.location.href) {
+            const audioUrl = getPreviewAudioUrl(song);
+            if (audioUrl) {
+              audioRef.current.src = audioUrl;
+              audioRef.current.load();
+            }
+          }
+          await audioRef.current?.play();
+          setIsPlayingPreview(true);
+        } catch (e) {
+          console.warn("Error reanudando preview:", e);
+        }
       }
       return;
     }
 
+    setPreviewTrack(song);
     const audioUrl = getPreviewAudioUrl(song);
     if (!audioUrl) {
-      setError(`No se encontró archivo de audio para escuchar "${song.title}". Asegúrate de que existe en G:\\Mi unidad\\Radio.`);
+      setError(`No se encontró ruta de audio para pre-escuchar "${song.title}". Asegúrate de que existe en la carpeta de música.`);
+      setIsPlayingPreview(false);
       return;
     }
 
     try {
-      setPreviewTrack(song);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = audioUrl;
@@ -892,16 +926,16 @@ export default function RadioManager() {
         audioRef.current.load();
         await audioRef.current.play();
         setIsPlayingPreview(true);
-        setSuccess(`🎧 Pre-escuchando en audífonos (Modo Azul): "${song.title}"`);
+        setSuccess(`🎧 Modo Azul Activado: Pre-escuchando "${song.title}"`);
       }
     } catch (err) {
       console.warn("Error en reproducción preview:", err);
-      setError("No se pudo iniciar la pre-escucha local: " + err.message);
+      // Mantener la pista en la barra para que el usuario pueda verla e interactuar
       setIsPlayingPreview(false);
     }
   };
 
-  // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PRE-ESCUCHA INTERNA) ---
+  // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PRE-ESCUCHA INTERNA MODO AZUL) ---
   const handleToggleLibraryPreview = () => {
     setBottomPlayerMode('preview');
     if (isPlayingPreview) {
@@ -910,12 +944,21 @@ export default function RadioManager() {
       return;
     }
     if (previewTrack) {
-      audioRef.current?.play().catch(() => {});
-      setIsPlayingPreview(true);
+      if (!audioRef.current?.src || audioRef.current?.src === 'about:blank' || audioRef.current?.src === window.location.href) {
+        handlePlayPreview(previewTrack);
+      } else {
+        audioRef.current?.play().catch(() => {
+          handlePlayPreview(previewTrack);
+        });
+        setIsPlayingPreview(true);
+      }
       return;
     }
-    if (filteredLibraryTracks.length > 0) {
-      handlePlayPreview(filteredLibraryTracks[0]);
+    const target = (filteredLibraryTracks && filteredLibraryTracks[0]) || 
+                   (libraryTracks && libraryTracks[0]) || 
+                   (batCatalog && batCatalog[0]?.tracks && batCatalog[0].tracks[0]);
+    if (target) {
+      handlePlayPreview(target);
     }
   };
 
@@ -1010,25 +1053,31 @@ export default function RadioManager() {
 
         setAirTime(resumeFromSecond);
 
-        setOnAirTrack({
-          station_name: currentSong.station_name || currentSong.title,
-          station_artist: currentSong.station_artist || currentSong.artist || 'Radio Café',
-          station_url: currentSong.station_url || currentSong.url || '',
-          station_cover: currentSong.station_cover || currentSong.cover || '',
-          is_playing: true,
-          updated_at: startedAt,
-          paused_position: null
-        });
+        const validLiveUrl = (currentSong.station_url && currentSong.station_url.startsWith('http'))
+          ? currentSong.station_url
+          : ((currentSong.url && currentSong.url.startsWith('http'))
+            ? currentSong.url
+            : ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null));
 
-        await supabase.from('radio_current_play').update({
+        const updatePayload = {
           station_name: currentSong.station_name || currentSong.title,
           station_artist: currentSong.station_artist || currentSong.artist || 'Radio Café',
-          station_url: currentSong.station_url || currentSong.url || '',
           station_cover: currentSong.station_cover || currentSong.cover || '',
           is_playing: true,
           updated_at: startedAt,
           tab: 'supabase'
-        }).eq('id', 1);
+        };
+        if (validLiveUrl) {
+          updatePayload.station_url = validLiveUrl;
+        }
+
+        setOnAirTrack({
+          ...updatePayload,
+          station_url: validLiveUrl || currentSong.station_url || currentSong.url || '',
+          paused_position: null
+        });
+
+        await supabase.from('radio_current_play').update(updatePayload).eq('id', 1);
 
         await sendRemoteCommand({ type: 'PLAY', targetClientId: 'all', payload: { position: resumeFromSecond, startedAt } });
         setSuccess("🟢 Switch ON AIR activado: Emisión autorizada y transmitiendo en vivo a Proyecto Radio.");
@@ -1111,14 +1160,22 @@ export default function RadioManager() {
         airAudio.play().catch(() => {});
       }
 
-      await supabase.from('radio_current_play').update({
+      const validPrevUrl = (prevSong.url && prevSong.url.startsWith('http')) 
+        ? prevSong.url 
+        : ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null);
+
+      const prevPayload = {
         station_name: prevSong.title,
-        station_artist: prevSong.artist || 'Radio Café',
-        station_url: prevSong.url,
+        station_artist: `REQUEST:${prevSong.title}`,
         station_cover: prevSong.cover || '',
         is_playing: true,
         updated_at: new Date().toISOString()
-      }).eq('id', 1);
+      };
+      if (validPrevUrl) {
+        prevPayload.station_url = validPrevUrl;
+      }
+
+      await supabase.from('radio_current_play').update(prevPayload).eq('id', 1);
 
       await sendRemoteCommand({
         type: 'NEXT',
@@ -1297,26 +1354,32 @@ export default function RadioManager() {
 
       setAirTime(resumeFromSecond);
 
-      setOnAirTrack(prev => ({
-        ...(prev || {}),
-        station_name: songToPlay.station_name || songToPlay.title,
-        station_artist: songToPlay.station_artist || songToPlay.artist || 'Radio Café',
-        station_url: songToPlay.station_url || songToPlay.url || '',
-        station_cover: songToPlay.station_cover || songToPlay.cover || '',
-        is_playing: true,
-        updated_at: newStartedAt,
-        paused_position: null
-      }));
+      const validPlayUrl = (songToPlay.station_url && songToPlay.station_url.startsWith('http'))
+        ? songToPlay.station_url
+        : ((songToPlay.url && songToPlay.url.startsWith('http'))
+          ? songToPlay.url
+          : ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null));
 
-      await supabase.from('radio_current_play').update({
+      const playPayload = {
         station_name: songToPlay.station_name || songToPlay.title,
-        station_artist: songToPlay.station_artist || songToPlay.artist || 'Radio Café',
-        station_url: songToPlay.station_url || songToPlay.url || '',
+        station_artist: `REQUEST:${songToPlay.station_name || songToPlay.title}`,
         station_cover: songToPlay.station_cover || songToPlay.cover || '',
         is_playing: true,
         updated_at: newStartedAt,
         tab: 'supabase'
-      }).eq('id', 1);
+      };
+      if (validPlayUrl) {
+        playPayload.station_url = validPlayUrl;
+      }
+
+      setOnAirTrack(prev => ({
+        ...(prev || {}),
+        ...playPayload,
+        station_url: validPlayUrl || songToPlay.station_url || songToPlay.url || '',
+        paused_position: null
+      }));
+
+      await supabase.from('radio_current_play').update(playPayload).eq('id', 1);
 
       try {
         if (liveTimeBcRef.current) {
@@ -1370,14 +1433,22 @@ export default function RadioManager() {
         airAudio.play().catch(() => {});
       }
 
-      await supabase.from('radio_current_play').update({
+      const validNextUrl = (nextSong.url && nextSong.url.startsWith('http')) 
+        ? nextSong.url 
+        : ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null);
+
+      const nextPayload = {
         station_name: nextSong.title,
-        station_artist: nextSong.artist || 'Radio Café',
-        station_url: nextSong.url,
+        station_artist: `REQUEST:${nextSong.title}`,
         station_cover: nextSong.cover || '',
         is_playing: true,
         updated_at: new Date().toISOString()
-      }).eq('id', 1);
+      };
+      if (validNextUrl) {
+        nextPayload.station_url = validNextUrl;
+      }
+
+      await supabase.from('radio_current_play').update(nextPayload).eq('id', 1);
 
       await sendRemoteCommand({
         type: 'NEXT',
@@ -2652,7 +2723,7 @@ export default function RadioManager() {
 
                     {/* CUERPO DEL PANEL IZQUIERDO */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 mt-3 space-y-1.5">
-                      {!isBatOnline || batCatalog.length === 0 ? (
+                      {batCatalog.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
                           <FolderUp className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />
                           <div>
@@ -2678,7 +2749,7 @@ export default function RadioManager() {
                           </div>
                         ) : (
                           filteredLibraryTracks.map((track, idx) => {
-                            const isCurrentPreview = previewTrack?.title === track.title && isPlayingPreview;
+                            const isCurrentPreview = (previewTrack?.title === track.title || previewTrack?.fileName === track.fileName) && isPlayingPreview;
                             return (
                               <div
                                 key={track.id || track.fileName || idx}
@@ -2686,10 +2757,11 @@ export default function RadioManager() {
                                 onDragStart={(e) => {
                                   e.dataTransfer.setData('application/json', JSON.stringify(track));
                                 }}
-                                className={`group flex items-center justify-between p-2 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
+                                onClick={() => handlePlayPreview(track)}
+                                className={`group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none ${
                                   isCurrentPreview
-                                    ? 'bg-cyan-500/10 border-cyan-500/40 shadow-sm'
-                                    : 'bg-black/40 hover:bg-white/5 border-white/5 hover:border-white/10'
+                                    ? 'bg-cyan-500/15 border-cyan-400/60 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
+                                    : 'bg-black/40 hover:bg-white/5 border-white/5 hover:border-cyan-500/30'
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
@@ -2721,22 +2793,28 @@ export default function RadioManager() {
                                     {formatTime(track.duration || 210)}
                                   </span>
 
-                                  {/* BOTÓN PRE-ESCUCHA (HEADPHONES PREVIEW) */}
+                                  {/* BOTÓN PRE-ESCUCHA (HEADPHONES PREVIEW MODO AZUL) */}
                                   <button
-                                    onClick={() => handlePlayPreview(track)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePlayPreview(track);
+                                    }}
                                     className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                                       isCurrentPreview
-                                        ? 'bg-cyan-500 text-black'
-                                        : 'bg-white/10 hover:bg-cyan-500 hover:text-black text-gray-300'
+                                        ? 'bg-cyan-400 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300'
+                                        : 'bg-white/10 hover:bg-cyan-400 hover:text-black text-gray-300'
                                     }`}
-                                    title="Pre-escuchar en audífonos (no sale al aire)"
+                                    title="Pre-escuchar en audífonos (Modo Azul)"
                                   >
                                     {isCurrentPreview ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
                                   </button>
 
                                   {/* BOTÓN AGREGAR A LA COLA */}
                                   <button
-                                    onClick={() => handleAddTrackToQueue(track)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddTrackToQueue(track);
+                                    }}
                                     className="px-2 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black text-gray-200 rounded-lg text-[10px] font-extrabold transition flex items-center gap-1"
                                     title="Añadir a la cola de emisión de la derecha"
                                   >
@@ -2791,19 +2869,29 @@ export default function RadioManager() {
                                 {isExpanded && (
                                   <div className="border-t border-white/10 bg-black/80 p-2 space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
                                     {(alb.tracks || []).map(t => (
-                                      <div key={t.id || t.fileName} className="flex items-center justify-between p-1.5 hover:bg-white/5 rounded-lg text-xs">
+                                      <div 
+                                        key={t.id || t.fileName} 
+                                        onClick={() => handlePlayPreview(t)}
+                                        className="flex items-center justify-between p-1.5 hover:bg-cyan-500/10 rounded-lg text-xs cursor-pointer select-none group"
+                                      >
                                         <div className="min-w-0 flex-1 pr-2">
-                                          <p className="text-white font-semibold truncate text-[11px]">{t.title}</p>
+                                          <p className="text-white group-hover:text-cyan-400 font-semibold truncate text-[11px] transition-colors">{t.title}</p>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0">
                                           <button
-                                            onClick={() => handlePlayPreview(t)}
-                                            className="px-2 py-0.5 bg-white/10 hover:bg-cyan-500 hover:text-black rounded text-[10px] font-bold transition"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handlePlayPreview(t);
+                                            }}
+                                            className="px-2 py-0.5 bg-cyan-500/20 hover:bg-cyan-400 text-cyan-300 hover:text-black rounded text-[10px] font-bold transition"
                                           >
                                             Escuchar
                                           </button>
                                           <button
-                                            onClick={() => handleAddTrackToQueue(t)}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAddTrackToQueue(t);
+                                            }}
                                             className="px-2 py-0.5 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded text-[10px] font-bold transition"
                                           >
                                             + Cola
@@ -3584,19 +3672,23 @@ export default function RadioManager() {
 
       </div>
 
-      {/* BARRA INFERIOR DE REPRODUCCION (VISTA PREVIA BIBLIOTECA O TRANSMISIÓN EN VIVO) */}
+      {/* BARRA INFERIOR DE REPRODUCCION COMPARTIDA (MODO ROJO: AL AIRE | MODO AZUL: BIBLIOTECA) */}
       {(previewTrack || onAirTrack?.station_name || songs.length > 0) && (() => {
         const isLiveBottomActive = (bottomPlayerMode === 'live' || !previewTrack) && Boolean(onAirTrack?.station_name || songs.length > 0);
         const liveDisplayTrack = onAirTrack?.station_name ? onAirTrack : (songs[0] || null);
 
         return (
-          <div className={`fixed bottom-0 left-0 right-0 z-40 bg-[#181818]/95 backdrop-blur-xl border-t px-4 py-3 text-white flex items-center justify-between shadow-2xl animate-slide-up transition-colors ${
-            isLiveBottomActive ? 'border-red-500/40' : 'border-white/10'
+          <div className={`fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t px-4 py-3 text-white flex items-center justify-between shadow-2xl animate-slide-up transition-all duration-300 ${
+            isLiveBottomActive 
+              ? 'border-red-500/50 bg-gradient-to-r from-neutral-950 via-[#1c0808]/95 to-neutral-950 shadow-red-950/30' 
+              : 'border-cyan-400/50 bg-gradient-to-r from-neutral-950 via-[#071926]/95 to-neutral-950 shadow-cyan-950/30 ring-1 ring-cyan-500/20'
           }`}>
             
             {/* Info Pista */}
             <div className="flex items-center gap-3 w-1/4 min-w-[200px]">
-              <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/10 shadow-md">
+              <div className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border shadow-md transition-all ${
+                isLiveBottomActive ? 'border-red-500/40 ring-1 ring-red-500/30' : 'border-cyan-400/40 ring-1 ring-cyan-400/30'
+              }`}>
                 <img 
                   src={isLiveBottomActive 
                     ? (liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400')
@@ -3604,16 +3696,20 @@ export default function RadioManager() {
                   alt="cover" 
                   className="w-full h-full object-cover"
                 />
-                {isLiveBottomActive && (
+                {isLiveBottomActive ? (
                   <div className="absolute inset-0 bg-red-600/30 flex items-center justify-center pointer-events-none">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center pointer-events-none">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                   </div>
                 )}
               </div>
 
               <div className="truncate">
                 <div className="flex items-center gap-1.5">
-                  <h4 className={`font-bold text-xs truncate ${isLiveBottomActive ? 'text-red-400' : 'text-white'}`}>
+                  <h4 className={`font-black text-xs truncate transition-colors ${isLiveBottomActive ? 'text-red-400' : 'text-cyan-400'}`}>
                     {isLiveBottomActive 
                       ? (liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café') 
                       : previewTrack?.title}
@@ -3622,36 +3718,39 @@ export default function RadioManager() {
                 <p className="text-[11px] text-gray-400 truncate">
                   {isLiveBottomActive 
                     ? (liveDisplayTrack?.station_artist || liveDisplayTrack?.artist || 'En Vivo') 
-                    : previewTrack?.artist}
+                    : (previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local')}
                 </p>
 
                 {/* Badges y selector de modo */}
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {isLiveBottomActive ? (
-                    <span className="px-1.5 py-0.2 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-red-500/20">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                      EN VIVO AL AIRE
+                      🔴 EN VIVO AL AIRE
                     </span>
                   ) : (
-                    <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-[9px] font-black uppercase tracking-wider">
-                      PRE-ESCUCHA BIBLIOTECA
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-cyan-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      🎧 MODO AZUL (BIBLIOTECA)
                     </span>
                   )}
 
                   {previewTrack && isLiveBottomActive && (
                     <button 
                       onClick={() => setBottomPlayerMode('preview')} 
-                      className="text-[9px] text-gray-400 hover:text-white underline ml-1 cursor-pointer"
+                      className="text-[9px] text-cyan-400 hover:text-cyan-300 font-bold underline ml-1 cursor-pointer"
+                      title="Cambiar a la barra de pre-escucha de biblioteca"
                     >
-                      Ver Biblioteca
+                      Ir a Azul
                     </button>
                   )}
                   {!isLiveBottomActive && (onAirTrack?.station_name || songs.length > 0) && (
                     <button 
                       onClick={() => setBottomPlayerMode('live')} 
                       className="text-[9px] text-red-400 hover:text-red-300 font-bold underline ml-1 cursor-pointer"
+                      title="Cambiar a la barra de transmisión al aire"
                     >
-                      Ver Señal en Vivo
+                      Ir a Rojo
                     </button>
                   )}
                 </div>
@@ -3663,7 +3762,7 @@ export default function RadioManager() {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={isLiveBottomActive ? handleAirPrev : playPrevPreview} 
-                  className="text-gray-400 hover:text-white transition"
+                  className={`transition ${isLiveBottomActive ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-cyan-400'}`}
                   title={isLiveBottomActive ? "Pista anterior en la cola al aire" : "Pista anterior en biblioteca"}
                 >
                   <SkipBack className="w-4 h-4" />
@@ -3671,10 +3770,10 @@ export default function RadioManager() {
                 
                 <button 
                   onClick={isLiveBottomActive ? handleAirPlayPause : () => handlePlayPreview(previewTrack)}
-                  className={`p-2.5 rounded-full shadow-lg transition ${
+                  className={`p-2.5 rounded-full shadow-lg transition-transform active:scale-95 ${
                     isLiveBottomActive 
                       ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30' 
-                      : 'bg-[#1DB954] hover:bg-[#1ed760] text-black shadow-[#1DB954]/30'
+                      : 'bg-cyan-400 hover:bg-cyan-300 text-black shadow-cyan-400/30 ring-2 ring-cyan-300'
                   }`}
                   title={isLiveBottomActive ? (onAirTrack?.is_playing ? "Pausar emisión" : "Iniciar emisión") : (isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha")}
                 >
@@ -3685,7 +3784,7 @@ export default function RadioManager() {
 
                 <button 
                   onClick={isLiveBottomActive ? handleAirNext : playNextPreview} 
-                  className="text-gray-400 hover:text-white transition"
+                  className={`transition ${isLiveBottomActive ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-cyan-400'}`}
                   title={isLiveBottomActive ? "Siguiente canción al aire" : "Siguiente canción en biblioteca"}
                 >
                   <SkipForward className="w-4 h-4" />
@@ -3694,7 +3793,9 @@ export default function RadioManager() {
 
               {/* Barra de Tiempo / Seek */}
               <div className="w-full flex items-center gap-2 text-[10px] font-mono text-gray-400">
-                <span>{formatTime(isLiveBottomActive ? airTime : previewTime)}</span>
+                <span className={isLiveBottomActive ? 'text-red-400' : 'text-cyan-400'}>
+                  {formatTime(isLiveBottomActive ? airTime : previewTime)}
+                </span>
                 <input 
                   type="range"
                   min="0"
@@ -3711,7 +3812,7 @@ export default function RadioManager() {
                     }
                   }}
                   className={`w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer transition-all ${
-                    isLiveBottomActive ? 'accent-red-500' : 'accent-[#1DB954]'
+                    isLiveBottomActive ? 'accent-red-500' : 'accent-cyan-400'
                   }`}
                   title={isLiveBottomActive ? "Arrastra para mover dónde va la canción (sincroniza en vivo a Proyecto Radio)" : "Adelantar o retroceder pre-escucha"}
                 />
@@ -3721,7 +3822,7 @@ export default function RadioManager() {
 
             {/* Control Volumen y Monitor */}
             <div className="flex items-center justify-end gap-3 w-1/4">
-              {isLiveBottomActive && (
+              {isLiveBottomActive ? (
                 <button
                   onClick={handleToggleListenLive}
                   className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider transition border ${
@@ -3733,9 +3834,13 @@ export default function RadioManager() {
                 >
                   {isPlayingLiveSignal ? '🔊 Monitor ON' : '🔇 Monitor OFF'}
                 </button>
+              ) : (
+                <span className="text-[10px] font-bold text-cyan-400/80 uppercase tracking-wider hidden sm:inline">
+                  🎧 Audífonos CUE
+                </span>
               )}
 
-              <button onClick={() => setIsMuted(!isMuted)} className="text-gray-400 hover:text-white transition">
+              <button onClick={() => setIsMuted(!isMuted)} className={`transition ${isLiveBottomActive ? 'text-gray-400 hover:text-red-400' : 'text-gray-400 hover:text-cyan-400'}`}>
                 {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
               </button>
               <input 
@@ -3749,7 +3854,7 @@ export default function RadioManager() {
                   setIsMuted(false);
                 }}
                 className={`w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer ${
-                  isLiveBottomActive ? 'accent-red-500' : 'accent-[#1DB954]'
+                  isLiveBottomActive ? 'accent-red-500' : 'accent-cyan-400'
                 }`}
               />
             </div>
