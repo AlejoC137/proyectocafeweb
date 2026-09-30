@@ -26,6 +26,7 @@ export default function RadioStationSelector({
   const [requestingTrackId, setRequestingTrackId] = useState(null);
   const [requestSuccess, setRequestSuccess] = useState(null);
   const [djMixingTrack, setDjMixingTrack] = useState(null);
+  const [showPreviousTracks, setShowPreviousTracks] = useState(false);
 
   // Lista dinámica de pistas de la cola filtradas por búsqueda
   const filteredQueueTracks = useMemo(() => {
@@ -37,6 +38,61 @@ export default function RadioStationSelector({
       (t.album && t.album.toLowerCase().includes(q))
     );
   }, [supabasePlaylist, searchQuery]);
+
+  // Función helper para determinar si una pista específica está al aire
+  const isSongOnAir = (track) => {
+    if (!track) return false;
+    if (track.url && currentPlay?.station_url && track.url === currentPlay.station_url) return true;
+    if (currentLiveTitle && track.title) {
+      const liveLower = currentLiveTitle.toLowerCase().trim();
+      const titleLower = track.title.toLowerCase().trim();
+      if (liveLower === titleLower) return true;
+      if (liveLower.includes(titleLower) || titleLower.includes(liveLower)) return true;
+    }
+    return false;
+  };
+
+  // Separación exacta de Pista Actual vs Siguientes estilo Spotify Queue
+  const { currentQueueTrack, nextQueueTracks, previousQueueTracks } = useMemo(() => {
+    if (!filteredQueueTracks || filteredQueueTracks.length === 0) {
+      return { currentQueueTrack: null, nextQueueTracks: [], previousQueueTracks: [] };
+    }
+
+    const foundIndex = filteredQueueTracks.findIndex(track => isSongOnAir(track));
+
+    if (foundIndex !== -1) {
+      return {
+        currentQueueTrack: filteredQueueTracks[foundIndex],
+        nextQueueTracks: filteredQueueTracks.slice(foundIndex + 1),
+        previousQueueTracks: filteredQueueTracks.slice(0, foundIndex)
+      };
+    }
+
+    // Si hay canción al aire en Supabase pero no se encontró idéntica en la tanda
+    if (currentPlay?.station_name) {
+      const liveFallback = {
+        id: 'current-live-play',
+        title: currentPlay.station_name,
+        artist: (currentPlay.station_artist || 'Radio Café').replace(/^REQUEST:[^|]*\|\|/, ''),
+        album: 'Emisión al Aire',
+        cover: currentPlay.station_cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
+        duration: 180,
+        url: currentPlay.station_url
+      };
+      return {
+        currentQueueTrack: liveFallback,
+        nextQueueTracks: filteredQueueTracks,
+        previousQueueTracks: []
+      };
+    }
+
+    // Default si no se detecta canción al aire: la primera es actual, siguientes el resto
+    return {
+      currentQueueTrack: filteredQueueTracks[0],
+      nextQueueTracks: filteredQueueTracks.slice(1),
+      previousQueueTracks: []
+    };
+  }, [filteredQueueTracks, currentLiveTitle, currentPlay]);
 
   // 1. Agrupar canciones en las Playlists / Álbumes creados en Radio Manager
   const playlistsFromManager = useMemo(() => {
@@ -189,77 +245,208 @@ export default function RadioStationSelector({
         </button>
       </div>
 
-      {/* VISTA A: COLA DE EMISIÓN AL AIRE (DINÁMICA EN TIEMPO REAL) */}
+      {/* VISTA A: COLA DE EMISIÓN AL AIRE (ESTILO SPOTIFY CON CANCIÓN ACTUAL ARRIBA Y SOLO LAS SIGUIENTES) */}
       {selectorTab === 'queue' && (
-        <div>
-          {filteredQueueTracks.length === 0 ? (
+        <div className="space-y-4">
+          {(!currentQueueTrack && nextQueueTracks.length === 0) ? (
             <div className="p-8 text-center border-[3px] border-dashed border-black dark:border-slate-700 bg-cream-bg dark:bg-[#181926] my-4">
               <Radio className="w-12 h-12 mx-auto text-gray-400 animate-pulse mb-2" />
               <p className="font-black uppercase text-sm">Cola de emisión vacía</p>
               <p className="text-xs text-gray-500 mt-1 font-bold">Agrega canciones en Radio Manager para verlas aquí en vivo.</p>
             </div>
           ) : (
-            <div className="flex flex-col divide-y-[3px] divide-black dark:divide-slate-700 border-[3px] border-black dark:border-slate-700">
-              {filteredQueueTracks.map((track, idx) => {
-                const isCurrentPlaying = Boolean(
-                  currentLiveTitle && (
-                    (track.title && currentLiveTitle.toLowerCase().includes(track.title.toLowerCase())) ||
-                    (currentLiveTitle.toLowerCase().includes((track.title || '').toLowerCase())) ||
-                    (track.url && currentPlay?.station_url && track.url === currentPlay.station_url)
-                  )
-                );
-
-                return (
-                  <div
-                    key={track.id || `${track.title}-${idx}`}
-                    className={`flex items-center gap-3 px-3 py-2 bg-white dark:bg-[#181926] transition-colors ${
-                      isCurrentPlaying ? 'bg-yellow-50 dark:bg-yellow-400/10' : ''
-                    }`}
-                  >
-                    {/* Número en la tanda */}
-                    <span className="w-5 text-center font-mono font-bold text-xs text-gray-400 shrink-0">
-                      {idx + 1}
+            <>
+              {/* SECCIÓN 1: CANCIÓN ACTUAL AL AIRE (EN REPRODUCCIÓN / HERO CARD) */}
+              {currentQueueTrack && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+                      <span className="text-[11px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
+                        En Reproducción
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400">
+                      Al Aire en Vivo
                     </span>
+                  </div>
 
-                    {/* Miniatura */}
-                    <div className="w-9 h-9 shrink-0 overflow-hidden border-[2px] border-black dark:border-slate-600 bg-black">
+                  <div className="p-3 sm:p-3.5 bg-yellow-50 dark:bg-yellow-400/10 border-[3px] border-black dark:border-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.25)] flex items-center justify-between gap-3 sm:gap-4 transition-all duration-200">
+                    {/* Miniatura con Ecualizador animado estilo Spotify */}
+                    <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 overflow-hidden border-[2px] border-black dark:border-slate-600 bg-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
                       <img
-                        src={track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
-                        alt={track.title}
+                        src={currentQueueTrack.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                        alt={currentQueueTrack.title}
                         onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
                         className="w-full h-full object-cover"
                       />
+                      {/* Ecualizador animado Spotify en esquina */}
+                      <div className="absolute inset-0 bg-black/35 flex items-end justify-center pb-1.5 gap-[3px] pointer-events-none">
+                        <span className="w-1 bg-white rounded-none animate-eq-1 h-3" />
+                        <span className="w-1 bg-white rounded-none animate-eq-2 h-4" />
+                        <span className="w-1 bg-white rounded-none animate-eq-3 h-2" />
+                        <span className="w-1 bg-white rounded-none animate-eq-4 h-3.5" />
+                      </div>
                     </div>
 
-                    {/* Info */}
+                    {/* Información Principal de la canción actual */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className={`font-black text-xs uppercase tracking-wide truncate ${
-                          isCurrentPlaying ? 'text-red-600 dark:text-yellow-400' : 'text-black dark:text-white'
-                        }`}>
-                          {track.title}
+                        <p className="font-black text-xs sm:text-sm uppercase tracking-wide truncate text-red-600 dark:text-yellow-400">
+                          {currentQueueTrack.title}
                         </p>
-                        {isCurrentPlaying && (
-                          <span className="px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-black uppercase animate-pulse shrink-0">
-                            AL AIRE
-                          </span>
-                        )}
+                        <span className="px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-black uppercase animate-pulse shrink-0 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                          AL AIRE
+                        </span>
                       </div>
-                      <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 truncate">
-                        {track.artist || 'Radio Café'} {track.album ? `• ${track.album}` : ''}
+                      <p className="text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 truncate mt-0.5">
+                        {currentQueueTrack.artist || 'Radio Café'} {currentQueueTrack.album ? `• ${currentQueueTrack.album}` : ''}
                       </p>
                     </div>
 
                     {/* Duración */}
                     <div className="shrink-0 text-right">
-                      <p className="text-[11px] font-mono font-bold text-gray-400">
-                        {formatDuration(track.duration)}
+                      <p className="text-xs font-mono font-black text-black dark:text-yellow-400">
+                        {formatDuration(currentQueueTrack.duration)}
                       </p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+
+              {/* SECCIÓN 2: A CONTINUACIÓN EN LA COLA (SOLO LAS SIGUIENTES) */}
+              <div>
+                <div className="flex items-center justify-between mt-5 mb-2.5 pt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-black dark:text-white">
+                      A continuación en la cola
+                    </span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-black text-white dark:bg-yellow-400 dark:text-black">
+                      {nextQueueTracks.length}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider hidden sm:inline">
+                    Toca para mezclar al aire
+                  </span>
+                </div>
+
+                {nextQueueTracks.length === 0 ? (
+                  <div className="p-6 text-center border-[2px] border-dashed border-black/30 dark:border-slate-700 bg-cream-bg/60 dark:bg-[#181926]">
+                    <p className="font-black uppercase text-xs text-gray-700 dark:text-gray-300">
+                      Has llegado al final de la tanda
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-bold">
+                      La emisión continuará en bucle o con canciones añadidas desde Radio Manager.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col divide-y-[2px] divide-black/15 dark:divide-slate-700/60 border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#181926] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                    {nextQueueTracks.map((track, idx) => {
+                      const isRequesting = requestingTrackId === track.id;
+
+                      return (
+                        <div
+                          key={track.id || `${track.title}-${idx}`}
+                          onClick={() => handleSelectSong(track)}
+                          className="group flex items-center gap-3 px-3 py-2.5 bg-white dark:bg-[#181926] hover:bg-yellow-50 dark:hover:bg-yellow-400/5 transition-all duration-200 cursor-pointer active:scale-[0.99] select-none"
+                          title={`Toca para pedir al aire: "${track.title}"`}
+                        >
+                          {/* Número relativo o icono de Play en hover / tap */}
+                          <div className="w-5 text-center shrink-0 flex items-center justify-center">
+                            <span className="font-mono font-bold text-xs text-gray-400 group-hover:hidden transition-colors">
+                              {idx + 1}
+                            </span>
+                            <span className="hidden group-hover:flex items-center justify-center text-red-600 dark:text-yellow-400">
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                            </span>
+                          </div>
+
+                          {/* Miniatura */}
+                          <div className="w-9 h-9 shrink-0 overflow-hidden border-[2px] border-black dark:border-slate-600 bg-black group-hover:scale-105 transition-transform duration-200">
+                            <img
+                              src={track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                              alt={track.title}
+                              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          {/* Información */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-xs uppercase tracking-wide truncate text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-yellow-400 transition-colors">
+                              {track.title}
+                            </p>
+                            <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                              {track.artist || 'Radio Café'} {track.album ? `• ${track.album}` : ''}
+                            </p>
+                          </div>
+
+                          {/* Duración o Feedback de Mezcla */}
+                          <div className="shrink-0 text-right flex items-center gap-2">
+                            {isRequesting ? (
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase text-red-600 dark:text-yellow-400 animate-pulse">
+                                <Volume2 className="w-3.5 h-3.5 animate-bounce" />
+                                <span>Mezclando</span>
+                              </span>
+                            ) : (
+                              <p className="text-[11px] font-mono font-bold text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors">
+                                {formatDuration(track.duration)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN 3: HISTORIAL COLAPSABLE DE PISTAS ANTERIORES */}
+              {previousQueueTracks.length > 0 && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => setShowPreviousTracks(!showPreviousTracks)}
+                    className="w-full py-2 px-3 border-[2px] border-dashed border-black/30 dark:border-slate-700 font-bold text-xs uppercase tracking-wider text-gray-500 hover:text-black dark:hover:text-white hover:border-black transition flex items-center justify-center gap-2 bg-cream-bg/40 dark:bg-white/5"
+                  >
+                    <span>{showPreviousTracks ? '▲ Ocultar pistas anteriores' : `▼ Ver pistas anteriores (${previousQueueTracks.length})`}</span>
+                  </button>
+
+                  {showPreviousTracks && (
+                    <div className="mt-2 flex flex-col divide-y divide-black/10 dark:divide-slate-800 border-[2px] border-black/20 dark:border-slate-800 bg-black/5 dark:bg-black/20 opacity-80">
+                      {previousQueueTracks.map((track, idx) => (
+                        <div
+                          key={track.id || `${track.title}-prev-${idx}`}
+                          onClick={() => handleSelectSong(track)}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-black/10 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                        >
+                          <span className="w-5 text-center font-mono text-[10px] text-gray-400 shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div className="w-7 h-7 shrink-0 overflow-hidden border border-black/30 bg-black">
+                            <img
+                              src={track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                              alt={track.title}
+                              className="w-full h-full object-cover grayscale opacity-70"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-xs uppercase text-gray-700 dark:text-gray-300 truncate">
+                              {track.title}
+                            </p>
+                            <p className="text-[10px] text-gray-500 truncate">
+                              {track.artist || 'Radio Café'}
+                            </p>
+                          </div>
+                          <span className="font-mono text-[10px] text-gray-400">
+                            {formatDuration(track.duration)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

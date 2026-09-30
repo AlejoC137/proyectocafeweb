@@ -2606,7 +2606,7 @@ export default function RadioManager() {
 
   return (
     <div 
-      className={`min-h-screen bg-[#121212] text-white font-sans p-4 sm:p-8 pb-32 transition-colors ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
+      className={`min-h-screen bg-[#121212] text-white font-sans p-3 sm:p-6 md:p-8 pb-48 sm:pb-36 transition-colors overflow-x-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
@@ -2614,25 +2614,25 @@ export default function RadioManager() {
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* HEADER PRINCIPAL SPOTIFY */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
           <div>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-[#1DB954] text-black rounded-2xl shadow-xl shadow-[#1DB954]/20">
-                <Music className="w-8 h-8 stroke-[2.5]" />
+              <div className="p-2.5 sm:p-3 bg-[#1DB954] text-black rounded-2xl shadow-xl shadow-[#1DB954]/20 shrink-0">
+                <Music className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
               </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                  Radio Studio Manager <span className="text-xs px-3 py-1 rounded-full bg-[#1DB954]/20 text-[#1DB954] font-extrabold border border-[#1DB954]/30 uppercase tracking-widest">Spotify Style</span>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-2 sm:gap-3">
+                  Radio Studio Manager <span className="text-[10px] sm:text-xs px-2.5 py-0.5 sm:py-1 rounded-full bg-[#1DB954]/20 text-[#1DB954] font-extrabold border border-[#1DB954]/30 uppercase tracking-widest">Spotify Style</span>
                 </h1>
-                <p className="text-xs text-gray-400 font-semibold mt-1">
+                <p className="text-[11px] sm:text-xs text-gray-400 font-semibold mt-1">
                   Gestión integral de playlist de radio, metadatos ID3, carpetas, álbumes y enlaces de YouTube
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ACCIONES DE CARGA Y SUBIDA */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          {/* ACCIONES DE CARGA Y SUBIDA (OPTIMIZADAS TÁCTIL MÓVIL / IOS) */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
             <input 
               ref={fileInputRef}
               type="file" 
@@ -2653,50 +2653,50 @@ export default function RadioManager() {
 
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 md:flex-none px-5 py-3 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-xl shadow-[#1DB954]/20"
+              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 text-black font-extrabold text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-xl shadow-[#1DB954]/20 touch-manipulation"
             >
               <Upload className="w-4 h-4 stroke-[2.5]" />
-              Subir MP3s
+              <span>Subir MP3s</span>
             </button>
 
             <button 
               onClick={() => folderInputRef.current?.click()}
-              className="flex-1 md:flex-none px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs uppercase tracking-wider border border-white/15 transition flex items-center justify-center gap-2 shadow-lg"
+              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border border-white/15 transition flex items-center justify-center gap-1.5 shadow-lg touch-manipulation"
             >
               <FolderUp className="w-4 h-4" />
-              Subir Carpeta Completa
+              <span>Subir Carpeta</span>
             </button>
 
             <button 
               onClick={() => setShowListenersModal(true)}
-              className="flex-1 md:flex-none px-5 py-3 rounded-full bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-extrabold text-xs uppercase tracking-wider border border-blue-500/40 transition flex items-center justify-center gap-2 shadow-lg"
+              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-blue-600/30 hover:bg-blue-600/50 active:scale-95 text-blue-300 font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border border-blue-500/40 transition flex items-center justify-center gap-1.5 shadow-lg touch-manipulation"
               title="Monitorear oyentes activos y enviarles órdenes de transmisión"
             >
               <Users className="w-4 h-4" />
-              Oyentes ({activeListenersCount})
+              <span>Oyentes ({activeListenersCount})</span>
             </button>
 
             <button 
               onClick={handleForceRestart}
               disabled={isRestarting}
               title="Forzar el reinicio completo de la radio, detener la transmisión activa y recargar listas"
-              className="flex-1 md:flex-none px-5 py-3 rounded-full bg-red-600/90 hover:bg-red-600 text-white font-extrabold text-xs uppercase tracking-wider border border-red-500/40 transition flex items-center justify-center gap-2 shadow-xl shadow-red-900/30 disabled:opacity-50"
+              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-red-600/90 hover:bg-red-600 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border border-red-500/40 transition flex items-center justify-center gap-1.5 shadow-xl shadow-red-900/30 disabled:opacity-50 touch-manipulation"
             >
               <RotateCcw className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} />
-              {isRestarting ? 'Reiniciando...' : 'Forzar Reinicio'}
+              <span>{isRestarting ? 'Reiniciando...' : 'Reinicio'}</span>
             </button>
           </div>
         </div>
 
         {/* BANNER CONTROL MAESTRO DE EMISIÓN: FORZAR FUENTES EN TODAS LAS INSTANCIAS */}
-        <div className="bg-[#181818] p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-[#181818] p-3 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
               <Radio className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black uppercase tracking-wider text-white">Forzar Fuente en Oyentes:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">Forzar Fuente en Oyentes:</span>
                 <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
                   onAirTrack?.tab === 'youtube' ? 'bg-red-500/20 text-red-400 border-red-500/40' :
                   onAirTrack?.tab === 'live' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' :
@@ -2705,56 +2705,56 @@ export default function RadioManager() {
                   Al aire: {onAirTrack?.tab === 'youtube' ? 'YouTube' : onAirTrack?.tab === 'live' ? 'Radios (Plaza)' : 'Files (MP3s)'}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">
                 Pasa forzosamente todas las instancias abiertas de Proyecto Radio a reproducir la fuente seleccionada ({activeListenersCount} instancias conectadas).
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full lg:w-auto">
             <button
               onClick={() => handleForceModeAll('supabase')}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border shadow-lg ${
+              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
                 onAirTrack?.tab === 'supabase' || !onAirTrack?.tab
                   ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-[#1DB954]/30'
                   : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
               }`}
             >
               <Music className="w-4 h-4" />
-              Forzar Files
+              <span>Files</span>
             </button>
 
             <button
               onClick={() => handleForceModeAll('live')}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border shadow-lg ${
+              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
                 onAirTrack?.tab === 'live'
                   ? 'bg-cyan-500 text-black border-cyan-400 shadow-cyan-500/30'
                   : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
               }`}
             >
               <Radio className="w-4 h-4" />
-              Forzar Radios
+              <span>Radios</span>
             </button>
 
             <button
               onClick={() => handleForceModeAll('youtube')}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border shadow-lg ${
+              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
                 onAirTrack?.tab === 'youtube'
                   ? 'bg-red-600 text-white border-red-500 shadow-red-600/30'
                   : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
               }`}
             >
               <Youtube className="w-4 h-4 fill-current" />
-              Forzar YouTube
+              <span>YouTube</span>
             </button>
           </div>
         </div>
 
         {/* SWITCHER DE PESTAÑAS PRINCIPALES */}
-        <div className="flex border-b border-white/10 gap-3 sm:gap-6 pt-2">
+        <div className="flex border-b border-white/10 gap-3 sm:gap-6 pt-2 overflow-x-auto no-scrollbar whitespace-nowrap scroll-smooth">
           <button 
             onClick={() => setManagerTab('mp3')}
-            className={`pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 ${
+            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
               managerTab === 'mp3' ? 'border-[#1DB954] text-[#1DB954]' : 'border-transparent text-gray-400 hover:text-white'
             }`}
           >
@@ -2763,7 +2763,7 @@ export default function RadioManager() {
 
           <button 
             onClick={() => setManagerTab('albums')}
-            className={`pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 ${
+            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
               managerTab === 'albums' ? 'border-[#1DB954] text-[#1DB954]' : 'border-transparent text-gray-400 hover:text-white'
             }`}
           >
@@ -2772,7 +2772,7 @@ export default function RadioManager() {
 
           <button 
             onClick={() => setManagerTab('youtube')}
-            className={`pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 ${
+            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
               managerTab === 'youtube' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-400 hover:text-white'
             }`}
           >
@@ -2784,14 +2784,14 @@ export default function RadioManager() {
           <div className="space-y-6">
 
             {/* BARRA SUPERIOR DE ESTADO Y VISTAS */}
-            <div className="bg-[#181818] p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-[#181818] p-3 sm:p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-3 w-3 relative">
+                <span className="flex h-3 w-3 relative shrink-0">
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isBatOnline ? 'bg-emerald-500' : 'bg-red-500'} opacity-75`}></span>
                   <span className={`relative inline-flex rounded-full h-3 w-3 ${isBatOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                 </span>
                 <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                     PARRILLA DINÁMICA AL AIRE
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
                       isBatOnline ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'
@@ -2799,7 +2799,7 @@ export default function RadioManager() {
                       {isBatOnline ? '🟢 BAT CONECTADO' : '🔴 BAT DESCONECTADO'}
                     </span>
                   </h3>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">
                     {isBatOnline 
                       ? 'Emisión sincronizada en vivo con G:\\Mi unidad\\Radio.' 
                       : 'Inicia "iniciar_radio.bat" en tu PC para conectar la biblioteca y transmitir.'}
@@ -2812,7 +2812,7 @@ export default function RadioManager() {
                 <button
                   onClick={handleSyncWithBat}
                   disabled={isUpdatingAirList}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs uppercase tracking-wider transition flex items-center gap-2 border border-white/10 shadow-md disabled:opacity-50"
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-extrabold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border border-white/10 shadow-md disabled:opacity-50 touch-manipulation"
                   title="Recargar catálogo y sincronizar con el bat"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isUpdatingAirList ? 'animate-spin text-[#1DB954]' : 'text-gray-300'}`} />
@@ -2822,54 +2822,54 @@ export default function RadioManager() {
             </div>
 
             {/* SELECTOR DE VISTAS: SPLIT, BIBLIOTECA, COLA */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2 overflow-x-auto no-scrollbar gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setMp3ViewMode('split')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
+                  className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 touch-manipulation ${
                     mp3ViewMode === 'split'
                       ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/20'
                       : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5" /> Consola Dividida (DJ Split)
+                  <Layers className="w-3.5 h-3.5" /> Consola Dividida
                 </button>
                 <button
                   onClick={() => setMp3ViewMode('library')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
+                  className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 touch-manipulation ${
                     mp3ViewMode === 'library'
                       ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/20'
                       : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <FolderUp className="w-3.5 h-3.5" /> Solo Biblioteca ({libraryTracks.length})
+                  <FolderUp className="w-3.5 h-3.5" /> Biblioteca ({libraryTracks.length})
                 </button>
                 <button
                   onClick={() => setMp3ViewMode('queue')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
+                  className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 touch-manipulation ${
                     mp3ViewMode === 'queue'
                       ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/20'
                       : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <Radio className="w-3.5 h-3.5" /> Solo Cola Al Aire ({songs.length})
+                  <Radio className="w-3.5 h-3.5" /> Cola Al Aire ({songs.length})
                 </button>
               </div>
 
-              <div className="text-[11px] text-gray-400 hidden sm:flex items-center gap-2">
+              <div className="text-[11px] text-gray-400 hidden lg:flex items-center gap-2 shrink-0">
                 <span>💡 Arrastra canciones de la izquierda a la derecha para sumarlas a la cola</span>
               </div>
             </div>
 
             {/* GRID DUAL PANEL 50% / 50% */}
             <div className="w-full">
-              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start' : ''}`}>
+              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start' : ''}`}>
 
                 {/* ========================================================================= */}
                 {/* PANEL IZQUIERDO: BIBLIOTECA COMPLETA DE LA CARPETA (CON PLAY, NEXT, ALEATORIO) */}
                 {/* ========================================================================= */}
                 {(mp3ViewMode === 'split' || mp3ViewMode === 'library') && (
-                  <div className="w-full bg-[#181818] pt-6 px-5 pb-5 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[780px]">
+                  <div className="w-full bg-[#181818] pt-4 sm:pt-6 px-3 sm:px-5 pb-4 sm:pb-5 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[540px] sm:h-[660px] lg:h-[780px]">
                     {/* CABECERA PANEL IZQUIERDO */}
                     <div className="space-y-3 pb-3 border-b border-white/10 pt-1">
                       {/* FILA 1: TÍTULO Y CONTEO */}
@@ -3178,7 +3178,7 @@ export default function RadioManager() {
                         } catch (err) {}
                       }
                     }}
-                    className={`w-full bg-[#181818] pt-6 px-5 pb-5 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[780px] ${
+                    className={`w-full bg-[#181818] pt-4 sm:pt-6 px-3 sm:px-5 pb-4 sm:pb-5 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[540px] sm:h-[660px] lg:h-[780px] ${
                       isDraggingOverQueue 
                         ? 'border-[#1DB954] bg-[#1DB954]/5 ring-4 ring-[#1DB954]/30 scale-[1.002]' 
                         : 'border-white/10'
@@ -3952,15 +3952,60 @@ export default function RadioManager() {
         const liveDisplayTrack = onAirTrack?.station_name ? onAirTrack : (songs[0] || null);
 
         return (
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 backdrop-blur-2xl border-t border-white/10 px-2 sm:px-4 py-2 shadow-2xl animate-slide-up">
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 backdrop-blur-2xl border-t border-white/10 px-2 sm:px-4 py-2 shadow-2xl animate-slide-up pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            
+            {/* SELECTOR DE DECKS EN MÓVIL (< lg) */}
+            <div className="flex lg:hidden items-center justify-between gap-1.5 pb-2 border-b border-white/10 mb-2">
+              <div className="flex items-center gap-1 w-full">
+                <button
+                  onClick={() => setBottomPlayerMode('preview')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition touch-manipulation ${
+                    bottomPlayerMode === 'preview'
+                      ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/30 font-black'
+                      : 'bg-white/5 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span>Deck CUE</span>
+                </button>
+
+                <button
+                  onClick={() => setBottomPlayerMode('live')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition touch-manipulation ${
+                    bottomPlayerMode === 'live'
+                      ? 'bg-red-600 text-white shadow-md shadow-red-600/30 font-black'
+                      : 'bg-white/5 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                  <span>Deck Aire</span>
+                </button>
+
+                <button
+                  onClick={() => setBottomPlayerMode('split')}
+                  className={`py-1.5 px-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition touch-manipulation ${
+                    bottomPlayerMode === 'split'
+                      ? 'bg-white text-black font-black'
+                      : 'bg-white/5 text-gray-400 hover:text-white'
+                  }`}
+                  title="Mostrar ambos decks"
+                >
+                  <Layers className="w-3 h-3" />
+                  <span className="hidden sm:inline">Ambos</span>
+                </button>
+              </div>
+            </div>
+
             <div className="max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-2.5">
               
               {/* ===================== DECK AZUL: BIBLIOTECA (PRE-ESCUCHA / CUE EXCLUSIVO) ===================== */}
-              <div className="bg-gradient-to-r from-[#071926]/95 via-[#0b2438]/90 to-[#071926]/95 border-2 border-cyan-500/50 rounded-xl p-2.5 shadow-lg shadow-cyan-950/40 flex items-center justify-between gap-3 min-w-0">
+              <div className={`bg-gradient-to-r from-[#071926]/95 via-[#0b2438]/90 to-[#071926]/95 border-2 border-cyan-500/50 rounded-xl p-2.5 shadow-lg shadow-cyan-950/40 items-center justify-between gap-2 sm:gap-3 min-w-0 ${
+                bottomPlayerMode === 'live' ? 'hidden lg:flex' : 'flex'
+              }`}>
                 
                 {/* Info Canción Azul */}
-                <div className="flex items-center gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
-                  <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-cyan-400/40 ring-1 ring-cyan-400/30 bg-neutral-900 shadow-md">
+                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
+                  <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden shrink-0 border border-cyan-400/40 ring-1 ring-cyan-400/30 bg-neutral-900 shadow-md">
                     <img 
                       src={previewTrack?.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'} 
                       alt="cover biblioteca" 
@@ -3977,23 +4022,23 @@ export default function RadioManager() {
                   <div className="min-w-0 flex-1">
                     <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1 mb-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                      🎧 DECK AZUL: BIBLIOTECA
+                      🎧 DECK CUE
                     </span>
                     <h4 className="font-black text-xs text-cyan-300 truncate" title={previewTrack?.title || 'Sin pre-escucha'}>
-                      {previewTrack?.title || 'Selecciona de Biblioteca'}
+                      {previewTrack?.title || 'Selecciona pista'}
                     </h4>
                     <p className="text-[10px] text-gray-400 truncate" title={previewTrack?.artist || previewTrack?.albumArtist}>
-                      {previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local (CUE)'}
+                      {previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local'}
                     </p>
                   </div>
                 </div>
 
                 {/* Controles Azul (Prev, Play/Pause, Next, Seek) */}
                 <div className="flex flex-col items-center gap-1 flex-1 max-w-xs min-w-0">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <button 
                       onClick={playPrevPreview} 
-                      className="text-gray-400 hover:text-cyan-400 transition" 
+                      className="p-1 text-gray-400 hover:text-cyan-400 transition touch-manipulation" 
                       title="Pista anterior en biblioteca"
                     >
                       <SkipBack className="w-3.5 h-3.5" />
@@ -4001,7 +4046,7 @@ export default function RadioManager() {
                     
                     <button 
                       onClick={handleTogglePreviewPlay}
-                      className="p-2 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300 transition-transform active:scale-95"
+                      className="p-2 sm:p-2.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300 transition-transform active:scale-95 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                       title={isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha"}
                     >
                       {isPlayingPreview ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
@@ -4009,7 +4054,7 @@ export default function RadioManager() {
 
                     <button 
                       onClick={playNextPreview} 
-                      className="text-gray-400 hover:text-cyan-400 transition" 
+                      className="p-1 text-gray-400 hover:text-cyan-400 transition touch-manipulation" 
                       title="Siguiente pista en biblioteca"
                     >
                       <SkipForward className="w-3.5 h-3.5" />
@@ -4017,7 +4062,7 @@ export default function RadioManager() {
 
                     <button 
                       onClick={handleToggleLibraryShuffle} 
-                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center ${
+                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center touch-manipulation ${
                         isLibraryShuffle 
                           ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.8)] ring-1 ring-cyan-400 scale-105' 
                           : 'text-gray-400 hover:text-cyan-400 bg-transparent'
@@ -4030,7 +4075,7 @@ export default function RadioManager() {
 
                   {/* Seek Azul */}
                   <div className="w-full flex items-center gap-1.5 text-[9px] font-mono text-gray-400">
-                    <span className="text-cyan-400 w-8 text-right">{formatTime(previewTime)}</span>
+                    <span className="text-cyan-400 w-8 text-right shrink-0">{formatTime(previewTime)}</span>
                     <input 
                       type="range"
                       min="0"
@@ -4042,16 +4087,16 @@ export default function RadioManager() {
                         if (audioRef.current) audioRef.current.currentTime = newTime;
                         setPreviewTime(newTime);
                       }}
-                      className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                      className="w-full h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400 touch-manipulation"
                       title="Adelantar o retroceder pre-escucha de biblioteca"
                     />
-                    <span className="w-8">{formatTime(previewDuration)}</span>
+                    <span className="w-8 shrink-0">{formatTime(previewDuration)}</span>
                   </div>
                 </div>
 
                 {/* Volumen Azul */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => setIsPreviewMuted(!isPreviewMuted)} className="text-gray-400 hover:text-cyan-400 transition">
+                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => setIsPreviewMuted(!isPreviewMuted)} className="p-1 text-gray-400 hover:text-cyan-400 transition touch-manipulation">
                     {isPreviewMuted || previewVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
                   </button>
                   <input 
@@ -4064,18 +4109,20 @@ export default function RadioManager() {
                       setPreviewVolume(Number(e.target.value));
                       setIsPreviewMuted(false);
                     }}
-                    className="w-14 sm:w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    className="w-14 sm:w-16 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400 touch-manipulation"
                     title="Volumen Pre-escucha Biblioteca"
                   />
                 </div>
               </div>
 
               {/* ===================== DECK ROJO: COLA DE EMISIÓN (AL AIRE) ===================== */}
-              <div className="bg-gradient-to-r from-[#1c0808]/95 via-[#260c0d]/90 to-[#1c0808]/95 border-2 border-red-500/50 rounded-xl p-2.5 shadow-lg shadow-red-950/40 flex items-center justify-between gap-3 min-w-0">
+              <div className={`bg-gradient-to-r from-[#1c0808]/95 via-[#260c0d]/90 to-[#1c0808]/95 border-2 border-red-500/50 rounded-xl p-2.5 shadow-lg shadow-red-950/40 items-center justify-between gap-2 sm:gap-3 min-w-0 ${
+                bottomPlayerMode === 'preview' ? 'hidden lg:flex' : 'flex'
+              }`}>
                 
                 {/* Info Canción Rojo */}
-                <div className="flex items-center gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
-                  <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-red-500/40 ring-1 ring-red-500/30 bg-neutral-900 shadow-md">
+                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
+                  <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden shrink-0 border border-red-500/40 ring-1 ring-red-500/30 bg-neutral-900 shadow-md">
                     <img 
                       src={liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'} 
                       alt="cover al aire" 
@@ -4090,7 +4137,7 @@ export default function RadioManager() {
                   <div className="min-w-0 flex-1">
                     <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1 mb-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                      🔴 DECK ROJO: AL AIRE
+                      🔴 AL AIRE
                     </span>
                     <h4 className="font-black text-xs text-red-400 truncate" title={liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}>
                       {liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}
@@ -4103,10 +4150,10 @@ export default function RadioManager() {
 
                 {/* Controles Rojo (Prev, Play/Pause Monitor, Next, Seek) */}
                 <div className="flex flex-col items-center gap-1 flex-1 max-w-xs min-w-0">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <button 
                       onClick={handleAirPrev} 
-                      className="text-gray-400 hover:text-red-400 transition" 
+                      className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" 
                       title="Pista anterior en cola al aire"
                     >
                       <SkipBack className="w-3.5 h-3.5" />
@@ -4114,7 +4161,7 @@ export default function RadioManager() {
                     
                     <button 
                       onClick={handleAirPlayPause}
-                      className="p-2 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-600/30 transition-transform active:scale-95"
+                      className="p-2 sm:p-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-600/30 transition-transform active:scale-95 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
                       title={isPlayingLiveSignal ? "Silenciar monitor de cabina" : "Escuchar monitor al aire en cabina"}
                     >
                       {isPlayingLiveSignal ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
@@ -4122,7 +4169,7 @@ export default function RadioManager() {
 
                     <button 
                       onClick={handleAirNext} 
-                      className="text-gray-400 hover:text-red-400 transition" 
+                      className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" 
                       title="Siguiente canción al aire"
                     >
                       <SkipForward className="w-3.5 h-3.5" />
@@ -4130,7 +4177,7 @@ export default function RadioManager() {
 
                     <button 
                       onClick={handleToggleAirShuffle} 
-                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center ${
+                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center touch-manipulation ${
                         isAirShuffle 
                           ? 'bg-red-500/25 text-red-300 border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] ring-1 ring-red-400 scale-105' 
                           : 'text-gray-400 hover:text-red-400 bg-transparent'
@@ -4143,7 +4190,7 @@ export default function RadioManager() {
 
                   {/* Seek Rojo */}
                   <div className="w-full flex items-center gap-1.5 text-[9px] font-mono text-gray-400">
-                    <span className="text-red-400 w-8 text-right">{formatTime(airTime)}</span>
+                    <span className="text-red-400 w-8 text-right shrink-0">{formatTime(airTime)}</span>
                     <input 
                       type="range"
                       min="0"
@@ -4151,18 +4198,18 @@ export default function RadioManager() {
                       step="0.5"
                       value={airTime}
                       onChange={(e) => handleSeekAir(Number(e.target.value))}
-                      className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
+                      className="w-full h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
                       title="Arrastra para mover el tiempo de la canción al aire"
                     />
-                    <span className="w-8">{formatTime(airDuration || liveDisplayTrack?.duration || 180)}</span>
+                    <span className="w-8 shrink-0">{formatTime(airDuration || liveDisplayTrack?.duration || 180)}</span>
                   </div>
                 </div>
 
                 {/* Monitor Cabina y Volumen Rojo */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   <button
                     onClick={handleToggleListenLive}
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider transition border ${
+                    className={`px-1.5 py-1 sm:py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition border touch-manipulation ${
                       isPlayingLiveSignal 
                         ? 'bg-red-600/30 border-red-500 text-red-300' 
                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
@@ -4172,22 +4219,24 @@ export default function RadioManager() {
                     {isPlayingLiveSignal ? '🔊 Cabina ON' : '🔇 Cabina OFF'}
                   </button>
 
-                  <button onClick={() => setIsAirMuted(!isAirMuted)} className="text-gray-400 hover:text-red-400 transition">
-                    {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
-                  </button>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={isAirMuted ? 0 : airVolume}
-                    onChange={(e) => {
-                      setAirVolume(Number(e.target.value));
-                      setIsAirMuted(false);
-                    }}
-                    className="w-14 sm:w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
-                    title="Volumen Monitor Al Aire"
-                  />
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <button onClick={() => setIsAirMuted(!isAirMuted)} className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation">
+                      {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
+                    </button>
+                    <input 
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={isAirMuted ? 0 : airVolume}
+                      onChange={(e) => {
+                        setAirVolume(Number(e.target.value));
+                        setIsAirMuted(false);
+                      }}
+                      className="w-14 sm:w-16 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
+                      title="Volumen Monitor Al Aire"
+                    />
+                  </div>
                 </div>
               </div>
 
