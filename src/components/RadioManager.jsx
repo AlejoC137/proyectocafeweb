@@ -258,22 +258,31 @@ export default function RadioManager() {
     setSuccess(`Comando SIGUIENTE enviado a la instancia.`);
   };
 
-  // Comprobar latido activo del .bat (detección inmediata y ventana precisa de 8s)
-  const checkBatHeartbeat = (record) => {
+  // Comprobar latido activo del .bat (detección inmediata local vía Vite y fallback Supabase)
+  const checkBatHeartbeat = async (record) => {
+    // 1. Verificación local inmediata (G:\Mi unidad\Radio\bat_heartbeat.json)
+    try {
+      const res = await fetch(`/api/bat-status?t=${Date.now()}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.online) {
+          setIsBatOnline(true);
+          return true;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Si no responde local, verificar estado remoto en Supabase
     if (!record) {
       setIsBatOnline(false);
       return false;
     }
-    if (record.station_artist === 'OFFLINE' || record.station_name === 'Estacion Desconectada') {
+    if (record.station_artist === 'OFFLINE' || record.station_name === 'Estacion Desconectada' || !record.is_playing) {
       setIsBatOnline(false);
       return false;
     }
-    const updatedAt = record.updated_at ? new Date(record.updated_at).getTime() : 0;
-    const diff = Date.now() - updatedAt;
-    // Ventana precisa de 8 segundos para detectar si el BAT fue cerrado
-    const online = diff < 8000;
-    setIsBatOnline(online);
-    return online;
+    setIsBatOnline(true);
+    return true;
   };
 
   // Cargar biblioteca sincronizada por el .bat: primero vía endpoint local Vite, fallback a Supabase Storage
@@ -905,6 +914,7 @@ export default function RadioManager() {
     // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca / Pre-escucha)
     setBottomPlayerMode('preview');
     setPreviewTrack(song);
+    setPreviewDuration(song.duration || 0);
 
     // Silenciar monitor de cabina para pre-escuchar en privado en audífonos (Modo Azul CUE)
     if (isPlayingLiveSignal && masterAirAudioRef.current) {
@@ -912,20 +922,8 @@ export default function RadioManager() {
       setIsPlayingLiveSignal(false);
     }
 
-    if (previewTrack?.id === song.id && (previewTrack?.title === song.title || previewTrack?.fileName === song.fileName)) {
-      if (isPlayingPreview) {
-        audioRef.current?.pause();
-        setIsPlayingPreview(false);
-      } else {
-        try {
-          await audioRef.current?.play();
-          setIsPlayingPreview(true);
-        } catch (e) {
-          console.warn("Error reanudando preview:", e);
-        }
-      }
-      return;
-    }
+    const audio = audioRef.current;
+    if (!audio) return;
 
     const audioUrl = getPreviewAudioUrl(song);
     if (!audioUrl) {
@@ -934,17 +932,51 @@ export default function RadioManager() {
       return;
     }
 
+    // Si ya es la misma canción cargada en el elemento de audio
+    const isSameTrack = previewTrack && (
+      previewTrack.title === song.title || 
+      previewTrack.fileName === song.fileName ||
+      (previewTrack.id && song.id && previewTrack.id === song.id)
+    );
+
+    if (isSameTrack && audio.src && audio.src.includes(encodeURIComponent(song.fileName || song.title))) {
+      if (isPlayingPreview && !audio.paused) {
+        audio.pause();
+        setIsPlayingPreview(false);
+        return;
+      } else {
+        try {
+          await audio.play();
+          setIsPlayingPreview(true);
+          return;
+        } catch (e) {
+          console.warn("Reintentando reproducción desde inicio:", e);
+        }
+      }
+    }
+
+    // Cargar y reproducir nueva pista
     try {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = audioUrl;
-        audioRef.current.currentTime = 0;
-        audioRef.current.muted = false;
-        audioRef.current.volume = isMuted ? 0 : volume;
-        audioRef.current.load();
-        await audioRef.current.play();
-        setIsPlayingPreview(true);
-        setSuccess(`🎧 Modo Azul: Pre-escuchando "${song.title}"`);
+      audio.pause();
+      audio.src = audioUrl;
+      audio.currentTime = 0;
+      setPreviewTime(0);
+      audio.muted = false;
+      audio.volume = isMuted ? 0 : volume;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlayingPreview(true);
+            setSuccess(`🎧 Modo Azul: Pre-escuchando "${song.title}"`);
+          })
+          .catch((err) => {
+            console.warn("Autoplay diferido para canplay:", err);
+            audio.addEventListener('canplay', () => {
+              audio.play().then(() => setIsPlayingPreview(true)).catch(() => {});
+            }, { once: true });
+          });
       }
     } catch (err) {
       console.warn("Error en reproducción preview:", err);
@@ -3466,7 +3498,7 @@ export default function RadioManager() {
           }`}>
             
             {/* Info Pista */}
-            <div className="flex items-center gap-3 w-1/4 min-w-[200px]">
+            <div className="flex items-center gap-3 w-1/3 min-w-[220px] max-w-sm shrink-0">
               <div className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border shadow-md transition-all ${
                 isLiveBottomActive ? 'border-red-500/40 ring-1 ring-red-500/30' : 'border-cyan-400/40 ring-1 ring-cyan-400/30'
               }`}>
@@ -3475,6 +3507,7 @@ export default function RadioManager() {
                     ? (liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400')
                     : (previewTrack?.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400')} 
                   alt="cover" 
+                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'; }}
                   className="w-full h-full object-cover"
                 />
                 {isLiveBottomActive ? (
@@ -3488,29 +3521,29 @@ export default function RadioManager() {
                 )}
               </div>
 
-              <div className="truncate">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <h4 className={`font-black text-xs truncate transition-colors ${isLiveBottomActive ? 'text-red-400' : 'text-cyan-400'}`}>
+                  <h4 className={`font-black text-xs truncate transition-colors ${isLiveBottomActive ? 'text-red-400' : 'text-cyan-400'}`} title={isLiveBottomActive ? (liveDisplayTrack?.station_name || liveDisplayTrack?.title) : previewTrack?.title}>
                     {isLiveBottomActive 
                       ? (liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café') 
-                      : previewTrack?.title}
+                      : (previewTrack?.title || 'Selecciona una canción')}
                   </h4>
                 </div>
-                <p className="text-[11px] text-gray-400 truncate">
+                <p className="text-[11px] text-gray-400 truncate" title={isLiveBottomActive ? (liveDisplayTrack?.station_artist || liveDisplayTrack?.artist) : (previewTrack?.artist || previewTrack?.albumArtist)}>
                   {isLiveBottomActive 
                     ? (liveDisplayTrack?.station_artist || liveDisplayTrack?.artist || 'En Vivo') 
                     : (previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local')}
                 </p>
 
                 {/* Badges y selector de modo */}
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   {isLiveBottomActive ? (
-                    <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-red-500/20">
+                    <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-red-500/20 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
                       🔴 EN VIVO AL AIRE
                     </span>
                   ) : (
-                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-cyan-500/20">
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm shadow-cyan-500/20 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                       🎧 MODO AZUL (BIBLIOTECA)
                     </span>
@@ -3519,7 +3552,7 @@ export default function RadioManager() {
                   {previewTrack && isLiveBottomActive && (
                     <button 
                       onClick={() => setBottomPlayerMode('preview')} 
-                      className="text-[9px] text-cyan-400 hover:text-cyan-300 font-bold underline ml-1 cursor-pointer"
+                      className="text-[9px] text-cyan-400 hover:text-cyan-300 font-bold underline ml-1 cursor-pointer shrink-0"
                       title="Cambiar a la barra de pre-escucha de biblioteca"
                     >
                       Ir a Azul
@@ -3528,7 +3561,7 @@ export default function RadioManager() {
                   {!isLiveBottomActive && (onAirTrack?.station_name || songs.length > 0) && (
                     <button 
                       onClick={() => setBottomPlayerMode('live')} 
-                      className="text-[9px] text-red-400 hover:text-red-300 font-bold underline ml-1 cursor-pointer"
+                      className="text-[9px] text-red-400 hover:text-red-300 font-bold underline ml-1 cursor-pointer shrink-0"
                       title="Cambiar a la barra de transmisión al aire"
                     >
                       Ir a Rojo

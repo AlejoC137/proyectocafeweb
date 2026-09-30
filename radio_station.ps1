@@ -153,19 +153,18 @@ function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $t
     } catch {}
 }
 
-# Enviar latido de vida SIN sobreescribir titulos ni peticiones de la web
-function Send-BatHeartbeat {
-    $isoNow = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-    $headersSync = @{
-        "Authorization" = "Bearer $SUPABASE_API_KEY"
-        "apikey"        = "$SUPABASE_API_KEY"
-    }
-    $payload = @{
-        updated_at = $isoNow
-    } | ConvertTo-Json -Compress
+# Enviar latido de vida localmente sin alterar la estampa de inicio de cancion en Supabase
+function Send-BatHeartbeat($sec = 0, $duration = 180, $currentTitle = "") {
     try {
-        $urlPatch = "$SUPABASE_URL/rest/v1/radio_current_play?id=eq.1"
-        Invoke-RestMethod -Uri $urlPatch -Method Patch -Headers $headersSync -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($payload)) | Out-Null
+        $hbFile = Join-Path $PSScriptRoot "bat_heartbeat.json"
+        $hbData = @{
+            online    = $true
+            sec       = $sec
+            duration  = $duration
+            title     = $currentTitle
+            timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        } | ConvertTo-Json -Compress
+        [System.IO.File]::WriteAllText($hbFile, $hbData, [System.Text.Encoding]::UTF8)
     } catch {}
 }
 
@@ -623,8 +622,8 @@ try {
                         break
                     }
                     else {
-                        # Latido de vida liviano para actualizar la estampa de tiempo
-                        Send-BatHeartbeat
+                        # Latido de vida liviano en bat_heartbeat.json
+                        Send-BatHeartbeat -sec $sec -duration $duration -currentTitle $currentTrack.title
                     }
                 } catch {}
 
@@ -638,6 +637,11 @@ finally {
     if ($previousRemoteFilename) { Delete-Track -remoteFilename $previousRemoteFilename }
     if ($remoteFilename) { Delete-Track -remoteFilename $remoteFilename }
     Cleanup-OrphanLiveFiles
+    # Limpiar latido local
+    try {
+        $hbFile = Join-Path $PSScriptRoot "bat_heartbeat.json"
+        if (Test-Path $hbFile) { Remove-Item $hbFile -Force -ErrorAction SilentlyContinue }
+    } catch {}
     # Notificar que el BAT se cerro de inmediato
     Update-CurrentPlay -title "Estacion Desconectada" -artist "OFFLINE" -cover "" -publicUrl "" -isPlaying $false
     Write-Host " [OK] Estacion desconectada y estado OFFLINE notificado a la web." -ForegroundColor Green
