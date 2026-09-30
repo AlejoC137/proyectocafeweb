@@ -222,9 +222,9 @@ export default function ProyectoRadio() {
       if (isLocalHost) {
         streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       } else {
-        // En entorno de PRODUCCIÓN DEPLOY:
-        // Las URLs local:// no pueden ser resueltas por localhost. Fallback al bucket público de Supabase Storage.
-        streamUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/${encodeURIComponent(rawName)}`;
+        // En entorno de PRODUCCION DEPLOY:
+        // Las canciones locales se transmiten a traves del intermediario live_stream.mp3 del .bat
+        streamUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/live_stream.mp3`;
       }
     }
 
@@ -331,7 +331,7 @@ export default function ProyectoRadio() {
         if (isLocalHost) {
           return `/api/local-audio?file=${encodeURIComponent(rawName)}`;
         }
-        return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/${encodeURIComponent(rawName)}`;
+        return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/live_stream.mp3`;
       }
       return raw;
     };

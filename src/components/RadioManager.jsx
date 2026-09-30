@@ -510,6 +510,16 @@ export default function RadioManager() {
         const row = payload.new;
         if (row) {
           setOnAirTrack(row);
+          // Actualizar la fuente del monitor de cabina si se recibio la señal en vivo transmitida por el .bat
+          if (row.station_url && (row.station_url.startsWith('http://') || row.station_url.startsWith('https://'))) {
+            const airAudio = masterAirAudioRef.current;
+            if (airAudio && airAudio.src !== row.station_url) {
+              airAudio.src = row.station_url;
+              if (isPlayingLiveSignal && row.is_playing) {
+                airAudio.play().catch(() => {});
+              }
+            }
+          }
           const online = checkBatHeartbeat(row);
           if (online && (row.station_artist === 'BAT_ONLINE' || row.station_artist === 'LIBRARY_LOADED' || row.station_name === 'BAT_READY')) {
             fetchBatCatalog(true);
@@ -844,7 +854,7 @@ export default function RadioManager() {
     if (!song) return null;
     const isLocalHost = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    const storageBase = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio`;
+    const liveStreamUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/live_stream.mp3`;
 
     if (song.station_url) {
       if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://')) {
@@ -855,7 +865,7 @@ export default function RadioManager() {
       }
       if (song.station_url.startsWith('local://')) {
         const raw = decodeURIComponent(song.station_url.substring(8));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(raw)}` : `${storageBase}/${encodeURIComponent(raw)}`;
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(raw)}` : liveStreamUrl;
       }
     }
     if (song.filePath) {
@@ -867,14 +877,14 @@ export default function RadioManager() {
       }
       if (song.url.startsWith('local://')) {
         const fileName = song.fileName || decodeURIComponent(song.url.substring(8));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(fileName)}` : `${storageBase}/${encodeURIComponent(fileName)}`;
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(fileName)}` : liveStreamUrl;
       }
     }
     if (song.fileName) {
-      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.fileName)}` : `${storageBase}/${encodeURIComponent(song.fileName)}`;
+      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.fileName)}` : liveStreamUrl;
     }
     if (song.title) {
-      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.title + '.mp3')}` : `${storageBase}/${encodeURIComponent(song.title + '.mp3')}`;
+      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.title + '.mp3')}` : liveStreamUrl;
     }
     return null;
   };
@@ -1141,14 +1151,15 @@ export default function RadioManager() {
       const updatedSongs = [prevSong, ...songs.slice(0, songs.length - 1)];
       setSongs(updatedSongs);
 
-      setOnAirTrack({
+      setOnAirTrack(prev => ({
+        ...(prev || {}),
         station_name: prevSong.title,
         station_artist: prevSong.artist || 'Radio Café',
-        station_url: prevSong.url,
+        station_url: (prevSong.url && prevSong.url.startsWith('http')) ? prevSong.url : (prev?.station_url || ''),
         station_cover: prevSong.cover || '',
         is_playing: true,
         updated_at: new Date().toISOString()
-      });
+      }));
 
       const nextUrl = getPreviewAudioUrl(prevSong);
       if (nextUrl) {
@@ -1412,14 +1423,15 @@ export default function RadioManager() {
       const updatedSongs = songs.length > 1 ? [...songs.slice(1), songs[0]] : songs;
       setSongs(updatedSongs);
 
-      setOnAirTrack({
+      setOnAirTrack(prev => ({
+        ...(prev || {}),
         station_name: nextSong.title,
         station_artist: nextSong.artist || 'Radio Café',
-        station_url: nextSong.url,
+        station_url: (nextSong.url && nextSong.url.startsWith('http')) ? nextSong.url : (prev?.station_url || ''),
         station_cover: nextSong.cover || '',
         is_playing: true,
         updated_at: new Date().toISOString()
-      });
+      }));
 
       // Actualizar el motor maestro de emisión continua
       const airAudio = masterAirAudioRef.current;
