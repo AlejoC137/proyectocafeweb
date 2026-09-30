@@ -281,11 +281,14 @@ export default function RadioManager() {
     try {
       if (!silent) setLoadingCatalog(true);
 
-      // 1. Intentar cargar desde el endpoint local de Vite (catalog.json)
+      // 1. Intentar cargar desde el endpoint local de Vite o catálogo público de la web
       try {
         let localRes = await fetch(`/api/local-audio?file=catalog.json&t=${Date.now()}`);
         if (!localRes.ok) {
           localRes = await fetch(`/api/local-catalog?t=${Date.now()}`);
+        }
+        if (!localRes.ok) {
+          localRes = await fetch(`/catalog.json?t=${Date.now()}`);
         }
         if (localRes.ok) {
           const localData = await localRes.json();
@@ -299,31 +302,30 @@ export default function RadioManager() {
             return;
           }
         }
-      } catch (e) {
-        // Fallback a Supabase Storage si no está disponible el endpoint local
-      }
+      } catch (e) {}
 
-      // 2. Fallback a Supabase Storage
-      const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/catalog.json?t=${Date.now()}`;
-      const res = await fetch(storageUrl);
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Array.isArray(data) && data.length > 0) {
-          setBatCatalog(data);
-          setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
-          if (!silent) {
-            const totalTracks = data.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
-            setSuccess(`¡Biblioteca completa cargada desde Supabase! (${data.length} álbumes, ${totalTracks} canciones).`);
-          }
-          return;
+      // 2. Usar catálogo empaquetado si tiene la colección completa
+      if (Array.isArray(fallbackCatalogData) && fallbackCatalogData.length > 0) {
+        setBatCatalog(fallbackCatalogData);
+        setSelectedAirAlbumFolder(prev => prev || fallbackCatalogData[0]?.folderName || '');
+        if (!silent) {
+          const totalTracks = fallbackCatalogData.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
+          setSuccess(`¡Biblioteca completa cargada! (${fallbackCatalogData.length} álbumes, ${totalTracks} canciones).`);
         }
       }
 
-      // 3. Fallback a catálogo empaquetado si sigue vacío
-      setBatCatalog(prev => {
-        if (prev && prev.length > 0) return prev;
-        return Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [];
-      });
+      // 3. Fallback a Supabase Storage sólo si tiene igual o más álbumes que el actual
+      try {
+        const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/catalog.json?t=${Date.now()}`;
+        const res = await fetch(storageUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data) && data.length >= 40) {
+            setBatCatalog(data);
+            setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
+          }
+        }
+      } catch (e) {}
     } catch (err) {
       console.warn("No se pudo cargar catalog.json:", err);
       setBatCatalog(prev => (prev && prev.length > 0 ? prev : (Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [])));

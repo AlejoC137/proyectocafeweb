@@ -205,11 +205,13 @@ function Build-And-Upload-MultiCatalog($folderList, $reqHeaders, $supabaseEndpoi
     foreach ($folder in $folderList) {
         if (-not (Test-Path $folder)) { continue }
         Write-Host "    [Fuente] $folder" -ForegroundColor DarkGray
-        $subDirs = @(Get-ChildItem -Path $folder -Directory)
-        foreach ($d in $subDirs) {
-            if (-not $seenFolders.Contains($d.Name.ToLower())) {
-                $seenFolders.Add($d.Name.ToLower()) | Out-Null
-                $albumsDirs.Add($d)
+        $allMp3sInFolder = @(Get-ChildItem -Path $folder -Filter *.mp3 -Recurse -File)
+        foreach ($mp3Item in $allMp3sInFolder) {
+            $parentDir = $mp3Item.Directory
+            $key = $parentDir.FullName.ToLower()
+            if (-not $seenFolders.Contains($key)) {
+                $seenFolders.Add($key) | Out-Null
+                $albumsDirs.Add($parentDir)
             }
         }
     }
@@ -265,7 +267,7 @@ function Build-And-Upload-MultiCatalog($folderList, $reqHeaders, $supabaseEndpoi
             $totalSongsCount++
         }
 
-        $catalogList.Add(@{
+        $catalogList.Add([PSCustomObject]@{
             id         = $albumId
             folderName = $alb.Name
             albumName  = $albumTitle
@@ -342,7 +344,11 @@ $folders = Get-ConfiguredFolders
 
 # Cargar o generar catalogo
 $fullCatalog = Build-And-Upload-MultiCatalog -folderList $folders -reqHeaders $headers -supabaseEndpoint $SUPABASE_URL
-$totalSongs = ($fullCatalog | Measure-Object -Property trackCount -Sum).Sum
+$totalSongs = 0
+foreach ($alb in $fullCatalog) {
+    if ($alb.trackCount) { $totalSongs += [int]$alb.trackCount }
+    elseif ($alb.tracks) { $totalSongs += [int]$alb.tracks.Count }
+}
 
 # Escanear todos los archivos MP3 de todas las fuentes
 $allLocalFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
