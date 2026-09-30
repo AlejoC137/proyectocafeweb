@@ -200,11 +200,48 @@ export async function fetchYoutubeMetadata(urlOrId) {
 }
 
 /**
- * Extrae los videos de una playlist pública de YouTube utilizando el Feed RSS XML + fallback de proxies CORS.
+ * Extrae los videos de una playlist pública de YouTube utilizando APIs públicas, Feed RSS XML y proxies CORS.
  */
 export async function fetchYoutubePlaylist(playlistId) {
   if (!playlistId) return [];
 
+  // Si es un mix dinámico (comienza con RD), delegar a fetchYoutubeMix
+  if (playlistId.startsWith('RD') || playlistId.startsWith('UL')) {
+    const mixTracks = await fetchYoutubeMix(playlistId);
+    if (mixTracks && mixTracks.length > 0) return mixTracks;
+  }
+
+  // 1. Intentar APIs REST directas de Piped / Invidious
+  const apiEndpoints = [
+    `https://pipedapi.kavin.rocks/playlists/${playlistId}`,
+    `https://yewtu.be/api/v1/playlists/${playlistId}`,
+    `https://invidious.jing.rocks/api/v1/playlists/${playlistId}`
+  ];
+
+  for (const endpoint of apiEndpoints) {
+    try {
+      const res = await fetch(endpoint);
+      if (res.ok) {
+        const data = await res.json();
+        const rawVideos = data.relatedStreams || data.videos || data.items || [];
+        if (rawVideos.length > 0) {
+          return rawVideos.map(v => {
+            const vId = v.videoId || (v.url ? extractYoutubeId(v.url) : null);
+            if (!vId) return null;
+            return {
+              videoId: vId,
+              url: `https://www.youtube.com/watch?v=${vId}`,
+              title: v.title || `Video ${vId}`,
+              artist: v.uploaderName || v.author || v.uploader || 'YouTube',
+              cover: v.thumbnail || getYoutubeThumbnail(vId)
+            };
+          }).filter(Boolean);
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. Intentar Feed RSS XML vía Proxies CORS
   const rssUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
   const proxies = [
     `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
@@ -244,6 +281,13 @@ export async function fetchYoutubePlaylist(playlistId) {
       console.warn("Proxy playlist attempt failed:", err);
     }
   }
+
+  // 3. Fallback: Parsear la página HTML completa de la playlist vía Mix scraper
+  try {
+    const htmlItems = await fetchYoutubeMix(playlistId);
+    if (htmlItems && htmlItems.length > 0) return htmlItems;
+  } catch (e) {}
+
   return [];
 }
 
@@ -492,14 +536,100 @@ export function parseCopiedYoutubeText(text) {
 }
 
 /**
- * Procesa masivamente un texto pegado (JSON, URLs, texto copiado de la cola de YouTube o IDs) sin bloqueos CORS.
+ * Parsea listas de canciones en formato texto plano o CSV (ej: export de Spotify "Track Name,Artist Name,Album Name" o "Artista - Título")
+ */
+export function parseSpotifyOrTextSongs(text) {
+  if (!text || typeof text !== 'string') return [];
+
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length === 0) return [];
+
+  const items = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Ignorar encabezados comunes de CSV de Spotify o Export tools
+    if (i === 0 && (line.toLowerCase().includes('track name') || line.toLowerCase().includes('artist name') || line.toLowerCase().includes('spotify:track'))) {
+      continue;
+    }
+
+    // Caso 1: CSV delimitado por comas o tabulaciones
+    if (line.includes(',') || line.includes('\t')) {
+      // Manejar posibles comillas en CSV
+      const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
+      if (parts.length >= 2) {
+        const title = parts[0];
+        const artist = parts[1];
+        if (title && title.length > 1) {
+          items.push({
+            videoId: '',
+            url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${artist} ${title}`)}`,
+            title: title,
+            artist: artist || 'Spotify Export',
+            cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
+            searchQuery: `${artist} ${title}`
+          });
+          continue;
+        }
+      }
+    }
+
+    // Caso 2: Formato "Artista - Canción" o "Canción - Artista"
+    if (line.includes(' - ')) {
+      const parts = line.split(' - ').map(p => p.trim());
+      if (parts.length >= 2 && parts[0] && parts[1]) {
+        items.push({
+          videoId: '',
+          url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${parts[0]} ${parts[1]}`)}`,
+          title: parts[1],
+          artist: parts[0],
+          cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
+          searchQuery: `${parts[0]} ${parts[1]}`
+        });
+        continue;
+      }
+    }
+
+    // Caso 3: Línea con solo título de canción (al menos 3 caracteres y no es URL)
+    if (line.length > 2 && !line.startsWith('http') && !line.includes('/')) {
+      items.push({
+        videoId: '',
+        url: `https://www.youtube.com/results?search_query=${encodeURIComponent(line)}`,
+        title: line,
+        artist: 'Desconocido',
+        cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
+        searchQuery: line
+      });
+    }
+  }
+
+  return items;
+}
+
+/**
+ * Procesa masivamente un texto pegado (Playlists de YouTube, Mixes, URLs, JSON, Spotify CSV o texto) sin bloqueos CORS.
  */
 export async function parseBulkYoutubeInput(rawText, onProgress = () => {}) {
   if (!rawText || !rawText.trim()) return [];
 
   const trimmed = rawText.trim();
 
-  // 1. Si el texto pegado es una estructura JSON válida (arreglo u objeto de canciones)
+  // 1. Detectar si el texto contiene una URL de PLAYLIST o MIX de YouTube (list=...)
+  const playlistId = extractPlaylistId(trimmed);
+  if (playlistId) {
+    onProgress(1, 1, `Consultando playlist de YouTube (${playlistId})...`);
+    try {
+      const playlistTracks = await fetchYoutubePlaylist(playlistId);
+      if (playlistTracks && playlistTracks.length > 0) {
+        return playlistTracks;
+      }
+    } catch (err) {
+      console.warn("Fallo al leer playlist:", err);
+    }
+  }
+
+  // 2. Si el texto pegado es una estructura JSON válida (arreglo u objeto de canciones)
   try {
     const jsonParsed = JSON.parse(trimmed);
     const jsonArray = Array.isArray(jsonParsed) ? jsonParsed : (jsonParsed.playlist || jsonParsed.tracks || jsonParsed.items || [jsonParsed]);
@@ -522,27 +652,35 @@ export async function parseBulkYoutubeInput(rawText, onProgress = () => {}) {
     }
   } catch (e) {}
 
-  // 2. Si se pegó un bloque de texto copiado directamente desde la lista de YouTube (títulos + artistas + duraciones)
+  // 3. Si se pegó un bloque de texto copiado directamente desde la lista de YouTube (títulos + artistas + duraciones)
   const copiedItems = parseCopiedYoutubeText(trimmed);
   if (copiedItems.length > 0) {
     return copiedItems;
   }
 
-  // 3. Extraer todos los enlaces/IDs de YouTube del texto o lista pegada
+  // 4. Extraer todos los enlaces/IDs de videos de YouTube del texto o lista pegada
   const videoIds = extractAllYoutubeVideoIds(trimmed);
-  if (videoIds.length === 0) return [];
+  if (videoIds.length > 0) {
+    const uniqueIds = Array.from(new Set(videoIds)).slice(0, 100);
+    const total = uniqueIds.length;
+    const items = [];
 
-  const uniqueIds = Array.from(new Set(videoIds)).slice(0, 50);
-  const total = uniqueIds.length;
-  const items = [];
+    for (let i = 0; i < total; i++) {
+      onProgress(i + 1, total, `Leyendo información de video ${i + 1} de ${total}...`);
+      const meta = await fetchYoutubeMetadata(uniqueIds[i]);
+      if (meta) items.push(meta);
+    }
 
-  for (let i = 0; i < total; i++) {
-    onProgress(i + 1, total, `Leyendo información de video ${i + 1} de ${total}...`);
-    const meta = await fetchYoutubeMetadata(uniqueIds[i]);
-    if (meta) items.push(meta);
+    if (items.length > 0) return items;
   }
 
-  return items;
+  // 5. Si no hubo IDs de YouTube, intentar parsear como lista de canciones / Spotify CSV
+  const textOrCsvItems = parseSpotifyOrTextSongs(trimmed);
+  if (textOrCsvItems.length > 0) {
+    return textOrCsvItems;
+  }
+
+  return [];
 }
 
 

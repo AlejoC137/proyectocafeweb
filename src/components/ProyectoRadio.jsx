@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { useRadioSync } from '../hooks/useRadioSync';
 import { useCafeData } from '../hooks/useCafeData';
 import { useRadioData } from '../hooks/useRadioData';
@@ -13,20 +13,19 @@ import PlayerCenter from './radio/PlayerCenter';
 import SourceTabs from './radio/SourceTabs';
 
 export default function ProyectoRadio() {
-  // 1. Sync
-  const { currentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync();
   const isApplyingRemoteChange = useRef(false);
+  const playerRef = useRef(null);
 
   // 2. Tab Local
   const [activeTab, setActiveTab] = useState('supabase');
   const [mobileTab, setMobileTab] = useState('player'); // 'agenda', 'player', 'menu'
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    player.setCurrentTrackIndex(0);
-    player.setProgress(0);
-    player.setCurrentTime(0);
-    player.setIsPlaying(false);
-    player.setAudioError(null);
+    playerRef.current?.setCurrentTrackIndex(0);
+    playerRef.current?.setProgress(0);
+    playerRef.current?.setCurrentTime(0);
+    playerRef.current?.setIsPlaying(false);
+    playerRef.current?.setAudioError(null);
   };
 
   // 3. Hooks
@@ -48,16 +47,81 @@ export default function ProyectoRadio() {
 
   const currentTrack = radioData.currentPlaylist[currentTrackIndex] || radioData.currentPlaylist[0];
 
+  // Callback para ejecutar comandos remotos enviados desde Radio Manager
+  const handleRemoteCommand = useCallback((cmd) => {
+    console.log('[ProyectoRadio] Ejecutando comando remoto:', cmd);
+    if (cmd.type === 'FORCE_RELOAD') {
+      window.location.reload();
+    } else if (cmd.type === 'APPLY_PLAYLIST') {
+      if (Array.isArray(cmd.tracks) && cmd.tracks.length > 0) {
+        radioData.setSupabasePlaylist(cmd.tracks);
+        setCurrentTrackIndex(0);
+        setIsPlaying(true);
+      }
+    } else if (cmd.type === 'PAUSE') {
+      playerRef.current?.audioRef?.current?.pause();
+      setIsPlaying(false);
+    } else if (cmd.type === 'PLAY') {
+      setIsPlaying(true);
+      playerRef.current?.audioRef?.current?.play().catch(() => {});
+    } else if (cmd.type === 'NEXT') {
+      playerRef.current?.nextTrack();
+    } else if (cmd.type === 'SEEK_TO') {
+      const seekTime = Number(cmd.payload?.time ?? cmd.time);
+      if (Number.isFinite(seekTime) && playerRef.current?.audioRef?.current) {
+        playerRef.current.audioRef.current.currentTime = seekTime;
+        console.log(`[ProyectoRadio] ⏩ Comando remoto SEEK_TO: ${seekTime.toFixed(1)}s`);
+      }
+    } else if (cmd.type === 'PLAYLIST_UPDATED') {
+      radioData.fetchSupabasePlaylist?.(true);
+    } else if (cmd.type === 'PLAYLIST_TRACK_REMOVED') {
+      if (cmd.payload?.deletedId) {
+        radioData.setSupabasePlaylist?.(prev => prev.filter(t => t.id !== cmd.payload.deletedId));
+      } else {
+        radioData.fetchSupabasePlaylist?.(true);
+      }
+    } else if (cmd.type === 'SET_VOLUME') {
+      if (cmd.volume !== undefined) {
+        playerRef.current?.handleVolumeChange({ target: { value: cmd.volume } });
+      }
+    }
+  }, [radioData, setCurrentTrackIndex, setIsPlaying]);
+
+  // Telemetría de presencia para reportar estado y oyentes activos a Radio Manager
+  const presenceData = useMemo(() => ({
+    isPlaying,
+    trackTitle: currentTrack?.title || 'En espera',
+    artist: currentTrack?.artist || '',
+    volume: playerRef.current?.volume !== undefined ? playerRef.current.volume : 0.85,
+    isMuted: Boolean(playerRef.current?.isMuted)
+  }), [isPlaying, currentTrack?.title, currentTrack?.artist]);
+
+  // 1. Sync & Presence
+  const { currentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync({
+    isManager: false,
+    presenceData,
+    onRemoteCommand: handleRemoteCommand
+  });
+
   const player = useRadioPlayer(
     radioData.currentPlaylist,
     activeTab,
-    broadcastPlay,
-    broadcastStop,
+    null, // Oyente: NO emite broadcastPlay a la estación
+    null, // Oyente: NO emite broadcastStop a la estación
     isApplyingRemoteChange,
     currentTrackIndex,
     setCurrentTrackIndex,
-    broadcastVolume
+    null // Oyente: NO altera el volumen de la estación
   );
+  playerRef.current = player;
+
+  // Sincronizar estado Play/Pausa de ProyectoRadio con currentPlay.is_playing (recuerda tras F5)
+  React.useEffect(() => {
+    if (currentPlay && typeof currentPlay.is_playing === 'boolean') {
+      setIsPlaying(currentPlay.is_playing);
+      player.setIsPlaying(currentPlay.is_playing);
+    }
+  }, [currentPlay?.is_playing]);
 
   // Override player's states with hoisted states
   player.currentTrackIndex = currentTrackIndex;
@@ -68,59 +132,141 @@ export default function ProyectoRadio() {
   player.setAudioError = setAudioError;
   player.currentTrack = currentTrack;
 
-  // React to remote sync changes
+  // Sincronización continua de tiempo en vivo emitida desde Radio Manager
+  const lastLiveTickRef = useRef({ time: 0, receivedAt: 0, url: '' });
+  const lastPlayedTrackKeyRef = useRef('');
+
+  React.useEffect(() => {
+    let bc;
+    try {
+      bc = new BroadcastChannel('radio-live-time');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'LIVE_TICK') {
+          lastLiveTickRef.current = {
+            time: Number(event.data.currentTime) || 0,
+            receivedAt: Number(event.data.timestamp) || Date.now(),
+            url: event.data.url || ''
+          };
+          // Si es un SEEK manual explícito desde el cursor de Radio Manager:
+          if (event.data.isForceSeek) {
+            const seekTime = Number(event.data.currentTime);
+            if (Number.isFinite(seekTime) && playerRef.current?.audioRef?.current) {
+              playerRef.current.audioRef.current.currentTime = seekTime;
+              console.log(`[ProyectoRadio] ⚡ Seek remoto manual aplicado: ${seekTime.toFixed(1)}s`);
+            }
+          }
+        }
+      };
+    } catch (e) {}
+    return () => {
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+    };
+  }, []);
+
+  const getLiveBroadcastOffset = (trackDuration) => {
+    let offset = 0;
+    // 1. Tick local de BroadcastChannel (instantáneo y sin latencia)
+    if (lastLiveTickRef.current.receivedAt > 0) {
+      const elapsedSinceTick = (Date.now() - lastLiveTickRef.current.receivedAt) / 1000;
+      if (elapsedSinceTick >= 0 && elapsedSinceTick < 60) {
+        offset = lastLiveTickRef.current.time + elapsedSinceTick;
+      }
+    }
+    // 2. Fallback: Diferencia respecto al timestamp updated_at de Supabase
+    if (offset <= 0 && currentPlay?.updated_at && currentPlay.is_playing) {
+      const startedAt = new Date(currentPlay.updated_at).getTime();
+      const elapsedSinceStart = (Date.now() - startedAt) / 1000;
+      if (elapsedSinceStart > 0) {
+        offset = elapsedSinceStart;
+      }
+    }
+
+    if (trackDuration && Number.isFinite(trackDuration) && trackDuration > 0) {
+      offset = offset % trackDuration;
+    }
+    return Math.max(0, offset);
+  };
+
+  const applyLiveSeek = (audioEl) => {
+    if (!audioEl) return;
+    const targetOffset = getLiveBroadcastOffset(audioEl.duration);
+    if (targetOffset > 1) {
+      try {
+        const seekPos = (Number.isFinite(audioEl.duration) && audioEl.duration > 0)
+          ? (targetOffset % audioEl.duration)
+          : targetOffset;
+        audioEl.currentTime = seekPos;
+        console.log(`[ProyectoRadio] 📻 Señal al aire sincronizada a ${seekPos.toFixed(1)}s`);
+      } catch (err) {}
+    }
+  };
+
+  // Reacción limpia a eventos de cambio de canción al aire (SIN loops ni recargas que corten el audio)
   React.useEffect(() => {
     if (!currentPlay || !currentPlay.station_url) return;
-    isApplyingRemoteChange.current = true;
 
-    const remoteTrack = {
-      id: `sync-${Date.now()}`,
-      title: currentPlay.station_name || 'Radio en Vivo',
-      artist: currentPlay.station_artist || '',
-      url: currentPlay.station_url,
-      cover: currentPlay.station_cover || '',
-      isLiveStream: true,
-    };
+    // Ignorar señales internas de control o sincronización
+    const ignoredControlSignals = ['SYNC', 'BAT_ONLINE', 'CARGANDO...', 'OFFLINE', 'ON_AIR:ON', 'ON_AIR:OFF', 'SHUFFLE', 'PAUSED', 'NEXT_TRACK', 'START_BROADCAST', 'RESUME_BROADCAST', 'FORCE_RELOAD'];
+    if (ignoredControlSignals.includes(currentPlay.station_artist) || ignoredControlSignals.includes(currentPlay.station_name)) {
+      return;
+    }
+
+    let streamUrl = currentPlay.station_url;
+    if (streamUrl.startsWith('local://')) {
+      const rawName = decodeURIComponent(streamUrl.replace('local://', ''));
+      streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+    }
+
+    const audioEl = player.audioRef.current;
+    if (!audioEl) return;
+
+    const trackKey = `${currentPlay.station_name}__${streamUrl}`;
+
+    // Si es la misma canción ya cargada, solo manejar play/pause sin recargar
+    if (lastPlayedTrackKeyRef.current === trackKey) {
+      if (currentPlay.is_playing && !player.showAutoStart) {
+        setIsPlaying(true);
+        if (audioEl.paused) audioEl.play().catch(() => {});
+      } else if (!currentPlay.is_playing) {
+        audioEl.pause();
+        setIsPlaying(false);
+      }
+      return;
+    }
+
+    // Nueva canción al aire:
+    lastPlayedTrackKeyRef.current = trackKey;
+    isApplyingRemoteChange.current = true;
 
     if (currentPlay.tab && currentPlay.tab !== 'local') {
       setActiveTab(currentPlay.tab);
     }
 
-    player.pendingPlayRef.current = remoteTrack.url;
+    const targetVol = player.isMuted ? 0 : player.volume;
+    audioEl.volume = targetVol;
+    audioEl.src = streamUrl;
+    audioEl.load();
 
-    if (currentPlay.tab === 'youtube' || activeTab === 'youtube') {
-      player.audioRef.current?.pause();
-      setIsPlaying(Boolean(currentPlay.is_playing));
-      setTimeout(() => { isApplyingRemoteChange.current = false; }, 500);
-      return;
-    }
-
-    player.pendingPlayRef.current = remoteTrack.url;
-
-    if (player.audioRef.current && remoteTrack.url) {
-      player.audioRef.current.src = remoteTrack.url;
-      player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
-      player.audioRef.current.load();
-    }
-
-    if (player.showAutoStart) {
-      setIsPlaying(false);
-    } else {
-      if (currentPlay.is_playing && player.audioRef.current) {
+    const startTrack = () => {
+      applyLiveSeek(audioEl);
+      if (currentPlay.is_playing && !player.showAutoStart) {
         setIsPlaying(true);
-        player.audioRef.current.play().catch((err) => {
-          console.warn('[RadioSync] Autoplay continuo:', err.message);
-        });
-      } else {
-        player.audioRef.current?.pause();
-        setIsPlaying(false);
+        audioEl.play().catch(() => {});
       }
+    };
+
+    if (audioEl.readyState >= 1) {
+      startTrack();
+    } else {
+      audioEl.addEventListener('loadedmetadata', startTrack, { once: true });
     }
 
     setTimeout(() => {
       isApplyingRemoteChange.current = false;
-    }, 500);
-  }, [currentPlay]);
+    }, 400);
+  }, [currentPlay?.station_url, currentPlay?.station_name, currentPlay?.is_playing]);
 
   // Sincronizar el index local si la playlist actual contiene la estación global
   React.useEffect(() => {
@@ -166,29 +312,28 @@ export default function ProyectoRadio() {
       return;
     }
 
-    if (player.pendingPlayRef.current && player.audioRef.current) {
-      player.audioRef.current.src = player.pendingPlayRef.current;
+    const targetUrl = (player.pendingPlayRef.current && !player.pendingPlayRef.current.startsWith('local://'))
+      ? player.pendingPlayRef.current
+      : (currentPlay?.station_url && !currentPlay.station_url.startsWith('local://'))
+        ? currentPlay.station_url
+        : (currentTrack?.url && !currentTrack.url.startsWith('local://'))
+          ? currentTrack.url
+          : null;
+
+    if (targetUrl && player.audioRef.current) {
+      player.audioRef.current.src = targetUrl;
       player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
+      applyLiveSeek(player.audioRef.current);
       const promise = player.audioRef.current.play();
       if (promise !== undefined) {
-        promise.then(() => setIsPlaying(true)).catch((err) => {
+        promise.then(() => {
+          setIsPlaying(true);
+          applyLiveSeek(player.audioRef.current);
+        }).catch((err) => {
           if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
             return;
           }
           console.warn("Autoplay block (AutoStart):", err.message);
-          setIsPlaying(false);
-        });
-      }
-    } else if (currentTrack?.url && player.audioRef.current) {
-      player.audioRef.current.src = currentTrack.url;
-      player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
-      const promise = player.audioRef.current.play();
-      if (promise !== undefined) {
-        promise.then(() => setIsPlaying(true)).catch((err) => {
-          if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
-            return;
-          }
-          console.warn("Autoplay fallback:", err.message);
           setIsPlaying(false);
         });
       }
@@ -389,6 +534,10 @@ export default function ProyectoRadio() {
         ref={player.audioRef}
         preload="auto"
         referrerPolicy="no-referrer"
+        onLoadedMetadata={(e) => {
+          player.handleLoadedMetadata?.(e);
+          applyLiveSeek(e.target);
+        }}
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
           if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {

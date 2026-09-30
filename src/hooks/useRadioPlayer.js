@@ -8,13 +8,23 @@ export function useRadioPlayer(
   isApplyingRemoteChange,
   externalTrackIndex,
   externalSetTrackIndex,
-  broadcastVolume
+  broadcastVolume,
+  externalIsPlaying,
+  externalSetIsPlaying,
+  externalAudioError,
+  externalSetAudioError
 ) {
   const [internalTrackIndex, setInternalTrackIndex] = useState(0);
   const currentTrackIndex = externalTrackIndex !== undefined ? externalTrackIndex : internalTrackIndex;
   const setCurrentTrackIndex = externalSetTrackIndex || setInternalTrackIndex;
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [internalIsPlaying, setInternalIsPlaying] = useState(false);
+  const isPlaying = externalIsPlaying !== undefined ? externalIsPlaying : internalIsPlaying;
+  const setIsPlaying = externalSetIsPlaying || setInternalIsPlaying;
+
+  const [internalAudioError, setInternalAudioError] = useState(null);
+  const audioError = externalAudioError !== undefined ? externalAudioError : internalAudioError;
+  const setAudioError = externalSetAudioError || setInternalAudioError;
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -41,7 +51,6 @@ export function useRadioPlayer(
   const [isDailyLoop, setIsDailyLoop] = useState(true);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeatSingle, setIsRepeatSingle] = useState(false);
-  const [audioError, setAudioError] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showAutoStart, setShowAutoStart] = useState(true);
 
@@ -80,7 +89,7 @@ export function useRadioPlayer(
     const next2Idx = (currentTrackIndex + 2) % total;
 
     const tracksToPreload = [currentPlaylist[next1Idx], currentPlaylist[next2Idx]].filter(
-      t => t && t.url && !t.type?.includes('youtube') && !t.isLiveStream
+      t => t && t.url && !t.url.startsWith('local://') && !t.type?.includes('youtube') && !t.isLiveStream
     );
 
     // Reutilizar o crear elementos de audio para caché en segundo plano
@@ -356,29 +365,44 @@ export function useRadioPlayer(
     }
 
     if (audioRef.current && currentTrack?.url) {
-      if (audioRef.current.src !== currentTrack.url) {
-        audioRef.current.src = currentTrack.url;
+      let playableUrl = currentTrack.url;
+      if (playableUrl.startsWith('local://')) {
+        const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
+        playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+      }
+
+      const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';
+      const isSameSrc = (currentSrcPath === playableUrl || audioRef.current.src === playableUrl);
+
+      if (!isSameSrc) {
+        audioRef.current.src = playableUrl;
       }
       audioRef.current.volume = isMuted ? 0 : volume;
 
       if (isPlaying) {
-        setProgress(0);
-        setCurrentTime(0);
-        const promise = audioRef.current.play();
-        if (promise !== undefined) {
-          promise.catch((err) => {
-            if (err.name === 'AbortError' || err.name === 'NotSupportedError' || err.message?.includes('interrupted') || err.message?.includes('no supported source')) {
-              return;
-            }
-            console.warn("Autoplay o reproducción cancelada:", err.message);
-            setIsPlaying(false);
-          });
+        if (!isSameSrc) {
+          if (!currentTrack?.isLiveStream) {
+            setProgress(0);
+            setCurrentTime(0);
+          }
+          const promise = audioRef.current.play();
+          if (promise !== undefined) {
+            promise.catch((err) => {
+              if (err.name === 'AbortError' || err.name === 'NotSupportedError' || err.message?.includes('interrupted') || err.message?.includes('no supported source')) {
+                return;
+              }
+              console.warn("Autoplay o reproducción cancelada:", err.message);
+              setIsPlaying(false);
+            });
+          }
+        } else if (audioRef.current.paused) {
+          audioRef.current.play().catch(() => {});
         }
       }
     } else if (!currentTrack?.url && isPlaying) {
       setIsPlaying(false);
     }
-  }, [currentTrack?.url, activeTab]);
+  }, [currentTrack?.url, activeTab, isPlaying]);
 
   const handleTrackEnded = () => {
     if (isRepeatSingle) {

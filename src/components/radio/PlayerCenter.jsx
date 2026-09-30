@@ -442,83 +442,93 @@ export default function PlayerCenter({
           )}
         </div>
 
-        {/* Barra de Progreso Ultra Minimalista (Solo en pestañas de Archivos / Files) */}
-        {(activeTab === 'supabase' || activeTab === 'files' || activeTab === 'local') && !currentTrack?.isLiveStream && (
-          <div className="absolute bottom-16 sm:bottom-20 left-4 right-4 sm:left-6 sm:right-6 z-30 flex flex-col gap-1 pointer-events-auto">
-            <div className="flex items-center justify-between text-[11px] font-mono font-bold text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] px-0.5 select-none">
-              <span>{activeTimeStr}</span>
-              <span>{activeDurStr}</span>
-            </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              step="0.1" 
-              value={activeProgress || 0} 
-              onChange={handleSeekWrapper}
-              className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-yellow-400 transition-all [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black"
-              style={{
-                background: `linear-gradient(to right, #facc15 0%, #facc15 ${activeProgress || 0}%, rgba(255, 255, 255, 0.3) ${activeProgress || 0}%, rgba(255, 255, 255, 0.3) 100%)`
-              }}
-              title="Adelantar o retroceder canción"
-            />
-          </div>
-        )}
 
-        {/* Controles Principales SUPERPUESTOS (Disponibles tanto para Audio como para YouTube con Aleatorio) */}
+
+        {/* Controles Principales SUPERPUESTOS */}
         <div className={`absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 sm:gap-4 px-4 z-20 ${
           isYoutubeTrack ? 'bg-black/60 backdrop-blur-sm py-2' : ''
         }`}>
-          <button 
-            onClick={() => setIsShuffle(!isShuffle)}
-            title={isShuffle ? "Modo aleatorio (Shuffle) ACTIVADO" : "Activar modo aleatorio (Shuffle)"}
-            className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
-              isShuffle 
-                ? 'bg-yellow-400 text-black border-yellow-400 font-black ring-2 ring-yellow-400' 
-                : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
-            }`}
-          >
-            <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-          
-          <button 
-            onClick={handlePrevWrapper} 
-            disabled={!currentTrack?.url && !ytId}
-            title="Pista anterior"
-            className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
-          >
-            <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-          
-          <button 
-            onClick={handleMainPlayToggle} 
-            disabled={!currentTrack?.url && !ytId}
-            title={isPlaying ? "Pausar" : "Reproducir"}
-            className={`w-14 h-14 sm:w-16 sm:h-16 border-[3px] ${borderColor} shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.6)] flex items-center justify-center ${
-              isYoutubeTrack ? 'bg-red-600 text-white border-black' : 'bg-yellow-100 text-black dark:bg-yellow-400 dark:text-black dark:border-yellow-400'
-            } transition-all ${buttonHover} rounded-none disabled:opacity-50`}
-          >
-            {isPlaying ? <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" /> : <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" />}
-          </button>
-          
-          <button 
-            onClick={handleNextWrapper} 
-            disabled={!currentTrack?.url && !ytId}
-            title="Siguiente pista"
-            className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
-          >
-            <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-          
-          <button 
-            onClick={() => setIsRepeatSingle(!isRepeatSingle)}
-            title={isRepeatSingle ? "Repetir 1 canción activado" : "Repetir 1 canción"}
-            className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
-              isRepeatSingle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
-            }`}
-          >
-            <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
+          {isYoutubeTrack ? (
+            <>
+              <button 
+                onClick={() => setIsShuffle(!isShuffle)}
+                title={isShuffle ? "Modo aleatorio (Shuffle) ACTIVADO" : "Activar modo aleatorio (Shuffle)"}
+                className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
+                  isShuffle 
+                    ? 'bg-yellow-400 text-black border-yellow-400 font-black ring-2 ring-yellow-400' 
+                    : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
+                }`}
+              >
+                <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              
+              <button 
+                onClick={handlePrevWrapper} 
+                disabled={!currentTrack?.url && !ytId}
+                title="Pista anterior"
+                className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
+              >
+                <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+              
+              <button 
+                onClick={handleMainPlayToggle} 
+                disabled={!currentTrack?.url && !ytId}
+                title={isPlaying ? "Pausar" : "Reproducir"}
+                className={`w-14 h-14 sm:w-16 sm:h-16 border-[3px] ${borderColor} shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.6)] flex items-center justify-center bg-red-600 text-white border-black transition-all ${buttonHover} rounded-none disabled:opacity-50`}
+              >
+                {isPlaying ? <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" /> : <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" />}
+              </button>
+              
+              <button 
+                onClick={handleNextWrapper} 
+                disabled={!currentTrack?.url && !ytId}
+                title="Siguiente pista"
+                className={`p-3 sm:p-4 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} bg-white text-black dark:bg-[#1e1f2e] dark:text-white rounded-none disabled:opacity-50`}
+              >
+                <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+              
+              <button 
+                onClick={() => setIsRepeatSingle(!isRepeatSingle)}
+                title={isRepeatSingle ? "Repetir 1 canción activado" : "Repetir 1 canción"}
+                className={`p-2 sm:p-3 border-[3px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] transition-all ${buttonHover} rounded-none ${
+                  isRepeatSingle ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white text-black dark:bg-[#1e1f2e] dark:text-white'
+                }`}
+              >
+                <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </>
+          ) : (
+            /* CONTROL EN VIVO INCORRUPTIBLE: Solo Mute / Desmutear */
+            <div className="flex flex-col items-center gap-1.5 w-full max-w-sm px-2">
+              <button
+                onClick={toggleMuteWrapper}
+                className={`w-full py-3 px-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] rounded-none ${
+                  isMuted || volume === 0
+                    ? 'bg-red-600 hover:bg-red-500 text-white'
+                    : 'bg-yellow-400 hover:bg-yellow-300 text-black'
+                }`}
+                title={isMuted ? "Activar audio" : "Silenciar audio"}
+              >
+                {isMuted || volume === 0 ? (
+                  <>
+                    <VolumeX className="w-5 h-5 text-white animate-bounce flex-shrink-0" />
+                    <span>Activar Sonido (Desmutear)</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-5 h-5 flex-shrink-0" />
+                    <span>Silenciar Transmisión (Mute)</span>
+                  </>
+                )}
+              </button>
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/80 bg-black/80 px-2 py-0.5 border border-white/30">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                <span>Señal en vivo continua · Control maestro desde Radio Manager</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import { X, Youtube, Sparkles, Loader2, CheckSquare, Square, Trash2, Plus, ExternalLink, ListPlus } from 'lucide-react';
-import { parseBulkYoutubeInput, YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
+import React, { useState, useEffect } from 'react';
+import { X, Youtube, Sparkles, Loader2, CheckSquare, Square, Trash2, Plus, ExternalLink, ListPlus, AlertCircle } from 'lucide-react';
+import { parseBulkYoutubeInput, YOUTUBE_CATEGORIES, extractYoutubeId, extractPlaylistId, getYoutubeThumbnail } from '../../utils/youtubeHelpers';
 
-export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories = [], existingSongs = [] }) {
-  const [rawText, setRawText] = useState('');
+export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories = [], existingSongs = [], initialText = '' }) {
+  const [rawText, setRawText] = useState(initialText || '');
   const [isParsing, setIsParsing] = useState(false);
   const [parseStatus, setParseStatus] = useState('');
+  const [parseError, setParseError] = useState('');
   const [parsedTracks, setParsedTracks] = useState([]);
   const [globalCategory, setGlobalCategory] = useState('Lofi & Chill');
   const [isImporting, setIsImporting] = useState(false);
   const [omittedDuplicatesCount, setOmittedDuplicatesCount] = useState(0);
+
+  useEffect(() => {
+    if (initialText && isOpen) {
+      setRawText(initialText);
+    }
+  }, [initialText, isOpen]);
 
   if (!isOpen) return null;
 
@@ -19,11 +26,17 @@ export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories
     if (!rawText.trim()) return;
     setIsParsing(true);
     setParseStatus('Analizando enlaces y descartando duplicados...');
+    setParseError('');
     setOmittedDuplicatesCount(0);
     try {
       const results = await parseBulkYoutubeInput(rawText, (current, total, msg) => {
         setParseStatus(msg || `Procesando video ${current} de ${total}...`);
       });
+
+      if (!results || results.length === 0) {
+        setParseError('No se encontraron videos ni canciones válidas. Revisa que el enlace sea público o pega una lista con formato "Artista - Canción" o export de Spotify.');
+        return;
+      }
 
       // 1. Filtrar duplicados dentro del lote pegado y contra canciones existentes
       const uniqueResults = [];
@@ -197,6 +210,19 @@ export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories
                 Analizar Enlaces y Leer Nombres
               </button>
             </div>
+
+            {parseError && (
+              <div className="p-3 bg-red-950/80 border border-red-500/40 rounded-xl text-red-300 text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <span>{parseError}</span>
+              </div>
+            )}
+
+            {omittedDuplicatesCount > 0 && (
+              <div className="p-2.5 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-300 text-xs font-semibold flex items-center gap-2">
+                <span>⚠️ Se omitieron {omittedDuplicatesCount} canciones por ya encontrarse en tu biblioteca o repetidas.</span>
+              </div>
+            )}
           </div>
 
           {/* Paso 2: Vista previa y edición de videos detectados */}

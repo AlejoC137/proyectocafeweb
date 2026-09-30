@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import supabase from '../config/supabaseClient';
 import { getAudioDuration, MAX_PLAYLIST_SECONDS } from '../utils/radioHelpers';
 import { extractYoutubeId, extractPlaylistId, getYoutubeThumbnail } from '../utils/youtubeHelpers';
@@ -19,16 +19,24 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
   const [loadingSupabase, setLoadingSupabase] = useState(true);
   const [supabaseError, setSupabaseError] = useState(null);
 
+  // Referencia a la pista activa para mantener la reproducción continua al actualizar la cola
+  const activeTrackRef = useRef(null);
+  useEffect(() => {
+    if (supabasePlaylist && supabasePlaylist[currentTrackIndex]) {
+      activeTrackRef.current = supabasePlaylist[currentTrackIndex];
+    }
+  }, [supabasePlaylist, currentTrackIndex]);
+
   // Playlist de YouTube (Estrictamente desde Supabase)
   const [youtubePlaylist, setYoutubePlaylist] = useState([]);
   const [selectedYoutubeCategory, setSelectedYoutubeCategory] = useState('Todos');
   const [youtubeSearchQuery, setYoutubeSearchQuery] = useState('');
   const [loadingYoutube, setLoadingYoutube] = useState(false);
 
-  // 2. Fetch playlist real desde Supabase (MP3s)
-  const fetchSupabasePlaylist = async () => {
+  // 2. Fetch playlist real desde Supabase (MP3s) con soporte silencioso para Realtime
+  const fetchSupabasePlaylist = async (silent = false) => {
     try {
-      setLoadingSupabase(true);
+      if (!silent) setLoadingSupabase(true);
       setSupabaseError(null);
       
       let data = null;
@@ -54,28 +62,84 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
 
       if (error) throw error;
 
-      // Deduplicar canciones por título y álbum para evitar que canciones de Alcolirykoz u otros aparezcan repetidas
-      const seen = new Set();
-      const uniqueData = (data || []).filter(item => {
-        const titleKey = (item.title || '').trim().toLowerCase();
-        const albumKey = (item.album || '').trim().toLowerCase();
-        const key = `${titleKey}__${albumKey}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+      // Conservar todas las canciones de la cola de emisión en su orden exacto
+      const formattedData = (data || []).map(item => {
+        let playableUrl = item.url || '';
+        if (playableUrl.startsWith('local://')) {
+          const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
+          playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        }
+        return {
+          ...item,
+          url: playableUrl,
+          streamUrl: playableUrl
+        };
       });
 
-      setSupabasePlaylist(uniqueData);
+      // Si una pista está sonando, ajustar el índice en la nueva lista para que no salte ni se reinicie
+      if (activeTrackRef.current && setCurrentTrackIndex) {
+        const curActive = activeTrackRef.current;
+        const foundIdx = formattedData.findIndex(t =>
+          (curActive.id && t.id === curActive.id) ||
+          (curActive.url && (t.url === curActive.url || t.streamUrl === curActive.url)) ||
+          (curActive.title && t.title === curActive.title && t.artist === curActive.artist)
+        );
+        if (foundIdx !== -1 && foundIdx !== currentTrackIndex) {
+          setCurrentTrackIndex(foundIdx);
+        }
+      }
+
+      setSupabasePlaylist(formattedData);
     } catch (err) {
       console.warn("Supabase playlist no disponible:", err.message);
-      setSupabaseError(err.message);
+      if (!silent) setSupabaseError(err.message);
     } finally {
-      setLoadingSupabase(false);
+      if (!silent) setLoadingSupabase(false);
     }
   };
 
   useEffect(() => {
     fetchSupabasePlaylist();
+
+    // 1. Escuchador Realtime de Supabase (WebSockets) para cambios en la cola
+    const playlistChannel = supabase
+      .channel('playlist-radio-realtime-listener')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'playlist_radio',
+        },
+        () => {
+          fetchSupabasePlaylist(true);
+        }
+      )
+      .subscribe();
+
+    // 2. BroadcastChannel inter-pestañas para propagación instantánea a 0ms
+    let bcPlaylist;
+    try {
+      bcPlaylist = new BroadcastChannel('radio-playlist-channel');
+      bcPlaylist.onmessage = (event) => {
+        if (event.data?.type === 'PLAYLIST_TRACK_REMOVED') {
+          if (event.data.deletedId) {
+            setSupabasePlaylist(prev => prev.filter(t => t.id !== event.data.deletedId));
+          } else {
+            fetchSupabasePlaylist(true);
+          }
+        } else if (event.data?.type === 'PLAYLIST_CLEARED') {
+          setSupabasePlaylist([]);
+        } else if (event.data?.type === 'PLAYLIST_UPDATED') {
+          fetchSupabasePlaylist(true);
+        }
+      };
+    } catch (e) {}
+
+    return () => {
+      supabase.removeChannel(playlistChannel);
+      if (bcPlaylist) bcPlaylist.close();
+    };
   }, []);
 
   // 2.5 Fetch playlist de YouTube estrictamente desde Supabase
@@ -518,6 +582,8 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     setSearchQuery,
     handleSearchSubmit,
     supabasePlaylist,
+    setSupabasePlaylist,
+    fetchSupabasePlaylist,
     filteredSupabasePlaylist,
     supabaseSearchQuery,
     setSupabaseSearchQuery,
