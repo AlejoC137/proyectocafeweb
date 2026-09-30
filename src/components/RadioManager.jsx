@@ -1227,7 +1227,7 @@ export default function RadioManager() {
     }
   };
 
-  const handleAddTrackToQueue = async (track) => {
+  const handleAddTrackToQueue = async (track, playImmediately = true) => {
     try {
       const nextIndex = songs.length;
       const cleanTrack = {
@@ -1241,26 +1241,13 @@ export default function RadioManager() {
       };
       const { error } = await supabase.from('playlist_radio').insert([cleanTrack]);
       if (error) throw error;
-      await supabase.from('radio_current_play').update({
-        station_artist: 'SYNC',
-        updated_at: new Date().toISOString()
-      }).eq('id', 1);
-
-      // Notificar de inmediato a otras pestañas (como ProyectoRadio) para que agreguen la canción en caliente sin recargar la página
-      try {
-        const bc = new BroadcastChannel('radio-playlist-channel');
-        bc.postMessage({ type: 'PLAYLIST_UPDATED', track: cleanTrack, timestamp: Date.now() });
-        bc.close();
-      } catch (e) {}
-
-      await sendRemoteCommand({
-        type: 'PLAYLIST_UPDATED',
-        targetClientId: 'all',
-        payload: { track: cleanTrack }
-      });
 
       await fetchSongs();
-      setSuccess(`➕ Canción "${track.title}" añadida a la cola.`);
+
+      // Poner al aire de inmediato
+      setBottomPlayerMode('live');
+      await handlePlayAirSong(cleanTrack);
+      setSuccess(`➕ Canción "${track.title}" añadida y sonando al aire de inmediato.`);
     } catch (e) {
       setError("Error al añadir canción a la cola: " + e.message);
     }
@@ -2851,11 +2838,16 @@ export default function RadioManager() {
                           return (
                             <div
                               key={song.id || idx}
-                              className={`group flex items-center justify-between p-2 rounded-xl border transition-all ${
+                              onClick={() => {
+                                setBottomPlayerMode('live');
+                                handlePlayAirSong(song);
+                              }}
+                              className={`group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none ${
                                 isOnAir
-                                  ? 'bg-[#1DB954]/10 border-[#1DB954]/40 shadow-sm'
+                                  ? 'bg-[#1DB954]/15 border-[#1DB954]/60 shadow-md ring-1 ring-[#1DB954]/40'
                                   : 'bg-black/40 hover:bg-white/5 border-white/5 hover:border-white/10'
                               }`}
+                              title={`Clic para poner al aire de inmediato: "${song.title}"`}
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
                                 <span className="text-[11px] font-mono text-gray-500 w-5 text-right shrink-0">
@@ -2893,11 +2885,27 @@ export default function RadioManager() {
                                 </div>
                               </div>
 
-                              {/* EN LA COLA SOLO SE MUESTRAN CONTROLES DE ORDEN Y ELIMINAR (SIN PLAY Y SIN ON AIR INDIVIDUAL) */}
-                              <div className="flex items-center gap-1 shrink-0">
+                              <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                                 <span className="text-[11px] font-mono text-gray-400 mr-1">
                                   {formatTime(song.duration)}
                                 </span>
+
+                                {/* BOTÓN TRANSMITIR / AL AIRE INMEDIATAMENTE */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setBottomPlayerMode('live');
+                                    handlePlayAirSong(song);
+                                  }}
+                                  className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                                    isOnAir
+                                      ? 'bg-red-600 text-white shadow-md shadow-red-600/30 ring-1 ring-red-400'
+                                      : 'bg-white/10 hover:bg-red-600 hover:text-white text-gray-300'
+                                  }`}
+                                  title="Transmitir al aire de inmediato"
+                                >
+                                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                                </button>
 
                                 {/* SUBIR / BAJAR ORDEN */}
                                 <button
