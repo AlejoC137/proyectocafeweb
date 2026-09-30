@@ -116,7 +116,7 @@ function Cleanup-OrphanLiveFiles {
         $listUrl = "$SUPABASE_URL/storage/v1/object/list/$BUCKET_NAME"
         $body = @{ prefix = ""; limit = 500 } | ConvertTo-Json
         $res = Invoke-RestMethod -Uri $listUrl -Method Post -Headers $headers -Body $body
-        $toDel = $res | Where-Object { $_.name -like "live_*.mp3" -or $_.name -like "queue_*.mp3" } | ForEach-Object { $_.name }
+        $toDel = $res | Where-Object { $_.name -like "live_*.mp3" -or $_.name -like "queue_*.mp3" -or $_.name -like "preview_*.mp3" } | ForEach-Object { $_.name }
         if ($toDel.Count -gt 0) {
             for ($i = 0; $i -lt $toDel.Count; $i += 50) {
                 $batch = $toDel | Select-Object -Skip $i -First 50
@@ -568,23 +568,23 @@ try {
 
                 # Chequeo de senales desde la web cada 1 segundo
                 try {
-                    $checkUrl = "$SUPABASE_URL/rest/v1/radio_current_play?select=station_artist,station_name,station_cover,station_url&id=eq.1"
+                    $checkUrl = "$SUPABASE_URL/rest/v1/radio_current_play?select=station_artist,station_name,station_cover,station_url,tab&id=eq.1"
                     $rawResp = Invoke-RestMethod -Uri $checkUrl -Headers $headers
                     $currentRemote = if ($rawResp -is [System.Array]) { $rawResp[0] } else { $rawResp }
 
                     $cmdArtist = [string]$currentRemote.station_artist
-                    $cmdName = [string]$currentRemote.station_name
+                    $cmdName   = [string]$currentRemote.station_name
+                    $cmdTab    = [string]$currentRemote.tab
 
-                    # 1. Peticion instantanea de una cancion especifica (clic en cola o biblioteca)
-                    if ($cmdArtist.StartsWith("REQUEST:") -or $cmdArtist.StartsWith("LIBRARY_REQUEST:") -or $cmdArtist.StartsWith("PREVIEW:")) {
-                        $prefixLen = if ($cmdArtist.StartsWith("LIBRARY_REQUEST:")) { 16 } elseif ($cmdArtist.StartsWith("PREVIEW:")) { 8 } else { 8 }
-                        $reqPayload = $cmdArtist.Substring($prefixLen).Trim()
+                    # 1. Peticion de PRE-ESCUCHA / CUE desde la Biblioteca Web (EN PARALELO, SIN TOCAR EL AIRE)
+                    if ($cmdTab -like "PREVIEW_REQ:*") {
+                        $reqPayload = $cmdTab.Substring(12).Trim()
                         $reqParts = $reqPayload -split '\|\|', 3
                         $reqTitle = $reqParts[0].Trim()
                         $reqArtist = if ($reqParts.Count -gt 1 -and $reqParts[1].Trim()) { $reqParts[1].Trim() } else { "" }
                         $reqFile = if ($reqParts.Count -gt 2 -and $reqParts[2].Trim()) { $reqParts[2].Trim() } else { "" }
 
-                        Write-Host "`n>>> [SOLICITUD BIBLIOTECA / WEB] Pista solicitada: $reqTitle" -ForegroundColor Magenta
+                        Write-Host "`n>>> [CUE / PRE-ESCUCHA PARALELA] Pista solicitada de biblioteca: $reqTitle" -ForegroundColor Cyan
 
                         $matchedReq = $null
                         if ($reqFile) {
@@ -610,7 +610,83 @@ try {
                         }
 
                         if ($matchedReq) {
-                            Write-Host " [ENCONTRADO] $($matchedReq.FullName)" -ForegroundColor Green
+                            Write-Host " [SUBIENDO PRE-ESCUCHA] $($matchedReq.Name)..." -ForegroundColor Cyan
+                            $previewTimestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                            $previewFilename = "preview_$previewTimestamp.mp3"
+
+                            $headersUpload = @{
+                                "Authorization" = "Bearer $SUPABASE_API_KEY"
+                                "apikey"        = "$SUPABASE_API_KEY"
+                                "Content-Type"  = "audio/mpeg"
+                                "x-upsert"      = "true"
+                            }
+                            $urlUp = "$SUPABASE_URL/storage/v1/object/$BUCKET_NAME/$previewFilename"
+                            try {
+                                Invoke-RestMethod -Uri $urlUp -Method Post -Headers $headersUpload -InFile $matchedReq.FullName | Out-Null
+                                $previewUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/$previewFilename"
+                                $previewDur = Get-Mp3DurationSeconds $matchedReq.FullName
+                                if (-not $previewDur -or $previewDur -le 0) { $previewDur = 180 }
+
+                                # Borrar archivo de pre-escucha anterior si existia
+                                if ($global:PreviousPreviewFilename) {
+                                    Delete-Track -remoteFilename $global:PreviousPreviewFilename
+                                }
+                                $global:PreviousPreviewFilename = $previewFilename
+
+                                # Notificar que la pre-escucha esta lista para la web (SIN alterar datos al aire)
+                                $readyPayload = @{
+                                    tab = "PREVIEW_READY:$previewUrl||$reqTitle||$reqArtist||$previewDur"
+                                } | ConvertTo-Json -Compress
+                                $patchUrl = "$SUPABASE_URL/rest/v1/radio_current_play?id=eq.1"
+                                $headersPatch = @{
+                                    "Authorization" = "Bearer $SUPABASE_API_KEY"
+                                    "apikey"        = "$SUPABASE_API_KEY"
+                                    "Content-Type"  = "application/json; charset=utf-8"
+                                }
+                                Invoke-RestMethod -Uri $patchUrl -Method Patch -Headers $headersPatch -Body ([System.Text.Encoding]::UTF8.GetBytes($readyPayload)) | Out-Null
+                                Write-Host " [PRE-ESCUCHA LISTA] Transmitida en paralelo. Emision al aire sigue activa.`n" -ForegroundColor Green
+                            } catch {
+                                Write-Host " [ERROR SUBIENDO PRE-ESCUCHA] $_" -ForegroundColor Red
+                            }
+                        } else {
+                            Write-Host " [AVISO] Archivo para pre-escucha '$reqTitle' no encontrado en disco." -ForegroundColor Yellow
+                        }
+                    }
+                    # 2. Peticion instantanea de una cancion especifica AL AIRE (clic en cola de emision)
+                    elseif ($cmdArtist.StartsWith("REQUEST:")) {
+                        $reqPayload = $cmdArtist.Substring(8).Trim()
+                        $reqParts = $reqPayload -split '\|\|', 3
+                        $reqTitle = $reqParts[0].Trim()
+                        $reqArtist = if ($reqParts.Count -gt 1 -and $reqParts[1].Trim()) { $reqParts[1].Trim() } else { "" }
+                        $reqFile = if ($reqParts.Count -gt 2 -and $reqParts[2].Trim()) { $reqParts[2].Trim() } else { "" }
+
+                        Write-Host "`n>>> [SOLICITUD AL AIRE] Pista solicitada para emision: $reqTitle" -ForegroundColor Magenta
+
+                        $matchedReq = $null
+                        if ($reqFile) {
+                            $matchedReq = $allLocalFiles | Where-Object {
+                                $_.FullName -eq $reqFile -or 
+                                $_.Name -eq $reqFile -or
+                                ($_.FullName.IndexOf($reqFile, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or
+                                ($_.Name.IndexOf($reqFile, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+                            } | Select-Object -First 1
+                        }
+
+                        if (-not $matchedReq) {
+                            $reqNorm = Normalize-Text $reqTitle
+                            $matchedReq = $allLocalFiles | Where-Object {
+                                $fClean = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+                                $fNorm = Normalize-Text $fClean
+                                ($fClean.IndexOf($reqTitle, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or 
+                                ($reqTitle.IndexOf($fClean, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) -or 
+                                ($reqNorm -and $fNorm -eq $reqNorm) -or
+                                ($reqNorm -and $fNorm.Contains($reqNorm)) -or
+                                ($reqNorm -and $reqNorm.Contains($fNorm))
+                            } | Select-Object -First 1
+                        }
+
+                        if ($matchedReq) {
+                            Write-Host " [ENCONTRADO AL AIRE] $($matchedReq.FullName)" -ForegroundColor Green
                             if (-not $reqArtist) {
                                 $cName = [System.IO.Path]::GetFileNameWithoutExtension($matchedReq.Name)
                                 $cClean = [System.Text.RegularExpressions.Regex]::Replace($cName, "^\d+[\s\-_.]*", "")
@@ -633,12 +709,12 @@ try {
                             }
                             break
                         } else {
-                            Write-Host " [AVISO] Archivo para '$reqTitle' no encontrado en disco." -ForegroundColor Yellow
+                            Write-Host " [AVISO] Archivo para emision '$reqTitle' no encontrado en disco." -ForegroundColor Yellow
                         }
                     }
-                    # 2. Salto a siguiente cancion solicitado desde la web
+                    # 3. Salto a siguiente cancion al aire solicitado desde la web
                     elseif ($cmdArtist -eq "NEXT_TRACK" -or $cmdName -eq "NEXT_TRACK") {
-                        Write-Host "`n>>> [RADIO MANAGER] Siguiente pista solicitada." -ForegroundColor Cyan
+                        Write-Host "`n>>> [RADIO MANAGER] Siguiente pista solicitada al aire." -ForegroundColor Cyan
                         break
                     }
                     else {
@@ -656,6 +732,7 @@ finally {
     Write-Host "`n`n>>> [APAGANDO] Limpiando archivos temporales en Supabase Storage..." -ForegroundColor Yellow
     if ($previousRemoteFilename) { Delete-Track -remoteFilename $previousRemoteFilename }
     if ($remoteFilename) { Delete-Track -remoteFilename $remoteFilename }
+    if ($global:PreviousPreviewFilename) { Delete-Track -remoteFilename $global:PreviousPreviewFilename }
     Cleanup-OrphanLiveFiles
     # Limpiar latido local
     try {
