@@ -31,7 +31,7 @@ export default function ListenersRemoteModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
       <div 
-        className="bg-[#121212] border border-white/15 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        className="bg-[#121212] border border-white/15 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90dvh] pb-safe overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* CABECERA */}

@@ -147,7 +147,7 @@ export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#181818] border border-white/10 rounded-2xl w-full max-w-4xl text-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[#181818] border border-white/10 rounded-2xl w-full max-w-4xl text-white shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] pb-safe">
         
         {/* Header Modal */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#202020]">

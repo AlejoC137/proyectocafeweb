@@ -221,7 +221,7 @@ export default function CreateAlbumModal({ isOpen, onClose, onAlbumCreated }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl border-[3.5px] border-black dark:border-slate-700 bg-white dark:bg-[#12131C] text-black dark:text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl border-[3.5px] border-black dark:border-slate-700 bg-white dark:bg-[#12131C] text-black dark:text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none overflow-hidden flex flex-col max-h-[90dvh] pb-safe">
         
         {/* Cabecera del Modal */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b-[3px] border-black dark:border-slate-700 bg-[#1DB954] text-black font-black uppercase tracking-wider text-sm">

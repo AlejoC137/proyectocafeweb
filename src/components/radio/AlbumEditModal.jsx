@@ -145,7 +145,7 @@ export default function AlbumEditModal({ isOpen, onClose, albumData, album, onSa
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80dvh] pb-safe overflow-y-auto">
           {errorMsg && (
             <div className="p-3 border-[2px] border-black bg-red-100 text-red-700 font-bold text-xs uppercase">
               ⚠️ {errorMsg}
