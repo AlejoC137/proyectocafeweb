@@ -1,0 +1,3 @@
+# carpetas_musica.txt - lista de carpetas donde buscar MP3 (una por línea)
+G:\Mi unidad\Radio\musica
+G:\Mi unidad\Radio
