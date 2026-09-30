@@ -216,7 +216,9 @@ function Match-TracksToLocalFiles($dbList, $localFilesList) {
                 title       = $dbSong.title
                 artist      = if ($dbSong.artist) { $dbSong.artist } else { "Radio Cafe" }
                 album       = if ($dbSong.album) { $dbSong.album } else { "Radio Cafe" }
-                cover       = if ($dbSong.cover) { $dbSong.cover } else { "" }
+                $safeCover = [System.Text.RegularExpressions.Regex]::Replace($foundFile.Directory.Name, "[^a-zA-Z0-9_\-]", "_") + ".jpg"
+                $pubCover = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/covers/$safeCover"
+                cover       = if ($dbSong.cover -and $dbSong.cover.StartsWith("http")) { $dbSong.cover } else { $pubCover }
                 filePath    = $foundFile.FullName
                 order_index = $dbSong.order_index
             })
@@ -276,7 +278,17 @@ function Build-And-Upload-MultiCatalog($folderList) {
         if ($coverFiles.Count -gt 0) {
             $preferredCover = $coverFiles | Where-Object { $_.BaseName -match '^(cover|folder|front|album|portada)$' } | Select-Object -First 1
             if (-not $preferredCover) { $preferredCover = $coverFiles[0] }
-            $albumCoverUrl = "/api/local-audio?path=" + [System.Uri]::EscapeDataString($preferredCover.FullName)
+            $safeCoverName = [System.Text.RegularExpressions.Regex]::Replace($alb.Name, "[^a-zA-Z0-9_\-]", "_") + ".jpg"
+            $albumCoverUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/covers/$safeCoverName"
+            try {
+                $uploadCoverUrl = "$SUPABASE_URL/storage/v1/object/$BUCKET_NAME/covers/$safeCoverName"
+                $headersCover = @{
+                    "Authorization" = "Bearer $SUPABASE_API_KEY"
+                    "apikey"        = "$SUPABASE_API_KEY"
+                    "Content-Type"  = "image/jpeg"
+                }
+                Invoke-RestMethod -Uri $uploadCoverUrl -Method Post -Headers $headersCover -InFile $preferredCover.FullName -ErrorAction SilentlyContinue | Out-Null
+            } catch {}
         }
 
         $trackList = [System.Collections.Generic.List[PSObject]]::new()
@@ -454,7 +466,8 @@ try {
                 title       = $autoTitle
                 artist      = $autoArtist
                 album       = $randomFile.Directory.Name
-                cover       = ""
+                $safeCoverAuto = [System.Text.RegularExpressions.Regex]::Replace($randomFile.Directory.Name, "[^a-zA-Z0-9_\-]", "_") + ".jpg"
+                cover       = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/covers/$safeCoverAuto"
                 filePath    = $randomFile.FullName
                 order_index = 0
             })
@@ -588,7 +601,8 @@ try {
                                     title       = $reqTitle
                                     artist      = $currentRemote.station_name
                                     album       = "Sencillo"
-                                    cover       = ""
+                                    $safeCoverReq = [System.Text.RegularExpressions.Regex]::Replace($matchedReq.Directory.Name, "[^a-zA-Z0-9_\-]", "_") + ".jpg"
+                                    cover       = if ($currentRemote.station_cover -and $currentRemote.station_cover.StartsWith("http")) { $currentRemote.station_cover } else { "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/covers/$safeCoverReq" }
                                     filePath    = $matchedReq.FullName
                                     order_index = 0
                                 }
