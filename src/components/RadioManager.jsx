@@ -1742,9 +1742,11 @@ export default function RadioManager() {
     setIsUpdatingAirList(true);
     try {
       const shuffled = [...songs].sort(() => 0.5 - Math.random());
-      for (let i = 0; i < shuffled.length; i++) {
-        await supabase.from('playlist_radio').update({ order_index: i }).eq('id', shuffled[i].id);
-      }
+      await Promise.all(
+        shuffled.map((item, i) =>
+          supabase.from('playlist_radio').update({ order_index: i }).eq('id', item.id)
+        )
+      );
       setSongs(shuffled);
       await notifyPlaylistUpdate();
       setSuccess("🔀 ¡Cola de reproducción mezclada aleatoriamente!");
@@ -3952,6 +3954,14 @@ export default function RadioManager() {
                     >
                       <SkipForward className="w-3.5 h-3.5" />
                     </button>
+
+                    <button 
+                      onClick={handleRandomLibraryPreview} 
+                      className="text-gray-400 hover:text-cyan-400 transition" 
+                      title="Canción aleatoria de biblioteca"
+                    >
+                      <Shuffle className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   {/* Seek Azul */}
@@ -4052,6 +4062,14 @@ export default function RadioManager() {
                       title="Siguiente canción al aire"
                     >
                       <SkipForward className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button 
+                      onClick={handleAirShuffle} 
+                      className="text-gray-400 hover:text-red-400 transition" 
+                      title="Mezclar canciones de la cola al aire"
+                    >
+                      <Shuffle className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
