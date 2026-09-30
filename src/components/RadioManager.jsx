@@ -258,6 +258,80 @@ export default function RadioManager() {
     setSuccess(`Comando SIGUIENTE enviado a la instancia.`);
   };
 
+  // Forzar cambio de modo/fuente (Files, Radios o YouTube) a todas las instancias conectadas
+  const handleForceModeAll = async (targetMode) => {
+    try {
+      setIsUpdatingAirList(true);
+      const modeNames = { supabase: 'FILES (MP3s)', live: 'RADIOS (Plaza)', youtube: 'YOUTUBE' };
+
+      // 1. Enviar comando remoto a todas las instancias de Proyecto Radio
+      await sendRemoteCommand({
+        type: 'FORCE_MODE',
+        targetClientId: 'all',
+        payload: {
+          tab: targetMode,
+          mode: targetMode,
+          isPlaying: true
+        }
+      });
+
+      // 2. BroadcastChannel local inter-pestañas
+      try {
+        const bc = new BroadcastChannel('radio-command-channel');
+        bc.postMessage({
+          type: 'FORCE_MODE',
+          targetClientId: 'all',
+          tab: targetMode,
+          mode: targetMode,
+          isPlaying: true,
+          timestamp: Date.now()
+        });
+        bc.close();
+      } catch (e) {}
+
+      // 3. Actualizar la tabla radio_current_play en Supabase
+      let updatePayload = {
+        tab: targetMode,
+        is_playing: true,
+        updated_at: new Date().toISOString()
+      };
+
+      if (targetMode === 'supabase') {
+        const firstSong = songs[0];
+        if (firstSong) {
+          updatePayload.station_name = firstSong.title;
+          updatePayload.station_artist = firstSong.artist || 'Radio Café';
+          updatePayload.station_cover = firstSong.cover || '';
+          updatePayload.station_url = firstSong.url || (firstSong.fileName ? `local://${encodeURIComponent(firstSong.fileName)}` : '');
+        }
+      } else if (targetMode === 'live') {
+        updatePayload.station_name = 'Emisora En Vivo';
+        updatePayload.station_artist = 'Radios En Vivo';
+      } else if (targetMode === 'youtube') {
+        const firstYt = youtubeSongs[0];
+        if (firstYt) {
+          updatePayload.station_name = firstYt.title || 'YouTube Video';
+          updatePayload.station_artist = firstYt.artist || 'Canal YouTube';
+          updatePayload.station_cover = firstYt.cover || '';
+          updatePayload.station_url = firstYt.url || '';
+        }
+      }
+
+      await supabase.from('radio_current_play').update(updatePayload).eq('id', 1);
+
+      setOnAirTrack(prev => ({
+        ...(prev || {}),
+        ...updatePayload
+      }));
+
+      setSuccess(`⚡ ¡Modo forzado a ${modeNames[targetMode]} en todas las instancias (${activeListenersCount} activas)!`);
+    } catch (err) {
+      setError(`Error forzando modo ${targetMode}: ` + err.message);
+    } finally {
+      setIsUpdatingAirList(false);
+    }
+  };
+
   // Comprobar latido activo del .bat (detección inmediata local vía Vite y fallback Supabase)
   const checkBatHeartbeat = async (record) => {
     // 1. Verificación local inmediata (G:\Mi unidad\Radio\bat_heartbeat.json)
@@ -2296,6 +2370,15 @@ export default function RadioManager() {
             </button>
 
             <button 
+              onClick={() => setShowListenersModal(true)}
+              className="flex-1 md:flex-none px-5 py-3 rounded-full bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-extrabold text-xs uppercase tracking-wider border border-blue-500/40 transition flex items-center justify-center gap-2 shadow-lg"
+              title="Monitorear oyentes activos y enviarles órdenes de transmisión"
+            >
+              <Users className="w-4 h-4" />
+              Oyentes ({activeListenersCount})
+            </button>
+
+            <button 
               onClick={handleForceRestart}
               disabled={isRestarting}
               title="Forzar el reinicio completo de la radio, detener la transmisión activa y recargar listas"
@@ -2303,6 +2386,68 @@ export default function RadioManager() {
             >
               <RotateCcw className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} />
               {isRestarting ? 'Reiniciando...' : 'Forzar Reinicio'}
+            </button>
+          </div>
+        </div>
+
+        {/* BANNER CONTROL MAESTRO DE EMISIÓN: FORZAR FUENTES EN TODAS LAS INSTANCIAS */}
+        <div className="bg-[#181818] p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+              <Radio className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black uppercase tracking-wider text-white">Forzar Fuente en Oyentes:</span>
+                <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
+                  onAirTrack?.tab === 'youtube' ? 'bg-red-500/20 text-red-400 border-red-500/40' :
+                  onAirTrack?.tab === 'live' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' :
+                  'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                }`}>
+                  Al aire: {onAirTrack?.tab === 'youtube' ? 'YouTube' : onAirTrack?.tab === 'live' ? 'Radios (Plaza)' : 'Files (MP3s)'}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400">
+                Pasa forzosamente todas las instancias abiertas de Proyecto Radio a reproducir la fuente seleccionada ({activeListenersCount} instancias conectadas).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <button
+              onClick={() => handleForceModeAll('supabase')}
+              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border shadow-lg ${
+                onAirTrack?.tab === 'supabase' || !onAirTrack?.tab
+                  ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-[#1DB954]/30'
+                  : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+              }`}
+            >
+              <Music className="w-4 h-4" />
+              Forzar Files
+            </button>
+
+            <button
+              onClick={() => handleForceModeAll('live')}
+              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border shadow-lg ${
+                onAirTrack?.tab === 'live'
+                  ? 'bg-cyan-500 text-black border-cyan-400 shadow-cyan-500/30'
+                  : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+              }`}
+            >
+              <Radio className="w-4 h-4" />
+              Forzar Radios
+            </button>
+
+            <button
+              onClick={() => handleForceModeAll('youtube')}
+              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border shadow-lg ${
+                onAirTrack?.tab === 'youtube'
+                  ? 'bg-red-600 text-white border-red-500 shadow-red-600/30'
+                  : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+              }`}
+            >
+              <Youtube className="w-4 h-4 fill-current" />
+              Forzar YouTube
             </button>
           </div>
         </div>
@@ -3744,6 +3889,37 @@ export default function RadioManager() {
         isOpen={showCreateAlbumModal}
         onClose={() => setShowCreateAlbumModal(false)}
         onAlbumCreated={handleAlbumCreated}
+      />
+
+      {/* MODAL DE CONTROL REMOTO Y OYENTES ACTIVOS */}
+      <ListenersRemoteModal 
+        isOpen={showListenersModal}
+        onClose={() => setShowListenersModal(false)}
+        listeners={listeners}
+        activeListenersCount={activeListenersCount}
+        batCatalog={batCatalog}
+        songs={songs}
+        selectedTargetList={selectedTargetListForRemote}
+        setSelectedTargetList={setSelectedTargetListForRemote}
+        onApplyListToRemoteListeners={handleApplyListToRemoteListeners}
+        onForceReloadAll={() => broadcastForceReload('all')}
+        onPauseAll={async () => {
+          await sendRemoteCommand({ type: 'PAUSE', targetClientId: 'all' });
+          setSuccess("⏸️ Comando de pausa enviado a todas las instancias.");
+        }}
+        onPlayAll={async () => {
+          await sendRemoteCommand({ type: 'PLAY', targetClientId: 'all' });
+          setSuccess("▶️ Comando de reproducción enviado a todas las instancias.");
+        }}
+        onNextAll={async () => {
+          await sendRemoteCommand({ type: 'NEXT', targetClientId: 'all' });
+          setSuccess("⏭️ Comando siguiente pista enviado a todas las instancias.");
+        }}
+        onReloadListener={handleReloadListener}
+        onTogglePlayListener={handleTogglePlayListener}
+        onNextTrackListener={handleNextTrackListener}
+        currentMode={onAirTrack?.tab}
+        onForceModeAll={handleForceModeAll}
       />
 
     </div>

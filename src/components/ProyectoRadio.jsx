@@ -3,7 +3,7 @@ import { useRadioSync } from '../hooks/useRadioSync';
 import { useCafeData } from '../hooks/useCafeData';
 import { useRadioData } from '../hooks/useRadioData';
 import { useRadioPlayer } from '../hooks/useRadioPlayer';
-import { Radio, Play } from 'lucide-react';
+import { Radio, Play, Youtube, Globe } from 'lucide-react';
 
 import RadioHeader from './radio/RadioHeader';
 import AgendaColumn from './radio/AgendaColumn';
@@ -16,12 +16,30 @@ export default function ProyectoRadio() {
   const isApplyingRemoteChange = useRef(false);
   const playerRef = useRef(null);
 
-  // 2. Tab Local
-  const [activeTab, setActiveTab] = useState('supabase');
+  // 2. Tab Local con persistencia en localStorage para recordar estado entre sesiones
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = localStorage.getItem('proyecto_radio_active_tab');
+      if (saved && ['supabase', 'live', 'youtube'].includes(saved)) {
+        return saved;
+      }
+    } catch (e) {}
+    return 'supabase';
+  });
   const [mobileTab, setMobileTab] = useState('player'); // 'agenda', 'player', 'menu'
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    playerRef.current?.setCurrentTrackIndex(0);
+    try {
+      localStorage.setItem('proyecto_radio_active_tab', tab);
+      const savedIdx = localStorage.getItem(`proyecto_radio_index_${tab}`);
+      const restoredIdx = (savedIdx !== null && !isNaN(Number(savedIdx))) ? Math.max(0, parseInt(savedIdx, 10)) : 0;
+      setCurrentTrackIndex(restoredIdx);
+      playerRef.current?.setCurrentTrackIndex(restoredIdx);
+    } catch (e) {
+      setCurrentTrackIndex(0);
+      playerRef.current?.setCurrentTrackIndex(0);
+    }
     playerRef.current?.setProgress(0);
     playerRef.current?.setCurrentTime(0);
     playerRef.current?.setIsPlaying(false);
@@ -31,8 +49,24 @@ export default function ProyectoRadio() {
   // 3. Hooks
   const cafeData = useCafeData();
   
-  // Hoist shared states needed for player and radioData
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  // Hoist shared states needed for player and radioData con persistencia de índice por tab
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(() => {
+    try {
+      const savedTab = localStorage.getItem('proyecto_radio_active_tab') || 'supabase';
+      const savedIdx = localStorage.getItem(`proyecto_radio_index_${savedTab}`);
+      if (savedIdx !== null && !isNaN(Number(savedIdx))) {
+        return Math.max(0, parseInt(savedIdx, 10));
+      }
+    } catch (e) {}
+    return 0;
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(`proyecto_radio_index_${activeTab}`, String(currentTrackIndex));
+    } catch (e) {}
+  }, [currentTrackIndex, activeTab]);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null);
 
@@ -58,12 +92,53 @@ export default function ProyectoRadio() {
         setCurrentTrackIndex(0);
         setIsPlaying(true);
       }
+    } else if (cmd.type === 'FORCE_MODE' || cmd.type === 'SWITCH_TAB') {
+      const rawTab = cmd.payload?.tab || cmd.tab || cmd.payload?.mode || cmd.mode;
+      let targetTab = 'supabase';
+      if (rawTab === 'youtube' || rawTab === 'yt') targetTab = 'youtube';
+      else if (rawTab === 'live' || rawTab === 'radio' || rawTab === 'radios' || rawTab === 'plaza') targetTab = 'live';
+      else if (rawTab === 'supabase' || rawTab === 'files') targetTab = 'supabase';
+
+      console.log(`[ProyectoRadio] ⚡ Forzando modo remoto a: ${targetTab}`);
+      setActiveTab(targetTab);
+      try {
+        localStorage.setItem('proyecto_radio_active_tab', targetTab);
+      } catch (e) {}
+
+      playerRef.current?.setShowAutoStart(false);
+      setIsPlaying(true);
+
+      if (targetTab === 'youtube') {
+        if (playerRef.current?.audioRef?.current) {
+          try { playerRef.current.audioRef.current.pause(); } catch (e) {}
+        }
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
+        }, 150);
+      } else if (targetTab === 'live') {
+        const station = radioData.apiStations[0] || (currentTrack?.isLiveStream ? currentTrack : null);
+        const stationUrl = station?.url || cmd.payload?.url || cmd.url;
+        if (stationUrl && playerRef.current?.audioRef?.current) {
+          playerRef.current.audioRef.current.src = stationUrl;
+          playerRef.current.audioRef.current.play().catch(() => {});
+        }
+      } else if (targetTab === 'supabase') {
+        const fileUrl = radioData.supabasePlaylist[0]?.url || cmd.payload?.url || cmd.url;
+        if (fileUrl && playerRef.current?.audioRef?.current) {
+          playerRef.current.audioRef.current.src = fileUrl;
+          playerRef.current.audioRef.current.play().catch(() => {});
+        }
+      }
     } else if (cmd.type === 'PAUSE') {
       playerRef.current?.audioRef?.current?.pause();
       setIsPlaying(false);
     } else if (cmd.type === 'PLAY') {
       setIsPlaying(true);
-      playerRef.current?.audioRef?.current?.play().catch(() => {});
+      if (activeTab === 'youtube') {
+        window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
+      } else {
+        playerRef.current?.audioRef?.current?.play().catch(() => {});
+      }
     } else if (cmd.type === 'NEXT') {
       playerRef.current?.nextTrack();
     } else if (cmd.type === 'SEEK_TO') {
@@ -85,7 +160,7 @@ export default function ProyectoRadio() {
         playerRef.current?.handleVolumeChange({ target: { value: cmd.volume } });
       }
     }
-  }, [radioData, setCurrentTrackIndex, setIsPlaying]);
+  }, [radioData, activeTab, currentTrack, setCurrentTrackIndex, setIsPlaying]);
 
   // Telemetría de presencia para reportar estado y oyentes activos a Radio Manager
   const presenceData = useMemo(() => ({
@@ -260,9 +335,18 @@ export default function ProyectoRadio() {
     lastPlayedTrackKeyRef.current = trackKey;
     isApplyingRemoteChange.current = true;
 
-    const validTabs = ['radio', 'youtube', 'podcasts', 'favorites'];
-    if (currentPlay.tab && validTabs.includes(currentPlay.tab)) {
-      setActiveTab(currentPlay.tab);
+    if (currentPlay.tab) {
+      let resolvedTab = null;
+      if (currentPlay.tab === 'youtube') resolvedTab = 'youtube';
+      else if (currentPlay.tab === 'live' || currentPlay.tab === 'radio' || currentPlay.tab === 'radios' || currentPlay.tab === 'plaza') resolvedTab = 'live';
+      else if (currentPlay.tab === 'supabase' || currentPlay.tab === 'files') resolvedTab = 'supabase';
+
+      if (resolvedTab && resolvedTab !== activeTab) {
+        setActiveTab(resolvedTab);
+        try {
+          localStorage.setItem('proyecto_radio_active_tab', resolvedTab);
+        } catch (e) {}
+      }
     }
 
     const targetVol = player.isMuted ? 0 : player.volume;
@@ -327,10 +411,29 @@ export default function ProyectoRadio() {
     setIsPlaying(true);
 
     if (activeTab === 'youtube' || currentTrack?.type === 'youtube') {
+      if (player.audioRef.current) {
+        try { player.audioRef.current.pause(); } catch (e) {}
+      }
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
-      }, 150);
+      }, 100);
       return;
+    }
+
+    if (activeTab === 'live') {
+      const station = currentTrack || radioData.apiStations[0];
+      const stationUrl = station?.url;
+      if (stationUrl && player.audioRef.current) {
+        const audioEl = player.audioRef.current;
+        audioEl.src = stationUrl;
+        audioEl.volume = player.isMuted ? 0 : player.volume;
+        audioEl.play().then(() => {
+          setIsPlaying(true);
+        }).catch(err => {
+          console.warn("Autoplay block (Live Radio):", err.message);
+        });
+        return;
+      }
     }
 
     // Resolve local:// URLs to the API proxy path or Supabase Storage in production
@@ -349,9 +452,10 @@ export default function ProyectoRadio() {
     };
 
     const targetUrl =
+      resolveUrl(currentTrack?.url) ||
       resolveUrl(player.pendingPlayRef.current) ||
       resolveUrl(currentPlay?.station_url) ||
-      resolveUrl(currentTrack?.url) ||
+      resolveUrl(radioData.supabasePlaylist[0]?.url) ||
       // Last resort: whatever is already loaded in the audio element
       player.audioRef.current?.src || null;
 
@@ -545,27 +649,40 @@ export default function ProyectoRadio() {
             </div>
           )}
           <div className="relative z-10 flex flex-col items-center text-center px-8 max-w-lg border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none py-10">
-            <div className="relative mb-8">
-              <div className="w-28 h-28 border-[4px] border-black bg-yellow-100 flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none">
-                <Radio className="w-14 h-14 text-black" />
+            <div className="relative mb-6">
+              <div className={`w-28 h-28 border-[4px] border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none ${
+                activeTab === 'youtube' ? 'bg-red-100 text-red-600' :
+                activeTab === 'live' ? 'bg-cyan-100 text-cyan-600' :
+                'bg-yellow-100 text-black'
+              }`}>
+                {activeTab === 'youtube' ? (
+                  <Youtube className="w-14 h-14 fill-current" />
+                ) : activeTab === 'live' ? (
+                  <Globe className="w-14 h-14" />
+                ) : (
+                  <Radio className="w-14 h-14" />
+                )}
               </div>
             </div>
             <h1 className="text-3xl md:text-4xl font-black mb-2 uppercase tracking-widest text-black leading-tight" style={{ fontFamily: "'First Bunny', sans-serif" }}>
               Proyecto<br/>Café Radio
             </h1>
-            {currentPlay?.station_name && currentPlay.station_name !== 'Esperando primera reproducción...' ? (
-              <div className="mb-8 border-t-[3px] border-b-[3px] border-black py-4 w-full">
-                <p className="text-sm font-bold uppercase tracking-widest mb-1 text-black">Transmisión activa:</p>
-                <p className="text-xl font-black uppercase text-black">{currentPlay.station_name}</p>
-                {currentPlay.station_artist && (
-                  <p className="text-sm mt-1 font-bold text-black/70 uppercase">{currentPlay.station_artist}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-base font-bold uppercase tracking-widest mb-8 text-black/60 border-t-[3px] border-b-[3px] border-black py-4 w-full">
-                Música curada para el café
+            
+            <div className="mb-6 border-t-[3px] border-b-[3px] border-black py-4 w-full">
+              <p className="text-xs font-black uppercase tracking-widest mb-1 text-black/60">
+                {activeTab === 'youtube' ? '🔴 Modo Recordado: YouTube' :
+                 activeTab === 'live' ? '📻 Modo Recordado: Radios En Vivo' :
+                 '📁 Modo Recordado: Files (Biblioteca)'}
               </p>
-            )}
+              <p className="text-lg md:text-xl font-black uppercase text-black truncate">
+                {currentTrack?.title || currentPlay?.station_name || (activeTab === 'youtube' ? 'Videos Seleccionados' : activeTab === 'live' ? 'Emisora Online' : 'Música curada para el café')}
+              </p>
+              {(currentTrack?.artist || currentPlay?.station_artist) && (
+                <p className="text-xs mt-1 font-bold text-black/70 uppercase truncate">
+                  {currentTrack?.artist || currentPlay?.station_artist}
+                </p>
+              )}
+            </div>
             <button onClick={handleAutoStart}
               className="w-20 h-20 border-[4px] border-black bg-black flex items-center justify-center text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none mb-6"
             >

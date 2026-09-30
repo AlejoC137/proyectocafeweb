@@ -169,7 +169,24 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
       };
     } catch (e) {}
 
+    // 3. Polling de respaldo cada 3 segundos para sincronización infalible entre pestañas y dispositivos
+    const pollInterval = setInterval(() => {
+      fetchSupabasePlaylist(true);
+    }, 3000);
+
+    // 4. Sincronización instantánea al volver a enfocar la ventana/pestaña
+    const handleFocusSync = () => {
+      if (document.visibilityState === 'visible') {
+        fetchSupabasePlaylist(true);
+      }
+    };
+    window.addEventListener('focus', handleFocusSync);
+    document.addEventListener('visibilitychange', handleFocusSync);
+
     return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocusSync);
+      document.removeEventListener('visibilitychange', handleFocusSync);
       supabase.removeChannel(playlistChannel);
       if (bcPlaylist) bcPlaylist.close();
     };
