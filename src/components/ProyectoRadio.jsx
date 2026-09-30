@@ -205,7 +205,19 @@ export default function ProyectoRadio() {
 
   // Reacción limpia a eventos de cambio de canción al aire (SIN loops ni recargas que corten el audio)
   React.useEffect(() => {
-    if (!currentPlay || !currentPlay.station_url) return;
+    if (!currentPlay) return;
+
+    // Si la estación está desautorizada por el switch OFF AIR de Radio Manager
+    if (currentPlay.tab === 'OFF_AIR') {
+      const audioEl = player.audioRef.current;
+      if (audioEl && !audioEl.paused) {
+        audioEl.pause();
+      }
+      setIsPlaying(false);
+      return;
+    }
+
+    if (!currentPlay.station_url) return;
 
     // Ignorar señales internas de control o sincronización
     const ignoredControlSignals = ['SYNC', 'BAT_ONLINE', 'CARGANDO...', 'OFFLINE', 'ON_AIR:ON', 'ON_AIR:OFF', 'SHUFFLE', 'PAUSED', 'NEXT_TRACK', 'START_BROADCAST', 'RESUME_BROADCAST', 'FORCE_RELOAD'];
@@ -222,9 +234,8 @@ export default function ProyectoRadio() {
       if (isLocalHost) {
         streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       } else {
-        // En entorno de PRODUCCION DEPLOY:
-        // Las canciones locales se transmiten a traves del intermediario live_stream.mp3 del .bat
-        streamUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/live_stream.mp3`;
+        // En deploy remoto, esperar a que el .bat emita la URL http
+        return;
       }
     }
 
@@ -249,7 +260,8 @@ export default function ProyectoRadio() {
     lastPlayedTrackKeyRef.current = trackKey;
     isApplyingRemoteChange.current = true;
 
-    if (currentPlay.tab && currentPlay.tab !== 'local') {
+    const validTabs = ['radio', 'youtube', 'podcasts', 'favorites'];
+    if (currentPlay.tab && validTabs.includes(currentPlay.tab)) {
       setActiveTab(currentPlay.tab);
     }
 
