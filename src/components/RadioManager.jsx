@@ -855,7 +855,12 @@ export default function RadioManager() {
   const getPreviewAudioUrl = (song) => {
     if (!song) return null;
     const isLocalHost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location.hostname === 'localhost' || 
+       window.location.hostname === '127.0.0.1' || 
+       window.location.hostname === '::1' || 
+       window.location.hostname === '[::1]' ||
+       window.location.hostname.includes('localhost') ||
+       window.location.port === '5173');
     const liveStreamUrl = (onAirTrack?.station_url && (onAirTrack.station_url.startsWith('http://') || onAirTrack.station_url.startsWith('https://')))
       ? onAirTrack.station_url
       : null;
@@ -900,6 +905,12 @@ export default function RadioManager() {
     // Cambiar la barra inferior inmediatamente a MODO AZUL (Biblioteca / Pre-escucha)
     setBottomPlayerMode('preview');
     setPreviewTrack(song);
+
+    // Silenciar monitor de cabina para pre-escuchar en privado en audífonos (Modo Azul CUE)
+    if (isPlayingLiveSignal && masterAirAudioRef.current) {
+      masterAirAudioRef.current.pause();
+      setIsPlayingLiveSignal(false);
+    }
 
     if (previewTrack?.id === song.id && (previewTrack?.title === song.title || previewTrack?.fileName === song.fileName)) {
       if (isPlayingPreview) {
@@ -1054,15 +1065,22 @@ export default function RadioManager() {
     } catch (e) {}
   };
 
-  // Emitir inmediatamente una pista de la cola al aire
+  // Emitir inmediatamente una pista de la cola al aire (Modo Rojo)
   const handlePlayAirSong = async (song) => {
     if (!song) return;
+    setBottomPlayerMode('live');
     try {
       // 1. Pausar y limpiar audio anterior inmediatamente para evitar que vuelva a sonar
       const airAudio = masterAirAudioRef.current;
       if (airAudio) {
         airAudio.pause();
         airAudio.currentTime = 0;
+      }
+
+      // Detener pre-escucha si estaba activa para que no interfiera con la emision al aire
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlayingPreview(false);
       }
 
       setOnAirTrack(prev => ({
@@ -1078,7 +1096,7 @@ export default function RadioManager() {
       // 2. Notificar inmediatamente al transmisor .bat
       await supabase.from('radio_current_play').update({
         station_name: song.title,
-        station_artist: `REQUEST:${song.title}`,
+        station_artist: `REQUEST:${song.title}||${song.artist || ''}`,
         station_cover: song.cover || '',
         station_url: '',
         is_playing: true,
@@ -3538,10 +3556,10 @@ export default function RadioManager() {
                       ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30' 
                       : 'bg-cyan-400 hover:bg-cyan-300 text-black shadow-cyan-400/30 ring-2 ring-cyan-300'
                   }`}
-                  title={isLiveBottomActive ? (onAirTrack?.is_playing ? "Pausar emisión" : "Iniciar emisión") : (isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha")}
+                  title={isLiveBottomActive ? (isPlayingLiveSignal ? "Pausar monitor de cabina" : "Escuchar monitor de cabina") : (isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha")}
                 >
                   {isLiveBottomActive 
-                    ? (onAirTrack?.is_playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />)
+                    ? (isPlayingLiveSignal ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />)
                     : (isPlayingPreview ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />)}
                 </button>
 

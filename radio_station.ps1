@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.3.0)
 # ==============================================================================
 # - Deteccion Instantanea de Estado: Conectado/Desconectado en tiempo real.
@@ -572,7 +572,11 @@ try {
 
                     # 1. Peticion instantanea de una cancion especifica (clic en cola o biblioteca)
                     if ($cmdArtist.StartsWith("REQUEST:")) {
-                        $reqTitle = $cmdArtist.Substring(8).Trim()
+                        $reqPayload = $cmdArtist.Substring(8).Trim()
+                        $reqParts = $reqPayload -split '\|\|', 2
+                        $reqTitle = $reqParts[0].Trim()
+                        $reqArtist = if ($reqParts.Count -gt 1 -and $reqParts[1].Trim()) { $reqParts[1].Trim() } else { "" }
+
                         Write-Host "`n>>> [SOLICITUD WEB] Cambio inmediato solicitado: $reqTitle" -ForegroundColor Magenta
                         
                         $reqNorm = Normalize-Text $reqTitle
@@ -588,10 +592,21 @@ try {
 
                         if ($matchedReq) {
                             Write-Host " [ENCONTRADO] $($matchedReq.FullName)" -ForegroundColor Green
+                            if (-not $reqArtist) {
+                                $cName = [System.IO.Path]::GetFileNameWithoutExtension($matchedReq.Name)
+                                $cClean = [System.Text.RegularExpressions.Regex]::Replace($cName, "^\d+[\s\-_.]*", "")
+                                if ($cClean -like "* - *") {
+                                    $p = $cClean -split ' - ', 2
+                                    $reqArtist = $p[0].Trim()
+                                } else {
+                                    $reqArtist = $matchedReq.Directory.Name
+                                }
+                            }
+
                             $requestedTrack = [PSCustomObject]@{
                                 id          = 999
                                 title       = $reqTitle
-                                artist      = if ($cmdName -and $cmdName -ne $reqTitle) { $cmdName } else { "Radio Cafe" }
+                                artist      = $reqArtist
                                 album       = $matchedReq.Directory.Name
                                 cover       = if ($currentRemote.station_cover) { $currentRemote.station_cover } else { "" }
                                 filePath    = $matchedReq.FullName
