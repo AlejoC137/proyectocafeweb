@@ -312,31 +312,52 @@ export default function ProyectoRadio() {
       return;
     }
 
-    const targetUrl = (player.pendingPlayRef.current && !player.pendingPlayRef.current.startsWith('local://'))
-      ? player.pendingPlayRef.current
-      : (currentPlay?.station_url && !currentPlay.station_url.startsWith('local://'))
-        ? currentPlay.station_url
-        : (currentTrack?.url && !currentTrack.url.startsWith('local://'))
-          ? currentTrack.url
-          : null;
-
-    if (targetUrl && player.audioRef.current) {
-      player.audioRef.current.src = targetUrl;
-      player.audioRef.current.volume = player.isMuted ? 0 : player.volume;
-      applyLiveSeek(player.audioRef.current);
-      const promise = player.audioRef.current.play();
-      if (promise !== undefined) {
-        promise.then(() => {
-          setIsPlaying(true);
-          applyLiveSeek(player.audioRef.current);
-        }).catch((err) => {
-          if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
-            return;
-          }
-          console.warn("Autoplay block (AutoStart):", err.message);
-          setIsPlaying(false);
-        });
+    // Resolve local:// URLs to the API proxy path (same as the rest of the codebase)
+    const resolveUrl = (raw) => {
+      if (!raw) return null;
+      if (raw.startsWith('local://')) {
+        const rawName = decodeURIComponent(raw.replace('local://', ''));
+        return `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       }
+      return raw;
+    };
+
+    const targetUrl =
+      resolveUrl(player.pendingPlayRef.current) ||
+      resolveUrl(currentPlay?.station_url) ||
+      resolveUrl(currentTrack?.url) ||
+      // Last resort: whatever is already loaded in the audio element
+      player.audioRef.current?.src || null;
+
+    if (!targetUrl || !player.audioRef.current) {
+      console.warn("AutoStart: no se encontró una URL válida para reproducir.");
+      setIsPlaying(false);
+      return;
+    }
+
+    const audioEl = player.audioRef.current;
+    audioEl.volume = player.isMuted ? 0 : player.volume;
+
+    const srcChanged = audioEl.src !== targetUrl && audioEl.src !== new URL(targetUrl, window.location.origin).href;
+    if (srcChanged) {
+      audioEl.src = targetUrl;
+      audioEl.load();
+    }
+
+    applyLiveSeek(audioEl);
+
+    const promise = audioEl.play();
+    if (promise !== undefined) {
+      promise.then(() => {
+        setIsPlaying(true);
+        applyLiveSeek(audioEl);
+      }).catch((err) => {
+        if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
+          return;
+        }
+        console.warn("Autoplay block (AutoStart):", err.message);
+        setIsPlaying(false);
+      });
     }
   };
 
