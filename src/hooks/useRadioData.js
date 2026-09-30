@@ -1,12 +1,45 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import supabase from '../config/supabaseClient';
 import { getAudioDuration, MAX_PLAYLIST_SECONDS } from '../utils/radioHelpers';
-import { extractYoutubeId, extractPlaylistId, getYoutubeThumbnail } from '../utils/youtubeHelpers';
+import { extractYoutubeId, extractPlaylistId, getYoutubeThumbnail, DEFAULT_YOUTUBE_PLAYLIST } from '../utils/youtubeHelpers';
+
+export const DEFAULT_RADIO_STATIONS = [
+  {
+    id: 'api-default-1',
+    title: 'Lofi Cafe Radio',
+    artist: 'Global • MP3 Online',
+    genre: 'lofi',
+    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
+    isLiveStream: true,
+    duration: 0,
+    cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600'
+  },
+  {
+    id: 'api-default-2',
+    title: 'Smooth Jazz Global',
+    artist: 'Global • MP3 Online',
+    genre: 'jazz',
+    url: 'https://streaming.exclusive.radio/er/smoothjazz/icecast.audio',
+    isLiveStream: true,
+    duration: 0,
+    cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600'
+  },
+  {
+    id: 'api-default-3',
+    title: 'Chillout Lounge Ambient',
+    artist: 'Chillout • Stream',
+    genre: 'chillout',
+    url: 'https://stream.zeno.fm/f3wvbbqmdg8uv',
+    isLiveStream: true,
+    duration: 0,
+    cover: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&q=80&w=600'
+  }
+];
 
 export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurrentTrackIndex, setIsPlaying, setAudioError) {
   // Radio Browser API & Filtros
   const [selectedCategory, setSelectedCategory] = useState('lofi'); 
-  const [apiStations, setApiStations] = useState([]);
+  const [apiStations, setApiStations] = useState(DEFAULT_RADIO_STATIONS);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingApi, setLoadingApi] = useState(false);
 
@@ -27,8 +60,8 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
     }
   }, [supabasePlaylist, currentTrackIndex]);
 
-  // Playlist de YouTube (Estrictamente desde Supabase)
-  const [youtubePlaylist, setYoutubePlaylist] = useState([]);
+  // Playlist de YouTube (Estrictamente desde Supabase, con fallback curado)
+  const [youtubePlaylist, setYoutubePlaylist] = useState(DEFAULT_YOUTUBE_PLAYLIST);
   const [selectedYoutubeCategory, setSelectedYoutubeCategory] = useState('Todos');
   const [youtubeSearchQuery, setYoutubeSearchQuery] = useState('');
   const [loadingYoutube, setLoadingYoutube] = useState(false);
@@ -229,9 +262,7 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
   };
 
   useEffect(() => {
-    if (activeTab === 'live') {
-      fetchApiRadioStations(selectedCategory, searchQuery);
-    }
+    fetchApiRadioStations(selectedCategory, searchQuery);
   }, [selectedCategory, activeTab]);
 
   const handleSearchSubmit = (e) => {

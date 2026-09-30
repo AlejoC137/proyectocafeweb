@@ -45,9 +45,50 @@ export default function PlayerCenter({
   const ytPlayerRef = useRef(null);
   const nextTrackRef = useRef(nextTrack);
 
+  const isPlayingRef = useRef(isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const forcePlayRequestedRef = useRef(false);
+
   useEffect(() => {
     nextTrackRef.current = nextTrack;
   }, [nextTrack]);
+
+  // Escuchar evento directo para forzar inicio de YouTube
+  useEffect(() => {
+    const handleForcePlay = () => {
+      forcePlayRequestedRef.current = true;
+      if (setIsPlaying) setIsPlaying(true);
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === 'function') {
+        try {
+          const volVal = isMuted ? 0 : Math.round(volume * 100);
+          if (typeof ytPlayerRef.current.setVolume === 'function') {
+            ytPlayerRef.current.setVolume(volVal);
+          }
+          if (isMuted) {
+            if (typeof ytPlayerRef.current.mute === 'function') ytPlayerRef.current.mute();
+          } else {
+            if (typeof ytPlayerRef.current.unMute === 'function') ytPlayerRef.current.unMute();
+          }
+          ytPlayerRef.current.playVideo();
+        } catch (e) { }
+      }
+    };
+
+    window.addEventListener('YT_FORCE_PLAY', handleForcePlay);
+    return () => window.removeEventListener('YT_FORCE_PLAY', handleForcePlay);
+  }, [setIsPlaying, isMuted, volume]);
+
+  // Pausar YouTube si la fuente actual ya no es YouTube
+  useEffect(() => {
+    if (!isYoutubeTrack && ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === 'function') {
+      try {
+        ytPlayerRef.current.pauseVideo();
+      } catch (e) { }
+    }
+  }, [isYoutubeTrack]);
 
   // Cargar el script oficial de YouTube Iframe API si no existe aún
   useEffect(() => {
@@ -85,7 +126,7 @@ export default function PlayerCenter({
           width: '100%',
           videoId: ytId,
           playerVars: {
-            autoplay: isPlaying ? 1 : 0,
+            autoplay: (isPlaying || forcePlayRequestedRef.current) ? 1 : 0,
             controls: 1,
             rel: 0,
             playsinline: 1,
@@ -98,8 +139,14 @@ export default function PlayerCenter({
               try {
                 const volVal = isMuted ? 0 : Math.round(volume * 100);
                 event.target.setVolume(volVal);
-                if (isMuted) event.target.mute();
-                if (isPlaying) event.target.playVideo();
+                if (isMuted) {
+                  event.target.mute();
+                } else {
+                  event.target.unMute();
+                }
+                if (isPlayingRef.current || forcePlayRequestedRef.current) {
+                  event.target.playVideo();
+                }
               } catch (e) { }
             },
             onStateChange: (event) => {
@@ -114,9 +161,9 @@ export default function PlayerCenter({
                 } else if (nextTrackRef.current) {
                   nextTrackRef.current();
                 }
-              } else if (event.data === 1 && !isPlaying) {
+              } else if (event.data === 1 && !isPlayingRef.current) {
                 if (setIsPlaying) setIsPlaying(true);
-              } else if (event.data === 2 && isPlaying) {
+              } else if (event.data === 2 && isPlayingRef.current) {
                 if (setIsPlaying) setIsPlaying(false);
               }
             }

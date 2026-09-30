@@ -20,7 +20,9 @@ export default function ListenersRemoteModal({
   onNextAll,
   onReloadListener,
   onTogglePlayListener,
-  onNextTrackListener
+  onNextTrackListener,
+  currentMode,
+  onForceModeAll
 }) {
   if (!isOpen) return null;
 
@@ -97,6 +99,54 @@ export default function ListenersRemoteModal({
               >
                 <Send className="w-3.5 h-3.5" />
                 Aplicar a Todos
+              </button>
+            </div>
+          </div>
+
+          {/* SECCIÓN: FORZAR FUENTE EN TODAS LAS INSTANCIAS (FILES / RADIOS / YOUTUBE) */}
+          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-3">
+            <h4 className="text-white font-extrabold text-sm flex items-center gap-2">
+              <Radio className="w-4 h-4 text-purple-400" />
+              Forzar Fuente en Todas las Instancias de Proyecto Radio
+            </h4>
+            <p className="text-gray-400 text-xs">
+              Pasa forzosamente a todas las instancias conectadas a reproducir Files, Radios en vivo (Plaza) o YouTube inmediatamente.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button
+                onClick={() => onForceModeAll && onForceModeAll('supabase')}
+                className={`p-2.5 rounded-xl border font-bold transition flex items-center justify-center gap-2 ${
+                  currentMode === 'supabase' || !currentMode
+                    ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30'
+                    : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+                }`}
+              >
+                <ListMusic className="w-4 h-4" />
+                Forzar Files (MP3s)
+              </button>
+
+              <button
+                onClick={() => onForceModeAll && onForceModeAll('live')}
+                className={`p-2.5 rounded-xl border font-bold transition flex items-center justify-center gap-2 ${
+                  currentMode === 'live'
+                    ? 'bg-cyan-500 text-black border-cyan-400 shadow-lg shadow-cyan-500/30'
+                    : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+                }`}
+              >
+                <Radio className="w-4 h-4" />
+                Forzar Radios (Plaza)
+              </button>
+
+              <button
+                onClick={() => onForceModeAll && onForceModeAll('youtube')}
+                className={`p-2.5 rounded-xl border font-bold transition flex items-center justify-center gap-2 ${
+                  currentMode === 'youtube'
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30'
+                    : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+                }`}
+              >
+                <Play className="w-4 h-4 fill-current" />
+                Forzar YouTube
               </button>
             </div>
           </div>
