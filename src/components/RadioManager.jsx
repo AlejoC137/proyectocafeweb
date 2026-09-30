@@ -1162,6 +1162,48 @@ export default function RadioManager() {
     return null;
   };
 
+  // Identificar la siguiente cancion de la cola al aire para precarga (Zero Delay)
+  const nextAirSong = useMemo(() => {
+    if (!songs || songs.length === 0) return null;
+    let currentIdx = songs.findIndex(s => 
+      s.title === onAirTrack?.station_name || 
+      (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase())) ||
+      (onAirTrack?.station_name && s.title && s.title.toLowerCase().includes(onAirTrack.station_name.toLowerCase()))
+    );
+    if (currentIdx === -1) currentIdx = 0;
+    const nextIdx = (currentIdx + 1) % songs.length;
+    return songs[nextIdx];
+  }, [songs, onAirTrack?.station_name]);
+
+  const nextAirAudioPreloadRef = useRef(null);
+
+  // Precargar por adelantado la siguiente cancion para evitar retrasos al cambiar de pista
+  useEffect(() => {
+    if (!nextAirSong) {
+      if (nextAirAudioPreloadRef.current) {
+        nextAirAudioPreloadRef.current.src = '';
+      }
+      return;
+    }
+
+    const nextUrl = getPreviewAudioUrl(nextAirSong) || nextAirSong.url;
+    if (nextUrl && (nextUrl.startsWith('http://') || nextUrl.startsWith('https://') || nextUrl.startsWith('/'))) {
+      try {
+        if (!nextAirAudioPreloadRef.current) {
+          nextAirAudioPreloadRef.current = new Audio();
+        }
+        const preAudio = nextAirAudioPreloadRef.current;
+        if (preAudio.src !== nextUrl && preAudio.src !== new URL(nextUrl, window.location.origin).href) {
+          preAudio.src = nextUrl;
+          preAudio.preload = 'auto';
+          preAudio.load();
+        }
+      } catch (e) {
+        console.warn('[RadioManager] Error en pre-carga de audio siguiente:', e);
+      }
+    }
+  }, [nextAirSong]);
+
   // Control PLAY / PAUSA exclusivo de la pre-escucha (Modo Azul / Biblioteca CUE)
   const handleTogglePreviewPlay = () => {
     const audio = audioRef.current;
@@ -2574,6 +2616,24 @@ export default function RadioManager() {
     return (valA || 0) - (valB || 0);
   });
 
+  // Formato visual de la cola al aire: la canción actual al aire queda arriba y solo se muestran las siguientes
+  const displayedQueueSongs = useMemo(() => {
+    if (searchQuery.trim()) return filteredSongs;
+
+    const currentIdx = filteredSongs.findIndex(song =>
+      Boolean(
+        (onAirTrack?.station_name && song.title && onAirTrack.station_name.toLowerCase().includes(song.title.toLowerCase())) ||
+        (onAirTrack?.station_name && song.title && song.title.toLowerCase().includes(onAirTrack.station_name.toLowerCase())) ||
+        (onAirTrack?.station_name === song.title)
+      )
+    );
+
+    if (currentIdx > 0) {
+      return filteredSongs.slice(currentIdx);
+    }
+    return filteredSongs;
+  }, [filteredSongs, searchQuery, onAirTrack]);
+
   // Agrupamiento dinámico según pestaña activa
   const groupedSongs = useMemo(() => {
     if (activeTab === 'all') return [{ title: 'Todas las Canciones', songs: filteredSongs }];
@@ -3334,12 +3394,12 @@ export default function RadioManager() {
                             <Shuffle className="w-3.5 h-3.5" /> Cargar 15 Aleatorios
                           </button>
                         </div>
-                      ) : filteredSongs.length === 0 ? (
+                      ) : displayedQueueSongs.length === 0 ? (
                         <div className="p-8 text-center text-gray-400 text-xs">
                           No hay canciones en la cola que coincidan con "${searchQuery}".
                         </div>
                       ) : (
-                        filteredSongs.map((song, idx) => {
+                        displayedQueueSongs.map((song, idx) => {
                           const isOnAir = Boolean(
                             onAirTrack?.is_playing && (
                               (onAirTrack?.station_name && song.title && onAirTrack.station_name.toLowerCase().includes(song.title.toLowerCase())) ||

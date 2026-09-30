@@ -110,6 +110,52 @@ function Delete-Track($remoteFilename) {
     } catch {}
 }
 
+# Subir pista por adelantado en segundo plano (Zero Delay Pre-Upload)
+function Start-AsyncTrackUpload($filePath, $remoteFilename) {
+    $ps = [powershell]::Create()
+    [void]$ps.AddScript({
+        param($filePath, $remoteFilename, $supabaseUrl, $supabaseKey, $bucketName)
+        $url = "$supabaseUrl/storage/v1/object/$bucketName/$remoteFilename"
+        $headersUpload = @{
+            "Authorization" = "Bearer $supabaseKey"
+            "apikey"        = "$supabaseKey"
+            "Content-Type"  = "audio/mpeg"
+        }
+        try {
+            $ProgressPreference = 'SilentlyContinue'
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-RestMethod -Uri $url -Method Post -Headers $headersUpload -InFile $filePath | Out-Null
+            return $true
+        } catch {
+            return $false
+        }
+    }).AddArgument($filePath).AddArgument($remoteFilename).AddArgument($SUPABASE_URL).AddArgument($SUPABASE_API_KEY).AddArgument($BUCKET_NAME)
+    $handle = $ps.BeginInvoke()
+    return @{
+        PowerShell     = $ps
+        Handle         = $handle
+        RemoteFilename = $remoteFilename
+        FilePath       = $filePath
+    }
+}
+
+# Descartar y borrar pista pre-subida si el usuario cambia de cancion
+function Discard-PreloadedTrack {
+    if ($global:PreloadedTrack) {
+        if ($global:PreloadedTrack.uploadTask -and $global:PreloadedTrack.uploadTask.PowerShell) {
+            try {
+                $global:PreloadedTrack.uploadTask.PowerShell.Stop()
+                $global:PreloadedTrack.uploadTask.PowerShell.Dispose()
+            } catch {}
+        }
+        if ($global:PreloadedTrack.remoteFilename -and $global:PreloadedTrack.isReady) {
+            Write-Host "  [PRE-CARGA DESCARTADA] Borrando pista adelantada no utilizada: $($global:PreloadedTrack.remoteFilename)" -ForegroundColor DarkGray
+            Delete-Track -remoteFilename $global:PreloadedTrack.remoteFilename
+        }
+        $global:PreloadedTrack = $null
+    }
+}
+
 # Limpiar pistas temporales huerfanas en el bucket
 function Cleanup-OrphanLiveFiles {
     try {
@@ -427,6 +473,7 @@ Show-DashboardHeader -version $VERSION -configuredFolders $folders -catalogCount
 $previousRemoteFilename = $null
 $remoteFilename = $null
 $requestedTrack = $null
+$global:PreloadedTrack = $null
 
 $vuFrames = @(" ▂▃▅▆▇▆▅▃ ", "▂▃▅▆▇█▇▆▅", "▃▅▆▇██▇▆▅▃", "▅▆▇██▇▆▅▃▂", "▆▇██▇▆▅▃▂ ", "▇██▇▆▅▃▂ ▂", "██▇▆▅▃▂ ▂▃", "▇▆▅▃▂ ▂▃▅")
 $vuIndex = 0
@@ -468,20 +515,79 @@ try {
         $trackIndex = 0
 
         while ($trackIndex -lt $matchedTracks.Count) {
+            $usedPreloaded = $false
+
             if ($requestedTrack) {
-                $currentTrack = $requestedTrack
+                # Solicitud interactiva del usuario
+                if ($global:PreloadedTrack -and $global:PreloadedTrack.isReady -and 
+                    ($requestedTrack.filePath -and $global:PreloadedTrack.filePath -eq $requestedTrack.filePath)) {
+                    # La cancion solicitada ya habia sido pre-subida
+                    $currentTrack = $requestedTrack
+                    $remoteFilename = $global:PreloadedTrack.remoteFilename
+                    $publicUrl = $global:PreloadedTrack.publicUrl
+                    $duration = $global:PreloadedTrack.duration
+                    $usedPreloaded = $true
+                    $global:PreloadedTrack = $null
+                } else {
+                    # Si el usuario eligio una pista distinta: NO se pone la extra pre-cargada
+                    Discard-PreloadedTrack
+                    $currentTrack = $requestedTrack
+                }
                 $requestedTrack = $null
             } else {
-                $currentTrack = $matchedTracks[$trackIndex]
-                $trackIndex++
+                $candidate = $matchedTracks[$trackIndex]
+                if ($global:PreloadedTrack -and $global:PreloadedTrack.isReady -and ($candidate.filePath -and $global:PreloadedTrack.filePath -eq $candidate.filePath)) {
+                    # Usar la pista ya pre-subida por adelantado para cambio instantaneo
+                    $currentTrack = $candidate
+                    $remoteFilename = $global:PreloadedTrack.remoteFilename
+                    $publicUrl = $global:PreloadedTrack.publicUrl
+                    $duration = $global:PreloadedTrack.duration
+                    $usedPreloaded = $true
+                    $global:PreloadedTrack = $null
+                    $trackIndex++
+                } else {
+                    # Si la subida adelantada sigue en curso para este mismo archivo, darle unos segundos para finalizar
+                    if ($global:PreloadedTrack -and $global:PreloadedTrack.uploadTask -and ($candidate.filePath -and $global:PreloadedTrack.filePath -eq $candidate.filePath)) {
+                        Write-Host "`n  [FINALIZANDO SUBIDA ADELANTADA] Esperando confirmacion de subida..." -ForegroundColor DarkCyan
+                        try {
+                            $resWait = $global:PreloadedTrack.uploadTask.PowerShell.EndInvoke($global:PreloadedTrack.uploadTask.Handle)
+                            $global:PreloadedTrack.uploadTask.PowerShell.Dispose()
+                            if ($resWait -contains $true -or $resWait -eq $true) {
+                                $currentTrack = $candidate
+                                $remoteFilename = $global:PreloadedTrack.remoteFilename
+                                $publicUrl = $global:PreloadedTrack.publicUrl
+                                $duration = $global:PreloadedTrack.duration
+                                $usedPreloaded = $true
+                                $global:PreloadedTrack = $null
+                                $trackIndex++
+                            }
+                        } catch {}
+                    }
+                    if (-not $usedPreloaded) {
+                        Discard-PreloadedTrack
+                        $currentTrack = $candidate
+                        $trackIndex++
+                    }
+                }
             }
 
-            $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-            $remoteFilename = "live_$timestamp.mp3"
-            $duration = 180
+            if ($usedPreloaded) {
+                Write-Host "`n-------------------------------------------------------------------------------" -ForegroundColor DarkCyan
+                Write-Host " [ON AIR - CAMBIO INSTANTANEO CERO DELAY] Transmitiendo pista pre-subida" -ForegroundColor Green
+                Write-Host " Cancion  : $($currentTrack.title)" -ForegroundColor Yellow
+                Write-Host " Artista  : $($currentTrack.artist)" -ForegroundColor White
+                Write-Host " Album    : $($currentTrack.album)" -ForegroundColor DarkGray
+                Write-Host " Duracion : $duration s ($([math]::Round($duration/60, 2)) min)" -ForegroundColor DarkGray
 
-            if ($currentTrack.filePath -and (Test-Path $currentTrack.filePath)) {
+                # Borrar pista anterior inmediatamente
+                if ($previousRemoteFilename -and ($previousRemoteFilename -ne $remoteFilename)) {
+                    Delete-Track -remoteFilename $previousRemoteFilename
+                }
+                $previousRemoteFilename = $remoteFilename
+            } elseif ($currentTrack.filePath -and (Test-Path $currentTrack.filePath)) {
                 $duration = Get-Mp3DurationSeconds $currentTrack.filePath
+                $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                $remoteFilename = "live_$timestamp.mp3"
 
                 Write-Host "`n-------------------------------------------------------------------------------" -ForegroundColor DarkCyan
                 if ($isAutoRotation) {
@@ -517,6 +623,8 @@ try {
             Update-CurrentPlay -title $currentTrack.title -artist $currentTrack.artist -cover $currentTrack.cover -publicUrl $publicUrl -isPlaying $true
             Write-Host " [TRANSMITIENDO EN VIVO] Sincronizado con pagina web y oyentes.`n" -ForegroundColor Green
 
+            $isPreloadTriggered = $false
+
             # Monitoreo de reproduccion con VU meter DJ
             for ($sec = 0; $sec -lt $duration; $sec++) {
                 $pct = [math]::Round(($sec / $duration) * 100)
@@ -532,6 +640,74 @@ try {
                 $timeFormatted = "{0:00}:{1:00} / {2:00}:{3:00}" -f $elapsedMin, $elapsedSec, $totalMin, $totalSec
 
                 Write-Host -NoNewline "`r  $vu [ON AIR] [$progressStr] $pct% ($timeFormatted) "
+
+                # Iniciar pre-subida por adelantado de la siguiente cancion para evitar delay
+                if ($sec -ge 3 -and (-not $isPreloadTriggered) -and (-not $global:PreloadedTrack)) {
+                    $isPreloadTriggered = $true
+                    $nextCandidate = $null
+                    if ($trackIndex -lt $matchedTracks.Count) {
+                        $nextCandidate = $matchedTracks[$trackIndex]
+                    } elseif ($matchedTracks.Count -gt 0) {
+                        $nextCandidate = $matchedTracks[0]
+                    } elseif ($isAutoRotation -and $allLocalFiles.Count -gt 0) {
+                        $randomNext = $allLocalFiles | Get-Random
+                        $cNameNext = [System.IO.Path]::GetFileNameWithoutExtension($randomNext.Name)
+                        $cCleanNext = [System.Text.RegularExpressions.Regex]::Replace($cNameNext, "^\d+[\s\-_.]*", "")
+                        $autoArtistNext = "Radio Cafe"
+                        $autoTitleNext = $cCleanNext
+                        if ($cCleanNext -like "* - *") {
+                            $pNext = $cCleanNext -split ' - ', 2
+                            $autoArtistNext = $pNext[0].Trim()
+                            $autoTitleNext = $pNext[1].Trim()
+                        }
+                        $nextCandidate = [PSCustomObject]@{
+                            id          = 0
+                            title       = $autoTitleNext
+                            artist      = $autoArtistNext
+                            album       = $randomNext.Directory.Name
+                            cover       = ""
+                            filePath    = $randomNext.FullName
+                            order_index = 0
+                        }
+                    }
+
+                    if ($nextCandidate -and $nextCandidate.filePath -and (Test-Path $nextCandidate.filePath)) {
+                        $nextTs = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                        $nextRemoteName = "live_$nextTs.mp3"
+                        $nextDur = Get-Mp3DurationSeconds $nextCandidate.filePath
+                        $task = Start-AsyncTrackUpload -filePath $nextCandidate.filePath -remoteFilename $nextRemoteName
+                        $global:PreloadedTrack = @{
+                            track          = $nextCandidate
+                            filePath       = $nextCandidate.filePath
+                            remoteFilename = $nextRemoteName
+                            publicUrl      = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/$nextRemoteName"
+                            duration       = $nextDur
+                            isReady        = $false
+                            uploadTask     = $task
+                            title          = $nextCandidate.title
+                        }
+                        Write-Host "`n  [PRE-CARGA] Subiendo por adelantado: '$($nextCandidate.title)'..." -ForegroundColor DarkCyan
+                    }
+                }
+
+                # Chequear si la subida adelantada ya termino
+                if ($global:PreloadedTrack -and (-not $global:PreloadedTrack.isReady) -and $global:PreloadedTrack.uploadTask) {
+                    if ($global:PreloadedTrack.uploadTask.Handle.IsCompleted) {
+                        try {
+                            $resTask = $global:PreloadedTrack.uploadTask.PowerShell.EndInvoke($global:PreloadedTrack.uploadTask.Handle)
+                            $global:PreloadedTrack.uploadTask.PowerShell.Dispose()
+                            $global:PreloadedTrack.uploadTask = $null
+                            if ($resTask -contains $true -or $resTask -eq $true) {
+                                $global:PreloadedTrack.isReady = $true
+                                Write-Host "`n  [PRE-CARGA LISTA] '$($global:PreloadedTrack.title)' lista en la nube. ¡Cero delay en transicion!" -ForegroundColor Green
+                            } else {
+                                $global:PreloadedTrack = $null
+                            }
+                        } catch {
+                            $global:PreloadedTrack = $null
+                        }
+                    }
+                }
 
                 # Control por teclado local
                 if ([Console]::KeyAvailable) {
@@ -706,6 +882,11 @@ try {
                                 filePath    = $matchedReq.FullName
                                 order_index = 0
                             }
+                            # Si el usuario eligio una pista distinta a la pre-cargada, descartar la pre-carga adelantada
+                            if ($global:PreloadedTrack -and ($matchedReq.FullName -ne $global:PreloadedTrack.filePath)) {
+                                Write-Host "  [PRE-CARGA] El usuario eligio manualmente otra pista ('$reqTitle'). Descartando pista extra adelantada..." -ForegroundColor Yellow
+                                Discard-PreloadedTrack
+                            }
                             break
                         } else {
                             Write-Host " [AVISO] Archivo para emision '$reqTitle' no encontrado en disco." -ForegroundColor Yellow
@@ -729,6 +910,7 @@ try {
 }
 finally {
     Write-Host "`n`n>>> [APAGANDO] Limpiando archivos temporales en Supabase Storage..." -ForegroundColor Yellow
+    Discard-PreloadedTrack
     if ($previousRemoteFilename) { Delete-Track -remoteFilename $previousRemoteFilename }
     if ($remoteFilename) { Delete-Track -remoteFilename $remoteFilename }
     if ($global:PreviousPreviewFilename) { Delete-Track -remoteFilename $global:PreviousPreviewFilename }

@@ -88,20 +88,42 @@ export function useRadioPlayer(
     const next1Idx = (currentTrackIndex + 1) % total;
     const next2Idx = (currentTrackIndex + 2) % total;
 
-    const tracksToPreload = [currentPlaylist[next1Idx], currentPlaylist[next2Idx]].filter(
-      t => t && t.url && !t.url.startsWith('local://') && !t.type?.includes('youtube') && !t.isLiveStream
-    );
+    const isLocalHost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || 
+       window.location.hostname === '127.0.0.1' || 
+       window.location.hostname.includes('localhost'));
+
+    const resolvePreloadUrl = (track) => {
+      if (!track || !track.url) return null;
+      if (track.type?.includes('youtube') || track.isLiveStream) return null;
+      if (track.url.startsWith('local://')) {
+        const rawName = decodeURIComponent(track.url.replace('local://', ''));
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(rawName)}` : null;
+      }
+      if (track.filePath && isLocalHost) {
+        return `/api/local-audio?path=${encodeURIComponent(track.filePath)}`;
+      }
+      if (track.url.startsWith('http://') || track.url.startsWith('https://') || track.url.startsWith('/')) {
+        return track.url;
+      }
+      return null;
+    };
+
+    const tracksToPreload = [currentPlaylist[next1Idx], currentPlaylist[next2Idx]]
+      .map(resolvePreloadUrl)
+      .filter(Boolean);
 
     // Reutilizar o crear elementos de audio para caché en segundo plano
-    tracksToPreload.forEach((track, i) => {
+    tracksToPreload.forEach((targetUrl, i) => {
       try {
         if (!preloaderPoolRef.current[i]) {
           preloaderPoolRef.current[i] = new Audio();
         }
         const preAudio = preloaderPoolRef.current[i];
-        if (preAudio.src !== track.url) {
-          preAudio.src = track.url;
+        if (preAudio.src !== targetUrl && preAudio.src !== new URL(targetUrl, window.location.origin).href) {
+          preAudio.src = targetUrl;
           preAudio.preload = 'auto';
+          preAudio.load();
         }
       } catch (e) {}
     });
