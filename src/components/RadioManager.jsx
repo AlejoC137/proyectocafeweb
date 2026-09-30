@@ -121,6 +121,12 @@ export default function RadioManager() {
   const [airVolume, setAirVolume] = useState(0.9);
   const [isAirMuted, setIsAirMuted] = useState(false);
 
+  // Modos aleatorios independientes para Deck Azul (Biblioteca) y Deck Rojo (Cola)
+  const [isLibraryShuffle, setIsLibraryShuffle] = useState(false);
+  const [isAirShuffle, setIsAirShuffle] = useState(false);
+  const isLibraryShuffleRef = useRef(false);
+  const isAirShuffleRef = useRef(false);
+
   // Compatibilidad general
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
@@ -139,6 +145,14 @@ export default function RadioManager() {
   const isMutedRef = useRef(false);
   const lastLoadedPreviewTabRef = useRef('');
   const requestedPreviewTitleRef = useRef('');
+
+  useEffect(() => {
+    isLibraryShuffleRef.current = isLibraryShuffle;
+  }, [isLibraryShuffle]);
+
+  useEffect(() => {
+    isAirShuffleRef.current = isAirShuffle;
+  }, [isAirShuffle]);
 
   useEffect(() => {
     isPlayingLiveSignalRef.current = isPlayingLiveSignal;
@@ -1279,6 +1293,11 @@ export default function RadioManager() {
     const list = getActiveLibraryTrackList();
     if (!list || list.length === 0) return;
 
+    if (isLibraryShuffleRef.current || isLibraryShuffle) {
+      handleRandomLibraryPreview();
+      return;
+    }
+
     if (!previewTrack) {
       handlePlayPreview(list[0], true);
       return;
@@ -1336,6 +1355,20 @@ export default function RadioManager() {
       attempts++;
     } while (attempts < 10 && list[randomIdx]?.title === previewTrack?.title);
     handlePlayPreview(list[randomIdx], true);
+  };
+
+  const handleToggleLibraryShuffle = () => {
+    const nextVal = !isLibraryShuffle;
+    setIsLibraryShuffle(nextVal);
+    isLibraryShuffleRef.current = nextVal;
+    if (nextVal) {
+      setSuccess("🔀 Modo aleatorio ACTIVADO en Biblioteca");
+      if (!isPlayingPreview || !previewTrack) {
+        handleRandomLibraryPreview();
+      }
+    } else {
+      setSuccess("⏹ Modo aleatorio DESACTIVADO en Biblioteca (Secuencial)");
+    }
   };
 
   // --- CONTROLES DE CABECERA DE LA COLA (AL AIRE EN RADIO PROYECTO) ---
@@ -1594,23 +1627,42 @@ export default function RadioManager() {
         (onAirTrack?.station_name && s.title && s.title.toLowerCase().includes(onAirTrack.station_name.toLowerCase()))
       );
       if (currentIdx === -1) currentIdx = 0;
-      const nextIdx = (currentIdx + 1) % songs.length;
+
+      let nextIdx;
+      if ((isAirShuffleRef.current || isAirShuffle) && songs.length > 1) {
+        let attempts = 0;
+        do {
+          nextIdx = Math.floor(Math.random() * songs.length);
+          attempts++;
+        } while (attempts < 10 && nextIdx === currentIdx);
+      } else {
+        nextIdx = (currentIdx + 1) % songs.length;
+      }
+
       const nextSong = songs[nextIdx];
 
       await handlePlayAirSong(nextSong);
-      setSuccess(`⏭ Al aire: "${nextSong.title}" - ${nextSong.artist || 'Radio Café'}`);
+      setSuccess(`⏭ Al aire (${(isAirShuffleRef.current || isAirShuffle) ? 'Aleatorio' : 'Siguiente'}): "${nextSong.title}" - ${nextSong.artist || 'Radio Café'}`);
     } catch (e) {
       setError("Error saltando canción: " + e.message);
     }
   };
 
-  const handleAirShuffle = async () => {
-    if (songs.length > 1) {
-      await handleShuffleAirList();
+  const handleToggleAirShuffle = async () => {
+    const nextVal = !isAirShuffle;
+    setIsAirShuffle(nextVal);
+    isAirShuffleRef.current = nextVal;
+    if (nextVal) {
+      setSuccess("🔀 Modo aleatorio ACTIVADO en Cola de Emisión");
+      if (songs.length === 0 && batCatalog && batCatalog.length > 0) {
+        await handleGoRandom(15);
+      }
     } else {
-      await handleGoRandom(15);
+      setSuccess("⏹ Modo aleatorio DESACTIVADO en Cola de Emisión (Secuencial)");
     }
   };
+
+  const handleAirShuffle = handleToggleAirShuffle;
 
   // Añadir pista a la cola de emisión: se coloca abajo al final de la lista, NO altera el orden ni interrumpe la emisión actual
   const handleAddTrackToQueue = async (track) => {
@@ -2857,12 +2909,16 @@ export default function RadioManager() {
                           <span className="truncate">Next</span>
                         </button>
                         <button
-                          onClick={handleRandomLibraryPreview}
-                          className="py-2 px-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5"
-                          title="Pre-escuchar canción aleatoria de la biblioteca"
+                          onClick={handleToggleLibraryShuffle}
+                          className={`py-2 px-2 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                            isLibraryShuffle 
+                              ? 'bg-cyan-400 hover:bg-cyan-300 text-black font-black shadow-[0_0_15px_rgba(6,182,212,0.8)] ring-2 ring-cyan-300' 
+                              : 'bg-white/10 hover:bg-white/20 text-white'
+                          }`}
+                          title={isLibraryShuffle ? "Modo aleatorio ACTIVO en biblioteca (Clic para apagar)" : "Activar modo aleatorio en biblioteca"}
                         >
-                          <Shuffle className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                          <span className="truncate">Aleatorio</span>
+                          <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isLibraryShuffle ? 'text-black stroke-[2.5]' : 'text-cyan-400'}`} />
+                          <span className="truncate">{isLibraryShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
                         </button>
                       </div>
 
@@ -3219,12 +3275,16 @@ export default function RadioManager() {
 
                         {/* ALEATORIO COLA */}
                         <button
-                          onClick={handleAirShuffle}
-                          className="col-span-1 py-2 px-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1"
-                          title="Mezclar canciones de la cola"
+                          onClick={handleToggleAirShuffle}
+                          className={`col-span-1 py-2 px-2 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1 ${
+                            isAirShuffle 
+                              ? 'bg-red-600 hover:bg-red-500 text-white font-black shadow-[0_0_15px_rgba(239,68,68,0.8)] ring-2 ring-red-400' 
+                              : 'bg-white/10 hover:bg-white/20 text-white'
+                          }`}
+                          title={isAirShuffle ? "Modo aleatorio ACTIVO en cola (Clic para apagar)" : "Activar modo aleatorio en cola"}
                         >
-                          <Shuffle className="w-3.5 h-3.5 text-[#1DB954] shrink-0" />
-                          <span className="truncate">Aleatorio</span>
+                          <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isAirShuffle ? 'text-white stroke-[2.5]' : 'text-red-400'}`} />
+                          <span className="truncate">{isAirShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
                         </button>
                       </div>
 
@@ -3956,11 +4016,15 @@ export default function RadioManager() {
                     </button>
 
                     <button 
-                      onClick={handleRandomLibraryPreview} 
-                      className="text-gray-400 hover:text-cyan-400 transition" 
-                      title="Canción aleatoria de biblioteca"
+                      onClick={handleToggleLibraryShuffle} 
+                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center ${
+                        isLibraryShuffle 
+                          ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.8)] ring-1 ring-cyan-400 scale-105' 
+                          : 'text-gray-400 hover:text-cyan-400 bg-transparent'
+                      }`}
+                      title={isLibraryShuffle ? "Modo aleatorio ACTIVO en biblioteca (Clic para apagar)" : "Activar modo aleatorio en biblioteca"}
                     >
-                      <Shuffle className="w-3.5 h-3.5" />
+                      <Shuffle className={`w-3.5 h-3.5 ${isLibraryShuffle ? 'text-cyan-300 stroke-[2.5]' : ''}`} />
                     </button>
                   </div>
 
@@ -4065,11 +4129,15 @@ export default function RadioManager() {
                     </button>
 
                     <button 
-                      onClick={handleAirShuffle} 
-                      className="text-gray-400 hover:text-red-400 transition" 
-                      title="Mezclar canciones de la cola al aire"
+                      onClick={handleToggleAirShuffle} 
+                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center ${
+                        isAirShuffle 
+                          ? 'bg-red-500/25 text-red-300 border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] ring-1 ring-red-400 scale-105' 
+                          : 'text-gray-400 hover:text-red-400 bg-transparent'
+                      }`}
+                      title={isAirShuffle ? "Modo aleatorio ACTIVO en cola al aire (Clic para apagar)" : "Activar modo aleatorio en cola al aire"}
                     >
-                      <Shuffle className="w-3.5 h-3.5" />
+                      <Shuffle className={`w-3.5 h-3.5 ${isAirShuffle ? 'text-red-300 stroke-[2.5]' : ''}`} />
                     </button>
                   </div>
 
