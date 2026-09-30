@@ -137,6 +137,7 @@ export default function RadioManager() {
   const isPreviewMutedRef = useRef(false);
   const volumeRef = useRef(0.8);
   const isMutedRef = useRef(false);
+  const lastLoadedPreviewTabRef = useRef('');
 
   useEffect(() => {
     isPlayingLiveSignalRef.current = isPlayingLiveSignal;
@@ -711,6 +712,11 @@ export default function RadioManager() {
         if (row) {
           // 1. Si es señal de pre-escucha (Modo Azul / Biblioteca CUE exclusiva)
           if (row.tab && row.tab.startsWith('PREVIEW_READY:')) {
+            if (row.tab === lastLoadedPreviewTabRef.current) {
+              return; // Ya cargada previamente; evitar reiniciar la canción o repetir autoplay
+            }
+            lastLoadedPreviewTabRef.current = row.tab;
+
             const parts = row.tab.substring(14).split('||');
             const previewUrl = parts[0];
             const previewTitle = parts[1] || '';
@@ -1149,11 +1155,17 @@ export default function RadioManager() {
   };
 
   // Manejo de Reproducción / Pre-escucha de Biblioteca (Modo Azul, 100% independiente de la radio al aire)
-  const handlePlayPreview = async (song) => {
+  const handlePlayPreview = async (song, forcePlay = false) => {
     if (!song) return;
 
-    // Si ya es la canción que está en pre-escucha y tiene audio, alternar play / pausa
-    if (previewTrack?.title === song.title && audioRef.current?.src) {
+    // Si ya es la misma canción y NO es cambio forzado por Next/Prev, alternar play / pausa
+    const isSameSong = previewTrack && (
+      (previewTrack.id && song.id && String(previewTrack.id) === String(song.id)) ||
+      (previewTrack.fileName && song.fileName && previewTrack.fileName === song.fileName) ||
+      (previewTrack.title && song.title && previewTrack.title.trim().toLowerCase() === song.title.trim().toLowerCase())
+    );
+
+    if (!forcePlay && isSameSong && audioRef.current?.src) {
       handleTogglePreviewPlay();
       return;
     }
@@ -1162,13 +1174,29 @@ export default function RadioManager() {
     setBottomPlayerMode('preview');
     setPreviewTrack(song);
     setPreviewDuration(song.duration || 0);
+    setPreviewTime(0);
     setIsPlayingPreview(true);
 
     if (audioRef.current) {
       audioRef.current.pause();
     }
 
-    setSuccess(`🎧 Solicitando pre-escucha al BAT: "${song.title}"...`);
+    // Resetear referencia de URL de pre-escucha para aceptar la nueva pista
+    lastLoadedPreviewTabRef.current = '';
+
+    // En localhost, si el endpoint de Vite está disponible, cargar audio directo
+    if (isLocalHost && (song.fileName || song.filePath)) {
+      const localAudioUrl = `/api/local-audio?file=${encodeURIComponent(song.fileName || song.filePath)}`;
+      if (audioRef.current) {
+        audioRef.current.src = localAudioUrl;
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => console.warn("Autoplay local diferido:", err));
+        setSuccess(`🎧 Reproduciendo en Biblioteca: "${song.title}"`);
+        return;
+      }
+    }
+
+    setSuccess(`🎧 Solicitando pista "${song.title}" al BAT...`);
 
     // Enviar solicitud de pre-escucha en PARALELO vía columna 'tab' (SIN TOCAR station_artist ni el aire)
     try {
@@ -1200,41 +1228,85 @@ export default function RadioManager() {
       setSuccess(`🎧 Reproduciendo pre-escucha: "${previewTrack.title}"`);
       return;
     }
-    const target = (filteredLibraryTracks && filteredLibraryTracks[0]) || 
-                   (libraryTracks && libraryTracks[0]) || 
-                   (batCatalog && batCatalog[0]?.tracks && batCatalog[0].tracks[0]);
-    if (target) {
-      handlePlayPreview(target);
+    const list = getActiveLibraryTrackList();
+    if (list && list.length > 0) {
+      handlePlayPreview(list[0], true);
     }
   };
 
+  // Obtener la lista activa según la vista (álbum abierto o lista filtrada)
+  const getActiveLibraryTrackList = () => {
+    if (expandedLibraryAlbum) {
+      const alb = (batCatalog || []).find(a => (a.folderName || a.albumName) === expandedLibraryAlbum);
+      if (alb && alb.tracks && alb.tracks.length > 0) {
+        return alb.tracks.map(t => ({
+          ...t,
+          folderName: alb.folderName,
+          album: alb.albumName || t.album,
+          artist: t.artist || alb.artist,
+          albumArtist: alb.artist,
+          cover: t.cover || alb.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'
+        }));
+      }
+    }
+    if (filteredLibraryTracks && filteredLibraryTracks.length > 0) {
+      return filteredLibraryTracks;
+    }
+    return libraryTracks;
+  };
 
-  const handleNextLibraryPreview = () => {
-    if (filteredLibraryTracks.length === 0) return;
+  const playNextPreview = () => {
+    const list = getActiveLibraryTrackList();
+    if (!list || list.length === 0) return;
+
     if (!previewTrack) {
-      handlePlayPreview(filteredLibraryTracks[0]);
+      handlePlayPreview(list[0], true);
       return;
     }
-    const currIdx = filteredLibraryTracks.findIndex(t => t.id === previewTrack.id || t.title === previewTrack.title);
-    const nextIdx = (currIdx + 1) % filteredLibraryTracks.length;
-    handlePlayPreview(filteredLibraryTracks[nextIdx]);
+
+    const currIdx = list.findIndex(t => 
+      (previewTrack.id && t.id && String(previewTrack.id) === String(t.id)) ||
+      (previewTrack.fileName && t.fileName && previewTrack.fileName === t.fileName) ||
+      (previewTrack.title && t.title && previewTrack.title.trim().toLowerCase() === t.title.trim().toLowerCase())
+    );
+
+    const nextIdx = currIdx >= 0 ? (currIdx + 1) % list.length : 0;
+    const nextTrack = list[nextIdx];
+    if (nextTrack) {
+      handlePlayPreview(nextTrack, true);
+    }
   };
 
-  const handlePrevLibraryPreview = () => {
-    if (filteredLibraryTracks.length === 0) return;
+  const playPrevPreview = () => {
+    const list = getActiveLibraryTrackList();
+    if (!list || list.length === 0) return;
+
     if (!previewTrack) {
-      handlePlayPreview(filteredLibraryTracks[0]);
+      handlePlayPreview(list[0], true);
       return;
     }
-    const currIdx = filteredLibraryTracks.findIndex(t => t.id === previewTrack.id || t.title === previewTrack.title);
-    const prevIdx = (currIdx - 1 + filteredLibraryTracks.length) % filteredLibraryTracks.length;
-    handlePlayPreview(filteredLibraryTracks[prevIdx]);
+
+    const currIdx = list.findIndex(t => 
+      (previewTrack.id && t.id && String(previewTrack.id) === String(t.id)) ||
+      (previewTrack.fileName && t.fileName && previewTrack.fileName === t.fileName) ||
+      (previewTrack.title && t.title && previewTrack.title.trim().toLowerCase() === t.title.trim().toLowerCase())
+    );
+
+    const prevIdx = currIdx > 0 ? currIdx - 1 : (currIdx === 0 ? list.length - 1 : 0);
+    const prevTrack = list[prevIdx];
+    if (prevTrack) {
+      handlePlayPreview(prevTrack, true);
+    }
   };
+
+  const handleNextLibraryPreview = playNextPreview;
+  const handlePrevLibraryPreview = playPrevPreview;
 
   const handleRandomLibraryPreview = () => {
-    if (filteredLibraryTracks.length === 0) return;
-    const randomIdx = Math.floor(Math.random() * filteredLibraryTracks.length);
-    handlePlayPreview(filteredLibraryTracks[randomIdx]);
+    const list = getActiveLibraryTrackList();
+    if (!list || list.length === 0) return;
+    const randomIdx = Math.floor(Math.random() * list.length);
+    handlePlayPreview(list[randomIdx], true);
   };
 
   // --- CONTROLES DE CABECERA DE LA COLA (AL AIRE EN RADIO PROYECTO) ---
