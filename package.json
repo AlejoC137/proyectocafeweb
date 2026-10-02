@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
     "@radix-ui/react-checkbox": "^1.1.4",

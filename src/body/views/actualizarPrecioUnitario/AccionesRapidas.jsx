@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react/prop-types */
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getAllFromTable,
@@ -17,7 +18,6 @@ import {
   ProduccionInterna,
   MENU,
   MenuItems,
-  BODEGA,
   ESTATUS,
   SUB_CATEGORIES
 } from "../../../redux/actions-types";
@@ -360,7 +360,9 @@ function AccionesRapidas({ currentType: propType }) {
             else if (typeof item.STOCK === "string") {
               try {
                 stockObj = { ...stockObj, ...JSON.parse(item.STOCK) };
-              } catch (e) {}
+              } catch {
+                // ignorar si no es json valido
+              }
             }
           }
 

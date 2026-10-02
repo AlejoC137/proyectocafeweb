@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+/* eslint-disable react/prop-types */
+import { useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateItem, getAllFromTable } from '../../../redux/actions';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, Hammer, X, RefreshCw, ChefHat, Tag, Percent, DollarSign } from "lucide-react";
+import { TrendingUp, X, RefreshCw, ChefHat, Tag } from "lucide-react";
 import { MENU, MenuItems } from "../../../redux/actions-types";
 
 // ─────────────────────────────────────────────
