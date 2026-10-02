@@ -80,6 +80,7 @@ function AccionesRapidas({ currentType: propType }) {
   const [macroEditorVisible, setMacroEditorVisible] = useState(false);
   const [macroAgregadorVisible, setMacroAgregadorVisible] = useState(false);
   const [spellCheckerVisible, setSpellCheckerVisible] = useState(false);
+  const [macroEditorMenuVisible, setMacroEditorMenuVisible] = useState(false);
 
   // Sync selectedType when propType changes from parent component
   useEffect(() => {
@@ -542,6 +543,19 @@ function AccionesRapidas({ currentType: propType }) {
           <RefreshCw className="h-3.5 w-3.5 mr-1.5 text-indigo-500" />
           Sincronizar Costos
         </Button>
+
+        {/* Botón exclusivo para ítems de Menú */}
+        {selectedType === MenuItems && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100 font-bold"
+            onClick={() => setMacroEditorMenuVisible(true)}
+          >
+            <TrendingUp className="h-4 w-4 mr-1.5 text-blue-600" />
+            Subir Precios
+          </Button>
+        )}
       </div>
 
       {/* CLIPBOARD QUICK ACCESS */}
@@ -592,6 +606,10 @@ function AccionesRapidas({ currentType: propType }) {
           onClose={() => setSpellCheckerVisible(false)}
           currentType={selectedType}
         />
+      )}
+
+      {macroEditorMenuVisible && (
+        <MacroEditorMenu onClose={() => setMacroEditorMenuVisible(false)} />
       )}
 
       {/* JSON IA IMPORT FORM */}
