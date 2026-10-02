@@ -145,6 +145,9 @@ export default function RadioManager() {
   const isMutedRef = useRef(false);
   const lastLoadedPreviewTabRef = useRef('');
   const requestedPreviewTitleRef = useRef('');
+  // true SOLO cuando el usuario inició la pre-escucha explícitamente.
+  // Evita que handleEnded avance automáticamente si el deck CUE no fue arrancado por el usuario.
+  const userStartedPreviewRef = useRef(false);
 
   useEffect(() => {
     isLibraryShuffleRef.current = isLibraryShuffle;
@@ -960,7 +963,15 @@ export default function RadioManager() {
       }
     };
     const handleLoadedMetadata = () => setPreviewDuration(audio.duration || 0);
-    const handleEnded = () => playNextPreview();
+    const handleEnded = () => {
+      // Solo avanzar automáticamente si el usuario arrancó la reproducción explícitamente.
+      // Si el deck CUE nunca fue iniciado por el usuario, detener silenciosamente.
+      if (userStartedPreviewRef.current) {
+        playNextPreview();
+      } else {
+        setIsPlayingPreview(false);
+      }
+    };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -1192,9 +1203,11 @@ export default function RadioManager() {
     if (!audio) return;
     if (isPlayingPreview && !audio.paused) {
       audio.pause();
+      userStartedPreviewRef.current = false; // usuario pausó → no auto-avanzar al terminar
       setIsPlayingPreview(false);
       setSuccess("⏸ Pre-escucha pausada.");
     } else if (audio.src) {
+      userStartedPreviewRef.current = true; // usuario arrancó explícitamente
       audio.play().catch(() => {});
       setIsPlayingPreview(true);
       setBottomPlayerMode('preview');

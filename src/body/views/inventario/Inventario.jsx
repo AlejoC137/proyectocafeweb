@@ -13,7 +13,8 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, TrendingUp } from "lucide-react";
+import MacroEditorMenu from "../actualizarPrecioUnitario/MacroEditorMenu";
 
 function Inventario() {
   const { tab } = useParams();
@@ -37,6 +38,7 @@ function Inventario() {
   }, [tab]);
 
   const [showAccionesRapidas, setShowAccionesRapidas] = useState(false);
+  const [showMacroEditorMenu, setShowMacroEditorMenu] = useState(false);
   
   const currentStaff = useSelector((state) => state.currentStaff);
   const viewPreferences = useSelector((state) => state.viewPreferences || {});
@@ -108,15 +110,27 @@ function Inventario() {
   ];
 
   const headerActions = (
-    <CategoryNavBar
-      categories={categories}
-      currentType={currentType}
-      onTypeChange={handleToggleType}
-      showEdit={showEdit}
-      onToggleEdit={handleToggleShowEdit}
-      showActions={showAccionesRapidas}
-      onToggleActions={handleToggleAccionesRapidas}
-    />
+    <div className="flex items-center gap-2 flex-wrap">
+      <CategoryNavBar
+        categories={categories}
+        currentType={currentType}
+        onTypeChange={handleToggleType}
+        showEdit={showEdit}
+        onToggleEdit={handleToggleShowEdit}
+        showActions={showAccionesRapidas}
+        onToggleActions={handleToggleAccionesRapidas}
+      />
+      {/* Botón exclusivo para tab Menú */}
+      {currentType === MenuItems && (
+        <button
+          onClick={() => setShowMacroEditorMenu(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-md transition-colors shadow-sm"
+        >
+          <TrendingUp className="h-3.5 w-3.5" />
+          Subir Precios
+        </button>
+      )}
+    </div>
   );
 
   return (
@@ -127,6 +141,7 @@ function Inventario() {
           <AccionesRapidas currentType={currentType} />
         </ContentCard>
       )}
+
 
       {/* Contenido principal del inventario */}
       <ContentCard
@@ -169,6 +184,11 @@ function Inventario() {
         <span>Total de elementos: {filteredItems.length}</span>
         <span>Modo edición: {showEdit ? 'Activado' : 'Desactivado'}</span>
       </div>
+
+      {/* Modal Macro Editor de Precios — solo para Menú */}
+      {showMacroEditorMenu && (
+        <MacroEditorMenu onClose={() => setShowMacroEditorMenu(false)} />
+      )}
     </PageLayout>
   );
 }
