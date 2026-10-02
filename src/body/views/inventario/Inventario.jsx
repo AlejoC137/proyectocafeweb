@@ -110,27 +110,26 @@ function Inventario() {
   ];
 
   const headerActions = (
-    <div className="flex items-center gap-2 flex-wrap">
-      <CategoryNavBar
-        categories={categories}
-        currentType={currentType}
-        onTypeChange={handleToggleType}
-        showEdit={showEdit}
-        onToggleEdit={handleToggleShowEdit}
-        showActions={showAccionesRapidas}
-        onToggleActions={handleToggleAccionesRapidas}
-      />
-      {/* Botón exclusivo para tab Menú */}
-      {currentType === MenuItems && (
-        <button
-          onClick={() => setShowMacroEditorMenu(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-md transition-colors shadow-sm"
-        >
-          <TrendingUp className="h-3.5 w-3.5" />
-          Subir Precios
-        </button>
-      )}
-    </div>
+    <CategoryNavBar
+      categories={categories}
+      currentType={currentType}
+      onTypeChange={handleToggleType}
+      showEdit={showEdit}
+      onToggleEdit={handleToggleShowEdit}
+      showActions={showAccionesRapidas}
+      onToggleActions={handleToggleAccionesRapidas}
+      extraActions={
+        currentType === MenuItems ? (
+          <button
+            onClick={() => setShowMacroEditorMenu(true)}
+            className="rounded-lg flex items-center justify-center gap-1.5 py-1.5 px-3 font-bold transition-all duration-200 min-h-[2.4rem] text-xs sm:text-sm bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+          >
+            <TrendingUp className="h-3.5 w-3.5" />
+            <span className="whitespace-nowrap">Subir Precios</span>
+          </button>
+        ) : null
+      }
+    />
   );
 
   return (

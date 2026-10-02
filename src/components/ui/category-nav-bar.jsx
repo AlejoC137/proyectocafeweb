@@ -31,6 +31,7 @@ function CategoryNavBar({
   onToggleEdit,
   showActions = false,
   onToggleActions,
+  extraActions = null,
   className = ""
 }) {
   // Mapeo de iconos por defecto (compatible con versiones anteriores)
@@ -102,6 +103,8 @@ function CategoryNavBar({
           </span>
         </button>
       )}
+      {/* Acciones extra (botones adicionales contextuales) */}
+      {extraActions}
     </div>
   );
 }
