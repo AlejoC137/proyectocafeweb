@@ -37,13 +37,15 @@ import {
   Package,
   LayoutGrid,
   Zap,
-  Sparkles
+  Sparkles,
+  TrendingUp
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { copyPromptToClipboard } from "../../../utils/prompts";
 import MacroEditorItems from "./MacroEditorItems";
 import MacroAgregadorItems from "./MacroAgregadorItems";
 import CorrectorOrtograficoModal from "../inventario/CorrectorOrtograficoModal";
+import MacroEditorMenu from "./MacroEditorMenu";
 
 function AccionesRapidas({ currentType: propType }) {
   const dispatch = useDispatch();
