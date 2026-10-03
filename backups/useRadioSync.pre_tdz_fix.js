@@ -15,8 +15,6 @@ export function useRadioSync(options = {}) {
   const { isManager = false, presenceData, onRemoteCommand } = options;
 
   const [currentPlay, setCurrentPlay] = useState(null);
-  const currentPlayRef = useRef(null);
-  currentPlayRef.current = currentPlay;
   const [remoteVolume, setRemoteVolume] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(null);
@@ -336,15 +334,14 @@ export function useRadioSync(options = {}) {
 
     const sendHeartbeat = () => {
       const pres = presenceDataRef.current;
-      const curPlay = currentPlayRef.current;
       const payload = {
         type: 'PRESENCE_PING',
         clientId,
         role: 'listener',
         device: /Mobi|Android/i.test(navigator.userAgent) ? 'Móvil' : 'Escritorio',
         isPlaying: Boolean(pres?.isPlaying),
-        trackTitle: pres?.trackTitle || curPlay?.station_name || 'Radio al Aire',
-        artist: pres?.artist || curPlay?.station_artist || '',
+        trackTitle: pres?.trackTitle || 'Radio al Aire',
+        artist: pres?.artist || '',
         volume: pres?.volume !== undefined ? pres.volume : 0.85,
         isMuted: Boolean(pres?.isMuted),
         updatedAt: Date.now()
