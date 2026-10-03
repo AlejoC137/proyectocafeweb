@@ -1,8 +1,16 @@
 {
-    "rewrites" : [
+    "rewrites": [
         {
-            "source" : "/(.*)",
-            "destination" : "/"
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/.well-known/(.*)",
+            "destination": "/api/well-known/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/"
         }
     ]
 }
