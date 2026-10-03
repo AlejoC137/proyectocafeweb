@@ -266,14 +266,17 @@ export default function ProyectoRadio() {
 
   const applyLiveSeek = (audioEl) => {
     if (!audioEl) return;
-    const targetOffset = getLiveBroadcastOffset(audioEl.duration);
-    if (targetOffset > 1) {
+    const dur = audioEl.duration;
+    if (!Number.isFinite(dur) || dur <= 0) return;
+    const targetOffset = getLiveBroadcastOffset(dur);
+    // Sincronizar seek suavemente solo si el oyente entra con la canción ya empezada más de 4s
+    if (targetOffset > 4 && targetOffset < (dur - 2)) {
       try {
-        const seekPos = (Number.isFinite(audioEl.duration) && audioEl.duration > 0)
-          ? (targetOffset % audioEl.duration)
-          : targetOffset;
-        audioEl.currentTime = seekPos;
-        console.log(`[ProyectoRadio] 📻 Señal al aire sincronizada a ${seekPos.toFixed(1)}s`);
+        const diff = Math.abs((audioEl.currentTime || 0) - targetOffset);
+        if (diff > 3) {
+          audioEl.currentTime = targetOffset;
+          console.log(`[ProyectoRadio] 📻 Señal al aire sincronizada a ${targetOffset.toFixed(1)}s`);
+        }
       } catch (err) {}
     }
   };
@@ -360,6 +363,7 @@ export default function ProyectoRadio() {
     audioEl.load();
 
     const startTrack = () => {
+      setAudioError(null);
       applyLiveSeek(audioEl);
       if (currentPlay.is_playing && !player.showAutoStart) {
         setIsPlaying(true);
@@ -709,22 +713,34 @@ export default function ProyectoRadio() {
         }}
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
-          // Si falló una URL en producción deploy, reconectar a la emisión al aire de Supabase
           const audioEl = player.audioRef?.current;
-          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http')) {
-            if (audioEl.src !== currentPlay.station_url) {
-              console.warn('[ProyectoRadio] Error en fuente, reconectando a señal al aire:', currentPlay.station_url);
-              audioEl.src = currentPlay.station_url;
-              audioEl.play().catch(() => {});
-              return;
-            }
+          // Si el audio está actualmente reproduciendo o tiene datos cargados, ignorar evento transitorio
+          if (audioEl && !audioEl.paused && (audioEl.currentTime > 0 || audioEl.readyState >= 2)) {
+            return;
           }
-          if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {
+          // Si hay una señal al aire activa en Supabase, reintentar reconexión sin abortar el reproductor
+          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http')) {
+            console.warn('[ProyectoRadio] Reconectando señal al aire tras evento transitorio...');
+            try {
+              audioEl.load();
+              audioEl.play().catch(() => {});
+            } catch (err) {}
+            return;
+          }
+          // Solo si es un fallo definitivo en modo local/no-streaming
+          if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube' && (!currentPlay || !currentPlay.station_url)) {
             setAudioError(`No se pudo cargar "${currentTrack.title}". Verifica la conexión o inicia el transmisor local.`);
             setIsPlaying(false);
           }
         }}
-        onEnded={player.handleTrackEnded}
+        onEnded={() => {
+          // Al finalizar la pista al aire, pausar y esperar la siguiente pista del transmisor .bat
+          const audioEl = player.audioRef?.current;
+          if (audioEl) {
+            audioEl.pause();
+          }
+          console.log('[ProyectoRadio] Pista actual finalizada. Esperando siguiente canción del transmisor...');
+        }}
       />
     </div>
   );

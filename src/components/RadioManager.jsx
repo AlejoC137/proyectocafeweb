@@ -879,19 +879,14 @@ export default function RadioManager() {
       const elapsed = calcElapsed();
       const songDur = airDuration || onAirTrack?.duration || 180;
 
-      // Si la pista terminó en tiempo real, avanzar automáticamente la cola
-      if (songDur > 5 && elapsed >= songDur) {
-        console.log('[IncorruptibleClock] Canción finalizada en tiempo real. Avanzando cola...');
-        handleAirNext();
-      } else {
-        setAirTime(elapsed);
+      // Mantener actualizado el reloj visual de emisión sin interrumpir la canción
+      setAirTime(elapsed);
 
-        // Si el audio en cabina está activo, mantenerlo alineado
-        const airAudio = masterAirAudioRef.current;
-        if (airAudio && airAudio.src && !airAudio.paused) {
-          if (Math.abs(airAudio.currentTime - elapsed) > 3) {
-            airAudio.currentTime = elapsed;
-          }
+      // Si el audio en cabina está activo, mantenerlo alineado
+      const airAudio = masterAirAudioRef.current;
+      if (airAudio && airAudio.src && !airAudio.paused) {
+        if (Math.abs(airAudio.currentTime - elapsed) > 3) {
+          airAudio.currentTime = elapsed;
         }
       }
     }, 1000);
@@ -1050,7 +1045,12 @@ export default function RadioManager() {
     };
 
     const handleAirEnded = () => {
-      console.log('[MasterBroadcaster] Canción al aire finalizada. Avanzando automáticamente en la cola...');
+      // Si el transmisor .bat está activo, el .bat es la autoridad de transmisión; el monitor no debe cortar canciones
+      if (isBatOnline) {
+        console.log('[MasterBroadcaster] Monitor de cabina finalizó reproducción local. Esperando señal del transmisor .bat.');
+        return;
+      }
+      console.log('[MasterBroadcaster] Canción finalizada en modo autónomo. Avanzando cola...');
       handleAirNext();
     };
 
