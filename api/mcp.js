@@ -1,16 +1,21 @@
 /**
- * MCP Server endpoint for Gemini integration
+ * MCP Server endpoint for Gemini / Antigravity integration
  * Implements Model Context Protocol (MCP) over HTTP
  * https://spec.modelcontextprotocol.io/
  *
- * CRUD completo de Agenda + lectura de Menú, Recetas, Ventas, Inventario, Compras
- * Adaptado a los nombres reales de las columnas en Supabase:
- * - Agenda: nombreES, nombreEN, fecha, horaInicio, horaFinal, servicios, etc.
- * - Menu: NombreES, NombreEN, Precio, TipoES, GRUPO, SUB_GRUPO, etc.
- * - ItemsAlmacen: Nombre_del_producto, Area, CANTIDAD, UNIDADES, GRUPO, etc.
- * - Recetas: legacyName, rendimiento, costo, etc.
- * - Ventas: Date, Time, Total_Ingreso, Productos, Cliente, etc.
- * - Compras: Date, Valor, Proveedor_Id, Concepto, Categoria, etc.
+ * CRUD completo de Agenda con Doble Capa de Protección:
+ * 1. Confirmación obligatoria (Safety Gate) en agenda_eliminar
+ * 2. Borrado Lógico (Soft Delete) por defecto con opción de hard delete
+ * 3. Snapshot previo automático en agenda_actualizar y agenda_eliminar (Audit / Rollback)
+ * 4. Nueva herramienta: agenda_restaurar para recuperar eventos soft-deleted
+ *
+ * Mapeo nativo a Supabase:
+ * - Agenda: nombreES, nombreEN, fecha, horaInicio, horaFinal, servicios, estado_proceso
+ * - Menu: NombreES, NombreEN, Precio, TipoES, GRUPO, SUB_GRUPO
+ * - ItemsAlmacen: Nombre_del_producto, Area, CANTIDAD, UNIDADES, GRUPO
+ * - Recetas: legacyName, rendimiento, costo
+ * - Ventas: Date, Time, Total_Ingreso, Productos, Cliente
+ * - Compras: Date, Valor, Proveedor_Id, Concepto, Categoria
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -25,7 +30,7 @@ function supabase() {
 // MCP Server metadata
 const SERVER_INFO = {
   name: "proyectocafe-mcp",
-  version: "1.2.0",
+  version: "1.3.0",
 };
 
 // ─────────────────────────────────────────────
@@ -93,7 +98,7 @@ function normalizeAgendaItem(ev) {
 // TOOL DEFINITIONS
 // ─────────────────────────────────────────────
 const TOOLS = [
-  // ── READ-ONLY ──────────────────────────────
+  // ── LECTURAS (Seguras) ─────────────────────
   {
     name: "get_menu",
     description: "Obtiene el menú del café con productos, precios y categorías.",
@@ -157,7 +162,7 @@ const TOOLS = [
     },
   },
 
-  // ── AGENDA — CRUD COMPLETO ─────────────────
+  // ── AGENDA — LECTURA Y CREACIÓN (Operaciones automáticas) ──
   {
     name: "agenda_listar",
     description:
@@ -170,6 +175,10 @@ const TOOLS = [
         busqueda: {
           type: "string",
           description: "Texto para buscar por nombre del evento, cliente o autores",
+        },
+        incluir_eliminados: {
+          type: "boolean",
+          description: "Si es true, incluye eventos cancelados/eliminados lógicamente (default false)",
         },
         limite: { type: "number", description: "Máx registros a retornar (default 100)" },
       },
@@ -187,9 +196,27 @@ const TOOLS = [
     },
   },
   {
+    name: "agenda_buscar_disponibilidad",
+    description:
+      "Verifica si hay conflictos de horario en una fecha dada para planificar nuevos eventos.",
+    inputSchema: {
+      type: "object",
+      required: ["fecha"],
+      properties: {
+        fecha: { type: "string", description: "Fecha a verificar YYYY-MM-DD" },
+        horaInicio: { type: "string", description: "Hora de inicio para verificar HH:MM" },
+        horaFinal: { type: "string", description: "Hora de fin para verificar HH:MM" },
+        excluir_id: {
+          type: "string",
+          description: "UUID de evento a excluir de la verificación (para ediciones)",
+        },
+      },
+    },
+  },
+  {
     name: "agenda_crear",
     description:
-      "Crea un nuevo evento en la agenda del café. Requiere nombre (o nombreES), fecha, horaInicio y horaFinal.",
+      "Crea un nuevo evento en la agenda del café. Registra el evento en estado activo.",
     inputSchema: {
       type: "object",
       required: ["fecha", "horaInicio", "horaFinal"],
@@ -223,21 +250,23 @@ const TOOLS = [
       },
     },
   },
+
+  // ── AGENDA — OPERACIONES SENSIBLES (Requieren confirmación manual) ──
   {
     name: "agenda_actualizar",
     description:
-      "Actualiza un evento existente en la agenda. Solo se actualizan los campos enviados.",
+      "⚠️ OPERACIÓN SENSIBLE: Modifica los datos de un evento existente. Guarda y retorna un snapshot del estado previo para permitir reversión (rollback) inmediata si se comete un error.",
     inputSchema: {
       type: "object",
       required: ["id"],
       properties: {
         id: { type: "string", description: "UUID del evento a actualizar (_id)" },
-        nombre: { type: "string", description: "Nombre del evento" },
-        nombreES: { type: "string", description: "Nombre del evento en español" },
-        nombreEN: { type: "string", description: "Nombre en inglés" },
-        fecha: { type: "string", description: "YYYY-MM-DD" },
-        horaInicio: { type: "string", description: "HH:MM:SS o HH:MM" },
-        horaFinal: { type: "string", description: "HH:MM:SS o HH:MM" },
+        nombre: { type: "string", description: "Nuevo nombre del evento" },
+        nombreES: { type: "string", description: "Nuevo nombre del evento en español" },
+        nombreEN: { type: "string", description: "Nuevo nombre en inglés" },
+        fecha: { type: "string", description: "Nueva fecha YYYY-MM-DD" },
+        horaInicio: { type: "string", description: "Nueva hora de inicio HH:MM" },
+        horaFinal: { type: "string", description: "Nueva hora de fin HH:MM" },
         nombreCliente: { type: "string" },
         emailCliente: { type: "string" },
         telefonoCliente: { type: "string" },
@@ -256,7 +285,8 @@ const TOOLS = [
   },
   {
     name: "agenda_eliminar",
-    description: "Elimina un evento de la agenda permanentemente.",
+    description:
+      "🚨 OPERACIÓN CRÍTICA: Elimina un evento de la agenda. Requiere obligatoriamente confirmar: true. Por defecto aplica Borrado Lógico (soft delete) para proteger los datos y permitir recuperación. Si se especifica modo 'definitivo', se realiza borrado físico en base de datos retornando un backup completo.",
     inputSchema: {
       type: "object",
       required: ["id", "confirmar"],
@@ -264,26 +294,26 @@ const TOOLS = [
         id: { type: "string", description: "UUID del evento a eliminar (_id)" },
         confirmar: {
           type: "boolean",
-          description: "Debe ser true para confirmar la eliminación definitiva",
+          description: "Debe ser true obligatoriamente tras haber confirmado con el usuario",
+        },
+        modo: {
+          type: "string",
+          enum: ["soft", "definitivo"],
+          description:
+            "'soft' (por defecto, recomendado): borrado lógico recuperable. 'definitivo': eliminación física permanente.",
         },
       },
     },
   },
   {
-    name: "agenda_buscar_disponibilidad",
+    name: "agenda_restaurar",
     description:
-      "Verifica si hay conflictos de horario en una fecha dada para planificar nuevos eventos.",
+      "Restaura un evento que haya sido eliminado lógicamente (soft delete), devolviéndolo a estado activo.",
     inputSchema: {
       type: "object",
-      required: ["fecha"],
+      required: ["id"],
       properties: {
-        fecha: { type: "string", description: "Fecha a verificar YYYY-MM-DD" },
-        horaInicio: { type: "string", description: "Hora de inicio para verificar HH:MM" },
-        horaFinal: { type: "string", description: "Hora de fin para verificar HH:MM" },
-        excluir_id: {
-          type: "string",
-          description: "UUID de evento a excluir de la verificación (para ediciones)",
-        },
+        id: { type: "string", description: "UUID del evento a restaurar (_id)" },
       },
     },
   },
@@ -359,9 +389,9 @@ async function getCompras({ busqueda, limite = 50 } = {}) {
   return data || [];
 }
 
-// ── AGENDA CRUD ───────────────────────────────
+// ── AGENDA CRUD & SAFETY ─────────────────────
 
-async function agendaListar({ fecha_inicio, fecha_fin, busqueda, limite = 100 } = {}) {
+async function agendaListar({ fecha_inicio, fecha_fin, busqueda, incluir_eliminados = false, limite = 100 } = {}) {
   let q = supabase()
     .from("Agenda")
     .select("*")
@@ -379,7 +409,13 @@ async function agendaListar({ fecha_inicio, fecha_fin, busqueda, limite = 100 } 
 
   const { data, error } = await q;
   if (error) throw new Error(`Error al listar agenda: ${error.message}`);
-  const normalizados = (data || []).map(normalizeAgendaItem);
+
+  let filtrados = data || [];
+  if (!incluir_eliminados) {
+    filtrados = filtrados.filter((ev) => ev.estado_proceso !== "eliminado");
+  }
+
+  const normalizados = filtrados.map(normalizeAgendaItem);
   return { total: normalizados.length, eventos: normalizados };
 }
 
@@ -392,6 +428,49 @@ async function agendaObtener({ id } = {}) {
     .single();
   if (error) throw new Error(`Evento no encontrado: ${error.message}`);
   return normalizeAgendaItem(data);
+}
+
+async function agendaBuscarDisponibilidad({ fecha, horaInicio, horaFinal, excluir_id } = {}) {
+  if (!fecha) throw new Error("Se requiere la fecha");
+
+  let q = supabase()
+    .from("Agenda")
+    .select("_id, nombreES, horaInicio, horaFinal, nombreCliente, estado_proceso")
+    .eq("fecha", fecha);
+
+  if (excluir_id) q = q.neq("_id", excluir_id);
+
+  const { data: rawEventos, error } = await q.order("horaInicio");
+  if (error) throw new Error(`Error al verificar disponibilidad: ${error.message}`);
+
+  // Ignorar eventos eliminados lógicamente al evaluar conflictos
+  const eventosActivos = (rawEventos || [])
+    .filter((ev) => ev.estado_proceso !== "eliminado")
+    .map(normalizeAgendaItem);
+
+  if (!horaInicio || !horaFinal) {
+    return {
+      fecha,
+      eventos_del_dia: eventosActivos,
+      total_eventos: eventosActivos.length,
+      disponible: eventosActivos.length === 0,
+    };
+  }
+
+  const conflictos = eventosActivos.filter((ev) => {
+    return horaInicio < ev.horaFinal && horaFinal > ev.horaInicio;
+  });
+
+  return {
+    fecha,
+    horaInicio,
+    horaFinal,
+    disponible: conflictos.length === 0,
+    conflictos,
+    otros_eventos_del_dia: eventosActivos.filter(
+      (ev) => !conflictos.find((c) => c._id === ev._id)
+    ),
+  };
 }
 
 async function agendaCrear(args) {
@@ -421,6 +500,7 @@ async function agendaCrear(args) {
     servicios: formatServicios(args.servicios),
     ...(args.aliado_id !== undefined && { aliado_id: args.aliado_id }),
     ...(args.instagramsAliados !== undefined && { instagramsAliados: args.instagramsAliados }),
+    estado_proceso: "activo",
   };
 
   const { data, error } = await supabase()
@@ -434,7 +514,18 @@ async function agendaCrear(args) {
 }
 
 async function agendaActualizar({ id, ...campos }) {
-  if (!id) throw new Error("Se requiere el ID del evento");
+  if (!id) throw new Error("Se requiere el ID del evento (_id)");
+
+  // 1. Snapshot previo de seguridad
+  const { data: existing, error: fetchErr } = await supabase()
+    .from("Agenda")
+    .select("*")
+    .eq("_id", id)
+    .single();
+
+  if (fetchErr || !existing) {
+    throw new Error(`No se encontró el evento con ID: ${id}`);
+  }
 
   const payload = {};
 
@@ -463,29 +554,38 @@ async function agendaActualizar({ id, ...campos }) {
     throw new Error("Debes enviar al menos un campo para actualizar");
   }
 
-  const { data, error } = await supabase()
+  const { data: updated, error: updateErr } = await supabase()
     .from("Agenda")
     .update(payload)
     .eq("_id", id)
     .select()
     .single();
 
-  if (error) throw new Error(`Error al actualizar evento: ${error.message}`);
-  if (!data) throw new Error(`No se encontró el evento con ID: ${id}`);
-  return { mensaje: "Evento actualizado exitosamente", evento: normalizeAgendaItem(data) };
+  if (updateErr) throw new Error(`Error al actualizar evento: ${updateErr.message}`);
+
+  return {
+    mensaje: "Evento actualizado exitosamente",
+    evento_actualizado: normalizeAgendaItem(updated),
+    snapshot_previo: normalizeAgendaItem(existing),
+    nota_seguridad:
+      "Se ha preservado una copia exacta del evento antes de la modificación para auditoría y reversión inmediata si fuese necesario.",
+  };
 }
 
-async function agendaEliminar({ id, confirmar } = {}) {
+async function agendaEliminar({ id, confirmar, modo = "soft" } = {}) {
   if (!id) throw new Error("Se requiere el ID del evento");
-  if (!confirmar) {
+
+  // 1. Safety Gate: validación estricta
+  if (confirmar !== true) {
     throw new Error(
-      "Para eliminar debes enviar confirmar: true. Esta acción es irreversible."
+      "CONFIRMACIÓN REQUERIDA (Safety Gate): Para eliminar este evento es obligatorio solicitar autorización explícita al usuario y enviar 'confirmar: true'."
     );
   }
 
+  // 2. Obtener copia completa de respaldo antes de borrar
   const { data: existing, error: fetchErr } = await supabase()
     .from("Agenda")
-    .select("nombreES, fecha")
+    .select("*")
     .eq("_id", id)
     .single();
 
@@ -493,53 +593,57 @@ async function agendaEliminar({ id, confirmar } = {}) {
     throw new Error(`No se encontró el evento con ID: ${id}`);
   }
 
-  const { error } = await supabase().from("Agenda").delete().eq("_id", id);
-  if (error) throw new Error(`Error al eliminar evento: ${error.message}`);
+  // 3. Ejecutar según modo (soft delete por defecto)
+  if (modo === "definitivo") {
+    const { error: deleteErr } = await supabase().from("Agenda").delete().eq("_id", id);
+    if (deleteErr) throw new Error(`Error al eliminar definitivamente: ${deleteErr.message}`);
 
-  return {
-    mensaje: `Evento "${existing.nombreES}" del ${existing.fecha} eliminado exitosamente`,
-    id_eliminado: id,
-  };
-}
-
-async function agendaBuscarDisponibilidad({ fecha, horaInicio, horaFinal, excluir_id } = {}) {
-  if (!fecha) throw new Error("Se requiere la fecha");
-
-  let q = supabase()
-    .from("Agenda")
-    .select("_id, nombreES, horaInicio, horaFinal, nombreCliente")
-    .eq("fecha", fecha);
-
-  if (excluir_id) q = q.neq("_id", excluir_id);
-
-  const { data: rawEventos, error } = await q.order("horaInicio");
-  if (error) throw new Error(`Error al verificar disponibilidad: ${error.message}`);
-
-  const eventosDelDia = (rawEventos || []).map(normalizeAgendaItem);
-
-  if (!horaInicio || !horaFinal) {
     return {
-      fecha,
-      eventos_del_dia: eventosDelDia,
-      total_eventos: eventosDelDia.length,
-      disponible: eventosDelDia.length === 0,
+      mensaje: `Evento "${existing.nombreES}" (${existing.fecha}) eliminado definitivamente de la base de datos.`,
+      id_eliminado: id,
+      modo: "definitivo",
+      backup_para_restaurar: normalizeAgendaItem(existing),
+      instruccion_restauracion:
+        "Si fue un error, puedes recrear este evento con 'agenda_crear' usando los datos del backup_para_restaurar.",
+    };
+  } else {
+    // Borrado lógico (Soft Delete)
+    const { data: softUpdated, error: softErr } = await supabase()
+      .from("Agenda")
+      .update({ estado_proceso: "eliminado" })
+      .eq("_id", id)
+      .select()
+      .single();
+
+    if (softErr) throw new Error(`Error en borrado lógico: ${softErr.message}`);
+
+    return {
+      mensaje: `Evento "${existing.nombreES}" (${existing.fecha}) eliminado de la vista activa (Borrado Lógico / Soft Delete).`,
+      id_eliminado: id,
+      modo: "soft_delete",
+      estado: "eliminado",
+      backup_para_restaurar: normalizeAgendaItem(existing),
+      instruccion_restauracion: `Para restaurar este evento ejecuta 'agenda_restaurar' con id: "${id}".`,
     };
   }
+}
 
-  // Verificar solapamiento de horario
-  const conflictos = eventosDelDia.filter((ev) => {
-    return horaInicio < ev.horaFinal && horaFinal > ev.horaInicio;
-  });
+async function agendaRestaurar({ id } = {}) {
+  if (!id) throw new Error("Se requiere el ID del evento a restaurar");
+
+  const { data, error } = await supabase()
+    .from("Agenda")
+    .update({ estado_proceso: "activo" })
+    .eq("_id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Error al restaurar evento: ${error.message}`);
+  if (!data) throw new Error(`No se encontró el evento con ID: ${id}`);
 
   return {
-    fecha,
-    horaInicio,
-    horaFinal,
-    disponible: conflictos.length === 0,
-    conflictos,
-    otros_eventos_del_dia: eventosDelDia.filter(
-      (ev) => !conflictos.find((c) => c._id === ev._id)
-    ),
+    mensaje: `Evento "${data.nombreES}" restaurado a estado activo exitosamente.`,
+    evento: normalizeAgendaItem(data),
   };
 }
 
@@ -582,10 +686,11 @@ async function handleMcpRequest(body) {
           get_compras: getCompras,
           agenda_listar: agendaListar,
           agenda_obtener: agendaObtener,
+          agenda_buscar_disponibilidad: agendaBuscarDisponibilidad,
           agenda_crear: agendaCrear,
           agenda_actualizar: agendaActualizar,
           agenda_eliminar: agendaEliminar,
-          agenda_buscar_disponibilidad: agendaBuscarDisponibilidad,
+          agenda_restaurar: agendaRestaurar,
         };
 
         const fn = handlers[toolName];
