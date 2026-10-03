@@ -145,8 +145,6 @@ export default function RadioManager() {
   const isMutedRef = useRef(false);
   const lastLoadedPreviewTabRef = useRef('');
   const requestedPreviewTitleRef = useRef('');
-  const lastAirTrackNameRef = useRef('');
-  const isAdvancingAirRef = useRef(false);
   // true SOLO cuando el usuario inició la pre-escucha explícitamente.
   // Evita que handleEnded avance automáticamente si el deck CUE no fue arrancado por el usuario.
   const userStartedPreviewRef = useRef(false);
@@ -801,30 +799,12 @@ export default function RadioManager() {
 
           // 2. Si es actualización de la emisión general al aire (Cola de emisión)
           setOnAirTrack(row);
-
-          const airAudio = masterAirAudioRef.current;
-          if (airAudio && row.station_name && row.station_name !== lastAirTrackNameRef.current) {
-            lastAirTrackNameRef.current = row.station_name;
-            // Si la nueva pista no tiene URL HTTP lista todavía (está subiendo en el BAT):
-            // Silenciar inmediatamente el monitor para que no siga sonando la pista anterior en caché
-            if (!row.station_url || (!row.station_url.startsWith('http://') && !row.station_url.startsWith('https://'))) {
-              airAudio.pause();
-              airAudio.currentTime = 0;
-              airAudio.removeAttribute('src');
-              airAudio.load();
-              setIsPlayingLiveSignal(false);
-            }
-          }
-
           // Actualizar la fuente del monitor de cabina si se recibió la señal en vivo transmitida por el .bat
           if (row.station_url && (row.station_url.startsWith('http://') || row.station_url.startsWith('https://'))) {
+            const airAudio = masterAirAudioRef.current;
             if (airAudio) {
               const isDifferent = airAudio.src !== row.station_url;
               if (isDifferent) {
-                airAudio.pause();
-                airAudio.currentTime = 0;
-                airAudio.removeAttribute('src');
-                airAudio.load();
                 airAudio.src = row.station_url;
                 airAudio.load();
               }
@@ -1180,18 +1160,24 @@ export default function RadioManager() {
        window.location.hostname === '[::1]' ||
        window.location.hostname.includes('localhost') ||
        window.location.port === '5173');
+    const liveStreamUrl = (onAirTrack?.station_url && (onAirTrack.station_url.startsWith('http://') || onAirTrack.station_url.startsWith('https://')))
+      ? onAirTrack.station_url
+      : null;
 
     if (song.station_url) {
-      if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://') || song.station_url.startsWith('/')) {
+      if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://')) {
+        return song.station_url;
+      }
+      if (song.station_url.startsWith('/')) {
         return song.station_url;
       }
       if (song.station_url.startsWith('local://')) {
         const raw = decodeURIComponent(song.station_url.substring(8));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(raw)}` : null;
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(raw)}` : liveStreamUrl;
       }
     }
     if (song.filePath) {
-      return isLocalHost ? `/api/local-audio?path=${encodeURIComponent(song.filePath)}` : null;
+      return isLocalHost ? `/api/local-audio?path=${encodeURIComponent(song.filePath)}` : liveStreamUrl;
     }
     if (song.url) {
       if (song.url.startsWith('http://') || song.url.startsWith('https://') || song.url.startsWith('/')) {
@@ -1199,14 +1185,14 @@ export default function RadioManager() {
       }
       if (song.url.startsWith('local://')) {
         const fileName = song.fileName || decodeURIComponent(song.url.substring(8));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(fileName)}` : null;
+        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(fileName)}` : liveStreamUrl;
       }
     }
     if (song.fileName) {
-      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.fileName)}` : null;
+      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.fileName)}` : liveStreamUrl;
     }
-    if (song.title && isLocalHost) {
-      return `/api/local-audio?file=${encodeURIComponent(song.title + '.mp3')}`;
+    if (song.title) {
+      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.title + '.mp3')}` : liveStreamUrl;
     }
     return null;
   };
@@ -1496,48 +1482,42 @@ export default function RadioManager() {
     if (!song) return;
     setBottomPlayerMode('live');
     try {
-      // 1. Pausar y limpiar audio anterior inmediatamente para evitar que vuelva a sonar en caché
+      // 1. Pausar y limpiar audio anterior inmediatamente para evitar que vuelva a sonar
       const airAudio = masterAirAudioRef.current;
       if (airAudio) {
         airAudio.pause();
         airAudio.currentTime = 0;
-        airAudio.removeAttribute('src');
-        airAudio.load();
       }
 
-      // Resolver URL de audio directo si existe para ESTA canción específica (nunca de la anterior)
-      const directAudioUrl = getPreviewAudioUrl(song) || (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://')) ? song.url : '');
+      // La emisión al aire NO interfiere con la pre-escucha de biblioteca (streams paralelos)
+
+      const directAudioUrl = getPreviewAudioUrl(song) || song.url || '';
 
       setOnAirTrack(prev => ({
         ...(prev || {}),
         station_name: song.title,
         station_artist: song.artist || 'Radio Café',
         station_cover: song.cover || '',
-        station_url: directAudioUrl || '',
+        station_url: directAudioUrl,
         is_playing: true,
         updated_at: new Date().toISOString()
       }));
 
-      // Reproducir en el monitor de cabina solo si existe una URL de audio directa y válida para esta canción
-      if (airAudio && directAudioUrl && (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://') || directAudioUrl.startsWith('/api/local-audio'))) {
+      // Reproducir inmediatamente en el monitor de cabina si está activo
+      if (airAudio && directAudioUrl) {
         airAudio.src = directAudioUrl;
         airAudio.muted = false;
         airAudio.volume = isMuted ? 0 : volume;
         airAudio.play().catch(() => {});
         setIsPlayingLiveSignal(true);
-      } else {
-        // Si no hay URL directa aún (el BAT debe subirla a Supabase Storage), esperar en silencio
-        setIsPlayingLiveSignal(false);
       }
 
       // 2. Notificar inmediatamente al transmisor .bat y a Supabase
-      // Si no hay URL directa verificada, se envía station_url vacía para que ninguna instancia reproduzca caché previo
-      const fileInfo = song.fileName || song.filePath || (song.url && song.url.startsWith('local://') ? decodeURIComponent(song.url.replace('local://', '')) : '');
       await supabase.from('radio_current_play').update({
         station_name: song.title,
-        station_artist: `REQUEST:${song.title}||${song.artist || ''}||${fileInfo}`,
+        station_artist: `REQUEST:${song.title}||${song.artist || ''}`,
         station_cover: song.cover || '',
-        station_url: (directAudioUrl && !directAudioUrl.startsWith('local://')) ? directAudioUrl : '',
+        station_url: directAudioUrl,
         is_playing: true,
         updated_at: new Date().toISOString()
       }).eq('id', 1);
@@ -1554,6 +1534,7 @@ export default function RadioManager() {
         });
       } catch (e) {}
 
+      setIsPlayingLiveSignal(true);
       setSuccess(`📻 Al aire: "${song.title}"`);
     } catch (e) {
       setError("Error emitiendo canción: " + e.message);
@@ -1565,12 +1546,6 @@ export default function RadioManager() {
     if (airAudio && airAudio.currentTime > 3) {
       await handleSeekAir(0);
       return;
-    }
-    if (airAudio) {
-      airAudio.pause();
-      airAudio.currentTime = 0;
-      airAudio.removeAttribute('src');
-      airAudio.load();
     }
     if (songs.length === 0) return;
     try {
@@ -1678,18 +1653,6 @@ export default function RadioManager() {
   };
 
   const handleAirNext = async () => {
-    if (isAdvancingAirRef.current) return;
-    isAdvancingAirRef.current = true;
-    setTimeout(() => { isAdvancingAirRef.current = false; }, 2500);
-
-    const airAudio = masterAirAudioRef.current;
-    if (airAudio) {
-      airAudio.pause();
-      airAudio.currentTime = 0;
-      airAudio.removeAttribute('src');
-      airAudio.load();
-    }
-
     if (songs.length === 0) {
       setError("No hay canciones en la cola de emisión para avanzar.");
       return;
@@ -2680,12 +2643,12 @@ export default function RadioManager() {
 
   return (
     <div 
-      className={`min-h-screen bg-[#121212] text-white font-sans p-3 sm:p-5 md:p-6 pb-44 sm:pb-36 transition-colors overflow-x-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
+      className={`min-h-screen bg-[#121212] text-white font-sans p-3 sm:p-6 md:p-8 pb-48 sm:pb-36 transition-colors overflow-x-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
     >
-      <div className="max-w-[1920px] mx-auto space-y-4 sm:space-y-5">
+      <div className="max-w-7xl mx-auto space-y-6">
         
         {/* HEADER PRINCIPAL SPOTIFY */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
@@ -2935,15 +2898,15 @@ export default function RadioManager() {
               </div>
             </div>
 
-            {/* GRID DUAL PANEL 50% / 50% (CON ESPACIADO INFERIOR PARA QUE NUNCA SE TRASLAPE CON LOS REPRODUCTORES) */}
-            <div className="w-full mb-32 sm:mb-28">
-              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-5 items-start' : ''}`}>
+            {/* GRID DUAL PANEL 50% / 50% */}
+            <div className="w-full">
+              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start' : ''}`}>
 
                 {/* ========================================================================= */}
                 {/* PANEL IZQUIERDO: BIBLIOTECA COMPLETA DE LA CARPETA (CON PLAY, NEXT, ALEATORIO) */}
                 {/* ========================================================================= */}
                 {(mp3ViewMode === 'split' || mp3ViewMode === 'library') && (
-                  <div className="w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[520px] sm:h-[600px] lg:h-[calc(100vh-230px)] lg:min-h-[480px] lg:max-h-[760px]">
+                  <div className="w-full bg-[#181818] pt-4 sm:pt-6 px-3 sm:px-5 pb-4 sm:pb-5 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[540px] sm:h-[660px] lg:h-[780px]">
                     {/* CABECERA PANEL IZQUIERDO */}
                     <div className="space-y-3 pb-3 border-b border-white/10 pt-1">
                       {/* FILA 1: TÍTULO Y CONTEO */}
@@ -3035,7 +2998,7 @@ export default function RadioManager() {
                     </div>
 
                     {/* CUERPO DEL PANEL IZQUIERDO */}
-                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 mt-3 space-y-1.5">
                       {batCatalog.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
                           <FolderUp className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />
@@ -3252,7 +3215,7 @@ export default function RadioManager() {
                         } catch (err) {}
                       }
                     }}
-                    className={`w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[520px] sm:h-[600px] lg:h-[calc(100vh-230px)] lg:min-h-[480px] lg:max-h-[760px] ${
+                    className={`w-full bg-[#181818] pt-4 sm:pt-6 px-3 sm:px-5 pb-4 sm:pb-5 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[540px] sm:h-[660px] lg:h-[780px] ${
                       isDraggingOverQueue 
                         ? 'border-[#1DB954] bg-[#1DB954]/5 ring-4 ring-[#1DB954]/30 scale-[1.002]' 
                         : 'border-white/10'
@@ -3390,7 +3353,7 @@ export default function RadioManager() {
                     </div>
 
                     {/* CUERPO DEL PANEL DERECHO (LISTA DE CANCIONES DE LA COLA) */}
-                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 mt-3 space-y-1.5">
                       {songs.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
                           <Radio className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />

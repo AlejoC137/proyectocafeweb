@@ -1,5 +1,5 @@
 # ==============================================================================
-# RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.4.0 - ANTI-GHOST AUDIO FIX)
+# RADIO BROADCASTER PRO - PROYECTO CAFE (EDICION SUPABASE HIGH-FIDELITY v3.3.0)
 # ==============================================================================
 # - Deteccion Instantanea de Estado: Conectado/Desconectado en tiempo real.
 # - Cambio Inmediato de Pista: Soporte total para NEXT, PREV y REQUEST sin trabas.
@@ -534,19 +534,6 @@ try {
                     $currentTrack = $requestedTrack
                 }
                 $requestedTrack = $null
-
-                # Sincronizar $trackIndex con la posición de la pista solicitada en la cola de emisión
-                $foundIdx = -1
-                for ($mIdx = 0; $mIdx -lt $matchedTracks.Count; $mIdx++) {
-                    if (($matchedTracks[$mIdx].filePath -and $matchedTracks[$mIdx].filePath -eq $currentTrack.filePath) -or 
-                        ($matchedTracks[$mIdx].title.Trim().ToLower() -eq $currentTrack.title.Trim().ToLower())) {
-                        $foundIdx = $mIdx
-                        break
-                    }
-                }
-                if ($foundIdx -ge 0) {
-                    $trackIndex = $foundIdx + 1
-                }
             } else {
                 $candidate = $matchedTracks[$trackIndex]
                 if ($global:PreloadedTrack -and $global:PreloadedTrack.isReady -and ($candidate.filePath -and $global:PreloadedTrack.filePath -eq $candidate.filePath)) {
@@ -612,9 +599,6 @@ try {
                 Write-Host " Artista  : $($currentTrack.artist)" -ForegroundColor White
                 Write-Host " Album    : $($currentTrack.album)" -ForegroundColor DarkGray
                 Write-Host " Duracion : $duration s ($([math]::Round($duration/60, 2)) min)" -ForegroundColor DarkGray
-
-                # Silenciar inmediatamente la emisión en Supabase mientras se sube el archivo para evitar que los clientes repitan la pista anterior
-                Update-CurrentPlay -title $currentTrack.title -artist "CARGANDO..." -cover $currentTrack.cover -publicUrl "" -isPlaying $true
 
                 # Subir pista actual
                 $uploaded = Upload-Track -filePath $currentTrack.filePath -remoteFilename $remoteFilename
@@ -852,8 +836,6 @@ try {
                         $reqFile = if ($reqParts.Count -gt 2 -and $reqParts[2].Trim()) { $reqParts[2].Trim() } else { "" }
 
                         Write-Host "`n>>> [SOLICITUD AL AIRE] Pista solicitada para emision: $reqTitle" -ForegroundColor Magenta
-                        # Silenciar y actualizar titulo inmediatamente en Supabase para evitar reproduccion residual de la cancion previa
-                        Update-CurrentPlay -title $reqTitle -artist "CARGANDO..." -cover ($currentRemote.station_cover) -publicUrl "" -isPlaying $true
 
                         $matchedReq = $null
                         if ($reqFile) {
@@ -913,7 +895,6 @@ try {
                     # 3. Salto a siguiente cancion al aire solicitado desde la web
                     elseif ($cmdArtist -eq "NEXT_TRACK" -or $cmdName -eq "NEXT_TRACK") {
                         Write-Host "`n>>> [RADIO MANAGER] Siguiente pista solicitada al aire." -ForegroundColor Cyan
-                        Update-CurrentPlay -title "Avanzando pista..." -artist "CARGANDO..." -cover "" -publicUrl "" -isPlaying $true
                         break
                     }
                     else {

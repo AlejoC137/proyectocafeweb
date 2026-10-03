@@ -220,15 +220,6 @@ export function useRadioPlayer(
   const nextTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
-
-    // Silenciar y limpiar inmediatamente el audio previo para evitar reproducir residuos de la cancion anterior
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.removeAttribute('src');
-      audioRef.current.load();
-    }
-
     let newIdx;
 
     if (isShuffle && currentPlaylist.length > 1) {
@@ -266,15 +257,6 @@ export function useRadioPlayer(
   const prevTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
-
-    // Silenciar y limpiar inmediatamente el audio previo
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.removeAttribute('src');
-      audioRef.current.load();
-    }
-
     let newIdx;
 
     if (isShuffle && shuffleHistory.length > 0) {
@@ -299,15 +281,6 @@ export function useRadioPlayer(
   const jumpToTrack = useCallback((index) => {
     if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
     setAudioError(null);
-
-    // Silenciar y limpiar inmediatamente el audio previo para evitar reproducir residuos de la cancion anterior
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.removeAttribute('src');
-      audioRef.current.load();
-    }
-
     if (isShuffle) {
       setShuffleHistory(prev => [...prev, currentTrackIndex]);
     }
@@ -408,11 +381,7 @@ export function useRadioPlayer(
   useEffect(() => {
     if (activeTab === 'youtube') {
       if (audioRef.current) {
-        try { 
-          audioRef.current.pause();
-          audioRef.current.removeAttribute('src');
-          audioRef.current.load();
-        } catch (e) {}
+        try { audioRef.current.pause(); } catch (e) {}
       }
       return;
     }
@@ -427,39 +396,21 @@ export function useRadioPlayer(
         if (isLocalHost) {
           playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
         } else {
-          // En deploy remoto: una URL local:// no se puede reproducir directamente en Vercel.
-          // Silenciar el elemento de audio para esperar en silencio la señal al aire de Supabase.
-          if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            audioRef.current.removeAttribute('src');
-            audioRef.current.load();
+          // En deploy: si ya existe una fuente de streaming válida al aire, preservarla
+          if (audioRef.current.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://')) && !audioRef.current.src.includes('/api/local-audio')) {
+            playableUrl = audioRef.current.src;
+          } else {
+            // No intentar reproducir /api/local-audio en Vercel
+            return;
           }
-          return;
         }
-      }
-
-      // Validar que sea una URL de audio directamente reproducible
-      if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/api/local-audio') && !playableUrl.startsWith('/'))) {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          audioRef.current.removeAttribute('src');
-          audioRef.current.load();
-        }
-        return;
       }
 
       const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';
       const isSameSrc = (currentSrcPath === playableUrl || audioRef.current.src === playableUrl);
 
       if (!isSameSrc) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current.removeAttribute('src');
-        audioRef.current.load();
         audioRef.current.src = playableUrl;
-        audioRef.current.load();
       }
       audioRef.current.volume = isMuted ? 0 : volume;
 
@@ -484,23 +435,11 @@ export function useRadioPlayer(
         }
       }
     } else if (!currentTrack?.url && isPlaying) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current.removeAttribute('src');
-        audioRef.current.load();
-      }
       setIsPlaying(false);
     }
   }, [currentTrack?.url, activeTab, isPlaying]);
 
   const handleTrackEnded = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.removeAttribute('src');
-      audioRef.current.load();
-    }
     if (isRepeatSingle) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;

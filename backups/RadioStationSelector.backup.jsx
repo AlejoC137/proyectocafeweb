@@ -177,17 +177,12 @@ export default function RadioStationSelector({
       setRequestingTrackId(track.id);
       setRequestSuccess(`🎧 Mezclando al aire "${track.title}"...`);
 
-      const isDirectHttp = track.url && (track.url.startsWith('http://') || track.url.startsWith('https://'));
-      const fileInfo = track.fileName || track.filePath || (track.url && track.url.startsWith('local://') ? decodeURIComponent(track.url.replace('local://', '')) : '');
-
-      // Enviar station_url vacía si no es un streaming HTTP directo verificado,
-      // para que ninguna instancia reproduzca el audio anterior en caché mientras el BAT carga o sube la nueva pista.
       const payload = {
         id: 1,
         station_name: track.title,
-        station_artist: `REQUEST:${track.title}||${track.artist || ''}||${fileInfo}`,
+        station_artist: `REQUEST:${track.title}||${track.artist || ''}`,
         station_cover: track.cover || '',
-        station_url: isDirectHttp ? track.url : '',
+        station_url: track.url || '',
         is_playing: true,
         updated_at: new Date().toISOString()
       };

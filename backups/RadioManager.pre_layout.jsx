@@ -2680,12 +2680,12 @@ export default function RadioManager() {
 
   return (
     <div 
-      className={`min-h-screen bg-[#121212] text-white font-sans p-3 sm:p-5 md:p-6 pb-44 sm:pb-36 transition-colors overflow-x-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
+      className={`min-h-screen bg-[#121212] text-white font-sans p-3 sm:p-6 md:p-8 pb-48 sm:pb-36 transition-colors overflow-x-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
     >
-      <div className="max-w-[1920px] mx-auto space-y-4 sm:space-y-5">
+      <div className="max-w-7xl mx-auto space-y-6">
         
         {/* HEADER PRINCIPAL SPOTIFY */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
@@ -2935,15 +2935,15 @@ export default function RadioManager() {
               </div>
             </div>
 
-            {/* GRID DUAL PANEL 50% / 50% (CON ESPACIADO INFERIOR PARA QUE NUNCA SE TRASLAPE CON LOS REPRODUCTORES) */}
-            <div className="w-full mb-32 sm:mb-28">
-              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-5 items-start' : ''}`}>
+            {/* GRID DUAL PANEL 50% / 50% */}
+            <div className="w-full">
+              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start' : ''}`}>
 
                 {/* ========================================================================= */}
                 {/* PANEL IZQUIERDO: BIBLIOTECA COMPLETA DE LA CARPETA (CON PLAY, NEXT, ALEATORIO) */}
                 {/* ========================================================================= */}
                 {(mp3ViewMode === 'split' || mp3ViewMode === 'library') && (
-                  <div className="w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[520px] sm:h-[600px] lg:h-[calc(100vh-230px)] lg:min-h-[480px] lg:max-h-[760px]">
+                  <div className="w-full bg-[#181818] pt-4 sm:pt-6 px-3 sm:px-5 pb-4 sm:pb-5 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[540px] sm:h-[660px] lg:h-[780px]">
                     {/* CABECERA PANEL IZQUIERDO */}
                     <div className="space-y-3 pb-3 border-b border-white/10 pt-1">
                       {/* FILA 1: TÍTULO Y CONTEO */}
@@ -3035,7 +3035,7 @@ export default function RadioManager() {
                     </div>
 
                     {/* CUERPO DEL PANEL IZQUIERDO */}
-                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 mt-3 space-y-1.5">
                       {batCatalog.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
                           <FolderUp className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />
@@ -3252,7 +3252,7 @@ export default function RadioManager() {
                         } catch (err) {}
                       }
                     }}
-                    className={`w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[520px] sm:h-[600px] lg:h-[calc(100vh-230px)] lg:min-h-[480px] lg:max-h-[760px] ${
+                    className={`w-full bg-[#181818] pt-4 sm:pt-6 px-3 sm:px-5 pb-4 sm:pb-5 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[540px] sm:h-[660px] lg:h-[780px] ${
                       isDraggingOverQueue 
                         ? 'border-[#1DB954] bg-[#1DB954]/5 ring-4 ring-[#1DB954]/30 scale-[1.002]' 
                         : 'border-white/10'
@@ -3390,7 +3390,7 @@ export default function RadioManager() {
                     </div>
 
                     {/* CUERPO DEL PANEL DERECHO (LISTA DE CANCIONES DE LA COLA) */}
-                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 mt-3 space-y-1.5">
                       {songs.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
                           <Radio className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />

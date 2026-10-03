@@ -210,7 +210,6 @@ export default function ProyectoRadio() {
   // Sincronización continua de tiempo en vivo emitida desde Radio Manager
   const lastLiveTickRef = useRef({ time: 0, receivedAt: 0, url: '' });
   const lastPlayedTrackKeyRef = useRef('');
-  const lastPlayedSongNameRef = useRef('');
 
   React.useEffect(() => {
     let bc;
@@ -286,15 +285,14 @@ export default function ProyectoRadio() {
     // Si la estación está desautorizada por el switch OFF AIR de Radio Manager
     if (currentPlay.tab === 'OFF_AIR') {
       const audioEl = player.audioRef.current;
-      if (audioEl) {
+      if (audioEl && !audioEl.paused) {
         audioEl.pause();
-        audioEl.currentTime = 0;
-        audioEl.removeAttribute('src');
-        audioEl.load();
       }
       setIsPlaying(false);
       return;
     }
+
+    if (!currentPlay.station_url) return;
 
     // Ignorar señales internas de control o sincronización
     const ignoredControlSignals = ['SYNC', 'BAT_ONLINE', 'CARGANDO...', 'OFFLINE', 'ON_AIR:ON', 'ON_AIR:OFF', 'SHUFFLE', 'PAUSED', 'NEXT_TRACK', 'START_BROADCAST', 'RESUME_BROADCAST', 'FORCE_RELOAD'];
@@ -302,10 +300,7 @@ export default function ProyectoRadio() {
       return;
     }
 
-    const audioEl = player.audioRef.current;
-    if (!audioEl) return;
-
-    let streamUrl = currentPlay.station_url || '';
+    let streamUrl = currentPlay.station_url;
     if (streamUrl && streamUrl.startsWith('local://')) {
       const isLocalHost = typeof window !== 'undefined' && 
         (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -314,31 +309,14 @@ export default function ProyectoRadio() {
       if (isLocalHost) {
         streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       } else {
-        streamUrl = '';
+        // En deploy remoto, esperar a que el .bat emita la URL http
+        return;
       }
     }
 
-    const isNewSong = currentPlay.station_name && lastPlayedSongNameRef.current && currentPlay.station_name !== lastPlayedSongNameRef.current;
+    const audioEl = player.audioRef.current;
+    if (!audioEl) return;
 
-    // Si cambió la canción o la nueva pista no tiene una URL de streaming lista (está cargando o subiendo en el BAT):
-    // Silenciar inmediatamente el audio anterior para no reproducir residuo/fantasma en caché.
-    if (isNewSong || !streamUrl || (!streamUrl.startsWith('http://') && !streamUrl.startsWith('https://') && !streamUrl.startsWith('/api/local-audio'))) {
-      if (isNewSong) {
-        lastPlayedSongNameRef.current = currentPlay.station_name;
-        lastPlayedTrackKeyRef.current = '';
-        if (audioEl) {
-          audioEl.pause();
-          audioEl.currentTime = 0;
-          audioEl.removeAttribute('src');
-          audioEl.load();
-        }
-      }
-      if (!streamUrl || (!streamUrl.startsWith('http://') && !streamUrl.startsWith('https://') && !streamUrl.startsWith('/api/local-audio'))) {
-        return; // Esperar en silencio a que llegue la URL real del nuevo tema
-      }
-    }
-
-    lastPlayedSongNameRef.current = currentPlay.station_name;
     const trackKey = `${currentPlay.station_name}__${streamUrl}`;
 
     // Si es la misma canción ya cargada, solo manejar play/pause sin recargar
@@ -356,12 +334,6 @@ export default function ProyectoRadio() {
     // Nueva canción al aire:
     lastPlayedTrackKeyRef.current = trackKey;
     isApplyingRemoteChange.current = true;
-
-    // Detener y resetear antes de asignar nuevo src para evitar reproducción fantasma
-    audioEl.pause();
-    audioEl.currentTime = 0;
-    audioEl.removeAttribute('src');
-    audioEl.load();
 
     if (currentPlay.tab) {
       let resolvedTab = null;
@@ -552,21 +524,6 @@ export default function ProyectoRadio() {
   const borderColor = "border-[#1F2937] dark:border-slate-700";
   const shadowColor = "shadow-[6px_6px_0px_0px_rgba(31,41,55,1)] dark:shadow-[6px_6px_0px_0px_rgba(239,68,68,0.5)]";
 
-  const handleAudioEnded = () => {
-    const audioEl = player.audioRef?.current;
-    if (audioEl) {
-      audioEl.pause();
-      audioEl.currentTime = 0;
-      audioEl.removeAttribute('src');
-      audioEl.load();
-    }
-    // En modo radio sincronizada (supabase/live), no auto-avanzar con nextTrack local para no disparar audio en caché.
-    // Simplemente detenerse en silencio; el BAT o RadioManager avanzará la estación y enviará la nueva señal por Supabase.
-    if (activeTab === 'youtube') {
-      player.handleTrackEnded();
-    }
-  };
-
   return (
     <div className={`w-full min-h-screen relative font-sans overflow-x-hidden pb-8 transition-colors duration-300 ${
       isDarkMode ? 'dark bg-[#0b0c10] text-white' : 'bg-cream-bg text-black'
@@ -747,18 +704,22 @@ export default function ProyectoRadio() {
         }}
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
+          // Si falló una URL en producción deploy, reconectar a la emisión al aire de Supabase
           const audioEl = player.audioRef?.current;
-          if (audioEl) {
-            audioEl.pause();
-            audioEl.removeAttribute('src');
-            audioEl.load();
+          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http')) {
+            if (audioEl.src !== currentPlay.station_url) {
+              console.warn('[ProyectoRadio] Error en fuente, reconectando a señal al aire:', currentPlay.station_url);
+              audioEl.src = currentPlay.station_url;
+              audioEl.play().catch(() => {});
+              return;
+            }
           }
           if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {
-            console.warn(`[ProyectoRadio] Esperando señal válida para "${currentTrack.title}"...`);
+            setAudioError(`No se pudo cargar "${currentTrack.title}". Verifica la conexión o inicia el transmisor local.`);
             setIsPlaying(false);
           }
         }}
-        onEnded={handleAudioEnded}
+        onEnded={player.handleTrackEnded}
       />
     </div>
   );
