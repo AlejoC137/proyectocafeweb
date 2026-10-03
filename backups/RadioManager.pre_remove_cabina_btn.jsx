@@ -178,9 +178,9 @@ export default function RadioManager() {
   useEffect(() => {
     isAirMutedRef.current = isAirMuted;
     if (masterAirAudioRef.current) {
-      masterAirAudioRef.current.muted = isAirMuted || airVolume === 0;
+      masterAirAudioRef.current.muted = !isPlayingLiveSignal || isAirMuted;
     }
-  }, [isAirMuted, airVolume]);
+  }, [isAirMuted, isPlayingLiveSignal]);
 
   useEffect(() => {
     previewVolumeRef.current = previewVolume;
@@ -767,20 +767,12 @@ export default function RadioManager() {
             const previewArtist = parts[2] || '';
             const previewDur = Number(parts[3]) || 180;
 
-            // Validar que la señal corresponda a la canción actualmente solicitada
-            const reqTitle = requestedPreviewTitleRef.current;
-            if (reqTitle && previewTitle) {
-              const pNorm = previewTitle.trim().toLowerCase();
-              if (!pNorm.includes(reqTitle) && !reqTitle.includes(pNorm)) {
-                console.log(`[Preview] Esperando "${reqTitle}", ignorando señal previa "${previewTitle}"`);
-                return;
-              }
-            }
-
             lastLoadedPreviewTabRef.current = row.tab;
 
             if (previewUrl && audioRef.current) {
-              audioRef.current.src = previewUrl;
+              if (audioRef.current.src !== previewUrl) {
+                audioRef.current.src = previewUrl;
+              }
               audioRef.current.currentTime = 0;
               setPreviewDuration(previewDur);
               setPreviewTrack(prev => ({
@@ -790,7 +782,7 @@ export default function RadioManager() {
                 duration: previewDur
               }));
               setIsPlayingPreview(true);
-              audioRef.current.play().catch(err => console.warn("Autoplay pre-escucha diferido:", err));
+              audioRef.current.play().catch(err => console.warn("Autoplay pre-escucha:", err));
               setSuccess(`🎧 Reproduciendo en Biblioteca: "${previewTitle}"`);
             }
             return; // ¡TOTALMENTE AISLADO! No toca la emisión al aire ni los oyentes
@@ -806,37 +798,25 @@ export default function RadioManager() {
           const airAudio = masterAirAudioRef.current;
           if (airAudio && row.station_name && row.station_name !== lastAirTrackNameRef.current) {
             lastAirTrackNameRef.current = row.station_name;
-            // Si la nueva pista no tiene URL HTTP lista todavía (está subiendo en el BAT):
-            // Silenciar inmediatamente el monitor para que no siga sonando la pista anterior en caché
+            // Pausar audio anterior para que no suene residualmente
             if (!row.station_url || (!row.station_url.startsWith('http://') && !row.station_url.startsWith('https://'))) {
               airAudio.pause();
               airAudio.currentTime = 0;
-              airAudio.removeAttribute('src');
-              airAudio.load();
-              setIsPlayingLiveSignal(false);
             }
           }
 
-          // Actualizar la fuente del monitor de cabina si se recibió la señal en vivo transmitida por el .bat
+          // Reproducir en streaming inmediato tan pronto como llega la URL del stream
           if (row.station_url && (row.station_url.startsWith('http://') || row.station_url.startsWith('https://'))) {
             if (airAudio) {
-              const isDifferent = airAudio.src !== row.station_url;
-              if (isDifferent) {
-                airAudio.pause();
-                airAudio.currentTime = 0;
-                airAudio.removeAttribute('src');
-                airAudio.load();
+              if (airAudio.src !== row.station_url) {
                 airAudio.src = row.station_url;
-                airAudio.load();
+                airAudio.currentTime = 0;
               }
               if (isPlayingLiveSignalRef.current && row.is_playing) {
                 airAudio.muted = false;
                 airAudio.volume = isMutedRef.current ? 0 : volumeRef.current;
                 airAudio.play().catch(err => {
-                  console.warn("Autoplay diferido al recibir señal del BAT:", err);
-                  airAudio.addEventListener('canplay', () => {
-                    airAudio.play().catch(() => {});
-                  }, { once: true });
+                  console.warn("Autoplay diferido al recibir señal:", err);
                 });
               }
             }
@@ -1255,20 +1235,31 @@ export default function RadioManager() {
     setPreviewTime(0);
     setIsPlayingPreview(false); // Pausa explícita mientras se recibe el audio del BAT
 
-    // Limpiar completamente el audio anterior para que NO pueda sonar de nuevo
+    userStartedPreviewRef.current = true;
+    setIsPlayingPreview(true);
+
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.removeAttribute('src');
-      audioRef.current.load();
+      audioRef.current.currentTime = 0;
     }
 
-    // Registrar la pista solicitada para ignorar señales anteriores en tránsito
     requestedPreviewTitleRef.current = (song.title || '').trim().toLowerCase();
     lastLoadedPreviewTabRef.current = '';
 
+    // Si tiene URL directa HTTP, reproducir de inmediato
+    if (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://'))) {
+      if (audioRef.current) {
+        audioRef.current.src = song.url;
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => console.warn("Autoplay directo pre-escucha:", err));
+        setSuccess(`🎧 Reproduciendo en Biblioteca: "${song.title}"`);
+        return;
+      }
+    }
+
     // En localhost, si el endpoint de Vite está disponible, cargar audio directo
     const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.includes('localhost') || window.location.port === '5173');
 
     if (isLocal && (song.fileName || song.filePath)) {
       const localAudioUrl = `/api/local-audio?file=${encodeURIComponent(song.fileName || song.filePath)}`;
@@ -1276,13 +1267,12 @@ export default function RadioManager() {
         audioRef.current.src = localAudioUrl;
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(err => console.warn("Autoplay local diferido:", err));
-        setIsPlayingPreview(true);
         setSuccess(`🎧 Reproduciendo en Biblioteca: "${song.title}"`);
         return;
       }
     }
 
-    setSuccess(`⏳ Solicitando pista "${song.title}" al BAT... (en pausa hasta recibir audio)`);
+    setSuccess(`⏳ Solicitando pista "${song.title}" al BAT...`);
 
     // Enviar solicitud de pre-escucha en PARALELO vía columna 'tab' (SIN TOCAR station_artist ni el aire)
     try {
@@ -1497,16 +1487,17 @@ export default function RadioManager() {
     if (!song) return;
     setBottomPlayerMode('live');
     try {
-      // 1. Pausar y limpiar audio anterior inmediatamente para evitar que vuelva a sonar en caché
       const airAudio = masterAirAudioRef.current;
       if (airAudio) {
         airAudio.pause();
         airAudio.currentTime = 0;
-        airAudio.removeAttribute('src');
-        airAudio.load();
       }
 
-      // Resolver URL de audio directo si existe para ESTA canción específica (nunca de la anterior)
+      // Mantener la señal activa para el DJ
+      setIsPlayingLiveSignal(true);
+      isPlayingLiveSignalRef.current = true;
+
+      // Resolver URL de audio directo si existe para esta canción
       const directAudioUrl = getPreviewAudioUrl(song) || (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://')) ? song.url : '');
 
       setOnAirTrack(prev => ({
@@ -1514,34 +1505,33 @@ export default function RadioManager() {
         station_name: song.title,
         station_artist: song.artist || 'Radio Café',
         station_cover: song.cover || '',
-        station_url: directAudioUrl || '',
+        station_url: directAudioUrl || prev?.station_url || '',
         is_playing: true,
         updated_at: new Date().toISOString()
       }));
 
-      // Reproducir en el monitor de cabina solo si existe una URL de audio directa y válida para esta canción
+      // Si existe audio directo, arrancar reproducción inmediata en streaming
       if (airAudio && directAudioUrl && (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://') || directAudioUrl.startsWith('/api/local-audio'))) {
         airAudio.src = directAudioUrl;
+        airAudio.currentTime = 0;
         airAudio.muted = false;
         airAudio.volume = isMuted ? 0 : volume;
         airAudio.play().catch(() => {});
-        setIsPlayingLiveSignal(true);
-      } else {
-        // Si no hay URL directa aún (el BAT debe subirla a Supabase Storage), esperar en silencio
-        setIsPlayingLiveSignal(false);
       }
 
-      // 2. Notificar inmediatamente al transmisor .bat y a Supabase
-      // Si no hay URL directa verificada, se envía station_url vacía para que ninguna instancia reproduzca caché previo
+      // Notificar al transmisor .bat y a Supabase
       const fileInfo = song.fileName || song.filePath || (song.url && song.url.startsWith('local://') ? decodeURIComponent(song.url.replace('local://', '')) : '');
-      await supabase.from('radio_current_play').update({
+      const updatePayload = {
         station_name: song.title,
         station_artist: `REQUEST:${song.title}||${song.artist || ''}||${fileInfo}`,
         station_cover: song.cover || '',
-        station_url: (directAudioUrl && !directAudioUrl.startsWith('local://')) ? directAudioUrl : '',
         is_playing: true,
         updated_at: new Date().toISOString()
-      }).eq('id', 1);
+      };
+      if (directAudioUrl && !directAudioUrl.startsWith('local://')) {
+        updatePayload.station_url = directAudioUrl;
+      }
+      await supabase.from('radio_current_play').update(updatePayload).eq('id', 1);
 
       // Reiniciar reloj local a 0s
       setAirTime(0);
@@ -1570,8 +1560,6 @@ export default function RadioManager() {
     if (airAudio) {
       airAudio.pause();
       airAudio.currentTime = 0;
-      airAudio.removeAttribute('src');
-      airAudio.load();
     }
     if (songs.length === 0) return;
     try {
@@ -1687,8 +1675,6 @@ export default function RadioManager() {
     if (airAudio) {
       airAudio.pause();
       airAudio.currentTime = 0;
-      airAudio.removeAttribute('src');
-      airAudio.load();
     }
 
     if (songs.length === 0) {
@@ -4346,10 +4332,22 @@ export default function RadioManager() {
                   </div>
                 </div>
 
-                {/* Control de Volumen Monitor Al Aire */}
+                {/* Monitor Cabina y Volumen Rojo */}
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => setIsAirMuted(!isAirMuted)} className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" title={isAirMuted ? "Activar audio" : "Silenciar"}>
+                  <button
+                    onClick={handleToggleListenLive}
+                    className={`px-1.5 py-1 sm:py-0.5 rounded text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition border touch-manipulation ${
+                      isPlayingLiveSignal 
+                        ? 'bg-red-600/30 border-red-500 text-red-300' 
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                    title={isPlayingLiveSignal ? "Silenciar monitor de cabina" : "Escuchar emisión al aire en cabina"}
+                  >
+                    {isPlayingLiveSignal ? '🔊 Cabina ON' : '🔇 Cabina OFF'}
+                  </button>
+
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <button onClick={() => setIsAirMuted(!isAirMuted)} className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation">
                       {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
                     </button>
                     <input 
@@ -4362,7 +4360,7 @@ export default function RadioManager() {
                         setAirVolume(Number(e.target.value));
                         setIsAirMuted(false);
                       }}
-                      className="w-16 sm:w-20 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
+                      className="w-14 sm:w-16 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
                       title="Volumen Monitor Al Aire"
                     />
                   </div>

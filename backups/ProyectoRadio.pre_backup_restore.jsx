@@ -165,7 +165,7 @@ export default function ProyectoRadio() {
   // Telemetría de presencia para reportar estado y oyentes activos a Radio Manager
   const presenceData = useMemo(() => ({
     isPlaying,
-    trackTitle: currentTrack?.title || 'En espera',
+    trackTitle: currentTrack?.title || 'Radio al Aire',
     artist: currentTrack?.artist || '',
     volume: playerRef.current?.volume !== undefined ? playerRef.current.volume : 0.85,
     isMuted: Boolean(playerRef.current?.isMuted)
@@ -186,7 +186,11 @@ export default function ProyectoRadio() {
     isApplyingRemoteChange,
     currentTrackIndex,
     setCurrentTrackIndex,
-    null // Oyente: NO altera el volumen de la estación
+    null, // Oyente: NO altera el volumen de la estación
+    isPlaying,
+    setIsPlaying,
+    audioError,
+    setAudioError
   );
   playerRef.current = player;
 
@@ -210,6 +214,7 @@ export default function ProyectoRadio() {
   // Sincronización continua de tiempo en vivo emitida desde Radio Manager
   const lastLiveTickRef = useRef({ time: 0, receivedAt: 0, url: '' });
   const lastPlayedTrackKeyRef = useRef('');
+  const lastPlayedSongNameRef = useRef('');
 
   React.useEffect(() => {
     let bc;
@@ -265,15 +270,12 @@ export default function ProyectoRadio() {
   };
 
   const applyLiveSeek = (audioEl) => {
-    if (!audioEl) return;
+    if (!audioEl || !Number.isFinite(audioEl.duration) || audioEl.duration <= 0) return;
     const targetOffset = getLiveBroadcastOffset(audioEl.duration);
-    if (targetOffset > 1) {
+    if (targetOffset > 1 && targetOffset < audioEl.duration) {
       try {
-        const seekPos = (Number.isFinite(audioEl.duration) && audioEl.duration > 0)
-          ? (targetOffset % audioEl.duration)
-          : targetOffset;
-        audioEl.currentTime = seekPos;
-        console.log(`[ProyectoRadio] 📻 Señal al aire sincronizada a ${seekPos.toFixed(1)}s`);
+        audioEl.currentTime = targetOffset;
+        console.log(`[ProyectoRadio] 📻 Señal al aire sincronizada a ${targetOffset.toFixed(1)}s`);
       } catch (err) {}
     }
   };
@@ -285,14 +287,13 @@ export default function ProyectoRadio() {
     // Si la estación está desautorizada por el switch OFF AIR de Radio Manager
     if (currentPlay.tab === 'OFF_AIR') {
       const audioEl = player.audioRef.current;
-      if (audioEl && !audioEl.paused) {
+      if (audioEl) {
         audioEl.pause();
+        audioEl.currentTime = 0;
       }
       setIsPlaying(false);
       return;
     }
-
-    if (!currentPlay.station_url) return;
 
     // Ignorar señales internas de control o sincronización
     const ignoredControlSignals = ['SYNC', 'BAT_ONLINE', 'CARGANDO...', 'OFFLINE', 'ON_AIR:ON', 'ON_AIR:OFF', 'SHUFFLE', 'PAUSED', 'NEXT_TRACK', 'START_BROADCAST', 'RESUME_BROADCAST', 'FORCE_RELOAD'];
@@ -300,7 +301,10 @@ export default function ProyectoRadio() {
       return;
     }
 
-    let streamUrl = currentPlay.station_url;
+    const audioEl = player.audioRef.current;
+    if (!audioEl) return;
+
+    let streamUrl = currentPlay.station_url || '';
     if (streamUrl && streamUrl.startsWith('local://')) {
       const isLocalHost = typeof window !== 'undefined' && 
         (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -309,22 +313,37 @@ export default function ProyectoRadio() {
       if (isLocalHost) {
         streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       } else {
-        // En deploy remoto, esperar a que el .bat emita la URL http
-        return;
+        streamUrl = '';
       }
     }
 
-    const audioEl = player.audioRef.current;
-    if (!audioEl) return;
+    const isNewSong = currentPlay.station_name && lastPlayedSongNameRef.current && currentPlay.station_name !== lastPlayedSongNameRef.current;
 
+    // Si cambió la canción o la nueva pista no tiene una URL de streaming lista (está cargando o subiendo en el BAT):
+    // Silenciar inmediatamente el audio anterior para no reproducir residuo/fantasma en caché.
+    if (isNewSong || !streamUrl || (!streamUrl.startsWith('http://') && !streamUrl.startsWith('https://') && !streamUrl.startsWith('/api/local-audio'))) {
+      if (isNewSong) {
+        lastPlayedSongNameRef.current = currentPlay.station_name;
+        lastPlayedTrackKeyRef.current = '';
+        if (audioEl) {
+          audioEl.pause();
+          audioEl.currentTime = 0;
+        }
+      }
+      if (!streamUrl || (!streamUrl.startsWith('http://') && !streamUrl.startsWith('https://') && !streamUrl.startsWith('/api/local-audio'))) {
+        return; // Esperar en silencio a que llegue la URL real del nuevo tema
+      }
+    }
+
+    lastPlayedSongNameRef.current = currentPlay.station_name;
     const trackKey = `${currentPlay.station_name}__${streamUrl}`;
 
     // Si es la misma canción ya cargada, solo manejar play/pause sin recargar
     if (lastPlayedTrackKeyRef.current === trackKey) {
-      if (currentPlay.is_playing && !player.showAutoStart) {
+      if (currentPlay.is_playing) {
         setIsPlaying(true);
         if (audioEl.paused) audioEl.play().catch(() => {});
-      } else if (!currentPlay.is_playing) {
+      } else {
         audioEl.pause();
         setIsPlaying(false);
       }
@@ -334,6 +353,9 @@ export default function ProyectoRadio() {
     // Nueva canción al aire:
     lastPlayedTrackKeyRef.current = trackKey;
     isApplyingRemoteChange.current = true;
+
+    audioEl.pause();
+    audioEl.currentTime = 0;
 
     if (currentPlay.tab) {
       let resolvedTab = null;
@@ -351,21 +373,39 @@ export default function ProyectoRadio() {
 
     const targetVol = player.isMuted ? 0 : player.volume;
     audioEl.volume = targetVol;
-    audioEl.src = streamUrl;
-    audioEl.load();
+    if (audioEl.src !== streamUrl) {
+      audioEl.src = streamUrl;
+    }
 
     const startTrack = () => {
       applyLiveSeek(audioEl);
-      if (currentPlay.is_playing && !player.showAutoStart) {
+      if (currentPlay.is_playing) {
         setIsPlaying(true);
-        audioEl.play().catch(() => {});
+        audioEl.muted = false;
+        audioEl.volume = player.isMuted ? 0 : (player.volume || 0.85);
+        audioEl.play().catch(err => {
+          console.warn("[ProyectoRadio] Autoplay diferido por política del navegador:", err.message);
+          player.setShowAutoStart(true);
+        });
       }
     };
+
+    audioEl.muted = false;
+    audioEl.volume = player.isMuted ? 0 : (player.volume || 0.85);
+    try { audioEl.load(); } catch (e) {}
 
     if (audioEl.readyState >= 1) {
       startTrack();
     } else {
-      audioEl.addEventListener('loadedmetadata', startTrack, { once: true });
+      let started = false;
+      const onReady = () => {
+        if (!started) {
+          started = true;
+          startTrack();
+        }
+      };
+      audioEl.addEventListener('loadedmetadata', onReady, { once: true });
+      audioEl.addEventListener('canplay', onReady, { once: true });
     }
 
     setTimeout(() => {
@@ -406,9 +446,89 @@ export default function ProyectoRadio() {
     return () => window.removeEventListener('RADIO_FORCE_RESTART', handleForceRestartEvent);
   }, []);
 
+  const resolveBestAudioUrl = () => {
+    const isLocalHost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || 
+       window.location.hostname === '127.0.0.1' || 
+       window.location.hostname === '::1' ||
+       window.location.hostname.includes('localhost'));
+
+    const audioEl = player.audioRef?.current;
+
+    // 1. Emisión global al aire transmitida por Supabase / radio_station.ps1
+    if (currentPlay?.station_url && (currentPlay.station_url.startsWith('http://') || currentPlay.station_url.startsWith('https://'))) {
+      return currentPlay.station_url;
+    }
+
+    // 2. Si estamos en la pestaña de Radios en Vivo:
+    if (activeTab === 'live') {
+      const station = currentTrack || radioData.apiStations?.[0];
+      return station?.url || 'https://streams.ilovemusic.de/iloveradio17.mp3';
+    }
+
+    // 3. Pista de la lista si tiene URL HTTP remota directa
+    if (currentTrack?.url && (currentTrack.url.startsWith('http://') || currentTrack.url.startsWith('https://'))) {
+      return currentTrack.url;
+    }
+
+    // 4. Pista local únicamente si estamos en localhost con servidor de desarrollo
+    if (isLocalHost && currentTrack?.url && currentTrack.url.startsWith('/api/local-audio')) {
+      return currentTrack.url;
+    }
+
+    // 5. URL ya cargada previamente en el elemento de audio si es válida
+    if (audioEl?.src && (audioEl.src.startsWith('http://') || audioEl.src.startsWith('https://')) && !audioEl.src.includes('/api/local-audio')) {
+      return audioEl.src;
+    }
+
+    // 6. Respaldo definitivo online 24/7 (Lofi Cafe Radio) para garantizar que NUNCA haya silencio
+    return radioData.apiStations?.[0]?.url || 'https://streams.ilovemusic.de/iloveradio17.mp3';
+  };
+
+  const handleTogglePlay = () => {
+    const audioEl = player.audioRef?.current;
+    if (!audioEl) return;
+
+    if (activeTab === 'youtube' || currentTrack?.type === 'youtube') {
+      window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
+      return;
+    }
+
+    if (isPlaying) {
+      audioEl.pause();
+      setIsPlaying(false);
+      player.setIsPlaying(false);
+      playerRef.current?.setIsPlaying(false);
+    } else {
+      player.setShowAutoStart(false);
+      const targetUrl = resolveBestAudioUrl();
+
+      if (targetUrl) {
+        if (audioEl.src !== targetUrl && audioEl.src !== new URL(targetUrl, window.location.origin).href) {
+          audioEl.src = targetUrl;
+        }
+        audioEl.muted = false;
+        audioEl.volume = player.isMuted ? 0 : (player.volume || 0.85);
+
+        const playPromise = audioEl.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setIsPlaying(true);
+            player.setIsPlaying(true);
+            playerRef.current?.setIsPlaying(true);
+            applyLiveSeek(audioEl);
+          }).catch(err => {
+            console.warn("[ProyectoRadio] Error al reproducir audio:", err.message);
+            setIsPlaying(false);
+            player.setIsPlaying(false);
+          });
+        }
+      }
+    }
+  };
+
   const handleAutoStart = () => {
     player.setShowAutoStart(false);
-    setIsPlaying(true);
 
     if (activeTab === 'youtube' || currentTrack?.type === 'youtube') {
       if (player.audioRef.current) {
@@ -420,74 +540,33 @@ export default function ProyectoRadio() {
       return;
     }
 
-    if (activeTab === 'live') {
-      const station = currentTrack || radioData.apiStations[0];
-      const stationUrl = station?.url;
-      if (stationUrl && player.audioRef.current) {
-        const audioEl = player.audioRef.current;
-        audioEl.src = stationUrl;
-        audioEl.volume = player.isMuted ? 0 : player.volume;
-        audioEl.play().then(() => {
+    const audioEl = player.audioRef?.current;
+    if (!audioEl) return;
+
+    const targetUrl = resolveBestAudioUrl();
+
+    if (targetUrl) {
+      if (audioEl.src !== targetUrl && audioEl.src !== new URL(targetUrl, window.location.origin).href) {
+        audioEl.src = targetUrl;
+      }
+      audioEl.muted = false;
+      audioEl.volume = player.isMuted ? 0 : (player.volume || 0.85);
+
+      applyLiveSeek(audioEl);
+
+      const promise = audioEl.play();
+      if (promise !== undefined) {
+        promise.then(() => {
           setIsPlaying(true);
-        }).catch(err => {
-          console.warn("Autoplay block (Live Radio):", err.message);
+          player.setIsPlaying(true);
+          playerRef.current?.setIsPlaying(true);
+          applyLiveSeek(audioEl);
+        }).catch((err) => {
+          console.warn("[ProyectoRadio] Autoplay bloqueado por el navegador:", err.message);
+          setIsPlaying(false);
+          player.setIsPlaying(false);
         });
-        return;
       }
-    }
-
-    // Resolve local:// URLs to the API proxy path or Supabase Storage in production
-    const resolveUrl = (raw) => {
-      if (!raw) return null;
-      if (raw.startsWith('local://')) {
-        const isLocalHost = typeof window !== 'undefined' && 
-          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        const rawName = decodeURIComponent(raw.replace('local://', ''));
-        if (isLocalHost) {
-          return `/api/local-audio?file=${encodeURIComponent(rawName)}`;
-        }
-        return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/live_stream.mp3`;
-      }
-      return raw;
-    };
-
-    const targetUrl =
-      (currentPlay?.station_url && (currentPlay.station_url.startsWith('http://') || currentPlay.station_url.startsWith('https://')) ? currentPlay.station_url : null) ||
-      resolveUrl(currentTrack?.url) ||
-      resolveUrl(player.pendingPlayRef.current) ||
-      resolveUrl(radioData.supabasePlaylist[0]?.url) ||
-      // Last resort: whatever is already loaded in the audio element
-      player.audioRef.current?.src || null;
-
-    if (!targetUrl || !player.audioRef.current) {
-      console.warn("AutoStart: no se encontró una URL válida para reproducir.");
-      setIsPlaying(false);
-      return;
-    }
-
-    const audioEl = player.audioRef.current;
-    audioEl.volume = player.isMuted ? 0 : player.volume;
-
-    const srcChanged = audioEl.src !== targetUrl && audioEl.src !== new URL(targetUrl, window.location.origin).href;
-    if (srcChanged) {
-      audioEl.src = targetUrl;
-      audioEl.load();
-    }
-
-    applyLiveSeek(audioEl);
-
-    const promise = audioEl.play();
-    if (promise !== undefined) {
-      promise.then(() => {
-        setIsPlaying(true);
-        applyLiveSeek(audioEl);
-      }).catch((err) => {
-        if (err.name === 'AbortError' || err.message?.includes('interrupted') || err.message?.includes('new load request')) {
-          return;
-        }
-        console.warn("Autoplay block (AutoStart):", err.message);
-        setIsPlaying(false);
-      });
     }
   };
 
@@ -523,6 +602,19 @@ export default function ProyectoRadio() {
 
   const borderColor = "border-[#1F2937] dark:border-slate-700";
   const shadowColor = "shadow-[6px_6px_0px_0px_rgba(31,41,55,1)] dark:shadow-[6px_6px_0px_0px_rgba(239,68,68,0.5)]";
+
+  const handleAudioEnded = () => {
+    const audioEl = player.audioRef?.current;
+    if (audioEl) {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+    }
+    // En modo radio sincronizada (supabase/live), no auto-avanzar con nextTrack local para no disparar audio en caché.
+    // Simplemente detenerse en silencio; el BAT o RadioManager avanzará la estación y enviará la nueva señal por Supabase.
+    if (activeTab === 'youtube') {
+      player.handleTrackEnded();
+    }
+  };
 
   return (
     <div className={`w-full min-h-screen relative font-sans overflow-x-hidden pb-8 transition-colors duration-300 ${
@@ -599,7 +691,7 @@ export default function ProyectoRadio() {
               isShuffle={player.isShuffle}
               setIsShuffle={player.setIsShuffle}
               prevTrack={player.prevTrack}
-              togglePlay={player.togglePlay}
+              togglePlay={handleTogglePlay}
               nextTrack={player.nextTrack}
               jumpToTrack={player.jumpToTrack}
               queueWindow={player.queueWindow}
@@ -704,22 +796,26 @@ export default function ProyectoRadio() {
         }}
         onTimeUpdate={player.handleTimeUpdate}
         onError={() => {
-          // Si falló una URL en producción deploy, reconectar a la emisión al aire de Supabase
           const audioEl = player.audioRef?.current;
-          if (audioEl && currentPlay?.station_url && currentPlay.station_url.startsWith('http')) {
-            if (audioEl.src !== currentPlay.station_url) {
-              console.warn('[ProyectoRadio] Error en fuente, reconectando a señal al aire:', currentPlay.station_url);
-              audioEl.src = currentPlay.station_url;
-              audioEl.play().catch(() => {});
-              return;
+          console.warn("[ProyectoRadio] Error cargando fuente de audio, aplicando fallback en vivo...");
+          if (audioEl) {
+            audioEl.pause();
+            audioEl.currentTime = 0;
+            // Si falló una URL local o caída, cambiar a la radio online de respaldo en vez de quedar en silencio
+            if (activeTab !== 'youtube') {
+              const fallback = radioData.apiStations?.[0]?.url || 'https://streams.ilovemusic.de/iloveradio17.mp3';
+              if (audioEl.src !== fallback) {
+                audioEl.src = fallback;
+                audioEl.muted = false;
+                audioEl.volume = player.volume || 0.85;
+                if (isPlaying) {
+                  audioEl.play().catch(() => {});
+                }
+              }
             }
           }
-          if (isPlaying && currentTrack?.url && activeTab !== 'youtube' && currentTrack?.type !== 'youtube') {
-            setAudioError(`No se pudo cargar "${currentTrack.title}". Verifica la conexión o inicia el transmisor local.`);
-            setIsPlaying(false);
-          }
         }}
-        onEnded={player.handleTrackEnded}
+        onEnded={handleAudioEnded}
       />
     </div>
   );
