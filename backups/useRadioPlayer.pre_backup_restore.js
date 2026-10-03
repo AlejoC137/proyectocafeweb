@@ -183,7 +183,7 @@ export function useRadioPlayer(
   }, [currentPlaylist, currentTrackIndex, isShuffle, shuffleHistory]);
 
   const togglePlay = () => {
-    if (!currentTrack?.url || !audioRef.current) return;
+    if (!audioRef.current) return;
 
     setAudioError(null);
     if (isPlaying) {
@@ -195,6 +195,17 @@ export function useRadioPlayer(
       }
     } else {
       setShowAutoStart(false);
+      // Asegurar que exista una fuente de audio antes de llamar play()
+      if (!audioRef.current.src || audioRef.current.src === '' || audioRef.current.src === window.location.href) {
+        let playableUrl = currentTrack?.station_url || currentTrack?.stream_url || currentTrack?.url;
+        if (!playableUrl || (!playableUrl.startsWith('http') && !playableUrl.startsWith('/api/local-audio'))) {
+          playableUrl = 'https://streams.ilovemusic.de/iloveradio17.mp3';
+        }
+        audioRef.current.src = playableUrl;
+      }
+      audioRef.current.muted = Boolean(isMuted);
+      audioRef.current.volume = isMuted ? 0 : (volume || 0.85);
+
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise
@@ -220,6 +231,13 @@ export function useRadioPlayer(
   const nextTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
+
+    // Pausar audio anterior
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
     let newIdx;
 
     if (isShuffle && currentPlaylist.length > 1) {
@@ -257,6 +275,13 @@ export function useRadioPlayer(
   const prevTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
+
+    // Pausar audio anterior
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
     let newIdx;
 
     if (isShuffle && shuffleHistory.length > 0) {
@@ -281,6 +306,13 @@ export function useRadioPlayer(
   const jumpToTrack = useCallback((index) => {
     if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
     setAudioError(null);
+
+    // Pausar audio anterior
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
     if (isShuffle) {
       setShuffleHistory(prev => [...prev, currentTrackIndex]);
     }
@@ -381,38 +413,57 @@ export function useRadioPlayer(
   useEffect(() => {
     if (activeTab === 'youtube') {
       if (audioRef.current) {
-        try { audioRef.current.pause(); } catch (e) {}
+        try { 
+          audioRef.current.pause();
+        } catch (e) {}
+      }
+      return;
+    }
+
+    // Si el elemento de audio ya tiene o está reproduciendo un stream válido (Supabase Storage o Radio En Vivo):
+    // ¡PRESERVARLO! NO pausarlo ni sobreescribirlo con pistas locales de la lista
+    if (audioRef.current && audioRef.current.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://')) && !audioRef.current.src.includes('/api/local-audio')) {
+      if (isPlaying && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
       }
       return;
     }
 
     if (audioRef.current && currentTrack?.url) {
       const isLocalHost = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        (window.location.hostname === 'localhost' || 
+         window.location.hostname === '127.0.0.1' || 
+         window.location.hostname === '::1' ||
+         window.location.hostname.includes('localhost'));
 
       let playableUrl = currentTrack.station_url || currentTrack.stream_url || currentTrack.url;
-      if (playableUrl && playableUrl.startsWith('local://')) {
-        const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
-        if (isLocalHost) {
-          playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
-        } else {
-          // En deploy: si ya existe una fuente de streaming válida al aire, preservarla
-          if (audioRef.current.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://')) && !audioRef.current.src.includes('/api/local-audio')) {
-            playableUrl = audioRef.current.src;
-          } else {
-            // No intentar reproducir /api/local-audio en Vercel
-            return;
-          }
+      const isLocalUrl = playableUrl && (playableUrl.startsWith('local://') || playableUrl.startsWith('/api/local-audio') || !playableUrl.startsWith('http'));
+
+      if (isLocalUrl) {
+        if (!isLocalHost) {
+          // En deploy remoto: NO intentar reproducir URLs locales que dan 404
+          return;
         }
+        if (playableUrl.startsWith('local://')) {
+          const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
+          playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        }
+      }
+
+      if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/api/local-audio') && !playableUrl.startsWith('/'))) {
+        return;
       }
 
       const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';
       const isSameSrc = (currentSrcPath === playableUrl || audioRef.current.src === playableUrl);
 
       if (!isSameSrc) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
         audioRef.current.src = playableUrl;
       }
-      audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.muted = Boolean(isMuted);
+      audioRef.current.volume = isMuted ? 0 : (volume || 0.85);
 
       if (isPlaying) {
         if (!isSameSrc) {
@@ -435,11 +486,21 @@ export function useRadioPlayer(
         }
       }
     } else if (!currentTrack?.url && isPlaying) {
-      setIsPlaying(false);
+      if (audioRef.current && (!audioRef.current.src || !audioRef.current.src.startsWith('http'))) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
+        setIsPlaying(false);
+      }
     }
   }, [currentTrack?.url, activeTab, isPlaying]);
 
   const handleTrackEnded = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     if (isRepeatSingle) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
