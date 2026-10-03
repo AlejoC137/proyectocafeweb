@@ -1,41 +1,64 @@
 /**
  * MCP Server endpoint for Gemini / Antigravity integration
- * Implements Model Context Protocol (MCP) over HTTP
+ * Implements Model Context Protocol (MCP) over HTTP / Serverless
  * https://spec.modelcontextprotocol.io/
  *
- * CRUD completo de Agenda con Doble Capa de Protección:
- * 1. Confirmación obligatoria (Safety Gate) en agenda_eliminar
- * 2. Borrado Lógico (Soft Delete) por defecto con opción de hard delete
- * 3. Snapshot previo automático en agenda_actualizar y agenda_eliminar (Audit / Rollback)
- * 4. Nueva herramienta: agenda_restaurar para recuperar eventos soft-deleted
+ * PROYECTO CAFÉ — SERVIDOR MCP INTEGRAL CON CRUDs COMPLETOS
  *
- * Mapeo nativo a Supabase:
- * - Agenda: nombreES, nombreEN, fecha, horaInicio, horaFinal, servicios, estado_proceso
- * - Menu: NombreES, NombreEN, Precio, TipoES, GRUPO, SUB_GRUPO
- * - ItemsAlmacen: Nombre_del_producto, Area, CANTIDAD, UNIDADES, GRUPO
- * - Recetas: legacyName, rendimiento, costo
- * - Ventas: Date, Time, Total_Ingreso, Productos, Cliente
- * - Compras: Date, Valor, Proveedor_Id, Concepto, Categoria
+ * Módulos implementados con contexto y relaciones internas:
+ * 1. AGENDA: Listar, Obtener, Disponibilidad, Crear, Actualizar (con snapshot), Eliminar (Soft/Hard + Safety Gate), Restaurar.
+ * 2. MENÚ: Listar (get_menu), Obtener (menu_obtener), Crear (menu_crear), Actualizar (menu_actualizar), Eliminar (menu_eliminar).
+ * 3. INVENTARIO: Listar (get_inventario), Obtener (inventario_obtener), Crear (inventario_crear), Actualizar (inventario_actualizar), Ajustar Stock (inventario_ajustar_stock), Eliminar (inventario_eliminar).
+ * 4. RECETAS / ESCANDALLOS: Listar (get_recetas), Obtener (receta_obtener), Crear (receta_crear), Actualizar (receta_actualizar).
+ * 5. COMPRAS: Listar (get_compras), Registrar (compra_crear).
+ * 6. VENTAS: Listar (get_ventas), Registrar (venta_registrar).
+ * 7. STAFF: Listar personal activo y roles (get_staff).
+ *
+ * Mapeo nativo a tablas Supabase:
+ * - Agenda: _id, nombreES, nombreEN, fecha, horaInicio, horaFinal, servicios, valor, estado_proceso, etc.
+ * - Menu: _id, NombreES, NombreEN, Precio, TipoES, TipoEN, DescripcionMenuES, Foto, DietaES, CuidadoES, AproxTime.
+ * - ItemsAlmacen: _id, Nombre_del_producto, Area, CANTIDAD, UNIDADES, COSTO, GRUPO, Estado, precioUnitario, COOR, FECHA_ACT.
+ * - Recetas: _id, forId, legacyName, rendimiento, costo, emplatado, proces1..proces10, item1_Id..item20_Id.
+ * - Compras: _id, Date, Valor, Proveedor_Id, Concepto, Categoria, Detalle.
+ * - Ventas: _id, Date, Time, Total_Ingreso, Productos, Cliente, MetodoPago.
+ * - Staff: _id, nombre, rol, telefono, email, activo.
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function supabase() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error("Variables de entorno SUPABASE_URL y SUPABASE_ANON_KEY no configuradas en el servidor.");
+  }
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 // MCP Server metadata
 const SERVER_INFO = {
   name: "proyectocafe-mcp",
-  version: "1.3.0",
+  version: "2.0.0",
 };
 
 // ─────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────
+
+function getFechaActual() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function calcularPrecioUnitario(costo, cantidad, coor = 1.05) {
+  const c = parseFloat(costo) || 0;
+  const q = parseFloat(cantidad) || 1;
+  const k = parseFloat(coor) || 1.05;
+  if (q <= 0) return 0;
+  const ajusteInflacionario = 1.04;
+  return parseFloat(((c / q) * ajusteInflacionario * k).toFixed(2));
+}
 
 function formatServicios(svc) {
   if (!svc) {
@@ -95,98 +118,370 @@ function normalizeAgendaItem(ev) {
 }
 
 // ─────────────────────────────────────────────
-// TOOL DEFINITIONS
+// TOOL DEFINITIONS (MCP SPEC)
 // ─────────────────────────────────────────────
 const TOOLS = [
-  // ── LECTURAS (Seguras) ─────────────────────
+  // ── 1. MENÚ (CRUD) ──────────────────────────
   {
     name: "get_menu",
-    description: "Obtiene el menú del café con productos, precios y categorías.",
+    description: "Obtiene los productos del menú del café, con filtros por categoría o búsqueda de texto.",
     inputSchema: {
       type: "object",
       properties: {
         categoria: {
           type: "string",
-          description: "Filtrar por categoría o nombre (ej: bebidas, comida, café)",
+          description: "Filtrar por categoría (ej: Café, Desayuno, Almuerzo, Bebidas) o texto en nombre",
         },
       },
     },
   },
   {
-    name: "get_recetas",
-    description: "Obtiene las recetas del café con ingredientes y procedimientos.",
+    name: "menu_obtener",
+    description: "Obtiene los detalles completos de un producto del menú por su ID (_id).",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "UUID del producto en Menu" },
+      },
+    },
+  },
+  {
+    name: "menu_crear",
+    description: "Crea un nuevo producto en el menú del café.",
+    inputSchema: {
+      type: "object",
+      required: ["nombreES", "precio", "tipoES"],
+      properties: {
+        nombreES: { type: "string", description: "Nombre del producto en español" },
+        nombreEN: { type: "string", description: "Nombre en inglés (opcional)" },
+        precio: { type: "number", description: "Precio de venta al público en COP" },
+        tipoES: { type: "string", description: "Categoría en español (ej: Café, Desayuno, Almuerzo, Repostería)" },
+        tipoEN: { type: "string", description: "Categoría en inglés (ej: Coffee, Breackfast, Lunch, Others)" },
+        descripcionMenuES: { type: "string", description: "Descripción del plato o bebida en la carta" },
+        descripcionMenuEN: { type: "string", description: "Descripción en inglés" },
+        foto: { type: "string", description: "URL de la fotografía del producto" },
+        dietaES: { type: "string", description: "Etiqueta dietética: Vegetariano, Vegano, Carnico, o ninguna" },
+        cuidadoES: { type: "string", description: "Advertencias de alérgenos: Picante, Nueces, etc." },
+        aproxTime: { type: "number", description: "Tiempo estimado de preparación en minutos" },
+      },
+    },
+  },
+  {
+    name: "menu_actualizar",
+    description: "⚠️ Modifica un producto del menú (precio, descripción, categoría). Guarda snapshot previo.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "UUID del producto a actualizar" },
+        nombreES: { type: "string" },
+        nombreEN: { type: "string" },
+        precio: { type: "number" },
+        tipoES: { type: "string" },
+        tipoEN: { type: "string" },
+        descripcionMenuES: { type: "string" },
+        foto: { type: "string" },
+        dietaES: { type: "string" },
+        cuidadoES: { type: "string" },
+        aproxTime: { type: "number" },
+      },
+    },
+  },
+  {
+    name: "menu_eliminar",
+    description: "🚨 Elimina un producto del menú. Requiere confirmar: true.",
+    inputSchema: {
+      type: "object",
+      required: ["id", "confirmar"],
+      properties: {
+        id: { type: "string", description: "UUID del producto a eliminar" },
+        confirmar: { type: "boolean", description: "Debe ser true tras confirmación del usuario" },
+      },
+    },
+  },
+
+  // ── 2. INVENTARIO (CRUD) ─────────────────────
+  {
+    name: "get_inventario",
+    description: "Consulta el inventario de almacén (materia prima e insumos) con stock, unidades, costos y estado.",
     inputSchema: {
       type: "object",
       properties: {
-        nombre: { type: "string", description: "Buscar receta por nombre (opcional)" },
+        categoria: {
+          type: "string",
+          description: "Filtrar por grupo (CARNICO, LACTEO, CAFE, PANADERIA, etc.) o área (COCINA, BARRA, MESAS)",
+        },
+        estado: {
+          type: "string",
+          enum: ["PC", "PP", "OK", "NA"],
+          description: "Filtrar por estado: PC (Por Comprar), PP (Por Producir), OK, NA",
+        },
+      },
+    },
+  },
+  {
+    name: "inventario_obtener",
+    description: "Obtiene el detalle completo de un ítem de inventario por su ID.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "UUID del ítem en ItemsAlmacen" },
+      },
+    },
+  },
+  {
+    name: "inventario_crear",
+    description: "Registra un nuevo insumo o materia prima en el almacén de Proyecto Café.",
+    inputSchema: {
+      type: "object",
+      required: ["nombre", "cantidad", "unidades", "costo", "grupo"],
+      properties: {
+        nombre: { type: "string", description: "Nombre del producto/insumo" },
+        cantidad: { type: "number", description: "Cantidad total disponible en stock" },
+        unidades: {
+          type: "string",
+          enum: ["gr", "kl", "ml", "li", "un"],
+          description: "Unidad de medida: gr (gramos), kl (kilos), ml (mililitros), li (litros), un (unidades)",
+        },
+        costo: { type: "number", description: "Costo total del paquete/compra en COP" },
+        grupo: {
+          type: "string",
+          description: "Grupo (ej: CAFE, LACTEO, PANADERIA, CARNICO, VERDURAS_FRUTAS, BEBIDAS, LIMPIEZA, etc.)",
+        },
+        area: {
+          type: "string",
+          enum: ["COCINA", "BARRA", "MESAS"],
+          description: "Área asignada en el café (COCINA, BARRA, MESAS)",
+        },
+        estado: {
+          type: "string",
+          enum: ["PC", "PP", "OK", "NA"],
+          description: "Estado operativo (default: OK; PC = Por Comprar, PP = Por Producir)",
+        },
+        coor: { type: "number", description: "Factor de corrección de merma (default: 1.05)" },
+      },
+    },
+  },
+  {
+    name: "inventario_actualizar",
+    description: "⚠️ Actualiza datos de un insumo (stock, costo, unidades, estado). Recalcula precioUnitario y guarda snapshot.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "UUID del ítem a actualizar" },
+        nombre: { type: "string" },
+        cantidad: { type: "number" },
+        unidades: { type: "string", enum: ["gr", "kl", "ml", "li", "un"] },
+        costo: { type: "number" },
+        grupo: { type: "string" },
+        area: { type: "string", enum: ["COCINA", "BARRA", "MESAS"] },
+        estado: { type: "string", enum: ["PC", "PP", "OK", "NA"] },
+        coor: { type: "number" },
+      },
+    },
+  },
+  {
+    name: "inventario_ajustar_stock",
+    description: "Ajusta rápidamente el stock de un insumo sumando o restando una cantidad (por compras, mermas o consumo).",
+    inputSchema: {
+      type: "object",
+      required: ["id", "delta_cantidad"],
+      properties: {
+        id: { type: "string", description: "UUID del ítem" },
+        delta_cantidad: {
+          type: "number",
+          description: "Cantidad a sumar (positivo, ej: +5) o restar (negativo, ej: -2)",
+        },
+        motivo: { type: "string", description: "Motivo del ajuste (ej: 'Compra recibida', 'Merma por vencimiento')" },
+      },
+    },
+  },
+  {
+    name: "inventario_eliminar",
+    description: "🚨 Elimina un insumo del inventario. Requiere confirmar: true.",
+    inputSchema: {
+      type: "object",
+      required: ["id", "confirmar"],
+      properties: {
+        id: { type: "string", description: "UUID del ítem a eliminar" },
+        confirmar: { type: "boolean", description: "Debe ser true tras confirmación del usuario" },
+      },
+    },
+  },
+
+  // ── 3. RECETAS / ESCANDALLOS (CRUD) ─────────
+  {
+    name: "get_recetas",
+    description: "Consulta las recetas y escandallos con ingredientes, rendimientos y procedimientos.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        nombre: { type: "string", description: "Buscar receta por nombre (legacyName)" },
+        for_id: { type: "string", description: "Buscar receta vinculada a un producto de Menú (_id)" },
+      },
+    },
+  },
+  {
+    name: "receta_obtener",
+    description: "Obtiene el detalle completo de una receta por su ID (_id) o por el ID del producto que la usa (forId).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "UUID de la receta" },
+        for_id: { type: "string", description: "UUID del producto en Menu" },
+      },
+    },
+  },
+  {
+    name: "receta_crear",
+    description: "Crea una nueva receta o escandallo vinculada a un producto del menú o a una producción interna.",
+    inputSchema: {
+      type: "object",
+      required: ["nombre", "forId"],
+      properties: {
+        nombre: { type: "string", description: "Nombre de la receta (legacyName)" },
+        forId: { type: "string", description: "UUID del producto en Menu o ProduccionInterna al que pertenece" },
+        rendimiento: {
+          type: "object",
+          description: "Objeto con rendimiento: { porcion: 1, cantidad: 350, unidades: 'ml' }",
+        },
+        costo: { type: "number", description: "Costo estándar calculado de la porción en COP" },
+        emplatado: { type: "string", description: "Instrucciones de vajilla y presentación" },
+        autor: { type: "string", description: "Creador de la receta" },
+        procesos: {
+          type: "array",
+          items: { type: "string" },
+          description: "Lista secuencial de pasos de preparación (hasta 10 pasos)",
+        },
+        ingredientes: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["item_id", "cantidad", "unidades"],
+            properties: {
+              item_id: { type: "string", description: "UUID del insumo en ItemsAlmacen" },
+              cantidad: { type: "number" },
+              unidades: { type: "string" },
+              nombre: { type: "string" },
+            },
+          },
+          description: "Lista de insumos necesarios con cantidades",
+        },
+      },
+    },
+  },
+  {
+    name: "receta_actualizar",
+    description: "⚠️ Modifica los ingredientes, pasos o rendimiento de una receta existente. Guarda snapshot.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "UUID de la receta" },
+        nombre: { type: "string" },
+        costo: { type: "number" },
+        emplatado: { type: "string" },
+        rendimiento: { type: "object" },
+        procesos: { type: "array", items: { type: "string" } },
+      },
+    },
+  },
+
+  // ── 4. COMPRAS Y VENTAS ─────────────────────
+  {
+    name: "get_compras",
+    description: "Consulta el historial de compras e insumos del café.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        busqueda: { type: "string", description: "Filtrar por concepto o categoría" },
+        fecha_inicio: { type: "string", description: "Fecha inicio YYYY-MM-DD" },
+        fecha_fin: { type: "string", description: "Fecha fin YYYY-MM-DD" },
+        limite: { type: "number", description: "Máx registros (default 50)" },
+      },
+    },
+  },
+  {
+    name: "compra_crear",
+    description: "Registra una nueva compra o factura de insumos.",
+    inputSchema: {
+      type: "object",
+      required: ["valor", "concepto"],
+      properties: {
+        valor: { type: "number", description: "Valor total de la compra en COP" },
+        concepto: { type: "string", description: "Descripción o concepto del gasto/compra" },
+        categoria: { type: "string", description: "Categoría del gasto (ej: Materia Prima, Aseo, Mantenimiento)" },
+        fecha: { type: "string", description: "Fecha de la compra YYYY-MM-DD (default: hoy)" },
+        proveedor_id: { type: "string", description: "UUID o nombre del proveedor" },
+        detalle: { type: "string", description: "Detalles adicionales u observaciones" },
       },
     },
   },
   {
     name: "get_ventas",
-    description: "Obtiene el historial de ventas con totales y detalles de comandas.",
+    description: "Obtiene el historial de ventas y cierres de turno de Proyecto Café.",
     inputSchema: {
       type: "object",
       properties: {
-        fecha_inicio: { type: "string", description: "Fecha inicio (opcional)" },
-        fecha_fin: { type: "string", description: "Fecha fin (opcional)" },
+        fecha_inicio: { type: "string", description: "Fecha inicio YYYY-MM-DD" },
+        fecha_fin: { type: "string", description: "Fecha fin YYYY-MM-DD" },
         limite: { type: "number", description: "Máx registros (default 50)" },
       },
     },
   },
   {
-    name: "get_inventario",
-    description: "Consulta el inventario del almacén con cantidades, unidades y áreas.",
+    name: "venta_registrar",
+    description: "Registra una transacción de venta o cierre diario en el sistema.",
     inputSchema: {
       type: "object",
+      required: ["total_ingreso"],
       properties: {
-        categoria: {
+        total_ingreso: { type: "number", description: "Monto total ingresado en COP" },
+        fecha: { type: "string", description: "Fecha de la venta YYYY-MM-DD (default: hoy)" },
+        hora: { type: "string", description: "Hora de la venta HH:MM (default: hora actual)" },
+        productos: { type: "string", description: "Resumen de productos o comanda asociada" },
+        cliente: { type: "string", description: "Nombre del cliente o 'Mesa / Barra'" },
+        metodo_pago: {
           type: "string",
-          description: "Filtrar por área o grupo de inventario (opcional)",
+          description: "Medio de pago utilizado: Bold, Efectivo, Transferencia, Redeban",
         },
-      },
-    },
-  },
-  {
-    name: "get_compras",
-    description: "Historial de compras e insumos del café.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        busqueda: {
-          type: "string",
-          description: "Filtrar por concepto o categoría (opcional)",
-        },
-        limite: { type: "number", description: "Máx registros (default 50)" },
       },
     },
   },
 
-  // ── AGENDA — LECTURA Y CREACIÓN (Operaciones automáticas) ──
+  // ── 5. STAFF ────────────────────────────────
   {
-    name: "agenda_listar",
-    description:
-      "Lista los eventos de la agenda del café. Puede filtrarse por rango de fechas o búsqueda de texto libre.",
+    name: "get_staff",
+    description: "Consulta el equipo de trabajo y colaboradores de Proyecto Café con sus roles y contacto.",
     inputSchema: {
       type: "object",
       properties: {
-        fecha_inicio: { type: "string", description: "Fecha inicio YYYY-MM-DD (opcional)" },
-        fecha_fin: { type: "string", description: "Fecha fin YYYY-MM-DD (opcional)" },
-        busqueda: {
-          type: "string",
-          description: "Texto para buscar por nombre del evento, cliente o autores",
-        },
-        incluir_eliminados: {
-          type: "boolean",
-          description: "Si es true, incluye eventos cancelados/eliminados lógicamente (default false)",
-        },
+        solo_activos: { type: "boolean", description: "Filtrar únicamente colaboradores activos (default true)" },
+      },
+    },
+  },
+
+  // ── 6. AGENDA (CRUD Completo & Safety) ───────
+  {
+    name: "agenda_listar",
+    description: "Lista los eventos de la agenda del café con filtros por fechas o búsqueda libre.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fecha_inicio: { type: "string", description: "Fecha inicio YYYY-MM-DD" },
+        fecha_fin: { type: "string", description: "Fecha fin YYYY-MM-DD" },
+        busqueda: { type: "string", description: "Texto para buscar por nombre del evento, cliente o autores" },
+        incluir_eliminados: { type: "boolean", description: "Si es true, incluye eventos cancelados (default false)" },
         limite: { type: "number", description: "Máx registros a retornar (default 100)" },
       },
     },
   },
   {
     name: "agenda_obtener",
-    description: "Obtiene los detalles completos de un evento de la agenda por su ID.",
+    description: "Obtiene los detalles completos de un evento de la agenda por su ID (_id).",
     inputSchema: {
       type: "object",
       required: ["id"],
@@ -197,8 +492,7 @@ const TOOLS = [
   },
   {
     name: "agenda_buscar_disponibilidad",
-    description:
-      "Verifica si hay conflictos de horario en una fecha dada para planificar nuevos eventos.",
+    description: "Verifica si hay conflictos de horario en una fecha dada para planificar nuevos eventos.",
     inputSchema: {
       type: "object",
       required: ["fecha"],
@@ -206,67 +500,53 @@ const TOOLS = [
         fecha: { type: "string", description: "Fecha a verificar YYYY-MM-DD" },
         horaInicio: { type: "string", description: "Hora de inicio para verificar HH:MM" },
         horaFinal: { type: "string", description: "Hora de fin para verificar HH:MM" },
-        excluir_id: {
-          type: "string",
-          description: "UUID de evento a excluir de la verificación (para ediciones)",
-        },
+        excluir_id: { type: "string", description: "UUID de evento a excluir de la verificación (para ediciones)" },
       },
     },
   },
   {
     name: "agenda_crear",
-    description:
-      "Crea un nuevo evento en la agenda del café. Registra el evento en estado activo.",
+    description: "Crea un nuevo evento en la agenda del café en estado activo.",
     inputSchema: {
       type: "object",
       required: ["fecha", "horaInicio", "horaFinal"],
       properties: {
         nombre: { type: "string", description: "Nombre del evento en español" },
-        nombreES: { type: "string", description: "Nombre del evento en español (equivalente a nombre)" },
-        nombreEN: { type: "string", description: "Nombre del evento en inglés (opcional)" },
+        nombreES: { type: "string", description: "Nombre del evento en español" },
+        nombreEN: { type: "string", description: "Nombre en inglés (opcional)" },
         fecha: { type: "string", description: "Fecha del evento YYYY-MM-DD" },
-        horaInicio: { type: "string", description: "Hora de inicio HH:MM:SS o HH:MM" },
-        horaFinal: { type: "string", description: "Hora de finalización HH:MM:SS o HH:MM" },
+        horaInicio: { type: "string", description: "Hora de inicio HH:MM" },
+        horaFinal: { type: "string", description: "Hora de fin HH:MM" },
         nombreCliente: { type: "string", description: "Nombre del cliente u organizador" },
-        emailCliente: { type: "string", description: "Email del cliente" },
-        telefonoCliente: { type: "string", description: "Teléfono del cliente" },
-        numeroPersonas: { type: "number", description: "Número de asistentes esperados" },
-        valor: { type: "string", description: "Valor / precio o 'Gratis'" },
-        autores: { type: "string", description: "Artistas, ponentes o autores" },
-        infoAdicional: { type: "string", description: "Información adicional u observaciones" },
-        decripcion: { type: "string", description: "Descripción detallada del evento" },
-        bannerIMG: { type: "string", description: "URL de la imagen del banner" },
-        linkInscripcion: { type: "string", description: "URL de inscripción o boletería" },
-        servicios: {
-          type: "object",
-          description:
-            "Servicios requeridos: alimentos, mesas, audioVisual, otros (booleanos u objetos con descripción)",
-        },
-        aliado_id: { type: "string", description: "UUID del aliado vinculado (opcional)" },
-        instagramsAliados: {
-          type: "array",
-          description: "Lista de @handles de Instagram de aliados",
-        },
+        emailCliente: { type: "string", description: "Email de contacto" },
+        telefonoCliente: { type: "string", description: "Teléfono de contacto" },
+        numeroPersonas: { type: "number", description: "Aforo esperado" },
+        valor: { type: "string", description: "Valor o 'Gratis'" },
+        autores: { type: "string", description: "Ponentes, artistas o talleristas" },
+        infoAdicional: { type: "string", description: "Observaciones de logística" },
+        decripcion: { type: "string", description: "Descripción detallada" },
+        bannerIMG: { type: "string", description: "URL del banner promocional" },
+        linkInscripcion: { type: "string", description: "Enlace de inscripción o boletería" },
+        servicios: { type: "object", description: "Servicios requeridos: alimentos, mesas, audioVisual, otros" },
+        aliado_id: { type: "string", description: "UUID del aliado vinculado" },
+        instagramsAliados: { type: "array", description: "Lista de @handles de Instagram" },
       },
     },
   },
-
-  // ── AGENDA — OPERACIONES SENSIBLES (Requieren confirmación manual) ──
   {
     name: "agenda_actualizar",
-    description:
-      "⚠️ OPERACIÓN SENSIBLE: Modifica los datos de un evento existente. Guarda y retorna un snapshot del estado previo para permitir reversión (rollback) inmediata si se comete un error.",
+    description: "⚠️ Modifica un evento existente. Guarda snapshot de seguridad previo.",
     inputSchema: {
       type: "object",
       required: ["id"],
       properties: {
         id: { type: "string", description: "UUID del evento a actualizar (_id)" },
-        nombre: { type: "string", description: "Nuevo nombre del evento" },
-        nombreES: { type: "string", description: "Nuevo nombre del evento en español" },
-        nombreEN: { type: "string", description: "Nuevo nombre en inglés" },
-        fecha: { type: "string", description: "Nueva fecha YYYY-MM-DD" },
-        horaInicio: { type: "string", description: "Nueva hora de inicio HH:MM" },
-        horaFinal: { type: "string", description: "Nueva hora de fin HH:MM" },
+        nombre: { type: "string" },
+        nombreES: { type: "string" },
+        nombreEN: { type: "string" },
+        fecha: { type: "string" },
+        horaInicio: { type: "string" },
+        horaFinal: { type: "string" },
         nombreCliente: { type: "string" },
         emailCliente: { type: "string" },
         telefonoCliente: { type: "string" },
@@ -285,35 +565,25 @@ const TOOLS = [
   },
   {
     name: "agenda_eliminar",
-    description:
-      "🚨 OPERACIÓN CRÍTICA: Elimina un evento de la agenda. Requiere obligatoriamente confirmar: true. Por defecto aplica Borrado Lógico (soft delete) para proteger los datos y permitir recuperación. Si se especifica modo 'definitivo', se realiza borrado físico en base de datos retornando un backup completo.",
+    description: "🚨 Elimina un evento de la agenda. Requiere confirmar: true. Aplica borrado lógico por defecto.",
     inputSchema: {
       type: "object",
       required: ["id", "confirmar"],
       properties: {
-        id: { type: "string", description: "UUID del evento a eliminar (_id)" },
-        confirmar: {
-          type: "boolean",
-          description: "Debe ser true obligatoriamente tras haber confirmado con el usuario",
-        },
-        modo: {
-          type: "string",
-          enum: ["soft", "definitivo"],
-          description:
-            "'soft' (por defecto, recomendado): borrado lógico recuperable. 'definitivo': eliminación física permanente.",
-        },
+        id: { type: "string", description: "UUID del evento a eliminar" },
+        confirmar: { type: "boolean", description: "Debe ser true tras autorización del usuario" },
+        modo: { type: "string", enum: ["soft", "definitivo"], description: "'soft' (recomendado) o 'definitivo'" },
       },
     },
   },
   {
     name: "agenda_restaurar",
-    description:
-      "Restaura un evento que haya sido eliminado lógicamente (soft delete), devolviéndolo a estado activo.",
+    description: "Restaura un evento que haya sido eliminado lógicamente (soft delete) a estado activo.",
     inputSchema: {
       type: "object",
       required: ["id"],
       properties: {
-        id: { type: "string", description: "UUID del evento a restaurar (_id)" },
+        id: { type: "string", description: "UUID del evento a restaurar" },
       },
     },
   },
@@ -323,64 +593,376 @@ const TOOLS = [
 // TOOL IMPLEMENTATIONS
 // ─────────────────────────────────────────────
 
+// ── 1. MENÚ ──────────────────────────────────
 async function getMenu({ categoria } = {}) {
   let q = supabase().from("Menu").select("*");
   if (categoria) {
     q = q.or(
-      `NombreES.ilike.%${categoria}%,TipoES.ilike.%${categoria}%,GRUPO.ilike.%${categoria}%,SUB_GRUPO.ilike.%${categoria}%`
+      `NombreES.ilike.%${categoria}%,TipoES.ilike.%${categoria}%,TipoEN.ilike.%${categoria}%,DescripcionMenuES.ilike.%${categoria}%`
     );
   }
-  const { data, error } = await q.order("NombreES", { ascending: true, nullsFirst: false });
+  const { data, error } = await q.order("NombreES", { ascending: true });
   if (error) throw new Error(`Error menú: ${error.message}`);
   return (data || []).map((item) => ({
+    _id: item._id,
     nombre: item.NombreES,
+    nombreEN: item.NombreEN,
     precio: item.Precio,
-    categoria: item.TipoES || item.GRUPO || "",
+    categoria: item.TipoES || item.TipoEN || "",
     descripcion: item.DescripcionMenuES || "",
+    foto: item.Foto,
+    dieta: item.DietaES,
+    cuidado: item.CuidadoES,
+    tiempoMin: item.AproxTime,
     ...item,
   }));
 }
 
-async function getRecetas({ nombre } = {}) {
-  let q = supabase().from("Recetas").select("*");
-  if (nombre) {
-    q = q.ilike("legacyName", `%${nombre}%`);
+async function menuObtener({ id } = {}) {
+  if (!id) throw new Error("Se requiere el ID del producto");
+  const { data, error } = await supabase().from("Menu").select("*").eq("_id", id).single();
+  if (error) throw new Error(`Producto no encontrado en Menú: ${error.message}`);
+  return data;
+}
+
+async function menuCrear(args) {
+  const nombreFinal = args.nombreES || args.nombre;
+  if (!nombreFinal || args.precio === undefined) {
+    throw new Error("Campos obligatorios: nombreES y precio");
   }
-  const { data, error } = await q.order("legacyName", { ascending: true, nullsFirst: false });
-  if (error) throw new Error(`Error recetas: ${error.message}`);
-  return (data || []).map((item) => ({
-    nombre: item.legacyName,
-    ...item,
-  }));
+
+  const payload = {
+    _id: randomUUID(),
+    NombreES: nombreFinal,
+    NombreEN: args.nombreEN || "",
+    Precio: Number(args.precio) || 0,
+    TipoES: args.tipoES || "Otros",
+    TipoEN: args.tipoEN || "Others",
+    DescripcionMenuES: args.descripcionMenuES || "",
+    DescripcionMenuEN: args.descripcionMenuEN || "",
+    Foto: args.foto || "",
+    DietaES: args.dietaES || "",
+    CuidadoES: args.cuidadoES || "",
+    AproxTime: args.aproxTime || 5,
+  };
+
+  const { data, error } = await supabase().from("Menu").insert([payload]).select().single();
+  if (error) throw new Error(`Error al crear producto en Menú: ${error.message}`);
+  return { mensaje: "Producto creado exitosamente en el Menú", producto: data };
 }
 
-async function getVentas({ fecha_inicio, fecha_fin, limite = 50 } = {}) {
-  let q = supabase().from("Ventas").select("*").limit(limite);
-  if (fecha_inicio) q = q.gte("Date", fecha_inicio);
-  if (fecha_fin) q = q.lte("Date", fecha_fin);
-  const { data, error } = await q;
-  if (error) throw new Error(`Error ventas: ${error.message}`);
-  return data || [];
+async function menuActualizar({ id, ...campos }) {
+  if (!id) throw new Error("Se requiere el ID del producto");
+
+  const { data: existing, error: fetchErr } = await supabase().from("Menu").select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró el producto con ID: ${id}`);
+
+  const payload = {};
+  if (campos.nombreES || campos.nombre) payload.NombreES = campos.nombreES || campos.nombre;
+  if (campos.nombreEN !== undefined) payload.NombreEN = campos.nombreEN;
+  if (campos.precio !== undefined) payload.Precio = Number(campos.precio);
+  if (campos.tipoES !== undefined) payload.TipoES = campos.tipoES;
+  if (campos.tipoEN !== undefined) payload.TipoEN = campos.tipoEN;
+  if (campos.descripcionMenuES !== undefined) payload.DescripcionMenuES = campos.descripcionMenuES;
+  if (campos.foto !== undefined) payload.Foto = campos.foto;
+  if (campos.dietaES !== undefined) payload.DietaES = campos.dietaES;
+  if (campos.cuidadoES !== undefined) payload.CuidadoES = campos.cuidadoES;
+  if (campos.aproxTime !== undefined) payload.AproxTime = Number(campos.aproxTime);
+
+  const { data: updated, error: updateErr } = await supabase()
+    .from("Menu")
+    .update(payload)
+    .eq("_id", id)
+    .select()
+    .single();
+
+  if (updateErr) throw new Error(`Error al actualizar producto en Menú: ${updateErr.message}`);
+  return {
+    mensaje: `Producto "${updated.NombreES}" actualizado exitosamente`,
+    producto_actualizado: updated,
+    snapshot_previo: existing,
+  };
 }
 
-async function getInventario({ categoria } = {}) {
+async function menuEliminar({ id, confirmar } = {}) {
+  if (!id) throw new Error("Se requiere el ID del producto");
+  if (confirmar !== true) {
+    throw new Error("CONFIRMACIÓN REQUERIDA: Debes enviar 'confirmar: true' para eliminar este producto del Menú.");
+  }
+
+  const { data: existing, error: fetchErr } = await supabase().from("Menu").select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró el producto con ID: ${id}`);
+
+  const { error } = await supabase().from("Menu").delete().eq("_id", id);
+  if (error) throw new Error(`Error al eliminar del Menú: ${error.message}`);
+
+  return {
+    mensaje: `Producto "${existing.NombreES}" eliminado exitosamente del Menú`,
+    backup_producto: existing,
+  };
+}
+
+// ── 2. INVENTARIO ────────────────────────────
+async function getInventario({ categoria, estado } = {}) {
   let q = supabase().from("ItemsAlmacen").select("*");
   if (categoria) {
     q = q.or(`Area.ilike.%${categoria}%,GRUPO.ilike.%${categoria}%,Nombre_del_producto.ilike.%${categoria}%`);
   }
-  const { data, error } = await q.order("Nombre_del_producto", { ascending: true, nullsFirst: false });
+  if (estado) {
+    q = q.eq("Estado", estado);
+  }
+  const { data, error } = await q.order("Nombre_del_producto", { ascending: true });
   if (error) throw new Error(`Error inventario: ${error.message}`);
   return (data || []).map((item) => ({
+    _id: item._id,
     nombre: item.Nombre_del_producto,
-    categoria: item.Area || item.GRUPO || "",
     cantidad: item.CANTIDAD,
-    unidades: item.UNIDADES,
+    unidades: item.UNIDADES || item.UNIDAD,
+    costo: item.COSTO,
+    grupo: item.GRUPO,
+    area: item.Area,
+    estado: item.Estado,
+    precioUnitario: item.precioUnitario,
+    fechaActualizacion: item.FECHA_ACT,
     ...item,
   }));
 }
 
-async function getCompras({ busqueda, limite = 50 } = {}) {
-  let q = supabase().from("Compras").select("*").limit(limite);
+async function inventarioObtener({ id } = {}) {
+  if (!id) throw new Error("Se requiere el ID del ítem de inventario");
+  const { data, error } = await supabase().from("ItemsAlmacen").select("*").eq("_id", id).single();
+  if (error) throw new Error(`Ítem no encontrado en Inventario: ${error.message}`);
+  return data;
+}
+
+async function inventarioCrear(args) {
+  const nombre = args.nombre || args.Nombre_del_producto;
+  if (!nombre || args.cantidad === undefined || !args.unidades || args.costo === undefined) {
+    throw new Error("Campos obligatorios: nombre, cantidad, unidades, costo, grupo");
+  }
+
+  const coor = args.coor || 1.05;
+  const precioUnitario = calcularPrecioUnitario(args.costo, args.cantidad, coor);
+
+  const payload = {
+    _id: randomUUID(),
+    Nombre_del_producto: nombre,
+    CANTIDAD: Number(args.cantidad),
+    UNIDADES: args.unidades,
+    COSTO: Number(args.costo),
+    GRUPO: args.grupo || "GENERAL",
+    Area: args.area || "COCINA",
+    Estado: args.estado || "OK",
+    COOR: String(coor),
+    precioUnitario: precioUnitario,
+    FECHA_ACT: getFechaActual(),
+  };
+
+  const { data, error } = await supabase().from("ItemsAlmacen").insert([payload]).select().single();
+  if (error) throw new Error(`Error al crear ítem en Inventario: ${error.message}`);
+  return { mensaje: "Insumo creado exitosamente en Almacén", item: data };
+}
+
+async function inventarioActualizar({ id, ...campos }) {
+  if (!id) throw new Error("Se requiere el ID del ítem");
+
+  const { data: existing, error: fetchErr } = await supabase().from("ItemsAlmacen").select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró el ítem de inventario con ID: ${id}`);
+
+  const payload = {};
+  if (campos.nombre) payload.Nombre_del_producto = campos.nombre;
+  if (campos.cantidad !== undefined) payload.CANTIDAD = Number(campos.cantidad);
+  if (campos.unidades !== undefined) payload.UNIDADES = campos.unidades;
+  if (campos.costo !== undefined) payload.COSTO = Number(campos.costo);
+  if (campos.grupo !== undefined) payload.GRUPO = campos.grupo;
+  if (campos.area !== undefined) payload.Area = campos.area;
+  if (campos.estado !== undefined) payload.Estado = campos.estado;
+  if (campos.coor !== undefined) payload.COOR = String(campos.coor);
+
+  // Recalcular precio unitario si cambió costo o cantidad
+  const nuevoCosto = payload.COSTO !== undefined ? payload.COSTO : existing.COSTO;
+  const nuevaCantidad = payload.CANTIDAD !== undefined ? payload.CANTIDAD : existing.CANTIDAD;
+  const nuevoCoor = payload.COOR !== undefined ? payload.COOR : (existing.COOR || 1.05);
+
+  payload.precioUnitario = calcularPrecioUnitario(nuevoCosto, nuevaCantidad, nuevoCoor);
+  payload.FECHA_ACT = getFechaActual();
+
+  const { data: updated, error: updateErr } = await supabase()
+    .from("ItemsAlmacen")
+    .update(payload)
+    .eq("_id", id)
+    .select()
+    .single();
+
+  if (updateErr) throw new Error(`Error al actualizar ítem de inventario: ${updateErr.message}`);
+  return {
+    mensaje: `Ítem "${updated.Nombre_del_producto}" actualizado exitosamente`,
+    item_actualizado: updated,
+    snapshot_previo: existing,
+  };
+}
+
+async function inventarioAjustarStock({ id, delta_cantidad, motivo } = {}) {
+  if (!id || delta_cantidad === undefined) {
+    throw new Error("Se requiere el ID del ítem y el delta_cantidad (positivo o negativo)");
+  }
+
+  const { data: existing, error: fetchErr } = await supabase().from("ItemsAlmacen").select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró el ítem con ID: ${id}`);
+
+  const stockActual = parseFloat(existing.CANTIDAD) || 0;
+  const nuevoStock = Math.max(0, stockActual + Number(delta_cantidad));
+
+  const payload = {
+    CANTIDAD: nuevoStock,
+    FECHA_ACT: getFechaActual(),
+  };
+
+  const { data: updated, error: updateErr } = await supabase()
+    .from("ItemsAlmacen")
+    .update(payload)
+    .eq("_id", id)
+    .select()
+    .single();
+
+  if (updateErr) throw new Error(`Error al ajustar stock: ${updateErr.message}`);
+  return {
+    mensaje: `Stock de "${existing.Nombre_del_producto}" ajustado de ${stockActual} a ${nuevoStock} ${existing.UNIDADES || ""}`,
+    stock_anterior: stockActual,
+    stock_nuevo: nuevoStock,
+    motivo: motivo || "Ajuste operativo",
+    item: updated,
+  };
+}
+
+async function inventarioEliminar({ id, confirmar } = {}) {
+  if (!id) throw new Error("Se requiere el ID del ítem");
+  if (confirmar !== true) {
+    throw new Error("CONFIRMACIÓN REQUERIDA: Debes enviar 'confirmar: true' para eliminar este insumo del almacén.");
+  }
+
+  const { data: existing, error: fetchErr } = await supabase().from("ItemsAlmacen").select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró el ítem con ID: ${id}`);
+
+  const { error } = await supabase().from("ItemsAlmacen").delete().eq("_id", id);
+  if (error) throw new Error(`Error al eliminar ítem: ${error.message}`);
+
+  return {
+    mensaje: `Insumo "${existing.Nombre_del_producto}" eliminado exitosamente del inventario`,
+    backup_item: existing,
+  };
+}
+
+// ── 3. RECETAS ───────────────────────────────
+async function getRecetas({ nombre, for_id } = {}) {
+  let q = supabase().from("Recetas").select("*");
+  if (nombre) q = q.ilike("legacyName", `%${nombre}%`);
+  if (for_id) q = q.eq("forId", for_id);
+
+  const { data, error } = await q.order("legacyName", { ascending: true });
+  if (error) throw new Error(`Error recetas: ${error.message}`);
+  return (data || []).map((item) => ({
+    _id: item._id,
+    nombre: item.legacyName,
+    forId: item.forId,
+    costo: item.costo,
+    rendimiento: item.rendimiento,
+    emplatado: item.emplatado,
+    actualizacion: item.actualizacion,
+    ...item,
+  }));
+}
+
+async function recetaObtener({ id, for_id } = {}) {
+  let q = supabase().from("Recetas").select("*");
+  if (id) q = q.eq("_id", id);
+  else if (for_id) q = q.eq("forId", for_id);
+  else throw new Error("Se requiere id o for_id para consultar la receta");
+
+  const { data, error } = await q.single();
+  if (error) throw new Error(`Receta no encontrada: ${error.message}`);
+  return data;
+}
+
+async function recetaCrear(args) {
+  if (!args.nombre || !args.forId) {
+    throw new Error("Campos obligatorios: nombre (legacyName) y forId (producto vinculado)");
+  }
+
+  const payload = {
+    _id: randomUUID(),
+    legacyName: args.nombre,
+    forId: args.forId,
+    costo: args.costo !== undefined ? Number(args.costo) : null,
+    emplatado: args.emplatado || "",
+    autor: args.autor || "Equipo Proyecto Café",
+    actualizacion: getFechaActual(),
+    rendimiento: args.rendimiento ? (typeof args.rendimiento === "string" ? args.rendimiento : JSON.stringify(args.rendimiento)) : null,
+  };
+
+  // Mapear pasos de preparación proces1..proces10
+  if (Array.isArray(args.procesos)) {
+    args.procesos.slice(0, 10).forEach((p, idx) => {
+      payload[`proces${idx + 1}`] = p;
+    });
+  }
+
+  // Mapear ingredientes
+  if (Array.isArray(args.ingredientes)) {
+    args.ingredientes.slice(0, 20).forEach((ing, idx) => {
+      payload[`item${idx + 1}_Id`] = ing.item_id;
+      payload[`item${idx + 1}_Cuantity_Units`] = JSON.stringify({
+        metric: { cuantity: ing.cantidad, units: ing.unidades },
+        legacyName: ing.nombre || "",
+      });
+    });
+  }
+
+  const { data, error } = await supabase().from("Recetas").insert([payload]).select().single();
+  if (error) throw new Error(`Error al crear receta: ${error.message}`);
+  return { mensaje: "Receta creada exitosamente", receta: data };
+}
+
+async function recetaActualizar({ id, ...campos }) {
+  if (!id) throw new Error("Se requiere el ID de la receta");
+
+  const { data: existing, error: fetchErr } = await supabase().from("Recetas").select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró la receta con ID: ${id}`);
+
+  const payload = { actualizacion: getFechaActual() };
+  if (campos.nombre) payload.legacyName = campos.nombre;
+  if (campos.costo !== undefined) payload.costo = Number(campos.costo);
+  if (campos.emplatado !== undefined) payload.emplatado = campos.emplatado;
+  if (campos.rendimiento !== undefined) {
+    payload.rendimiento = typeof campos.rendimiento === "string" ? campos.rendimiento : JSON.stringify(campos.rendimiento);
+  }
+
+  if (Array.isArray(campos.procesos)) {
+    campos.procesos.slice(0, 10).forEach((p, idx) => {
+      payload[`proces${idx + 1}`] = p;
+    });
+  }
+
+  const { data: updated, error: updateErr } = await supabase()
+    .from("Recetas")
+    .update(payload)
+    .eq("_id", id)
+    .select()
+    .single();
+
+  if (updateErr) throw new Error(`Error al actualizar receta: ${updateErr.message}`);
+  return {
+    mensaje: `Receta "${updated.legacyName}" actualizada exitosamente`,
+    receta_actualizada: updated,
+    snapshot_previo: existing,
+  };
+}
+
+// ── 4. COMPRAS Y VENTAS ─────────────────────
+async function getCompras({ busqueda, fecha_inicio, fecha_fin, limite = 50 } = {}) {
+  let q = supabase().from("Compras").select("*").limit(limite).order("Date", { ascending: false });
+  if (fecha_inicio) q = q.gte("Date", fecha_inicio);
+  if (fecha_fin) q = q.lte("Date", fecha_fin);
   if (busqueda) {
     q = q.or(`Concepto.ilike.%${busqueda}%,Categoria.ilike.%${busqueda}%`);
   }
@@ -389,8 +971,70 @@ async function getCompras({ busqueda, limite = 50 } = {}) {
   return data || [];
 }
 
-// ── AGENDA CRUD & SAFETY ─────────────────────
+async function compraCrear(args) {
+  if (args.valor === undefined || !args.concepto) {
+    throw new Error("Campos obligatorios: valor y concepto");
+  }
 
+  const payload = {
+    _id: randomUUID(),
+    Date: args.fecha || getFechaActual(),
+    Valor: Number(args.valor),
+    Concepto: args.concepto,
+    Categoria: args.categoria || "Insumos",
+    Proveedor_Id: args.proveedor_id || null,
+    Detalle: args.detalle || "",
+  };
+
+  const { data, error } = await supabase().from("Compras").insert([payload]).select().single();
+  if (error) throw new Error(`Error al registrar compra: ${error.message}`);
+  return { mensaje: "Compra registrada exitosamente", compra: data };
+}
+
+async function getVentas({ fecha_inicio, fecha_fin, limite = 50 } = {}) {
+  let q = supabase().from("Ventas").select("*").limit(limite).order("Date", { ascending: false });
+  if (fecha_inicio) q = q.gte("Date", fecha_inicio);
+  if (fecha_fin) q = q.lte("Date", fecha_fin);
+  const { data, error } = await q;
+  if (error) throw new Error(`Error ventas: ${error.message}`);
+  return data || [];
+}
+
+async function ventaRegistrar(args) {
+  if (args.total_ingreso === undefined) {
+    throw new Error("Campo obligatorio: total_ingreso");
+  }
+
+  const ahora = new Date();
+  const horaActual = `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}`;
+
+  const payload = {
+    _id: randomUUID(),
+    Date: args.fecha || getFechaActual(),
+    Time: args.hora || horaActual,
+    Total_Ingreso: Number(args.total_ingreso),
+    Productos: args.productos || "Venta de turno",
+    Cliente: args.cliente || "Consumidor Final",
+    MetodoPago: args.metodo_pago || "Bold",
+  };
+
+  const { data, error } = await supabase().from("Ventas").insert([payload]).select().single();
+  if (error) throw new Error(`Error al registrar venta: ${error.message}`);
+  return { mensaje: "Venta registrada exitosamente", venta: data };
+}
+
+// ── 5. STAFF ────────────────────────────────
+async function getStaff({ solo_activos = true } = {}) {
+  let q = supabase().from("Staff").select("*");
+  if (solo_activos) {
+    q = q.eq("activo", true);
+  }
+  const { data, error } = await q.order("nombre", { ascending: true });
+  if (error) throw new Error(`Error al obtener staff: ${error.message}`);
+  return data || [];
+}
+
+// ── 6. AGENDA CRUD & SAFETY ──────────────────
 async function agendaListar({ fecha_inicio, fecha_fin, busqueda, incluir_eliminados = false, limite = 100 } = {}) {
   let q = supabase()
     .from("Agenda")
@@ -443,7 +1087,6 @@ async function agendaBuscarDisponibilidad({ fecha, horaInicio, horaFinal, exclui
   const { data: rawEventos, error } = await q.order("horaInicio");
   if (error) throw new Error(`Error al verificar disponibilidad: ${error.message}`);
 
-  // Ignorar eventos eliminados lógicamente al evaluar conflictos
   const eventosActivos = (rawEventos || [])
     .filter((ev) => ev.estado_proceso !== "eliminado")
     .map(normalizeAgendaItem);
@@ -482,6 +1125,7 @@ async function agendaCrear(args) {
   }
 
   const payload = {
+    _id: randomUUID(),
     nombreES: nombreFinal,
     nombreEN: args.nombreEN || "",
     fecha,
@@ -516,7 +1160,6 @@ async function agendaCrear(args) {
 async function agendaActualizar({ id, ...campos }) {
   if (!id) throw new Error("Se requiere el ID del evento (_id)");
 
-  // 1. Snapshot previo de seguridad
   const { data: existing, error: fetchErr } = await supabase()
     .from("Agenda")
     .select("*")
@@ -575,14 +1218,12 @@ async function agendaActualizar({ id, ...campos }) {
 async function agendaEliminar({ id, confirmar, modo = "soft" } = {}) {
   if (!id) throw new Error("Se requiere el ID del evento");
 
-  // 1. Safety Gate: validación estricta
   if (confirmar !== true) {
     throw new Error(
       "CONFIRMACIÓN REQUERIDA (Safety Gate): Para eliminar este evento es obligatorio solicitar autorización explícita al usuario y enviar 'confirmar: true'."
     );
   }
 
-  // 2. Obtener copia completa de respaldo antes de borrar
   const { data: existing, error: fetchErr } = await supabase()
     .from("Agenda")
     .select("*")
@@ -593,7 +1234,6 @@ async function agendaEliminar({ id, confirmar, modo = "soft" } = {}) {
     throw new Error(`No se encontró el evento con ID: ${id}`);
   }
 
-  // 3. Ejecutar según modo (soft delete por defecto)
   if (modo === "definitivo") {
     const { error: deleteErr } = await supabase().from("Agenda").delete().eq("_id", id);
     if (deleteErr) throw new Error(`Error al eliminar definitivamente: ${deleteErr.message}`);
@@ -607,7 +1247,6 @@ async function agendaEliminar({ id, confirmar, modo = "soft" } = {}) {
         "Si fue un error, puedes recrear este evento con 'agenda_crear' usando los datos del backup_para_restaurar.",
     };
   } else {
-    // Borrado lógico (Soft Delete)
     const { data: softUpdated, error: softErr } = await supabase()
       .from("Agenda")
       .update({ estado_proceso: "eliminado" })
@@ -679,11 +1318,37 @@ async function handleMcpRequest(body) {
         const toolArgs = params?.arguments || {};
 
         const handlers = {
+          // Menú
           get_menu: getMenu,
-          get_recetas: getRecetas,
-          get_ventas: getVentas,
+          menu_obtener: menuObtener,
+          menu_crear: menuCrear,
+          menu_actualizar: menuActualizar,
+          menu_eliminar: menuEliminar,
+
+          // Inventario
           get_inventario: getInventario,
+          inventario_obtener: inventarioObtener,
+          inventario_crear: inventarioCrear,
+          inventario_actualizar: inventarioActualizar,
+          inventario_ajustar_stock: inventarioAjustarStock,
+          inventario_eliminar: inventarioEliminar,
+
+          // Recetas
+          get_recetas: getRecetas,
+          receta_obtener: recetaObtener,
+          receta_crear: recetaCrear,
+          receta_actualizar: recetaActualizar,
+
+          // Compras y Ventas
           get_compras: getCompras,
+          compra_crear: compraCrear,
+          get_ventas: getVentas,
+          venta_registrar: ventaRegistrar,
+
+          // Staff
+          get_staff: getStaff,
+
+          // Agenda
           agenda_listar: agendaListar,
           agenda_obtener: agendaObtener,
           agenda_buscar_disponibilidad: agendaBuscarDisponibilidad,
@@ -752,7 +1417,9 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     res.write(
-      `data: ${JSON.stringify({ type: "endpoint", endpoint: "/api/mcp" })}\n\n`
+      `data: ${JSON.stringify({ type: "endpoint", endpoint: "/api/mcp" })}
+
+`
     );
     setTimeout(() => res.end(), 500);
     return;
