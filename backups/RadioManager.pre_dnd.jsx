@@ -150,7 +150,6 @@ export default function RadioManager() {
   // true SOLO cuando el usuario inició la pre-escucha explícitamente.
   // Evita que handleEnded avance automáticamente si el deck CUE no fue arrancado por el usuario.
   const userStartedPreviewRef = useRef(false);
-  const draggedLibraryTrackRef = useRef(null);
 
   useEffect(() => {
     isLibraryShuffleRef.current = isLibraryShuffle;
@@ -1739,43 +1738,8 @@ export default function RadioManager() {
 
   const handleAirShuffle = handleToggleAirShuffle;
 
-  const handleQueueDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      e.dataTransfer.dropEffect = 'copy';
-    } catch (err) {}
-    setIsDraggingOverQueue(true);
-  };
-
-  const handleQueueDragLeave = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setIsDraggingOverQueue(false);
-    }
-  };
-
-  const handleQueueDrop = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOverQueue(false);
-
-    let trackToInsert = draggedLibraryTrackRef.current;
-    if (!trackToInsert) {
-      try {
-        const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
-        if (raw) trackToInsert = JSON.parse(raw);
-      } catch (err) {}
-    }
-
-    if (trackToInsert) {
-      draggedLibraryTrackRef.current = null;
-      await handleAddTrackToQueue(trackToInsert);
-    }
-  };
-
   // Añadir pista a la cola de emisión: se coloca abajo al final de la lista, NO altera el orden ni interrumpe la emisión actual
   const handleAddTrackToQueue = async (track) => {
-    if (!track) return;
     try {
       // 1. Obtener el orden máximo actual para asegurar que quede al final estricto
       const maxOrder = songs.reduce((max, s) => Math.max(max, Number(s.order_index) ?? -1), -1);
@@ -3110,19 +3074,9 @@ export default function RadioManager() {
                             return (
                               <div
                                 key={track.id || track.fileName || idx}
-                                draggable={true}
+                                draggable
                                 onDragStart={(e) => {
-                                  draggedLibraryTrackRef.current = track;
-                                  try {
-                                    e.dataTransfer.effectAllowed = 'copy';
-                                    e.dataTransfer.setData('application/json', JSON.stringify(track));
-                                    e.dataTransfer.setData('text/plain', JSON.stringify(track));
-                                  } catch (err) {}
-                                  setIsDraggingOverQueue(true);
-                                }}
-                                onDragEnd={() => {
-                                  setIsDraggingOverQueue(false);
-                                  setTimeout(() => { draggedLibraryTrackRef.current = null; }, 500);
+                                  e.dataTransfer.setData('application/json', JSON.stringify(track));
                                 }}
                                 onClick={() => {
                                   handlePlayPreview(track);
@@ -3245,20 +3199,6 @@ export default function RadioManager() {
                                     {(alb.tracks || []).map(t => (
                                       <div 
                                         key={t.id || t.fileName} 
-                                        draggable={true}
-                                        onDragStart={(e) => {
-                                          draggedLibraryTrackRef.current = t;
-                                          try {
-                                            e.dataTransfer.effectAllowed = 'copy';
-                                            e.dataTransfer.setData('application/json', JSON.stringify(t));
-                                            e.dataTransfer.setData('text/plain', JSON.stringify(t));
-                                          } catch (err) {}
-                                          setIsDraggingOverQueue(true);
-                                        }}
-                                        onDragEnd={() => {
-                                          setIsDraggingOverQueue(false);
-                                          setTimeout(() => { draggedLibraryTrackRef.current = null; }, 500);
-                                        }}
                                         onClick={() => handlePlayPreview(t)}
                                         className="flex items-center justify-between p-1.5 hover:bg-cyan-500/10 rounded-lg text-xs cursor-pointer select-none group"
                                       >
@@ -3303,9 +3243,19 @@ export default function RadioManager() {
                 {/* ========================================================================= */}
                 {(mp3ViewMode === 'split' || mp3ViewMode === 'queue') && (
                   <div 
-                    onDragOver={handleQueueDragOver}
-                    onDragLeave={handleQueueDragLeave}
-                    onDrop={handleQueueDrop}
+                    onDragOver={(e) => { e.preventDefault(); setIsDraggingOverQueue(true); }}
+                    onDragLeave={() => setIsDraggingOverQueue(false)}
+                    onDrop={async (e) => {
+                      e.preventDefault();
+                      setIsDraggingOverQueue(false);
+                      const rawData = e.dataTransfer.getData('application/json');
+                      if (rawData) {
+                        try {
+                          const droppedTrack = JSON.parse(rawData);
+                          await handleAddTrackToQueue(droppedTrack);
+                        } catch (err) {}
+                      }
+                    }}
                     className={`w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[540px] lg:h-[620px] ${
                       isDraggingOverQueue 
                         ? 'border-[#1DB954] bg-[#1DB954]/5 ring-4 ring-[#1DB954]/30 scale-[1.002]' 
@@ -3429,16 +3379,11 @@ export default function RadioManager() {
                       </div>
 
                       {/* ZONA DE ARRASTRE */}
-                      <div 
-                        onDragOver={handleQueueDragOver}
-                        onDragLeave={handleQueueDragLeave}
-                        onDrop={handleQueueDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center text-xs font-bold transition flex items-center justify-center gap-2 ${
-                          isDraggingOverQueue 
-                            ? 'border-[#1DB954] text-[#1DB954] bg-[#1DB954]/25 ring-2 ring-[#1DB954]/50 animate-pulse' 
-                            : 'border-white/15 text-gray-300 bg-black/40'
-                        }`}
-                      >
+                      <div className={`border-2 border-dashed rounded-xl p-2 text-center text-xs font-bold transition flex items-center justify-center gap-2 ${
+                        isDraggingOverQueue 
+                          ? 'border-[#1DB954] text-[#1DB954] bg-[#1DB954]/20 animate-pulse' 
+                          : 'border-white/10 text-gray-400 bg-black/30'
+                      }`}>
                         <ListPlus className="w-4 h-4 text-[#1DB954]" />
                         <span>
                           {isDraggingOverQueue 
@@ -3449,12 +3394,7 @@ export default function RadioManager() {
                     </div>
 
                     {/* CUERPO DEL PANEL DERECHO (LISTA DE CANCIONES DE LA COLA) */}
-                    <div 
-                      onDragOver={handleQueueDragOver}
-                      onDragLeave={handleQueueDragLeave}
-                      onDrop={handleQueueDrop}
-                      className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28"
-                    >
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28">
                       {songs.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
                           <Radio className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />
