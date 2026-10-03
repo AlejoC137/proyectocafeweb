@@ -309,7 +309,12 @@ export default function ProyectoRadio() {
       if (isLocalHost) {
         streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       } else {
-        // En deploy remoto, esperar a que el .bat emita la URL http
+        // En deploy remoto, esperar a que el .bat emita la URL http en la nube.
+        // Pausar audio inmediatamente para evitar que siga sonando la pista anterior en caché
+        const audioEl = player.audioRef.current;
+        if (audioEl && !audioEl.paused) {
+          audioEl.pause();
+        }
         return;
       }
     }

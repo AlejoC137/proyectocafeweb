@@ -519,6 +519,16 @@ try {
 
             if ($requestedTrack) {
                 # Solicitud interactiva del usuario
+                # Sincronizar cola fresca al recibir petición
+                $freshQueue = Get-SupabaseQueue
+                if ($freshQueue -and $freshQueue.Count -gt 0) {
+                    $freshMatched = Match-TracksToLocalFiles -dbList $freshQueue -localFilesList $allLocalFiles
+                    if ($freshMatched.Count -gt 0) {
+                        $matchedTracks = $freshMatched
+                        $isAutoRotation = $false
+                    }
+                }
+
                 if ($global:PreloadedTrack -and $global:PreloadedTrack.isReady -and 
                     ($requestedTrack.filePath -and $global:PreloadedTrack.filePath -eq $requestedTrack.filePath)) {
                     # La cancion solicitada ya habia sido pre-subida
@@ -548,6 +558,18 @@ try {
                     $trackIndex = $foundIdx + 1
                 }
             } else {
+                # Consultar cola fresca para respetar cualquier cambio o reordenamiento del DJ
+                $freshQueue = Get-SupabaseQueue
+                if ($freshQueue -and $freshQueue.Count -gt 0) {
+                    $freshMatched = Match-TracksToLocalFiles -dbList $freshQueue -localFilesList $allLocalFiles
+                    if ($freshMatched.Count -gt 0) {
+                        $matchedTracks = $freshMatched
+                        $isAutoRotation = $false
+                    }
+                }
+                if ($trackIndex -ge $matchedTracks.Count) {
+                    $trackIndex = 0
+                }
                 $candidate = $matchedTracks[$trackIndex]
                 if ($global:PreloadedTrack -and $global:PreloadedTrack.isReady -and ($candidate.filePath -and $global:PreloadedTrack.filePath -eq $candidate.filePath)) {
                     # Usar la pista ya pre-subida por adelantado para cambio instantaneo
@@ -658,11 +680,44 @@ try {
                 if ($sec -ge 3 -and (-not $isPreloadTriggered) -and (-not $global:PreloadedTrack)) {
                     $isPreloadTriggered = $true
                     $nextCandidate = $null
-                    if ($trackIndex -lt $matchedTracks.Count) {
-                        $nextCandidate = $matchedTracks[$trackIndex]
-                    } elseif ($matchedTracks.Count -gt 0) {
-                        $nextCandidate = $matchedTracks[0]
+
+                    # 1. Consultar la cola activa en Supabase para saber con certeza cuál es la siguiente pista
+                    $freshQueue = Get-SupabaseQueue
+                    if ($freshQueue -and $freshQueue.Count -gt 0) {
+                        $freshMatched = Match-TracksToLocalFiles -dbList $freshQueue -localFilesList $allLocalFiles
+                        if ($freshMatched.Count -gt 0) {
+                            $matchedTracks = $freshMatched
+                            $isAutoRotation = $false
+                        }
+                    }
+
+                    # 2. Si hay cola de emision activa, localizar la cancion actual y elegir la siguiente en la cola
+                    if ($matchedTracks -and $matchedTracks.Count -gt 0 -and (-not $isAutoRotation)) {
+                        $currQIdx = -1
+                        for ($qi = 0; $qi -lt $matchedTracks.Count; $qi++) {
+                            if (($matchedTracks[$qi].filePath -and $currentTrack.filePath -and $matchedTracks[$qi].filePath -eq $currentTrack.filePath) -or 
+                                ((Normalize-Text $matchedTracks[$qi].title) -eq (Normalize-Text $currentTrack.title))) {
+                                $currQIdx = $qi
+                                break
+                            }
+                        }
+
+                        if ($currQIdx -ge 0) {
+                            if (($currQIdx + 1) -lt $matchedTracks.Count) {
+                                $nextCandidate = $matchedTracks[$currQIdx + 1]
+                                $trackIndex = $currQIdx + 1
+                            } else {
+                                # Si era la ultima cancion de la cola, reinicia la cola desde el primer tema
+                                $nextCandidate = $matchedTracks[0]
+                                $trackIndex = 0
+                            }
+                        } else {
+                            # Si la cancion actual no estaba en la cola, la siguiente es la primera de la cola
+                            $nextCandidate = $matchedTracks[0]
+                            $trackIndex = 0
+                        }
                     } elseif ($isAutoRotation -and $allLocalFiles.Count -gt 0) {
+                        # Solo si NO hay ninguna cancion en la cola web, rotar aleatoriamente
                         $randomNext = $allLocalFiles | Get-Random
                         $cNameNext = [System.IO.Path]::GetFileNameWithoutExtension($randomNext.Name)
                         $cCleanNext = [System.Text.RegularExpressions.Regex]::Replace($cNameNext, "^\d+[\s\-_.]*", "")

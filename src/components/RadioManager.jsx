@@ -830,8 +830,8 @@ export default function RadioManager() {
                 airAudio.load();
               }
               if (isPlayingLiveSignalRef.current && row.is_playing) {
-                airAudio.muted = false;
-                airAudio.volume = isMutedRef.current ? 0 : volumeRef.current;
+                airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
+                airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
                 airAudio.play().catch(err => {
                   console.warn("Autoplay diferido al recibir señal del BAT:", err);
                   airAudio.addEventListener('canplay', () => {
@@ -1522,8 +1522,8 @@ export default function RadioManager() {
       // Reproducir en el monitor de cabina solo si existe una URL de audio directa y válida para esta canción
       if (airAudio && directAudioUrl && (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://') || directAudioUrl.startsWith('/api/local-audio'))) {
         airAudio.src = directAudioUrl;
-        airAudio.muted = false;
-        airAudio.volume = isMuted ? 0 : volume;
+        airAudio.muted = isAirMuted || airVolume === 0;
+        airAudio.volume = isAirMuted ? 0 : airVolume;
         airAudio.play().catch(() => {});
         setIsPlayingLiveSignal(true);
       } else {
@@ -1666,8 +1666,8 @@ export default function RadioManager() {
         airAudio.src = liveUrl;
         airAudio.load();
       }
-      airAudio.muted = false;
-      airAudio.volume = isMuted ? 0 : volume;
+      airAudio.muted = isAirMuted || airVolume === 0;
+      airAudio.volume = isAirMuted ? 0 : airVolume;
       try {
         await airAudio.play();
         setIsPlayingLiveSignal(true);
@@ -3416,6 +3416,52 @@ export default function RadioManager() {
                         </button>
                       </div>
 
+                      {/* CONTROL DE VOLUMEN MONITOR DE COLA (DEDICADO) */}
+                      <div className="flex items-center justify-between gap-2 bg-black/60 px-3 py-1.5 rounded-xl border border-white/10">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <button
+                            onClick={() => {
+                              const nextMute = !isAirMuted;
+                              setIsAirMuted(nextMute);
+                              if (masterAirAudioRef.current) {
+                                masterAirAudioRef.current.muted = nextMute;
+                                masterAirAudioRef.current.volume = nextMute ? 0 : airVolume;
+                              }
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation shrink-0"
+                            title={isAirMuted ? "Activar audio del monitor" : "Silenciar monitor de cola"}
+                          >
+                            {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-500" /> : <Volume2 className="w-3.5 h-3.5 text-red-400" />}
+                          </button>
+                          <span className="text-[11px] font-bold text-gray-300 truncate">
+                            Monitor Cola:
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-1 max-w-[150px]">
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={isAirMuted ? 0 : airVolume}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setAirVolume(val);
+                              setIsAirMuted(false);
+                              if (masterAirAudioRef.current) {
+                                masterAirAudioRef.current.muted = false;
+                                masterAirAudioRef.current.volume = val;
+                              }
+                            }}
+                            className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
+                            title={`Volumen Monitor de Cola: ${Math.round((isAirMuted ? 0 : airVolume) * 100)}%`}
+                          />
+                          <span className="text-[10px] font-mono text-red-400 font-bold w-8 text-right shrink-0">
+                            {isAirMuted ? 'MUTE' : `${Math.round(airVolume * 100)}%`}
+                          </span>
+                        </div>
+                      </div>
+
                       {/* BUSCADOR DENTRO DE LA COLA */}
                       <div className="relative pt-1">
                         <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3.5" />
@@ -4349,7 +4395,18 @@ export default function RadioManager() {
                 {/* Control de Volumen Monitor Al Aire */}
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                   <div className="flex items-center gap-1.5">
-                    <button onClick={() => setIsAirMuted(!isAirMuted)} className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" title={isAirMuted ? "Activar audio" : "Silenciar"}>
+                    <button 
+                      onClick={() => {
+                        const nextMute = !isAirMuted;
+                        setIsAirMuted(nextMute);
+                        if (masterAirAudioRef.current) {
+                          masterAirAudioRef.current.muted = nextMute;
+                          masterAirAudioRef.current.volume = nextMute ? 0 : airVolume;
+                        }
+                      }} 
+                      className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" 
+                      title={isAirMuted ? "Activar audio" : "Silenciar"}
+                    >
                       {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
                     </button>
                     <input 
@@ -4359,8 +4416,13 @@ export default function RadioManager() {
                       step="0.01"
                       value={isAirMuted ? 0 : airVolume}
                       onChange={(e) => {
-                        setAirVolume(Number(e.target.value));
+                        const val = Number(e.target.value);
+                        setAirVolume(val);
                         setIsAirMuted(false);
+                        if (masterAirAudioRef.current) {
+                          masterAirAudioRef.current.muted = false;
+                          masterAirAudioRef.current.volume = val;
+                        }
                       }}
                       className="w-16 sm:w-20 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
                       title="Volumen Monitor Al Aire"

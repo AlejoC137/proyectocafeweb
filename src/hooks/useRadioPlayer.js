@@ -396,20 +396,29 @@ export function useRadioPlayer(
         if (isLocalHost) {
           playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
         } else {
-          // En deploy: si ya existe una fuente de streaming válida al aire, preservarla
-          if (audioRef.current.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://')) && !audioRef.current.src.includes('/api/local-audio')) {
-            playableUrl = audioRef.current.src;
-          } else {
-            // No intentar reproducir /api/local-audio en Vercel
-            return;
+          // En deploy remoto (ej. Vercel): si la pista solo tiene formato 'local://',
+          // el transmisor .bat la está preparando o subiendo a Supabase Storage.
+          // SILENCIAR Y PAUSAR de inmediato: NUNCA volver a reproducir la canción anterior en caché.
+          if (audioRef.current && !audioRef.current.paused) {
+            audioRef.current.pause();
           }
+          return;
         }
+      }
+
+      // Si no hay URL válida HTTP/HTTPS o local, pausar y esperar a que llegue la información
+      if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/'))) {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        return;
       }
 
       const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';
       const isSameSrc = (currentSrcPath === playableUrl || audioRef.current.src === playableUrl);
 
       if (!isSameSrc) {
+        audioRef.current.pause();
         audioRef.current.src = playableUrl;
       }
       audioRef.current.volume = isMuted ? 0 : volume;
@@ -435,6 +444,9 @@ export function useRadioPlayer(
         }
       }
     } else if (!currentTrack?.url && isPlaying) {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
       setIsPlaying(false);
     }
   }, [currentTrack?.url, activeTab, isPlaying]);
@@ -445,10 +457,15 @@ export function useRadioPlayer(
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
       }
-    } else if (isDailyLoop) {
-      nextTrack();
     } else {
-      nextTrack();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (isDailyLoop) {
+        nextTrack();
+      } else {
+        nextTrack();
+      }
     }
   };
 
