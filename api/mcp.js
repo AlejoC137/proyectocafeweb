@@ -1025,13 +1025,13 @@ async function ventaRegistrar(args) {
 
 // ── 5. STAFF ────────────────────────────────
 async function getStaff({ solo_activos = true } = {}) {
-  let q = supabase().from("Staff").select("*");
+  const { data, error } = await supabase().from("Staff").select("*");
+  if (error) throw new Error("Error al obtener staff: " + error.message);
+  let filtrados = data || [];
   if (solo_activos) {
-    q = q.eq("activo", true);
+    filtrados = filtrados.filter((s) => s.show !== false && s.activo !== false && s.Estado !== "Inactivo");
   }
-  const { data, error } = await q.order("nombre", { ascending: true });
-  if (error) throw new Error(`Error al obtener staff: ${error.message}`);
-  return data || [];
+  return filtrados;
 }
 
 // ── 6. AGENDA CRUD & SAFETY ──────────────────
