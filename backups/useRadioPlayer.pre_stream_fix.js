@@ -221,10 +221,12 @@ export function useRadioPlayer(
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
 
-    // Pausar audio anterior
+    // Silenciar y limpiar inmediatamente el audio previo para evitar reproducir residuos de la cancion anterior
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
 
     let newIdx;
@@ -265,10 +267,12 @@ export function useRadioPlayer(
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
 
-    // Pausar audio anterior
+    // Silenciar y limpiar inmediatamente el audio previo
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
 
     let newIdx;
@@ -296,10 +300,12 @@ export function useRadioPlayer(
     if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
     setAudioError(null);
 
-    // Pausar audio anterior
+    // Silenciar y limpiar inmediatamente el audio previo para evitar reproducir residuos de la cancion anterior
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
 
     if (isShuffle) {
@@ -404,6 +410,8 @@ export function useRadioPlayer(
       if (audioRef.current) {
         try { 
           audioRef.current.pause();
+          audioRef.current.removeAttribute('src');
+          audioRef.current.load();
         } catch (e) {}
       }
       return;
@@ -424,6 +432,8 @@ export function useRadioPlayer(
           if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
+            audioRef.current.removeAttribute('src');
+            audioRef.current.load();
           }
           return;
         }
@@ -434,6 +444,8 @@ export function useRadioPlayer(
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
+          audioRef.current.removeAttribute('src');
+          audioRef.current.load();
         }
         return;
       }
@@ -444,7 +456,10 @@ export function useRadioPlayer(
       if (!isSameSrc) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
         audioRef.current.src = playableUrl;
+        audioRef.current.load();
       }
       audioRef.current.volume = isMuted ? 0 : volume;
 
@@ -483,6 +498,8 @@ export function useRadioPlayer(
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
     }
     if (isRepeatSingle) {
       if (audioRef.current) {

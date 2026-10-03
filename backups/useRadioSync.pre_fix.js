@@ -31,42 +31,39 @@ export function useRadioSync(options = {}) {
   onRemoteCommandRef.current = onRemoteCommand;
 
   const clientId = useRef((() => {
-    const prefix = isManager ? 'manager-' : 'listener-';
-    return prefix + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
+    try {
+      const stored = sessionStorage.getItem('proyecto_radio_client_id');
+      if (stored) return stored;
+      const gen = 'listener-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
+      sessionStorage.setItem('proyecto_radio_client_id', gen);
+      return gen;
+    } catch (e) {
+      return 'listener-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
+    }
   })()).current;
-
-  const lastRemoteListRef = useRef([]);
 
   const hasVolumeColumnRef = useRef(true);
 
   // Combinar escuchas remotos (Supabase Presence) con locales (BroadcastChannel)
-  const updateMergedListeners = useCallback((remoteList) => {
-    if (remoteList !== undefined) {
-      lastRemoteListRef.current = remoteList;
-    }
-    const currentRemote = remoteList !== undefined ? remoteList : lastRemoteListRef.current;
+  const updateMergedListeners = useCallback((remoteList = []) => {
     const now = Date.now();
     const map = new Map();
 
     // 1. Agregar escuchas remotos de Supabase
-    currentRemote.forEach(item => {
+    remoteList.forEach(item => {
       if (item.clientId && item.clientId !== clientId) {
-        if (item.role !== 'manager') {
-          map.set(item.clientId, {
-            ...item,
-            source: 'remote',
-            updatedAt: item.updatedAt || now
-          });
-        }
+        map.set(item.clientId, {
+          ...item,
+          source: 'remote',
+          updatedAt: item.updatedAt || now
+        });
       }
     });
 
     // 2. Agregar escuchas locales válidos (< 10 segundos)
     localListenersMap.current.forEach((val, key) => {
       if (now - val.updatedAt < 10000 && key !== clientId) {
-        if (val.role !== 'manager') {
-          map.set(key, { ...val, source: 'local' });
-        }
+        map.set(key, { ...val, source: 'local' });
       } else {
         localListenersMap.current.delete(key);
       }
@@ -275,7 +272,7 @@ export function useRadioSync(options = {}) {
       bcPresence.onmessage = (event) => {
         if (event.data?.type === 'PRESENCE_PING' && event.data.clientId !== clientId) {
           localListenersMap.current.set(event.data.clientId, event.data);
-          updateMergedListeners(lastRemoteListRef.current);
+          updateMergedListeners();
         }
       };
     } catch (e) {}
