@@ -2680,16 +2680,12 @@ export default function RadioManager() {
 
   return (
     <div 
-      className={`h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] flex flex-col bg-[#121212] text-white font-sans overflow-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
+      className={`min-h-screen bg-[#121212] text-white font-sans p-3 sm:p-5 md:p-6 pb-44 sm:pb-36 transition-colors overflow-x-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
     >
-      {/* ========================================================================= */}
-      {/* CONTENEDOR 1: ÁREA DE LISTAS Y GESTIÓN (SEPARADO, FLEX-1 CON SCROLL)      */}
-      {/* ========================================================================= */}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-5">
-        <div className="max-w-[1920px] mx-auto space-y-4">
+      <div className="max-w-[1920px] mx-auto space-y-4 sm:space-y-5">
         
         {/* HEADER PRINCIPAL SPOTIFY */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
@@ -2939,15 +2935,15 @@ export default function RadioManager() {
               </div>
             </div>
 
-            {/* GRID DUAL PANEL 50% / 50% */}
-            <div className="w-full pb-4">
+            {/* GRID DUAL PANEL 50% / 50% (CON ESPACIADO INFERIOR PARA QUE NUNCA SE TRASLAPE CON LOS REPRODUCTORES) */}
+            <div className="w-full mb-32 sm:mb-28">
               <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-5 items-start' : ''}`}>
 
                 {/* ========================================================================= */}
                 {/* PANEL IZQUIERDO: BIBLIOTECA COMPLETA DE LA CARPETA (CON PLAY, NEXT, ALEATORIO) */}
                 {/* ========================================================================= */}
                 {(mp3ViewMode === 'split' || mp3ViewMode === 'library') && (
-                  <div className="w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[540px] lg:h-[620px]">
+                  <div className="w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[520px] sm:h-[600px] lg:h-[calc(100vh-230px)] lg:min-h-[480px] lg:max-h-[760px]">
                     {/* CABECERA PANEL IZQUIERDO */}
                     <div className="space-y-3 pb-3 border-b border-white/10 pt-1">
                       {/* FILA 1: TÍTULO Y CONTEO */}
@@ -3256,7 +3252,7 @@ export default function RadioManager() {
                         } catch (err) {}
                       }
                     }}
-                    className={`w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[540px] lg:h-[620px] ${
+                    className={`w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[520px] sm:h-[600px] lg:h-[calc(100vh-230px)] lg:min-h-[480px] lg:max-h-[760px] ${
                       isDraggingOverQueue 
                         ? 'border-[#1DB954] bg-[#1DB954]/5 ring-4 ring-[#1DB954]/30 scale-[1.002]' 
                         : 'border-white/10'
@@ -4023,17 +4019,14 @@ export default function RadioManager() {
           </div>
         )}
 
-        </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* CONTENEDOR 2: ÁREA DE REPRODUCTORES (SEPARADO, ESTÁTICO EN EL FONDO)     */}
-      {/* ========================================================================= */}
+      {/* BARRA INFERIOR DE REPRODUCCIÓN DIVIDIDA EN 2 DECKS TOTALES: AZUL (BIBLIOTECA) Y ROJO (AL AIRE) */}
       {(previewTrack || onAirTrack?.station_name || songs.length > 0) && (() => {
         const liveDisplayTrack = onAirTrack?.station_name ? onAirTrack : (songs[0] || null);
 
         return (
-          <div className="flex-shrink-0 w-full bg-neutral-950/98 border-t border-white/10 px-2 sm:px-4 py-2 shadow-2xl z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 backdrop-blur-2xl border-t border-white/10 px-2 sm:px-4 py-2 shadow-2xl animate-slide-up pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             
             {/* SELECTOR DE DECKS EN MÓVIL (< lg) */}
             <div className="flex lg:hidden items-center justify-between gap-1.5 pb-2 border-b border-white/10 mb-2">
