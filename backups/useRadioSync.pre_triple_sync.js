@@ -8,8 +8,8 @@ const SYNC_ROW_ID = 1;
  * Hook de sincronizacion global de radio via Supabase Realtime + Presencia de Escuchas + Control Remoto.
  * - Lee el estado actual al montar el componente.
  * - Suscribe a cambios en tiempo real (WebSocket).
- * - Monitorea instancias/oyentes en vivo (Presence + Broadcast + BroadcastChannel local).
- * - Triple redundancia: Presence, Broadcast Realtime y BroadcastChannel para 100% de fiabilidad en red.
+ * - Monitorea instancias/oyentes en vivo (Presence + BroadcastChannel local).
+ * - Permite enviar comandos a instancias individuales o a todas (F5, pausar, reproducir, listas específicas).
  */
 export function useRadioSync(options = {}) {
   const { isManager = false, presenceData, onRemoteCommand } = options;
@@ -22,23 +22,24 @@ export function useRadioSync(options = {}) {
   // Lista de escuchas/instancias activas
   const [listeners, setListeners] = useState([]);
   const localListenersMap = useRef(new Map());
-  const broadcastListenersMap = useRef(new Map());
-  const lastRemoteListRef = useRef([]);
+
+  // Reloj de emisión continua en vivo (Live Broadcast Clock)
+  const liveTimeTickRef = useRef(null);
 
   const channelRef = useRef(null);
   const onRemoteCommandRef = useRef(onRemoteCommand);
   onRemoteCommandRef.current = onRemoteCommand;
 
-  const presenceDataRef = useRef(presenceData);
-  presenceDataRef.current = presenceData;
-
-  // Identificador de cliente único por pestaña/instancia
   const clientId = useRef((() => {
     const prefix = isManager ? 'manager-' : 'listener-';
     return prefix + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
   })()).current;
 
-  // Combinar escuchas remotos (Presence + Broadcast) con locales (BroadcastChannel)
+  const lastRemoteListRef = useRef([]);
+
+  const hasVolumeColumnRef = useRef(true);
+
+  // Combinar escuchas remotos (Supabase Presence) con locales (BroadcastChannel)
   const updateMergedListeners = useCallback((remoteList) => {
     if (remoteList !== undefined) {
       lastRemoteListRef.current = remoteList;
@@ -47,31 +48,20 @@ export function useRadioSync(options = {}) {
     const now = Date.now();
     const map = new Map();
 
-    // 1. Agregar escuchas remotos de Supabase Presence
+    // 1. Agregar escuchas remotos de Supabase
     currentRemote.forEach(item => {
-      if (item && item.clientId && item.clientId !== clientId) {
+      if (item.clientId && item.clientId !== clientId) {
         if (item.role !== 'manager') {
           map.set(item.clientId, {
             ...item,
-            source: 'remote-presence',
+            source: 'remote',
             updatedAt: item.updatedAt || now
           });
         }
       }
     });
 
-    // 2. Agregar escuchas remotos de Supabase Realtime Broadcast (fallback robusto)
-    broadcastListenersMap.current.forEach((val, key) => {
-      if (now - val.updatedAt < 12000 && key !== clientId) {
-        if (val.role !== 'manager') {
-          map.set(key, { ...val, source: 'remote-broadcast' });
-        }
-      } else {
-        broadcastListenersMap.current.delete(key);
-      }
-    });
-
-    // 3. Agregar escuchas locales válidos (< 10 segundos, BroadcastChannel entre pestañas)
+    // 2. Agregar escuchas locales válidos (< 10 segundos)
     localListenersMap.current.forEach((val, key) => {
       if (now - val.updatedAt < 10000 && key !== clientId) {
         if (val.role !== 'manager') {
@@ -125,24 +115,6 @@ export function useRadioSync(options = {}) {
         presence: { key: clientId }
       }
     });
-
-    const handlePresenceStateChange = () => {
-      try {
-        const state = channel.presenceState();
-        const list = [];
-        Object.keys(state).forEach((key) => {
-          const arr = state[key];
-          if (Array.isArray(arr)) {
-            arr.forEach((p) => {
-              if (p.role === 'listener' || (!p.role && !key.startsWith('manager-'))) {
-                list.push({ ...p, clientId: p.clientId || key });
-              }
-            });
-          }
-        });
-        updateMergedListeners(list);
-      } catch (e) {}
-    };
 
     channel
       .on(
@@ -218,33 +190,35 @@ export function useRadioSync(options = {}) {
           });
         }
       })
-      .on('broadcast', { event: 'LISTENER_PING' }, ({ payload }) => {
-        if (payload && payload.clientId && payload.clientId !== clientId) {
-          broadcastListenersMap.current.set(payload.clientId, {
-            ...payload,
-            updatedAt: Date.now()
-          });
-          updateMergedListeners();
-        }
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const list = [];
+        Object.keys(state).forEach((key) => {
+          const arr = state[key];
+          if (Array.isArray(arr)) {
+            arr.forEach((p) => {
+              if (p.role === 'listener' || !p.role) {
+                list.push(p);
+              }
+            });
+          }
+        });
+        updateMergedListeners(list);
       })
-      .on('presence', { event: 'sync' }, handlePresenceStateChange)
-      .on('presence', { event: 'join' }, handlePresenceStateChange)
-      .on('presence', { event: 'leave' }, handlePresenceStateChange)
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           console.log('[RadioSync] Suscripción Realtime y Presence activa.');
           if (!isManager) {
             try {
-              const currentPres = presenceDataRef.current;
               await channel.track({
                 clientId,
                 role: 'listener',
                 device: /Mobi|Android/i.test(navigator.userAgent) ? 'Móvil' : 'Escritorio',
-                isPlaying: Boolean(currentPres?.isPlaying),
-                trackTitle: currentPres?.trackTitle || 'Radio al Aire',
-                artist: currentPres?.artist || '',
-                volume: currentPres?.volume !== undefined ? currentPres.volume : 0.85,
-                isMuted: Boolean(currentPres?.isMuted),
+                isPlaying: Boolean(presenceData?.isPlaying),
+                trackTitle: presenceData?.trackTitle || 'En espera',
+                artist: presenceData?.artist || '',
+                volume: presenceData?.volume !== undefined ? presenceData.volume : 0.85,
+                isMuted: Boolean(presenceData?.isMuted),
                 updatedAt: Date.now()
               });
             } catch (e) {}
@@ -301,18 +275,12 @@ export function useRadioSync(options = {}) {
       bcPresence.onmessage = (event) => {
         if (event.data?.type === 'PRESENCE_PING' && event.data.clientId !== clientId) {
           localListenersMap.current.set(event.data.clientId, event.data);
-          updateMergedListeners();
+          updateMergedListeners(lastRemoteListRef.current);
         }
       };
     } catch (e) {}
 
-    // Limpieza periódica cada 3 segundos de escuchas inactivos
-    const cleanupInterval = setInterval(() => {
-      updateMergedListeners();
-    }, 3000);
-
     return () => {
-      clearInterval(cleanupInterval);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
@@ -323,60 +291,59 @@ export function useRadioSync(options = {}) {
     };
   }, [clientId, isManager, updateMergedListeners]);
 
-  // Actualizar Presence en Supabase periódicamente y cuando cambie el estado de reproducción
+  // Actualizar Presence en Supabase y localmente cuando cambie el estado de reproducción
+  useEffect(() => {
+    if (!isManager && channelRef.current) {
+      try {
+        channelRef.current.track({
+          clientId,
+          role: 'listener',
+          device: /Mobi|Android/i.test(navigator.userAgent) ? 'Móvil' : 'Escritorio',
+          isPlaying: Boolean(presenceData?.isPlaying),
+          trackTitle: presenceData?.trackTitle || 'En espera',
+          artist: presenceData?.artist || '',
+          volume: presenceData?.volume !== undefined ? presenceData.volume : 0.85,
+          isMuted: Boolean(presenceData?.isMuted),
+          updatedAt: Date.now()
+        });
+      } catch (e) {}
+    }
+  }, [isManager, clientId, presenceData?.isPlaying, presenceData?.trackTitle, presenceData?.artist, presenceData?.volume, presenceData?.isMuted]);
+
+  // Enviar heartbeat local (BroadcastChannel) cada 3 segundos si es oyente
   useEffect(() => {
     if (isManager) return;
-
     let bc;
     try {
       bc = new BroadcastChannel('radio-presence-channel');
-    } catch (e) {}
+    } catch (e) {
+      return;
+    }
 
-    const sendHeartbeat = () => {
-      const pres = presenceDataRef.current;
-      const payload = {
-        type: 'PRESENCE_PING',
-        clientId,
-        role: 'listener',
-        device: /Mobi|Android/i.test(navigator.userAgent) ? 'Móvil' : 'Escritorio',
-        isPlaying: Boolean(pres?.isPlaying),
-        trackTitle: pres?.trackTitle || 'Radio al Aire',
-        artist: pres?.artist || '',
-        volume: pres?.volume !== undefined ? pres.volume : 0.85,
-        isMuted: Boolean(pres?.isMuted),
-        updatedAt: Date.now()
-      };
-
-      // 1. Localmente vía BroadcastChannel (mismo navegador / pestañas)
-      if (bc) {
-        try { bc.postMessage(payload); } catch (e) {}
-      }
-
-      // 2. Remotamente vía Supabase Realtime Broadcast (entre dispositivos)
-      if (channelRef.current) {
-        try {
-          channelRef.current.send({
-            type: 'broadcast',
-            event: 'LISTENER_PING',
-            payload
-          });
-        } catch (e) {}
-
-        // 3. Remotamente vía Supabase Presence track
-        try {
-          channelRef.current.track(payload);
-        } catch (e) {}
-      }
+    const sendPing = () => {
+      try {
+        bc.postMessage({
+          type: 'PRESENCE_PING',
+          clientId,
+          role: 'listener',
+          device: /Mobi|Android/i.test(navigator.userAgent) ? 'Móvil' : 'Escritorio',
+          isPlaying: Boolean(presenceData?.isPlaying),
+          trackTitle: presenceData?.trackTitle || 'En espera',
+          artist: presenceData?.artist || '',
+          volume: presenceData?.volume !== undefined ? presenceData.volume : 0.85,
+          isMuted: Boolean(presenceData?.isMuted),
+          updatedAt: Date.now()
+        });
+      } catch (e) {}
     };
 
-    sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 2500);
-
+    sendPing();
+    const interval = setInterval(sendPing, 3000);
     return () => {
       clearInterval(interval);
-      if (bc) bc.close();
+      bc.close();
     };
-  }, [isManager, clientId]);
+  }, [isManager, clientId, presenceData?.isPlaying, presenceData?.trackTitle, presenceData?.artist, presenceData?.volume, presenceData?.isMuted]);
 
   // Enviar comando remoto (a una instancia o a todas)
   const sendRemoteCommand = async ({ type, targetClientId = 'all', payload = {} }) => {
@@ -404,99 +371,181 @@ export function useRadioSync(options = {}) {
           payload: cmd
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[RadioSync] Error enviando comando remoto:', e);
+    }
   };
 
-  // Forzar recarga global (F5) en todas las instancias oyentes
-  const broadcastForceReload = async () => {
+  const broadcastVolume = async (volume, isMuted = false) => {
+    // REGLA JERÁRQUICA ESTRICTA:
+    // Un oyente/receptor (Proyecto Radio) NO PUEDE alterar el volumen maestro de emisión ni silenciar Radio Manager.
+    // Solo el operador maestro (isManager === true) puede emitir cambios globales.
+    if (!isManager) {
+      return;
+    }
+
+    const timestamp = Date.now();
+
+    // 1. Emitir por BroadcastChannel local (inter-pestañas)
     try {
-      const bc = new BroadcastChannel('radio-reload-channel');
-      bc.postMessage({ type: 'FORCE_RELOAD', timestamp: Date.now() });
+      const bc = new BroadcastChannel('radio-volume-channel');
+      bc.postMessage({
+        type: 'VOLUME_CHANGE',
+        volume,
+        isMuted,
+        senderId: clientId,
+        timestamp
+      });
       bc.close();
     } catch (e) {}
 
+    // 2. Emitir por Supabase Realtime Broadcast (WebSockets a todos los clientes)
     try {
       if (channelRef.current) {
         await channelRef.current.send({
           type: 'broadcast',
-          event: 'FORCE_RELOAD',
-          payload: { timestamp: Date.now(), targetClientId: 'all' }
+          event: 'VOLUME_CHANGE',
+          payload: {
+            volume,
+            isMuted,
+            senderId: clientId,
+            timestamp
+          }
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[RadioSync] Error en broadcastRealtime de volumen:', e.message);
+    }
+
+    // 3. Persistir en tabla radio_current_play si la columna existe
+    if (hasVolumeColumnRef.current) {
+      try {
+        const { error } = await supabase
+          .from(SYNC_TABLE)
+          .update({
+            volume,
+            is_muted: isMuted,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', SYNC_ROW_ID);
+
+        if (error) {
+          if (error.code === '42703') {
+            hasVolumeColumnRef.current = false;
+          } else {
+            console.warn('[RadioSync] Error al actualizar volumen en BD:', error.message);
+          }
+        }
+      } catch (err) {
+        hasVolumeColumnRef.current = false;
+      }
+    }
   };
 
-  const broadcastPlay = async (track, tab = 'supabase', isPlaying = true, volume = 0.85, isMuted = false) => {
-    if (!isManager) return;
-    setIsSyncing(true);
+  const broadcastPlay = async (station, tab, playing = true, currentVolume, currentMuted) => {
+    if (!station) return;
+
+    const basePayload = {
+      id: SYNC_ROW_ID,
+      tab: tab || 'supabase',
+      station_url: station.url || '',
+      station_name: station.title || station.name || 'Desconocido',
+      station_cover: station.cover || station.favicon || '',
+      station_artist: station.artist || '',
+      is_playing: playing,
+      updated_at: new Date().toISOString(),
+    };
+
+    const payloadWithVolume = (hasVolumeColumnRef.current && currentVolume !== undefined)
+      ? { ...basePayload, volume: currentVolume, is_muted: Boolean(currentMuted) }
+      : basePayload;
+
     try {
-      const isoNow = new Date().toISOString();
-      const payload = {
-        station_name: track.title || 'Pista de Radio',
-        station_artist: track.artist || '',
-        station_cover: track.cover || '',
-        station_url: track.url || track.station_url || '',
-        tab: tab || 'supabase',
-        is_playing: isPlaying,
-        updated_at: isoNow
-      };
-      await supabase.from(SYNC_TABLE).update(payload).eq('id', SYNC_ROW_ID);
-    } catch (e) {
-      console.warn('[RadioSync] Error al emitir play:', e.message);
+      setIsSyncing(true);
+      let { error } = await supabase
+        .from(SYNC_TABLE)
+        .upsert(payloadWithVolume, { onConflict: 'id' });
+
+      if (error && error.code === '42703') {
+        hasVolumeColumnRef.current = false;
+        const fallbackRes = await supabase
+          .from(SYNC_TABLE)
+          .upsert(basePayload, { onConflict: 'id' });
+        error = fallbackRes.error;
+      }
+
+      if (error) {
+        console.warn('[RadioSync] Error al publicar:', error.message);
+        setSyncError(error.message);
+      }
+    } catch (err) {
+      console.warn('[RadioSync] Error broadcastPlay:', err.message);
     } finally {
       setIsSyncing(false);
     }
   };
 
   const broadcastStop = async () => {
-    if (!isManager) return;
-    setIsSyncing(true);
     try {
       await supabase
         .from(SYNC_TABLE)
-        .update({
-          is_playing: false,
-          updated_at: new Date().toISOString()
-        })
+        .update({ is_playing: false, updated_at: new Date().toISOString() })
         .eq('id', SYNC_ROW_ID);
-    } catch (e) {
-      console.warn('[RadioSync] Error al emitir pausa:', e.message);
-    } finally {
-      setIsSyncing(false);
+    } catch (err) {
+      console.warn('[RadioSync] Error al pausar globalmente:', err.message);
     }
   };
 
-  const broadcastVolume = async (newVol, isMuted = false) => {
-    if (!isManager) return;
+  const broadcastForceReload = async (targetClientId = 'all') => {
     try {
-      const bc = new BroadcastChannel('radio-volume-channel');
-      bc.postMessage({ type: 'VOLUME_CHANGE', volume: newVol, isMuted, timestamp: Date.now(), senderId: clientId });
-      bc.close();
-    } catch (e) {}
+      setIsSyncing(true);
 
-    try {
-      if (channelRef.current) {
-        await channelRef.current.send({
-          type: 'broadcast',
-          event: 'VOLUME_CHANGE',
-          payload: { volume: newVol, isMuted, timestamp: Date.now(), senderId: clientId }
-        });
+      // 1. Emitir comando por BroadcastChannel y Supabase
+      await sendRemoteCommand({
+        type: 'FORCE_RELOAD',
+        targetClientId,
+      });
+
+      // 2. Si es para todos, registrar también en tabla
+      if (targetClientId === 'all') {
+        await supabase
+          .from(SYNC_TABLE)
+          .upsert({
+            id: SYNC_ROW_ID,
+            tab: 'supabase',
+            station_url: '',
+            station_name: 'FORCE_RELOAD',
+            station_cover: '',
+            station_artist: '',
+            is_playing: false,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'id' });
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('[RadioSync] Error en broadcastForceReload:', err.message);
+    } finally {
+      setIsSyncing(false);
+    }
+
+    if (targetClientId === 'all' || targetClientId === clientId) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
   };
 
   return {
     currentPlay,
     remoteVolume,
-    isSyncing,
-    syncError,
-    listeners,
-    activeListenersCount: listeners.length,
-    sendRemoteCommand,
     broadcastPlay,
     broadcastStop,
     broadcastVolume,
-    broadcastForceReload
+    broadcastForceReload,
+    sendRemoteCommand,
+    listeners,
+    activeListenersCount: listeners.length,
+    clientId,
+    isSyncing,
+    syncError,
   };
 }
-export default useRadioSync;

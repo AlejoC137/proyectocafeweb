@@ -419,16 +419,22 @@ export function useRadioPlayer(
         if (isLocalHost) {
           playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
         } else {
-          // En deploy: si ya existe una fuente de streaming válida al aire, preservarla
-          if (audioRef.current && audioRef.current.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://')) && !audioRef.current.src.includes('/api/local-audio')) {
-            playableUrl = audioRef.current.src;
-          } else {
-            return;
+          // En deploy remoto: una URL local:// no se puede reproducir directamente en Vercel.
+          // Silenciar el elemento de audio para esperar en silencio la señal al aire de Supabase.
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
           }
+          return;
         }
       }
 
+      // Validar que sea una URL de audio directamente reproducible
       if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/api/local-audio') && !playableUrl.startsWith('/'))) {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
         return;
       }
 

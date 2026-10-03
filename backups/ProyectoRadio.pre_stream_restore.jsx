@@ -165,11 +165,11 @@ export default function ProyectoRadio() {
   // Telemetría de presencia para reportar estado y oyentes activos a Radio Manager
   const presenceData = useMemo(() => ({
     isPlaying,
-    trackTitle: currentTrack?.title || currentPlay?.station_name || 'Radio al Aire',
-    artist: currentTrack?.artist || currentPlay?.station_artist || '',
+    trackTitle: currentTrack?.title || 'En espera',
+    artist: currentTrack?.artist || '',
     volume: playerRef.current?.volume !== undefined ? playerRef.current.volume : 0.85,
     isMuted: Boolean(playerRef.current?.isMuted)
-  }), [isPlaying, currentTrack?.title, currentTrack?.artist, currentPlay?.station_name, currentPlay?.station_artist]);
+  }), [isPlaying, currentTrack?.title, currentTrack?.artist]);
 
   // 1. Sync & Presence
   const { currentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync({
