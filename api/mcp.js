@@ -4,6 +4,13 @@
  * https://spec.modelcontextprotocol.io/
  *
  * CRUD completo de Agenda + lectura de Menú, Recetas, Ventas, Inventario, Compras
+ * Adaptado a los nombres reales de las columnas en Supabase:
+ * - Agenda: nombreES, nombreEN, fecha, horaInicio, horaFinal, servicios, etc.
+ * - Menu: NombreES, NombreEN, Precio, TipoES, GRUPO, SUB_GRUPO, etc.
+ * - ItemsAlmacen: Nombre_del_producto, Area, CANTIDAD, UNIDADES, GRUPO, etc.
+ * - Recetas: legacyName, rendimiento, costo, etc.
+ * - Ventas: Date, Time, Total_Ingreso, Productos, Cliente, etc.
+ * - Compras: Date, Valor, Proveedor_Id, Concepto, Categoria, etc.
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -18,8 +25,69 @@ function supabase() {
 // MCP Server metadata
 const SERVER_INFO = {
   name: "proyectocafe-mcp",
-  version: "1.1.0",
+  version: "1.2.0",
 };
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+function formatServicios(svc) {
+  if (!svc) {
+    return [
+      { alimentos: false, alimentosDescripcion: "" },
+      { mesas: false, mesasDescription: "" },
+      { audioVisual: false, audioVisualDescription: "" },
+      { otros: false, otrosDescroptions: "" },
+    ];
+  }
+  if (Array.isArray(svc)) return svc;
+
+  const isTrue = (val) => {
+    if (typeof val === "boolean") return val;
+    if (typeof val === "string") {
+      const s = val.toLowerCase().trim();
+      return s === "true" || s === "si" || s === "sí" || s === "1";
+    }
+    if (val && typeof val === "object") return !!val.activo;
+    return false;
+  };
+
+  const getDesc = (val) => {
+    if (val && typeof val === "object") return val.descripcion || "";
+    if (
+      typeof val === "string" &&
+      !["true", "false", "si", "sí", "no"].includes(val.toLowerCase().trim())
+    ) {
+      return val;
+    }
+    return "";
+  };
+
+  const alimentosVal =
+    svc.alimentos ?? svc.alimento ?? svc["Alimentos/bebidas"] ?? svc["Alimentos"] ?? svc.bebidas;
+  const mesasVal =
+    svc.mesas ?? svc.mesa ?? svc["Mesas y sillas"] ?? svc["Mesas"] ?? svc.sillas;
+  const avVal =
+    svc.audioVisual ?? svc.audiovisual ?? svc["Audiovisual"] ?? svc.sonido;
+  const otrosVal =
+    svc.otros ?? svc.otro ?? svc["Otros"] ?? svc.reservas ?? svc["Reservas"];
+
+  return [
+    { alimentos: isTrue(alimentosVal), alimentosDescripcion: getDesc(alimentosVal) },
+    { mesas: isTrue(mesasVal), mesasDescription: getDesc(mesasVal) },
+    { audioVisual: isTrue(avVal), audioVisualDescription: getDesc(avVal) },
+    { otros: isTrue(otrosVal), otrosDescroptions: getDesc(otrosVal) },
+  ];
+}
+
+function normalizeAgendaItem(ev) {
+  if (!ev) return ev;
+  return {
+    ...ev,
+    nombre: ev.nombreES || ev.nombre || "",
+  };
+}
 
 // ─────────────────────────────────────────────
 // TOOL DEFINITIONS
@@ -32,7 +100,10 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        categoria: { type: "string", description: "Filtrar por categoría (opcional)" },
+        categoria: {
+          type: "string",
+          description: "Filtrar por categoría o nombre (ej: bebidas, comida, café)",
+        },
       },
     },
   },
@@ -42,7 +113,7 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        nombre: { type: "string", description: "Buscar por nombre (opcional)" },
+        nombre: { type: "string", description: "Buscar receta por nombre (opcional)" },
       },
     },
   },
@@ -52,29 +123,35 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        fecha_inicio: { type: "string", description: "YYYY-MM-DD (opcional)" },
-        fecha_fin: { type: "string", description: "YYYY-MM-DD (opcional)" },
+        fecha_inicio: { type: "string", description: "Fecha inicio (opcional)" },
+        fecha_fin: { type: "string", description: "Fecha fin (opcional)" },
         limite: { type: "number", description: "Máx registros (default 50)" },
       },
     },
   },
   {
     name: "get_inventario",
-    description: "Consulta el inventario del almacén con cantidades y unidades.",
+    description: "Consulta el inventario del almacén con cantidades, unidades y áreas.",
     inputSchema: {
       type: "object",
       properties: {
-        categoria: { type: "string", description: "Filtrar por categoría (opcional)" },
+        categoria: {
+          type: "string",
+          description: "Filtrar por área o grupo de inventario (opcional)",
+        },
       },
     },
   },
   {
     name: "get_compras",
-    description: "Historial de compras a proveedores.",
+    description: "Historial de compras e insumos del café.",
     inputSchema: {
       type: "object",
       properties: {
-        proveedor: { type: "string", description: "Filtrar por proveedor (opcional)" },
+        busqueda: {
+          type: "string",
+          description: "Filtrar por concepto o categoría (opcional)",
+        },
         limite: { type: "number", description: "Máx registros (default 50)" },
       },
     },
@@ -84,7 +161,7 @@ const TOOLS = [
   {
     name: "agenda_listar",
     description:
-      "Lista los eventos de la agenda del café. Puede filtrarse por rango de fechas o búsqueda de nombre/cliente.",
+      "Lista los eventos de la agenda del café. Puede filtrarse por rango de fechas o búsqueda de texto libre.",
     inputSchema: {
       type: "object",
       properties: {
@@ -92,7 +169,7 @@ const TOOLS = [
         fecha_fin: { type: "string", description: "Fecha fin YYYY-MM-DD (opcional)" },
         busqueda: {
           type: "string",
-          description: "Texto libre para buscar por nombre de evento o cliente (opcional)",
+          description: "Texto para buscar por nombre del evento, cliente o autores",
         },
         limite: { type: "number", description: "Máx registros a retornar (default 100)" },
       },
@@ -112,33 +189,36 @@ const TOOLS = [
   {
     name: "agenda_crear",
     description:
-      "Crea un nuevo evento en la agenda del café. Requiere nombre, fecha, horaInicio y horaFinal.",
+      "Crea un nuevo evento en la agenda del café. Requiere nombre (o nombreES), fecha, horaInicio y horaFinal.",
     inputSchema: {
       type: "object",
-      required: ["nombre", "fecha", "horaInicio", "horaFinal"],
+      required: ["fecha", "horaInicio", "horaFinal"],
       properties: {
-        nombre: { type: "string", description: "Nombre del evento" },
+        nombre: { type: "string", description: "Nombre del evento en español" },
+        nombreES: { type: "string", description: "Nombre del evento en español (equivalente a nombre)" },
+        nombreEN: { type: "string", description: "Nombre del evento en inglés (opcional)" },
         fecha: { type: "string", description: "Fecha del evento YYYY-MM-DD" },
         horaInicio: { type: "string", description: "Hora de inicio HH:MM:SS o HH:MM" },
         horaFinal: { type: "string", description: "Hora de finalización HH:MM:SS o HH:MM" },
-        nombreCliente: { type: "string", description: "Nombre del cliente / organizador" },
+        nombreCliente: { type: "string", description: "Nombre del cliente u organizador" },
         emailCliente: { type: "string", description: "Email del cliente" },
         telefonoCliente: { type: "string", description: "Teléfono del cliente" },
-        numeroPersonas: { type: "number", description: "Número de personas esperadas" },
-        valor: { type: "string", description: "Valor / precio del evento (ej: '$200,000')" },
-        autores: { type: "string", description: "Artistas o autores del evento" },
+        numeroPersonas: { type: "number", description: "Número de asistentes esperados" },
+        valor: { type: "string", description: "Valor / precio o 'Gratis'" },
+        autores: { type: "string", description: "Artistas, ponentes o autores" },
         infoAdicional: { type: "string", description: "Información adicional u observaciones" },
-        bannerIMG: { type: "string", description: "URL de la imagen banner del evento" },
-        linkInscripcion: { type: "string", description: "URL de inscripción o Eventbrite" },
+        decripcion: { type: "string", description: "Descripción detallada del evento" },
+        bannerIMG: { type: "string", description: "URL de la imagen del banner" },
+        linkInscripcion: { type: "string", description: "URL de inscripción o boletería" },
         servicios: {
           type: "object",
           description:
-            "Servicios requeridos. Objeto con llaves: alimentos, mesas, audioVisual, otros. Cada uno tiene { activo: boolean, descripcion: string }",
+            "Servicios requeridos: alimentos, mesas, audioVisual, otros (booleanos u objetos con descripción)",
         },
         aliado_id: { type: "string", description: "UUID del aliado vinculado (opcional)" },
         instagramsAliados: {
           type: "array",
-          description: "Lista de Instagram handles de aliados (opcional)",
+          description: "Lista de @handles de Instagram de aliados",
         },
       },
     },
@@ -146,13 +226,15 @@ const TOOLS = [
   {
     name: "agenda_actualizar",
     description:
-      "Actualiza un evento existente en la agenda. Solo se actualizan los campos que se envíen.",
+      "Actualiza un evento existente en la agenda. Solo se actualizan los campos enviados.",
     inputSchema: {
       type: "object",
       required: ["id"],
       properties: {
         id: { type: "string", description: "UUID del evento a actualizar (_id)" },
-        nombre: { type: "string" },
+        nombre: { type: "string", description: "Nombre del evento" },
+        nombreES: { type: "string", description: "Nombre del evento en español" },
+        nombreEN: { type: "string", description: "Nombre en inglés" },
         fecha: { type: "string", description: "YYYY-MM-DD" },
         horaInicio: { type: "string", description: "HH:MM:SS o HH:MM" },
         horaFinal: { type: "string", description: "HH:MM:SS o HH:MM" },
@@ -163,6 +245,7 @@ const TOOLS = [
         valor: { type: "string" },
         autores: { type: "string" },
         infoAdicional: { type: "string" },
+        decripcion: { type: "string" },
         bannerIMG: { type: "string" },
         linkInscripcion: { type: "string" },
         servicios: { type: "object" },
@@ -176,12 +259,12 @@ const TOOLS = [
     description: "Elimina un evento de la agenda permanentemente.",
     inputSchema: {
       type: "object",
-      required: ["id"],
+      required: ["id", "confirmar"],
       properties: {
         id: { type: "string", description: "UUID del evento a eliminar (_id)" },
         confirmar: {
           type: "boolean",
-          description: "Debe ser true para confirmar la eliminación",
+          description: "Debe ser true para confirmar la eliminación definitiva",
         },
       },
     },
@@ -211,52 +294,69 @@ const TOOLS = [
 // ─────────────────────────────────────────────
 
 async function getMenu({ categoria } = {}) {
-  let q = supabase().from("Menu").select("*").order("nombre");
-  if (categoria) q = q.ilike("categoria", `%${categoria}%`);
-  const { data, error } = await q;
+  let q = supabase().from("Menu").select("*");
+  if (categoria) {
+    q = q.or(
+      `NombreES.ilike.%${categoria}%,TipoES.ilike.%${categoria}%,GRUPO.ilike.%${categoria}%,SUB_GRUPO.ilike.%${categoria}%`
+    );
+  }
+  const { data, error } = await q.order("NombreES", { ascending: true, nullsFirst: false });
   if (error) throw new Error(`Error menú: ${error.message}`);
-  return data;
+  return (data || []).map((item) => ({
+    nombre: item.NombreES,
+    precio: item.Precio,
+    categoria: item.TipoES || item.GRUPO || "",
+    descripcion: item.DescripcionMenuES || "",
+    ...item,
+  }));
 }
 
 async function getRecetas({ nombre } = {}) {
-  let q = supabase().from("Recetas").select("*").order("nombre");
-  if (nombre) q = q.ilike("nombre", `%${nombre}%`);
-  const { data, error } = await q;
+  let q = supabase().from("Recetas").select("*");
+  if (nombre) {
+    q = q.ilike("legacyName", `%${nombre}%`);
+  }
+  const { data, error } = await q.order("legacyName", { ascending: true, nullsFirst: false });
   if (error) throw new Error(`Error recetas: ${error.message}`);
-  return data;
+  return (data || []).map((item) => ({
+    nombre: item.legacyName,
+    ...item,
+  }));
 }
 
 async function getVentas({ fecha_inicio, fecha_fin, limite = 50 } = {}) {
-  let q = supabase()
-    .from("Ventas")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limite);
-  if (fecha_inicio) q = q.gte("created_at", fecha_inicio);
-  if (fecha_fin) q = q.lte("created_at", `${fecha_fin}T23:59:59`);
+  let q = supabase().from("Ventas").select("*").limit(limite);
+  if (fecha_inicio) q = q.gte("Date", fecha_inicio);
+  if (fecha_fin) q = q.lte("Date", fecha_fin);
   const { data, error } = await q;
   if (error) throw new Error(`Error ventas: ${error.message}`);
-  return data;
+  return data || [];
 }
 
 async function getInventario({ categoria } = {}) {
-  let q = supabase().from("ItemsAlmacen").select("*").order("nombre");
-  if (categoria) q = q.ilike("categoria", `%${categoria}%`);
-  const { data, error } = await q;
+  let q = supabase().from("ItemsAlmacen").select("*");
+  if (categoria) {
+    q = q.or(`Area.ilike.%${categoria}%,GRUPO.ilike.%${categoria}%,Nombre_del_producto.ilike.%${categoria}%`);
+  }
+  const { data, error } = await q.order("Nombre_del_producto", { ascending: true, nullsFirst: false });
   if (error) throw new Error(`Error inventario: ${error.message}`);
-  return data;
+  return (data || []).map((item) => ({
+    nombre: item.Nombre_del_producto,
+    categoria: item.Area || item.GRUPO || "",
+    cantidad: item.CANTIDAD,
+    unidades: item.UNIDADES,
+    ...item,
+  }));
 }
 
-async function getCompras({ proveedor, limite = 50 } = {}) {
-  let q = supabase()
-    .from("Compras")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limite);
-  if (proveedor) q = q.ilike("proveedor", `%${proveedor}%`);
+async function getCompras({ busqueda, limite = 50 } = {}) {
+  let q = supabase().from("Compras").select("*").limit(limite);
+  if (busqueda) {
+    q = q.or(`Concepto.ilike.%${busqueda}%,Categoria.ilike.%${busqueda}%`);
+  }
   const { data, error } = await q;
   if (error) throw new Error(`Error compras: ${error.message}`);
-  return data;
+  return data || [];
 }
 
 // ── AGENDA CRUD ───────────────────────────────
@@ -272,12 +372,15 @@ async function agendaListar({ fecha_inicio, fecha_fin, busqueda, limite = 100 } 
   if (fecha_inicio) q = q.gte("fecha", fecha_inicio);
   if (fecha_fin) q = q.lte("fecha", fecha_fin);
   if (busqueda) {
-    q = q.or(`nombre.ilike.%${busqueda}%,nombreCliente.ilike.%${busqueda}%,autores.ilike.%${busqueda}%`);
+    q = q.or(
+      `nombreES.ilike.%${busqueda}%,nombreCliente.ilike.%${busqueda}%,autores.ilike.%${busqueda}%`
+    );
   }
 
   const { data, error } = await q;
   if (error) throw new Error(`Error al listar agenda: ${error.message}`);
-  return { total: data.length, eventos: data };
+  const normalizados = (data || []).map(normalizeAgendaItem);
+  return { total: normalizados.length, eventos: normalizados };
 }
 
 async function agendaObtener({ id } = {}) {
@@ -288,36 +391,36 @@ async function agendaObtener({ id } = {}) {
     .eq("_id", id)
     .single();
   if (error) throw new Error(`Evento no encontrado: ${error.message}`);
-  return data;
+  return normalizeAgendaItem(data);
 }
 
 async function agendaCrear(args) {
-  const {
-    nombre, fecha, horaInicio, horaFinal,
-    nombreCliente, emailCliente, telefonoCliente,
-    numeroPersonas, valor, autores, infoAdicional,
-    bannerIMG, linkInscripcion, servicios,
-    aliado_id, instagramsAliados,
-  } = args;
+  const nombreFinal = args.nombreES || args.nombre;
+  const { fecha, horaInicio, horaFinal } = args;
 
-  if (!nombre || !fecha || !horaInicio || !horaFinal) {
-    throw new Error("Campos obligatorios: nombre, fecha, horaInicio, horaFinal");
+  if (!nombreFinal || !fecha || !horaInicio || !horaFinal) {
+    throw new Error("Campos obligatorios: nombre (o nombreES), fecha, horaInicio, horaFinal");
   }
 
   const payload = {
-    nombre, fecha, horaInicio, horaFinal,
-    ...(nombreCliente !== undefined && { nombreCliente }),
-    ...(emailCliente !== undefined && { emailCliente }),
-    ...(telefonoCliente !== undefined && { telefonoCliente }),
-    ...(numeroPersonas !== undefined && { numeroPersonas }),
-    ...(valor !== undefined && { valor }),
-    ...(autores !== undefined && { autores }),
-    ...(infoAdicional !== undefined && { infoAdicional }),
-    ...(bannerIMG !== undefined && { bannerIMG }),
-    ...(linkInscripcion !== undefined && { linkInscripcion }),
-    ...(servicios !== undefined && { servicios }),
-    ...(aliado_id !== undefined && { aliado_id }),
-    ...(instagramsAliados !== undefined && { instagramsAliados }),
+    nombreES: nombreFinal,
+    nombreEN: args.nombreEN || "",
+    fecha,
+    horaInicio,
+    horaFinal,
+    ...(args.nombreCliente !== undefined && { nombreCliente: args.nombreCliente }),
+    ...(args.emailCliente !== undefined && { emailCliente: args.emailCliente }),
+    ...(args.telefonoCliente !== undefined && { telefonoCliente: args.telefonoCliente }),
+    ...(args.numeroPersonas !== undefined && { numeroPersonas: parseInt(args.numeroPersonas) || 1 }),
+    ...(args.valor !== undefined && { valor: String(args.valor) }),
+    ...(args.autores !== undefined && { autores: args.autores }),
+    ...(args.infoAdicional !== undefined && { infoAdicional: args.infoAdicional }),
+    ...(args.decripcion !== undefined && { decripcion: args.decripcion }),
+    ...(args.bannerIMG !== undefined && { bannerIMG: args.bannerIMG }),
+    ...(args.linkInscripcion !== undefined && { linkInscripcion: args.linkInscripcion }),
+    servicios: formatServicios(args.servicios),
+    ...(args.aliado_id !== undefined && { aliado_id: args.aliado_id }),
+    ...(args.instagramsAliados !== undefined && { instagramsAliados: args.instagramsAliados }),
   };
 
   const { data, error } = await supabase()
@@ -327,16 +430,34 @@ async function agendaCrear(args) {
     .single();
 
   if (error) throw new Error(`Error al crear evento: ${error.message}`);
-  return { mensaje: "Evento creado exitosamente", evento: data };
+  return { mensaje: "Evento creado exitosamente", evento: normalizeAgendaItem(data) };
 }
 
 async function agendaActualizar({ id, ...campos }) {
   if (!id) throw new Error("Se requiere el ID del evento");
 
-  // Eliminar campos undefined y el id del payload
-  const payload = Object.fromEntries(
-    Object.entries(campos).filter(([, v]) => v !== undefined)
-  );
+  const payload = {};
+
+  if (campos.nombre !== undefined || campos.nombreES !== undefined) {
+    payload.nombreES = campos.nombreES || campos.nombre;
+  }
+  if (campos.nombreEN !== undefined) payload.nombreEN = campos.nombreEN;
+  if (campos.fecha !== undefined) payload.fecha = campos.fecha;
+  if (campos.horaInicio !== undefined) payload.horaInicio = campos.horaInicio;
+  if (campos.horaFinal !== undefined) payload.horaFinal = campos.horaFinal;
+  if (campos.nombreCliente !== undefined) payload.nombreCliente = campos.nombreCliente;
+  if (campos.emailCliente !== undefined) payload.emailCliente = campos.emailCliente;
+  if (campos.telefonoCliente !== undefined) payload.telefonoCliente = campos.telefonoCliente;
+  if (campos.numeroPersonas !== undefined) payload.numeroPersonas = parseInt(campos.numeroPersonas) || 1;
+  if (campos.valor !== undefined) payload.valor = String(campos.valor);
+  if (campos.autores !== undefined) payload.autores = campos.autores;
+  if (campos.infoAdicional !== undefined) payload.infoAdicional = campos.infoAdicional;
+  if (campos.decripcion !== undefined) payload.decripcion = campos.decripcion;
+  if (campos.bannerIMG !== undefined) payload.bannerIMG = campos.bannerIMG;
+  if (campos.linkInscripcion !== undefined) payload.linkInscripcion = campos.linkInscripcion;
+  if (campos.servicios !== undefined) payload.servicios = formatServicios(campos.servicios);
+  if (campos.aliado_id !== undefined) payload.aliado_id = campos.aliado_id;
+  if (campos.instagramsAliados !== undefined) payload.instagramsAliados = campos.instagramsAliados;
 
   if (Object.keys(payload).length === 0) {
     throw new Error("Debes enviar al menos un campo para actualizar");
@@ -351,7 +472,7 @@ async function agendaActualizar({ id, ...campos }) {
 
   if (error) throw new Error(`Error al actualizar evento: ${error.message}`);
   if (!data) throw new Error(`No se encontró el evento con ID: ${id}`);
-  return { mensaje: "Evento actualizado exitosamente", evento: data };
+  return { mensaje: "Evento actualizado exitosamente", evento: normalizeAgendaItem(data) };
 }
 
 async function agendaEliminar({ id, confirmar } = {}) {
@@ -362,10 +483,9 @@ async function agendaEliminar({ id, confirmar } = {}) {
     );
   }
 
-  // Verificar que existe antes de eliminar
   const { data: existing, error: fetchErr } = await supabase()
     .from("Agenda")
-    .select("nombre, fecha")
+    .select("nombreES, fecha")
     .eq("_id", id)
     .single();
 
@@ -377,7 +497,7 @@ async function agendaEliminar({ id, confirmar } = {}) {
   if (error) throw new Error(`Error al eliminar evento: ${error.message}`);
 
   return {
-    mensaje: `Evento "${existing.nombre}" del ${existing.fecha} eliminado exitosamente`,
+    mensaje: `Evento "${existing.nombreES}" del ${existing.fecha} eliminado exitosamente`,
     id_eliminado: id,
   };
 }
@@ -387,13 +507,15 @@ async function agendaBuscarDisponibilidad({ fecha, horaInicio, horaFinal, exclui
 
   let q = supabase()
     .from("Agenda")
-    .select("_id, nombre, horaInicio, horaFinal, nombreCliente")
+    .select("_id, nombreES, horaInicio, horaFinal, nombreCliente")
     .eq("fecha", fecha);
 
   if (excluir_id) q = q.neq("_id", excluir_id);
 
-  const { data: eventosDelDia, error } = await q.order("horaInicio");
+  const { data: rawEventos, error } = await q.order("horaInicio");
   if (error) throw new Error(`Error al verificar disponibilidad: ${error.message}`);
+
+  const eventosDelDia = (rawEventos || []).map(normalizeAgendaItem);
 
   if (!horaInicio || !horaFinal) {
     return {
