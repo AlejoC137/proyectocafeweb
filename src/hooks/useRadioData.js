@@ -96,14 +96,24 @@ export function useRadioData(activeTab, currentTrack, currentTrackIndex, setCurr
       if (error) throw error;
 
       // Conservar todas las canciones de la cola de emisión en su orden exacto
+      const isLocalHost = typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
       const formattedData = (data || []).map(item => {
-        let playableUrl = item.url || '';
-        if (playableUrl.startsWith('local://')) {
-          const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
-          playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+        const rawUrl = item.url || '';
+        let playableUrl = rawUrl;
+        let extractedFileName = item.fileName || '';
+        if (rawUrl.startsWith('local://')) {
+          const rawName = decodeURIComponent(rawUrl.replace('local://', ''));
+          extractedFileName = extractedFileName || rawName;
+          playableUrl = isLocalHost
+            ? `/api/local-audio?file=${encodeURIComponent(rawName)}`
+            : rawUrl;
         }
         return {
           ...item,
+          rawUrl,
+          fileName: extractedFileName || item.fileName || '',
           url: playableUrl,
           streamUrl: playableUrl
         };

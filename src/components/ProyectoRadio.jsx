@@ -28,7 +28,32 @@ export default function ProyectoRadio() {
   });
   const [mobileTab, setMobileTab] = useState('player'); // 'agenda', 'player', 'menu'
 
+  const lastLiveTickRef = useRef({ time: 0, receivedAt: 0, url: '' });
+  const lastPlayedTrackKeyRef = useRef('');
+  const lastRemoteTabRef = useRef(null);
+  const endedPollTimerRef = useRef(null);
+
   const handleTabChange = (tab) => {
+    if (endedPollTimerRef.current) {
+      clearInterval(endedPollTimerRef.current);
+      endedPollTimerRef.current = null;
+    }
+
+    // Detener inmediatamente cualquier audio en curso al cambiar de fuente
+    const audioEl = playerRef.current?.audioRef?.current;
+    if (audioEl) {
+      try {
+        audioEl.pause();
+        if (tab === 'youtube') {
+          audioEl.removeAttribute('src');
+          audioEl.load();
+        }
+      } catch (e) {}
+    }
+
+    // Resetear la clave de pista reproducida para que al volver a 'supabase' recargue la emisión al aire
+    lastPlayedTrackKeyRef.current = '';
+
     setActiveTab(tab);
     try {
       localStorage.setItem('proyecto_radio_active_tab', tab);
@@ -42,8 +67,16 @@ export default function ProyectoRadio() {
     }
     playerRef.current?.setProgress(0);
     playerRef.current?.setCurrentTime(0);
-    playerRef.current?.setIsPlaying(false);
     playerRef.current?.setAudioError(null);
+
+    if (tab === 'supabase') {
+      const shouldPlay = Boolean(currentPlay?.is_playing) && !playerRef.current?.showAutoStart;
+      setIsPlaying(shouldPlay);
+      playerRef.current?.setIsPlaying(shouldPlay);
+    } else {
+      setIsPlaying(false);
+      playerRef.current?.setIsPlaying(false);
+    }
   };
 
   // 3. Hooks
@@ -110,7 +143,11 @@ export default function ProyectoRadio() {
 
       if (targetTab === 'youtube') {
         if (playerRef.current?.audioRef?.current) {
-          try { playerRef.current.audioRef.current.pause(); } catch (e) {}
+          try {
+            playerRef.current.audioRef.current.pause();
+            playerRef.current.audioRef.current.removeAttribute('src');
+            playerRef.current.audioRef.current.load();
+          } catch (e) {}
         }
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
@@ -123,9 +160,12 @@ export default function ProyectoRadio() {
           playerRef.current.audioRef.current.play().catch(() => {});
         }
       } else if (targetTab === 'supabase') {
-        const fileUrl = radioData.supabasePlaylist[0]?.url || cmd.payload?.url || cmd.url;
-        if (fileUrl && playerRef.current?.audioRef?.current) {
-          playerRef.current.audioRef.current.src = fileUrl;
+        lastPlayedTrackKeyRef.current = '';
+        const liveUrl = (currentPlay?.station_url && currentPlay.station_url.startsWith('http'))
+          ? currentPlay.station_url
+          : (cmd.payload?.url || cmd.url || '');
+        if (liveUrl && playerRef.current?.audioRef?.current) {
+          playerRef.current.audioRef.current.src = liveUrl;
           playerRef.current.audioRef.current.play().catch(() => {});
         }
       }
@@ -172,7 +212,7 @@ export default function ProyectoRadio() {
   }), [isPlaying, currentTrack?.title, currentTrack?.artist]);
 
   // 1. Sync & Presence
-  const { currentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync({
+  const { currentPlay, refreshCurrentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync({
     isManager: false,
     presenceData,
     onRemoteCommand: handleRemoteCommand
@@ -190,13 +230,13 @@ export default function ProyectoRadio() {
   );
   playerRef.current = player;
 
-  // Sincronizar estado Play/Pausa de ProyectoRadio con currentPlay.is_playing (recuerda tras F5)
+  // Sincronizar estado Play/Pausa de ProyectoRadio con currentPlay.is_playing cuando estamos en 'supabase'
   React.useEffect(() => {
-    if (currentPlay && typeof currentPlay.is_playing === 'boolean') {
+    if (activeTab === 'supabase' && currentPlay && typeof currentPlay.is_playing === 'boolean') {
       setIsPlaying(currentPlay.is_playing);
       player.setIsPlaying(currentPlay.is_playing);
     }
-  }, [currentPlay?.is_playing]);
+  }, [currentPlay?.is_playing, activeTab]);
 
   // Override player's states with hoisted states
   player.currentTrackIndex = currentTrackIndex;
@@ -208,8 +248,6 @@ export default function ProyectoRadio() {
   player.currentTrack = currentTrack;
 
   // Sincronización continua de tiempo en vivo emitida desde Radio Manager
-  const lastLiveTickRef = useRef({ time: 0, receivedAt: 0, url: '' });
-  const lastPlayedTrackKeyRef = useRef('');
 
   React.useEffect(() => {
     let bc;
@@ -295,7 +333,13 @@ export default function ProyectoRadio() {
       return;
     }
 
-    if (!currentPlay.station_url) return;
+    // Ignorar eventos internos de preescucha (PREVIEW_READY / PREVIEW_REQ) o peticiones en tránsito (REQUEST:)
+    if (
+      (currentPlay.tab && currentPlay.tab.startsWith('PREVIEW_READY:')) ||
+      (currentPlay.station_artist && (currentPlay.station_artist.startsWith('PREVIEW_REQ:') || currentPlay.station_artist.startsWith('REQUEST:')))
+    ) {
+      return;
+    }
 
     // Ignorar señales internas de control o sincronización
     const ignoredControlSignals = ['SYNC', 'BAT_ONLINE', 'CARGANDO...', 'OFFLINE', 'ON_AIR:ON', 'ON_AIR:OFF', 'SHUFFLE', 'PAUSED', 'NEXT_TRACK', 'START_BROADCAST', 'RESUME_BROADCAST', 'FORCE_RELOAD'];
@@ -303,23 +347,56 @@ export default function ProyectoRadio() {
       return;
     }
 
-    let streamUrl = currentPlay.station_url;
-    if (streamUrl && streamUrl.startsWith('local://')) {
-      const isLocalHost = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-      const rawName = decodeURIComponent(streamUrl.replace('local://', ''));
+    // Sincronizar cambio de modo global sólo si cambió explícitamente en la BD (ej. desde Radio Manager)
+    let effectiveTab = activeTab;
+    if (currentPlay.tab && !currentPlay.tab.startsWith('PREVIEW_READY:')) {
+      let resolvedTab = null;
+      if (currentPlay.tab === 'youtube') resolvedTab = 'youtube';
+      else if (currentPlay.tab === 'live' || currentPlay.tab === 'radio' || currentPlay.tab === 'radios' || currentPlay.tab === 'plaza') resolvedTab = 'live';
+      else if (currentPlay.tab === 'supabase' || currentPlay.tab === 'files') resolvedTab = 'supabase';
 
+      if (resolvedTab && lastRemoteTabRef.current !== null && resolvedTab !== lastRemoteTabRef.current) {
+        setActiveTab(resolvedTab);
+        effectiveTab = resolvedTab;
+        try {
+          localStorage.setItem('proyecto_radio_active_tab', resolvedTab);
+        } catch (e) {}
+      }
+      if (resolvedTab) {
+        lastRemoteTabRef.current = resolvedTab;
+      }
+    }
+
+    // REGLA CRÍTICA: Si la pestaña activa es YouTube o Radios Online ('live'),
+    // NUNCA cargar ni reproducir el MP3 de Files en <audio> para evitar doble audio simultáneo.
+    if (effectiveTab === 'youtube') {
+      const audioEl = player.audioRef.current;
+      if (audioEl && !audioEl.paused) {
+        try { audioEl.pause(); } catch (e) {}
+      }
+      return;
+    }
+
+    if (effectiveTab === 'live') {
+      return;
+    }
+
+    if (!currentPlay.station_url) return;
+
+    const isLocalHost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    let streamUrl = currentPlay.station_url;
+    if (streamUrl.startsWith('local://')) {
+      const rawName = decodeURIComponent(streamUrl.replace('local://', ''));
       if (isLocalHost) {
         streamUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
       } else {
-        // En deploy remoto, esperar a que el .bat emita la URL http en la nube.
-        // Pausar audio inmediatamente para evitar que siga sonando la pista anterior en caché
-        const audioEl = player.audioRef.current;
-        if (audioEl && !audioEl.paused) {
-          audioEl.pause();
-        }
         return;
       }
+    } else if (streamUrl.startsWith('/api/local-audio') && !isLocalHost) {
+      // En celular/remoto jamás intentar cargar una ruta local del servidor Vite
+      return;
     }
 
     const audioEl = player.audioRef.current;
@@ -339,23 +416,15 @@ export default function ProyectoRadio() {
       return;
     }
 
+    // Si había un polling de fin de pista esperando nueva canción, limpiarlo porque ya llegó
+    if (endedPollTimerRef.current) {
+      clearInterval(endedPollTimerRef.current);
+      endedPollTimerRef.current = null;
+    }
+
     // Nueva canción al aire:
     lastPlayedTrackKeyRef.current = trackKey;
     isApplyingRemoteChange.current = true;
-
-    if (currentPlay.tab) {
-      let resolvedTab = null;
-      if (currentPlay.tab === 'youtube') resolvedTab = 'youtube';
-      else if (currentPlay.tab === 'live' || currentPlay.tab === 'radio' || currentPlay.tab === 'radios' || currentPlay.tab === 'plaza') resolvedTab = 'live';
-      else if (currentPlay.tab === 'supabase' || currentPlay.tab === 'files') resolvedTab = 'supabase';
-
-      if (resolvedTab && resolvedTab !== activeTab) {
-        setActiveTab(resolvedTab);
-        try {
-          localStorage.setItem('proyecto_radio_active_tab', resolvedTab);
-        } catch (e) {}
-      }
-    }
 
     const targetVol = player.isMuted ? 0 : player.volume;
     audioEl.volume = targetVol;
@@ -367,7 +436,9 @@ export default function ProyectoRadio() {
       applyLiveSeek(audioEl);
       if (currentPlay.is_playing && !player.showAutoStart) {
         setIsPlaying(true);
-        audioEl.play().catch(() => {});
+        audioEl.play().catch((err) => {
+          console.warn('[ProyectoRadio] Reproducción bloqueada o pendiente de interacción:', err?.message);
+        });
       }
     };
 
@@ -380,7 +451,49 @@ export default function ProyectoRadio() {
     setTimeout(() => {
       isApplyingRemoteChange.current = false;
     }, 400);
-  }, [currentPlay?.station_url, currentPlay?.station_name, currentPlay?.is_playing]);
+  }, [currentPlay?.station_url, currentPlay?.station_name, currentPlay?.is_playing, currentPlay?.tab, activeTab]);
+
+  // Integración con MediaSession API para mantener la reproducción continua en celulares (iOS / Android) con pantalla bloqueada
+  React.useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    try {
+      const title = (activeTab === 'supabase' && currentPlay?.station_name)
+        ? currentPlay.station_name
+        : (currentTrack?.title || 'Proyecto Café Radio');
+      const artist = (activeTab === 'supabase' && currentPlay?.station_artist && !currentPlay.station_artist.startsWith('REQUEST:'))
+        ? currentPlay.station_artist
+        : (currentTrack?.artist || 'Radio en Vivo');
+      const artworkUrl = (activeTab === 'supabase' && currentPlay?.station_cover)
+        ? currentPlay.station_cover
+        : (currentTrack?.cover || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600');
+
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title,
+        artist,
+        album: 'Proyecto Café Radio',
+        artwork: [{ src: artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
+      });
+
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        const audioEl = playerRef.current?.audioRef?.current;
+        if (audioEl && activeTab !== 'youtube') {
+          audioEl.play().catch(() => {});
+          setIsPlaying(true);
+        }
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (activeTab === 'supabase') {
+          playerRef.current?.toggleMute?.();
+        } else {
+          const audioEl = playerRef.current?.audioRef?.current;
+          if (audioEl) audioEl.pause();
+          setIsPlaying(false);
+        }
+      });
+    } catch (e) {}
+  }, [currentPlay?.station_name, currentPlay?.station_artist, currentPlay?.station_cover, currentTrack?.title, currentTrack?.artist, currentTrack?.cover, isPlaying, activeTab]);
 
   // Sincronizar el index local si la playlist actual contiene la canción o estación global al aire
   React.useEffect(() => {
@@ -586,12 +699,18 @@ export default function ProyectoRadio() {
             <PlayerCenter 
               currentTrack={{
                 ...currentTrack,
-                // Si la URL que está sonando es la global, garantizamos que el título y cover vengan del global para evitar desajustes
-                title: (player.audioRef.current?.src === currentPlay?.station_url) ? currentPlay?.station_name : (currentTrack?.title || currentPlay?.station_name || 'Selecciona una estación'),
-                artist: (player.audioRef.current?.src === currentPlay?.station_url) ? currentPlay?.station_artist : (currentTrack?.artist || currentPlay?.station_artist || ''),
-                cover: (player.audioRef.current?.src === currentPlay?.station_url) ? currentPlay?.station_cover : (currentTrack?.cover || currentPlay?.station_cover),
-                isLiveStream: currentTrack?.isLiveStream ?? true,
-                url: currentTrack?.url || currentPlay?.station_url
+                // En modo 'supabase' (Files al aire), mostrar siempre la metadatos oficiales de la señal al aire del .bat
+                title: (activeTab === 'supabase' && currentPlay?.station_name && !['SYNC', 'BAT_ONLINE', 'CARGANDO...', 'OFFLINE'].includes(currentPlay.station_name))
+                  ? currentPlay.station_name
+                  : (currentTrack?.title || currentPlay?.station_name || 'Selecciona una estación'),
+                artist: (activeTab === 'supabase' && currentPlay?.station_artist && !currentPlay.station_artist.startsWith('REQUEST:') && !currentPlay.station_artist.startsWith('PREVIEW_REQ:'))
+                  ? currentPlay.station_artist
+                  : (currentTrack?.artist || currentPlay?.station_artist || ''),
+                cover: (activeTab === 'supabase' && currentPlay?.station_cover)
+                  ? currentPlay.station_cover
+                  : (currentTrack?.cover || currentPlay?.station_cover),
+                isLiveStream: activeTab === 'supabase' ? true : (currentTrack?.isLiveStream ?? true),
+                url: activeTab === 'supabase' ? (currentPlay?.station_url || currentTrack?.url) : (currentTrack?.url || currentPlay?.station_url)
               }}
               nowPlaying={radioData.nowPlaying}
               isPlaying={isPlaying}
@@ -733,13 +852,66 @@ export default function ProyectoRadio() {
             setIsPlaying(false);
           }
         }}
-        onEnded={() => {
-          // Al finalizar la pista al aire, pausar y esperar la siguiente pista del transmisor .bat
-          const audioEl = player.audioRef?.current;
-          if (audioEl) {
-            audioEl.pause();
+        onEnded={async () => {
+          if (activeTab !== 'supabase') {
+            player.handleTrackEnded?.();
+            return;
           }
-          console.log('[ProyectoRadio] Pista actual finalizada. Esperando siguiente canción del transmisor...');
+
+          console.log('[ProyectoRadio] Pista actual finalizada. Sincronizando siguiente canción del transmisor...');
+          const finishedKey = lastPlayedTrackKeyRef.current;
+
+          const checkAndPlayNext = async () => {
+            const fresh = await refreshCurrentPlay?.();
+            if (!fresh || !fresh.station_url || !fresh.is_playing) return false;
+            if (fresh.station_artist?.startsWith('REQUEST:') || fresh.station_artist?.startsWith('PREVIEW_REQ:')) return false;
+
+            const isLocalHost = typeof window !== 'undefined' &&
+              (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            let nextUrl = fresh.station_url;
+            if (nextUrl.startsWith('local://')) {
+              if (!isLocalHost) return false;
+              const rawName = decodeURIComponent(nextUrl.replace('local://', ''));
+              nextUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
+            } else if (nextUrl.startsWith('/api/local-audio') && !isLocalHost) {
+              return false;
+            }
+
+            const newKey = `${fresh.station_name}__${nextUrl}`;
+            if (newKey !== finishedKey) {
+              if (endedPollTimerRef.current) {
+                clearInterval(endedPollTimerRef.current);
+                endedPollTimerRef.current = null;
+              }
+              const audioEl = player.audioRef?.current;
+              if (audioEl && lastPlayedTrackKeyRef.current !== newKey) {
+                lastPlayedTrackKeyRef.current = newKey;
+                audioEl.volume = player.isMuted ? 0 : player.volume;
+                audioEl.src = nextUrl;
+                audioEl.load();
+                setIsPlaying(true);
+                audioEl.play().catch(() => {});
+              }
+              return true;
+            }
+            return false;
+          };
+
+          const switchedImmediately = await checkAndPlayNext();
+          if (!switchedImmediately) {
+            if (endedPollTimerRef.current) clearInterval(endedPollTimerRef.current);
+            let attempts = 0;
+            endedPollTimerRef.current = setInterval(async () => {
+              attempts += 1;
+              const done = await checkAndPlayNext();
+              if (done || attempts >= 15) {
+                if (endedPollTimerRef.current) {
+                  clearInterval(endedPollTimerRef.current);
+                  endedPollTimerRef.current = null;
+                }
+              }
+            }, 800);
+          }
         }}
       />
     </div>

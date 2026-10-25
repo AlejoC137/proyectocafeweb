@@ -131,6 +131,11 @@ export default function RadioManager() {
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
 
+  // Control de Instancia Única (Singleton Lock) para evitar múltiples Radio Manager abiertos
+  const managerInstanceIdRef = useRef('rm-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now());
+  const [isDuplicateInstance, setIsDuplicateInstance] = useState(false);
+  const isDuplicateInstanceRef = useRef(false);
+
   const audioRef = useRef(new Audio());
   const masterAirAudioRef = useRef(new Audio());
 
@@ -203,6 +208,114 @@ export default function RadioManager() {
   useEffect(() => {
     isMutedRef.current = isMuted;
   }, [isMuted]);
+
+  // Bloqueo de Instancia Única de Radio Manager (BroadcastChannel + localStorage Heartbeat)
+  const handleTakeoverInstance = () => {
+    const myId = managerInstanceIdRef.current;
+    try {
+      localStorage.setItem('radio_manager_singleton_lock', JSON.stringify({
+        id: myId,
+        timestamp: Date.now()
+      }));
+      const bc = new BroadcastChannel('radio-manager-singleton');
+      bc.postMessage({ type: 'TAKEOVER', newActiveId: myId, timestamp: Date.now() });
+      bc.close();
+    } catch (e) {}
+    isDuplicateInstanceRef.current = false;
+    setIsDuplicateInstance(false);
+  };
+
+  useEffect(() => {
+    const myId = managerInstanceIdRef.current;
+    const LOCK_KEY = 'radio_manager_singleton_lock';
+    let bc = null;
+
+    // Verificar si ya hay otra pestaña activa con heartbeat reciente (< 4 segundos)
+    try {
+      const raw = localStorage.getItem(LOCK_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.id && parsed.id !== myId && (Date.now() - parsed.timestamp) < 4000) {
+          isDuplicateInstanceRef.current = true;
+          setIsDuplicateInstance(true);
+        } else {
+          localStorage.setItem(LOCK_KEY, JSON.stringify({ id: myId, timestamp: Date.now() }));
+        }
+      } else {
+        localStorage.setItem(LOCK_KEY, JSON.stringify({ id: myId, timestamp: Date.now() }));
+      }
+    } catch (e) {}
+
+    try {
+      bc = new BroadcastChannel('radio-manager-singleton');
+      bc.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg) return;
+
+        if (msg.type === 'WHO_IS_ACTIVE' && msg.senderId !== myId && !isDuplicateInstanceRef.current) {
+          bc.postMessage({ type: 'I_AM_ACTIVE', activeId: myId, timestamp: Date.now() });
+        } else if (msg.type === 'I_AM_ACTIVE' && msg.activeId !== myId) {
+          isDuplicateInstanceRef.current = true;
+          setIsDuplicateInstance(true);
+          try {
+            audioRef.current?.pause();
+            masterAirAudioRef.current?.pause();
+          } catch (e) {}
+          setIsPlayingPreview(false);
+          setIsPlayingLiveSignal(false);
+        } else if (msg.type === 'TAKEOVER' && msg.newActiveId !== myId) {
+          isDuplicateInstanceRef.current = true;
+          setIsDuplicateInstance(true);
+          try {
+            audioRef.current?.pause();
+            masterAirAudioRef.current?.pause();
+          } catch (e) {}
+          setIsPlayingPreview(false);
+          setIsPlayingLiveSignal(false);
+        }
+      };
+
+      bc.postMessage({ type: 'WHO_IS_ACTIVE', senderId: myId });
+    } catch (e) {}
+
+    const heartbeat = setInterval(() => {
+      if (!isDuplicateInstanceRef.current) {
+        try {
+          localStorage.setItem(LOCK_KEY, JSON.stringify({ id: myId, timestamp: Date.now() }));
+        } catch (e) {}
+      }
+    }, 1500);
+
+    const releaseLock = () => {
+      try {
+        const raw = localStorage.getItem(LOCK_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.id === myId) {
+            localStorage.removeItem(LOCK_KEY);
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('beforeunload', releaseLock);
+    window.addEventListener('pagehide', releaseLock);
+
+    return () => {
+      clearInterval(heartbeat);
+      window.removeEventListener('beforeunload', releaseLock);
+      window.removeEventListener('pagehide', releaseLock);
+      releaseLock();
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+      // Al desmontar RadioManager, detener ambos decks para no dejar audio fantasma
+      try {
+        audioRef.current?.pause();
+        masterAirAudioRef.current?.pause();
+      } catch (e) {}
+    };
+  }, []);
 
   // Referencias para Drag & Drop y carpetas
   const dragItem = useRef(null);
@@ -699,52 +812,16 @@ export default function RadioManager() {
     supabase.from('radio_current_play').select('*').eq('id', 1).single().then(({ data }) => {
       if (data) {
         setOnAirTrack(data);
+        if (data.station_name) {
+          lastAirTrackNameRef.current = data.station_name;
+        }
         checkBatHeartbeat(data);
         fetchBatCatalog(true); // Siempre cargar el catálogo disponible de canciones locales/en la nube
 
-        // Cargar estado inicial de pre-escucha si ya existía una activa en el BAT
-        if (data.tab && data.tab.startsWith('PREVIEW_READY:')) {
-          const parts = data.tab.substring(14).split('||');
-          const previewUrl = parts[0];
-          const previewTitle = parts[1] || '';
-          const previewArtist = parts[2] || '';
-          const previewDur = Number(parts[3]) || 180;
-          if (previewUrl && audioRef.current) {
-            audioRef.current.src = previewUrl;
-            setPreviewDuration(previewDur);
-            setPreviewTrack({
-              title: previewTitle,
-              artist: previewArtist,
-              duration: previewDur
-            });
-          }
-        }
-
-        // Si la señal al aire está activa en la base de datos, reanudar motor de emisión continua de fondo
+        // Si la señal al aire está activa en la base de datos, preparar el reloj y la URL del Deck Rojo (sin reproducir en silencio hasta que el usuario active el Deck Rojo)
         if (data.is_playing && data.station_url) {
-          const liveUrl = getPreviewAudioUrl({ url: data.station_url });
           const elapsed = Math.max(0, (Date.now() - new Date(data.updated_at).getTime()) / 1000);
           setAirTime(elapsed);
-
-          if (liveUrl) {
-            const airAudio = masterAirAudioRef.current;
-            airAudio.src = liveUrl;
-            airAudio.muted = true; // Emisión continua silenciosa en cabina por defecto
-            const seekAndPlay = () => {
-              if (elapsed > 0 && airAudio.duration && elapsed < airAudio.duration) {
-                airAudio.currentTime = elapsed;
-              } else if (elapsed > 0) {
-                airAudio.currentTime = elapsed;
-              }
-              airAudio.play().catch(() => {});
-            };
-            if (airAudio.readyState >= 1) {
-              seekAndPlay();
-            } else {
-              airAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
-              airAudio.load();
-            }
-          }
         }
       }
     });
@@ -757,87 +834,90 @@ export default function RadioManager() {
         if (row) {
           // 1. Si es señal de pre-escucha (Modo Azul / Biblioteca CUE exclusiva)
           if (row.tab && row.tab.startsWith('PREVIEW_READY:')) {
-            if (row.tab === lastLoadedPreviewTabRef.current) {
-              return; // Ya cargada previamente; evitar reiniciar la canción o repetir autoplay
-            }
+            if (row.tab !== lastLoadedPreviewTabRef.current && userStartedPreviewRef.current) {
+              const parts = row.tab.substring(14).split('||');
+              const previewUrl = parts[0];
+              const previewTitle = parts[1] || '';
+              const previewArtist = parts[2] || '';
+              const previewDur = Number(parts[3]) || 180;
 
-            const parts = row.tab.substring(14).split('||');
-            const previewUrl = parts[0];
-            const previewTitle = parts[1] || '';
-            const previewArtist = parts[2] || '';
-            const previewDur = Number(parts[3]) || 180;
+              // Validar que la señal corresponda a la canción actualmente solicitada
+              const reqTitle = requestedPreviewTitleRef.current;
+              const isMatch = !reqTitle || !previewTitle ||
+                previewTitle.trim().toLowerCase().includes(reqTitle) ||
+                reqTitle.includes(previewTitle.trim().toLowerCase());
 
-            // Validar que la señal corresponda a la canción actualmente solicitada
-            const reqTitle = requestedPreviewTitleRef.current;
-            if (reqTitle && previewTitle) {
-              const pNorm = previewTitle.trim().toLowerCase();
-              if (!pNorm.includes(reqTitle) && !reqTitle.includes(pNorm)) {
-                console.log(`[Preview] Esperando "${reqTitle}", ignorando señal previa "${previewTitle}"`);
-                return;
+              if (isMatch && previewUrl && audioRef.current) {
+                lastLoadedPreviewTabRef.current = row.tab;
+                audioRef.current.src = previewUrl;
+                audioRef.current.currentTime = 0;
+                audioRef.current.muted = isPreviewMutedRef.current;
+                audioRef.current.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
+                setPreviewDuration(previewDur);
+                setPreviewTrack(prev => ({
+                  ...(prev || {}),
+                  title: previewTitle || prev?.title,
+                  artist: previewArtist || prev?.artist,
+                  duration: previewDur
+                }));
+                setIsPlayingPreview(true);
+                audioRef.current.play().catch(err => console.warn("Autoplay pre-escucha diferido:", err));
+                setSuccess(`🎧 Reproduciendo en Deck CUE (Biblioteca): "${previewTitle}"`);
               }
             }
-
-            lastLoadedPreviewTabRef.current = row.tab;
-
-            if (previewUrl && audioRef.current) {
-              audioRef.current.src = previewUrl;
-              audioRef.current.currentTime = 0;
-              setPreviewDuration(previewDur);
-              setPreviewTrack(prev => ({
-                ...(prev || {}),
-                title: previewTitle || prev?.title,
-                artist: previewArtist || prev?.artist,
-                duration: previewDur
-              }));
-              setIsPlayingPreview(true);
-              audioRef.current.play().catch(err => console.warn("Autoplay pre-escucha diferido:", err));
-              setSuccess(`🎧 Reproduciendo en Biblioteca: "${previewTitle}"`);
+            // Si el evento fue únicamente de pre-escucha y no cambió la canción al aire, salir aquí
+            if (!row.station_name || row.station_name === lastAirTrackNameRef.current) {
+              return;
             }
-            return; // ¡TOTALMENTE AISLADO! No toca la emisión al aire ni los oyentes
           }
 
           if (row.tab && row.tab.startsWith('PREVIEW_REQ:')) {
             return; // Solicitud en tránsito al BAT, no alterar emisión al aire
           }
 
-          // 2. Si es actualización de la emisión general al aire (Cola de emisión)
+          // 2. Si es actualización de la emisión general al aire (Deck Rojo / Cola de emisión)
           setOnAirTrack(row);
 
           const airAudio = masterAirAudioRef.current;
-          if (airAudio && row.station_name && row.station_name !== lastAirTrackNameRef.current) {
+          const trackChanged = Boolean(row.station_name && row.station_name !== lastAirTrackNameRef.current);
+          if (trackChanged) {
             lastAirTrackNameRef.current = row.station_name;
-            // Si la nueva pista no tiene URL HTTP lista todavía (está subiendo en el BAT):
-            // Silenciar inmediatamente el monitor para que no siga sonando la pista anterior en caché
-            if (!row.station_url || (!row.station_url.startsWith('http://') && !row.station_url.startsWith('https://'))) {
-              airAudio.pause();
-              airAudio.currentTime = 0;
-              airAudio.removeAttribute('src');
-              airAudio.load();
-              setIsPlayingLiveSignal(false);
+            // Si la nueva pista no tiene URL HTTP lista todavía (está subiendo en el BAT)
+            // y el monitor NO está ya reproduciendo la pista local en localhost, pausar temporalmente SIN apagar isPlayingLiveSignal
+            const isAlreadyPlayingLocal = airAudio && !airAudio.paused && airAudio.src && airAudio.src.includes('/api/local-audio');
+            if (!isAlreadyPlayingLocal && (!row.station_url || (!row.station_url.startsWith('http://') && !row.station_url.startsWith('https://')))) {
+              if (airAudio) {
+                airAudio.pause();
+                airAudio.currentTime = 0;
+              }
             }
           }
 
-          // Actualizar la fuente del monitor de cabina si se recibió la señal en vivo transmitida por el .bat
+          // Actualizar la fuente del Deck Rojo si se recibió la señal en vivo transmitida por el .bat
           if (row.station_url && (row.station_url.startsWith('http://') || row.station_url.startsWith('https://'))) {
             if (airAudio) {
-              const isDifferent = airAudio.src !== row.station_url;
-              if (isDifferent) {
-                airAudio.pause();
-                airAudio.currentTime = 0;
-                airAudio.removeAttribute('src');
-                airAudio.load();
-                airAudio.src = row.station_url;
-                airAudio.load();
-              }
-              if (isPlayingLiveSignalRef.current && row.is_playing) {
-                airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
-                airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
-                airAudio.play().catch(err => {
-                  console.warn("Autoplay diferido al recibir señal del BAT:", err);
-                  airAudio.addEventListener('canplay', () => {
-                    airAudio.play().catch(() => {});
-                  }, { once: true });
-                });
+              // Si ya está sonando esta misma canción por /api/local-audio en localhost, no cortarla
+              const isPlayingSameLocal = !trackChanged && !airAudio.paused && airAudio.src && airAudio.src.includes('/api/local-audio');
+              if (!isPlayingSameLocal) {
+                const isDifferent = airAudio.src !== row.station_url;
+                if (isDifferent) {
+                  airAudio.pause();
+                  airAudio.currentTime = 0;
+                  airAudio.src = row.station_url;
+                  airAudio.load();
+                }
+                if (isPlayingLiveSignalRef.current && row.is_playing) {
+                  airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
+                  airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
+                  airAudio.play().catch(err => {
+                    console.warn("Autoplay diferido al recibir señal del BAT:", err);
+                    airAudio.addEventListener('canplay', () => {
+                      if (isPlayingLiveSignalRef.current) {
+                        airAudio.play().catch(() => {});
+                      }
+                    }, { once: true });
+                  });
+                }
               }
             }
           }
@@ -959,29 +1039,20 @@ export default function RadioManager() {
     }
   };
 
-  // Control de audio preview
+  // Control de audio preview (Deck Azul / CUE - 100% independiente de la transmisión al aire)
   useEffect(() => {
     const audio = audioRef.current;
     
     const handleTimeUpdate = () => {
-      setPreviewTime(audio.currentTime);
-      if (isPlayingLiveSignal && audio.src) {
-        try {
-          const bc = new BroadcastChannel('radio-live-time');
-          bc.postMessage({
-            type: 'LIVE_TICK',
-            currentTime: audio.currentTime,
-            timestamp: Date.now(),
-            url: audio.src
-          });
-          bc.close();
-        } catch (e) {}
+      setPreviewTime(audio.currentTime || 0);
+    };
+    const handleLoadedMetadata = () => {
+      if (audio.duration && Number.isFinite(audio.duration)) {
+        setPreviewDuration(audio.duration);
       }
     };
-    const handleLoadedMetadata = () => setPreviewDuration(audio.duration || 0);
     const handleEnded = () => {
-      // Solo avanzar automáticamente si el usuario arrancó la reproducción explícitamente.
-      // Si el deck CUE nunca fue iniciado por el usuario, detener silenciosamente.
+      // Avanzar automáticamente a la siguiente canción de la biblioteca si el usuario inició el Deck Azul
       if (userStartedPreviewRef.current) {
         playNextPreview();
       } else {
@@ -998,7 +1069,7 @@ export default function RadioManager() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [previewTrack, songs]);
+  }, [previewTrack, songs, expandedLibraryAlbum, librarySearchQuery, isLibraryShuffle]);
 
   // Canal persistente para sincronización de tiempo en vivo sin latencia
   const liveTimeBcRef = useRef(null);
@@ -1220,19 +1291,26 @@ export default function RadioManager() {
       audio.pause();
       userStartedPreviewRef.current = false; // usuario pausó → no auto-avanzar al terminar
       setIsPlayingPreview(false);
-      setSuccess("⏸ Pre-escucha pausada.");
+      setSuccess("⏸ Deck CUE (Biblioteca) en pausa.");
     } else if (audio.src) {
       userStartedPreviewRef.current = true; // usuario arrancó explícitamente
+      audio.muted = isPreviewMutedRef.current;
+      audio.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
       audio.play().catch(() => {});
       setIsPlayingPreview(true);
-      setBottomPlayerMode('preview');
-      setSuccess(`🎧 Reproduciendo pre-escucha: "${previewTrack?.title || 'Canción'}"`);
+      setBottomPlayerMode(prev => prev === 'live' ? 'split' : prev);
+      setSuccess(`🎧 Reproduciendo en Deck CUE: "${previewTrack?.title || 'Canción'}"`);
     } else if (previewTrack) {
-      handlePlayPreview(previewTrack);
+      handlePlayPreview(previewTrack, true);
+    } else {
+      const list = getActiveLibraryTrackList();
+      if (list && list.length > 0) {
+        handlePlayPreview(list[0], true);
+      }
     }
   };
 
-  // Manejo de Reproducción / Pre-escucha de Biblioteca (Modo Azul, 100% independiente de la radio al aire)
+  // Manejo de Reproducción / Pre-escucha de Biblioteca (Deck Azul, 100% independiente del Deck Rojo y de la radio al aire)
   const handlePlayPreview = async (song, forcePlay = false) => {
     if (!song) return;
 
@@ -1248,54 +1326,82 @@ export default function RadioManager() {
       return;
     }
 
-    // Modo Azul de audición / CUE: NUNCA toca la señal al aire ni la cola de emisión
-    setBottomPlayerMode('preview');
+    // Marcar que el usuario inició activamente el Deck CUE para permitir auto-avance continuo en Biblioteca
+    userStartedPreviewRef.current = true;
+
+    // Mantener modo 'split' si ambos decks estaban visibles
+    setBottomPlayerMode(prev => prev === 'live' ? 'split' : prev);
     setPreviewTrack(song);
     setPreviewDuration(song.duration || 0);
     setPreviewTime(0);
-    setIsPlayingPreview(false); // Pausa explícita mientras se recibe el audio del BAT
+    setIsPlayingPreview(false);
 
-    // Limpiar completamente el audio anterior para que NO pueda sonar de nuevo
+    // Limpiar el audio anterior del Deck Azul (NUNCA toca masterAirAudioRef)
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.removeAttribute('src');
       audioRef.current.load();
     }
 
-    // Registrar la pista solicitada para ignorar señales anteriores en tránsito
     requestedPreviewTitleRef.current = (song.title || '').trim().toLowerCase();
     lastLoadedPreviewTabRef.current = '';
 
-    // En localhost, si el endpoint de Vite está disponible, cargar audio directo
+    const requestFromBat = async () => {
+      setSuccess(`⏳ Cargando "${song.title}" en Deck CUE...`);
+      try {
+        const fileInfo = song.fileName || song.filePath || '';
+        const requestPayload = `PREVIEW_REQ:${song.title}||${song.artist || song.albumArtist || ''}||${fileInfo}`;
+        await supabase.from('radio_current_play').update({
+          tab: requestPayload
+        }).eq('id', 1);
+      } catch (err) {
+        console.error("Error enviando solicitud de pre-escucha al BAT:", err);
+        setError("Error solicitando pre-escucha al .bat: " + err.message);
+      }
+    };
+
+    // En localhost, reproducir instantáneamente desde el disco local vía Vite middleware (0ms latencia y sin usar la nube)
     const isLocal = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    if (isLocal && (song.fileName || song.filePath)) {
-      const localAudioUrl = `/api/local-audio?file=${encodeURIComponent(song.fileName || song.filePath)}`;
-      if (audioRef.current) {
-        audioRef.current.src = localAudioUrl;
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(err => console.warn("Autoplay local diferido:", err));
-        setIsPlayingPreview(true);
-        setSuccess(`🎧 Reproduciendo en Biblioteca: "${song.title}"`);
+    if (isLocal && (song.filePath || song.fileName || song.url)) {
+      const localAudioUrl = getPreviewAudioUrl(song) || `/api/local-audio?path=${encodeURIComponent(song.filePath || '')}&file=${encodeURIComponent(song.fileName || '')}`;
+      if (localAudioUrl && audioRef.current) {
+        const audio = audioRef.current;
+        audio.src = localAudioUrl;
+        audio.currentTime = 0;
+        audio.muted = isPreviewMutedRef.current;
+        audio.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
+        audio.onerror = () => {
+          audio.onerror = null;
+          requestFromBat();
+        };
+        audio.play().then(() => {
+          setIsPlayingPreview(true);
+          setSuccess(`🎧 Reproduciendo en Deck CUE (Biblioteca): "${song.title}"`);
+        }).catch(err => {
+          console.warn("Fallo reproducción local directa, usando fallback BAT:", err);
+          requestFromBat();
+        });
         return;
       }
     }
 
-    setSuccess(`⏳ Solicitando pista "${song.title}" al BAT... (en pausa hasta recibir audio)`);
-
-    // Enviar solicitud de pre-escucha en PARALELO vía columna 'tab' (SIN TOCAR station_artist ni el aire)
-    try {
-      const fileInfo = song.fileName || song.filePath || '';
-      const requestPayload = `PREVIEW_REQ:${song.title}||${song.artist || song.albumArtist || ''}||${fileInfo}`;
-
-      await supabase.from('radio_current_play').update({
-        tab: requestPayload
-      }).eq('id', 1);
-    } catch (err) {
-      console.error("Error enviando solicitud de pre-escucha al BAT:", err);
-      setError("Error solicitando pre-escucha al .bat: " + err.message);
+    // Si la canción ya tiene una URL HTTP directa en la nube, usarla directamente
+    if (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://')) && !song.url.includes('/api/local-audio')) {
+      if (audioRef.current) {
+        audioRef.current.src = song.url;
+        audioRef.current.currentTime = 0;
+        audioRef.current.muted = isPreviewMutedRef.current;
+        audioRef.current.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
+        audioRef.current.play().catch(() => {});
+        setIsPlayingPreview(true);
+        setSuccess(`🎧 Reproduciendo en Deck CUE: "${song.title}"`);
+        return;
+      }
     }
+
+    await requestFromBat();
   };
 
   // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PLAY / PAUSE EXCLUSIVO DE LA BIBLIOTECA) ---
@@ -1303,15 +1409,19 @@ export default function RadioManager() {
     const audio = audioRef.current;
     if (isPlayingPreview && audio && !audio.paused) {
       audio.pause();
+      userStartedPreviewRef.current = false;
       setIsPlayingPreview(false);
-      setSuccess("⏸ Pre-escucha en pausa.");
+      setSuccess("⏸ Deck CUE (Biblioteca) en pausa.");
       return;
     }
     if (previewTrack && audio && audio.src) {
+      userStartedPreviewRef.current = true;
+      audio.muted = isPreviewMutedRef.current;
+      audio.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
       audio.play().catch(() => {});
       setIsPlayingPreview(true);
-      setBottomPlayerMode('preview');
-      setSuccess(`🎧 Reproduciendo pre-escucha: "${previewTrack.title}"`);
+      setBottomPlayerMode(prev => prev === 'live' ? 'split' : prev);
+      setSuccess(`🎧 Reproduciendo en Deck CUE: "${previewTrack.title}"`);
       return;
     }
     const list = getActiveLibraryTrackList();
@@ -1492,12 +1602,12 @@ export default function RadioManager() {
     } catch (e) {}
   };
 
-  // Emitir inmediatamente una pista de la cola al aire (Modo Rojo)
+  // Emitir inmediatamente una pista de la cola al aire (Deck Rojo)
   const handlePlayAirSong = async (song) => {
     if (!song) return;
-    setBottomPlayerMode('live');
+    setBottomPlayerMode(prev => prev === 'preview' ? 'split' : prev);
     try {
-      // 1. Pausar y limpiar audio anterior inmediatamente para evitar que vuelva a sonar en caché
+      // 1. Pausar y limpiar audio anterior del Deck Rojo inmediatamente (sin tocar el Deck Azul)
       const airAudio = masterAirAudioRef.current;
       if (airAudio) {
         airAudio.pause();
@@ -1506,39 +1616,53 @@ export default function RadioManager() {
         airAudio.load();
       }
 
-      // Resolver URL de audio directo si existe para ESTA canción específica (nunca de la anterior)
+      // Resolver URL de audio local o pública para el monitor de cabina (Deck Rojo)
       const directAudioUrl = getPreviewAudioUrl(song) || (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://')) ? song.url : '');
+      // IMPORTANTE: Para Supabase (y celulares remotos), SOLO enviar station_url si es una URL HTTP/HTTPS pública real (NUNCA /api/local-audio)
+      const isPublicCloudUrl = Boolean(
+        directAudioUrl &&
+        (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://')) &&
+        !directAudioUrl.includes('/api/local-audio') &&
+        !directAudioUrl.includes('localhost') &&
+        !directAudioUrl.includes('127.0.0.1')
+      );
+
+      lastAirTrackNameRef.current = song.title;
 
       setOnAirTrack(prev => ({
         ...(prev || {}),
         station_name: song.title,
         station_artist: song.artist || 'Radio Café',
         station_cover: song.cover || '',
-        station_url: directAudioUrl || '',
+        station_url: isPublicCloudUrl ? directAudioUrl : (prev?.station_url || ''),
+        tab: 'supabase',
         is_playing: true,
         updated_at: new Date().toISOString()
       }));
 
-      // Reproducir en el monitor de cabina solo si existe una URL de audio directa y válida para esta canción
+      // Activar Deck Rojo en cabina inmediatamente
+      setIsPlayingLiveSignal(true);
+      isPlayingLiveSignalRef.current = true;
+
       if (airAudio && directAudioUrl && (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://') || directAudioUrl.startsWith('/api/local-audio'))) {
         airAudio.src = directAudioUrl;
-        airAudio.muted = isAirMuted || airVolume === 0;
-        airAudio.volume = isAirMuted ? 0 : airVolume;
+        airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
+        airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
         airAudio.play().catch(() => {});
-        setIsPlayingLiveSignal(true);
-      } else {
-        // Si no hay URL directa aún (el BAT debe subirla a Supabase Storage), esperar en silencio
-        setIsPlayingLiveSignal(false);
       }
 
       // 2. Notificar inmediatamente al transmisor .bat y a Supabase
-      // Si no hay URL directa verificada, se envía station_url vacía para que ninguna instancia reproduzca caché previo
-      const fileInfo = song.fileName || song.filePath || (song.url && song.url.startsWith('local://') ? decodeURIComponent(song.url.replace('local://', '')) : '');
+      // Si el archivo es local, enviamos station_url: '' con REQUEST: para que el .bat lo suba a Supabase Storage y publique el enlace HTTPS para celulares
+      let fileInfo = song.fileName || song.filePath || '';
+      if (!fileInfo && song.url && song.url.startsWith('local://')) {
+        fileInfo = decodeURIComponent(song.url.replace('local://', ''));
+      }
       await supabase.from('radio_current_play').update({
         station_name: song.title,
         station_artist: `REQUEST:${song.title}||${song.artist || ''}||${fileInfo}`,
         station_cover: song.cover || '',
-        station_url: (directAudioUrl && !directAudioUrl.startsWith('local://')) ? directAudioUrl : '',
+        station_url: isPublicCloudUrl ? directAudioUrl : '',
+        tab: 'supabase',
         is_playing: true,
         updated_at: new Date().toISOString()
       }).eq('id', 1);
@@ -1555,7 +1679,7 @@ export default function RadioManager() {
         });
       } catch (e) {}
 
-      setSuccess(`📻 Al aire: "${song.title}"`);
+      setSuccess(`📻 Al aire en Deck Rojo: "${song.title}"`);
     } catch (e) {
       setError("Error emitiendo canción: " + e.message);
     }
@@ -1637,43 +1761,52 @@ export default function RadioManager() {
     }
   };
 
-  // Control PLAY / PAUSA del monitor de cabina: Pausa o reanuda la escucha local sin alterar la transmisión al aire
+  // Control PLAY / PAUSA del Deck Rojo (Monitor de Cabina): Pausa o reanuda la escucha local en Radio Manager de forma independiente al Deck Azul
   const handleAirPlayPause = async () => {
     const airAudio = masterAirAudioRef.current;
     if (!airAudio) return;
 
     if (isPlayingLiveSignal && !airAudio.paused) {
-      // Pausar solo la escucha local del DJ
       airAudio.pause();
       setIsPlayingLiveSignal(false);
-      setSuccess("⏸ Monitor de cabina pausado (la transmisión al aire continúa).");
+      isPlayingLiveSignalRef.current = false;
+      setSuccess("⏸ Deck Rojo (Monitor de Cola) en pausa (la emisión del .bat al aire continúa).");
     } else {
       const currentSong = songs.find(s => 
         s.title === onAirTrack?.station_name || 
         (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase()))
       ) || songs[0];
 
-      const liveUrl = (onAirTrack?.station_url && onAirTrack.station_url.startsWith('http'))
-        ? onAirTrack.station_url
-        : (currentSong ? getPreviewAudioUrl(currentSong) : null);
+      const isLocal = typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+      const liveUrl = (isLocal && currentSong ? getPreviewAudioUrl(currentSong) : null) ||
+        ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null) ||
+        (currentSong ? getPreviewAudioUrl(currentSong) : null);
 
       if (!liveUrl) {
-        setError("No hay canción al aire para reproducir.");
+        if (currentSong) {
+          await handlePlayAirSong(currentSong);
+          return;
+        }
+        setError("No hay canción en la cola al aire para reproducir.");
         return;
       }
 
-      if (airAudio.src !== liveUrl) {
+      if (airAudio.src !== liveUrl && (!airAudio.src || !airAudio.src.endsWith(liveUrl))) {
         airAudio.src = liveUrl;
         airAudio.load();
       }
-      airAudio.muted = isAirMuted || airVolume === 0;
-      airAudio.volume = isAirMuted ? 0 : airVolume;
+      airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
+      airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
       try {
         await airAudio.play();
         setIsPlayingLiveSignal(true);
-        setSuccess("▶ Monitor de cabina reproduciendo.");
+        isPlayingLiveSignalRef.current = true;
+        setBottomPlayerMode(prev => prev === 'preview' ? 'split' : prev);
+        setSuccess(`▶ Deck Rojo reproduciendo: "${onAirTrack?.station_name || currentSong?.title || 'Cola al Aire'}"`);
       } catch (e) {
-        setError("Error al reproducir monitor: " + e.message);
+        setError("Error al reproducir Deck Rojo: " + e.message);
       }
     }
   };
@@ -2714,6 +2847,43 @@ export default function RadioManager() {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  if (isDuplicateInstance) {
+    return (
+      <div className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#121212] text-white p-6 font-sans">
+        <div className="max-w-lg w-full bg-neutral-900 border-2 border-red-500/60 rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-red-600/20 border border-red-500/40 flex items-center justify-center mx-auto text-red-400">
+            <AlertCircle className="w-9 h-9" />
+          </div>
+          <div className="space-y-2">
+            <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-[11px] font-black uppercase tracking-widest border border-red-500/30">
+              Protección de Cabina Activa
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-white">
+              Radio Manager ya está abierto en otra pestaña
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+              Para evitar conflictos de audio entre los dos decks y colisiones en la transmisión con el <code className="text-emerald-400 font-mono">.bat</code>, solo puede existir <strong>una única instancia activa</strong> de Radio Manager a la vez.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={handleTakeoverInstance}
+              className="flex-1 py-3 px-4 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-black text-xs uppercase tracking-wider transition shadow-lg shadow-[#1DB954]/20"
+            >
+              Usar Radio Manager aquí (Desactivar la otra)
+            </button>
+            <a
+              href="/proyectoradio"
+              className="py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wider transition flex items-center justify-center"
+            >
+              Ir a Proyecto Radio
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className={`h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] flex flex-col bg-[#121212] text-white font-sans overflow-hidden safe-bottom ${isDragOver ? 'border-4 border-dashed border-[#1DB954]' : ''}`}
@@ -3381,14 +3551,14 @@ export default function RadioManager() {
                           <span className="truncate">{isPlayingLiveSignal ? 'Sonando' : 'En Vivo'}</span>
                         </button>
 
-                        {/* PLAY / PAUSA COLA */}
+                        {/* PLAY / PAUSA DECK ROJO (COLA) */}
                         <button
                           onClick={handleAirPlayPause}
                           className="col-span-1 py-2 px-2 bg-[#1DB954] hover:bg-[#1ed760] text-black font-black text-xs rounded-lg transition flex items-center justify-center gap-1 shadow-md shadow-[#1DB954]/20"
-                          title="Iniciar o pausar emisión de la cola"
+                          title={isPlayingLiveSignal ? "Pausar escucha de Cola (Deck Rojo)" : "Reproducir escucha de Cola (Deck Rojo)"}
                         >
-                          {onAirTrack?.is_playing ? <Pause className="w-3.5 h-3.5 fill-current shrink-0" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5 shrink-0" />}
-                          <span className="truncate">{onAirTrack?.is_playing ? 'Pausa' : 'Play'}</span>
+                          {isPlayingLiveSignal ? <Pause className="w-3.5 h-3.5 fill-current shrink-0" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5 shrink-0" />}
+                          <span className="truncate">{isPlayingLiveSignal ? 'Pausa' : 'Play'}</span>
                         </button>
 
                         {/* NEXT COLA */}

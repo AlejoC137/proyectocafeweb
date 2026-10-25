@@ -37,7 +37,8 @@ export default function PlayerCenter({
   const shadowColor = "shadow-[6px_6px_0px_0px_rgba(255,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(239,68,68,0.7)]";
   const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
 
-  const isYoutubeTrack = currentTrack?.type === 'youtube' || activeTab === 'youtube' || Boolean(currentTrack?.youtubeId);
+  // Sólo considerar pista de YouTube cuando la pestaña activa es explícitamente 'youtube'
+  const isYoutubeTrack = activeTab === 'youtube' && (currentTrack?.type === 'youtube' || Boolean(currentTrack?.youtubeId) || Boolean(extractYoutubeId(currentTrack?.url)));
   const ytId = currentTrack?.youtubeId || extractYoutubeId(currentTrack?.url);
   const listId = currentTrack?.listId || extractPlaylistId(currentTrack?.url || currentTrack?.youtube_url);
 
@@ -81,12 +82,15 @@ export default function PlayerCenter({
     return () => window.removeEventListener('YT_FORCE_PLAY', handleForcePlay);
   }, [setIsPlaying, isMuted, volume]);
 
-  // Pausar YouTube si la fuente actual ya no es YouTube
+  // Pausar y destruir YouTube inmediatamente si la pestaña activa ya no es YouTube
   useEffect(() => {
-    if (!isYoutubeTrack && ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === 'function') {
+    if (!isYoutubeTrack && ytPlayerRef.current) {
       try {
-        ytPlayerRef.current.pauseVideo();
+        if (typeof ytPlayerRef.current.stopVideo === 'function') ytPlayerRef.current.stopVideo();
+        if (typeof ytPlayerRef.current.pauseVideo === 'function') ytPlayerRef.current.pauseVideo();
+        if (typeof ytPlayerRef.current.destroy === 'function') ytPlayerRef.current.destroy();
       } catch (e) { }
+      ytPlayerRef.current = null;
     }
   }, [isYoutubeTrack]);
 

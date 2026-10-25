@@ -64,23 +64,52 @@ function localAudioDevPlugin() {
           let targetPath = urlObj.searchParams.get('path')
           const fileName = urlObj.searchParams.get('file')
 
-          if (!targetPath && fileName) {
-            const baseDir = 'G:\\Mi unidad\\Radio'
-            if (fs.existsSync(baseDir)) {
-              const findFile = (dir) => {
+          if ((!targetPath || !fs.existsSync(targetPath)) && fileName) {
+            const searchDirs = ['G:\\Mi unidad\\Radio', path.resolve(__dirname, 'musica')]
+            const configFile = 'G:\\Mi unidad\\Radio\\carpetas_musica.txt'
+            if (fs.existsSync(configFile)) {
+              try {
+                const lines = fs.readFileSync(configFile, 'utf8').split(/\r?\n/)
+                for (const line of lines) {
+                  const trimmed = line.trim()
+                  if (trimmed && !trimmed.startsWith('#') && fs.existsSync(trimmed) && !searchDirs.includes(trimmed)) {
+                    searchDirs.push(trimmed)
+                  }
+                }
+              } catch (e) {}
+            }
+
+            const decodedFileName = decodeURIComponent(fileName).toLowerCase()
+            const rawFileName = fileName.toLowerCase()
+            const baseFileName = path.basename(fileName).toLowerCase()
+
+            const findFile = (dir) => {
+              try {
                 const entries = fs.readdirSync(dir, { withFileTypes: true })
                 for (const e of entries) {
                   const full = path.join(dir, e.name)
                   if (e.isDirectory()) {
                     const found = findFile(full)
                     if (found) return found
-                  } else if (e.name.toLowerCase() === fileName.toLowerCase() || decodeURIComponent(fileName).toLowerCase() === e.name.toLowerCase()) {
-                    return full
+                  } else {
+                    const entryLower = e.name.toLowerCase()
+                    if (entryLower === rawFileName || entryLower === decodedFileName || entryLower === baseFileName) {
+                      return full
+                    }
                   }
                 }
-                return null
+              } catch (e) {}
+              return null
+            }
+
+            for (const dir of searchDirs) {
+              if (fs.existsSync(dir)) {
+                const found = findFile(dir)
+                if (found) {
+                  targetPath = found
+                  break
+                }
               }
-              targetPath = findFile(baseDir)
             }
           }
 

@@ -75,38 +75,81 @@ export function useRadioSync(options = {}) {
     setListeners(Array.from(map.values()));
   }, [clientId]);
 
-  // Leer estado actual de Supabase al montar
-  useEffect(() => {
-    const fetchCurrent = async () => {
-      try {
-        const { data, error } = await supabase
-          .from(SYNC_TABLE)
-          .select('*')
-          .eq('id', SYNC_ROW_ID)
-          .single();
+  // Leer estado actual de Supabase al montar + polling de respaldo para móviles (cuando WebSockets entran en reposo)
+  const refreshCurrentPlay = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from(SYNC_TABLE)
+        .select('*')
+        .eq('id', SYNC_ROW_ID)
+        .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.warn('[RadioSync] No se pudo leer current_play:', error.message);
-          return;
+      if (error && error.code !== 'PGRST116') {
+        return null;
+      }
+
+      if (data) {
+        if (data.station_name === 'FORCE_RELOAD') {
+          return data;
         }
-
-        if (data) {
-          setCurrentPlay(data);
-          if (data.volume !== undefined && data.volume !== null) {
-            setRemoteVolume({
-              volume: Number(data.volume),
-              isMuted: Boolean(data.is_muted),
-              timestamp: Date.now()
-            });
+        setCurrentPlay(prev => {
+          if (
+            prev &&
+            prev.station_url === data.station_url &&
+            prev.station_name === data.station_name &&
+            prev.station_artist === data.station_artist &&
+            prev.is_playing === data.is_playing &&
+            prev.tab === data.tab &&
+            prev.updated_at === data.updated_at
+          ) {
+            return prev;
           }
+          return data;
+        });
+        if (data.volume !== undefined && data.volume !== null) {
+          setRemoteVolume(prev => {
+            const nextVol = Number(data.volume);
+            const nextMuted = Boolean(data.is_muted);
+            if (prev && prev.volume === nextVol && prev.isMuted === nextMuted) return prev;
+            return {
+              volume: nextVol,
+              isMuted: nextMuted,
+              timestamp: Date.now()
+            };
+          });
         }
-      } catch (err) {
-        console.warn('[RadioSync] Error al leer estado inicial:', err.message);
+        return data;
+      }
+    } catch (err) {
+      // Ignorar errores transitorios de red en polling
+    }
+    return null;
+  }, []);
+
+  useEffect(() => {
+    refreshCurrentPlay();
+
+    const pollInterval = setInterval(() => {
+      refreshCurrentPlay();
+    }, 2500);
+
+    const handleWakeUp = () => {
+      if (document.visibilityState === 'visible') {
+        refreshCurrentPlay();
       }
     };
 
-    fetchCurrent();
-  }, []);
+    window.addEventListener('focus', handleWakeUp);
+    window.addEventListener('online', handleWakeUp);
+    document.addEventListener('visibilitychange', handleWakeUp);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleWakeUp);
+      window.removeEventListener('online', handleWakeUp);
+      document.removeEventListener('visibilitychange', handleWakeUp);
+    };
+  }, [refreshCurrentPlay]);
 
   // Suscribirse a cambios en tiempo real + Presence + Comandos remotos
   useEffect(() => {
@@ -536,6 +579,7 @@ export function useRadioSync(options = {}) {
 
   return {
     currentPlay,
+    refreshCurrentPlay,
     remoteVolume,
     broadcastPlay,
     broadcastStop,

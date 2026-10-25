@@ -379,9 +379,25 @@ export function useRadioPlayer(
   };
 
   useEffect(() => {
+    // 1. En pestaña YouTube: detener y limpiar el <audio> inmediatamente para evitar doble reproducción
     if (activeTab === 'youtube') {
       if (audioRef.current) {
-        try { audioRef.current.pause(); } catch (e) {}
+        try {
+          audioRef.current.pause();
+          audioRef.current.removeAttribute('src');
+          audioRef.current.load();
+        } catch (e) {}
+      }
+      return;
+    }
+
+    // 2. En pestaña 'supabase' (Files / Emisión Al Aire del .bat):
+    // El <audio> principal es controlado EXCLUSIVAMENTE por el sincronizador en vivo de ProyectoRadio.jsx
+    // (a través de radio_current_play.station_url). Nunca sobreescribir aquí con URLs de playlist_radio
+    // para evitar saltos de canción o reproducción de canciones viejas.
+    if (activeTab === 'supabase') {
+      if (audioRef.current) {
+        audioRef.current.volume = isMuted ? 0 : volume;
       }
       return;
     }
@@ -396,11 +412,6 @@ export function useRadioPlayer(
         if (isLocalHost) {
           playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
         } else {
-          // En deploy remoto: si el audio ya está reproduciendo una emisión en la nube (live_*.mp3),
-          // NO pausar ni interrumpir: la señal al aire la gestiona el sincronizador de ProyectoRadio
-          if (audioRef.current?.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://'))) {
-            return;
-          }
           if (audioRef.current && !audioRef.current.paused) {
             audioRef.current.pause();
           }
@@ -408,11 +419,7 @@ export function useRadioPlayer(
         }
       }
 
-      // Si no hay URL válida HTTP/HTTPS o local: si ya hay un stream en vivo activo, no interrumpir
-      if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/'))) {
-        if (audioRef.current?.src && (audioRef.current.src.startsWith('http://') || audioRef.current.src.startsWith('https://'))) {
-          return;
-        }
+      if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/') && !playableUrl.startsWith('blob:'))) {
         if (audioRef.current && !audioRef.current.paused) {
           audioRef.current.pause();
         }
@@ -422,12 +429,7 @@ export function useRadioPlayer(
       const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';
       const isSameSrc = (currentSrcPath === playableUrl || audioRef.current.src === playableUrl);
 
-      // Si el elemento ya está reproduciendo un archivo de emisión al aire y la nueva playableUrl
-      // es un archivo distinto de lista, no sobreescribir la transmisión al aire
       if (!isSameSrc) {
-        if (audioRef.current?.src && (audioRef.current.src.includes('live_') || audioRef.current.src.includes('Radio/')) && !isLocalHost) {
-          return;
-        }
         audioRef.current.pause();
         audioRef.current.src = playableUrl;
       }
@@ -452,6 +454,8 @@ export function useRadioPlayer(
         } else if (audioRef.current.paused) {
           audioRef.current.play().catch(() => {});
         }
+      } else if (!audioRef.current.paused) {
+        audioRef.current.pause();
       }
     } else if (!currentTrack?.url && isPlaying) {
       if (audioRef.current && !audioRef.current.paused) {
