@@ -132,22 +132,6 @@ export default function PlantaBusinessContext({
       setTimeout(() => setSincronizadoExito(false), 3000);
     }
   };
-        limitacion = 'Volumen crítico para reposo de hojaldres y enfriamiento post-horneo.';
-      } else if (nombreLower.includes('mes') || nombreLower.includes('trabajo')) {
-        tipoCategoria = 'MANIPULACIÓN Y CORTE';
-        capacidadResumen = `${eq.dimensiones || '80x110 cm'} (Máximo 2 operarios sincronizados)`;
-        limitacion = 'Espacio de laminado y armado manual sensible a desorden.';
-      }
-
-      return {
-        ...eq,
-        tipoCategoria,
-        capacidadResumen,
-        esCuello,
-        limitacion
-      };
-    });
-  }, [equipos]);
 
   // Generador del Prompt / Dossier Markdown Completo
   const dossierMarkdown = useMemo(() => {
