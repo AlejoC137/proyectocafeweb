@@ -1,3 +1,4 @@
+import { buildUpdatedHistory } from '../utils/historyUtils';
 import supabase from "../config/supabaseClient";
 import {
   GET_ALL_FROM_TABLE,
@@ -574,13 +575,69 @@ export function crearItem(itemData, type, forId) {
   };
 }
 
-export function updateItem(itemId, updatedFields, type) {
+export function updateItem(itemId, updatedFields, type, auditMeta = null) {
   const table = type === MenuItems ? MENU : type;
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
+      const payload = { ...updatedFields };
+
+      // Auditoría automática en historial_update para ItemsAlmacen
+      if (
+        (table === ITEMS || table === ItemsAlmacen || table === 'ItemsAlmacen') &&
+        !payload.historial_update
+      ) {
+        const state = (typeof getState === 'function') ? getState() : {};
+        const allItems = state.allItems || [];
+        let original = allItems.find(i => i._id === itemId);
+
+        if (!original) {
+          const { data: dbItem } = await supabase.from(table).select('*').eq('_id', itemId).maybeSingle();
+          original = dbItem;
+        }
+
+        if (original) {
+          const cambios = {};
+          const ignoredKeys = ["_id", "historial_update", "FECHA_ACT", "createdAt", "updatedAt", "campos_parseados", "id"];
+
+          Object.keys(payload).forEach(key => {
+            if (key.startsWith('_') || ignoredKeys.includes(key)) return;
+
+            let oldVal = original[key];
+            let newVal = payload[key];
+
+            const isOldNum = !isNaN(oldVal) && oldVal !== "" && oldVal !== null && typeof oldVal !== 'object';
+            const isNewNum = !isNaN(newVal) && newVal !== "" && newVal !== null && typeof newVal !== 'object';
+
+            let different = false;
+            if (isOldNum && isNewNum) {
+              if (Number(oldVal) !== Number(newVal)) different = true;
+            } else {
+              const strOld = (oldVal === null || oldVal === undefined) ? "" : String(oldVal).trim();
+              const strNew = (newVal === null || newVal === undefined) ? "" : String(newVal).trim();
+              if (strOld !== strNew) different = true;
+            }
+
+            if (different) {
+              cambios[key] = {
+                anterior: oldVal !== undefined ? oldVal : null,
+                nuevo: newVal
+              };
+            }
+          });
+
+          if (Object.keys(cambios).length > 0) {
+            const meta = auditMeta || { origen: "Inventario (Manual)", tipo: "manual" };
+            payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, meta);
+            if (!payload.FECHA_ACT) {
+              payload.FECHA_ACT = new Date().toISOString().split('T')[0];
+            }
+          }
+        }
+      }
+
       const { data, error } = await supabase
         .from(table)
-        .update(updatedFields)
+        .update(payload)
         .eq('_id', itemId)
         .select();
 

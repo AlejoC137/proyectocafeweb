@@ -463,6 +463,10 @@
                 </div>
                 ${p.grams > 0 ? `<div class="text-[10px] text-slate-400">${p.grams}g</div>` : ''}
               </div>
+              <button onclick="event.stopPropagation(); syncWithParentInventory('${p.id}')" class="mt-2 w-full py-1.5 px-2 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Sincronizar a Inventario</span>
+              </button>
             </div>
           </div>
         `;
@@ -603,11 +607,15 @@
             </div>
 
             <!-- Acciones -->
-            <div class="mt-6 pt-4 border-t border-slate-200 flex items-center space-x-3">
-              <a href="${p.url}" target="_blank" class="flex-1 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm rounded-xl text-center shadow-sm transition">
-                Abrir en Supermú Web ↗
+            <div class="mt-6 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center gap-2">
+              <button onclick="syncWithParentInventory('${p.id}')" class="w-full sm:flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl text-center shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Sincronizar a Inventario</span>
+              </button>
+              <a href="${p.url}" target="_blank" class="w-full sm:w-auto py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm rounded-xl text-center shadow-sm transition">
+                Abrir en Web ↗
               </a>
-              <button onclick="closeModal()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition">
+              <button onclick="closeModal()" class="w-full sm:w-auto py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition">
                 Cerrar
               </button>
             </div>
@@ -616,6 +624,20 @@
       `;
 
       document.getElementById('productModal').classList.remove('hidden');
+    }
+
+    function syncWithParentInventory(productId) {
+      const p = allProducts.find(item => String(item.id) === String(productId));
+      if (p) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'SUPERMU_SYNC_PRODUCT',
+            product: p
+          }, '*');
+        } else {
+          alert('Producto: ' + p.title + '\nPrecio: ' + formatCOP(p.price) + '\n\nAbre esta vista dentro de Gestión Almacén para sincronizarlo directamente con tu inventario.');
+        }
+      }
     }
 
     function closeModal() {

@@ -161,7 +161,7 @@ export const CardInstanceInventario = memo(function CardInstanceInventario({ pro
         ALMACENAMIENTO: JSON.stringify(formData.ALMACENAMIENTO),
       };
 
-      await dispatch(updateItem(product._id, updatedFields, currentType));
+      await dispatch(updateItem(product._id, updatedFields, currentType, { origen: "Tarjeta Inventario", tipo: "manual" }));
       setButtonState("done");
       
       // Mostrar toast de éxito en lugar de recargar la página

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { updateItem, getAllFromTable } from "../../../redux/actions";
 import { ITEMS, ItemsAlmacen } from "../../../redux/actions-types";
 import { copyPromptToClipboard } from '../../../utils/prompts';
+import { buildUpdatedHistory } from '../../../utils/historyUtils';
 import { Copy, Check, Search, Receipt, ArrowRight, Trash2, Package } from 'lucide-react';
 
 const ReceiptIngestionModal = ({ onClose, onSuccess }) => {
@@ -131,12 +132,40 @@ const ReceiptIngestionModal = ({ onClose, onSuccess }) => {
         setIsSaving(true);
         try {
             const promises = updates.map(update => {
+                const original = allItems.find(i => i._id === update._id) || {};
+                const cambios = {};
+
+                ['COSTO', 'CANTIDAD', 'precioUnitario'].forEach(field => {
+                    const oldVal = original[field];
+                    const newVal = update[field];
+                    const numOld = Number(oldVal);
+                    const numNew = Number(newVal);
+                    if (!isNaN(numOld) && !isNaN(numNew)) {
+                        if (numOld !== numNew) {
+                            cambios[field] = {
+                                anterior: oldVal !== undefined ? oldVal : null,
+                                nuevo: newVal
+                            };
+                        }
+                    } else if (String(oldVal || "").trim() !== String(newVal || "").trim()) {
+                        cambios[field] = {
+                            anterior: oldVal !== undefined ? oldVal : null,
+                            nuevo: newVal
+                        };
+                    }
+                });
+
                 const payload = {
                     COSTO: update.COSTO,
                     CANTIDAD: update.CANTIDAD,
                     precioUnitario: update.precioUnitario,
                     FECHA_ACT: new Date().toISOString().split('T')[0]
                 };
+
+                if (Object.keys(cambios).length > 0) {
+                    payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, "IngestionRecibo");
+                }
+
                 return dispatch(updateItem(update._id, payload, ItemsAlmacen));
             });
 

@@ -13,11 +13,14 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag } from "lucide-react";
+import HistorialItemModal from "./HistorialItemModal";
+import HistorialCambiosView from "./HistorialCambiosView";
+import SupermuSyncView from "./SupermuSyncView";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
 import ReceiptIngestionModal from "./ReceiptIngestionModal";
 
-import { compareAndGenerateHistory } from "../../../utils/historyUtils";
+import { compareAndGenerateHistory, buildUpdatedHistory } from "../../../utils/historyUtils";
 
 
 function GestionAlmacen() {
@@ -122,6 +125,8 @@ function GestionAlmacen() {
   ]);
   const [newMacroField, setNewMacroField] = useState("");
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const [activeMainTab, setActiveMainTab] = useState("actualizador"); // "actualizador" | "historial" | "supermu"
 
   const handleMacroToggle = (key) => {
     setActiveMacroFields(prev => prev.map(f => {
@@ -152,39 +157,8 @@ function GestionAlmacen() {
   };
 
   const handleMacroValueChange = (key, val) => {
-    // 1. Update the local macro input state
     setActiveMacroFields(prev => prev.map(f => f.key === key ? { ...f, value: val } : f));
-
-    // 2. Apply this value to ALL staged items imediatelly (if field is enabled)
-    //    Logic: If you type in macro, it updates everyone.
-    setStagedItems(prev => prev.map(item => {
-      // Only update if the item actually has this field or we want to force it?
-      // Let's assume we update the changes.
-
-      // Clone item
-      const newItem = { ...item, [key]: val };
-
-      // SYNC HISTORY (reusing logic from handleUpdateStagedItem but simpler)
-      if (newItem.historial_update && newItem._latestHistoryIndex >= 0) {
-        const historyCopy = [...newItem.historial_update];
-        try {
-          const lastEntry = JSON.parse(historyCopy[newItem._latestHistoryIndex]);
-          if (!lastEntry.cambios) lastEntry.cambios = {};
-
-          if (lastEntry.cambios[key]) {
-            lastEntry.cambios[key].nuevo = val;
-          } else {
-            lastEntry.cambios[key] = {
-              anterior: item._original ? item._original[key] : "",
-              nuevo: val
-            };
-          }
-          historyCopy[newItem._latestHistoryIndex] = JSON.stringify(lastEntry);
-          newItem.historial_update = historyCopy;
-        } catch (e) { console.error("Error syncing history macro", e); }
-      }
-      return newItem;
-    }));
+    setStagedItems(prev => prev.map(item => ({ ...item, [key]: val })));
   };
 
   const handleAddMacroField = () => {
@@ -311,40 +285,7 @@ function GestionAlmacen() {
     setStagedItems(prev => prev.filter(i => i._id !== itemId));
   };
   const handleUpdateStagedItem = (itemId, field, newValue) => {
-    setStagedItems(prev => prev.map(item => {
-      if (item._id === itemId) {
-        // Deep copy to avoid mutation
-        const newItem = { ...item, [field]: newValue };
-
-        // SYNC HISTORY: We need to update the 'nuevo' value in the last history entry
-        if (newItem.historial_update && newItem._latestHistoryIndex >= 0) {
-          const historyCopy = [...newItem.historial_update];
-          const lastEntryStr = historyCopy[newItem._latestHistoryIndex];
-          try {
-            const lastEntry = JSON.parse(lastEntryStr);
-            // Verify if this field exists in changes, if not add it, if yes update it
-            if (!lastEntry.cambios) lastEntry.cambios = {};
-
-            if (lastEntry.cambios[field]) {
-              lastEntry.cambios[field].nuevo = newValue;
-            } else {
-              // If it wasn't originally changed but now user edits it, add it
-              // We need the original value. access from _original
-              lastEntry.cambios[field] = {
-                anterior: item._original[field],
-                nuevo: newValue
-              };
-            }
-            historyCopy[newItem._latestHistoryIndex] = JSON.stringify(lastEntry);
-            newItem.historial_update = historyCopy;
-          } catch (e) {
-            console.error("Error syncing history on edit", e);
-          }
-        }
-        return newItem;
-      }
-      return item;
-    }));
+    setStagedItems(prev => prev.map(item => (item._id === itemId ? { ...item, [field]: newValue } : item)));
   };
 
   const handleToggleFieldInclusion = (itemId, field) => {
@@ -367,7 +308,6 @@ function GestionAlmacen() {
 
 
   const handleSaveChanges = async () => {
-    // FIX: Use stagedItems directly. If it's in the list, it's a pending change.
     const itemsToUpdate = stagedItems;
 
     if (itemsToUpdate.length === 0) return alert("No hay cambios pendientes para guardar.");
@@ -377,58 +317,65 @@ function GestionAlmacen() {
       const promises = itemsToUpdate.map(async (item) => {
         // 1. Start with the staged item properties
         const payload = { ...item };
+        const original = item._original || {};
 
         // 2. Revert properties that were excluded by the user
         const excludedFields = item._excludedFields || [];
         excludedFields.forEach(field => {
-          // Reset payload value to original value
-          payload[field] = item._original[field];
-
-          // Also need to clean this from history!
-          // This is tricky because history is a JSON string in payload.historial_update array.
-          // We need to edit the LAST entry of historial_update to remove this field.
+          payload[field] = original[field];
         });
 
-        // 2.5 Fix History for excluded fields
-        if (excludedFields.length > 0 && Array.isArray(payload.historial_update)) {
-          const lastIdx = payload.historial_update.length - 1;
-          if (lastIdx >= 0) {
-            try {
-              const lastEntry = JSON.parse(payload.historial_update[lastIdx]);
-
-              // Filter out excluded fields from 'cambios'
-              const newCambios = {};
-              Object.keys(lastEntry.cambios || {}).forEach(key => {
-                if (!excludedFields.includes(key)) {
-                  newCambios[key] = lastEntry.cambios[key];
-                }
-              });
-
-              lastEntry.cambios = newCambios;
-
-              // If changes become empty, maybe we shouldn't add the history entry at all?
-              // For now, keep it even if empty or handle logic elsewhere.
-              if (Object.keys(newCambios).length === 0) {
-                // Remove this history entry entirely
-                payload.historial_update.pop();
-              } else {
-                payload.historial_update[lastIdx] = JSON.stringify(lastEntry);
-              }
-            } catch (e) { console.error("Error fixing history for excluded fields", e); }
-          }
+        // 3. Ensure numbers are numbers
+        if (payload.COSTO !== undefined && payload.COSTO !== null && payload.COSTO !== "") {
+          payload.COSTO = Number(payload.COSTO);
+        }
+        if (payload.CANTIDAD !== undefined && payload.CANTIDAD !== null && payload.CANTIDAD !== "") {
+          payload.CANTIDAD = Number(payload.CANTIDAD);
+        }
+        if (payload.precioUnitario !== undefined && payload.precioUnitario !== null && payload.precioUnitario !== "") {
+          payload.precioUnitario = Number(payload.precioUnitario);
         }
 
-        // 3. Cleanup internal flags (Aggressive cleanup of ALL underscores)
+        // 4. Calculate actual field changes
+        const ignoredKeys = ["_id", "historial_update", "FECHA_ACT", "createdAt", "updatedAt", "campos_parseados", "id"];
+        const cambios = {};
+
+        Object.keys(payload).forEach(key => {
+          if (key.startsWith('_') || ignoredKeys.includes(key)) return;
+
+          let oldVal = original[key];
+          let newVal = payload[key];
+
+          const isOldNum = !isNaN(oldVal) && oldVal !== "" && oldVal !== null && typeof oldVal !== 'object';
+          const isNewNum = !isNaN(newVal) && newVal !== "" && newVal !== null && typeof newVal !== 'object';
+
+          let different = false;
+          if (isOldNum && isNewNum) {
+            if (Number(oldVal) !== Number(newVal)) different = true;
+          } else {
+            const strOld = (oldVal === null || oldVal === undefined) ? "" : String(oldVal).trim();
+            const strNew = (newVal === null || newVal === undefined) ? "" : String(newVal).trim();
+            if (strOld !== strNew) different = true;
+          }
+
+          if (different) {
+            cambios[key] = {
+              anterior: oldVal !== undefined ? oldVal : null,
+              nuevo: newVal
+            };
+          }
+        });
+
+        // 5. Append to historial_update if there are changes
+        if (Object.keys(cambios).length > 0) {
+          payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, "GestionAlmacen");
+          payload.FECHA_ACT = new Date().toISOString().split('T')[0];
+        }
+
+        // 6. Cleanup internal flags (Aggressive cleanup of ALL underscores)
         Object.keys(payload).forEach(key => {
           if (key.startsWith('_')) delete payload[key];
         });
-
-        // Debug log for user validation
-
-        // Ensure numbers are numbers
-        if (payload.COSTO) payload.COSTO = Number(payload.COSTO);
-        if (payload.CANTIDAD) payload.CANTIDAD = Number(payload.CANTIDAD);
-        if (payload.precioUnitario) payload.precioUnitario = Number(payload.precioUnitario);
 
         return dispatch(updateItem(item._id, payload, currentType));
       });
@@ -438,6 +385,7 @@ function GestionAlmacen() {
       setSelectedItems([]);
       setStagedItems([]);
       setJsonText("");
+      dispatch(getAllFromTable(currentType || ITEMS));
     } catch (error) {
       console.error("Error updating items:", error);
       alert("Hubo un error al guardar los cambios.");
@@ -467,9 +415,77 @@ function GestionAlmacen() {
   // Keys available to ADD (not already in activeMacroFields)
   const availableToAdd = availableKeys.filter(k => !activeMacroFields.find(f => f.key === k));
 
+  const itemsWithHistoryCount = Items.filter(i => Array.isArray(i.historial_update) ? i.historial_update.length > 0 : !!i.historial_update).length;
+
   return (
     <PageLayout loading={loading} >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 min-h-[calc(100vh-140px)] md:h-[calc(100vh-140px)] text-xs">
+      {/* Top Main Tab Navigation */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2 flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <button
+            onClick={() => setActiveMainTab("actualizador")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeMainTab === "actualizador"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Zap className="h-3.5 w-3.5 text-amber-500" />
+            <span>Gestión Precios & IA</span>
+          </button>
+
+          <button
+            onClick={() => setActiveMainTab("historial")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeMainTab === "historial"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <History className="h-3.5 w-3.5 text-blue-600" />
+            <span>Historial en el Tiempo</span>
+            {itemsWithHistoryCount > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                activeMainTab === "historial" ? "bg-blue-100 text-blue-700" : "bg-slate-200 text-slate-700"
+              }`}>
+                {itemsWithHistoryCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveMainTab("supermu")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeMainTab === "supermu"
+                ? "bg-white text-rose-600 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <ShoppingBag className="h-3.5 w-3.5 text-rose-500" />
+            <span>Catálogo Supermú (Directo)</span>
+            <span className="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded font-extrabold">2.6k</span>
+          </button>
+        </div>
+
+        <div className="text-[11px] text-slate-400 flex items-center gap-2">
+          <span>Total Ítems en Almacén: <strong className="text-slate-700">{Items.length}</strong></span>
+        </div>
+      </div>
+
+      {activeMainTab === "historial" && (
+        <HistorialCambiosView
+          items={Items}
+          categorias={CATEGORIES}
+          onRefresh={() => dispatch(getAllFromTable(ITEMS))}
+        />
+      )}
+
+      {activeMainTab === "supermu" && (
+        <SupermuSyncView items={Items} />
+      )}
+
+      {activeMainTab === "actualizador" && (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 min-h-[calc(100vh-185px)] md:h-[calc(100vh-185px)] text-xs">
         {/* Column 1: Search & Selection List */}
         <div className="bg-white rounded-lg shadow-sm border p-2 flex flex-col h-full gap-2 border-t-4 border-t-blue-500/80">
           <h2 className="text-sm font-bold mb-1 text-slate-800 flex items-center gap-2">
@@ -556,7 +572,30 @@ function GestionAlmacen() {
                       </div>
                     </div>
                     <div className="text-[10px] items-end flex flex-col opacity-70 group-hover:opacity-100">
-                      <span className="font-semibold text-slate-600">${new Intl.NumberFormat("es-CO").format(item.COSTO || 0)}</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedHistoryItem(item);
+                          }}
+                          className={`p-0.5 rounded hover:bg-blue-100 transition-colors ${
+                            item.historial_update && item.historial_update.length > 0
+                              ? "text-blue-600 font-bold"
+                              : "text-slate-300 hover:text-slate-500"
+                          }`}
+                          title={
+                            item.historial_update && item.historial_update.length > 0
+                              ? `Ver historial (${item.historial_update.length} cambios)`
+                              : "Ver historial"
+                          }
+                        >
+                          <History className="h-3 w-3" />
+                        </button>
+                        <span className="font-semibold text-slate-600">
+                          ${new Intl.NumberFormat("es-CO").format(item.COSTO || 0)}
+                        </span>
+                      </div>
                       <span className="bg-blue-100 text-blue-600 px-1 rounded text-[8px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">ADD</span>
                     </div>
                   </div>
@@ -853,10 +892,15 @@ function GestionAlmacen() {
                             <span className="truncate">{item.Nombre_del_producto}</span>
                           )}
                         </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-100 px-1 rounded flex items-center gap-0.5">
-                            {/* <X className="h-3 w-3" /> MODIFICADO */}
-                          </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHistoryItem(item._original || item)}
+                            className="text-slate-400 hover:text-blue-600 p-0.5 transition-colors"
+                            title="Ver historial previo"
+                          >
+                            <History className="h-3.5 w-3.5" />
+                          </button>
                           <button
                             onClick={() => handleRemoveStagedItem(item._id)}
                             className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
@@ -929,7 +973,8 @@ function GestionAlmacen() {
             {isSaving ? "Guardando..." : "Guardar Todo"}
           </Button>
         </div>
-      </div >
+      </div>
+      )}
       {showReceiptModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
           <ReceiptIngestionModal 
@@ -937,6 +982,12 @@ function GestionAlmacen() {
             onSuccess={() => dispatch(getAllFromTable(ITEMS))}
           />
         </div>
+      )}
+      {selectedHistoryItem && (
+        <HistorialItemModal
+          item={selectedHistoryItem}
+          onClose={() => setSelectedHistoryItem(null)}
+        />
       )}
     </PageLayout>
   );

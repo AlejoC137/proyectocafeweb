@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import TopNav from './components/ui/top-nav';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import GlobalAuthModal from './components/GlobalAuthModal';
@@ -59,7 +59,6 @@ const RecruitmentPrint = lazy(() => import('./body/components/Menu/RecruitmentPr
 const ConsumoStaffView = lazy(() => import('./body/views/staff/ConsumoStaffView'));
 const ConsumoAdminView = lazy(() => import('./body/views/staff/ConsumoAdminView'));
 const FlyerCreator = lazy(() => import('./body/components/Menu/FlyerCreator/FlyerCreator'));
-// MenuPrintHorizontal lazy import removed since both render MenuPrintManager
 
 const CotizacionesView = lazy(() => import('./body/views/cotizaciones/CotizacionesView'));
 const AliadosManager = lazy(() => import('./body/views/aliados/AliadosManager'));
@@ -75,6 +74,7 @@ const BolsillosFinancieros = lazy(() => import('./body/views/ventaCompra/Bolsill
 
 const ProyectoRadio = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager = lazy(() => import('./components/RadioManager'));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center text-white text-xl font-SpaceGrotesk font-light">Cargando...</div>
@@ -131,95 +131,119 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <div className="flex-1 flex flex-col pt-14">
                 <Routes>
+                  {/* --- CAFÉ, MENÚ & CLIENTES --- */}
+                  <Route path="/" element={<StaffPortal />} />
                   <Route path="/MenuView" element={<MenuView />} />
+                  <Route path="/Home" element={<Navigate to="/MenuView" replace />} />
                   <Route path="/MenuLunch" element={<MenuLunch />} />
                   <Route path="/LunchByOrder" element={<LunchByOrder />} />
-                  <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
-                  <Route path="/Home" element={<MenuView />} />
-                  <Route path="/Agenda/:year?/:month?" element={<Agenda />} />
-                  <Route path="/AgendaIdeas" element={<AgendaIdeas />} />
-                  <Route path="/Manager/:tab?" element={<Manager />} />
-                  <Route path="/Recetas" element={<Recetas />} />
-                  <Route path="/CalculadorRecetaHelados" element={<CalculadorRecetaHelados />} />
+                  <Route path="/AnalisisAlmuerzo" element={<AnalisisAlmuerzo />} />
+                  <Route path="/UserPortal" element={<UserPortal />} />
+                  <Route path="/UserPortal/Registro" element={<Navigate to="/UserPortal" replace />} />
                   <Route path="/SobreNosotros" element={<SobreNosotros />} />
+                  <Route path="/review_ProyectoCafe" element={<ReviewProyectoCafe />} />
+
+                  {/* --- DISEÑO, CARTAS E IMPRESIÓN --- */}
+                  <Route path="/MenuPrint" element={<MenuPrintManager />} />
+                  <Route path="/MenuPrint/:menuId" element={<MenuPrintManager />} />
+                  <Route path="/MenuPrintHorizontal" element={<Navigate to="/MenuPrint" replace />} />
+                  <Route path="/MenuHead" element={<MenuHead />} />
+                  <Route path="/FlyerCreator" element={<FlyerCreator />} />
+                  <Route path="/RecruitmentPrint" element={<RecruitmentPrint />} />
+
+                  {/* --- OPERACIONES, TAREAS Y COMANDAS --- */}
+                  <Route path="/Comanda" element={<ComandaExcelView />} />
+                  <Route path="/ComandaCreator" element={<ComandaCreator />} />
+                  <Route path="/Actividades" element={<Actividades />} />
+                  <Route path="/BuscarPreciosInternet" element={<BuscarPreciosInternet />} />
                   <Route path="/Scraper" element={<Scraper />} />
-                  <Route path="/" element={<StaffPortal />} />
+
+                  {/* --- INVENTARIO, ALMACÉN Y MERMAS --- */}
                   <Route path="/Inventario/:tab?" element={<Inventario />} />
                   <Route path="/GestionAlmacen/:tab?" element={<GestionAlmacen />} />
                   <Route path="/Inventario/BarcodeManager" element={<BarcodeManager />} />
+                  <Route path="/Manager/:tab?" element={<Manager />} />
+                  <Route path="/Bajas" element={<BajasManager />} />
+                  <Route path="/bajas" element={<Navigate to="/Bajas" replace />} />
+
+                  {/* --- RECETAS, PRODUCCIÓN Y HELADERÍA --- */}
+                  <Route path="/Recetas" element={<Recetas />} />
+                  <Route path="/Planta" element={<PlantaProduccion />} />
+                  <Route path="/planta" element={<Navigate to="/Planta" replace />} />
+                  <Route path="/CalendarioProduccion" element={<CalendarioProduccion />} />
+                  <Route path="/CalendarioProduccio" element={<Navigate to="/CalendarioProduccion" replace />} />
+                  <Route path="/CalculadorRecetaHelados" element={<CalculadorRecetaHelados />} />
+                  <Route path="/Predict/:MenuItem" element={<Predict />} />
+
+                  {/* --- VENTAS, COMPRAS Y FINANZAS --- */}
                   <Route path="/VentaCompra" element={<VentaCompra />} />
-                  <Route path="/Actividades" element={<Actividades />} />
-                  <Route path="/Gastos" element={<Gastos />} />
                   <Route path="/Compras" element={<Compras />} />
-                  <Route path="/MenuPrint" element={<MenuPrintManager />} />
-                  <Route path="/MenuPrint/:menuId" element={<MenuPrintManager />} />
-                  <Route path="/FlyerCreator" element={<FlyerCreator />} />
-                  <Route path="/MenuHead" element={<MenuHead />} />
+                  <Route path="/Gastos" element={<Gastos />} />
                   <Route path="/DiaResumen" element={<DiaResumen />} />
                   <Route path="/DiaResumen/:date" element={<DiaResumen />} />
                   <Route path="/MesResumen" element={<MesResumen />} />
                   <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
-                  <Route path="/Comanda" element={<ComandaExcelView />} />
-                  <Route path="/CalendarioProduccion" element={<CalendarioProduccion />} />
-                  <Route path="/CalendarioProduccio" element={<CalendarioProduccion />} />
-                  <Route path="/ComandaCreator" element={<ComandaCreator />} />
-                  <Route path="/Proveedores" element={<Proveedores />} />
-                  <Route path="/PagosProveedores" element={<PagosProveedores />} />
-                  <Route path="/StaffCreator" element={<StaffCreator />} />
-                  <Route path="/receta/:id" element={<RecetaModal />} />
-                  <Route path="/item/:id" element={<ItemsModal />} />
-                  <Route path="/menu-item/:id" element={<ItemMenuModal />} />
-                  <Route path="/item-menu/:id" element={<ItemMenuModal />} />
-                  <Route path="/comanda/:id" element={<ComandaModal />} />
-                  <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
-                  <Route path="/evento/:id/:tab?" element={<AgendaFormPage />} />
-                  <Route path="/inscripcion/:id" element={<InscripcionEvento />} />
-                  <Route path="/agendaForm/:id" element={<AgendaFormPage />} />
-                  <Route path="/Predict/:MenuItem" element={<Predict />} />
-                  <Route path="/CalculoNomina" element={<CalculoNomina />} />
-                  <Route path="/staff-detail" element={<StaffDetailView />} />
-                  <Route path="/staff-manager" element={<StaffManager />} />
-                  <Route path="/user-manager" element={<UserManager />} />
-                  <Route path="/UserPortal" element={<UserPortal />} />
-                  <Route path="/UserPortal/Registro" element={<UserPortal />} />
-                  <Route path="/EventosOffer" element={<EventosOffer />} />
-                  <Route path="/staff-details/:cc" element={<StaffDetailView />} />
-                  <Route path="/staff-manager/:cc" element={<StaffDetailView />} />
-                  <Route path="/staff-manager/:cc/editar-turnos" element={<EditarTurnosView />} />
-                  <Route path="/staff-manager/tips" element={<TipsManager />} />
-                  <Route path="/TipsManager" element={<TipsManager />} />
+                  <Route path="/bolsillos-financieros" element={<BolsillosFinancieros />} />
+                  <Route path="/BolsillosFinancieros" element={<Navigate to="/bolsillos-financieros" replace />} />
+                  <Route path="/admin/bolsillos-financieros" element={<Navigate to="/bolsillos-financieros" replace />} />
+                  <Route path="/gastos-calculados" element={<GastosCalculadosMateriales />} />
+                  <Route path="/productosFinanciero" element={<ProductosFinanciero />} />
                   <Route path="/Model" element={<Model />} />
                   <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
                   <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
+
+                  {/* --- AGENDA Y EVENTOS --- */}
+                  <Route path="/Agenda/:year?/:month?" element={<Agenda />} />
+                  <Route path="/AgendaIdeas" element={<AgendaIdeas />} />
+                  <Route path="/EventosOffer" element={<EventosOffer />} />
+                  <Route path="/evento/:id/:tab?" element={<AgendaFormPage />} />
+                  <Route path="/agendaForm/:id" element={<Navigate to="/evento/:id" replace />} />
+                  <Route path="/inscripcion/:id" element={<InscripcionEvento />} />
+
+                  {/* --- PROVEEDORES Y COTIZACIONES --- */}
+                  <Route path="/Proveedores" element={<Proveedores />} />
+                  <Route path="/PagosProveedores" element={<PagosProveedores />} />
+                  <Route path="/Cotizaciones" element={<CotizacionesView />} />
+
+                  {/* --- EQUIPO Y STAFF --- */}
+                  <Route path="/StaffCreator" element={<StaffCreator />} />
+                  <Route path="/CalculoNomina" element={<CalculoNomina />} />
+                  <Route path="/staff-manager" element={<StaffManager />} />
+                  <Route path="/staff-detail" element={<StaffDetailView />} />
+                  <Route path="/staff-details/:cc" element={<StaffDetailView />} />
+                  <Route path="/staff-manager/:cc" element={<Navigate to="/staff-details/:cc" replace />} />
+                  <Route path="/staff-manager/:cc/editar-turnos" element={<EditarTurnosView />} />
+                  <Route path="/TipsManager" element={<TipsManager />} />
+                  <Route path="/staff-manager/tips" element={<Navigate to="/TipsManager" replace />} />
                   <Route path="/consumo" element={<ConsumoStaffView />} />
                   <Route path="/consumoAdmin" element={<ConsumoAdminView />} />
-                  <Route path="/AnalisisAlmuerzo" element={<AnalisisAlmuerzo />} />
-                  <Route path="/gastos-calculados" element={<GastosCalculadosMateriales />} />
-                  <Route path="/productosFinanciero" element={<ProductosFinanciero />} />
-                  <Route path="/RecruitmentPrint" element={<RecruitmentPrint />} />
-                  <Route path="/MenuPrintHorizontal" element={<MenuPrintManager />} />
-                  <Route path="/Radio" element={<ProyectoRadio />} />
-                  <Route path="/radio" element={<ProyectoRadio />} />
-                  <Route path="/ProyectoRadio" element={<ProyectoRadio />} />
-                  <Route path="/proyectoradio" element={<ProyectoRadio />} />
-                  <Route path="/RadioManager" element={<RadioManager />} />
-                  <Route path="/radiomanager" element={<RadioManager />} />
-                  <Route path="/Cotizaciones" element={<CotizacionesView />} />
+                  <Route path="/user-manager" element={<UserManager />} />
+
+                  {/* --- ALIADOS COMERCIALES --- */}
                   <Route path="/Aliados" element={<AliadosManager />} />
-                  <Route path="/AliadosExcel text-excel" element={<AliadosExcelView />} />
                   <Route path="/AliadosExcel" element={<AliadosExcelView />} />
+                  <Route path="/AliadosExcel text-excel" element={<Navigate to="/AliadosExcel" replace />} />
                   <Route path="/RegistroAliado" element={<AliadoRegistrationForm />} />
                   <Route path="/PortalAliado" element={<AliadoPortal />} />
-                  <Route path="/review_ProyectoCafe" element={<ReviewProyectoCafe />} />
-                  <Route path="/bajas" element={<BajasManager />} />
-                  <Route path="/Bajas" element={<BajasManager />} />
-                  <Route path="/planta" element={<PlantaProduccion />} />
-                  <Route path="/Planta" element={<PlantaProduccion />} />
-                  <Route path="/bolsillos-financieros" element={<BolsillosFinancieros />} />
-                  <Route path="/BolsillosFinancieros" element={<BolsillosFinancieros />} />
-                  <Route path="/admin/bolsillos-financieros" element={<BolsillosFinancieros />} />
 
-                  <Route path="*" element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
+                  {/* --- RADIO PROYECTO CAFÉ --- */}
+                  <Route path="/Radio" element={<ProyectoRadio />} />
+                  <Route path="/radio" element={<Navigate to="/Radio" replace />} />
+                  <Route path="/ProyectoRadio" element={<Navigate to="/Radio" replace />} />
+                  <Route path="/proyectoradio" element={<Navigate to="/Radio" replace />} />
+                  <Route path="/RadioManager" element={<RadioManager />} />
+                  <Route path="/radiomanager" element={<Navigate to="/RadioManager" replace />} />
+
+                  {/* --- MODALES Y VISTAS DE DETALLE POR ID --- */}
+                  <Route path="/receta/:id" element={<RecetaModal />} />
+                  <Route path="/item/:id" element={<ItemsModal />} />
+                  <Route path="/menu-item/:id" element={<ItemMenuModal />} />
+                  <Route path="/item-menu/:id" element={<Navigate to="/menu-item/:id" replace />} />
+                  <Route path="/comanda/:id" element={<ComandaModal />} />
+                  <Route path="/ProcedimientoModal/:id" element={<ProcedimientoModal />} />
+
+                  {/* --- 404 NOT FOUND --- */}
+                  <Route path="*" element={<div className="text-center p-8 text-white text-2xl font-SpaceGrotesk">Página no encontrada</div>} />
                 </Routes>
               </div>
             </Suspense>

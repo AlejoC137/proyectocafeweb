@@ -115,7 +115,7 @@ export function TableViewInventario({ products, currentType, recetasMenu = [], r
         try {
           // despachamos
 
-          await dispatch(updateItem(productId, payloadToSend, currentType));
+          await dispatch(updateItem(productId, payloadToSend, currentType, { origen: "Tabla Inventario", tipo: "manual" }));
 
           // si éxito: actualizamos originalProductsRef con la versión actual en editableProducts
           const edited = editableProducts.find(p => p._id === productId);

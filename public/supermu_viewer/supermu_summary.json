@@ -1,0 +1,18 @@
+{
+  "total_products": 2661,
+  "available_products": 2236,
+  "out_of_stock": 425,
+  "on_sale_products": 157,
+  "categories": {
+    "Carnes, pollo y pescado": 32,
+    "Frutas y Verduras": 195,
+    "Desayuno": 1167,
+    "Desayuno, Despensa": 34,
+    "Despensa": 1233
+  },
+  "min_price": 650.0,
+  "max_price": 106650.0,
+  "avg_price": 12921.08,
+  "scraped_at": "2026-11-01 01:49:15",
+  "duration_seconds": 15.32
+}

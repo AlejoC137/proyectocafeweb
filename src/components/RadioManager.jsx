@@ -3960,7 +3960,7 @@ export default function RadioManager() {
               </div>
             )}
           </div>
-        ) : (
+        ) : managerTab === 'youtube' ? (
           /* SECTION: YOUTUBE MANAGER */
           <div className="space-y-6">
             {/* Formulario Agregar / Editar Enlace YouTube */}

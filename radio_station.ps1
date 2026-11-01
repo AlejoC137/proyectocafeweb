@@ -149,6 +149,83 @@ function Delete-Track($remoteFilename) {
     } catch {}
 }
 
+# --- GESTION AUTONOMA DE PORTADAS (COVERS) ---
+# Cache en memoria para no re-subir la misma imagen durante la emision
+$global:UploadedCoversCache = @{}
+$global:SupportedImageRegex = '\.(jpg|jpeg|png|webp|bmp|gif)$'
+
+# Localizar la imagen de portada: subcarpeta de la cancion con fallback a la carpeta del .bat ($PSScriptRoot)
+function Get-TrackCoverPath($filePath) {
+    # 1. Buscar en la subcarpeta del archivo de audio (si existe $filePath)
+    if ($filePath -and (Test-Path $filePath)) {
+        $trackDir = Split-Path $filePath -Parent
+        if (Test-Path $trackDir) {
+            $localImgs = @(Get-ChildItem -Path $trackDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match $global:SupportedImageRegex })
+            if ($localImgs.Count -gt 0) {
+                # Priorizar nombres comunes: cover, folder, front, album, portada, art
+                $fav = $localImgs | Where-Object { $_.BaseName -match '^(cover|folder|front|album|portada|art)$' } | Select-Object -First 1
+                if ($fav) { return $fav.FullName }
+                return $localImgs[0].FullName
+            }
+        }
+    }
+
+    # 2. Respaldo (Fallback): Buscar en la carpeta donde habita el .bat ($PSScriptRoot)
+    $rootImgs = @(Get-ChildItem -Path $PSScriptRoot -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match $global:SupportedImageRegex })
+    if ($rootImgs.Count -gt 0) {
+        $favRoot = $rootImgs | Where-Object { $_.BaseName -match '^(cover|folder|front|album|portada|logo|station|radio)$' } | Select-Object -First 1
+        if ($favRoot) { return $favRoot.FullName }
+        return $rootImgs[0].FullName
+    }
+
+    return $null
+}
+
+# Subir portada a Supabase Storage con deduplicacion por hash (Zero Delay y reutilizable)
+function Ensure-CoverUploaded($localCoverPath) {
+    if (-not $localCoverPath -or -not (Test-Path $localCoverPath)) { return "" }
+
+    if ($global:UploadedCoversCache.ContainsKey($localCoverPath)) {
+        return $global:UploadedCoversCache[$localCoverPath]
+    }
+
+    $ext = [System.IO.Path]::GetExtension($localCoverPath).ToLower()
+    if (-not $ext) { $ext = ".jpg" }
+
+    $md5 = [System.Security.Cryptography.MD5]::Create()
+    $hashBytes = $md5.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($localCoverPath.ToLower()))
+    $hashHex = ([System.BitConverter]::ToString($hashBytes) -replace '-', '').ToLower()
+    $remoteFilename = "covers/cover_$($hashHex.Substring(0, 12))$ext"
+
+    $contentType = switch ($ext) {
+        ".png"  { "image/png" }
+        ".webp" { "image/webp" }
+        ".gif"  { "image/gif" }
+        ".bmp"  { "image/bmp" }
+        default { "image/jpeg" }
+    }
+
+    $url = "$SUPABASE_URL/storage/v1/object/$BUCKET_NAME/$remoteFilename"
+    $headersCover = @{
+        "Authorization" = "Bearer $SUPABASE_API_KEY"
+        "apikey"        = "$SUPABASE_API_KEY"
+        "Content-Type"  = $contentType
+        "x-upsert"      = "true"
+    }
+
+    try {
+        Invoke-RestMethod -Uri $url -Method Post -Headers $headersCover -InFile $localCoverPath | Out-Null
+        $publicUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/$remoteFilename"
+        $global:UploadedCoversCache[$localCoverPath] = $publicUrl
+        $coverName = Split-Path $localCoverPath -Leaf
+        Write-Host "  [PORTADA SINCRONIZADA] '$coverName' -> Storage ($remoteFilename)" -ForegroundColor DarkGray
+        return $publicUrl
+    } catch {
+        Write-Host "  [AVISO PORTADA] No se pudo subir portada: $($_.Exception.Message)" -ForegroundColor DarkGray
+        return ""
+    }
+}
+
 # Subir pista por adelantado en segundo plano (Zero Delay Pre-Upload)
 function Start-AsyncTrackUpload($filePath, $remoteFilename) {
     $ps = [powershell]::Create()
@@ -404,12 +481,10 @@ function Build-And-Upload-MultiCatalog($folderList) {
         $albumArtist = if ($albumParts.Count -ge 1) { $albumParts[0].Trim() } else { "Varios Artistas" }
         $albumTitle  = if ($albumParts.Count -ge 2) { $albumParts[1].Trim() } else { $alb.Name }
 
-        $coverFiles = @(Get-ChildItem -Path $alb.FullName -File | Where-Object { $_.Extension -match '\.(jpg|jpeg|png|webp)$' })
+        $albCoverLocal = Get-TrackCoverPath (Join-Path $alb.FullName "dummy.mp3")
         $albumCoverUrl = ""
-        if ($coverFiles.Count -gt 0) {
-            $preferredCover = $coverFiles | Where-Object { $_.BaseName -match '^(cover|folder|front|album|portada)$' } | Select-Object -First 1
-            if (-not $preferredCover) { $preferredCover = $coverFiles[0] }
-            $albumCoverUrl = "/api/local-audio?path=" + [System.Uri]::EscapeDataString($preferredCover.FullName)
+        if ($albCoverLocal) {
+            $albumCoverUrl = "/api/local-audio?path=" + [System.Uri]::EscapeDataString($albCoverLocal)
         }
 
         $trackList = [System.Collections.Generic.List[PSObject]]::new()
@@ -712,8 +787,15 @@ try {
             Write-Host "`n>>> [EMITIENDO REMOTO] $($currentTrack.title)" -ForegroundColor Yellow
         }
 
+        # Resolver y asegurar portada (subcarpeta con fallback a la carpeta del .bat)
+        $coverLocal = Get-TrackCoverPath $currentTrack.filePath
+        $resolvedCoverUrl = Ensure-CoverUploaded $coverLocal
+        if (-not $resolvedCoverUrl -and $currentTrack.cover -and $currentTrack.cover.StartsWith("http")) {
+            $resolvedCoverUrl = $currentTrack.cover
+        }
+
         # Notificar nueva pista activa a Supabase
-        Update-CurrentPlay -title $currentTrack.title -artist $currentTrack.artist -cover $currentTrack.cover -publicUrl $publicUrl -isPlaying $true
+        Update-CurrentPlay -title $currentTrack.title -artist $currentTrack.artist -cover $resolvedCoverUrl -publicUrl $publicUrl -isPlaying $true
         Write-Host " [TRANSMITIENDO EN VIVO] Sincronizado con pagina web y oyentes.`n" -ForegroundColor Green
 
         $isPreloadTriggered = $false
@@ -809,6 +891,11 @@ try {
                         title          = $nextCandidate.title
                     }
                     Write-Host "`n  [PRE-CARGA] Subiendo por adelantado: '$($nextCandidate.title)'..." -ForegroundColor DarkCyan
+                    # Pre-cargar portada en cache en segundo plano si existe
+                    if ($nextCandidate.filePath) {
+                        $nextCoverLocal = Get-TrackCoverPath $nextCandidate.filePath
+                        if ($nextCoverLocal) { [void](Ensure-CoverUploaded $nextCoverLocal) }
+                    }
                 }
             }
 
