@@ -8,7 +8,10 @@ import {
   Radio,
   Grid,
   List,
-  Music2
+  Music2,
+  Wifi,
+  Search,
+  Loader2
 } from 'lucide-react';
 import supabase from '../../config/supabaseClient';
 import fallbackCatalogData from '../../data/localMusicCatalog.json';
@@ -24,7 +27,7 @@ export default function RadioStationSelector({
   isShuffle = false,
   setIsShuffle = null
 }) {
-  const [selectorTab, setSelectorTab] = useState('queue'); // 'queue' (Cola al Aire en vivo) o 'albums' (Álbumes)
+  const [selectorTab, setSelectorTab] = useState('queue'); // 'queue' | 'albums' | 'p2p'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
   const [requestingTrackId, setRequestingTrackId] = useState(null);
@@ -32,6 +35,11 @@ export default function RadioStationSelector({
   const [djMixingTrack, setDjMixingTrack] = useState(null);
   const [showPreviousTracks, setShowPreviousTracks] = useState(false);
   const [albumDisplayMode, setAlbumDisplayMode] = useState('grid'); // 'grid' | 'list'
+  
+  // Estado para buscador federado P2P en Proyecto Radio
+  const [p2pSearchQuery, setP2pSearchQuery] = useState('');
+  const [p2pResults, setP2pResults] = useState([]);
+  const [isP2pSearching, setIsP2pSearching] = useState(false);
 
   // currentLiveTitle must be declared here so it's available in all hooks/helpers below
   const currentLiveTitle = currentPlay?.station_name || '';
@@ -227,6 +235,68 @@ export default function RadioStationSelector({
     }
   };
 
+  const handleSearchP2P = async (e) => {
+    if (e) e.preventDefault();
+    if (!p2pSearchQuery.trim()) return;
+    setIsP2pSearching(true);
+    try {
+      const res = await fetch(`/api/p2p-search?q=${encodeURIComponent(p2pSearchQuery.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setP2pResults(data.results || []);
+      }
+    } catch (e) {
+      console.warn("Error en búsqueda P2P:", e);
+    } finally {
+      setIsP2pSearching(false);
+    }
+  };
+
+  const handleSelectP2PTrack = async (track) => {
+    try {
+      setRequestingTrackId(track.id);
+      setRequestSuccess(`🛰️ Adquiriendo stream P2P para "${track.title}"...`);
+
+      // Iniciar el buffer de streaming progresivo en el gateway
+      const params = new URLSearchParams({
+        id: track.id,
+        title: track.title || '',
+        artist: track.artist || '',
+        filePath: track.filePath || '',
+        fileName: track.fileName || '',
+        streamUrl: track.streamUrl || ''
+      });
+      await fetch(`/api/p2p-transfer?${params.toString()}`);
+
+      const streamUrl = `/api/p2p-stream?id=${encodeURIComponent(track.id)}${track.filePath ? `&path=${encodeURIComponent(track.filePath)}` : ''}`;
+      
+      const payload = {
+        id: 1,
+        station_name: track.title,
+        station_artist: track.artist || 'P2P Stream Audio',
+        station_cover: track.cover || '',
+        station_url: streamUrl,
+        tab: 'supabase',
+        is_playing: true,
+        updated_at: new Date().toISOString()
+      };
+
+      await supabase.from('radio_current_play').update(payload).eq('id', 1);
+
+      setTimeout(() => {
+        setRequestSuccess(`🎧 ¡Al Aire Stream P2P!: "${track.title}"`);
+        setRequestingTrackId(null);
+      }, 1500);
+
+      setTimeout(() => {
+        setRequestSuccess(null);
+      }, 5000);
+    } catch (err) {
+      console.error('Error al pedir pista P2P:', err);
+      setRequestingTrackId(null);
+    }
+  };
+
   const handlePlayEntirePlaylist = (playlist) => {
     if (!playlist || playlist.tracks.length === 0) return;
     handleSelectSong(playlist.tracks[0]);
@@ -258,7 +328,7 @@ export default function RadioStationSelector({
         </div>
       )}
 
-      {/* SELECTOR DE VISTA: COLA AL AIRE (DINÁMICA) VS ÁLBUMES */}
+      {/* SELECTOR DE VISTA: COLA AL AIRE (DINÁMICA) VS ÁLBUMES VS BUSCADOR P2P */}
       <div className="flex items-center gap-2 mb-3">
         <button
           onClick={() => { setSelectorTab('queue'); setSelectedPlaylist(null); }}
@@ -281,6 +351,17 @@ export default function RadioStationSelector({
         >
           <Disc className="w-3.5 h-3.5 text-amber-500" />
           <span>Álbumes ({filteredPlaylists.length})</span>
+        </button>
+        <button
+          onClick={() => { setSelectorTab('p2p'); setSelectedPlaylist(null); }}
+          className={`flex-1 py-2 px-2 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 border-[2px] border-black transition ${
+            selectorTab === 'p2p'
+              ? 'bg-black text-white dark:bg-yellow-400 dark:text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+              : 'bg-white dark:bg-[#181926] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Wifi className="w-3.5 h-3.5 text-cyan-400" />
+          <span>P2P Stream</span>
         </button>
       </div>
 
@@ -805,6 +886,88 @@ export default function RadioStationSelector({
                       ) : (
                         <span className="px-2 py-1 bg-emerald-400 hover:bg-emerald-300 text-black text-[10px] font-black uppercase border-[2px] border-black flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Play className="w-2.5 h-2.5 fill-black" /> Poner
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VISTA D: BUSCADOR FEDERADO Y STREAMING P2P (CLICK-TO-PLAY CON BUFFER RANGES) */}
+      {selectorTab === 'p2p' && (
+        <div className="space-y-4">
+          <form onSubmit={handleSearchP2P} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={p2pSearchQuery}
+                onChange={(e) => setP2pSearchQuery(e.target.value)}
+                placeholder="Buscar canción en red P2P o catálogo federado..."
+                className="w-full pl-9 pr-3 py-2 border-[2px] border-black dark:border-slate-600 bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-white text-xs font-bold uppercase placeholder-black/40 outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isP2pSearching || !p2pSearchQuery.trim()}
+              className="px-4 py-2 bg-black dark:bg-yellow-400 text-white dark:text-black font-black text-xs uppercase border-[2px] border-black transition flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {isP2pSearching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+              <span>Buscar</span>
+            </button>
+          </form>
+
+          {p2pResults.length === 0 && !isP2pSearching && (
+            <div className="p-8 text-center border-[2px] border-dashed border-black/30 dark:border-slate-700 bg-cream-bg/60 dark:bg-[#181926]">
+              <Wifi className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="font-black uppercase text-xs">Búsqueda P2P Desacoplada</p>
+              <p className="text-[11px] text-gray-500 mt-1 font-bold">
+                Escribe un título o artista para consultar nodos locales y peers federados con inicio rápido.
+              </p>
+            </div>
+          )}
+
+          {p2pResults.length > 0 && (
+            <div className="flex flex-col divide-y-[2px] divide-black/15 dark:divide-slate-700/60 border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#181926] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              {p2pResults.map((track, idx) => {
+                const isRequesting = requestingTrackId === track.id;
+                return (
+                  <div
+                    key={track.id || idx}
+                    onClick={() => handleSelectP2PTrack(track)}
+                    className="group flex items-center justify-between gap-3 px-3 py-2.5 bg-white dark:bg-[#181926] hover:bg-yellow-50 dark:hover:bg-yellow-400/5 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 shrink-0 overflow-hidden border-[2px] border-black bg-black">
+                        <img
+                          src={track.cover}
+                          alt=""
+                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-black text-xs uppercase tracking-wide truncate group-hover:text-red-600 dark:group-hover:text-yellow-400">
+                          {track.title}
+                        </p>
+                        <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                          {track.artist} • <span className="text-emerald-500 font-bold">{track.peerStatus}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex items-center gap-2">
+                      {isRequesting ? (
+                        <span className="flex items-center gap-1 text-[10px] font-black uppercase text-red-600 animate-pulse">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Conectando
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-cyan-400 hover:bg-cyan-300 text-black text-[10px] font-black uppercase border-[2px] border-black flex items-center gap-1">
+                          <Play className="w-2.5 h-2.5 fill-black" /> Mezclar Stream
                         </span>
                       )}
                     </div>

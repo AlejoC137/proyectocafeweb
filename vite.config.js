@@ -4,6 +4,7 @@ import path from "path"
 import fs from "fs"
 import { visualizer } from 'rollup-plugin-visualizer'
 import { buildSystemPrompt, buildUserMessage, parseClaudeResponse } from './api/_claudeHelpers.js'
+import { searchLocalCatalog, searchOpenFederatedAudio, getOrStartTransfer, getTransferStatus, P2P_CACHE_DIR } from './api/p2pGateway.js'
 
 function localAudioDevPlugin() {
   return {
@@ -163,6 +164,132 @@ function localAudioDevPlugin() {
         } catch (err) {
           console.error('[local-audio-dev error]', err)
           res.writeHead(500, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+
+      // --- ENDPOINTS DE ARQUITECTURA P2P STREAMING (INFORME TÉCNICO SLSK / STREAM GATEWAY) ---
+      // 1. Endpoint /api/p2p-search: Búsqueda federada de audio (Local Index + Cache + Red Abierta)
+      server.middlewares.use('/api/p2p-search', async (req, res) => {
+        try {
+          const urlObj = new URL(req.url, 'http://localhost')
+          const query = urlObj.searchParams.get('q') || ''
+          
+          if (!query.trim()) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' })
+            res.end(JSON.stringify({ results: [] }))
+            return
+          }
+
+          // Búsqueda en catálogo local indexado
+          const localResults = searchLocalCatalog(query)
+          // Búsqueda federada paralela en peers abiertos
+          const openResults = await searchOpenFederatedAudio(query)
+
+          // Combinar y deduplicar resultados
+          const combined = [...localResults, ...openResults]
+
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-cache'
+          })
+          res.end(JSON.stringify({ query, count: combined.length, results: combined }))
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+
+      // 2. Endpoint /api/p2p-transfer: Iniciar o consultar estado de buffering de un peer
+      server.middlewares.use('/api/p2p-transfer', (req, res) => {
+        try {
+          const urlObj = new URL(req.url, 'http://localhost')
+          const id = urlObj.searchParams.get('id')
+          const title = urlObj.searchParams.get('title') || ''
+          const artist = urlObj.searchParams.get('artist') || ''
+          const filePath = urlObj.searchParams.get('filePath') || ''
+          const fileName = urlObj.searchParams.get('fileName') || ''
+          const streamUrl = urlObj.searchParams.get('streamUrl') || ''
+
+          if (!id) {
+            res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+            res.end(JSON.stringify({ error: 'Missing track id' }))
+            return
+          }
+
+          const transfer = getOrStartTransfer({ id, title, artist, filePath, fileName, streamUrl })
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-cache'
+          })
+          res.end(JSON.stringify({ transfer }))
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+
+      // 3. Endpoint /api/p2p-stream: Streaming HTTP Chunked / Range-based de baja latencia
+      server.middlewares.use('/api/p2p-stream', (req, res) => {
+        try {
+          const urlObj = new URL(req.url, 'http://localhost')
+          const id = urlObj.searchParams.get('id')
+          let targetPath = urlObj.searchParams.get('path')
+
+          if (!targetPath && id) {
+            const transfer = getTransferStatus(id)
+            if (transfer && transfer.localPath && fs.existsSync(transfer.localPath)) {
+              targetPath = transfer.localPath
+            } else {
+              // Buscar en p2p_cache si existe por id
+              const possibleCached = path.join(P2P_CACHE_DIR, `${encodeURIComponent(id)}.mp3`)
+              if (fs.existsSync(possibleCached)) {
+                targetPath = possibleCached
+              }
+            }
+          }
+
+          if (!targetPath || !fs.existsSync(targetPath)) {
+            res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+            res.end(JSON.stringify({ error: 'Stream buffer not ready or track not found' }))
+            return
+          }
+
+          const stat = fs.statSync(targetPath)
+          const fileSize = stat.size
+          const range = req.headers.range
+
+          res.setHeader('Content-Type', 'audio/mpeg')
+          res.setHeader('Access-Control-Allow-Origin', '*')
+
+          if (range) {
+            const parts = range.replace(/bytes=/, '').split('-')
+            const start = parseInt(parts[0], 10)
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1
+            const chunksize = (end - start) + 1
+            const file = fs.createReadStream(targetPath, { start, end })
+            res.writeHead(206, {
+              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': chunksize,
+              'Content-Type': 'audio/mpeg',
+              'Access-Control-Allow-Origin': '*'
+            })
+            file.pipe(res)
+          } else {
+            res.writeHead(200, {
+              'Content-Length': fileSize,
+              'Content-Type': 'audio/mpeg',
+              'Accept-Ranges': 'bytes',
+              'Access-Control-Allow-Origin': '*'
+            })
+            fs.createReadStream(targetPath).pipe(res)
+          }
+        } catch (err) {
+          console.error('[p2p-stream error]', err)
+          res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
           res.end(JSON.stringify({ error: err.message }))
         }
       })

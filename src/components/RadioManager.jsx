@@ -9,6 +9,7 @@ import YoutubeBulkModal from './radio/YoutubeBulkModal';
 import MusicCoversGalleryModal from './radio/MusicCoversGalleryModal';
 import AlbumTracklistModal from './radio/AlbumTracklistModal';
 import ListenersRemoteModal from './radio/ListenersRemoteModal';
+import P2PStreamManager from './radio/P2PStreamManager';
 import { extractYoutubeId, getYoutubeThumbnail, fetchYoutubeMetadata, YOUTUBE_CATEGORIES } from '../utils/youtubeHelpers';
 import fallbackCatalogData from '../data/localMusicCatalog.json';
 import { 
@@ -3062,6 +3063,15 @@ export default function RadioManager() {
           >
             <Youtube className="w-4 h-4 text-red-500 fill-current" /> YouTube Manager ({youtubeSongs.length})
           </button>
+
+          <button 
+            onClick={() => setManagerTab('p2p')}
+            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
+              managerTab === 'p2p' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'
+            }`}
+          >
+            <Radio className="w-4 h-4 text-cyan-400" /> P2P Stream Gateway
+          </button>
         </div>
 
         {managerTab === 'mp3' ? (
@@ -4297,7 +4307,18 @@ export default function RadioManager() {
               )}
             </div>
           </div>
-        )}
+        ) : managerTab === 'p2p' ? (
+          <div className="space-y-4">
+            <P2PStreamManager 
+              onPlayTrackInDeck={(track) => {
+                handlePlayPreview(track, true);
+              }}
+              onQueueTrack={async (track) => {
+                await handlePlayAirSong(track);
+              }}
+            />
+          </div>
+        ) : null}
 
         </div>
       </div>
