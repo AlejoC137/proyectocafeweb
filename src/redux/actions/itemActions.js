@@ -1,4 +1,4 @@
-import { buildUpdatedHistory } from '../utils/historyUtils';
+import { buildUpdatedHistory } from '../../utils/historyUtils';
 import supabase from "../../config/supabaseClient";
 import { v4 as uuidv4 } from "uuid";
 import { MenuItems, MENU } from "../actions-types";
