@@ -1,5 +1,5 @@
-import { trimRecepie } from '../../../redux/actions/recipeActions';
-import { CATEGORIES, CATEGORIES_t, SUB_CATEGORIES } from '../../../redux/actions-types';
+import { trimRecepie } from '../../../../redux/actions/recipeActions';
+import { CATEGORIES, CATEGORIES_t, SUB_CATEGORIES } from '../../../../redux/actions-types';
 
 /**
  * Normaliza nombres de unidades a estándares comunes (un, gr, ml, kg, L)
