@@ -1,13 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { 
   Plus, Trash2, RotateCcw, RotateCw, Copy, Move, Check, 
   Sparkles, Sliders, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
-  Download, Eye, Database, Cloud, Loader2, DoorOpen, ArrowLeftRight, ArrowUpDown, AppWindow
+  Download, Eye, Database, Cloud, Loader2, DoorOpen, ArrowLeftRight, ArrowUpDown, AppWindow,
+  Zap, Flame, Droplets, Wrench, Activity, Gauge, BarChart2, CheckCircle2, AlertTriangle, Layers, Info, FileSpreadsheet, FileCode, RefreshCw
 } from 'lucide-react';
 import defaultCadLayout from '../../../assets/data/plantaCustomLayout.json';
 import dxfSvgData from '../../../assets/data/plantaDxfSvgData.json';
+import {
+  normalizarEquipoRevit,
+  calcularConsumosEquipo,
+  calcularConsumosPlanta,
+  TARIFAS_SERVICIOS,
+  REVIT_TAXONOMIA
+} from './plantaConsumosUtils.js';
 
-const EQUIPOS_PRESETS = [
+
+const RAW_PRESETS = [
   {
     id: 'batidora-20l',
     nombre: 'Batidora Planetaria 20 Litros',
@@ -172,6 +181,8 @@ const EQUIPOS_PRESETS = [
     posicion: { x: 25, y: 0, width: 50, height: 4, rotacion: 0, color: '#0369a1' }
   }
 ];
+
+const EQUIPOS_PRESETS = RAW_PRESETS.map(p => normalizarEquipoRevit(p));
 
 // RENDERIZADOR ARQUITECTÓNICO CAD DE PUERTAS (BATIENTE, DOBLE, CORREDERA, VAIVÉN)
 function DoorCadRenderer({ item }) {
@@ -469,6 +480,10 @@ export default function PlantaCadEditor({
   setDimensionesHabitacion,
   analisisProductos = [],
   horasTurno = 8,
+  diasMes = 26,
+  costosFijos = {},
+  setCostosFijos,
+  onSincronizarCostosConConsumos,
   equipoSeleccionado, 
   setEquipoSeleccionado,
   onResetOriginal,
@@ -480,6 +495,10 @@ export default function PlantaCadEditor({
   const [guardadoNotif, setGuardadoNotif] = useState(false);
   const [activeYieldTab, setActiveYieldTab] = useState('tarta-basca');
   const [verMuros, setVerMuros] = useState(true);
+  const [inspectorTab, setInspectorTab] = useState('cad'); // 'cad', 'consumos', 'revit'
+  const [showConsumosModal, setShowConsumosModal] = useState(false);
+  const [tarifasMep, setTarifasMep] = useState(TARIFAS_SERVICIOS);
+  const [notifSincronizacion, setNotifSincronizacion] = useState(false);
 
   // Estados locales para las dimensiones de la habitación
   const anchoHab = Number(dimensionesHabitacion?.ancho || 3.20);
@@ -538,7 +557,105 @@ export default function PlantaCadEditor({
   const [pointerStart, setPointerStart] = useState({ x: 0, y: 0 });
   const [itemStart, setItemStart] = useState({ x: 0, y: 0, width: 20, height: 20 });
 
-  const eq = equipos.find(e => e.id === equipoSeleccionado?.id) || equipoSeleccionado || equipos[0] || {};
+  const rawSelectedEq = equipos.find(e => e.id === equipoSeleccionado?.id) || equipoSeleccionado || equipos[0] || {};
+  const eq = useMemo(() => normalizarEquipoRevit(rawSelectedEq), [rawSelectedEq]);
+
+  // Cálculos de Consumos Teóricos MEP individuales y globales de planta
+  const consumoActivo = useMemo(() => {
+    return calcularConsumosEquipo(eq, diasMes, tarifasMep);
+  }, [eq, diasMes, tarifasMep]);
+
+  const balancePlanta = useMemo(() => {
+    return calcularConsumosPlanta(equipos, diasMes, horasTurno, tarifasMep);
+  }, [equipos, diasMes, horasTurno, tarifasMep]);
+
+  // Actualizador de Consumos Teóricos MEP de un equipo
+  const handleUpdateConsumo = (campo, valor) => {
+    setEquipos(prev => prev.map(item => {
+      if (item.id === eq.id) {
+        const c = { ...(item.consumosTeoricos || {}) };
+        c[campo] = valor;
+        return normalizarEquipoRevit({ ...item, consumosTeoricos: c });
+      }
+      return item;
+    }));
+    triggerGuardado();
+  };
+
+  // Actualizador de Nomenclatura Revit de un equipo (review / reviewPlugIn Standard)
+  const handleUpdateRevit = (campo, valor) => {
+    setEquipos(prev => prev.map(item => {
+      if (item.id === eq.id) {
+        const updated = { ...item, [campo]: valor };
+        const qp = { ...(item.quick_params || {}) };
+        if (campo === 'familiaRevit') qp['Family'] = valor;
+        if (campo === 'tipoRevit') qp['Type'] = valor;
+        if (campo === 'disciplina') qp['Discipline'] = valor;
+        if (campo === 'categoriaRevit') qp['Revit Category'] = valor;
+        if (campo === 'elementIdRevit') qp['ElementId'] = String(valor);
+        updated.quick_params = qp;
+        return normalizarEquipoRevit(updated);
+      }
+      return item;
+    }));
+    triggerGuardado();
+  };
+
+  // Presets Rápidos de Consumo Teórico
+  const handleAplicarPresetConsumo = (modo) => {
+    if (!eq.id) return;
+    let horasUso = 4.0;
+    let factorCarga = 80;
+    let horasLlama = eq.consumosTeoricos?.usaGas ? 4.0 : 0;
+    if (modo === 'eco') {
+      horasUso = Math.max(1, Number(((eq.consumosTeoricos?.horasUsoDiario || 4) * 0.7).toFixed(1)));
+      factorCarga = 65;
+      horasLlama = Math.max(1, Number(((eq.consumosTeoricos?.horasLlamaDiario || 4) * 0.7).toFixed(1)));
+    } else if (modo === 'intenso') {
+      horasUso = horasTurno;
+      factorCarga = 95;
+      horasLlama = eq.consumosTeoricos?.usaGas ? Number((horasTurno * 0.9).toFixed(1)) : 0;
+    } else {
+      // Nominal
+      horasUso = eq.tipo === 'HORNO' ? 5.5 : (eq.tipo === 'BATIDORA' ? 3.0 : 4.0);
+      factorCarga = 80;
+      horasLlama = eq.tipo === 'HORNO' ? 5.0 : 0;
+    }
+    setEquipos(prev => prev.map(item => {
+      if (item.id === eq.id) {
+        return normalizarEquipoRevit({
+          ...item,
+          consumosTeoricos: {
+            ...item.consumosTeoricos,
+            horasUsoDiario: horasUso,
+            factorCargaPct: factorCarga,
+            horasLlamaDiario: horasLlama
+          }
+        });
+      }
+      return item;
+    }));
+    triggerGuardado();
+  };
+
+  // Sincronizar consumos teóricos calculados con los costos fijos de simulación
+  const handleSincronizarCostosConPlanta = () => {
+    if (onSincronizarCostosConConsumos) {
+      onSincronizarCostosConConsumos();
+      setNotifSincronizacion(true);
+      setTimeout(() => setNotifSincronizacion(false), 3500);
+      return;
+    }
+    if (setCostosFijos) {
+      setCostosFijos(prev => ({
+        ...prev,
+        electricidadComercial: balancePlanta.costoTotalElecMes,
+        gasPropanoPipetas: balancePlanta.costoTotalGasMes
+      }));
+      setNotifSincronizacion(true);
+      setTimeout(() => setNotifSincronizacion(false), 3500);
+    }
+  };
 
   // Dimensiones calculadas del equipo según el tamaño dinámico de la habitación
   const anchoMetrosCalc = (((eq.posicion?.width || 20) / 100) * anchoHab).toFixed(2);
@@ -1252,6 +1369,1251 @@ export default function PlantaCadEditor({
             title="Sincronizar y guardar en base de datos Supabase (PostgreSQL)"
           >
             <Cloud className="w-3 h-3" /> Guardar SQL
+          </button>
+
+          <button
+            onClick={() => setShowConsumosModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-black font-black text-[11px] uppercase border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-x-[1px] active:translate-y-[1px]"
+            title="Abrir Balance de Consumos Teóricos MEP de la Planta (Luz, Gas, Agua)"
+          >
+            <Zap className="w-3.5 h-3.5 text-black" />
+            Consumos MEP (` + '
+
+          <button
+            onClick={onResetOriginal}
+            className="flex items-center gap-1 px-2 py-1 bg-gray-100 font-bold text-[11px] border border-black hover:bg-gray-200"
+            title="Restablecer plano al original"
+          >
+            <RotateCcw className="w-3 h-3" /> Reset
+          </button>
+        </div>
+      </div>
+
+      {/* Banner de Estado de Guardado y Ubicación */}
+      <div className="flex flex-wrap items-center justify-between gap-1 p-1 px-2 bg-emerald-50 border border-emerald-600 text-[10.5px] font-bold text-emerald-950">
+        <div className="flex items-center gap-1.5">
+          <Database className="w-3.5 h-3.5 text-emerald-700" />
+          <span><b>Sincronización en la Nube:</b> Dimensiones <b>{anchoHab.toFixed(2)}m &times; {largoHab.toFixed(2)}m ({areaHab} m²)</b> en <b>Supabase SQL</b> (PostgreSQL).</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {syncStatus === 'syncing' && (
+            <span className="px-1.5 py-0.2 bg-amber-500 text-white font-black uppercase text-[9.5px] flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" /> Guardando...
+            </span>
+          )}
+          {syncStatus === 'saved' && (
+            <span className="px-1.5 py-0.2 bg-emerald-600 text-white font-black uppercase text-[9.5px] flex items-center gap-1">
+              <Check className="w-3 h-3" /> Sincronizado
+            </span>
+          )}
+          {syncStatus === 'error' && (
+            <span className="px-1.5 py-0.2 bg-red-600 text-white font-black uppercase text-[9.5px]">
+              Error conexión
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Grid Principal: Canvas 2D + Inspector de Propiedades */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5">
+        {/* Lienzo Interactivo CAD 2D */}
+        <div className="lg:col-span-8 bg-white border-2 border-black p-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center">
+          {/* Header de Escala Arquitectónica & Capas */}
+          <div className="w-full flex flex-wrap justify-between items-center gap-1 text-xs font-bold mb-1 px-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-black"></span>
+              <span className="font-mono text-gray-900 uppercase font-black tracking-wide text-[10.5px]">
+                Plano 2D ({anchoHab.toFixed(2)}m &times; {largoHab.toFixed(2)}m)
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setVerMuros(!verMuros)}
+                className={`px-2 py-0.2 border border-black font-mono text-[9.5px] font-black uppercase transition-all ${
+                  verMuros ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
+                }`}
+              >
+                {verMuros ? '✓ Muros' : '✕ Muros'}
+              </button>
+              <span className="font-mono bg-black text-white px-1.5 py-0.2 text-[9.5px] font-bold">
+                {areaHab} m²
+              </span>
+              <span className="font-mono bg-orange-100 text-orange-900 px-1.5 py-0.2 border border-orange-400 text-[9.5px] font-bold">
+                1:1
+              </span>
+            </div>
+          </div>
+
+          {/* Contenedor del Lienzo con Reglas Arquitectónicas Dinámicas */}
+          <div className="w-full max-w-3xl flex flex-col items-end">
+            {/* Regla Horizontal Superior (Eje X: 0.00m a anchoHab) */}
+            <div className="w-full flex items-end">
+              {/* Esquina origen (0,0) */}
+              <div className="w-7 h-7 bg-black text-white text-[9px] font-mono font-bold flex items-center justify-center border-t-2 border-l-2 border-black select-none shrink-0">
+                0,0
+              </div>
+              {/* Cuerpo de la regla X */}
+              <div className="flex-1 h-7 bg-[#f8fafc] border-t-2 border-b-2 border-r-2 border-black relative overflow-hidden select-none">
+                {(() => {
+                  const anchoCm = Math.round(anchoHab * 100);
+                  const numTicksX = Math.round(anchoHab * 10) + 1;
+                  return (
+                    <svg className="w-full h-full" viewBox={`0 0 ${anchoCm} 28`} preserveAspectRatio="none">
+                      <rect x="0" y="0" width={anchoCm} height="28" fill="#f8fafc" />
+                      {Array.from({ length: numTicksX }).map((_, i) => {
+                        const pos = i * 10;
+                        const isMajor = i % 10 === 0;
+                        const isMid = i % 5 === 0 && !isMajor;
+                        const height = isMajor ? 18 : isMid ? 11 : 6;
+                        return (
+                          <g key={`tick-x-${i}`}>
+                            <line
+                              x1={pos}
+                              y1={28 - height}
+                              x2={pos}
+                              y2={28}
+                              stroke="#0f172a"
+                              strokeWidth={isMajor ? 1.5 : 0.8}
+                            />
+                            {isMajor && (
+                              <text
+                                x={pos + 2}
+                                y={11}
+                                fontSize="8"
+                                fontFamily="monospace"
+                                fontWeight="bold"
+                                fill="#0f172a"
+                              >
+                                {(i * 0.1).toFixed(1)}m
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                      <text
+                        x={anchoCm - 2}
+                        y="11"
+                        fontSize="8"
+                        fontFamily="monospace"
+                        fontWeight="bold"
+                        fill="#ea580c"
+                        textAnchor="end"
+                      >
+                        {anchoHab.toFixed(2)}m
+                      </text>
+                    </svg>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Fila Central: Regla Vertical Izquierda + Lienzo */}
+            <div className="w-full flex">
+              {/* Regla Vertical Izquierda (Eje Y: 0.00m a largoHab) */}
+              <div className="w-7 bg-[#f8fafc] border-l-2 border-r-2 border-b-2 border-black relative select-none shrink-0 overflow-hidden">
+                {(() => {
+                  const largoCm = Math.round(largoHab * 100);
+                  const numTicksY = Math.round(largoHab * 10) + 1;
+                  return (
+                    <svg className="w-full h-full" viewBox={`0 0 28 ${largoCm}`} preserveAspectRatio="none">
+                      <rect x="0" y="0" width="28" height={largoCm} fill="#f8fafc" />
+                      {Array.from({ length: numTicksY }).map((_, i) => {
+                        const pos = i * 10;
+                        const isMajor = i % 10 === 0;
+                        const isMid = i % 5 === 0 && !isMajor;
+                        const width = isMajor ? 18 : isMid ? 11 : 6;
+                        return (
+                          <g key={`tick-y-${i}`}>
+                            <line
+                              x1={28 - width}
+                              y1={pos}
+                              x2={28}
+                              y2={pos}
+                              stroke="#0f172a"
+                              strokeWidth={isMajor ? 1.5 : 0.8}
+                            />
+                            {isMajor && (
+                              <text
+                                x={3}
+                                y={pos + 9}
+                                fontSize="7.5"
+                                fontFamily="monospace"
+                                fontWeight="bold"
+                                fill="#0f172a"
+                              >
+                                {(i * 0.1).toFixed(1)}
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                      <text
+                        x="3"
+                        y={largoCm - 4}
+                        fontSize="7"
+                        fontFamily="monospace"
+                        fontWeight="bold"
+                        fill="#ea580c"
+                      >
+                        {largoHab.toFixed(2)}m
+                      </text>
+                    </svg>
+                  );
+                })()}
+              </div>
+
+              {/* Lienzo Arquitectónico 2D Dinámico */}
+              <div 
+                ref={canvasRef}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                className="flex-1 bg-white border-2 border-black relative p-0 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] select-none overflow-hidden touch-none"
+                style={{
+                  aspectRatio: `${anchoHab} / ${largoHab}`,
+                  backgroundImage: 'linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px)',
+                  backgroundSize: '20px 20px'
+                }}
+              >
+                {/* Muros Arquitectónicos Reales Perimetrales Adaptativos */}
+                {verMuros && (() => {
+                  const anchoCm = Math.round(anchoHab * 100);
+                  const largoCm = Math.round(largoHab * 100);
+                  const muroEspesor = 12; // 12 cm de espesor arquitectónico
+
+                  return (
+                    <svg viewBox={`0 0 ${anchoCm} ${largoCm}`} className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                      <defs>
+                        {/* Patrón rayado arquitectónico para corte de muro a 45 grados */}
+                        <pattern id="muroHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                          <line x1="0" y1="0" x2="0" y2="8" stroke="#334155" strokeWidth="1.5" />
+                        </pattern>
+
+                        {/* Máscara de vanos: corta y oculta el muro al 100% bajo puertas y ventanas */}
+                        <mask id="muroVanoMask">
+                          {/* Blanco = todo el muro visible */}
+                          <rect x="-50" y="-50" width={anchoCm + 100} height={largoCm + 100} fill="white" />
+
+                          {/* Negro = huecos que eliminan completamente el muro, trama y bordes */}
+                          {equipos.filter(item => 
+                            item.tipo === 'PUERTA' || 
+                            item.tipo === 'PUERTA_DOBLE' || 
+                            item.tipo === 'PUERTA_CORREDERA' || 
+                            item.tipo === 'PUERTA_VAIVEN' || 
+                            item.tipo === 'VENTANA'
+                          ).map(ap => {
+                            const xCm = ((ap.posicion?.x ?? 0) / 100) * anchoCm;
+                            const yCm = ((ap.posicion?.y ?? 0) / 100) * largoCm;
+                            const wCm = ((ap.posicion?.width ?? 20) / 100) * anchoCm;
+                            const hCm = ((ap.posicion?.height ?? 4) / 100) * largoCm;
+
+                            let cutX = xCm;
+                            let cutY = yCm;
+                            let cutW = wCm;
+                            let cutH = hCm;
+
+                            // Expansión para corte limpio de borde exterior a interior
+                            if (yCm <= muroEspesor * 1.5) {
+                              cutY = -6;
+                              cutH = Math.max(hCm, muroEspesor) + 8;
+                            }
+                            if (yCm + hCm >= largoCm - (muroEspesor * 1.5)) {
+                              cutH = largoCm - yCm + 12;
+                            }
+                            if (xCm <= muroEspesor * 1.5) {
+                              cutX = -6;
+                              cutW = Math.max(wCm, muroEspesor) + 8;
+                            }
+                            if (xCm + wCm >= anchoCm - (muroEspesor * 1.5)) {
+                              cutW = anchoCm - xCm + 12;
+                            }
+
+                            return (
+                              <rect
+                                key={ap.id}
+                                x={cutX - 0.5}
+                                y={cutY - 0.5}
+                                width={cutW + 1}
+                                height={cutH + 1}
+                                fill="black"
+                              />
+                            );
+                          })}
+                        </mask>
+                      </defs>
+
+                      {/* Muros perimetrales con corte limpio en cada vano */}
+                      <g mask="url(#muroVanoMask)">
+                        {/* Muro Superior */}
+                        <rect x="0" y="0" width={anchoCm} height={muroEspesor} fill="url(#muroHatch)" stroke="#0f172a" strokeWidth="1.5" />
+
+                        {/* Muro Lateral Izquierdo */}
+                        <rect x="0" y="0" width={muroEspesor} height={largoCm} fill="url(#muroHatch)" stroke="#0f172a" strokeWidth="1.5" />
+
+                        {/* Muro Lateral Derecho */}
+                        <rect x={anchoCm - muroEspesor} y="0" width={muroEspesor} height={largoCm} fill="url(#muroHatch)" stroke="#0f172a" strokeWidth="1.5" />
+
+                        {/* Muro Inferior */}
+                        <rect x="0" y={largoCm - muroEspesor} width={anchoCm} height={muroEspesor} fill="url(#muroHatch)" stroke="#0f172a" strokeWidth="1.5" />
+                      </g>
+
+                      {/* Etiqueta técnica de muro */}
+                      <text x="16" y="22" fill="#64748b" fontSize="6.5" fontFamily="monospace" fontWeight="bold">MURO e=0.12m</text>
+                      <text x={anchoCm - 18} y={largoCm - 16} fill="#64748b" fontSize="6.5" fontFamily="monospace" fontWeight="bold" textAnchor="end">
+                        {anchoHab.toFixed(2)}m &times; {largoHab.toFixed(2)}m
+                      </text>
+                    </svg>
+                  );
+                })()}
+
+            {/* Cotas Temporales Azules para el equipo seleccionado */}
+            {eq.id && (
+              <>
+                <div 
+                  style={{
+                    left: '16px',
+                    top: (eq.posicion?.y || 0) + '%',
+                    width: (eq.posicion?.x || 0) + '%'
+                  }}
+                  className="absolute h-0.5 border-b border-dashed border-blue-600 pointer-events-none z-20 flex items-center justify-center"
+                >
+                  <span className="text-[8px] font-mono font-bold bg-blue-600 text-white px-1 -top-2 relative">
+                    {distMuroIzqMetros}m
+                  </span>
+                </div>
+
+                <div 
+                  style={{
+                    top: '16px',
+                    left: (eq.posicion?.x || 0) + '%',
+                    height: (eq.posicion?.y || 0) + '%'
+                  }}
+                  className="absolute w-0.5 border-l border-dashed border-blue-600 pointer-events-none z-20 flex items-center justify-center"
+                >
+                  <span className="text-[8px] font-mono font-bold bg-blue-600 text-white px-1 -left-3 relative">
+                    {distMuroSupMetros}m
+                  </span>
+                </div>
+              </>
+            )}
+
+            {/* RENDERIZADO DE EQUIPOS Y ELEMENTOS ARQUITECTÓNICOS BIM */}
+            {equipos.map((item) => {
+              const isSel = eq.id === item.id;
+              const posX = item.posicion?.x ?? 30;
+              const posY = item.posicion?.y ?? 30;
+              const w = item.posicion?.width ?? 20;
+              const h = item.posicion?.height ?? 20;
+              const rot = item.posicion?.rotacion ?? 0;
+              const itemAnchoM = ((w / 100) * anchoHab).toFixed(2);
+              const itemLargoM = ((h / 100) * largoHab).toFixed(2);
+
+              const esPuerta = item.tipo === 'PUERTA' || item.tipo === 'PUERTA_DOBLE' || item.tipo === 'PUERTA_CORREDERA' || item.tipo === 'PUERTA_VAIVEN';
+              const esVentana = item.tipo === 'VENTANA';
+              const esApertura = esPuerta || esVentana;
+
+              // RENDERIZADO ESPECIALIZADO DE PUERTAS ARQUITECTÓNICAS CAD
+              if (esPuerta) {
+                return (
+                  <div
+                    key={item.id}
+                    onPointerDown={(e) => handlePointerDown(e, item)}
+                    style={{
+                      left: posX + '%',
+                      top: posY + '%',
+                      width: w + '%',
+                      height: h + '%'
+                    }}
+                    className={`absolute cursor-grab active:cursor-grabbing select-none z-30 transition-shadow ${
+                      isSel 
+                        ? 'ring-2 ring-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]' 
+                        : 'hover:ring-1 hover:ring-blue-400'
+                    }`}
+                    title="Arrastra para mover la puerta por el muro. Clic para configurar bisagra y apertura."
+                  >
+                    {/* Vano en el muro (cubre y corta el muro perimetral al 100%) */}
+                    <div className="absolute inset-0 bg-white" />
+
+                    {/* Gráfico CAD de Puerta con arco de barrido, hoja batiente y marcos */}
+                    <DoorCadRenderer item={item} />
+
+                    {/* Etiqueta Técnica CAD Discreta */}
+                    <div className="absolute inset-x-0 -bottom-3.5 flex items-center justify-center pointer-events-none z-40">
+                      <span className="text-[7.5px] font-mono font-black bg-blue-900 text-white px-1 py-0.2 rounded shadow-sm whitespace-nowrap">
+                        {item.tipo === 'PUERTA_DOBLE' ? 'PD' : item.tipo === 'PUERTA_CORREDERA' ? 'PC' : item.tipo === 'PUERTA_VAIVEN' ? 'PV' : 'P1'} • {itemAnchoM}m
+                      </span>
+                    </div>
+
+                    {/* Barra Flotante de Acciones Rápidas CAD al Seleccionar */}
+                    {isSel && (
+                      <div 
+                        className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-black/95 px-1.5 py-0.5 rounded shadow-[0_2px_8px_rgba(0,0,0,0.5)] border border-gray-700 whitespace-nowrap"
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRotate(90);
+                          }}
+                          className="px-1.5 py-0.5 bg-orange-600 hover:bg-orange-700 text-white text-[9px] font-mono font-black rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                          title="Girar puerta 90° (Muro Sur ⇄ Oeste ⇄ Norte ⇄ Este)"
+                        >
+                          <RotateCw className="w-3 h-3" />
+                          <span>Girar 90°</span>
+                          <span className="text-[7.5px] bg-black/30 px-1 rounded">{rot}°</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleDoorMano();
+                          }}
+                          className="px-1.5 py-0.5 bg-blue-700 hover:bg-blue-600 text-white text-[9px] font-mono font-bold rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                          title="Invertir mano de bisagra (Izquierda / Derecha)"
+                        >
+                          <ArrowLeftRight className="w-3 h-3 text-blue-200" />
+                          <span>Bisagra {item.mano === 'der' ? 'Der ➔' : '⬅︎ Izq'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleDoorApertura();
+                          }}
+                          className="px-1.5 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white text-[9px] font-mono font-bold rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                          title="Invertir sentido de apertura (Hacia Adentro / Hacia Afuera)"
+                        >
+                          <ArrowUpDown className="w-3 h-3 text-emerald-200" />
+                          <span>{item.apertura === 'exterior' ? 'Afuera' : 'Adentro'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete();
+                          }}
+                          className="p-1 bg-red-800 hover:bg-red-700 text-white rounded cursor-pointer transition-colors active:scale-95 ml-0.5"
+                          title="Eliminar puerta"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Manijas de Redimensionamiento del Vano */}
+                    {isSel && (
+                      <>
+                        {w >= h ? (
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, item, 'e')}
+                            className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-5 bg-blue-600 border-2 border-white rounded cursor-ew-resize z-40 shadow hover:scale-125 transition-transform"
+                            title="Arrastra para cambiar el ancho del vano de la puerta"
+                          />
+                        ) : (
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, item, 's')}
+                            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-3 bg-blue-600 border-2 border-white rounded cursor-ns-resize z-40 shadow hover:scale-125 transition-transform"
+                            title="Arrastra para cambiar el ancho del vano de la puerta"
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              }
+
+              // RENDERIZADO ESPECIALIZADO DE VENTANAS ARQUITECTÓNICAS CAD
+              if (esVentana) {
+                const subtipo = item.subtipo || 'BATIENTE';
+                return (
+                  <div
+                    key={item.id}
+                    onPointerDown={(e) => handlePointerDown(e, item)}
+                    style={{
+                      left: posX + '%',
+                      top: posY + '%',
+                      width: w + '%',
+                      height: h + '%'
+                    }}
+                    className={`absolute cursor-grab active:cursor-grabbing select-none z-30 transition-shadow ${
+                      isSel 
+                        ? 'ring-2 ring-sky-500 shadow-[0_0_12px_rgba(2,132,199,0.5)]' 
+                        : 'hover:ring-1 hover:ring-sky-400'
+                    }`}
+                    title="Arrastra para mover la ventana por el muro. Clic para configurar carpintería y acristalamiento."
+                  >
+                    {/* Vano en el muro (cubre y corta el muro perimetral al 100%) */}
+                    <div className="absolute inset-0 bg-white" />
+
+                    {/* Gráfico CAD de Ventana con carpintería, alféizar y doble vidrio */}
+                    <WindowCadRenderer item={item} />
+
+                    {/* Etiqueta Técnica CAD Discreta */}
+                    <div className="absolute inset-x-0 -bottom-3.5 flex items-center justify-center pointer-events-none z-40">
+                      <span className="text-[7.5px] font-mono font-black bg-sky-800 text-white px-1 py-0.2 rounded shadow-sm whitespace-nowrap">
+                        {subtipo === 'CORREDERA' ? 'VC' : subtipo === 'FIJA' ? 'VF' : 'V1'} • {itemAnchoM}m
+                      </span>
+                    </div>
+
+                    {/* Barra Flotante de Acciones Rápidas CAD al Seleccionar */}
+                    {isSel && (
+                      <div 
+                        className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-black/95 px-1.5 py-0.5 rounded shadow-[0_2px_8px_rgba(0,0,0,0.5)] border border-gray-700 whitespace-nowrap"
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRotate(90);
+                          }}
+                          className="px-1.5 py-0.5 bg-sky-700 hover:bg-sky-600 text-white text-[9px] font-mono font-black rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                          title="Girar ventana 90° (Muro Norte/Sur ⇄ Este/Oeste)"
+                        >
+                          <RotateCw className="w-3 h-3" />
+                          <span>Girar 90°</span>
+                          <span className="text-[7.5px] bg-black/30 px-1 rounded">{rot}°</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleWindowSubtipo();
+                          }}
+                          className="px-1.5 py-0.5 bg-blue-700 hover:bg-blue-600 text-white text-[9px] font-mono font-bold rounded flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                          title="Alternar tipo de ventana (Batiente ⇄ Corredera ⇄ Fija Vitrina)"
+                        >
+                          <span>{subtipo === 'CORREDERA' ? '⇄ Corredera' : subtipo === 'FIJA' ? '◻ Fija Vitrina' : '🪟 Batiente'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete();
+                          }}
+                          className="p-1 bg-red-800 hover:bg-red-700 text-white rounded cursor-pointer transition-colors active:scale-95 ml-0.5"
+                          title="Eliminar ventana"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Manijas de Redimensionamiento del Vano */}
+                    {isSel && (
+                      <>
+                        {w >= h ? (
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, item, 'e')}
+                            className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-5 bg-sky-600 border-2 border-white rounded cursor-ew-resize z-40 shadow hover:scale-125 transition-transform"
+                            title="Arrastra para cambiar el ancho del vano de la ventana"
+                          />
+                        ) : (
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, item, 's')}
+                            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-3 bg-sky-600 border-2 border-white rounded cursor-ns-resize z-40 shadow hover:scale-125 transition-transform"
+                            title="Arrastra para cambiar el ancho del vano de la ventana"
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={item.id}
+                  onPointerDown={(e) => handlePointerDown(e, item)}
+                  style={{
+                    left: posX + '%',
+                    top: posY + '%',
+                    width: w + '%',
+                    height: h + '%'
+                  }}
+                  className={`absolute border-2 cursor-grab active:cursor-grabbing transition-shadow flex flex-col items-center justify-between p-0.5 select-none ${
+                    esApertura ? 'z-25' : 'z-20'
+                  } ${
+                    esVentana
+                      ? (isSel ? 'bg-white border-sky-700 ring-2 ring-sky-600 shadow-lg' : 'bg-white/95 border-sky-600 hover:bg-sky-50 shadow-sm')
+                      : isSel 
+                      ? 'bg-amber-100/95 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ring-2 ring-blue-600' 
+                      : 'bg-white/95 border-gray-800 hover:bg-orange-50'
+                  }`}
+                >
+                  {/* Botón Flotante de Rotación 90° Directo en el Canvas */}
+                  {isSel && (
+                    <div 
+                      className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1 z-40"
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRotate(90);
+                        }}
+                        className="px-2 py-0.5 bg-black hover:bg-orange-600 text-white text-[10px] font-mono font-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] flex items-center gap-1 cursor-pointer transition-colors active:scale-95 whitespace-nowrap"
+                        title="Rotar elemento 90° horario"
+                      >
+                        <RotateCw className="w-3 h-3 text-orange-400" />
+                        <span>Rotar 90°</span>
+                        <span className="text-[8px] bg-white/20 px-1 rounded font-bold">{rot}°</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Indicador sutil de cara frontal del equipo */}
+                  {!esApertura && (
+                    <div 
+                      className={`absolute pointer-events-none ${
+                        rot === 0 ? 'bottom-0 inset-x-0 h-1 bg-orange-500/80' :
+                        rot === 90 ? 'left-0 inset-y-0 w-1 bg-orange-500/80' :
+                        rot === 180 ? 'top-0 inset-x-0 h-1 bg-orange-500/80' :
+                        'right-0 inset-y-0 w-1 bg-orange-500/80'
+                      }`}
+                      title={`Frente del equipo: ${rot}°`}
+                    />
+                  )}
+
+                  {/* Encabezado */}
+                  <div className="w-full flex items-center justify-between pointer-events-none px-0.5">
+                    <span className="text-[8.5px] font-black text-gray-900 truncate leading-none">
+                      {item.nombre.split('(')[0]}
+                    </span>
+                    <div className="flex items-center gap-0.5">
+                      <span className={`text-[7px] font-mono px-1 font-bold ${
+                        esVentana ? 'bg-sky-600 text-white' : 'bg-black text-white'
+                      }`}>
+                        {item.tipo?.slice(0, 5)}
+                      </span>
+                      {rot > 0 && (
+                        <span className="text-[6.5px] font-mono font-bold bg-amber-200 text-amber-900 px-0.5 border border-amber-400">
+                          {rot}°
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Moldes gráficos internos */}
+                  <div className="w-full flex-1 my-0.5 flex flex-wrap items-center justify-center gap-0.5 overflow-hidden pointer-events-none relative">
+                    {item.tipo === 'HORNO' && (
+                      <div className="w-full h-full flex flex-col justify-around py-0.5">
+                        <div className="flex justify-center gap-1">
+                          {[...Array(Math.min(4, item.capacidadTartasVascas || 4))].map((_, i) => (
+                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-orange-600 bg-orange-400"></div>
+                          ))}
+                        </div>
+                        <div className="flex justify-center gap-1">
+                          {[...Array(Math.min(4, Math.max(0, (item.capacidadTartasVascas || 8) - 4)))].map((_, i) => (
+                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-orange-600 bg-orange-400"></div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {item.tipo === 'BATIDORA' && (
+                      <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-200 flex items-center justify-center font-bold text-[8px] text-blue-900">
+                        {item.capacidadBowlLitros || 6}L
+                      </div>
+                    )}
+
+                    {item.tipo === 'AREA_PREPARACION' && (
+                      <div className="w-full h-full border border-dashed border-emerald-600 bg-emerald-100/50 flex items-center justify-center text-[8px] font-mono text-emerald-800">
+                        Mesón Inox
+                      </div>
+                    )}
+
+                    {item.tipo === 'REFRIGERACION' && (
+                      <div className="w-full h-full border border-cyan-600 bg-cyan-100 flex flex-col justify-around px-1">
+                        <div className="h-0.5 bg-cyan-600"></div>
+                        <div className="h-0.5 bg-cyan-600"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dimensiones en metros adaptativas */}
+                  <div className="w-full text-center text-[7px] font-mono text-gray-700 border-t border-gray-300 pointer-events-none">
+                    {itemAnchoM}m &times; {itemLargoM}m
+                  </div>
+
+                  {/* MANIJAS DE REDIMENSIONAMIENTO (RESIZE HANDLES) */}
+                  {isSel && (
+                    <>
+                      {/* Manija Esquina Inferior Derecha (Redimensionar Ambos) */}
+                      <div
+                        onPointerDown={(e) => handleResizeStart(e, item, 'se')}
+                        className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-600 border-2 border-white rounded-sm cursor-nwse-resize z-30 shadow-md hover:scale-125 transition-transform"
+                        title="Arrastra para cambiar ancho y fondo"
+                      />
+                      {/* Manija Borde Derecho (Ancho) */}
+                      <div
+                        onPointerDown={(e) => handleResizeStart(e, item, 'e')}
+                        className="absolute top-1/2 -translate-y-1/2 -right-1 w-2 h-4 bg-blue-600 border border-white rounded-sm cursor-ew-resize z-30 hover:scale-125 transition-transform"
+                        title="Arrastra para cambiar ancho"
+                      />
+                      {/* Manija Borde Inferior (Largo/Fondo) */}
+                      <div
+                        onPointerDown={(e) => handleResizeStart(e, item, 's')}
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-blue-600 border border-white rounded-sm cursor-ns-resize z-30 hover:scale-125 transition-transform"
+                        title="Arrastra para cambiar fondo"
+                      />
+                    </>
+                  )}
+                </div>
+              );
+            })}
+              </div>
+            </div>
+          </div>
+
+          {/* Botones de Control de Movimiento por Pasos (Nudge) y Rotación */}
+          <div className="w-full flex flex-wrap items-center justify-between gap-2 mt-4 p-2 bg-gray-50 border border-black text-xs font-bold">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">Mover (6 cm):</span>
+              <div className="flex items-center gap-1">
+                <button onClick={() => handleNudge(-2, 0)} className="p-1 border border-black bg-white hover:bg-gray-100" title="Izquierda">
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => handleNudge(0, -2)} className="p-1 border border-black bg-white hover:bg-gray-100" title="Arriba">
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => handleNudge(0, 2)} className="p-1 border border-black bg-white hover:bg-gray-100" title="Abajo">
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => handleNudge(2, 0)} className="p-1 border border-black bg-white hover:bg-gray-100" title="Derecha">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <span className="text-[10px] text-gray-500 ml-1">X: <b>{distMuroIzqMetros}m</b> • Y: <b>{distMuroSupMetros}m</b></span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-gray-500 text-[11px]">Rotar elemento:</span>
+              <button 
+                onClick={() => handleRotate(-90)} 
+                className="px-2 py-1 border border-black bg-white hover:bg-orange-50 font-mono text-[10px] flex items-center gap-1"
+                title="Rotar -90° (antihorario)"
+              >
+                <RotateCcw className="w-3 h-3 text-gray-700" /> -90°
+              </button>
+              <button 
+                onClick={() => handleRotate(90)} 
+                className="px-2 py-1 border border-black bg-orange-600 text-white hover:bg-orange-700 font-mono text-[10px] flex items-center gap-1 font-bold shadow-sm"
+                title="Rotar +90° (horario)"
+              >
+                <RotateCw className="w-3 h-3 text-white" /> +90° ({eq.posicion?.rotacion || 0}°)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel Inspector de Propiedades y Yields */}
+        <div className="lg:col-span-4 bg-white border-2 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+            <div className="flex-1 mr-2">
+              <label className="text-[10px] font-mono font-bold uppercase text-gray-500 block mb-0.5">Nombre del Activo</label>
+              <input
+                type="text"
+                value={eq.nombre || ''}
+                onChange={(e) => {
+                  handleUpdateProp('nombre', e.target.value);
+                  triggerGuardado();
+                }}
+                className="w-full text-sm font-black text-gray-900 border border-black px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Nombre del equipo..."
+              />
+            </div>
+            <span className="px-2 py-0.5 text-xs font-mono font-bold bg-orange-100 text-orange-800 border border-orange-600 shrink-0 self-end mb-1">
+              {eq.tipo || 'EQUIPO'}
+            </span>
+          </div>
+
+          {/* Control de Orientación / Rotación */}
+          <div className="p-3 bg-amber-50/90 border-2 border-black space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase text-gray-800 flex items-center gap-1">
+                <RotateCw className="w-3.5 h-3.5 text-orange-600" /> Orientación / Rotación
+              </span>
+              <span className="text-[10px] font-mono font-black bg-black text-white px-1.5 py-0.5">
+                {eq.posicion?.rotacion || 0}° {
+                  (eq.posicion?.rotacion || 0) === 0 ? '▼ Sur' :
+                  (eq.posicion?.rotacion || 0) === 90 ? '◄ Oeste' :
+                  (eq.posicion?.rotacion || 0) === 180 ? '▲ Norte' : '► Este'
+                }
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleRotate(-90)}
+                className="py-1 px-2 bg-white border border-black font-mono font-bold text-xs hover:bg-orange-100 flex items-center justify-center gap-1 active:bg-orange-200"
+                title="Girar 90° antihorario (-90°)"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-gray-700" /> Giro -90°
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRotate(90)}
+                className="py-1 px-2 bg-orange-600 text-white border border-black font-mono font-black text-xs hover:bg-orange-700 flex items-center justify-center gap-1 active:bg-orange-800 shadow-sm"
+                title="Girar 90° horario (+90°)"
+              >
+                <RotateCw className="w-3.5 h-3.5 text-white" /> Giro +90°
+              </button>
+            </div>
+
+            {/* 4 Orientaciones directas */}
+            <div className="grid grid-cols-4 gap-1 pt-1 border-t border-amber-200 text-center font-mono text-[10px]">
+              {[
+                { deg: 0, label: '0° ▼' },
+                { deg: 90, label: '90° ◄' },
+                { deg: 180, label: '180° ▲' },
+                { deg: 270, label: '270° ►' }
+              ].map(p => {
+                const isCur = (eq.posicion?.rotacion || 0) === p.deg;
+                return (
+                  <button
+                    key={p.deg}
+                    type="button"
+                    onClick={() => handleRotateTo(p.deg)}
+                    className={`py-1 border font-bold ${
+                      isCur 
+                        ? 'bg-black text-white border-black ring-1 ring-orange-500 font-black' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-black hover:bg-gray-100'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Condicional: Configurador de Puerta Arquitectónica o Dimensiones de Equipos */}
+          {(() => {
+            const esPuertaActiva = eq.tipo === 'PUERTA' || eq.tipo === 'PUERTA_DOBLE' || eq.tipo === 'PUERTA_CORREDERA' || eq.tipo === 'PUERTA_VAIVEN';
+            if (esPuertaActiva) {
+              const curWMetros = (eq.posicion?.rotacion === 90 || eq.posicion?.rotacion === 270)
+                ? parseFloat(largoMetrosCalc) 
+                : parseFloat(anchoMetrosCalc);
+
+              return (
+                <div className="p-3 bg-blue-50/90 border-2 border-blue-600 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-blue-200 pb-2">
+                    <span className="text-[11px] font-black uppercase text-blue-950 flex items-center gap-1.5">
+                      <DoorOpen className="w-4 h-4 text-blue-700" />
+                      Configurador de Puerta CAD
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded">
+                      Vano {curWMetros.toFixed(2)}m
+                    </span>
+                  </div>
+
+                  {/* Selector de Tipo de Puerta */}
+                  <div>
+                    <label className="text-[9px] font-black text-blue-900 uppercase block mb-1">Tipo de Puerta:</label>
+                    <div className="grid grid-cols-2 gap-1 font-mono text-[10px]">
+                      {[
+                        { id: 'PUERTA', label: '🚪 1 Hoja Batiente' },
+                        { id: 'PUERTA_DOBLE', label: '🚪🚪 Doble Hoja' },
+                        { id: 'PUERTA_CORREDERA', label: '⇄ Corredera / Guía' },
+                        { id: 'PUERTA_VAIVEN', label: '↶↷ Vaivén Cocina' }
+                      ].map(t => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => handleChangeDoorTipo(t.id)}
+                          className={`py-1.5 px-2 text-left font-bold border transition-colors ${
+                            eq.tipo === t.id 
+                              ? 'bg-blue-700 text-white border-blue-900 shadow-sm font-black' 
+                              : 'bg-white text-gray-800 border-blue-300 hover:bg-blue-100'
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Ancho del Vano (Medidas Estándar Arquitectura) */}
+                  <div>
+                    <label className="text-[9px] font-black text-blue-900 uppercase block mb-1">Ancho del Vano de Acceso:</label>
+                    <div className="grid grid-cols-3 gap-1 font-mono text-[10px]">
+                      {[
+                        { w: 0.70, label: '0.70m' },
+                        { w: 0.80, label: '0.80m' },
+                        { w: 0.90, label: '0.90m' },
+                        { w: 1.00, label: '1.00m' },
+                        { w: 1.20, label: '1.20m' },
+                        { w: 1.40, label: '1.40m' }
+                      ].map(m => {
+                        const isCurrent = Math.abs(curWMetros - m.w) < 0.04;
+                        return (
+                          <button
+                            key={m.w}
+                            type="button"
+                            onClick={() => handleSetDoorWidth(m.w)}
+                            className={`py-1 px-1 text-center font-bold border transition-colors ${
+                              isCurrent 
+                                ? 'bg-blue-900 text-white border-blue-950 font-black ring-1 ring-blue-500' 
+                                : 'bg-white text-blue-950 border-blue-300 hover:bg-blue-100'
+                            }`}
+                          >
+                            {m.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Mano de Bisagra y Sentido de Apertura */}
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-blue-200">
+                    <div>
+                      <label className="text-[9px] font-black text-blue-900 uppercase block mb-1">Mano de Bisagra:</label>
+                      <button
+                        type="button"
+                        onClick={handleToggleDoorMano}
+                        className="w-full py-1.5 px-2 bg-white border border-blue-400 font-mono text-xs font-bold hover:bg-blue-100 flex items-center justify-between shadow-sm"
+                      >
+                        <span>{eq.mano === 'der' ? 'Bisagra Der ➔' : '⬅︎ Bisagra Izq'}</span>
+                        <ArrowLeftRight className="w-3.5 h-3.5 text-blue-700" />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-black text-blue-900 uppercase block mb-1">Sentido de Apertura:</label>
+                      <button
+                        type="button"
+                        onClick={handleToggleDoorApertura}
+                        className="w-full py-1.5 px-2 bg-white border border-blue-400 font-mono text-xs font-bold hover:bg-blue-100 flex items-center justify-between shadow-sm"
+                      >
+                        <span>{eq.apertura === 'exterior' ? 'Hacia Afuera' : 'Hacia Adentro'}</span>
+                        <ArrowUpDown className="w-3.5 h-3.5 text-blue-700" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Advertencia Técnica de Normativa Sanitaria y Seguridad */}
+                  <div className="p-2 bg-white border border-blue-300 rounded text-[9px] font-mono text-blue-950 space-y-0.5">
+                    <span className="font-black text-blue-800 block">Normativa de Seguridad y Evacuación:</span>
+                    <p className="text-gray-600 leading-tight">
+                      El área sombreada en azul representa el barrido físico de la hoja. Ninguna mesa de preparación o maquinaria debe invadir este radio para permitir la circulación y evacuación.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            const esVentanaActiva = eq.tipo === 'VENTANA';
+            if (esVentanaActiva) {
+              const curWMetros = (eq.posicion?.rotacion === 90 || eq.posicion?.rotacion === 270)
+                ? parseFloat(largoMetrosCalc) 
+                : parseFloat(anchoMetrosCalc);
+              const curSubtipo = eq.subtipo || 'BATIENTE';
+
+              return (
+                <div className="p-3 bg-sky-50/90 border-2 border-sky-600 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-sky-200 pb-2">
+                    <span className="text-[11px] font-black uppercase text-sky-950 flex items-center gap-1.5">
+                      <AppWindow className="w-4 h-4 text-sky-700" />
+                      Configurador de Ventana CAD
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-sky-600 text-white px-1.5 py-0.5 rounded">
+                      Vano {curWMetros.toFixed(2)}m
+                    </span>
+                  </div>
+
+                  {/* Selector de Tipo de Ventana / Carpintería */}
+                  <div>
+                    <label className="text-[9px] font-black text-sky-900 uppercase block mb-1">Tipo de Carpintería:</label>
+                    <div className="grid grid-cols-3 gap-1 font-mono text-[10px]">
+                      {[
+                        { id: 'BATIENTE', label: '🪟 Batiente' },
+                        { id: 'CORREDERA', label: '⇄ Corredera' },
+                        { id: 'FIJA', label: '◻ Fija Vitrina' }
+                      ].map(t => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => handleChangeWindowSubtipo(t.id)}
+                          className={`py-1.5 px-1 text-center font-bold border transition-colors ${
+                            curSubtipo === t.id 
+                              ? 'bg-sky-700 text-white border-sky-900 shadow-sm font-black' 
+                              : 'bg-white text-gray-800 border-sky-300 hover:bg-sky-100'
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Ancho del Vano de la Ventana */}
+                  <div>
+                    <label className="text-[9px] font-black text-sky-900 uppercase block mb-1">Ancho del Vano de Ventana:</label>
+                    <div className="grid grid-cols-3 gap-1 font-mono text-[10px]">
+                      {[
+                        { w: 0.60, label: '0.60m' },
+                        { w: 0.80, label: '0.80m' },
+                        { w: 1.00, label: '1.00m' },
+                        { w: 1.20, label: '1.20m' },
+                        { w: 1.50, label: '1.50m' },
+                        { w: 1.80, label: '1.80m' }
+                      ].map(m => {
+                        const isCurrent = Math.abs(curWMetros - m.w) < 0.04;
+                        return (
+                          <button
+                            key={m.w}
+                            type="button"
+                            onClick={() => handleSetWindowWidth(m.w)}
+                            className={`py-1 px-1 text-center font-bold border transition-colors ${
+                              isCurrent 
+                                ? 'bg-sky-900 text-white border-sky-950 font-black ring-1 ring-sky-500' 
+                                : 'bg-white text-sky-950 border-sky-300 hover:bg-sky-100'
+                            }`}
+                          >
+                            {m.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Controles rápidos de orientación y muro */}
+                  <div className="pt-1 border-t border-sky-200">
+                    <label className="text-[9px] font-black text-sky-900 uppercase block mb-1">Orientación y Muro:</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleRotate(90)}
+                        className="py-1.5 px-2 bg-white border border-sky-400 font-mono text-xs font-bold hover:bg-sky-100 flex items-center justify-between shadow-sm"
+                        title="Girar 90 grados para encajar en muro horizontal o vertical"
+                      >
+                        <span>Girar 90°</span>
+                        <RotateCw className="w-3.5 h-3.5 text-sky-700" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="py-1.5 px-2 bg-red-50 border border-red-300 text-red-700 font-mono text-xs font-bold hover:bg-red-100 flex items-center justify-between shadow-sm"
+                        title="Eliminar ventana"
+                      >
+                        <span>Eliminar</span>
+                        <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Ficha Técnica de Aislamiento y Sanidad */}
+                  <div className="p-2 bg-white border border-sky-300 rounded text-[9px] font-mono text-sky-950 space-y-0.5">
+                    <span className="font-black text-sky-800 block">Doble Acristalamiento con Rotura de Puente Térmico:</span>
+                    <p className="text-gray-600 leading-tight">
+                      Cámara de aire aislante para mantener la temperatura controlada del obrador y evitar condensación sobre áreas de amasado y horneado. Altura de antepecho recomendada: 1.00m.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="p-3 bg-gray-50 border-2 border-black space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-gray-700 block">
+                    Dimensiones Físicas (CAD / BIM)
+                  </span>
+                  <span className="text-[9px] font-mono text-gray-500">
+                    Área: <b>{(parseFloat(anchoMetrosCalc) * parseFloat(largoMetrosCalc)).toFixed(2)} m²</b>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div className="bg-white p-2 border border-black shadow-sm">
+                    <label className="text-[9px] font-black text-gray-600 block uppercase mb-1">
+                      Ancho (X en metros):
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={localAncho}
+                        onChange={(e) => handleDimensionChange('ancho', e.target.value)}
+                        onBlur={() => handleDimensionBlur('ancho')}
+                        onKeyDown={(e) => e.key === 'Enter' && handleDimensionBlur('ancho')}
+                        className="w-full font-black text-sm p-1 border border-gray-400 focus:border-blue-600 focus:outline-none bg-gray-50 text-gray-900"
+                        placeholder="0.70"
+                      />
+                      <span className="text-xs font-bold text-gray-500">m</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-2 border border-black shadow-sm">
+                    <label className="text-[9px] font-black text-gray-600 block uppercase mb-1">
+                      Fondo / Largo (Y en metros):
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={localLargo}
+                        onChange={(e) => handleDimensionChange('largo', e.target.value)}
+                        onBlur={() => handleDimensionBlur('largo')}
+                        onKeyDown={(e) => e.key === 'Enter' && handleDimensionBlur('largo')}
+                        className="w-full font-black text-sm p-1 border border-gray-400 focus:border-blue-600 focus:outline-none bg-gray-50 text-gray-900"
+                        placeholder="0.85"
+                      />
+                      <span className="text-xs font-bold text-gray-500">m</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Atajos rápidos de medidas estándar de hostelería */}
+                <div className="pt-1 border-t border-gray-200">
+                  <span className="text-[9px] font-bold text-gray-500 block mb-1">Medidas Estándar Gastronorm:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      { label: '70x70 (Nevera)', w: '0.70', l: '0.70' },
+                      { label: '70x85 (Horno Pizza)', w: '0.70', l: '0.85' },
+                      { label: '80x110 (Mesón)', w: '0.80', l: '1.10' },
+                      { label: '60x40 (Bandeja GN)', w: '0.60', l: '0.40' },
+                      { label: '90x35 (Repisa)', w: '0.90', l: '0.35' }
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          handleDimensionChange('ancho', preset.w);
+                          handleDimensionChange('largo', preset.l);
+                        }}
+                        className="px-1.5 py-0.5 text-[9px] font-bold bg-white border border-gray-300 hover:border-black hover:bg-orange-50 text-gray-700"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Capacidad Global de Producción de Toda la Planta (Top 10 Productos) */}
+          <div className="p-3.5 bg-amber-50/90 border-2 border-black space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-black/20">
+              <span className="text-xs font-black uppercase text-orange-950 flex items-center gap-1.5">
+                <Sliders className="w-4 h-4 text-orange-600" />
+                Capacidad Global de la Planta (Turno {horasTurno}h)
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-black text-white px-1.5 py-0.5">
+                10 Top Productos
+              </span>
+            </div>
+
+            <p className="text-[11px] text-gray-600 leading-tight">
+              Capacidad máxima real de la planta si se dedica a hornear y producir cada uno de los 10 productos más vendidos, calculada según el cuello de botella (TOC) de los equipos activos en el plano:
+            </p>
+
+            {/* Listado de los 10 Productos con Capacidad Total de Planta */}
+            <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1">
+              {(analisisProductos.length > 0 ? analisisProductos : defaultCadLayout.productos || []).map((p, idx) => {
+                const unidadesNetas = p.unidadesNetasTurno || (p.demandaEstimadaDia ? p.demandaEstimadaDia * 2 : 40);
+                const precio = p.precioVentaCOP || 0;
+                const margen = p.margenContribucionTurnoCOP || (unidadesNetas * (precio * 0.6));
+                const limitante = p.equipoLimitante || 'Horno / Batidora';
+
+                return (
+                  <div 
+                    key={p.id || idx}
+                    className="p-2 bg-white border border-black hover:border-orange-600 transition-colors flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs">{p.categoria === 'REPOSTERIA' ? '🍰' : '🥐'}</span>
+                        <span className="font-bold text-xs text-gray-900 truncate">{p.nombre}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-500 font-mono mt-0.5">
+                        Cuello botella: <span className="text-orange-800 font-semibold">{limitante}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <div className="font-mono font-black text-xs text-gray-900">
+                        {unidadesNetas} <span className="text-[9px] font-normal text-gray-500">uds/turno</span>
+                      </div>
+                      <div className="font-mono font-bold text-[10px] text-green-700">
+                        +${Math.round(margen).toLocaleString('es-CO')}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-2 bg-white border border-black flex items-center justify-between text-[11px] font-mono font-bold">
+              <span className="text-gray-600">Eficiencia OEE Planta:</span>
+              <span className="text-orange-700">85% Operativa</span>
+            </div>
+          </div>
+
+          <div className="p-3 bg-gray-50 border border-black text-xs space-y-1">
+            <span className="font-black uppercase text-[10px] text-gray-600 block">
+              Cuello de Botella Físico en la Planta
+            </span>
+            <p className="text-gray-700 leading-snug">
+              {eq.cuelloDeBotellaDesc || 'Activo operativo balanceado en la línea.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal para Agregar Nuevos Equipos */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-black p-6 max-w-xl w-full shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#f97316]" />
+                <h3 className="text-lg font-black text-gray-900">Catálogo de Familias BIM para Insertar</h3>
+              </div>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="font-bold text-lg px-2 border border-black hover:bg-gray-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {EQUIPOS_PRESETS.map((p) => (
+                <div 
+                  key={p.id}
+                  onClick={() => handleAddPreset(p)}
+                  className="p-3 border-2 border-black hover:bg-orange-50 cursor-pointer transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                >
+                  <div>
+                    <div className="font-bold text-sm text-gray-900">{p.nombre}</div>
+                    <div className="text-xs text-gray-500 font-mono">
+                      Dimensiones: {p.dimensiones} • Potencia: {p.potenciaElectrica}
+                    </div>
+                    <div className="text-xs text-orange-800 mt-0.5">{p.cuelloDeBotellaDesc}</div>
+                  </div>
+
+                  <button className="px-3 py-1 bg-black text-white font-bold text-xs uppercase self-start sm:self-center shrink-0">
+                    + Insertar
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+ + `{Math.round(balancePlanta.costoTotalServiciosPlantaMes).toLocaleString('es-CO')}/m)
           </button>
 
           <button
