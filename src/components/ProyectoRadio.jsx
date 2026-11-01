@@ -33,7 +33,12 @@ export default function ProyectoRadio() {
   const lastRemoteTabRef = useRef(null);
   const endedPollTimerRef = useRef(null);
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = (tab, isRemote = false) => {
+    if (!isRemote && tyrannySettings?.lockConsoles) {
+      console.warn('[ProyectoRadio] 🔒 Cambio de consola rechazado: Bloqueo Tiránico activo por Radio Manager.');
+      return;
+    }
+
     if (endedPollTimerRef.current) {
       clearInterval(endedPollTimerRef.current);
       endedPollTimerRef.current = null;
@@ -211,12 +216,32 @@ export default function ProyectoRadio() {
     isMuted: Boolean(playerRef.current?.isMuted)
   }), [isPlaying, currentTrack?.title, currentTrack?.artist]);
 
-  // 1. Sync & Presence
-  const { currentPlay, refreshCurrentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing } = useRadioSync({
+  // 1. Sync & Presence & Control Tiránico
+  const { currentPlay, refreshCurrentPlay, remoteVolume, broadcastPlay, broadcastStop, broadcastVolume, isSyncing, tyrannySettings } = useRadioSync({
     isManager: false,
     presenceData,
     onRemoteCommand: handleRemoteCommand
   });
+
+  // Efecto para hacer cumplir la consola forzada si el Modo Tiránico está activado
+  React.useEffect(() => {
+    if (tyrannySettings?.lockConsoles && tyrannySettings?.forcedTab) {
+      if (activeTab !== tyrannySettings.forcedTab) {
+        console.log(`[ProyectoRadio] 🔒 Sincronizando consola forzada por Radio Manager: ${tyrannySettings.forcedTab}`);
+        setActiveTab(tyrannySettings.forcedTab);
+        try {
+          localStorage.setItem('proyecto_radio_active_tab', tyrannySettings.forcedTab);
+        } catch (e) {}
+      }
+    }
+  }, [tyrannySettings?.lockConsoles, tyrannySettings?.forcedTab, activeTab]);
+
+  // Si el banner de inicio fue desactivado remotamente por el Manager, cerrar el autoStart
+  React.useEffect(() => {
+    if (tyrannySettings && tyrannySettings.bannerEnabled === false) {
+      playerRef.current?.setShowAutoStart(false);
+    }
+  }, [tyrannySettings?.bannerEnabled]);
 
   const player = useRadioPlayer(
     radioData.currentPlaylist,
@@ -662,6 +687,8 @@ export default function ProyectoRadio() {
         setShowInfoModal={player.setShowInfoModal}
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
+        showHamburgerMenu={tyrannySettings?.showHamburgerMenu}
+        allowAdminNav={tyrannySettings?.allowAdminNav}
       />
 
       {/* LAYOUT PRINCIPAL */}
@@ -740,6 +767,7 @@ export default function ProyectoRadio() {
             <SourceTabs 
               activeTab={activeTab}
               handleTabChange={handleTabChange}
+              isConsoleLocked={tyrannySettings?.lockConsoles}
               currentPlay={currentPlay}
               currentTrackIndex={currentTrackIndex}
               setCurrentTrackIndex={setCurrentTrackIndex}
@@ -765,54 +793,75 @@ export default function ProyectoRadio() {
         </div>
       </div>
 
-      {/* OVERLAY AUTO-START */}
-      {player.showAutoStart && (
+      {/* OVERLAY AUTO-START / BANNER DE INICIO CON PLAY (Controlado tiránicamente por Radio Manager) */}
+      {player.showAutoStart && tyrannySettings?.bannerEnabled !== false && (
         <div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center cursor-pointer bg-cream-bg bg-opacity-95 backdrop-blur-sm p-4"
           onClick={handleAutoStart}
         >
-          {currentPlay?.station_cover && (
+          {/* Fondo difuminado si no es modo solo texto */}
+          {tyrannySettings?.bannerContentType !== 'text' && (tyrannySettings?.bannerImageUrl || currentPlay?.station_cover) && (
             <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none grayscale">
-              <img src={currentPlay.station_cover} alt="" className="w-full h-full object-cover" />
+              <img src={tyrannySettings?.bannerImageUrl || currentPlay.station_cover} alt="" className="w-full h-full object-cover" />
             </div>
           )}
-          <div className="relative z-10 flex flex-col items-center text-center px-8 max-w-lg border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none py-10">
-            <div className="relative mb-6">
-              <div className={`w-28 h-28 border-[4px] border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none ${
-                activeTab === 'youtube' ? 'bg-red-100 text-red-600' :
-                activeTab === 'live' ? 'bg-cyan-100 text-cyan-600' :
-                'bg-yellow-100 text-black'
-              }`}>
-                {activeTab === 'youtube' ? (
-                  <Youtube className="w-14 h-14 fill-current" />
-                ) : activeTab === 'live' ? (
-                  <Globe className="w-14 h-14" />
+          <div className="relative z-10 flex flex-col items-center text-center px-8 max-w-lg border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none py-10 w-full animate-in zoom-in-95 duration-200">
+            
+            {/* IMAGEN DEL BANNER: Visible en modos 'both' o 'image' */}
+            {tyrannySettings?.bannerContentType !== 'text' && (
+              <div className="relative mb-6">
+                {tyrannySettings?.bannerImageUrl ? (
+                  <div className="w-28 h-28 border-[4px] border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-black">
+                    <img src={tyrannySettings.bannerImageUrl} alt="Banner" className="w-full h-full object-cover" />
+                  </div>
                 ) : (
-                  <Radio className="w-14 h-14" />
+                  <div className={`w-28 h-28 border-[4px] border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none ${
+                    activeTab === 'youtube' ? 'bg-red-100 text-red-600' :
+                    activeTab === 'live' ? 'bg-cyan-100 text-cyan-600' :
+                    'bg-yellow-100 text-black'
+                  }`}>
+                    {activeTab === 'youtube' ? (
+                      <Youtube className="w-14 h-14 fill-current" />
+                    ) : activeTab === 'live' ? (
+                      <Globe className="w-14 h-14" />
+                    ) : (
+                      <Radio className="w-14 h-14" />
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-black mb-2 uppercase tracking-widest text-black leading-tight" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-              Proyecto<br/>Café Radio
-            </h1>
-            
-            <div className="mb-6 border-t-[3px] border-b-[3px] border-black py-4 w-full">
-              <p className="text-xs font-black uppercase tracking-widest mb-1 text-black/60">
-                {activeTab === 'youtube' ? '🔴 Modo Recordado: YouTube' :
-                 activeTab === 'live' ? '📻 Modo Recordado: Radios En Vivo' :
-                 '📁 Modo Recordado: Files (Biblioteca)'}
-              </p>
-              <p className="text-lg md:text-xl font-black uppercase text-black truncate">
-                {currentTrack?.title || currentPlay?.station_name || (activeTab === 'youtube' ? 'Videos Seleccionados' : activeTab === 'live' ? 'Emisora Online' : 'Música curada para el café')}
-              </p>
-              {(currentTrack?.artist || currentPlay?.station_artist) && (
-                <p className="text-xs mt-1 font-bold text-black/70 uppercase truncate">
-                  {currentTrack?.artist || currentPlay?.station_artist}
-                </p>
-              )}
-            </div>
+            )}
+
+            {/* TEXTO DEL BANNER: Visible en modos 'both' o 'text' */}
+            {tyrannySettings?.bannerContentType !== 'image' && (
+              <>
+                <h1 className="text-3xl md:text-4xl font-black mb-2 uppercase tracking-widest text-black leading-tight" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+                  {tyrannySettings?.bannerTitle || 'Proyecto Café Radio'}
+                </h1>
+                
+                <div className="mb-6 border-t-[3px] border-b-[3px] border-black py-4 w-full">
+                  <p className="text-xs font-black uppercase tracking-widest mb-1 text-black/60">
+                    {tyrannySettings?.bannerText || (
+                      activeTab === 'youtube' ? '🔴 Emisión en Curso: YouTube' :
+                      activeTab === 'live' ? '📻 Emisión en Curso: Radios En Vivo' :
+                      '📁 Emisión en Curso: Files (Biblioteca)'
+                    )}
+                  </p>
+                  <p className="text-lg md:text-xl font-black uppercase text-black truncate">
+                    {currentTrack?.title || currentPlay?.station_name || (activeTab === 'youtube' ? 'Videos Seleccionados' : activeTab === 'live' ? 'Emisora Online' : 'Música curada para el café')}
+                  </p>
+                  {(currentTrack?.artist || currentPlay?.station_artist) && (
+                    <p className="text-xs mt-1 font-bold text-black/70 uppercase truncate">
+                      {currentTrack?.artist || currentPlay?.station_artist}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
             <button onClick={handleAutoStart}
               className="w-20 h-20 border-[4px] border-black bg-black flex items-center justify-center text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none mb-6"
+              aria-label="Toca para iniciar reproducción"
             >
               <Play className="w-10 h-10 fill-current ml-1" />
             </button>

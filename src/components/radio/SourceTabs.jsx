@@ -1,5 +1,5 @@
-import React from 'react';
-import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles, Radio, Shuffle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles, Radio, Shuffle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
 import AlejoSpotifySearch from './AlejoSpotifySearch';
@@ -9,6 +9,7 @@ import RadioStationSelector from './RadioStationSelector';
 export default function SourceTabs({
   activeTab,
   handleTabChange,
+  isConsoleLocked = false,
   currentPlay = null,
   supabasePlaylist = [],
   filteredSupabasePlaylist,
@@ -61,22 +62,55 @@ export default function SourceTabs({
   return (
     <>
       {/* TABS de fuente */}
-      <div className="flex flex-wrap md:flex-nowrap border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.1)] rounded-none mb-4 w-full transition-colors">
-        {[{id:'supabase',icon:<Cloud className="w-5 h-5"/>,label:'Files'},
-          {id:'live',icon:<Globe className="w-5 h-5"/>,label:'Radio'},
-          {id:'youtube',icon:<Youtube className="w-5 h-5 text-red-600"/>,label:'YouTube'},
-        ].map(tab => (
-          <button key={tab.id} onClick={() => handleTabChange(tab.id)}
-            className={`flex-1 flex flex-col items-center justify-center gap-2 p-3 font-black uppercase tracking-widest text-[10px] md:text-[11px] transition-colors border-r-[3px] last:border-r-0 border-black dark:border-slate-700 rounded-none ${
-              activeTab === tab.id
-                ? 'bg-black text-white dark:bg-yellow-400 dark:text-black font-black'
-                : 'bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-slate-300 hover:bg-black/10 dark:hover:bg-slate-800'
-            }`}
-          >
-            {tab.icon}
-            <span className="hidden sm:inline" style={{ fontFamily: "'First Bunny', sans-serif", fontSize: '14px' }}>{tab.label}</span>
-          </button>
-        ))}
+      <div className="flex flex-col border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.1)] rounded-none mb-4 w-full transition-colors overflow-hidden">
+        {isConsoleLocked && (
+          <div className="w-full bg-red-600 text-white px-3 py-1.5 text-center font-black uppercase text-[10px] md:text-xs tracking-widest flex items-center justify-center gap-1.5 border-b-[3px] border-black animate-pulse">
+            <Lock className="w-3.5 h-3.5 stroke-[3]" />
+            <span>Consola Bloqueada por Radio Manager (Modo Tiránico Activo)</span>
+          </div>
+        )}
+        <div className="flex flex-wrap md:flex-nowrap w-full">
+          {[{id:'supabase',icon:<Cloud className="w-5 h-5"/>,label:'Files'},
+            {id:'live',icon:<Globe className="w-5 h-5"/>,label:'Radio'},
+            {id:'youtube',icon:<Youtube className="w-5 h-5 text-red-600"/>,label:'YouTube'},
+          ].map(tab => {
+            const isCurrent = activeTab === tab.id;
+            const isLockedOut = isConsoleLocked && !isCurrent;
+            return (
+              <button 
+                key={tab.id} 
+                onClick={() => {
+                  if (isConsoleLocked && !isCurrent) {
+                    return; // Bloqueo total
+                  }
+                  handleTabChange(tab.id);
+                }}
+                disabled={isLockedOut}
+                title={isLockedOut ? "Consola bloqueada por Cabina Central" : `Modo ${tab.label}`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1.5 p-3 font-black uppercase tracking-widest text-[10px] md:text-[11px] transition-all border-r-[3px] last:border-r-0 border-black dark:border-slate-700 rounded-none relative ${
+                  isCurrent
+                    ? 'bg-black text-white dark:bg-yellow-400 dark:text-black font-black'
+                    : isLockedOut
+                    ? 'bg-gray-200 dark:bg-slate-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
+                    : 'bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-slate-300 hover:bg-black/10 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  {tab.icon}
+                  {isLockedOut && <Lock className="w-3 h-3 text-red-500" />}
+                </div>
+                <span className="hidden sm:inline" style={{ fontFamily: "'First Bunny', sans-serif", fontSize: '14px' }}>
+                  {tab.label}
+                </span>
+                {isLockedOut && (
+                  <span className="text-[9px] font-bold text-red-600 dark:text-red-400 tracking-normal hidden md:inline">
+                    🔒 Fijo
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* CONTENIDO DEL TAB */}

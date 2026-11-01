@@ -318,11 +318,13 @@ export default function TopNav({
   };
 
   const path = location.pathname.toLowerCase();
-  // El menú siempre está disponible para el staff; para usuarios anónimos se oculta en páginas públicas de clientes
+  // El menú siempre está disponible para el staff; para usuarios anónimos se oculta en páginas públicas de clientes y radio
   const hideDropdown = !currentStaff && (
     path === "/menuview" ||
     path === "/eventosoffer" ||
     path === "/userportal" ||
+    path === "/radio" ||
+    path === "/proyectoradio" ||
     path.startsWith('/evento/') ||
     path.startsWith('/agendaform/') ||
     path.startsWith('/inscripcion/')

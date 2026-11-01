@@ -20,8 +20,14 @@ import {
   ShieldCheck,
   Flame,
   Clock,
-  Scale
+  Scale,
+  Zap,
+  Droplets,
+  Activity,
+  RefreshCw,
+  FileSpreadsheet
 } from 'lucide-react';
+import { normalizarEquipoRevit, calcularConsumosEquipo, calcularConsumosPlanta, TARIFAS_SERVICIOS } from './plantaConsumosUtils.js';
 
 export default function PlantaBusinessContext({
   equipos = [],
@@ -33,10 +39,33 @@ export default function PlantaBusinessContext({
   totalCostosFijosMes = 4850000,
   diasMes = 26,
   horasTurno = 8,
-  eficienciaOEE = 0.85
+  eficienciaOEE = 0.85,
+  consumosPlanta = null,
+  onSincronizarCostosConConsumos = null
 }) {
   const [copiado, setCopiado] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState('resumen'); // 'resumen', 'maquinaria', 'recomendaciones', 'prompt'
+  const [sincronizadoExito, setSincronizadoExito] = useState(false);
+  const [vistaActiva, setVistaActiva] = useState('resumen'); // 'resumen', 'maquinaria', 'consumos', 'recomendaciones', 'prompt'
+
+  // Normalización Revit y MEP
+  const equiposNormalizados = useMemo(() => {
+    return equipos.map(eq => normalizarEquipoRevit(eq));
+  }, [equipos]);
+
+  const balanceConsumos = useMemo(() => {
+    if (consumosPlanta) return consumosPlanta;
+    return calcularConsumosPlanta(equiposNormalizados, diasMes, horasTurno, TARIFAS_SERVICIOS);
+  }, [consumosPlanta, equiposNormalizados, diasMes, horasTurno]);
+
+  const equiposConConsumos = useMemo(() => {
+    return equiposNormalizados.map(eq => {
+      const consumo = calcularConsumosEquipo(eq, diasMes, TARIFAS_SERVICIOS);
+      return {
+        ...eq,
+        consumoCalc: consumo
+      };
+    });
+  }, [equiposNormalizados, diasMes]);
 
   const anchoHab = Number(dimensionesHabitacion?.ancho || 3.20);
   const largoHab = Number(dimensionesHabitacion?.largo || 3.10);
@@ -59,9 +88,9 @@ export default function PlantaBusinessContext({
 
   // Cuello de botella identificado
   const equiposConCapacidad = useMemo(() => {
-    return equipos.map(eq => {
+    return equiposNormalizados.map(eq => {
       const nombreLower = (eq.nombre || '').toLowerCase();
-      let tipoCategoria = 'EQUIPO';
+      let tipoCategoria = eq.disciplina || 'EQUIPO';
       let capacidadResumen = 'Área operativa';
       let esCuello = false;
       let limitacion = eq.cuelloDeBotellaDesc || 'Sin restricción crítica reportada';
@@ -78,6 +107,31 @@ export default function PlantaBusinessContext({
       } else if (nombreLower.includes('nevera') || nombreLower.includes('refrig')) {
         tipoCategoria = 'CADENA DE FRÍO';
         capacidadResumen = `${eq.capacidadLitros || 420}L (Espacio para ~16 tartas o 4 latas de fermentación)`;
+        limitacion = 'Punto crítico de acopio: el reposo de 6h para tartas vascas demanda rotación ordenada.';
+      } else if (nombreLower.includes('meson')) {
+        tipoCategoria = 'SUPERFICIE INOX';
+        capacidadResumen = 'Estación de formado y pesaje para 1 panadero full-time';
+        limitacion = 'Espacio de ensamblado físico central; debe mantenerse libre de desorden.';
+      }
+
+      return {
+        ...eq,
+        tipoCategoria,
+        capacidadResumen,
+        esCuello,
+        limitacion
+      };
+    });
+  }, [equiposNormalizados]);
+
+  // Manejador de sincronización de costos con consumos
+  const handleEjecutarSincronizacion = () => {
+    if (onSincronizarCostosConConsumos) {
+      onSincronizarCostosConConsumos(balanceConsumos);
+      setSincronizadoExito(true);
+      setTimeout(() => setSincronizadoExito(false), 3000);
+    }
+  };
         limitacion = 'Volumen crítico para reposo de hojaldres y enfriamiento post-horneo.';
       } else if (nombreLower.includes('mes') || nombreLower.includes('trabajo')) {
         tipoCategoria = 'MANIPULACIÓN Y CORTE';
@@ -130,7 +184,31 @@ export default function PlantaBusinessContext({
 
 ---
 
-## 3. CAPACIDAD INSTALADA & INVENTARIO DE MAQUINARIA
+## 3. AUDITORÍA ENERGÉTICA MEP & MATRIZ DE CONSUMOS TEÓRICOS (AUTODESK REVIT BIM)
+
+### A. Jerarquía de Activos según Estándar Autodesk Revit (review / reviewPlugIn)
+| ID Elemento | Disciplina BIM | Categoría | Familia Revit | Tipo / Modelo | Sistema MEP |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+${equiposConConsumos.map(e => `| **#${e.element_id || 'N/A'}** | ${e.disciplina || 'Specialty Equipment'} | ${e.category || 'Specialty Equipment'} | \`${e.family || e.nombre}\` | ${e.type || e.dimensiones} | ${e.sistemaMep || 'Mecánico / Eléctrico'} |`).join('\n')}
+
+### B. Consumos Teóricos MEP por Activo (${diasMes} días/mes, ${horasTurno} h/turno base)
+| ID | Activo | Horas/Día | Potencia (W) | Elec. (kWh/m) | Costo Elec. | Gas GLP (kg/m) | Costo Gas | Costo MEP Total |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+${equiposConConsumos.map(e => `| #${e.element_id} | **${e.nombre}** | ${e.consumoCalc.horasUsoDia}h | ${e.consumoCalc.potenciaElectricaW}W | ${e.consumoCalc.kwhMes} | $${e.consumoCalc.costoElectricidadMes.toLocaleString('es-CO')} | ${e.consumoCalc.kgGasMes > 0 ? `${e.consumoCalc.kgGasMes} kg` : '0'} | $${e.consumoCalc.costoGasMes.toLocaleString('es-CO')} | **$${e.consumoCalc.costoTotalMes.toLocaleString('es-CO')}** |`).join('\n')}
+
+### C. Balance General de Servicios y Comparativo vs Presupuesto Operativo:
+- **Demanda Eléctrica Teórica Total:** **${balanceConsumos.totalKwhMes.toFixed(1)} kWh/mes** (~$${Math.round(balanceConsumos.totalElectricidadMes).toLocaleString('es-CO')} COP/mes a $${TARIFAS_SERVICIOS.kwhLuzCOP}/kWh).
+- **Demanda Gas GLP Teórica Total:** **${balanceConsumos.totalKgGasMes.toFixed(1)} kg/mes** (~${balanceConsumos.totalCilindrosMes.toFixed(1)} pipetas de 18kg = ~$${Math.round(balanceConsumos.totalGasMes).toLocaleString('es-CO')} COP/mes).
+- **Consumo Teórico de Agua Sanitaria:** **${balanceConsumos.totalM3AguaMes.toFixed(2)} m³/mes** (~$${Math.round(balanceConsumos.totalAguaMes).toLocaleString('es-CO')} COP/mes a $${TARIFAS_SERVICIOS.m3AguaCOP}/m³).
+- **Mantenimiento Preventivo MEP Estimado:** ~$${Math.round(balanceConsumos.totalMantenimientoMes).toLocaleString('es-CO')} COP/mes.
+- **Costo Operativo MEP Consolidado:** **$${Math.round(balanceConsumos.totalServiciosMes).toLocaleString('es-CO')} COP/mes** ($${Math.round(balanceConsumos.costoServiciosPorDia).toLocaleString('es-CO')} COP/día | $${Math.round(balanceConsumos.costoServiciosPorHora).toLocaleString('es-CO')} COP/hora).
+- **Control de Desviación Presupuestaria:**
+  - *Electricidad Presupuestada:* $${(costosFijos?.electricidadComercial || 0).toLocaleString('es-CO')} COP vs *Calculada MEP:* $${Math.round(balanceConsumos.totalElectricidadMes).toLocaleString('es-CO')} COP (Diferencia: $${((costosFijos?.electricidadComercial || 0) - Math.round(balanceConsumos.totalElectricidadMes)).toLocaleString('es-CO')} COP).
+  - *Gas GLP Presupuestado:* $${(costosFijos?.gasPropanoPipetas || 0).toLocaleString('es-CO')} COP vs *Calculado MEP:* $${Math.round(balanceConsumos.totalGasMes).toLocaleString('es-CO')} COP (Diferencia: $${((costosFijos?.gasPropanoPipetas || 0) - Math.round(balanceConsumos.totalGasMes)).toLocaleString('es-CO')} COP).
+
+---
+
+## 4. CAPACIDAD INSTALADA & INVENTARIO DE MAQUINARIA
 | Equipo | Dimensiones | Tipo / Energía | Capacidad Nominal | Cuello de Botella (TOC) |
 | :--- | :--- | :--- | :--- | :--- |
 ${equiposConCapacidad.map(e => `| **${e.nombre}** | ${e.dimensiones || 'N/A'} | ${e.combustible || e.tipoCategoria} | ${e.capacidadResumen} | ${e.esCuello ? '🔴 CUELLO DE BOTELLA' : '🟢 Capacidad Holgada'} |`).join('\n')}
@@ -142,14 +220,14 @@ El **Horno Doble Cámara** y los **tiempos de horneado (35-45 min)** representan
 
 ---
 
-## 4. LOS 10 PRODUCTOS ESTRELLA (RECETAS, TIEMPOS & MÁRGENES)
+## 5. LOS 10 PRODUCTOS ESTRELLA (RECETAS, TIEMPOS & MÁRGENES)
 | Producto | Categoría | P. Venta | Costo Var. | Margen COP | Margen % | T. Horneado | Lote/Horno | Demanda/Día |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 ${analisisProductos.map(p => `| **${p.nombre}** | ${p.categoria} | $${p.precioVentaCOP.toLocaleString('es-CO')} | $${p.costoVarUnitario.toLocaleString('es-CO')} | $${p.margenUnitarioCOP.toLocaleString('es-CO')} | ${p.margenPorcentaje}% | ${p.tiempoHorneadoMin} min | ${p.unidadesPorHorneada} u | ${p.demandaEstimadaDia} u |`).join('\n')}
 
 ---
 
-## 5. INFORME MULTIDISCIPLINAR DE RECOMENDACIONES ESTRATÉGICAS
+## 6. INFORME MULTIDISCIPLINAR DE RECOMENDACIONES ESTRATÉGICAS
 
 ### A. Ingeniería Industrial & Lean Manufacturing
 1. **Flujo de Proceso en 'U':** En un espacio de ${areaTotalM2} m², los desplazamientos entre la estación de pesaje (Mesón), batido y el horno deben ser menores a 1.5 metros para evitar fatiga del operario y colisiones.
@@ -174,7 +252,7 @@ ${analisisProductos.map(p => `| **${p.nombre}** | ${p.categoria} | $${p.precioVe
 
 ---
 
-## 6. PROMPT MAESTRO PARA CONSULTORÍA CON INTELIGENCIA ARTIFICIAL
+## 7. PROMPT MAESTRO PARA CONSULTORÍA CON INTELIGENCIA ARTIFICIAL
 \`\`\`text
 Actúa como Consultor Senior en Operaciones Gastronómicas, Ingeniería de Alimentos y Finanzas Restauranteras.
 Tienes acceso a todo el Business Context de Proyecto Café detallado anteriormente.
@@ -200,6 +278,8 @@ Cuando te haga preguntas, responde con rigor numérico, basándote en la capacid
     porcentajeCapacidadDisponible, 
     crecimientoPotencialCOP, 
     equiposConCapacidad, 
+    equiposConConsumos,
+    balanceConsumos,
     analisisProductos, 
     costosFijos
   ]);
@@ -245,6 +325,10 @@ Cuando te haga preguntas, responde con rigor numérico, basándote en la capacid
         capacidadDisponiblePorcentaje: porcentajeCapacidadDisponible,
         crecimientoDisponibleMensualCOP: crecimientoPotencialCOP,
         costosFijosDetalle: costosFijos
+      },
+      auditoriaMepRevit: {
+        balanceConsumos,
+        equiposDetalle: equiposConConsumos
       },
       maquinariaYCapacidad: equiposConCapacidad,
       productosTop10: analisisProductos,
@@ -334,8 +418,9 @@ Cuando te haga preguntas, responde con rigor numérico, basándote en la capacid
         {[
           { id: 'resumen', label: '1. Resumen Ejecutivo & Capacidad', icon: TrendingUp },
           { id: 'maquinaria', label: '2. Ficha de Máquinas & Cuellos (TOC)', icon: Cpu },
-          { id: 'recomendaciones', label: '3. Recomendaciones Multidisciplinares', icon: Wrench },
-          { id: 'prompt', label: '4. Visualizador de Prompt IA (Markdown)', icon: FileText }
+          { id: 'consumos', label: '3. Auditoría Energética MEP & Revit', icon: Zap },
+          { id: 'recomendaciones', label: '4. Recomendaciones Multidisciplinares', icon: Wrench },
+          { id: 'prompt', label: '5. Visualizador de Prompt IA (Markdown)', icon: FileText }
         ].map(tab => {
           const Icon = tab.icon;
           const isAct = vistaActiva === tab.id;
@@ -553,7 +638,220 @@ Cuando te haga preguntas, responde con rigor numérico, basándote en la capacid
         </div>
       )}
 
-      {/* CONTENIDO 3: RECOMENDACIONES MULTIDISCIPLINARES PROFUNDAS */}
+      {/* CONTENIDO 3: AUDITORÍA ENERGÉTICA MEP & MATRIZ REVIT BIM */}
+      {vistaActiva === 'consumos' && (
+        <div className="space-y-3">
+          {/* Tarjeta de Resumen Consolidado MEP */}
+          <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b-2 border-black">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="p-1 bg-amber-400 text-black border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-black uppercase text-gray-900">
+                    Auditoría Energética MEP & Balance de Servicios ({diasMes} días/mes - {horasTurno}h/turno)
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Cálculo teórico automatizado de demanda eléctrica, gas GLP, agua sanitaria y mantenimiento preventivo por activo BIM.
+                </p>
+              </div>
+
+              {onSincronizarCostosConConsumos && (
+                <button
+                  onClick={handleEjecutarSincronizacion}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-black border-2 border-black transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:scale-95 cursor-pointer ${
+                    sincronizadoExito 
+                      ? 'bg-emerald-500 text-white' 
+                      : 'bg-amber-400 hover:bg-amber-500 text-black'
+                  }`}
+                  title="Actualiza los costos fijos de Electricidad y Gas con el valor teórico de este balance"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${sincronizadoExito ? 'animate-spin' : ''}`} />
+                  <span>{sincronizadoExito ? '✓ Costos Fijos Sincronizados' : '⚡ Sincronizar con Costos Fijos'}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Métricas Principales */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
+              <div className="p-2.5 bg-amber-50 border-2 border-black">
+                <span className="text-[10px] font-black uppercase text-amber-900 block">Electricidad Total</span>
+                <div className="text-base font-black text-amber-950 mt-0.5">
+                  ${Math.round(balanceConsumos.totalElectricidadMes).toLocaleString('es-CO')}
+                </div>
+                <span className="text-[10px] font-mono text-gray-600">
+                  {balanceConsumos.totalKwhMes.toFixed(1)} kWh/mes
+                </span>
+              </div>
+
+              <div className="p-2.5 bg-orange-50 border-2 border-black">
+                <span className="text-[10px] font-black uppercase text-orange-900 block">Gas Propano GLP</span>
+                <div className="text-base font-black text-orange-950 mt-0.5">
+                  ${Math.round(balanceConsumos.totalGasMes).toLocaleString('es-CO')}
+                </div>
+                <span className="text-[10px] font-mono text-gray-600">
+                  {balanceConsumos.totalKgGasMes.toFixed(1)} kg (~{balanceConsumos.totalCilindrosMes.toFixed(1)} pipetas)
+                </span>
+              </div>
+
+              <div className="p-2.5 bg-cyan-50 border-2 border-black">
+                <span className="text-[10px] font-black uppercase text-cyan-900 block">Agua Sanitaria</span>
+                <div className="text-base font-black text-cyan-950 mt-0.5">
+                  ${Math.round(balanceConsumos.totalAguaMes).toLocaleString('es-CO')}
+                </div>
+                <span className="text-[10px] font-mono text-gray-600">
+                  {balanceConsumos.totalM3AguaMes.toFixed(2)} m³/mes
+                </span>
+              </div>
+
+              <div className="p-2.5 bg-purple-50 border-2 border-black">
+                <span className="text-[10px] font-black uppercase text-purple-900 block">Mantenimiento MEP</span>
+                <div className="text-base font-black text-purple-950 mt-0.5">
+                  ${Math.round(balanceConsumos.totalMantenimientoMes).toLocaleString('es-CO')}
+                </div>
+                <span className="text-[10px] font-mono text-gray-600">Preventivo / Repuestos</span>
+              </div>
+
+              <div className="p-2.5 bg-black text-white border-2 border-black col-span-2 sm:col-span-1">
+                <span className="text-[10px] font-black uppercase text-[#facc15] block">Costo MEP Total</span>
+                <div className="text-base font-black text-white mt-0.5">
+                  ${Math.round(balanceConsumos.totalServiciosMes).toLocaleString('es-CO')}
+                </div>
+                <span className="text-[10px] font-mono text-gray-300">
+                  ${Math.round(balanceConsumos.costoServiciosPorDia).toLocaleString('es-CO')}/día
+                </span>
+              </div>
+            </div>
+
+            {/* Comparativa vs Presupuesto en Costos Fijos */}
+            <div className="p-3 bg-gray-50 border border-black text-xs space-y-1.5">
+              <span className="font-black uppercase text-[10px] text-gray-700 block">
+                Control Presupuestal: Presupuesto Fijo Actual vs Auditoría Teórica MEP
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="flex items-center justify-between p-1.5 bg-white border border-gray-300">
+                  <span className="font-bold text-gray-700">Luz Comercial:</span>
+                  <div className="text-right">
+                    <span className="font-mono text-gray-500">Ppto: ${(costosFijos?.electricidadComercial || 0).toLocaleString('es-CO')}</span>
+                    <span className="font-mono font-bold ml-2 text-amber-800">MEP: ${Math.round(balanceConsumos.totalElectricidadMes).toLocaleString('es-CO')}</span>
+                    <span className={`block font-mono text-[9px] ${((costosFijos?.electricidadComercial || 0) >= balanceConsumos.totalElectricidadMes) ? 'text-emerald-700' : 'text-red-600'}`}>
+                      {((costosFijos?.electricidadComercial || 0) >= balanceConsumos.totalElectricidadMes ? '✓ Superávit: ' : '⚠️ Déficit: ') + 
+                        Math.abs((costosFijos?.electricidadComercial || 0) - Math.round(balanceConsumos.totalElectricidadMes)).toLocaleString('es-CO')} COP
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-1.5 bg-white border border-gray-300">
+                  <span className="font-bold text-gray-700">Gas Propano:</span>
+                  <div className="text-right">
+                    <span className="font-mono text-gray-500">Ppto: ${(costosFijos?.gasPropanoPipetas || 0).toLocaleString('es-CO')}</span>
+                    <span className="font-mono font-bold ml-2 text-orange-800">MEP: ${Math.round(balanceConsumos.totalGasMes).toLocaleString('es-CO')}</span>
+                    <span className={`block font-mono text-[9px] ${((costosFijos?.gasPropanoPipetas || 0) >= balanceConsumos.totalGasMes) ? 'text-emerald-700' : 'text-red-600'}`}>
+                      {((costosFijos?.gasPropanoPipetas || 0) >= balanceConsumos.totalGasMes ? '✓ Superávit: ' : '⚠️ Déficit: ') + 
+                        Math.abs((costosFijos?.gasPropanoPipetas || 0) - Math.round(balanceConsumos.totalGasMes)).toLocaleString('es-CO')} COP
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabla de Equipamiento con Taxonomía Revit BIM y MEP */}
+          <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b-2 border-black">
+              <h4 className="text-xs font-black uppercase text-gray-900 flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-blue-600" />
+                Matriz de Activos BIM / Autodesk Revit (review & reviewPlugIn Hierarchy)
+              </h4>
+              <span className="text-[10px] font-mono bg-blue-100 text-blue-900 border border-blue-300 px-2 py-0.5 font-bold">
+                {equiposConConsumos.length} Activos Modelados
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse border border-black">
+                <thead className="bg-black text-white font-mono text-[10px] uppercase">
+                  <tr>
+                    <th className="p-2 border border-black">ID Revit</th>
+                    <th className="p-2 border border-black">Activo CAD</th>
+                    <th className="p-2 border border-black">Disciplina / Categoría</th>
+                    <th className="p-2 border border-black">Familia & Tipo</th>
+                    <th className="p-2 border border-black">Sistema MEP</th>
+                    <th className="p-2 border border-black text-center">Horas/Día</th>
+                    <th className="p-2 border border-black text-right">Electricidad</th>
+                    <th className="p-2 border border-black text-right">Gas GLP</th>
+                    <th className="p-2 border border-black text-right">Costo MEP/mes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-300">
+                  {equiposConConsumos.map(e => (
+                    <tr key={e.id} className="hover:bg-amber-50/50">
+                      <td className="p-2 font-mono font-bold text-gray-900 border border-gray-300 whitespace-nowrap">
+                        <span className="px-1.5 py-0.5 bg-gray-100 border border-black text-[10px]">
+                          #{e.element_id || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="p-2 font-bold text-gray-900 border border-gray-300">
+                        {e.nombre}
+                        <span className="block font-mono text-[10px] text-gray-500">{e.dimensiones}</span>
+                      </td>
+                      <td className="p-2 border border-gray-300">
+                        <span className="text-[10px] font-bold text-blue-900 block">{e.disciplina}</span>
+                        <span className="text-[10px] text-gray-600">{e.category || e.categoriaRevit}</span>
+                      </td>
+                      <td className="p-2 border border-gray-300 max-w-[200px]">
+                        <span className="text-[10px] font-mono font-bold text-purple-900 block truncate" title={e.family}>
+                          {e.family}
+                        </span>
+                        <span className="text-[9px] text-gray-500 block truncate" title={e.type}>
+                          {e.type}
+                        </span>
+                      </td>
+                      <td className="p-2 border border-gray-300">
+                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1 py-0.5 border border-emerald-200">
+                          {e.sistemaMep || 'Mecánico'}
+                        </span>
+                      </td>
+                      <td className="p-2 font-mono text-center font-bold border border-gray-300">
+                        {e.consumoCalc.horasUsoDia}h
+                      </td>
+                      <td className="p-2 font-mono text-right border border-gray-300">
+                        <div className="font-bold text-amber-900">${e.consumoCalc.costoElectricidadMes.toLocaleString('es-CO')}</div>
+                        <div className="text-[9px] text-gray-500">{e.consumoCalc.kwhMes} kWh/m ({e.consumoCalc.potenciaElectricaW}W)</div>
+                      </td>
+                      <td className="p-2 font-mono text-right border border-gray-300">
+                        {e.consumoCalc.costoGasMes > 0 ? (
+                          <>
+                            <div className="font-bold text-orange-900">${e.consumoCalc.costoGasMes.toLocaleString('es-CO')}</div>
+                            <div className="text-[9px] text-orange-600">{e.consumoCalc.kgGasMes} kg/m (~{e.consumoCalc.cilindros18kgMes} pipetas)</div>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">—</span>
+                        )}
+                      </td>
+                      <td className="p-2 font-mono text-right font-black text-gray-900 border border-gray-300 bg-gray-50">
+                        ${e.consumoCalc.costoTotalMes.toLocaleString('es-CO')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-gray-100 font-mono font-black text-xs border-t-2 border-black">
+                  <tr>
+                    <td colSpan="6" className="p-2 text-right uppercase border border-gray-300">Totales MEP Consolidados:</td>
+                    <td className="p-2 text-right text-amber-900 border border-gray-300">${Math.round(balanceConsumos.totalElectricidadMes).toLocaleString('es-CO')}</td>
+                    <td className="p-2 text-right text-orange-900 border border-gray-300">${Math.round(balanceConsumos.totalGasMes).toLocaleString('es-CO')}</td>
+                    <td className="p-2 text-right text-black bg-amber-200 border border-black">${Math.round(balanceConsumos.totalServiciosMes).toLocaleString('es-CO')}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONTENIDO 4: RECOMENDACIONES MULTIDISCIPLINARES PROFUNDAS */}
       {vistaActiva === 'recomendaciones' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* Tarjeta 1: Lean & Ingeniería de Métodos */}
@@ -666,7 +964,7 @@ Cuando te haga preguntas, responde con rigor numérico, basándote en la capacid
         </div>
       )}
 
-      {/* CONTENIDO 4: VISUALIZADOR DE CÓDIGO MARKDOWN / PROMPT IA */}
+      {/* CONTENIDO 5: VISUALIZADOR DE CÓDIGO MARKDOWN / PROMPT IA */}
       {vistaActiva === 'prompt' && (
         <div className="bg-white border-2 border-black p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] space-y-2">
           <div className="flex items-center justify-between">

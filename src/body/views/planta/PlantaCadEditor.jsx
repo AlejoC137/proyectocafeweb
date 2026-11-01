@@ -499,6 +499,10 @@ export default function PlantaCadEditor({
   const [showConsumosModal, setShowConsumosModal] = useState(false);
   const [tarifasMep, setTarifasMep] = useState(TARIFAS_SERVICIOS);
   const [notifSincronizacion, setNotifSincronizacion] = useState(false);
+  const [inspectorTab, setInspectorTab] = useState('cad'); // 'cad', 'consumos', 'revit'
+  const [showConsumosModal, setShowConsumosModal] = useState(false);
+  const [tarifasMep, setTarifasMep] = useState(TARIFAS_SERVICIOS);
+  const [notifSincronizacion, setNotifSincronizacion] = useState(false);
 
   // Estados locales para las dimensiones de la habitación
   const anchoHab = Number(dimensionesHabitacion?.ancho || 3.20);
@@ -2134,7 +2138,47 @@ export default function PlantaCadEditor({
             </span>
           </div>
 
-          {/* Control de Orientación / Rotación */}
+                    {/* Selector de Pestañas del Inspector: CAD / Consumos MEP / Revit BIM */}
+          <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 border-2 border-black font-mono text-[10px] font-bold">
+            <button
+              type="button"
+              onClick={() => setInspectorTab('cad')}
+              className={`py-1.5 text-center border transition-all ${
+                inspectorTab === 'cad'
+                  ? 'bg-black text-white border-black font-black shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              📐 Geometría
+            </button>
+            <button
+              type="button"
+              onClick={() => setInspectorTab('consumos')}
+              className={`py-1.5 text-center border transition-all flex items-center justify-center gap-1 ${
+                inspectorTab === 'consumos'
+                  ? 'bg-amber-500 text-black border-black font-black shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Zap className="w-3 h-3 text-black" /> Consumos MEP
+            </button>
+            <button
+              type="button"
+              onClick={() => setInspectorTab('revit')}
+              className={`py-1.5 text-center border transition-all flex items-center justify-center gap-1 ${
+                inspectorTab === 'revit'
+                  ? 'bg-blue-600 text-white border-black font-black shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Building2 className="w-3 h-3" /> Revit BIM
+            </button>
+          </div>
+
+          {/* PESTAÑA 1: GEOMETRÍA & CAD */}
+          {inspectorTab === 'cad' && (
+            <div className="space-y-4">
+{/* Control de Orientación / Rotación */}
           <div className="p-3 bg-amber-50/90 border-2 border-black space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase text-gray-800 flex items-center gap-1">
@@ -2566,6 +2610,414 @@ export default function PlantaCadEditor({
               {eq.cuelloDeBotellaDesc || 'Activo operativo balanceado en la línea.'}
             </p>
           </div>
+        </d
+            </div>
+          )}
+
+          {/* PESTAÑA 2: CONSUMOS TEÓRICOS MEP */}
+          {inspectorTab === 'consumos' && (
+            <div className="space-y-3 font-sans">
+              {/* Resumen de Costo del Equipo */}
+              <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-black space-y-2">
+                <div className="flex items-center justify-between border-b border-black/20 pb-1.5">
+                  <span className="text-[10px] font-black uppercase text-amber-950 flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-amber-600" />
+                    Consumo Teórico Calculado
+                  </span>
+                  <span className="text-xs font-mono font-black text-green-700 bg-green-100 px-2 py-0.5 border border-green-700">
+                    ${consumoActivo.costoTotalServiciosMes.toLocaleString('es-CO')} / mes
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
+                  <div className="p-1.5 bg-white border border-black">
+                    <div className="text-[9px] font-bold text-gray-500 uppercase">Eléctrico</div>
+                    <div className="text-xs font-black text-gray-900">{consumoActivo.kwhMes} kWh</div>
+                    <div className="text-[9px] text-green-700 font-bold">${consumoActivo.costoElecMes.toLocaleString('es-CO')}</div>
+                  </div>
+                  <div className="p-1.5 bg-white border border-black">
+                    <div className="text-[9px] font-bold text-gray-500 uppercase">Gas GLP</div>
+                    <div className="text-xs font-black text-gray-900">{consumoActivo.usaGas ? `${consumoActivo.kgGasMes} kg` : '0 kg'}</div>
+                    <div className="text-[9px] text-green-700 font-bold">${consumoActivo.costoGasMes.toLocaleString('es-CO')}</div>
+                  </div>
+                  <div className="p-1.5 bg-white border border-black">
+                    <div className="text-[9px] font-bold text-gray-500 uppercase">Agua</div>
+                    <div className="text-xs font-black text-gray-900">{consumoActivo.usaAgua ? `${consumoActivo.litrosAguaDia} L/d` : '0 L/d'}</div>
+                    <div className="text-[9px] text-green-700 font-bold">${consumoActivo.costoAguaMes.toLocaleString('es-CO')}</div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] font-mono text-gray-600 pt-1">
+                  <span>Costo por día: <b>${consumoActivo.costoTotalServiciosDia.toLocaleString('es-CO')} COP</b></span>
+                  <span>Cilindros 40lb: <b>{consumoActivo.cilindros40lbMes} / mes</b></span>
+                </div>
+              </div>
+
+              {/* Sub-panel 1: Carga Eléctrica */}
+              <div className="p-3 bg-white border-2 border-black space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-gray-200">
+                  <span className="text-[10px] font-black uppercase text-gray-800 flex items-center gap-1">
+                    <Activity className="w-3.5 h-3.5 text-blue-600" /> Carga Eléctrica (Electrical Load)
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-blue-700">
+                    {consumoActivo.potenciaKW} kW
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Potencia Nominal (Watts):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="50"
+                      value={eq.consumosTeoricos?.potenciaElectricaW ?? 0}
+                      onChange={(e) => handleUpdateConsumo('potenciaElectricaW', Number(e.target.value))}
+                      className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Tensión de Operación:</label>
+                    <select
+                      value={eq.consumosTeoricos?.tensionVoltios ?? 110}
+                      onChange={(e) => handleUpdateConsumo('tensionVoltios', Number(e.target.value))}
+                      className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    >
+                      <option value="110">110V Monofásico</option>
+                      <option value="220">220V Bifásico / Trifásico</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Horas de Uso Diario (Turno):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="24"
+                      step="0.5"
+                      value={eq.consumosTeoricos?.horasUsoDiario ?? 0}
+                      onChange={(e) => handleUpdateConsumo('horasUsoDiario', Number(e.target.value))}
+                      className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[9px] font-bold text-gray-600 mb-0.5">
+                      <span>Factor de Carga:</span>
+                      <span className="font-mono text-blue-700">{eq.consumosTeoricos?.factorCargaPct ?? 80}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      step="5"
+                      value={eq.consumosTeoricos?.factorCargaPct ?? 80}
+                      onChange={(e) => handleUpdateConsumo('factorCargaPct', Number(e.target.value))}
+                      className="w-full accent-blue-600 cursor-pointer mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-panel 2: Combustible / Gas */}
+              <div className="p-3 bg-white border-2 border-black space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-gray-200">
+                  <span className="text-[10px] font-black uppercase text-gray-800 flex items-center gap-1">
+                    <Flame className="w-3.5 h-3.5 text-orange-600" /> Combustible / Gas (Thermal & GLP)
+                  </span>
+                  <label className="flex items-center gap-1 text-[10px] font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(eq.consumosTeoricos?.usaGas)}
+                      onChange={(e) => handleUpdateConsumo('usaGas', e.target.checked)}
+                      className="w-3.5 h-3.5 accent-orange-600"
+                    />
+                    <span>{eq.consumosTeoricos?.usaGas ? 'Activo' : 'Sin Gas'}</span>
+                  </label>
+                </div>
+
+                {eq.consumosTeoricos?.usaGas ? (
+                  <div className="space-y-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Potencia Térmica (BTU/h):</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="5000"
+                          value={eq.consumosTeoricos?.potenciaGasBTU ?? 35000}
+                          onChange={(e) => handleUpdateConsumo('potenciaGasBTU', Number(e.target.value))}
+                          className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Horas Llama Activa/Día:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.5"
+                          value={eq.consumosTeoricos?.horasLlamaDiario ?? 5.5}
+                          onChange={(e) => handleUpdateConsumo('horasLlamaDiario', Number(e.target.value))}
+                          className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Costo por Hora de Gas (COP):</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={eq.consumosTeoricos?.costoHoraGasCOP ?? 2200}
+                          onChange={(e) => handleUpdateConsumo('costoHoraGasCOP', Number(e.target.value))}
+                          className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                        />
+                      </div>
+                      <div className="p-1 bg-amber-50 border border-amber-300 rounded text-[9.5px] font-mono text-amber-950 flex flex-col justify-center">
+                        <div>GLP Consumido: <b>{consumoActivo.kgGasMes} kg/mes</b></div>
+                        <div>Pipetas de 40lb: <b>{consumoActivo.cilindros40lbMes} cil/mes</b></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-gray-500 italic">Este activo no consume gas propano ni gas natural.</p>
+                )}
+              </div>
+
+              {/* Sub-panel 3: Suministro de Agua & Plomería */}
+              <div className="p-3 bg-white border-2 border-black space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-gray-200">
+                  <span className="text-[10px] font-black uppercase text-gray-800 flex items-center gap-1">
+                    <Droplets className="w-3.5 h-3.5 text-cyan-600" /> Agua Potable & Lavado BPM
+                  </span>
+                  <label className="flex items-center gap-1 text-[10px] font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(eq.consumosTeoricos?.usaAgua)}
+                      onChange={(e) => handleUpdateConsumo('usaAgua', e.target.checked)}
+                      className="w-3.5 h-3.5 accent-cyan-600"
+                    />
+                    <span>{eq.consumosTeoricos?.usaAgua ? 'Activo' : 'Sin Agua'}</span>
+                  </label>
+                </div>
+
+                {eq.consumosTeoricos?.usaAgua ? (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <label className="text-[9px] font-bold text-gray-600 block mb-0.5">Litros de Agua por Día:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="10"
+                        value={eq.consumosTeoricos?.litrosAguaDiario ?? 50}
+                        onChange={(e) => handleUpdateConsumo('litrosAguaDiario', Number(e.target.value))}
+                        className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                      />
+                    </div>
+                    <div className="p-1 bg-cyan-50 border border-cyan-300 rounded text-[9.5px] font-mono text-cyan-950 flex flex-col justify-center">
+                      <div>Volumen Mes: <b>{consumoActivo.aguaMesM3} m³</b></div>
+                      <div>Costo Agua: <b>${consumoActivo.costoAguaMes.toLocaleString('es-CO')} COP</b></div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-gray-500 italic">No requiere suministro de agua continua.</p>
+                )}
+              </div>
+
+              {/* Sub-panel 4: Mantenimiento Preventivo & Repuestos */}
+              <div className="p-3 bg-white border-2 border-black space-y-1.5">
+                <div className="flex items-center justify-between pb-1 border-b border-gray-200">
+                  <span className="text-[10px] font-black uppercase text-gray-800 flex items-center gap-1">
+                    <Wrench className="w-3.5 h-3.5 text-gray-700" /> Mantenimiento & Consumibles
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-gray-600">
+                    COP / mes
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="5000"
+                    value={eq.consumosTeoricos?.mantenimientoMensualCOP ?? 10000}
+                    onChange={(e) => handleUpdateConsumo('mantenimientoMensualCOP', Number(e.target.value))}
+                    className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50 text-right"
+                  />
+                  <span className="text-xs font-bold text-gray-500">COP</span>
+                </div>
+                <p className="text-[9px] text-gray-500 leading-tight">
+                  Incluye lubricantes sanitarios, empaques, filtros, gas refrigerante y repuestos periódicos.
+                </p>
+              </div>
+
+              {/* Presets Rápidos de Consumo */}
+              <div className="p-2.5 bg-gray-50 border-2 border-black space-y-1.5">
+                <span className="text-[9px] font-black uppercase text-gray-700 block">
+                  Perfiles Rápidos de Consumo Operativo:
+                </span>
+                <div className="grid grid-cols-3 gap-1 font-mono text-[9.5px]">
+                  <button
+                    type="button"
+                    onClick={() => handleAplicarPresetConsumo('eco')}
+                    className="p-1 bg-white border border-gray-300 hover:border-black hover:bg-emerald-50 text-gray-800 font-bold text-center"
+                    title="Reducir horas y factor de carga a modo ahorro"
+                  >
+                    🍃 Modo ECO (-30%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAplicarPresetConsumo('nominal')}
+                    className="p-1 bg-white border border-gray-300 hover:border-black hover:bg-blue-50 text-gray-800 font-bold text-center"
+                    title="Carga promedio según ficha de fabricante"
+                  >
+                    ⚡ Nominal Estándar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAplicarPresetConsumo('intenso')}
+                    className="p-1 bg-white border border-gray-300 hover:border-black hover:bg-orange-50 text-gray-800 font-bold text-center"
+                    title="Operación continua turno completo al 95% de carga"
+                  >
+                    🔥 100% Intensivo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PESTAÑA 3: JERARQUÍA REVIT BIM (reviewPlugIn Standard) */}
+          {inspectorTab === 'revit' && (
+            <div className="space-y-3 font-sans">
+              <div className="p-3 bg-blue-50/90 border-2 border-blue-600 space-y-2">
+                <div className="flex items-center justify-between border-b border-blue-200 pb-1.5">
+                  <span className="text-[10px] font-black uppercase text-blue-950 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-blue-700" />
+                    Jerarquía Autodesk Revit (reviewPlugIn)
+                  </span>
+                  <span className="text-[9.5px] font-mono font-bold bg-blue-700 text-white px-1.5 py-0.5">
+                    ElementId: {eq.elementIdRevit || '6900000'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-blue-900 leading-tight">
+                  Estructura canónica de Revit: <b>Disciplina &gt; Categoría &gt; Familia &gt; Tipo &gt; Instancia</b>, interoperable con Navisworks y visores <code>ifcJSON-4</code>.
+                </p>
+              </div>
+
+              {/* Clasificación Canónica */}
+              <div className="p-3 bg-white border-2 border-black space-y-2 text-xs">
+                <div>
+                  <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">Disciplina Revit:</label>
+                  <select
+                    value={eq.disciplina || 'Specialty Equipment (Foodservice)'}
+                    onChange={(e) => handleUpdateRevit('disciplina', e.target.value)}
+                    className="w-full p-1 border border-black font-bold text-xs bg-gray-50"
+                  >
+                    {REVIT_TAXONOMIA.disciplinas.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">Categoría Revit (Category):</label>
+                  <select
+                    value={eq.categoriaRevit || 'Specialty Equipment'}
+                    onChange={(e) => handleUpdateRevit('categoriaRevit', e.target.value)}
+                    className="w-full p-1 border border-black font-bold text-xs bg-gray-50"
+                  >
+                    {REVIT_TAXONOMIA.categorias.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">Familia Revit (Family):</label>
+                  <input
+                    type="text"
+                    value={eq.familiaRevit || ''}
+                    onChange={(e) => handleUpdateRevit('familiaRevit', e.target.value)}
+                    className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    placeholder="Horno_Pizza_DobleCamara_GLP"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">Tipo Revit (Type):</label>
+                  <input
+                    type="text"
+                    value={eq.tipoRevit || ''}
+                    onChange={(e) => handleUpdateRevit('tipoRevit', e.target.value)}
+                    className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    placeholder="70x85cm - 2 Cámaras - GLP 35.000 BTU/h"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">Element ID Revit:</label>
+                    <input
+                      type="number"
+                      value={eq.elementIdRevit || 7041441}
+                      onChange={(e) => handleUpdateRevit('elementIdRevit', Number(e.target.value))}
+                      className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">Sistema MEP / Circuito:</label>
+                    <input
+                      type="text"
+                      value={eq.sistemaMep || 'GEN-01'}
+                      onChange={(e) => handleUpdateRevit('sistemaMep', e.target.value)}
+                      className="w-full p-1 border border-black font-mono font-bold text-xs bg-gray-50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black text-gray-600 uppercase block mb-0.5">UniqueId (GUID ifcJSON):</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={eq.uniqueIdRevit || '1e8f47e0-e3e9-413c-8e3f-006b5a21'}
+                    className="w-full p-1 border border-gray-300 font-mono text-[10px] bg-gray-100 text-gray-600 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Tabla de QuickParams Estilo Navisworks / review */}
+              <div className="p-3 bg-gray-50 border-2 border-black space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-black/20">
+                  <span className="text-[10px] font-black uppercase text-gray-700 flex items-center gap-1">
+                    <FileCode className="w-3.5 h-3.5 text-blue-600" /> Parámetros Compartidos (Properties Palette)
+                  </span>
+                  <span className="text-[9px] font-mono text-gray-500">
+                    {Object.keys(eq.quick_params || {}).length} Parámetros
+                  </span>
+                </div>
+
+                <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                  {Object.entries(eq.quick_params || {}).map(([key, val]) => (
+                    <div key={key} className="flex justify-between items-center text-[10px] font-mono p-1 bg-white border border-gray-200">
+                      <span className="text-gray-500 font-bold truncate max-w-[120px]">{key}:</span>
+                      <span className="text-gray-900 font-semibold truncate max-w-[150px] text-right">{String(val)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="p-3 bg-gray-50 border border-black text-xs space-y-1">
+            <span className="font-black uppercase text-[10px] text-gray-600 block">
+              Cuello de Botella Físico en la Planta
+            </span>
+            <p className="text-gray-700 leading-snug">
+              {eq.cuelloDeBotellaDesc || 'Activo operativo balanceado en la línea.'}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -2614,6 +3066,15 @@ export default function PlantaCadEditor({
   );
 }
  + `{Math.round(balancePlanta.costoTotalServiciosPlantaMes).toLocaleString('es-CO')}/m)
+          </button>
+
+          <button
+            onClick={() => setShowConsumosModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-black font-black text-[11px] uppercase border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-x-[1px] active:translate-y-[1px]"
+            title="Abrir Balance de Consumos Teóricos MEP de la Planta (Luz, Gas, Agua)"
+          >
+            <Zap className="w-3.5 h-3.5 text-black" />
+            Consumos MEP (${Math.round(balancePlanta.costoTotalServiciosPlantaMes).toLocaleString('es-CO')}/m)
           </button>
 
           <button
@@ -3855,6 +4316,263 @@ export default function PlantaCadEditor({
           </div>
         </div>
       )}
+    
+      {/* MODAL DE BALANCE DE CONSUMOS TEÓRICOS MEP & AUDITORÍA ENERGÉTICA DE PLANTA (REVIT STANDARD) */}
+      {showConsumosModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-3 md:p-6 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border-4 border-black p-5 md:p-7 max-w-4xl w-full shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] space-y-5 max-h-[92vh] overflow-y-auto">
+            {/* Header Modal */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b-2 border-black">
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-amber-400 text-black border border-black font-black text-[11px] uppercase tracking-wider mb-1">
+                  ⚡ Auditoría MEP & Balance Energético de Planta
+                </div>
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
+                  Consumos Teóricos de Planta & Nomenclatura Revit
+                </h3>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Cálculo automático de demanda eléctrica (kW), gas propano (GLP), agua y mantenimiento según equipos activos en el plano.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button 
+                  onClick={() => setShowConsumosModal(false)}
+                  className="px-3 py-1.5 bg-black text-white font-bold text-xs uppercase hover:bg-gray-800 transition-colors"
+                >
+                  ✕ Cerrar
+                </button>
+              </div>
+            </div>
+
+            {/* Notificación de Sincronización */}
+            {notifSincronizacion && (
+              <div className="p-3 bg-emerald-50 border-2 border-emerald-600 text-emerald-950 font-bold text-xs flex items-center justify-between shadow-sm animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>✓ ¡Costos Fijos de la Planta actualizados con éxito con los consumos teóricos MEP calculados!</span>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 border border-emerald-400">
+                  Luz: ${balancePlanta.costoTotalElecMes.toLocaleString('es-CO')} | Gas: ${balancePlanta.costoTotalGasMes.toLocaleString('es-CO')}
+                </span>
+              </div>
+            )}
+
+            {/* Tarjetas KPI de Consumos Globales */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3 bg-blue-50 border-2 border-black">
+                <div className="flex items-center justify-between text-gray-500 text-[10px] font-black uppercase">
+                  <span>Electricidad</span>
+                  <Activity className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="text-lg md:text-xl font-black text-blue-900 mt-1">
+                  {balancePlanta.consumoTotalKwhMes} <span className="text-xs font-normal text-gray-600">kWh/m</span>
+                </div>
+                <div className="text-xs font-bold text-green-700 mt-0.5 font-mono">
+                  ${balancePlanta.costoTotalElecMes.toLocaleString('es-CO')} COP/m
+                </div>
+                <div className="text-[9.5px] text-gray-500 font-mono mt-1">
+                  Potencia: {balancePlanta.potenciaInstaladaTotalKW} kW (Sim: {balancePlanta.potenciaSimultaneaKW} kW)
+                </div>
+              </div>
+
+              <div className="p-3 bg-orange-50 border-2 border-black">
+                <div className="flex items-center justify-between text-gray-500 text-[10px] font-black uppercase">
+                  <span>Gas GLP</span>
+                  <Flame className="w-4 h-4 text-orange-600" />
+                </div>
+                <div className="text-lg md:text-xl font-black text-orange-950 mt-1">
+                  {balancePlanta.totalKgGasMes} <span className="text-xs font-normal text-gray-600">kg/m</span>
+                </div>
+                <div className="text-xs font-bold text-green-700 mt-0.5 font-mono">
+                  ${balancePlanta.costoTotalGasMes.toLocaleString('es-CO')} COP/m
+                </div>
+                <div className="text-[9.5px] text-gray-500 font-mono mt-1">
+                  ~{balancePlanta.totalCilindrosGasMes} Cilindros (40 lb)
+                </div>
+              </div>
+
+              <div className="p-3 bg-cyan-50 border-2 border-black">
+                <div className="flex items-center justify-between text-gray-500 text-[10px] font-black uppercase">
+                  <span>Agua Potable</span>
+                  <Droplets className="w-4 h-4 text-cyan-600" />
+                </div>
+                <div className="text-lg md:text-xl font-black text-cyan-950 mt-1">
+                  {balancePlanta.consumoTotalAguaMesM3} <span className="text-xs font-normal text-gray-600">m³/m</span>
+                </div>
+                <div className="text-xs font-bold text-green-700 mt-0.5 font-mono">
+                  ${balancePlanta.costoTotalAguaMes.toLocaleString('es-CO')} COP/m
+                </div>
+                <div className="text-[9.5px] text-gray-500 font-mono mt-1">
+                  {balancePlanta.consumoTotalAguaDiaL} Litros / día
+                </div>
+              </div>
+
+              <div className="p-3 bg-emerald-50 border-2 border-black">
+                <div className="flex items-center justify-between text-gray-500 text-[10px] font-black uppercase">
+                  <span>Total Servicios</span>
+                  <Zap className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="text-lg md:text-xl font-black text-emerald-950 mt-1">
+                  ${balancePlanta.costoTotalServiciosPlantaMes.toLocaleString('es-CO')}
+                </div>
+                <div className="text-xs font-bold text-gray-600 mt-0.5 font-mono">
+                  ${balancePlanta.costoTotalServiciosPlantaDia.toLocaleString('es-CO')} / día
+                </div>
+                <div className="text-[9.5px] text-gray-500 font-mono mt-1">
+                  ${balancePlanta.costoServiciosPorHora.toLocaleString('es-CO')} / h (${balancePlanta.costoServiciosPorMinuto}/min)
+                </div>
+              </div>
+            </div>
+
+            {/* Acción de Sincronización Directa con Costos Fijos */}
+            <div className="p-4 bg-amber-100/70 border-2 border-black flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 className="font-black text-sm text-gray-900 flex items-center gap-1.5">
+                  <RefreshCw className="w-4 h-4 text-amber-700" />
+                  Sincronizar con el Módulo Financiero de Costos Fijos
+                </h4>
+                <p className="text-xs text-gray-700 mt-0.5">
+                  Aplica automáticamente los costos teóricos calculados (${balancePlanta.costoTotalElecMes.toLocaleString('es-CO')} en Luz y ${balancePlanta.costoTotalGasMes.toLocaleString('es-CO')} en Gas) a los rubros fijos mensuales de la planta.
+                </p>
+              </div>
+
+              <button
+                onClick={handleSincronizarCostosConPlanta}
+                className="px-4 py-2.5 bg-black hover:bg-gray-800 text-white font-black text-xs uppercase tracking-wider border-2 border-black shadow-[2px_2px_0px_0px_rgba(249,115,22,1)] shrink-0 active:translate-x-[1px] active:translate-y-[1px]"
+              >
+                ⚡ Sincronizar Costos Fijos
+              </button>
+            </div>
+
+            {/* Tabla / Matriz Completa de Equipos (Revit Schedule Standard) */}
+            <div className="border-2 border-black overflow-hidden">
+              <div className="p-2.5 bg-gray-100 border-b-2 border-black flex items-center justify-between">
+                <span className="font-black text-xs uppercase text-gray-800 flex items-center gap-1.5">
+                  <FileSpreadsheet className="w-4 h-4 text-[#f97316]" />
+                  Tabla de Planificación BIM: Consumos Teóricos MEP por Activo
+                </span>
+                <span className="font-mono text-[11px] font-bold text-gray-600">
+                  {balancePlanta.desglosePorEquipo.length} Equipos Activos
+                </span>
+              </div>
+
+              <div className="overflow-x-auto max-h-72">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-gray-200 border-b border-black text-[10px] font-black uppercase text-gray-700">
+                      <th className="p-2">ElementId</th>
+                      <th className="p-2">Equipo / Familia Revit</th>
+                      <th className="p-2">Categoría</th>
+                      <th className="p-2 text-right">Potencia</th>
+                      <th className="p-2 text-right">Electricidad/m</th>
+                      <th className="p-2 text-right">Gas GLP/m</th>
+                      <th className="p-2 text-right">Agua/m</th>
+                      <th className="p-2 text-right">Total COP/m</th>
+                      <th className="p-2 text-center">% Gasto</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 font-medium font-mono text-[11px]">
+                    {balancePlanta.desglosePorEquipo.map(item => (
+                      <tr key={item.equipoId} className="hover:bg-amber-50/70 transition-colors">
+                        <td className="p-2 text-gray-500">{item.elementIdRevit || '—'}</td>
+                        <td className="p-2 font-bold font-sans text-gray-900">
+                          <div>{item.nombre}</div>
+                          <div className="text-[9.5px] font-mono text-gray-500 font-normal">{item.familiaRevit}</div>
+                        </td>
+                        <td className="p-2 text-[10px]">
+                          <span className="px-1.5 py-0.5 bg-gray-100 border border-gray-400 text-gray-700">
+                            {item.categoriaRevit}
+                          </span>
+                        </td>
+                        <td className="p-2 text-right font-bold text-blue-900">{item.potenciaKW} kW</td>
+                        <td className="p-2 text-right text-gray-700">
+                          <div>{item.kwhMes} kWh</div>
+                          <div className="text-[9.5px] text-green-700 font-bold">${item.costoElecMes.toLocaleString('es-CO')}</div>
+                        </td>
+                        <td className="p-2 text-right text-gray-700">
+                          {item.horasLlama > 0 ? (
+                            <>
+                              <div>{item.kgGasMes} kg</div>
+                              <div className="text-[9.5px] text-orange-700 font-bold">${item.costoGasMes.toLocaleString('es-CO')}</div>
+                            </>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="p-2 text-right text-gray-700">
+                          {item.aguaMesM3 > 0 ? (
+                            <>
+                              <div>{item.aguaMesM3} m³</div>
+                              <div className="text-[9.5px] text-cyan-700 font-bold">${item.costoAguaMes.toLocaleString('es-CO')}</div>
+                            </>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="p-2 text-right font-black text-gray-900">
+                          ${item.costoTotalServiciosMes.toLocaleString('es-CO')}
+                        </td>
+                        <td className="p-2 text-center font-bold">
+                          <span className="px-1.5 py-0.5 bg-black text-white text-[10px]">
+                            {item.pctDelTotal}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Ajuste de Tarifas Base */}
+            <div className="p-3 bg-gray-50 border border-black space-y-2 text-xs">
+              <span className="font-black uppercase text-[10px] text-gray-600 block">
+                Tarifas Base de Facturación Comercial (Personalizables):
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px]">
+                <div>
+                  <label className="text-[9px] text-gray-500 block">Tarifa Energía (COP/kWh):</label>
+                  <input
+                    type="number"
+                    value={tarifasMep.tarifaKwhCOP}
+                    onChange={(e) => setTarifasMep({...tarifasMep, tarifaKwhCOP: Number(e.target.value)})}
+                    className="w-full p-1 border border-black font-bold text-right"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-gray-500 block">Hora Quemador GLP (COP/h):</label>
+                  <input
+                    type="number"
+                    value={tarifasMep.tarifaGasHoraCOP}
+                    onChange={(e) => setTarifasMep({...tarifasMep, tarifaGasHoraCOP: Number(e.target.value)})}
+                    className="w-full p-1 border border-black font-bold text-right"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-gray-500 block">Cilindro GLP 40lb (COP):</label>
+                  <input
+                    type="number"
+                    value={tarifasMep.cilindroGLP40lbCOP}
+                    onChange={(e) => setTarifasMep({...tarifasMep, cilindroGLP40lbCOP: Number(e.target.value)})}
+                    className="w-full p-1 border border-black font-bold text-right"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-gray-500 block">Tarifa Agua (COP/m³):</label>
+                  <input
+                    type="number"
+                    value={tarifasMep.tarifaAguaM3COP}
+                    onChange={(e) => setTarifasMep({...tarifasMep, tarifaAguaM3COP: Number(e.target.value)})}
+                    className="w-full p-1 border border-black font-bold text-right"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -4,12 +4,25 @@ import supabase from '../config/supabaseClient';
 const SYNC_TABLE = 'radio_current_play';
 const SYNC_ROW_ID = 1;
 
+export const DEFAULT_TYRANNY_SETTINGS = {
+  lockConsoles: true,
+  forcedTab: 'supabase',
+  bannerEnabled: true,
+  bannerContentType: 'both', // 'both' | 'image' | 'text'
+  bannerImageUrl: '',
+  bannerTitle: 'Proyecto Café Radio',
+  bannerText: 'Música curada para el café',
+  showHamburgerMenu: false,
+  allowAdminNav: false,
+};
+
 /**
  * Hook de sincronizacion global de radio via Supabase Realtime + Presencia de Escuchas + Control Remoto.
  * - Lee el estado actual al montar el componente.
  * - Suscribe a cambios en tiempo real (WebSocket).
  * - Monitorea instancias/oyentes en vivo (Presence + BroadcastChannel local).
  * - Permite enviar comandos a instancias individuales o a todas (F5, pausar, reproducir, listas específicas).
+ * - Control tiránico centralizado: bloqueos de consola, configuración remota de banners, menús.
  */
 export function useRadioSync(options = {}) {
   const { isManager = false, presenceData, onRemoteCommand } = options;
@@ -18,6 +31,16 @@ export function useRadioSync(options = {}) {
   const [remoteVolume, setRemoteVolume] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(null);
+
+  // Configuración tiránica maestra de la estación
+  const [tyrannySettings, setTyrannySettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('proyecto_radio_tyranny_settings');
+      if (saved) return { ...DEFAULT_TYRANNY_SETTINGS, ...JSON.parse(saved) };
+    } catch (e) {}
+    return DEFAULT_TYRANNY_SETTINGS;
+  });
+  const hasTyrannyColumnRef = useRef(true);
 
   // Lista de escuchas/instancias activas
   const [listeners, setListeners] = useState([]);
@@ -118,6 +141,20 @@ export function useRadioSync(options = {}) {
             };
           });
         }
+        if (data.tyranny_settings) {
+          try {
+            const parsed = typeof data.tyranny_settings === 'string'
+              ? JSON.parse(data.tyranny_settings)
+              : data.tyranny_settings;
+            if (parsed && typeof parsed === 'object') {
+              setTyrannySettings(prev => {
+                const next = { ...prev, ...parsed };
+                try { localStorage.setItem('proyecto_radio_tyranny_settings', JSON.stringify(next)); } catch (e) {}
+                return next;
+              });
+            }
+          } catch (e) {}
+        }
         return data;
       }
     } catch (err) {
@@ -153,6 +190,40 @@ export function useRadioSync(options = {}) {
 
   // Suscribirse a cambios en tiempo real + Presence + Comandos remotos
   useEffect(() => {
+    // Escucha de comandos entrantes con soporte para Ajustes Tiránicos
+    const handleCommand = (cmd) => {
+      if (!cmd) return;
+      if (cmd.type === 'TYRANNY_SETTINGS') {
+        const incoming = cmd.settings || cmd.payload?.settings;
+        if (incoming) {
+          setTyrannySettings(prev => {
+            const next = { ...prev, ...incoming };
+            try { localStorage.setItem('proyecto_radio_tyranny_settings', JSON.stringify(next)); } catch (e) {}
+            return next;
+          });
+        }
+      } else if (cmd.type === 'REQUEST_TYRANNY_SETTINGS' && isManager) {
+        // Enviar ajustes actuales al escucha solicitante
+        try {
+          const currentSettings = (() => {
+            try {
+              const saved = localStorage.getItem('proyecto_radio_tyranny_settings');
+              if (saved) return { ...DEFAULT_TYRANNY_SETTINGS, ...JSON.parse(saved) };
+            } catch (e) {}
+            return DEFAULT_TYRANNY_SETTINGS;
+          })();
+          sendRemoteCommand({
+            type: 'TYRANNY_SETTINGS',
+            payload: { settings: currentSettings },
+            targetClientId: cmd.senderId || 'all'
+          });
+        } catch (e) {}
+      }
+
+      if (onRemoteCommandRef.current) {
+        onRemoteCommandRef.current(cmd);
+      }
+    };
     const channel = supabase.channel('radio-sync-global', {
       config: {
         presence: { key: clientId }
@@ -182,6 +253,20 @@ export function useRadioSync(options = {}) {
               timestamp: Date.now()
             });
           }
+          if (payload.new?.tyranny_settings) {
+            try {
+              const parsed = typeof payload.new.tyranny_settings === 'string'
+                ? JSON.parse(payload.new.tyranny_settings)
+                : payload.new.tyranny_settings;
+              if (parsed && typeof parsed === 'object') {
+                setTyrannySettings(prev => {
+                  const next = { ...prev, ...parsed };
+                  try { localStorage.setItem('proyecto_radio_tyranny_settings', JSON.stringify(next)); } catch (e) {}
+                  return next;
+                });
+              }
+            } catch (e) {}
+          }
         }
       )
       .on(
@@ -204,6 +289,20 @@ export function useRadioSync(options = {}) {
               timestamp: Date.now()
             });
           }
+          if (payload.new?.tyranny_settings) {
+            try {
+              const parsed = typeof payload.new.tyranny_settings === 'string'
+                ? JSON.parse(payload.new.tyranny_settings)
+                : payload.new.tyranny_settings;
+              if (parsed && typeof parsed === 'object') {
+                setTyrannySettings(prev => {
+                  const next = { ...prev, ...parsed };
+                  try { localStorage.setItem('proyecto_radio_tyranny_settings', JSON.stringify(next)); } catch (e) {}
+                  return next;
+                });
+              }
+            } catch (e) {}
+          }
         }
       )
       .on('broadcast', { event: 'FORCE_RELOAD' }, ({ payload }) => {
@@ -218,8 +317,8 @@ export function useRadioSync(options = {}) {
             console.log('[RadioSync] Comando remoto recibido:', payload);
             if (payload.type === 'FORCE_RELOAD') {
               window.location.reload();
-            } else if (onRemoteCommandRef.current) {
-              onRemoteCommandRef.current(payload);
+            } else {
+              handleCommand(payload);
             }
           }
         }
@@ -264,6 +363,10 @@ export function useRadioSync(options = {}) {
                 isMuted: Boolean(presenceData?.isMuted),
                 updatedAt: Date.now()
               });
+              sendRemoteCommand({
+                type: 'REQUEST_TYRANNY_SETTINGS',
+                targetClientId: 'all'
+              });
             } catch (e) {}
           }
         } else if (status === 'CHANNEL_ERROR') {
@@ -307,8 +410,8 @@ export function useRadioSync(options = {}) {
           if (cmd.targetClientId === 'all' || cmd.targetClientId === clientId) {
             if (cmd.type === 'FORCE_RELOAD') {
               window.location.reload();
-            } else if (onRemoteCommandRef.current) {
-              onRemoteCommandRef.current(cmd);
+            } else {
+              handleCommand(cmd);
             }
           }
         }
@@ -577,6 +680,61 @@ export function useRadioSync(options = {}) {
     }
   };
 
+  /**
+   * Emite y persiste la configuración tiránica de la estación a todos los escuchas.
+   */
+  const broadcastTyrannySettings = async (newSettingsPartial) => {
+    const merged = {
+      ...tyrannySettings,
+      ...newSettingsPartial
+    };
+    setTyrannySettings(merged);
+    try {
+      localStorage.setItem('proyecto_radio_tyranny_settings', JSON.stringify(merged));
+    } catch (e) {}
+
+    // 1. Emitir comando TYRANNY_SETTINGS a todas las instancias (Local + Realtime)
+    await sendRemoteCommand({
+      type: 'TYRANNY_SETTINGS',
+      targetClientId: 'all',
+      payload: { settings: merged }
+    });
+
+    // 2. Si se cambió la consola forzada, emitir FORCE_MODE
+    if (merged.forcedTab) {
+      await sendRemoteCommand({
+        type: 'FORCE_MODE',
+        targetClientId: 'all',
+        payload: { tab: merged.forcedTab, mode: merged.forcedTab }
+      });
+    }
+
+    // 3. Persistir en Supabase radio_current_play si la columna existe
+    if (hasTyrannyColumnRef.current) {
+      try {
+        const { error } = await supabase
+          .from(SYNC_TABLE)
+          .update({
+            tyranny_settings: merged,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', SYNC_ROW_ID);
+
+        if (error) {
+          if (error.code === '42703') {
+            hasTyrannyColumnRef.current = false;
+          } else {
+            console.warn('[RadioSync] Error al guardar tyranny_settings en BD:', error.message);
+          }
+        }
+      } catch (err) {
+        hasTyrannyColumnRef.current = false;
+      }
+    }
+
+    return merged;
+  };
+
   return {
     currentPlay,
     refreshCurrentPlay,
@@ -585,6 +743,9 @@ export function useRadioSync(options = {}) {
     broadcastStop,
     broadcastVolume,
     broadcastForceReload,
+    broadcastTyrannySettings,
+    tyrannySettings,
+    setTyrannySettings,
     sendRemoteCommand,
     listeners,
     activeListenersCount: listeners.length,

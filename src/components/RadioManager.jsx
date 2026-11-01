@@ -16,7 +16,7 @@ import {
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
   GripVertical, Search, Filter, Layers, Disc, Tag, Calendar, Sparkles, 
   Clock, CheckSquare, Square, Volume2, VolumeX, SkipBack, SkipForward,
-  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus, RotateCcw, Shuffle, Radio, Users
+  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus, RotateCcw, Shuffle, Radio, Users, Lock
 } from 'lucide-react';
 
 const MAX_PLAYLIST_SECONDS = Infinity; // Sin límite de tiempo ni de canciones
@@ -380,7 +380,9 @@ export default function RadioManager() {
     listeners,
     activeListenersCount,
     sendRemoteCommand,
-    broadcastForceReload
+    broadcastForceReload,
+    broadcastTyrannySettings,
+    tyrannySettings
   } = useRadioSync({ isManager: true });
 
   // Notificador universal de cambios en la lista de reproducción hacia Proyecto Radio
@@ -2954,11 +2956,15 @@ export default function RadioManager() {
 
             <button 
               onClick={() => setShowListenersModal(true)}
-              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-blue-600/30 hover:bg-blue-600/50 active:scale-95 text-blue-300 font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border border-blue-500/40 transition flex items-center justify-center gap-1.5 shadow-lg touch-manipulation"
-              title="Monitorear oyentes activos y enviarles órdenes de transmisión"
+              className={`min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full active:scale-95 font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border transition flex items-center justify-center gap-1.5 shadow-lg touch-manipulation ${
+                tyrannySettings?.lockConsoles
+                  ? 'bg-red-600/40 hover:bg-red-600/60 border-red-500/50 text-red-200 shadow-red-900/30'
+                  : 'bg-blue-600/30 hover:bg-blue-600/50 border-blue-500/40 text-blue-300'
+              }`}
+              title="Panel de Control Tiránico y Oyentes en tiempo real"
             >
               <Users className="w-4 h-4" />
-              <span>Oyentes ({activeListenersCount})</span>
+              <span>{tyrannySettings?.lockConsoles ? '🔒 Tiránico' : 'Oyentes'} ({activeListenersCount})</span>
             </button>
 
             <button 
@@ -3031,6 +3037,27 @@ export default function RadioManager() {
             >
               <Youtube className="w-4 h-4 fill-current" />
               <span>YouTube</span>
+            </button>
+
+            <button
+              onClick={async () => {
+                const nextVal = !tyrannySettings?.lockConsoles;
+                await broadcastTyrannySettings({ lockConsoles: nextVal });
+                if (nextVal) {
+                  setSuccess("🔒 ¡Consolas de todos los escuchas bloqueadas! Modo tiránico activo.");
+                } else {
+                  setSuccess("🔓 Consolas liberadas: los escuchas pueden cambiar de modo.");
+                }
+              }}
+              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
+                tyrannySettings?.lockConsoles
+                  ? 'bg-red-600 text-white border-red-500 shadow-red-900/40'
+                  : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/20'
+              }`}
+              title={tyrannySettings?.lockConsoles ? "Consolas bloqueadas (clic para liberar)" : "Consolas libres (clic para bloquear)"}
+            >
+              <Lock className="w-4 h-4" />
+              <span>{tyrannySettings?.lockConsoles ? '🔒 Consolas Bloqueadas' : '🔓 Consolas Libres'}</span>
             </button>
           </div>
         </div>
@@ -4732,6 +4759,12 @@ export default function RadioManager() {
         onSetVolumeListener={async (clientId, vol) => {
           await sendRemoteCommand({ type: 'SET_VOLUME', volume: vol, targetClientId: clientId });
         }}
+        tyrannySettings={tyrannySettings}
+        onUpdateTyrannySettings={async (settings) => {
+          await broadcastTyrannySettings(settings);
+          setSuccess("👑 Ajustes tiránicos sincronizados y guardados.");
+        }}
+        currentTrackCover={onAirTrack?.station_cover || songs[0]?.cover || ''}
       />
 
     </div>

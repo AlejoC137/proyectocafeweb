@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PLANTA_CONFIG } from './plantaData';
+import { normalizarEquipoRevit, calcularConsumosPlanta, TARIFAS_SERVICIOS } from './plantaConsumosUtils.js';
 import PlantaHeader from './PlantaHeader';
 import PlantaKpis from './PlantaKpis';
 import PlantaCadViewer from './PlantaCadViewer';
@@ -33,10 +34,10 @@ export default function PlantaProduccion() {
       const saved = localStorage.getItem('planta_cad_equipos_v2');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizarEquipoRevit);
       }
     } catch (e) {}
-    return PLANTA_CONFIG.equipos;
+    return PLANTA_CONFIG.equipos.map(normalizarEquipoRevit);
   });
 
   // Cargar desde Supabase al montar la página
@@ -58,8 +59,9 @@ export default function PlantaProduccion() {
             localStorage.setItem('planta_cad_dimensiones_v1', JSON.stringify(dims));
           }
           if (dedicatedData.equipos && Array.isArray(dedicatedData.equipos) && dedicatedData.equipos.length > 0) {
-            setEquipos(dedicatedData.equipos);
-            localStorage.setItem('planta_cad_equipos_v2', JSON.stringify(dedicatedData.equipos));
+            const eqNorm = dedicatedData.equipos.map(normalizarEquipoRevit);
+            setEquipos(eqNorm);
+            localStorage.setItem('planta_cad_equipos_v2', JSON.stringify(eqNorm));
             setSyncStatus('saved');
             return;
           }
@@ -82,8 +84,9 @@ export default function PlantaProduccion() {
             localStorage.setItem('planta_cad_dimensiones_v1', JSON.stringify(dims));
           }
           if (data.preferences.equipos && Array.isArray(data.preferences.equipos) && data.preferences.equipos.length > 0) {
-            setEquipos(data.preferences.equipos);
-            localStorage.setItem('planta_cad_equipos_v2', JSON.stringify(data.preferences.equipos));
+            const eqNorm = data.preferences.equipos.map(normalizarEquipoRevit);
+            setEquipos(eqNorm);
+            localStorage.setItem('planta_cad_equipos_v2', JSON.stringify(eqNorm));
             setSyncStatus('saved');
           } else {
             setSyncStatus('idle');
@@ -109,8 +112,9 @@ export default function PlantaProduccion() {
           localStorage.setItem('planta_cad_dimensiones_v1', JSON.stringify(dims));
         }
         if (payload.new?.equipos && Array.isArray(payload.new.equipos)) {
-          setEquipos(payload.new.equipos);
-          localStorage.setItem('planta_cad_equipos_v2', JSON.stringify(payload.new.equipos));
+          const eqNorm = payload.new.equipos.map(normalizarEquipoRevit);
+          setEquipos(eqNorm);
+          localStorage.setItem('planta_cad_equipos_v2', JSON.stringify(eqNorm));
           setSyncStatus('saved');
         }
       })
@@ -309,6 +313,24 @@ export default function PlantaProduccion() {
     return totalCostosFijosMes / (diasMes || 1);
   }, [totalCostosFijosMes, diasMes]);
 
+  // Balance Teórico Agregado de Consumos MEP de la Planta (Lógica BIM / Revit)
+  const balanceConsumosPlanta = useMemo(() => {
+    return calcularConsumosPlanta(equipos, diasMes, horasTurno, TARIFAS_SERVICIOS);
+  }, [equipos, diasMes, horasTurno]);
+
+  // Sincronizar costos fijos OPEX con los consumos teóricos MEP calculados
+  const handleSincronizarCostosConConsumos = (balanceCustom) => {
+    const bal = balanceCustom || balanceConsumosPlanta;
+    setCostosFijos(prev => ({
+      ...prev,
+      electricidadComercial: Math.round(bal.totalElectricidadMes),
+      gasPropanoPipetas: Math.round(bal.totalGasMes),
+      mantenimientoAseoBPM: prev.mantenimientoAseoBPM 
+        ? Math.round(Math.max(prev.mantenimientoAseoBPM, bal.totalMantenimientoMes + 150000))
+        : Math.round(bal.totalMantenimientoMes)
+    }));
+  };
+
   // Cálculo DINÁMICO de capacidad monoproducto a partir de los equipos activos en planta
   const analisisProductos = useMemo(() => {
     const minutosDisponibles = horasTurno * 60 * eficienciaOEE;
@@ -476,6 +498,10 @@ export default function PlantaProduccion() {
             setDimensionesHabitacion={setDimensionesHabitacion}
             analisisProductos={analisisProductos}
             horasTurno={horasTurno}
+            diasMes={diasMes}
+            costosFijos={costosFijos}
+            setCostosFijos={setCostosFijos}
+            onSincronizarCostosConConsumos={handleSincronizarCostosConConsumos}
             onResetOriginal={handleResetOriginal}
             syncStatus={syncStatus}
             onForceSaveSupabase={handleForceSaveSupabase}
@@ -533,6 +559,8 @@ export default function PlantaProduccion() {
             diasMes={diasMes}
             horasTurno={horasTurno}
             eficienciaOEE={eficienciaOEE}
+            consumosPlanta={balanceConsumosPlanta}
+            onSincronizarCostosConConsumos={handleSincronizarCostosConConsumos}
           />
         )}
       </div>

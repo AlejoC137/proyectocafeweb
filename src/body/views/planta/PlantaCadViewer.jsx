@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Building2, Flame, Layers, CheckSquare, Square, FileCode, Edit3, CheckCircle2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Building2, Flame, Layers, CheckSquare, Square, FileCode, Edit3, CheckCircle2, Zap, Droplets, Activity } from 'lucide-react';
 import { PLANTA_CONFIG } from './plantaData';
+import { normalizarEquipoRevit, calcularConsumosEquipo, TARIFAS_SERVICIOS } from './plantaConsumosUtils.js';
 import dxfData from '../../../assets/data/plantaDxfData.json';
 import dxfSvgData from '../../../assets/data/plantaDxfSvgData.json';
 import PlantaCadEditor from './PlantaCadEditor';
@@ -12,6 +13,10 @@ export default function PlantaCadViewer({
   setDimensionesHabitacion,
   analisisProductos = [],
   horasTurno = 8,
+  diasMes = 26,
+  costosFijos = {},
+  setCostosFijos,
+  onSincronizarCostosConConsumos,
   onResetOriginal,
   syncStatus = 'idle',
   onForceSaveSupabase
@@ -20,8 +25,13 @@ export default function PlantaCadViewer({
   const [selectedEquipoId, setSelectedEquipoId] = useState(() => equipos[0]?.id || PLANTA_CONFIG.equipos[0]?.id);
 
   const equipoSeleccionado = React.useMemo(() => {
-    return equipos.find(e => e.id === selectedEquipoId) || equipos[0] || PLANTA_CONFIG.equipos[0];
+    const raw = equipos.find(e => e.id === selectedEquipoId) || equipos[0] || PLANTA_CONFIG.equipos[0];
+    return normalizarEquipoRevit(raw);
   }, [equipos, selectedEquipoId]);
+
+  const consumoSeleccionado = useMemo(() => {
+    return calcularConsumosEquipo(equipoSeleccionado, diasMes, TARIFAS_SERVICIOS);
+  }, [equipoSeleccionado, diasMes]);
 
   const handleSelectEquipo = (eqOrId) => {
     const id = typeof eqOrId === 'string' ? eqOrId : eqOrId?.id;
@@ -85,6 +95,10 @@ export default function PlantaCadViewer({
           setDimensionesHabitacion={setDimensionesHabitacion}
           analisisProductos={analisisProductos}
           horasTurno={horasTurno}
+          diasMes={diasMes}
+          costosFijos={costosFijos}
+          setCostosFijos={setCostosFijos}
+          onSincronizarCostosConConsumos={onSincronizarCostosConConsumos}
           equipoSeleccionado={equipoSeleccionado}
           setEquipoSeleccionado={handleSelectEquipo}
           onResetOriginal={onResetOriginal}
@@ -424,51 +438,135 @@ export default function PlantaCadViewer({
 
           {/* Ficha Técnica del Equipo Seleccionado */}
           <div className="lg:col-span-4 bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b-2 border-black">
-              <Flame className="w-5 h-5 text-[#f97316]" />
-              <h3 className="text-lg font-black text-gray-900">Ficha de Equipo CAD / BIM</h3>
+            <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-[#f97316]" />
+                <h3 className="text-lg font-black text-gray-900">Ficha de Equipo CAD / BIM</h3>
+              </div>
+              {equipoSeleccionado?.element_id && (
+                <span className="font-mono text-[10px] bg-black text-[#facc15] px-2 py-0.5 font-bold">
+                  ID: #{equipoSeleccionado.element_id}
+                </span>
+              )}
             </div>
 
             <div>
-              <div className="text-xs font-bold uppercase text-gray-500">Nombre del Activo</div>
+              <div className="text-[10px] font-bold uppercase text-gray-500">Nombre del Activo</div>
               <div className="text-base font-black text-gray-900 mt-0.5">{equipoSeleccionado?.nombre}</div>
               <div className="text-xs font-mono bg-gray-100 p-1.5 border border-black mt-1">
                 Dimensiones CAD: {equipoSeleccionado?.dimensiones}
               </div>
             </div>
 
+            {/* Jerarquía Revit BIM */}
+            <div className="p-2.5 bg-blue-50 border border-blue-200 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-[10px] uppercase text-blue-900">Jerarquía Autodesk Revit</span>
+                <span className="text-[10px] bg-blue-200 text-blue-900 px-1.5 py-0.2 font-mono font-bold">
+                  {equipoSeleccionado?.disciplina || 'Specialty Equipment'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-gray-700 pt-1">
+                <div>
+                  <span className="text-gray-500 font-bold block text-[9px] uppercase">Categoría:</span>
+                  <span className="font-semibold">{equipoSeleccionado?.category || equipoSeleccionado?.categoriaRevit || 'Specialty Equipment'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 font-bold block text-[9px] uppercase">Sistema MEP:</span>
+                  <span className="font-semibold text-emerald-800">{equipoSeleccionado?.sistemaMep || 'Mecánico / Eléctrico'}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-gray-500 font-bold block text-[9px] uppercase">Familia:</span>
+                  <span className="font-mono text-[10px] truncate block text-blue-950 font-bold">{equipoSeleccionado?.family || equipoSeleccionado?.familiaRevit || 'Genérico'}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-gray-500 font-bold block text-[9px] uppercase">Tipo:</span>
+                  <span className="font-mono text-[10px] text-gray-800">{equipoSeleccionado?.type || equipoSeleccionado?.tipoRevit || equipoSeleccionado?.dimensiones}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Consumos Teóricos MEP */}
+            {consumoSeleccionado && (
+              <div className="p-2.5 bg-amber-50 border border-amber-300 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-[10px] uppercase text-amber-950 flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-amber-600" /> Consumo Teórico MEP
+                  </span>
+                  <span className="font-mono font-black text-xs text-amber-900">
+                    ${consumoSeleccionado.costoTotalMes.toLocaleString('es-CO')}/mes
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div className="bg-white p-1.5 border border-amber-200">
+                    <span className="text-gray-500 font-bold block">Electricidad ({consumoSeleccionado.horasUsoDia}h/día)</span>
+                    <span className="font-mono font-bold text-gray-900">{consumoSeleccionado.kwhMes} kWh/mes</span>
+                    <span className="block text-gray-500 text-[9px]">${consumoSeleccionado.costoElectricidadMes.toLocaleString('es-CO')}</span>
+                  </div>
+
+                  {consumoSeleccionado.costoGasMes > 0 ? (
+                    <div className="bg-white p-1.5 border border-orange-200">
+                      <span className="text-orange-700 font-bold block">Gas Propano GLP</span>
+                      <span className="font-mono font-bold text-gray-900">{consumoSeleccionado.kgGasMes} kg/mes</span>
+                      <span className="block text-orange-600 text-[9px]">${consumoSeleccionado.costoGasMes.toLocaleString('es-CO')} (~{consumoSeleccionado.cilindros18kgMes} pipetas)</span>
+                    </div>
+                  ) : (
+                    <div className="bg-white p-1.5 border border-gray-200">
+                      <span className="text-gray-400 font-bold block">Gas Propano</span>
+                      <span className="font-mono text-gray-500">N/A (Eléctrico puro)</span>
+                    </div>
+                  )}
+
+                  {consumoSeleccionado.costoAguaMes > 0 && (
+                    <div className="bg-white p-1.5 border border-cyan-200 col-span-2 flex justify-between items-center">
+                      <span className="text-cyan-800 font-bold">Agua Sanitaria:</span>
+                      <span className="font-mono font-bold">{consumoSeleccionado.m3AguaMes} m³/mes (${consumoSeleccionado.costoAguaMes.toLocaleString('es-CO')})</span>
+                    </div>
+                  )}
+
+                  {consumoSeleccionado.costoMantenimientoMes > 0 && (
+                    <div className="bg-white p-1.5 border border-purple-200 col-span-2 flex justify-between items-center">
+                      <span className="text-purple-800 font-bold">Mantenimiento Preventivo:</span>
+                      <span className="font-mono font-bold">${consumoSeleccionado.costoMantenimientoMes.toLocaleString('es-CO')}/mes</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2 text-xs">
-              <div className="p-2.5 bg-orange-50 border border-orange-200 text-orange-950">
+              <div className="p-2 bg-orange-50 border border-orange-200 text-orange-950">
                 <span className="font-black block uppercase text-[10px]">Restricción / Cuello de Botella:</span>
                 {equipoSeleccionado?.cuelloDeBotellaDesc}
               </div>
 
               {equipoSeleccionado?.camaras && (
-                <div className="p-2 bg-gray-50 border border-gray-300">
+                <div className="p-1.5 bg-gray-50 border border-gray-300">
                   <span className="font-bold">Cámaras Refractarias:</span> {equipoSeleccionado.camaras} independientes
                 </div>
               )}
 
               {equipoSeleccionado?.capacidadBowlLitros && (
-                <div className="p-2 bg-gray-50 border border-gray-300">
+                <div className="p-1.5 bg-gray-50 border border-gray-300">
                   <span className="font-bold">Volumen del Bowl:</span> {equipoSeleccionado.capacidadBowlLitros} Litros (~4 kg masa batida)
                 </div>
               )}
 
               {equipoSeleccionado?.capacidadTartasVascas && (
-                <div className="p-2 bg-gray-50 border border-gray-300">
+                <div className="p-1.5 bg-gray-50 border border-gray-300">
                   <span className="font-bold">Capacidad Tartas Vascas por ciclo:</span> {equipoSeleccionado.capacidadTartasVascas} unidades
                 </div>
               )}
 
               {equipoSeleccionado?.combustible && (
-                <div className="p-2 bg-gray-50 border border-gray-300">
+                <div className="p-1.5 bg-gray-50 border border-gray-300">
                   <span className="font-bold">Fuente Energética:</span> {equipoSeleccionado.combustible}
                 </div>
               )}
 
               {equipoSeleccionado?.usos && (
-                <div className="p-2 bg-gray-50 border border-gray-300">
+                <div className="p-1.5 bg-gray-50 border border-gray-300">
                   <span className="font-bold">Función en Línea:</span> {equipoSeleccionado.usos}
                 </div>
               )}

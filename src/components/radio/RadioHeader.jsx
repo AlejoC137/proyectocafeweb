@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Radio, RotateCw, Info, Settings, Menu, X, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 export default function RadioHeader({ 
   isPlaying, 
@@ -11,9 +12,12 @@ export default function RadioHeader({
   setIsDailyLoop, 
   setShowInfoModal,
   isDarkMode,
-  toggleDarkMode 
+  toggleDarkMode,
+  showHamburgerMenu = true,
+  allowAdminNav = false
 }) {
   const navigate = useNavigate();
+  const currentStaff = useSelector(state => state.currentStaff);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [time, setTime] = useState(new Date());
 
@@ -56,15 +60,18 @@ export default function RadioHeader({
           {formatTime(time)}
         </div>
 
-        {/* BURGER MENU BUTTON */}
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="flex items-center justify-center w-[42px] h-[42px] border-[3px] border-black dark:border-slate-600 bg-white dark:bg-[#1e1f2e] text-black dark:text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.2)] hover:bg-black hover:text-white dark:hover:bg-slate-800 transition-colors rounded-none"
-        >
-          {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        {/* BURGER MENU BUTTON (Controlado por cabina central / Radio Manager) */}
+        {showHamburgerMenu && (
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="flex items-center justify-center w-[42px] h-[42px] border-[3px] border-black dark:border-slate-600 bg-white dark:bg-[#1e1f2e] text-black dark:text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.2)] hover:bg-black hover:text-white dark:hover:bg-slate-800 transition-colors rounded-none"
+            aria-label="Menú de opciones de radio"
+          >
+            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        )}
 
         {/* DROPDOWN MENU */}
-        {isMenuOpen && (
+        {showHamburgerMenu && isMenuOpen && (
           <div className="absolute top-full right-0 mt-2 flex flex-col gap-2 z-50 min-w-[160px]">
             <button onClick={() => { toggleDarkMode(); setIsMenuOpen(false); }}
               className="flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-colors border-[3px] border-black dark:border-yellow-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(250,204,21,0.5)] bg-white dark:bg-[#1e1f2e] text-black dark:text-yellow-400 hover:bg-black hover:text-white rounded-none whitespace-nowrap"
@@ -86,12 +93,14 @@ export default function RadioHeader({
               <Info className="w-4 h-4" />
               Info
             </button>
-            <button onClick={() => { navigate('/RadioManager'); setIsMenuOpen(false); }}
-              className="flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-colors border-[3px] border-black dark:border-blue-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(59,130,246,0.5)] bg-cobalt-blue text-white hover:bg-black hover:text-white rounded-none whitespace-nowrap"
-            >
-              <Settings className="w-4 h-4" />
-              Admin
-            </button>
+            {(allowAdminNav || Boolean(currentStaff)) && (
+              <button onClick={() => { navigate('/RadioManager'); setIsMenuOpen(false); }}
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-colors border-[3px] border-black dark:border-blue-400 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(59,130,246,0.5)] bg-cobalt-blue text-white hover:bg-black hover:text-white rounded-none whitespace-nowrap"
+              >
+                <Settings className="w-4 h-4" />
+                Admin
+              </button>
+            )}
           </div>
         )}
       </div>
