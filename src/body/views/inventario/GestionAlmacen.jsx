@@ -13,12 +13,12 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag, Sparkles } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag, Sparkles, ExternalLink, Check } from "lucide-react";
 import HistorialItemModal from "./HistorialItemModal";
 import HistorialCambiosView from "./HistorialCambiosView";
 import SupermuSyncView from "./SupermuSyncView";
 import SupermuMacroModal from "./SupermuMacroModal";
-import { getSupermuCatalog, autoMatchInventory, buildSupermuPromptContext } from "../../../utils/supermuMatcher";
+import { getSupermuCatalog, autoMatchInventory, buildSupermuPromptContext, findCandidatesForItem, buildProposedStagedItem } from "../../../utils/supermuMatcher";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
 import ReceiptIngestionModal from "./ReceiptIngestionModal";
 
@@ -132,6 +132,24 @@ function GestionAlmacen() {
   const [supermuOnlySource, setSupermuOnlySource] = useState(false);
   const [showSupermuMacroModal, setShowSupermuMacroModal] = useState(false);
   const [isAutoMatchingSupermu, setIsAutoMatchingSupermu] = useState(false);
+  const [col2Mode, setCol2Mode] = useState("supermu"); // "supermu" | "prompt"
+  const [supermuCatalogList, setSupermuCatalogList] = useState([]);
+  const [focusedItemId, setFocusedItemId] = useState(null);
+  const [supermuFilterQuery, setSupermuFilterQuery] = useState("");
+
+  useEffect(() => {
+    getSupermuCatalog().then((cat) => {
+      if (Array.isArray(cat)) setSupermuCatalogList(cat);
+    });
+  }, []);
+
+  const handleApplySupermuToItem = (item, supermuProd) => {
+    const proposed = buildProposedStagedItem(item, supermuProd);
+    setStagedItems((prev) => {
+      const filtered = prev.filter((p) => p._id !== item._id);
+      return [...filtered, proposed];
+    });
+  };
 
   const handleMacroToggle = (key) => {
     setActiveMacroFields(prev => prev.map(f => {
@@ -223,9 +241,11 @@ function GestionAlmacen() {
   }, [filterProvider]);
 
   const handleSelectItem = (item) => {
-    // Prevent duplicates
     if (!selectedItems.find((i) => i._id === item._id)) {
       setSelectedItems((prev) => [...prev, item]);
+      setFocusedItemId(item._id);
+    } else {
+      setFocusedItemId(item._id);
     }
   };
 
@@ -277,25 +297,25 @@ function GestionAlmacen() {
     }
     setIsAutoMatchingSupermu(true);
     try {
-      const catalog = await getSupermuCatalog();
-      const res = autoMatchInventory(itemsToMatch, catalog, 0.5);
+      const catalog = supermuCatalogList.length > 0 ? supermuCatalogList : await getSupermuCatalog();
+      const res = autoMatchInventory(itemsToMatch, catalog, 0.40);
 
       if (res.matches.length === 0) {
-        alert("No se encontraron coincidencias directas para los ítems seleccionados. Puedes probar en 'Macro Todo' ajustando la sensibilidad.");
+        alert("No se encontraron coincidencias automáticas directas. Puedes buscar el producto en el buscador manual de Supermú o usar 'Macro Todo' para ajustar la sensibilidad.");
         return;
       }
 
       const newStaged = res.matches.map(m => m.proposed);
       setStagedItems(prev => {
-        const existingIds = new Set(prev.map(p => p._id));
-        const added = newStaged.filter(n => !existingIds.has(n._id));
-        return [...prev, ...added];
+        const existingIds = new Set(newStaged.map(n => n._id));
+        const kept = prev.filter(p => !existingIds.has(p._id));
+        return [...kept, ...newStaged];
       });
 
-      alert(`¡${res.matches.length} productos coincidieron con el Catálogo Supermú!\n\nSe cargaron en la Columna 3 (Revisión) listos para verificar y guardar.`);
+      alert(`¡${res.matches.length} de ${itemsToMatch.length} productos cruzados con éxito con el Catálogo Supermú!\n\nRevisa los cambios y diferencias en la Columna 3 (Revisión).`);
     } catch (err) {
       console.error(err);
-      alert("Error al auto-coincidir con Supermú: " + err.message);
+      alert("Error al cruzar con Supermú: " + err.message);
     } finally {
       setIsAutoMatchingSupermu(false);
     }
@@ -416,7 +436,11 @@ function GestionAlmacen() {
 
         // 5. Append to historial_update if there are changes
         if (Object.keys(cambios).length > 0) {
-          payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, "GestionAlmacen");
+          const isFromSupermu = !!item._matchedSupermu;
+          payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, {
+            origen: isFromSupermu ? "Catálogo Supermú (Referencia)" : "Gestión Almacén",
+            tipo: isFromSupermu ? "automático" : "manual"
+          });
           payload.FECHA_ACT = new Date().toISOString().split('T')[0];
         }
 
@@ -709,83 +733,96 @@ function GestionAlmacen() {
           </div>
         </div>
 
-        {/* Column 2: Actions Options */}
+        {/* Column 2: Actions & Reference Catalog Engine */}
         <div className="bg-white rounded-lg shadow-sm border p-2 flex flex-col h-full border-t-4 border-t-amber-400/80 gap-2">
-          <div className="flex justify-between items-center mb-1">
-            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Zap className="h-4 w-4 text-amber-500" />
-              Acciones
-            </h2>
-            <div className="flex items-center gap-2">
+          {/* Header & Mode Switcher */}
+          <div className="flex justify-between items-center pb-1.5 border-b border-slate-100 gap-1 flex-none">
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setCol2Mode("supermu")}
+                className={`px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 transition-all ${
+                  col2Mode === "supermu"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <ShoppingBag className="h-3 w-3" />
+                <span>Catálogo Referencia Supermú</span>
+                <span className="text-[9px] px-1 rounded bg-black/20 font-mono">2.6k</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCol2Mode("prompt")}
+                className={`px-2 py-1 rounded text-[11px] font-medium flex items-center gap-1 transition-all ${
+                  col2Mode === "prompt"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <Zap className="h-3 w-3" />
+                <span>IA & Prompt</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1">
               <Button
                 onClick={() => setShowReceiptModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-8 flex-1"
+                className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] h-7 px-2"
+                title="Escanear recibo físico con IA"
               >
-                <Receipt className="h-3 w-3 mr-2" />
-                Ingestión Recibo (IA)
+                <Receipt className="h-3 w-3 mr-1" />
+                Recibo
               </Button>
-              {showHelp && (
-                <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${helpText ? 'bg-amber-100 text-amber-700 border-amber-200 animate-pulse' : 'text-slate-300 border-transparent'}`}>
-                  {helpText || "Opciones de Prompt"}
-                </span>
-              )}
-              <button onClick={() => setShowHelp(!showHelp)} className="text-slate-400 hover:text-blue-500">
-                {showHelp ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              </button>
             </div>
           </div>
 
-          {selectedItems.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 space-y-3 p-4">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-xs">
-                <ShoppingBag className="h-6 w-6" />
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-slate-700 text-xs">Catálogo Directo Supermú</p>
-                <p className="text-[11px] text-slate-500 mt-1 max-w-[220px]">
-                  Busca y sincroniza automáticamente coincidencias de precios entre todo el almacén y los 2.661 productos de Supermú:
-                </p>
-              </div>
-              <Button
-                onClick={() => setShowSupermuMacroModal(true)}
-                className="bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-bold shadow-sm h-8 px-4 flex items-center gap-1.5"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Macro Match Todo el Almacén</span>
-              </Button>
-              <span className="text-[10px] text-slate-400">O selecciona ítems en la izquierda para acciones rápidas</span>
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col gap-3">
-              {/* Supermú Quick Match Box */}
-              <div className="bg-gradient-to-r from-rose-50/80 to-amber-50/60 border border-rose-200 rounded-lg p-2 flex flex-col gap-1.5">
+          {col2Mode === "supermu" ? (
+            /* ================= SUPERMÚ REFERENCE ENGINE ================= */
+            <div className="flex-1 flex flex-col gap-2 min-h-0">
+              {/* Primary Action Banner */}
+              <div className="bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 border border-rose-200 rounded-lg p-2 flex flex-col gap-1.5 shadow-xs flex-none">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wide">
-                      Catálogo Supermú (2.6k)
+                    <span className="text-[11px] font-extrabold text-rose-900 tracking-wide">
+                      Catálogo Único de Referencia (Supermú)
                     </span>
                   </div>
-                  <span className="text-[9px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.2 rounded">
-                    Directo & Local
+                  <span className="text-[9px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.5 rounded">
+                    {supermuCatalogList.length > 0 ? `${supermuCatalogList.length} prods` : "Cargando..."}
                   </span>
                 </div>
 
                 <div className="flex gap-1.5">
                   <Button
-                    onClick={() => handleAutoMatchWithSupermu(selectedItems)}
+                    onClick={() => {
+                      if (selectedItems.length > 0) {
+                        handleAutoMatchWithSupermu(selectedItems);
+                      } else {
+                        const toMatch = filteredSearchItems.length > 0 ? filteredSearchItems : Items;
+                        setSelectedItems(toMatch);
+                        handleAutoMatchWithSupermu(toMatch);
+                      }
+                    }}
                     disabled={isAutoMatchingSupermu}
-                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] h-7 font-bold shadow-xs flex items-center justify-center gap-1"
-                    title="Coincidir los items seleccionados directamente con el catálogo local de Supermú"
+                    className="flex-1 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs h-8 font-bold shadow-xs flex items-center justify-center gap-1.5"
+                    title="Cruzar automáticamente los ítems con el catálogo de Supermú y cargar cambios en Revisión"
                   >
-                    <Sparkles className="h-3 w-3" />
-                    <span>{isAutoMatchingSupermu ? "Buscando..." : `Auto-Match (${selectedItems.length})`}</span>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>
+                      {isAutoMatchingSupermu
+                        ? "Cruzando con Supermú..."
+                        : selectedItems.length > 0
+                        ? `⚡ Auto-Cruzar Selección (${selectedItems.length})`
+                        : `⚡ Seleccionar y Cruzar ${filteredSearchItems.length} de ${filterGroup === 'TODOS' ? 'Almacén' : filterGroup}`}
+                    </span>
                   </Button>
 
                   <Button
                     onClick={() => setShowSupermuMacroModal(true)}
                     variant="outline"
-                    className="border-rose-300 text-rose-700 hover:bg-rose-100/60 text-[11px] h-7 font-bold shadow-xs flex items-center justify-center gap-1"
+                    className="border-rose-300 text-rose-700 hover:bg-rose-100/60 text-xs h-8 font-bold px-2.5 flex items-center gap-1"
                     title="Abrir explorador masivo de Supermú para todo el almacén"
                   >
                     <SlidersHorizontal className="h-3 w-3" />
@@ -794,6 +831,270 @@ function GestionAlmacen() {
                 </div>
               </div>
 
+              {/* Items Selected: Interactive Candidate Inspector */}
+              {selectedItems.length > 0 ? (
+                <div className="flex-1 flex flex-col min-h-0 border rounded-lg bg-slate-50/50 p-2 gap-2">
+                  {/* Pills of selected items */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 custom-scrollbar flex-none">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex-none">Ítem:</span>
+                    {selectedItems.map((si) => {
+                      const isFocused = (focusedItemId || selectedItems[0]?._id) === si._id;
+                      const isStaged = stagedItems.some((st) => st._id === si._id);
+                      return (
+                        <button
+                          key={si._id}
+                          type="button"
+                          onClick={() => setFocusedItemId(si._id)}
+                          className={`text-[10px] px-2 py-0.5 rounded-full border transition-all whitespace-nowrap flex items-center gap-1 flex-none ${
+                            isFocused
+                              ? "bg-rose-600 text-white border-rose-600 font-bold shadow-xs"
+                              : isStaged
+                              ? "bg-green-50 text-green-700 border-green-300 font-medium"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span className="max-w-[110px] truncate">{si.Nombre_del_producto}</span>
+                          {isStaged && <span className="text-[8px] bg-green-200 text-green-800 rounded px-1">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Focused item details & candidate list */}
+                  {(() => {
+                    const focused = selectedItems.find((i) => i._id === (focusedItemId || selectedItems[0]?._id)) || selectedItems[0];
+                    if (!focused) return null;
+
+                    const candidates = supermuCatalogList.length > 0 ? findCandidatesForItem(focused, supermuCatalogList, 5, 0.35) : [];
+                    const stagedForFocused = stagedItems.find((s) => s._id === focused._id);
+
+                    return (
+                      <div className="flex-1 flex flex-col min-h-0 gap-1.5">
+                        {/* Focused item header info */}
+                        <div className="bg-white border rounded p-1.5 flex justify-between items-center text-xs shadow-2xs">
+                          <div className="min-w-0 flex-1 pr-2">
+                            <p className="font-bold text-slate-800 truncate text-[11px]">{focused.Nombre_del_producto}</p>
+                            <p className="text-[10px] text-slate-400">
+                              Costo actual: <span className="font-bold text-slate-600">${new Intl.NumberFormat("es-CO").format(focused.COSTO || 0)}</span> • {focused.UNIDADES || "und"}
+                            </p>
+                          </div>
+                          {stagedForFocused ? (
+                            <span className="text-[9px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 flex-none">
+                              ✓ En Revisión (${new Intl.NumberFormat("es-CO").format(stagedForFocused.COSTO)})
+                            </span>
+                          ) : (
+                            <span className="text-[9px] bg-amber-100 text-amber-700 font-semibold px-1.5 py-0.5 rounded flex-none">
+                              Sin vincular
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Supermú Live Search / Filter for this item */}
+                        <div className="relative flex-none">
+                          <Search className="h-3 w-3 absolute left-2 top-2 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="Buscar alternativa en Supermú..."
+                            value={supermuFilterQuery}
+                            onChange={(e) => setSupermuFilterQuery(e.target.value)}
+                            className="w-full text-[10px] pl-6 pr-6 py-1 bg-white border border-slate-200 rounded focus:outline-none focus:border-rose-400"
+                          />
+                          {supermuFilterQuery && (
+                            <button
+                              onClick={() => setSupermuFilterQuery("")}
+                              className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 text-xs"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Candidates list or Search results */}
+                        <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 custom-scrollbar pr-0.5">
+                          {(() => {
+                            let displayProducts = [];
+                            if (supermuFilterQuery.trim()) {
+                              const qWords = supermuFilterQuery.toLowerCase().split(" ").filter(Boolean);
+                              displayProducts = supermuCatalogList
+                                .filter((p) => {
+                                  const t = (p.title || "").toLowerCase();
+                                  return qWords.every((w) => t.includes(w));
+                                })
+                                .slice(0, 10)
+                                .map((p) => ({ product: p, score: 100 }));
+                            } else {
+                              displayProducts = candidates;
+                            }
+
+                            if (displayProducts.length === 0) {
+                              return (
+                                <div className="text-center py-6 text-slate-400 text-[11px]">
+                                  <p>No se encontraron coincidencias automáticas.</p>
+                                  <p className="text-[10px] text-slate-400 mt-1">
+                                    Escribe en el buscador de arriba para encontrar el producto en Supermú.
+                                  </p>
+                                </div>
+                              );
+                            }
+
+                            return displayProducts.map(({ product: cand, score }) => {
+                              const isMatchedWithThis = stagedForFocused?._matchedSupermu?.id === cand.id;
+                              const diff = cand.price - (Number(focused.COSTO) || 0);
+                              const pctDiff = (Number(focused.COSTO) || 0) > 0 ? ((diff / (Number(focused.COSTO) || 0)) * 100).toFixed(1) : 0;
+
+                              return (
+                                <div
+                                  key={cand.id || cand.sku}
+                                  className={`p-1.5 rounded border transition-all text-xs flex gap-2 items-center ${
+                                    isMatchedWithThis
+                                      ? "bg-rose-50 border-rose-300 ring-1 ring-rose-200"
+                                      : "bg-white hover:bg-slate-50 border-slate-200"
+                                  }`}
+                                >
+                                  {cand.image && (
+                                    <img
+                                      src={cand.image}
+                                      alt=""
+                                      className="w-10 h-10 rounded object-cover border border-slate-200 flex-none"
+                                      onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                  )}
+                                  <div className="flex-1 min-w-0 flex flex-col">
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-bold text-slate-800 truncate text-[11px]" title={cand.title}>
+                                        {cand.title}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                      <span className="font-bold text-rose-700 font-mono">
+                                        ${new Intl.NumberFormat("es-CO").format(cand.price)}
+                                      </span>
+                                      {cand.grams ? <span>• {cand.grams}g</span> : null}
+                                      {score ? (
+                                        <span className={`text-[8px] px-1 rounded font-bold ${score >= 70 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                          {score}% match
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                    {diff !== 0 && (
+                                      <span className={`text-[9px] font-mono ${diff > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                                        {diff > 0 ? `+${pctDiff}%` : `${pctDiff}%`} (${new Intl.NumberFormat("es-CO").format(diff)})
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-1 flex-none items-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApplySupermuToItem(focused, cand)}
+                                      className={`px-2 py-1 rounded text-[10px] font-bold transition-all flex items-center gap-0.5 ${
+                                        isMatchedWithThis
+                                          ? "bg-emerald-600 text-white"
+                                          : "bg-rose-600 hover:bg-rose-700 text-white shadow-2xs"
+                                      }`}
+                                    >
+                                      <Check className="h-3 w-3" />
+                                      <span>{isMatchedWithThis ? "Aplicado" : "Vincular"}</span>
+                                    </button>
+                                    {cand.url && (
+                                      <a
+                                        href={cand.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[9px] text-slate-400 hover:text-rose-600 flex items-center gap-0.5 underline"
+                                      >
+                                        <span>Ver</span>
+                                        <ExternalLink className="h-2.5 w-2.5" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                /* No items selected state */
+                <div className="flex-1 flex flex-col items-center justify-center p-3 text-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-xs">
+                    <ShoppingBag className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-xs">Catálogo Único de Referencia Activo</h3>
+                    <p className="text-[11px] text-slate-500 mt-1 max-w-[240px]">
+                      Selecciona productos a la izquierda o sincroniza directamente todo el grupo actual con los 2.661 productos de Supermú.
+                    </p>
+                  </div>
+
+                  <div className="w-full space-y-1.5 max-w-[240px]">
+                    <Button
+                      onClick={() => {
+                        const toMatch = filteredSearchItems.length > 0 ? filteredSearchItems : Items;
+                        setSelectedItems(toMatch);
+                        handleAutoMatchWithSupermu(toMatch);
+                      }}
+                      disabled={isAutoMatchingSupermu || filteredSearchItems.length === 0}
+                      className="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold h-8 shadow-xs"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Cruzar Grupo {filterGroup === 'TODOS' ? 'Completo' : filterGroup} ({filteredSearchItems.length})
+                    </Button>
+
+                    <Button
+                      onClick={() => setShowSupermuMacroModal(true)}
+                      variant="outline"
+                      className="w-full border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold h-8"
+                    >
+                      <SlidersHorizontal className="h-3 w-3 mr-1" />
+                      Macro Match Todo el Almacén
+                    </Button>
+                  </div>
+
+                  {/* Live Search Supermú Directly */}
+                  <div className="w-full border-t pt-2 flex flex-col min-h-0 text-left">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      Buscador Rápido Supermú (2.6k)
+                    </label>
+                    <div className="relative">
+                      <Search className="h-3 w-3 absolute left-2 top-2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Consultar precio de referencia (ej: carne, leche, queso)..."
+                        value={supermuFilterQuery}
+                        onChange={(e) => setSupermuFilterQuery(e.target.value)}
+                        className="w-full text-[10px] pl-6 pr-2 py-1 bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-rose-400"
+                      />
+                    </div>
+                    {supermuFilterQuery.trim() && (
+                      <div className="max-h-[140px] overflow-y-auto space-y-1 mt-1 p-1 bg-white border rounded custom-scrollbar">
+                        {supermuCatalogList
+                          .filter((p) => {
+                            const words = supermuFilterQuery.toLowerCase().split(" ").filter(Boolean);
+                            const title = (p.title || "").toLowerCase();
+                            return words.every((w) => title.includes(w));
+                          })
+                          .slice(0, 5)
+                          .map((p) => (
+                            <div key={p.id} className="text-[10px] p-1 border-b last:border-b-0 flex justify-between items-center">
+                              <span className="truncate flex-1 font-medium text-slate-700" title={p.title}>{p.title}</span>
+                              <span className="font-bold text-rose-600 font-mono ml-2">
+                                ${new Intl.NumberFormat("es-CO").format(p.price)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* ================= LEGACY PROMPT & JSON MODE ================= */
+            <div className="flex-1 flex flex-col gap-3 min-h-0">
               <div className="flex items-center gap-2">
                 <Button
                   onClick={handleCopyPrompt}
@@ -804,7 +1105,6 @@ function GestionAlmacen() {
                   <Zap className="h-3 w-3" />
                 </Button>
 
-                {/* Prompt Options Checkboxes */}
                 <div className="flex items-center gap-1">
                   <div className="flex items-center gap-1" onMouseEnter={() => setHelpText("Forzar proveedores seleccionados")} onMouseLeave={() => setHelpText("")}>
                     <div onClick={() => setForceSelectedProviders(!forceSelectedProviders)} className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${forceSelectedProviders ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}>
@@ -896,7 +1196,6 @@ function GestionAlmacen() {
             </div>
           )}
         </div>
-
         {/* Column 3: Confirmation, Bulk Edit & Save */}
         <div className="bg-white rounded-lg shadow-sm border p-2 flex flex-col h-full border-t-4 border-t-green-500/80">
           <div className="flex justify-between items-center mb-3">
@@ -1031,6 +1330,29 @@ function GestionAlmacen() {
                         </div>
                       </div>
                       <div className="p-2 space-y-1">
+                      {item._matchedSupermu && (
+                        <div className="bg-rose-50/70 border border-rose-200/70 rounded px-1.5 py-1 mb-1.5 flex items-center justify-between text-[10px]">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {item._matchedSupermu.image && (
+                              <img src={item._matchedSupermu.image} alt="" className="w-5 h-5 rounded object-cover border border-rose-200 flex-none" />
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-rose-900 truncate" title={item._matchedSupermu.title}>
+                                🏢 Ref Supermú: {item._matchedSupermu.title}
+                              </span>
+                              <span className="text-[9px] text-rose-700 font-mono">
+                                ${new Intl.NumberFormat("es-CO").format(item._matchedSupermu.price || 0)} {item._matchedSupermu.grams ? `• ${item._matchedSupermu.grams}g` : ""}
+                              </span>
+                            </div>
+                          </div>
+                          {item._matchedSupermu.url && (
+                            <a href={item._matchedSupermu.url} target="_blank" rel="noopener noreferrer" className="text-[9px] text-rose-600 hover:text-rose-800 underline flex items-center gap-0.5 flex-none ml-1">
+                              <span>Ver</span>
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          )}
+                        </div>
+                      )}
                         {isUpdated && (
                           <div className="flex flex-col gap-1 mt-1">
                             {changes.map((change) => {
