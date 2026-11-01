@@ -71,6 +71,7 @@ const ReviewProyectoCafe = lazy(() => import('./body/views/reviewProyectoCafe/Re
 const CalculadorRecetaHelados = lazy(() => import('./body/views/ventaCompra/CalculadorRecetaHelados'));
 const BajasManager = lazy(() => import('./body/views/bajas/BajasManager'));
 const PlantaProduccion = lazy(() => import('./body/views/planta/PlantaProduccion'));
+const BolsillosFinancieros = lazy(() => import('./body/views/ventaCompra/BolsillosFinancieros'));
 
 const ProyectoRadio = lazy(() => import('./components/ProyectoRadio'));
 const RadioManager = lazy(() => import('./components/RadioManager'));
@@ -214,6 +215,9 @@ function App() {
                   <Route path="/Bajas" element={<BajasManager />} />
                   <Route path="/planta" element={<PlantaProduccion />} />
                   <Route path="/Planta" element={<PlantaProduccion />} />
+                  <Route path="/bolsillos-financieros" element={<BolsillosFinancieros />} />
+                  <Route path="/BolsillosFinancieros" element={<BolsillosFinancieros />} />
+                  <Route path="/admin/bolsillos-financieros" element={<BolsillosFinancieros />} />
 
                   <Route path="*" element={<div className="text-center p-8 text-white text-2xl">Página no encontrada</div>} />
                 </Routes>

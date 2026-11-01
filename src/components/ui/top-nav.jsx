@@ -45,6 +45,8 @@ const pageTitles = {
   "bajas": { [ESP]: "Gestión de Bajas", [ENG]: "Withdrawals & Offboarding" },
   "PLANTA": { [ESP]: "Planta de Producción", [ENG]: "Production Plant" },
   "planta": { [ESP]: "Planta de Producción", [ENG]: "Production Plant" },
+  "BOLSILLOS-FINANCIEROS": { [ESP]: "Bolsillos Financieros", [ENG]: "Financial Pockets" },
+  "BOLSILLOSFINANCIEROS": { [ESP]: "Bolsillos Financieros", [ENG]: "Financial Pockets" },
 };
 
 // Componente reutilizable para los botones de íconos
@@ -134,7 +136,8 @@ export default function TopNav() {
     { label: "Modelo Proyecto", path: "/ModeloProyecto" },
     { label: "Cotizaciones", path: "/Cotizaciones" },
     { label: "Formulador Helados (Dubovik)", path: "/CalculadorRecetaHelados" },
-    { label: "Planta de Producción", path: "/Planta" }
+    { label: "Planta de Producción", path: "/Planta" },
+    { label: "Bolsillos Financieros", path: "/bolsillos-financieros" }
   ];
 
   return (

@@ -41,7 +41,8 @@ import {
   Mic,
   Check,
   LogOut,
-  Coffee
+  Coffee,
+  Wallet
 } from "lucide-react";
 import ComandaStaff from "../actividades/WorkE/ComandaStaff";
 import Notas from "../actividades/WorkE/Notas";
@@ -214,6 +215,7 @@ function StaffPortal() {
       { label: "Financiero", icon: Landmark, onClick: () => navigate("/productosFinanciero") },
       { label: "Almacén", icon: Store, onClick: () => navigate("/GestionAlmacen") },
       { label: "Mes", icon: Calendar, onClick: () => navigate("/MesResumen") },
+      { label: "Bolsillos", icon: Wallet, onClick: () => navigate("/bolsillos-financieros") },
       { label: "Consumo", icon: Coffee, onClick: () => navigate("/consumoAdmin") }
     ] : [])
   ] : [];
