@@ -26,7 +26,7 @@ export function extractYoutubeId(url) {
  * Retorna la URL del thumbnail de YouTube con la máxima compatibilidad (hqdefault / 0.jpg).
  */
 export function getYoutubeThumbnail(videoId) {
-  if (!videoId) return 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600';
+  if (!videoId || videoId === '21qNxnCS8MA') return 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600';
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
@@ -81,9 +81,9 @@ export const DEFAULT_YOUTUBE_PLAYLIST = [
     id: 'yt-default-2',
     title: 'Relaxing Jazz Piano Radio',
     artist: 'Cafe Music BGM',
-    youtubeId: '21qNxnCS8MA',
-    url: 'https://www.youtube.com/watch?v=21qNxnCS8MA',
-    cover: 'https://img.youtube.com/vi/21qNxnCS8MA/hqdefault.jpg',
+    youtubeId: 'kgx4WGK0oNU',
+    url: 'https://www.youtube.com/watch?v=kgx4WGK0oNU',
+    cover: 'https://img.youtube.com/vi/kgx4WGK0oNU/hqdefault.jpg',
     category: 'Jazz & Lounge',
     order_index: 1,
     is_favorite: false,

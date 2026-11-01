@@ -13,10 +13,12 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag, Sparkles } from "lucide-react";
 import HistorialItemModal from "./HistorialItemModal";
 import HistorialCambiosView from "./HistorialCambiosView";
 import SupermuSyncView from "./SupermuSyncView";
+import SupermuMacroModal from "./SupermuMacroModal";
+import { getSupermuCatalog, autoMatchInventory, buildSupermuPromptContext } from "../../../utils/supermuMatcher";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
 import ReceiptIngestionModal from "./ReceiptIngestionModal";
 
@@ -127,6 +129,9 @@ function GestionAlmacen() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [activeMainTab, setActiveMainTab] = useState("actualizador"); // "actualizador" | "historial" | "supermu"
+  const [supermuOnlySource, setSupermuOnlySource] = useState(false);
+  const [showSupermuMacroModal, setShowSupermuMacroModal] = useState(false);
+  const [isAutoMatchingSupermu, setIsAutoMatchingSupermu] = useState(false);
 
   const handleMacroToggle = (key) => {
     setActiveMacroFields(prev => prev.map(f => {
@@ -235,6 +240,12 @@ function GestionAlmacen() {
     if (selectedItems.length === 0) return;
     try {
       const selectedProviderObjects = proveedores.filter(p => selectedProviderIds.includes(p._id));
+      let supermuCandidatesText = "";
+      if (supermuOnlySource) {
+        const catalog = await getSupermuCatalog();
+        const matchRes = autoMatchInventory(selectedItems, catalog, 0.4);
+        supermuCandidatesText = buildSupermuPromptContext(matchRes.matches);
+      }
       // Generate prompt using the new centralized utility
       const promptText = generateInventoryUpdatePrompt(
         selectedItems,
@@ -242,16 +253,53 @@ function GestionAlmacen() {
         proveedores, // Pass all providers for lookup
         forceSelectedProviders,
         singleProviderReturn,
-        forceLowestUnitPrice // Pass the new flag
+        forceLowestUnitPrice, // Pass the new flag
+        supermuOnlySource,
+        supermuCandidatesText
       );
       await navigator.clipboard.writeText(promptText);
-      alert("Prompt copiado al portapapeles");
+      alert(
+        supermuOnlySource
+          ? "¡Prompt copiado al portapapeles con CATÁLOGO SUPERMÚ como ÚNICA FUENTE!"
+          : "Prompt copiado al portapapeles"
+      );
     } catch (err) {
       console.error("Failed to copy prompt:", err);
       alert("Error al copiar el prompt");
     }
   };
 
+
+  const handleAutoMatchWithSupermu = async (itemsToMatch = selectedItems) => {
+    if (!itemsToMatch || itemsToMatch.length === 0) {
+      alert("Por favor selecciona ítems en la Columna 1 antes de sincronizar.");
+      return;
+    }
+    setIsAutoMatchingSupermu(true);
+    try {
+      const catalog = await getSupermuCatalog();
+      const res = autoMatchInventory(itemsToMatch, catalog, 0.5);
+
+      if (res.matches.length === 0) {
+        alert("No se encontraron coincidencias directas para los ítems seleccionados. Puedes probar en 'Macro Todo' ajustando la sensibilidad.");
+        return;
+      }
+
+      const newStaged = res.matches.map(m => m.proposed);
+      setStagedItems(prev => {
+        const existingIds = new Set(prev.map(p => p._id));
+        const added = newStaged.filter(n => !existingIds.has(n._id));
+        return [...prev, ...added];
+      });
+
+      alert(`¡${res.matches.length} productos coincidieron con el Catálogo Supermú!\n\nSe cargaron en la Columna 3 (Revisión) listos para verificar y guardar.`);
+    } catch (err) {
+      console.error(err);
+      alert("Error al auto-coincidir con Supermú: " + err.message);
+    } finally {
+      setIsAutoMatchingSupermu(false);
+    }
+  };
 
   const handleProcessJson = () => {
     if (!jsonText) return;
@@ -481,7 +529,17 @@ function GestionAlmacen() {
       )}
 
       {activeMainTab === "supermu" && (
-        <SupermuSyncView items={Items} />
+        <SupermuSyncView
+          items={Items}
+          onSendToStaging={(newStaged) => {
+            setStagedItems((prev) => {
+              const existingIds = new Set(prev.map((p) => p._id));
+              const added = newStaged.filter((n) => !existingIds.has(n._id));
+              return [...prev, ...added];
+            });
+            setActiveMainTab("actualizador");
+          }}
+        />
       )}
 
       {activeMainTab === "actualizador" && (
@@ -674,12 +732,64 @@ function GestionAlmacen() {
           </div>
 
           {selectedItems.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-300 space-y-2">
-              <Settings className="h-12 w-12 opacity-20" />
-              <p className="text-center px-4 text-[11px]">Selecciona items en la izquierda para ver opciones disponibles</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 space-y-3 p-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-xs">
+                <ShoppingBag className="h-6 w-6" />
+              </div>
+              <div className="text-center">
+                <p className="font-bold text-slate-700 text-xs">Catálogo Directo Supermú</p>
+                <p className="text-[11px] text-slate-500 mt-1 max-w-[220px]">
+                  Busca y sincroniza automáticamente coincidencias de precios entre todo el almacén y los 2.661 productos de Supermú:
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowSupermuMacroModal(true)}
+                className="bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-bold shadow-sm h-8 px-4 flex items-center gap-1.5"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Macro Match Todo el Almacén</span>
+              </Button>
+              <span className="text-[10px] text-slate-400">O selecciona ítems en la izquierda para acciones rápidas</span>
             </div>
           ) : (
             <div className="flex-1 flex flex-col gap-3">
+              {/* Supermú Quick Match Box */}
+              <div className="bg-gradient-to-r from-rose-50/80 to-amber-50/60 border border-rose-200 rounded-lg p-2 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wide">
+                      Catálogo Supermú (2.6k)
+                    </span>
+                  </div>
+                  <span className="text-[9px] bg-rose-100 text-rose-700 font-bold px-1.5 py-0.2 rounded">
+                    Directo & Local
+                  </span>
+                </div>
+
+                <div className="flex gap-1.5">
+                  <Button
+                    onClick={() => handleAutoMatchWithSupermu(selectedItems)}
+                    disabled={isAutoMatchingSupermu}
+                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] h-7 font-bold shadow-xs flex items-center justify-center gap-1"
+                    title="Coincidir los items seleccionados directamente con el catálogo local de Supermú"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    <span>{isAutoMatchingSupermu ? "Buscando..." : `Auto-Match (${selectedItems.length})`}</span>
+                  </Button>
+
+                  <Button
+                    onClick={() => setShowSupermuMacroModal(true)}
+                    variant="outline"
+                    className="border-rose-300 text-rose-700 hover:bg-rose-100/60 text-[11px] h-7 font-bold shadow-xs flex items-center justify-center gap-1"
+                    title="Abrir explorador masivo de Supermú para todo el almacén"
+                  >
+                    <SlidersHorizontal className="h-3 w-3" />
+                    <span>Macro Todo</span>
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Button
                   onClick={handleCopyPrompt}
@@ -705,6 +815,12 @@ function GestionAlmacen() {
                   <div className="flex items-center gap-1" onMouseEnter={() => setHelpText("Buscar precio unitario MÁS BAJO")} onMouseLeave={() => setHelpText("")}>
                     <div onClick={() => setForceLowestUnitPrice(!forceLowestUnitPrice)} className={`cursor-pointer h-8 w-8 flex items-center justify-center rounded border transition-colors ${forceLowestUnitPrice ? 'bg-green-100 border-green-300 text-green-600' : 'bg-white border-blue-200 text-slate-300 hover:border-blue-300'}`}>
                       <span className="text-[10px] font-bold">$</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1" onMouseEnter={() => setHelpText("Catálogo Supermú como ÚNICA FUENTE de verdad")} onMouseLeave={() => setHelpText("")}>
+                    <div onClick={() => setSupermuOnlySource(!supermuOnlySource)} className={`cursor-pointer h-8 px-1.5 flex items-center justify-center rounded border transition-colors gap-1 ${supermuOnlySource ? 'bg-rose-100 border-rose-300 text-rose-700 font-bold' : 'bg-white border-blue-200 text-slate-300 hover:border-rose-200 hover:text-rose-500'}`} title="Usar Catálogo Supermú como ÚNICA fuente en el prompt">
+                      <ShoppingBag className="h-3.5 w-3.5" />
+                      {supermuOnlySource && <span className="text-[9px] font-extrabold uppercase">Única Fuente</span>}
                     </div>
                   </div>
                 </div>
@@ -987,6 +1103,21 @@ function GestionAlmacen() {
         <HistorialItemModal
           item={selectedHistoryItem}
           onClose={() => setSelectedHistoryItem(null)}
+        />
+      )}
+      {showSupermuMacroModal && (
+        <SupermuMacroModal
+          isOpen={showSupermuMacroModal}
+          onClose={() => setShowSupermuMacroModal(false)}
+          inventoryItems={Items}
+          onSendToStaging={(newStaged) => {
+            setStagedItems((prev) => {
+              const existingIds = new Set(prev.map((p) => p._id));
+              const added = newStaged.filter((n) => !existingIds.has(n._id));
+              return [...prev, ...added];
+            });
+            setShowSupermuMacroModal(false);
+          }}
         />
       )}
     </PageLayout>

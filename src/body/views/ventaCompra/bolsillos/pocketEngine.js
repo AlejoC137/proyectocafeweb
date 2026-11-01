@@ -1,5 +1,5 @@
-import { trimRecepie } from '../../../../redux/actions/recipeActions';
-import { CATEGORIES, CATEGORIES_t, SUB_CATEGORIES } from '../../../../redux/actions-types';
+import { trimRecepie } from '../../../redux/actions/recipeActions';
+import { CATEGORIES, CATEGORIES_t, SUB_CATEGORIES } from '../../../redux/actions-types';
 
 /**
  * Normaliza nombres de unidades a estándares comunes (un, gr, ml, kg, L)
@@ -67,12 +67,9 @@ export function parseFlexibleDate(rawDate, rawPagoHora = null) {
   if (datePart.includes('/')) {
     const parts = datePart.split('/').map(p => parseInt(p, 10));
     if (parts.length === 3 && !parts.some(isNaN)) {
-      // parts[0] = mes o dia, parts[1] = dia o mes, parts[2] = año
       let year = parts[2];
       if (year < 100) year += 2000;
       
-      // En este sistema histórico: primer dígito suele ser mes (ej: 2/5/2025 es 5 de Feb)
-      // pero si el primer dígito es > 12, es día.
       let month = parts[0];
       let day = parts[1];
       if (parts[0] > 12 && parts[1] <= 12) {
@@ -99,25 +96,13 @@ export function parseFlexibleDate(rawDate, rawPagoHora = null) {
 }
 
 /**
- * Determina si una venta pertenece a una fecha o mes específico
+ * Determina si una fecha arbitraria pertenece a un período (Día, Mes o Rango)
  */
-export function isSaleInPeriod(sale, periodType, { targetDate, targetMonth, targetYear, customStartDate, customEndDate }) {
-  if (!sale) return false;
-
-  // Obtener hora de Pago_Info si existe
-  let pagoHora = null;
-  if (sale.Pago_Info) {
-    try {
-      const pInfo = typeof sale.Pago_Info === 'string' ? JSON.parse(sale.Pago_Info) : sale.Pago_Info;
-      pagoHora = pInfo?.hora || null;
-    } catch (e) {}
-  }
-
-  const vDate = parseFlexibleDate(sale.Date || sale.created_at || sale.date, pagoHora);
+export function isDateInPeriod(rawDate, rawHora, periodType, { targetDate, targetMonth, targetYear, customStartDate, customEndDate }) {
+  const vDate = parseFlexibleDate(rawDate, rawHora);
   if (!vDate) return false;
 
   if (periodType === 'day') {
-    // targetDate en formato 'YYYY-MM-DD'
     if (!targetDate) return false;
     const [tYear, tMonth, tDay] = targetDate.split('-').map(Number);
     return vDate.getFullYear() === tYear &&
@@ -137,6 +122,21 @@ export function isSaleInPeriod(sale, periodType, { targetDate, targetMonth, targ
   }
 
   return false;
+}
+
+/**
+ * Determina si una venta pertenece a una fecha o mes específico
+ */
+export function isSaleInPeriod(sale, periodType, params) {
+  if (!sale) return false;
+  let pagoHora = null;
+  if (sale.Pago_Info) {
+    try {
+      const pInfo = typeof sale.Pago_Info === 'string' ? JSON.parse(sale.Pago_Info) : sale.Pago_Info;
+      pagoHora = pInfo?.hora || null;
+    } catch (e) {}
+  }
+  return isDateInPeriod(sale.Date || sale.created_at || sale.date, pagoHora, periodType, params);
 }
 
 /**
@@ -256,9 +256,13 @@ export function mapGroupToPocketKey(rawGrupo, rawSubGrupo) {
 
 /**
  * Motor central de cálculo de Bolsillos Financieros y Re-Stock
+ * Incorpora: Ventas + Consumo Interno (Staff) + Bajas y Mermas
  */
 export function calculateFinancialPockets({
   ventas = [],
+  consumoStaff = [],
+  bajas = [],
+  allStaff = [],
   allMenu = [],
   allRecetasMenu = [],
   allRecetasProduccion = [],
@@ -296,6 +300,11 @@ export function calculateFinancialPockets({
     if (p?.Nombre_del_producto) produccionMapByName[p.Nombre_del_producto.trim().toLowerCase()] = p;
   });
 
+  const staffMapById = {};
+  allStaff.forEach(s => {
+    if (s?._id) staffMapById[s._id] = s;
+  });
+
   const combinedCatalog = [...allItems, ...allProduccion];
 
   // Helper para buscar receta
@@ -313,6 +322,72 @@ export function calculateFinancialPockets({
     return null;
   };
 
+  // Helper unificado para resolver costo e ingredientes de cualquier producto
+  const resolveProductCost = (productId, recipeId, productName) => {
+    const normName = (productName || '').trim().toLowerCase();
+    const recipeData = findRecipe(recipeId, productId, normName);
+    const menuMaster = (productId && menuMapById[productId]) || menuMapByName[normName] || null;
+
+    let unitCost = 0;
+    let ingredients = [];
+    let portions = 1;
+    let hasCostData = false;
+
+    if (recipeData) {
+      if (recipeData.rendimiento) {
+        try {
+          const rend = typeof recipeData.rendimiento === 'string' ? JSON.parse(recipeData.rendimiento) : recipeData.rendimiento;
+          const rCant = parseFloat(rend?.cantidad || rend?.cant || 0);
+          if (rCant > 0) portions = rCant;
+        } catch (e) {}
+      }
+
+      ingredients = trimRecepie(combinedCatalog, recipeData);
+
+      if (ingredients && ingredients.length > 0) {
+        let sumIngredientsCost = 0;
+        ingredients.forEach(ing => {
+          const ingQty = parseFloat(ing.cuantity || 0);
+          const ingMaster = itemsMapById[ing.item_Id] || produccionMapById[ing.item_Id] || itemsMapByName[ing.name?.toLowerCase()] || produccionMapByName[ing.name?.toLowerCase()];
+          const rawPrice = ing.precioUnitario || parseFloat(ingMaster?.precioUnitario || ingMaster?.costoPromedio || 0);
+          const normalizedPrice = getNormalizedUnitPrice(ingMaster, ing.units, rawPrice);
+          sumIngredientsCost += (ingQty * normalizedPrice);
+        });
+        unitCost = sumIngredientsCost / portions;
+        hasCostData = true;
+      } else if (recipeData.costo) {
+        try {
+          const cData = typeof recipeData.costo === 'string' ? JSON.parse(recipeData.costo) : recipeData.costo;
+          if (typeof cData === 'number') {
+            unitCost = cData;
+          } else if (cData?.vCMP || cData?.COSTO) {
+            unitCost = parseFloat(cData.vCMP || cData.COSTO || 0);
+          }
+          if (unitCost > 0) hasCostData = true;
+        } catch (e) {}
+      }
+    }
+
+    if (unitCost === 0) {
+      const directItem = (productId && (itemsMapById[productId] || produccionMapById[productId])) ||
+                         itemsMapByName[normName] ||
+                         produccionMapByName[normName];
+      if (directItem) {
+        unitCost = parseFloat(directItem.precioUnitario || directItem.costoPromedio || 0);
+        if (unitCost > 0) hasCostData = true;
+      }
+    }
+
+    return {
+      unitCost: Math.round(unitCost),
+      hasCostData,
+      recipeData,
+      ingredients,
+      portions,
+      menuMaster
+    };
+  };
+
   // 1. Acumuladores de Ventas Globales y Métodos de Pago
   let totalIngresoVentas = 0;
   let totalTip = 0;
@@ -326,7 +401,59 @@ export function calculateFinancialPockets({
   };
 
   const productosVendidosMap = {};
+  const insumosRestockMap = {};
 
+  // Función auxiliar para registrar insumos en la lista de compras de re-stock
+  const recordInsumoRestock = ({ insumoName, insumoId, recipeUnit, portionRatio, quantity, sourceCategory, parentProductName, originType }) => {
+    if (!insumoName) return;
+    const insumoKey = insumoName.trim().toLowerCase();
+    const ingMaster = itemsMapById[insumoId] || produccionMapById[insumoId] || itemsMapByName[insumoKey] || produccionMapByName[insumoKey];
+    const rawPrice = parseFloat(ingMaster?.precioUnitario || ingMaster?.costoPromedio || 0);
+    const normalizedPrice = getNormalizedUnitPrice(ingMaster, recipeUnit, rawPrice);
+
+    const insumoQtyNeeded = portionRatio * quantity;
+    const insumoCostNeeded = insumoQtyNeeded * normalizedPrice;
+    const insumoGrupo = ingMaster?.GRUPO || sourceCategory || 'OTROS';
+    const insumoUnidad = normalizeUnit(recipeUnit || ingMaster?.UNIDADES || ingMaster?.metric || 'un');
+
+    if (!insumosRestockMap[insumoKey]) {
+      insumosRestockMap[insumoKey] = {
+        id: insumoId || insumoKey,
+        nombre: insumoName,
+        grupo: insumoGrupo,
+        unidad: insumoUnidad,
+        precioUnitario: normalizedPrice,
+        cantidadAReponer: 0,
+        cantidadVentas: 0,
+        cantidadConsumo: 0,
+        cantidadBajas: 0,
+        dineroRestock: 0,
+        dineroVentas: 0,
+        dineroConsumo: 0,
+        dineroBajas: 0,
+        productosAsociados: new Set(),
+        origenes: new Set()
+      };
+    }
+
+    insumosRestockMap[insumoKey].cantidadAReponer += insumoQtyNeeded;
+    insumosRestockMap[insumoKey].dineroRestock += insumoCostNeeded;
+    insumosRestockMap[insumoKey].productosAsociados.add(parentProductName);
+    insumosRestockMap[insumoKey].origenes.add(originType);
+
+    if (originType === 'Ventas') {
+      insumosRestockMap[insumoKey].cantidadVentas += insumoQtyNeeded;
+      insumosRestockMap[insumoKey].dineroVentas += insumoCostNeeded;
+    } else if (originType === 'Consumo Interno') {
+      insumosRestockMap[insumoKey].cantidadConsumo += insumoQtyNeeded;
+      insumosRestockMap[insumoKey].dineroConsumo += insumoCostNeeded;
+    } else if (originType === 'Bajas') {
+      insumosRestockMap[insumoKey].cantidadBajas += insumoQtyNeeded;
+      insumosRestockMap[insumoKey].dineroBajas += insumoCostNeeded;
+    }
+  };
+
+  // PROCESAR VENTAS
   ventas.forEach(venta => {
     const isPaid = venta.Pagado === true || String(venta.Pagado).toLowerCase() === 'true';
     if (!isPaid) return;
@@ -349,8 +476,6 @@ export function calculateFinancialPockets({
           metodosPago.Tarjeta += ingreso;
         } else if (metodo.toLowerCase().includes('transferencia')) {
           metodosPago.Transferencia += ingreso;
-        } else if (metodo) {
-          metodosPago.Otros += ingreso;
         } else {
           metodosPago.Otros += ingreso;
         }
@@ -361,7 +486,7 @@ export function calculateFinancialPockets({
       metodosPago.Otros += ingreso;
     }
 
-    // Procesar Productos de la venta
+    // Productos de la venta
     let prods = [];
     if (venta.Productos) {
       try {
@@ -383,9 +508,7 @@ export function calculateFinancialPockets({
       const normName = name.trim();
       const key = normName.toLowerCase();
 
-      // Buscar maestro de menú
       const menuMaster = (p._id && menuMapById[p._id]) || (p.id && menuMapById[p.id]) || menuMapByName[key];
-
       let price = parseFloat(p.price || p.valor || p.precio || 0);
       if (price === 0 && menuMaster) {
         price = parseFloat(menuMaster.Precio || 0);
@@ -419,180 +542,278 @@ export function calculateFinancialPockets({
     });
   });
 
-  // 2. Resolver Recetas, Costos de Producción y Re-stock de Insumos
-  const insumosRestockMap = {};
-
+  // Calcular costos y registrar insumos de ventas
+  let totalRestockVentas = 0;
   const productosVendidosList = Object.values(productosVendidosMap).map(item => {
-    const recipeData = findRecipe(item.recipeId, item.id, item.nombre);
+    const { unitCost, hasCostData, recipeData, ingredients, portions } = resolveProductCost(item.id, item.recipeId, item.nombre);
     item.recipeData = recipeData;
-
-    let unitCost = 0;
-    let ingredients = [];
-    let portions = 1;
-
-    if (recipeData) {
-      // Parsear porciones o rendimiento
-      if (recipeData.rendimiento) {
-        try {
-          const rend = typeof recipeData.rendimiento === 'string' ? JSON.parse(recipeData.rendimiento) : recipeData.rendimiento;
-          const rCant = parseFloat(rend?.cantidad || rend?.cant || 0);
-          if (rCant > 0) portions = rCant;
-        } catch (e) {}
-      }
-
-      // Trimear receta
-      ingredients = trimRecepie(combinedCatalog, recipeData);
-
-      // Calcular costo sumando ingredientes
-      if (ingredients && ingredients.length > 0) {
-        let sumIngredientsCost = 0;
-        ingredients.forEach(ing => {
-          const ingQty = parseFloat(ing.cuantity || 0);
-          const ingMaster = itemsMapById[ing.item_Id] || produccionMapById[ing.item_Id] || itemsMapByName[ing.name?.toLowerCase()] || produccionMapByName[ing.name?.toLowerCase()];
-          const rawPrice = ing.precioUnitario || parseFloat(ingMaster?.precioUnitario || ingMaster?.costoPromedio || 0);
-          const normalizedPrice = getNormalizedUnitPrice(ingMaster, ing.units, rawPrice);
-
-          const subtotalCost = ingQty * normalizedPrice;
-          sumIngredientsCost += subtotalCost;
-
-          // Registrar en la lista global de insumos de re-stock
-          const insumoName = ing.name || 'Insumo Sin Nombre';
-          const insumoKey = insumoName.trim().toLowerCase();
-          const insumoQtyNeeded = (ingQty / portions) * item.cantidadTotal;
-          const insumoCostNeeded = insumoQtyNeeded * normalizedPrice;
-
-          const insumoGrupo = ingMaster?.GRUPO || item.grupo;
-
-          if (!insumosRestockMap[insumoKey]) {
-            insumosRestockMap[insumoKey] = {
-              id: ing.item_Id || insumoKey,
-              nombre: insumoName,
-              grupo: insumoGrupo,
-              unidad: normalizeUnit(ing.units || ingMaster?.UNIDADES || ingMaster?.metric || 'un'),
-              precioUnitario: normalizedPrice,
-              cantidadAReponer: 0,
-              dineroRestock: 0,
-              productosAsociados: new Set()
-            };
-          }
-          insumosRestockMap[insumoKey].cantidadAReponer += insumoQtyNeeded;
-          insumosRestockMap[insumoKey].dineroRestock += insumoCostNeeded;
-          insumosRestockMap[insumoKey].productosAsociados.add(item.nombre);
-        });
-
-        unitCost = sumIngredientsCost / portions;
-        item.hasCostData = true;
-      } else if (recipeData.costo) {
-        // Fallback a costo guardado en la receta
-        try {
-          const cData = typeof recipeData.costo === 'string' ? JSON.parse(recipeData.costo) : recipeData.costo;
-          if (typeof cData === 'number') {
-            unitCost = cData;
-          } else if (cData?.vCMP || cData?.COSTO) {
-            unitCost = parseFloat(cData.vCMP || cData.COSTO || 0);
-          }
-          if (unitCost > 0) item.hasCostData = true;
-        } catch (e) {}
-      }
-    }
-
-    // Si aún no tiene costo (ej: cerveza, gaseosa o producto directo sin receta)
-    // Buscamos directamente en ItemsAlmacen o ProduccionInterna
-    if (unitCost === 0) {
-      const directItem = (item.id && (itemsMapById[item.id] || produccionMapById[item.id])) ||
-                         itemsMapByName[item.nombre.toLowerCase()] ||
-                         produccionMapByName[item.nombre.toLowerCase()];
-      if (directItem) {
-        unitCost = parseFloat(directItem.precioUnitario || directItem.costoPromedio || 0);
-        if (unitCost > 0) {
-          item.hasCostData = true;
-          // Registrar como insumo directo
-          const directKey = item.nombre.toLowerCase();
-          if (!insumosRestockMap[directKey]) {
-            insumosRestockMap[directKey] = {
-              id: directItem._id || directKey,
-              nombre: item.nombre,
-              grupo: directItem.GRUPO || item.grupo,
-              unidad: normalizeUnit(directItem.UNIDADES || directItem.metric || 'un'),
-              precioUnitario: unitCost,
-              cantidadAReponer: 0,
-              dineroRestock: 0,
-              productosAsociados: new Set([item.nombre])
-            };
-          }
-          insumosRestockMap[directKey].cantidadAReponer += item.cantidadTotal;
-          insumosRestockMap[directKey].dineroRestock += (item.cantidadTotal * unitCost);
-        }
-      }
-    }
-
-    item.costoProduccionUnitario = Math.round(unitCost);
+    item.costoProduccionUnitario = unitCost;
+    item.hasCostData = hasCostData;
+    item.ingredientesDetalle = ingredients;
     item.costoTotalRestock = Math.round(unitCost * item.cantidadTotal);
     item.utilidad = item.totalIngreso - item.costoTotalRestock;
     item.margenPct = item.totalIngreso > 0 ? (item.utilidad / item.totalIngreso) * 100 : 0;
-    item.ingredientesDetalle = ingredients;
+
+    totalRestockVentas += item.costoTotalRestock;
+
+    // Registrar insumos consumidos en ventas
+    if (ingredients && ingredients.length > 0) {
+      ingredients.forEach(ing => {
+        const ratio = parseFloat(ing.cuantity || 0) / portions;
+        recordInsumoRestock({
+          insumoName: ing.name,
+          insumoId: ing.item_Id,
+          recipeUnit: ing.units,
+          portionRatio: ratio,
+          quantity: item.cantidadTotal,
+          sourceCategory: item.grupo,
+          parentProductName: item.nombre,
+          originType: 'Ventas'
+        });
+      });
+    } else if (unitCost > 0) {
+      // Direct product
+      recordInsumoRestock({
+        insumoName: item.nombre,
+        insumoId: item.id,
+        recipeUnit: 'un',
+        portionRatio: 1,
+        quantity: item.cantidadTotal,
+        sourceCategory: item.grupo,
+        parentProductName: item.nombre,
+        originType: 'Ventas'
+      });
+    }
 
     return item;
   });
-
-  // Ordenar productos vendidos por mayor total recaudado
   productosVendidosList.sort((a, b) => b.totalIngreso - a.totalIngreso);
 
-  // 3. Agrupar en Bolsillos Financieros
+  // 2. PROCESAR CONSUMO INTERNO (CONSUMO STAFF)
+  let totalConsumoInterno = 0;
+  const consumoInternoList = [];
+
+  consumoStaff.forEach(c => {
+    let prods = [];
+    if (c.Productos) {
+      try {
+        prods = typeof c.Productos === 'string' ? JSON.parse(c.Productos) : c.Productos;
+      } catch (e) {
+        prods = [];
+      }
+    }
+    if (!Array.isArray(prods)) return;
+
+    const staffMember = staffMapById[c.staff_id] || null;
+    const staffNombre = staffMember ? `${staffMember.Nombre || ''} ${staffMember.Apellido || ''}`.trim() : 'Staff';
+
+    prods.forEach(p => {
+      const name = p.NombreES || p.nombre || p.Nombre_del_producto;
+      if (!name) return;
+      const qty = parseFloat(p.quantity || p.cantidad || 0);
+      if (qty <= 0) return;
+
+      const normName = name.trim();
+      const menuMaster = menuMapByName[normName.toLowerCase()] || (p._id && menuMapById[p._id]);
+      const recipeId = p.Receta || menuMaster?.Receta || 'N/A';
+      const grupo = menuMaster?.GRUPO || p.GRUPO || 'OTROS';
+      const subGrupo = menuMaster?.SUB_GRUPO || p.SUB_GRUPO || '';
+
+      const { unitCost, ingredients, portions } = resolveProductCost(p._id || p.id, recipeId, normName);
+      const costoTotal = Math.round(unitCost * qty);
+
+      totalConsumoInterno += costoTotal;
+
+      // Registrar insumos de consumo interno
+      if (ingredients && ingredients.length > 0) {
+        ingredients.forEach(ing => {
+          const ratio = parseFloat(ing.cuantity || 0) / portions;
+          recordInsumoRestock({
+            insumoName: ing.name,
+            insumoId: ing.item_Id,
+            recipeUnit: ing.units,
+            portionRatio: ratio,
+            quantity: qty,
+            sourceCategory: grupo,
+            parentProductName: `${normName} (Consumo Interno)`,
+            originType: 'Consumo Interno'
+          });
+        });
+      } else if (unitCost > 0) {
+        recordInsumoRestock({
+          insumoName: normName,
+          insumoId: p._id,
+          recipeUnit: 'un',
+          portionRatio: 1,
+          quantity: qty,
+          sourceCategory: grupo,
+          parentProductName: `${normName} (Consumo Interno)`,
+          originType: 'Consumo Interno'
+        });
+      }
+
+      consumoInternoList.push({
+        id: c._id || Math.random(),
+        date: c.Date || c.created_at,
+        staffId: c.staff_id,
+        staffNombre: staffNombre,
+        productoNombre: normName,
+        cantidad: qty,
+        unitCost: unitCost,
+        costoTotal: costoTotal,
+        grupo: grupo,
+        subGrupo: subGrupo,
+        notas: c.Notas || ''
+      });
+    });
+  });
+  consumoInternoList.sort((a, b) => b.costoTotal - a.costoTotal);
+
+  // 3. PROCESAR BAJAS Y MERMAS (DETERIORO, DAÑO, VENCIMIENTO, MERMA)
+  let totalBajas = 0;
+  const bajasList = [];
+
+  bajas.forEach(b => {
+    const costoPerdida = parseFloat(b.costo_perdida || 0);
+    const cantMermada = parseFloat(b.cantidad_mermada || b.peso_bruto || 0);
+    const nombreItem = b.item_nombre || 'Item Mermado / Baja';
+    const tipoBaja = b.tipo_baja || 'Baja / Merma';
+    const proceso = b.proceso_origen || b.motivo || 'Deterioro / Merma';
+
+    totalBajas += Math.round(costoPerdida);
+
+    // Identificar grupo / bolsillo
+    let grupo = 'OTROS';
+    if (b.item_id && itemsMapById[b.item_id]) {
+      grupo = itemsMapById[b.item_id].GRUPO || 'OTROS';
+    } else if (b.produccion_id && produccionMapById[b.produccion_id]) {
+      grupo = produccionMapById[b.produccion_id].GRUPO || 'OTROS';
+    } else if (b.menu_id && menuMapById[b.menu_id]) {
+      grupo = menuMapById[b.menu_id].GRUPO || 'OTROS';
+    } else {
+      const norm = nombreItem.toLowerCase();
+      if (itemsMapByName[norm]) grupo = itemsMapByName[norm].GRUPO || 'OTROS';
+      else if (menuMapByName[norm]) grupo = menuMapByName[norm].GRUPO || 'OTROS';
+    }
+
+    // Registrar en insumos si tiene costo o cantidad
+    if (costoPerdida > 0 || cantMermada > 0) {
+      recordInsumoRestock({
+        insumoName: nombreItem,
+        insumoId: b.item_id || b.produccion_id || b.id,
+        recipeUnit: b.unidad_medida || 'un',
+        portionRatio: 1,
+        quantity: cantMermada || 1,
+        sourceCategory: grupo,
+        parentProductName: `${nombreItem} (${tipoBaja})`,
+        originType: 'Bajas'
+      });
+    }
+
+    bajasList.push({
+      id: b.id || Math.random(),
+      fecha: b.fecha_baja || b.created_at,
+      nombre: nombreItem,
+      tipoBaja: tipoBaja,
+      motivo: proceso,
+      cantidad: cantMermada,
+      unidad: normalizeUnit(b.unidad_medida || 'un'),
+      costoPerdida: Math.round(costoPerdida),
+      grupo: grupo,
+      registradoPor: b.registrado_por || ''
+    });
+  });
+  bajasList.sort((a, b) => b.costoPerdida - a.costoPerdida);
+
+  // 4. AGRUPAR EN BOLSILLOS FINANCIEROS (VENTAS + CONSUMO + BAJAS)
   const pocketsMap = {};
   Object.keys(POCKET_CONFIG).forEach(key => {
     pocketsMap[key] = {
       ...POCKET_CONFIG[key],
       totalVentas: 0,
+      totalRestockVentas: 0,
+      totalConsumoInterno: 0,
+      totalBajas: 0,
       totalRestock: 0,
       totalUtilidad: 0,
       totalItemsVendidos: 0,
-      productos: []
+      productos: [],
+      consumos: [],
+      bajasItems: []
     };
   });
 
-  let totalRestockGlobal = 0;
-
+  // Sumar ventas a bolsillos
   productosVendidosList.forEach(prod => {
     const pocketKey = mapGroupToPocketKey(prod.grupo, prod.subGrupo);
     const targetPocket = pocketsMap[pocketKey] || pocketsMap.OTROS;
 
     targetPocket.totalVentas += prod.totalIngreso;
+    targetPocket.totalRestockVentas += prod.costoTotalRestock;
     targetPocket.totalRestock += prod.costoTotalRestock;
     targetPocket.totalUtilidad += prod.utilidad;
     targetPocket.totalItemsVendidos += prod.cantidadTotal;
     targetPocket.productos.push(prod);
-
-    totalRestockGlobal += prod.costoTotalRestock;
   });
 
-  // Convertir pockets a lista activa (solo los que tengan ventas o re-stock)
-  const activePocketsList = Object.values(pocketsMap)
-    .filter(p => p.totalVentas > 0 || p.totalRestock > 0)
-    .map(p => ({
-      ...p,
-      margenPct: p.totalVentas > 0 ? (p.totalUtilidad / p.totalVentas) * 100 : 0,
-      pctDelTotalVentas: totalIngresoVentas > 0 ? (p.totalVentas / totalIngresoVentas) * 100 : 0,
-      pctDelTotalRestock: totalRestockGlobal > 0 ? (p.totalRestock / totalRestockGlobal) * 100 : 0
-    }))
-    .sort((a, b) => b.totalRestock - a.totalRestock);
+  // Sumar consumo interno a bolsillos
+  consumoInternoList.forEach(cons => {
+    const pocketKey = mapGroupToPocketKey(cons.grupo, cons.subGrupo);
+    const targetPocket = pocketsMap[pocketKey] || pocketsMap.OTROS;
 
-  // Lista de Insumos formateada
-  const insumosRestockList = Object.values(insumosRestockMap).map(ins => ({
-    ...ins,
-    dineroRestock: Math.round(ins.dineroRestock),
-    cantidadAReponer: Number(ins.cantidadAReponer.toFixed(2)),
-    productosAsociados: Array.from(ins.productosAsociados)
-  })).sort((a, b) => b.dineroRestock - a.dineroRestock);
+    targetPocket.totalConsumoInterno += cons.costoTotal;
+    targetPocket.totalRestock += cons.costoTotal;
+    targetPocket.consumos.push(cons);
+  });
 
-  // Ganancia Libre / Margen Operativo Libre (Ventas - ReStock - Propinas)
+  // Sumar bajas a bolsillos
+  bajasList.forEach(baj => {
+    const pocketKey = mapGroupToPocketKey(baj.grupo, '');
+    const targetPocket = pocketsMap[pocketKey] || pocketsMap.OTROS;
+
+    targetPocket.totalBajas += baj.costoPerdida;
+    targetPocket.totalRestock += baj.costoPerdida;
+    targetPocket.bajasItems.push(baj);
+  });
+
+  // TOTALES GLOBALES
+  const totalRestockGlobal = totalRestockVentas + totalConsumoInterno + totalBajas;
   const gananciaLibre = totalIngresoVentas - totalRestockGlobal - totalTip;
   const margenLibrePct = totalIngresoVentas > 0 ? (gananciaLibre / totalIngresoVentas) * 100 : 0;
   const restockPctGlobal = totalIngresoVentas > 0 ? (totalRestockGlobal / totalIngresoVentas) * 100 : 0;
   const propinasPctGlobal = totalIngresoVentas > 0 ? (totalTip / totalIngresoVentas) * 100 : 0;
 
+  // Lista activa de bolsillos
+  const activePocketsList = Object.values(pocketsMap)
+    .filter(p => p.totalVentas > 0 || p.totalRestock > 0 || p.totalConsumoInterno > 0 || p.totalBajas > 0)
+    .map(p => ({
+      ...p,
+      margenPct: p.totalVentas > 0 ? ((p.totalVentas - p.totalRestock) / p.totalVentas) * 100 : 0,
+      pctDelTotalVentas: totalIngresoVentas > 0 ? (p.totalVentas / totalIngresoVentas) * 100 : 0,
+      pctDelTotalRestock: totalRestockGlobal > 0 ? (p.totalRestock / totalRestockGlobal) * 100 : 0
+    }))
+    .sort((a, b) => b.totalRestock - a.totalRestock);
+
+  // Lista de insumos
+  const insumosRestockList = Object.values(insumosRestockMap).map(ins => ({
+    ...ins,
+    dineroRestock: Math.round(ins.dineroRestock),
+    dineroVentas: Math.round(ins.dineroVentas),
+    dineroConsumo: Math.round(ins.dineroConsumo),
+    dineroBajas: Math.round(ins.dineroBajas),
+    cantidadAReponer: Number(ins.cantidadAReponer.toFixed(2)),
+    cantidadVentas: Number(ins.cantidadVentas.toFixed(2)),
+    cantidadConsumo: Number(ins.cantidadConsumo.toFixed(2)),
+    cantidadBajas: Number(ins.cantidadBajas.toFixed(2)),
+    productosAsociados: Array.from(ins.productosAsociados),
+    origenes: Array.from(ins.origenes)
+  })).sort((a, b) => b.dineroRestock - a.dineroRestock);
+
   return {
     totalIngresoVentas,
+    totalRestockVentas,
+    totalConsumoInterno,
+    totalBajas,
     totalRestockGlobal,
     totalTip,
     gananciaLibre,
@@ -600,10 +821,14 @@ export function calculateFinancialPockets({
     restockPctGlobal,
     propinasPctGlobal,
     ventasPagadasCount,
+    consumosCount: consumoInternoList.length,
+    bajasCount: bajasList.length,
     metodosPago,
     pockets: activePocketsList,
     allPocketsMap: pocketsMap,
     productosVendidos: productosVendidosList,
+    consumoInternoList,
+    bajasList,
     insumosRestock: insumosRestockList,
     totalInsumosDistintos: insumosRestockList.length
   };

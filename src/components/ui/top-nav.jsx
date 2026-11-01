@@ -1,17 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ENG, ESP } from "../../redux/actions-types";
 import { useDispatch, useSelector } from "react-redux";
 import { setLenguage } from "../../redux/actions";
 import pcLogoWide from "@/assets/proyecto_cafe_logo_wide - copia.png";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 // Mapeo exhaustivo y bilingüe de rutas a títulos
 const pageTitles = {
@@ -224,7 +216,12 @@ const MENU_SECTIONS = [
   }
 ];
 
-export default function TopNav() {
+export default function TopNav({
+  isSidebarPinned: propPinned,
+  setIsSidebarPinned: propSetPinned,
+  isSidebarOpen: propOpen,
+  setIsSidebarOpen: propSetOpen,
+}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentLeng = useSelector((state) => state.currentLeng);
@@ -232,8 +229,55 @@ export default function TopNav() {
   const allAgenda = useSelector((state) => state.allAgenda);
   const location = useLocation();
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  // Estados locales como fallback si no se pasan por props
+  const [internalPinned, setInternalPinned] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pc_sidebar_pinned');
+      if (saved !== null) return saved === 'true';
+      return typeof window !== 'undefined' && window.innerWidth >= 1024;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [internalOpen, setInternalOpen] = useState(() => {
+    try {
+      const savedPinned = localStorage.getItem('pc_sidebar_pinned');
+      if (savedPinned !== null) return savedPinned === 'true';
+      return typeof window !== 'undefined' && window.innerWidth >= 1024;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const isPinned = propPinned !== undefined ? propPinned : internalPinned;
+  const setIsPinned = propSetPinned || setInternalPinned;
+  const isOpen = propOpen !== undefined ? propOpen : internalOpen;
+  const setIsOpen = propSetOpen || setInternalOpen;
+
   const [searchTerm, setSearchTerm] = useState("");
+  const scrollContainerRef = useRef(null);
+
+  // Guardar posición de scroll continuamente
+  const handleScroll = (e) => {
+    try {
+      sessionStorage.setItem('pc_sidebar_scroll', String(e.currentTarget.scrollTop));
+    } catch (err) {}
+  };
+
+  // Restaurar posición de scroll al montar, abrir o cambiar de ruta
+  useEffect(() => {
+    if (isOpen && scrollContainerRef.current) {
+      const savedScroll = sessionStorage.getItem('pc_sidebar_scroll');
+      if (savedScroll !== null) {
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = Number(savedScroll);
+          }
+        });
+      }
+    }
+  }, [isOpen, location.pathname]);
 
   const handleLanguageToggle = () => {
     dispatch(setLenguage(currentLeng === ESP ? ENG : ESP));
@@ -308,199 +352,264 @@ export default function TopNav() {
   }, [searchTerm]);
 
   const handleSelectRoute = (targetPath) => {
-    setMenuOpen(false);
-    setSearchTerm("");
+    // Preservar la posición exacta de scroll para no perder el lugar donde estaba el usuario
+    if (scrollContainerRef.current) {
+      try {
+        sessionStorage.setItem('pc_sidebar_scroll', String(scrollContainerRef.current.scrollTop));
+      } catch (err) {}
+    }
+
+    // SI LA BARRA ESTÁ FIJADA: NO SE CIERRA. El usuario puede seguir navegando sin perder la vista ni el scroll.
+    if (!isPinned) {
+      setIsOpen(false);
+    }
     navigate(targetPath);
   };
 
+  const togglePin = () => {
+    const nextVal = !isPinned;
+    setIsPinned(nextVal);
+    try {
+      localStorage.setItem('pc_sidebar_pinned', String(nextVal));
+    } catch (err) {}
+    if (nextVal) {
+      setIsOpen(true);
+    }
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-solid bg-cream-bg border-black text-gray-800">
-      <div className="container flex items-center justify-between h-14 px-4">
+    <>
+      {/* HEADER SUPERIOR FIJO */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b-2 shadow-solid bg-cream-bg border-black text-gray-800">
+        <div className="container flex items-center justify-between h-14 px-4">
 
-        {/* Sección Izquierda: Botón Hamburguesa + Logo + Título */}
-        <div className="flex flex-1 items-center justify-start gap-2 overflow-hidden">
-          {!hideDropdown && (
-            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-              <DropdownMenuTrigger asChild>
-                <IconButton
-                  aria-label="Menú principal"
-                  className="bg-light-leaf text-gray-900 hover:bg-sage-green hover:text-white shrink-0 flex items-center justify-center font-bold text-base"
-                >
-                  <span className="leading-none text-lg select-none">☰</span>
-                </IconButton>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                className="w-[330px] sm:w-[410px] max-h-[85vh] overflow-y-auto bg-cream-bg border-2 border-black shadow-solid-lg p-0 z-[100] rounded-none"
-                align="start"
-                sideOffset={6}
+          {/* Sección Izquierda: Botón Hamburguesa/Toggle + Logo + Título */}
+          <div className="flex flex-1 items-center justify-start gap-2 overflow-hidden">
+            {!hideDropdown && (
+              <IconButton
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Abrir/Cerrar menú persistente"
+                className={`p-1.5 shrink-0 flex items-center justify-center font-bold text-base transition-colors ${
+                  isOpen ? 'bg-sage-green text-black' : 'bg-light-leaf text-gray-900 hover:bg-sage-green hover:text-white'
+                }`}
+                title={isOpen ? (isPinned ? "Barra lateral fijada (Haz clic para ocultar)" : "Cerrar barra lateral") : "Abrir barra lateral de navegación"}
               >
-                {/* Cabecera del Menú */}
-                <div className="sticky top-0 z-20 bg-cream-bg border-b-2 border-black p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-SpaceGrotesk font-bold text-sm tracking-wide text-gray-900">
-                      <span>☕</span>
-                      <span>{currentLeng === ESP ? "Menú de Navegación" : "Main Navigation"}</span>
-                    </div>
-                    <span className="text-[11px] font-mono px-2 py-0.5 border border-black bg-white font-bold shadow-[1px_1px_0px_#000]">
-                      {MENU_SECTIONS.reduce((acc, s) => acc + s.items.length, 0)} {currentLeng === ESP ? "rutas" : "views"}
-                    </span>
-                  </div>
+                <span className="leading-none text-lg select-none">
+                  {isOpen ? (isPinned ? "◀" : "✕") : "☰"}
+                </span>
+              </IconButton>
+            )}
 
-                  {/* Campo de búsqueda rápida */}
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      placeholder={currentLeng === ESP ? "🔍 Buscar módulo o función..." : "🔍 Search feature or path..."}
-                      className="w-full text-xs font-SpaceGrotesk px-2.5 py-1.5 border-2 border-black bg-white focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-500 shadow-[2px_2px_0px_#000]"
-                      autoFocus={false}
-                    />
-                    {searchTerm && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSearchTerm("");
-                        }}
-                        className="absolute right-2 top-1.5 text-xs text-gray-500 hover:text-black font-bold"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                </div>
+            <button
+              onClick={handleGoHome}
+              className="transition-transform px-1 flex items-center justify-center shrink-0"
+            >
+              <img src={pcLogoWide} alt="Proyecto Café Logo" className="h-[28px] md:h-8 w-auto object-contain mix-blend-multiply" />
+            </button>
 
-                {/* Lista de Secciones y Rutas */}
-                <div className="p-2 space-y-3 font-SpaceGrotesk">
-                  {filteredSections.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500 text-xs">
-                      {currentLeng === ESP ? "No se encontraron funciones para esa búsqueda." : "No matching features found."}
-                    </div>
-                  ) : (
-                    filteredSections.map((section, idx) => (
-                      <div key={idx} className="space-y-1">
-                        {/* Título de Categoría */}
-                        <div className="flex items-center gap-1.5 px-2 py-1 select-none">
-                          <span className="text-sm">{section.badgeEmoji}</span>
-                          <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-                            {section.category[currentLeng]}
-                          </span>
-                          <div className="flex-1 border-b border-gray-300 ml-1"></div>
-                        </div>
+            <div className="flex items-center pl-2 md:pl-3 border-l-2 border-sage-green/50 min-w-0">
+              <h1 className="font-SpaceGrotesk font-bold text-sm md:text-base truncate text-gray-700">
+                {getDisplayText()}
+              </h1>
+            </div>
+          </div>
 
-                        {/* Items de la categoría */}
-                        <div className="space-y-0.5">
-                          {section.items.map((item) => {
-                            const isCurrent = location.pathname.toLowerCase() === item.path.toLowerCase();
-                            return (
-                              <DropdownMenuItem
-                                key={item.path}
-                                onClick={() => handleSelectRoute(item.path)}
-                                className={`flex items-start gap-2.5 px-2.5 py-1.5 cursor-pointer rounded-none border border-transparent transition-all ${
-                                  isCurrent
-                                    ? "bg-sage-green text-black font-bold border-black shadow-[2px_2px_0px_#000]"
-                                    : "hover:bg-white hover:border-black hover:shadow-[2px_2px_0px_#000] text-gray-800"
-                                } ${item.isSub ? "ml-3.5 pl-2 border-l-2 border-l-sage-green/60" : ""}`}
-                              >
-                                <span className="text-base shrink-0 leading-tight select-none">
-                                  {item.emoji}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs font-semibold truncate leading-snug">
-                                      {item.label[currentLeng]}
-                                    </span>
-                                    {item.isSub && (
-                                      <span className="text-[10px] text-gray-500 font-mono ml-1 opacity-70">
-                                        sub
-                                      </span>
-                                    )}
-                                  </div>
-                                  {item.subLabel && (
-                                    <p className="text-[10px] text-gray-500 truncate leading-none mt-0.5">
-                                      {item.subLabel[currentLeng]}
-                                    </p>
-                                  )}
-                                </div>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+          {/* Sección Derecha: Idioma, Usuario y Carrito */}
+          <div className="flex items-center justify-end gap-2 shrink-0 pl-2">
+            <button
+              onClick={handleLanguageToggle}
+              className="px-2 py-1 border-2 border-black rounded-none flex items-center gap-1.5 font-bold font-SpaceGrotesk text-xs shadow-solid transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-solid-lg active:shadow-none active:translate-y-0.5 active:translate-x-0.5 bg-terracotta-accent text-white"
+            >
+              <span className="text-sm">🌐</span>
+              {currentLeng === ESP ? 'EN' : 'ES'}
+            </button>
 
-                {/* Pie del Menú con info rápida */}
-                <div className="sticky bottom-0 bg-cream-bg/95 border-t-2 border-black p-2 text-center text-[11px] text-gray-600 font-mono">
-                  {currentStaff ? (
-                    <span className="text-emerald-800 font-bold">
-                      🟢 {currentStaff.Nombre} ({currentStaff.Rol || "Staff"})
-                    </span>
-                  ) : (
-                    <span>☕ Proyecto Café Web</span>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+            <IconButton 
+              onClick={() => {
+                if (currentStaff) {
+                  if (window.confirm(currentLeng === ESP ? "¿Deseas cerrar sesión?" : "Do you want to log out?")) {
+                    dispatch({ type: 'SET_CURRENT_STAFF', payload: null });
+                    localStorage.removeItem("staffFoundId");
+                    navigate('/');
+                  }
+                }
+              }}
+              className="bg-purple-600 text-white hover:bg-opacity-80 flex items-center justify-center relative min-w-[32px]"
+              title={currentStaff ? (currentLeng === ESP ? `Sesión iniciada como ${currentStaff.Nombre}` : `Logged in as ${currentStaff.Nombre}`) : (currentLeng === ESP ? "Iniciar Sesión" : "Login")}
+            >
+              {currentStaff ? (
+                <span className="font-bold text-xs font-SpaceGrotesk px-0.5">{currentStaff.Nombre?.charAt(0) || "U"}</span>
+              ) : (
+                <span className="text-sm select-none">👤</span>
+              )}
+            </IconButton>
 
-          <button
-            onClick={handleGoHome}
-            className="transition-transform px-1 flex items-center justify-center shrink-0"
-          >
-            <img src={pcLogoWide} alt="Proyecto Café Logo" className="h-[28px] md:h-8 w-auto object-contain mix-blend-multiply" />
-          </button>
-
-          <div className="flex items-center pl-2 md:pl-3 border-l-2 border-sage-green/50 min-w-0">
-            <h1 className="font-SpaceGrotesk font-bold text-sm md:text-base truncate text-gray-700">
-              {getDisplayText()}
-            </h1>
+            <IconButton 
+              onClick={() => navigate('/MenuView')}
+              className="bg-cobalt-blue text-white hover:bg-opacity-80 flex items-center justify-center min-w-[32px]"
+              title={currentLeng === ESP ? "Ver Menú / Pedidos" : "View Menu / Orders"}
+            >
+              <span className="text-sm select-none">🛒</span>
+            </IconButton>
           </div>
         </div>
+      </header>
 
-        {/* Sección Derecha: Idioma, Usuario y Carrito con Emojis */}
-        <div className="flex items-center justify-end gap-2 shrink-0 pl-2">
-          <button
-            onClick={handleLanguageToggle}
-            className="px-2 py-1 border-2 border-black rounded-none flex items-center gap-1.5 font-bold font-SpaceGrotesk text-xs shadow-solid transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-solid-lg active:shadow-none active:translate-y-0.5 active:translate-x-0.5 bg-terracotta-accent text-white"
-          >
-            <span className="text-sm">🌐</span>
-            {currentLeng === ESP ? 'EN' : 'ES'}
-          </button>
+      {/* OVERLAY DE SOMBRA (Solo en móvil o cuando la barra NO está fijada en escritorio) */}
+      {!hideDropdown && isOpen && !isPinned && (
+        <div
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 top-14 bg-black/40 z-30 transition-opacity backdrop-blur-[1px]"
+          aria-hidden="true"
+        />
+      )}
 
-          <IconButton 
-            onClick={() => {
-              if (currentStaff) {
-                if (window.confirm(currentLeng === ESP ? "¿Deseas cerrar sesión?" : "Do you want to log out?")) {
-                  dispatch({ type: 'SET_CURRENT_STAFF', payload: null });
-                  localStorage.removeItem("staffFoundId");
-                  navigate('/');
-                }
-              }
-            }}
-            className="bg-purple-600 text-white hover:bg-opacity-80 flex items-center justify-center relative min-w-[32px]"
-            title={currentStaff ? (currentLeng === ESP ? `Sesión iniciada como ${currentStaff.Nombre}` : `Logged in as ${currentStaff.Nombre}`) : (currentLeng === ESP ? "Iniciar Sesión" : "Login")}
+      {/* BARRA LATERAL PERSISTENTE (DRAWER / DOCKED SIDEBAR) */}
+      {!hideDropdown && (
+        <aside
+          className={`fixed top-14 bottom-0 left-0 z-40 w-80 bg-cream-bg border-r-2 border-black shadow-solid-lg flex flex-col font-SpaceGrotesk transition-transform duration-200 ease-in-out ${
+            isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+          style={{ willChange: "transform" }}
+        >
+          {/* Cabecera de la Barra Lateral: Título, Botón Fijar y Botón Cerrar */}
+          <div className="bg-cream-bg border-b-2 border-black p-3 space-y-2 shrink-0 z-10">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1.5 font-bold text-sm tracking-wide text-gray-900 truncate">
+                <span>☕</span>
+                <span>{currentLeng === ESP ? "Explorador" : "Navigator"}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* BOTÓN PARA FIJAR / DESFIJAR LA BARRA (PERSISTENCIA TOTAL) */}
+                <button
+                  type="button"
+                  onClick={togglePin}
+                  className={`px-2 py-0.5 text-xs font-bold border-2 border-black rounded-none shadow-[2px_2px_0px_#000] transition-all hover:-translate-y-0.5 active:translate-y-0.5 ${
+                    isPinned
+                      ? "bg-sage-green text-black"
+                      : "bg-white hover:bg-cream-bg text-gray-700"
+                  }`}
+                  title={
+                    isPinned
+                      ? (currentLeng === ESP ? "Barra fijada: No se cierra al hacer clic. Pulsa para desfijar." : "Pinned sidebar: Stays open when clicking. Click to unpin.")
+                      : (currentLeng === ESP ? "Fijar barra: Haz clic para que quede fija y no se cierre." : "Pin sidebar: Click to keep it docked.")
+                  }
+                >
+                  {isPinned ? "📌 Fijada" : "📍 Fijar"}
+                </button>
+
+                {/* BOTÓN CERRAR BARRA */}
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="px-2 py-0.5 text-xs font-bold border-2 border-black bg-white hover:bg-terracotta-accent hover:text-white rounded-none shadow-[2px_2px_0px_#000] transition-all"
+                  title={currentLeng === ESP ? "Cerrar barra lateral" : "Close sidebar"}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* BUSCADOR EN TIEMPO REAL */}
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={currentLeng === ESP ? "🔍 Buscar ruta o módulo..." : "🔍 Search path or module..."}
+                className="w-full text-xs font-SpaceGrotesk px-2.5 py-1.5 border-2 border-black bg-white focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-500 shadow-[2px_2px_0px_#000]"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1.5 text-xs text-gray-500 hover:text-black font-bold"
+                  title="Limpiar búsqueda"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* LISTA DE FUNCIONES Y RUTAS CON SCROLL PERSISTENTE */}
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-2 space-y-3 font-SpaceGrotesk"
           >
-            {currentStaff ? (
-              <span className="font-bold text-xs font-SpaceGrotesk px-0.5">{currentStaff.Nombre?.charAt(0) || "U"}</span>
+            {filteredSections.length === 0 ? (
+              <div className="p-6 text-center text-gray-500 text-xs">
+                {currentLeng === ESP ? "No se encontraron funciones para esa búsqueda." : "No matching features found."}
+              </div>
             ) : (
-              <span className="text-sm select-none">👤</span>
-            )}
-          </IconButton>
+              filteredSections.map((section, idx) => (
+                <div key={idx} className="space-y-1">
+                  {/* Encabezado de Categoría */}
+                  <div className="flex items-center gap-1.5 px-2 py-1 select-none">
+                    <span className="text-sm">{section.badgeEmoji}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                      {section.category[currentLeng]}
+                    </span>
+                    <div className="flex-1 border-b border-gray-300 ml-1"></div>
+                  </div>
 
-          <IconButton 
-            onClick={() => navigate('/MenuView')}
-            className="bg-cobalt-blue text-white hover:bg-opacity-80 flex items-center justify-center min-w-[32px]"
-            title={currentLeng === ESP ? "Ver Menú / Pedidos" : "View Menu / Orders"}
-          >
-            <span className="text-sm select-none">🛒</span>
-          </IconButton>
-        </div>
-      </div>
-    </header>
+                  {/* Lista de Rutas */}
+                  <div className="space-y-0.5">
+                    {section.items.map((item) => {
+                      const isCurrent = location.pathname.toLowerCase() === item.path.toLowerCase();
+                      return (
+                        <button
+                          key={item.path}
+                          type="button"
+                          onClick={() => handleSelectRoute(item.path)}
+                          className={`w-full text-left flex items-start gap-2.5 px-2.5 py-1.5 rounded-none border border-transparent transition-all select-none ${
+                            isCurrent
+                              ? "bg-sage-green text-black font-bold border-black shadow-[2px_2px_0px_#000]"
+                              : "hover:bg-white hover:border-black hover:shadow-[2px_2px_0px_#000] text-gray-800"
+                          } ${item.isSub ? "ml-3.5 pl-2 border-l-2 border-l-sage-green/60" : ""}`}
+                        >
+                          <span className="text-base shrink-0 leading-tight">
+                            {item.emoji}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold truncate leading-snug">
+                                {item.label[currentLeng]}
+                              </span>
+                              {item.isSub && (
+                                <span className="text-[10px] text-gray-500 font-mono ml-1 opacity-70">
+                                  sub
+                                </span>
+                              )}
+                            </div>
+                            {item.subLabel && (
+                              <p className="text-[10px] text-gray-500 truncate leading-none mt-0.5">
+                                {item.subLabel[currentLeng]}
+                              </p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* PIE DE LA BARRA LATERAL */}
+          <div className="bg-cream-bg border-t-2 border-black p-2 text-center text-[11px] text-gray-600 font-mono shrink-0">
+            {currentStaff ? (
+              <span className="text-emerald-800 font-bold">
+                🟢 {currentStaff.Nombre} ({currentStaff.Rol || "Staff"})
+              </span>
+            ) : (
+              <span>☕ Proyecto Café Web</span>
+            )}
+          </div>
+        </aside>
+      )}
+    </>
   );
 }

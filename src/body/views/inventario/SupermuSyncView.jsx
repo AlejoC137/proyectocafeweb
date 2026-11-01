@@ -7,8 +7,9 @@ import {
 } from "lucide-react";
 import { updateItem, getAllFromTable } from "../../../redux/actions";
 import { ITEMS, ItemsAlmacen } from "../../../redux/actions-types";
+import SupermuMacroModal from "./SupermuMacroModal";
 
-export default function SupermuSyncView({ items = [] }) {
+export default function SupermuSyncView({ items = [], onSendToStaging = null }) {
   const dispatch = useDispatch();
   const [productToSync, setProductToSync] = useState(null);
   const [matchedItemId, setMatchedItemId] = useState("");
@@ -18,6 +19,7 @@ export default function SupermuSyncView({ items = [] }) {
   const [isSaving, setIsSaving] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
   const [iframeKey, setIframeKey] = useState(0);
+  const [showMacroModal, setShowMacroModal] = useState(false);
 
   // Listen for messages from the Supermú iframe
   useEffect(() => {
@@ -181,6 +183,15 @@ export default function SupermuSyncView({ items = [] }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowMacroModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 hover:from-rose-700 hover:to-amber-700 text-white rounded-lg text-xs font-extrabold shadow-sm hover:shadow transition-all"
+            title="Comparar y sincronizar masivamente todo el almacén con Supermú"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Macro Match Automático</span>
+          </button>
+
           <button
             onClick={() => setIframeKey(k => k + 1)}
             className="flex items-center gap-1 px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
@@ -392,6 +403,14 @@ export default function SupermuSyncView({ items = [] }) {
           </div>
         </div>
       )}
+
+      {/* Supermú Macro Matching Modal */}
+      <SupermuMacroModal
+        isOpen={showMacroModal}
+        onClose={() => setShowMacroModal(false)}
+        inventoryItems={items}
+        onSendToStaging={onSendToStaging}
+      />
 
     </div>
   );

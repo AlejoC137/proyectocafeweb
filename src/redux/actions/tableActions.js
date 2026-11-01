@@ -44,26 +44,22 @@ export function getAllFromTable(Table) {
       let allData = [];
       let page = 0;
       const pageSize = 500;
-      let useOrder = true;
 
       while (true) {
         const from = page * pageSize;
         const to = from + pageSize - 1;
-        let query = supabase.from(Table).select('*').range(from, to);
-        
-        if (useOrder) {
-          query = query.order('Date', { ascending: false });
-        }
+        // La columna 'Date' es tipo texto no indexado y causa timeout 500 (statement timeout) al ordenar 500 filas en PostgreSQL.
+        // Se consulta directamente por rango paginado (o usando el índice primario _id) para respuesta inmediata (<500ms).
+        let query = supabase.from(Table).select('*').range(from, to).order('_id', { ascending: false });
 
         let { data, error } = await query;
 
-        if (error && useOrder) {
-          console.warn(`Ordering by Date failed for ${Table}, retrying without order. Error:`, error.message || error);
-          useOrder = false;
-          query = supabase.from(Table).select('*').range(from, to);
-          const retry = await query;
-          data = retry.data;
-          error = retry.error;
+        if (error) {
+          // Fallback sin order si _id fallara
+          const fallbackQuery = supabase.from(Table).select('*').range(from, to);
+          const fallbackRes = await fallbackQuery;
+          data = fallbackRes.data;
+          error = fallbackRes.error;
         }
 
         if (error) {

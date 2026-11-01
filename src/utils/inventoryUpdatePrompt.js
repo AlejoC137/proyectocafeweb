@@ -10,7 +10,9 @@ export const generateInventoryUpdatePrompt = (
   allProviders = [],
   forceSelectedProviders = false,
   singleProviderReturn = false,
-  forceLowestUnitPrice = false
+  forceLowestUnitPrice = false,
+  supermuOnly = false,
+  supermuCandidatesText = ""
 ) => {
   const itemsList = items
     .map((i) => {
@@ -40,7 +42,23 @@ export const generateInventoryUpdatePrompt = (
 
 TU OBJETIVO:
 Actualizar la información de los ítems suministrados (precio, presentación, marca, proveedor) y devolver un JSON que respete ESTRICTAMENTE la estructura de la tabla ItemsAlmacen.
+${
+  supermuOnly
+    ? `
+---
 
+## 🚨 MODO EXCLUSIVO: CATÁLOGO SUPERMÚ MEDELLÍN (ÚNICA FUENTE)
+Has sido configurado con el **Catálogo Oficial de Supermú Medellín como ÚNICA FUENTE DE VERDAD**.
+- **PROHIBIDO** buscar o usar precios de otras cadenas (Éxito, Jumbo, Carulla, D1, Euro, etc.).
+- Utiliza **EXCLUSIVAMENTE** las coincidencias del catálogo de Supermú provistas abajo.
+- Si un ítem no tiene coincidencia certera en Supermú, devuélvelo conservando sus valores actuales o con COSTO "0".
+- Extrae la cantidad en gramos (gr), mililitros (ml) o unidades (und) del producto de Supermú y calcula 'precioUnitario' = COSTO / CANTIDAD.
+
+### COINCIDENCIAS Y CANDIDATOS EXTRAÍDOS DEL CATÁLOGO SUPERMÚ:
+${supermuCandidatesText || "Revisa los productos disponibles en Supermú Medellín."}
+`
+    : ""
+}
 ---
 
 ## PASO 0 — DETECCIÓN DE MODO (OBLIGATORIO, EJECUTAR PRIMERO)

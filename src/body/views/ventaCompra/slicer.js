@@ -7,7 +7,7 @@ export async function fetchAndProcessSales(dispatch) {
       .from("Ventas")
       .select("*")
       .filter("Time", "is", null)
-      .order("Date", { ascending: true });
+      .order("_id", { ascending: true });
 
     if (error) {
       console.error("Error fetching sales:", error);

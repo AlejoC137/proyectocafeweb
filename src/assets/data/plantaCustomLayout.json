@@ -17,6 +17,36 @@
       "height": 28,
       "rotacion": 0,
       "color": "#ea580c"
+    },
+    "disciplina": "Specialty Equipment (Foodservice)",
+    "categoriaRevit": "Specialty Equipment",
+    "familiaRevit": "Horno_Pizza_DobleCamara_Refractario_GLP",
+    "tipoRevit": "70x85cm - 2 Cámaras - GLP 35.000 BTU/h",
+    "elementIdRevit": 6913687,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-da812aac",
+    "sistemaMep": "GAS-GLP-01 / ELEC-CTRL-01",
+    "quick_params": {
+      "Family": "Horno_Pizza_DobleCamara_Refractario_GLP",
+      "Type": "70x85cm - 2 Cámaras - GLP 35.000 BTU/h",
+      "Discipline": "Specialty Equipment (Foodservice)",
+      "Revit Category": "Specialty Equipment",
+      "ElementId": "6913687",
+      "Electrical Load": "120 W / 110V",
+      "Gas Load": "35.000 BTU/h",
+      "Water Flow": "N/A"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 120,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 6,
+      "factorCargaPct": 90,
+      "usaGas": true,
+      "potenciaGasBTU": 35000,
+      "horasLlamaDiario": 5.5,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": false,
+      "litrosAguaDiario": 0,
+      "mantenimientoMensualCOP": 45000
     }
   },
   {
@@ -33,6 +63,36 @@
       "height": 10,
       "rotacion": 0,
       "color": "#ef4444"
+    },
+    "disciplina": "Plumbing & Piping (MEP)",
+    "categoriaRevit": "Mechanical Equipment",
+    "familiaRevit": "Cilindro_Almacenamiento_GLP_40lb",
+    "tipoRevit": "Capacidad 18 kg GLP - Regulador 2 psi",
+    "elementIdRevit": 7011954,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-70dd5a4a",
+    "sistemaMep": "GAS-GLP-SUPPLY",
+    "quick_params": {
+      "Family": "Cilindro_Almacenamiento_GLP_40lb",
+      "Type": "Capacidad 18 kg GLP - Regulador 2 psi",
+      "Discipline": "Plumbing & Piping (MEP)",
+      "Revit Category": "Mechanical Equipment",
+      "ElementId": "7011954",
+      "Electrical Load": "0 W / 110V",
+      "Gas Load": "35.000 BTU/h",
+      "Water Flow": "N/A"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 0,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 0,
+      "factorCargaPct": 80,
+      "usaGas": true,
+      "potenciaGasBTU": 35000,
+      "horasLlamaDiario": 5.5,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": false,
+      "litrosAguaDiario": 0,
+      "mantenimientoMensualCOP": 10000
     }
   },
   {
@@ -52,6 +112,36 @@
       "height": 34,
       "rotacion": 0,
       "color": "#10b981"
+    },
+    "disciplina": "Architecture (ARC)",
+    "categoriaRevit": "Furniture",
+    "familiaRevit": "Mobiliario_AceroInox_AISI304",
+    "tipoRevit": "0.80m x 1.10m",
+    "elementIdRevit": 7094500,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-cc61b888",
+    "sistemaMep": "NONE",
+    "quick_params": {
+      "Family": "Mobiliario_AceroInox_AISI304",
+      "Type": "0.80m x 1.10m",
+      "Discipline": "Architecture (ARC)",
+      "Revit Category": "Furniture",
+      "ElementId": "7094500",
+      "Electrical Load": "0 W / 110V",
+      "Gas Load": "N/A",
+      "Water Flow": "N/A"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 0,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 0,
+      "factorCargaPct": 80,
+      "usaGas": false,
+      "potenciaGasBTU": 0,
+      "horasLlamaDiario": 0,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": false,
+      "litrosAguaDiario": 0,
+      "mantenimientoMensualCOP": 10000
     }
   },
   {
@@ -71,6 +161,36 @@
       "height": 24,
       "rotacion": 0,
       "color": "#06b6d4"
+    },
+    "disciplina": "Mechanical / HVAC (MEP)",
+    "categoriaRevit": "Mechanical Equipment",
+    "familiaRevit": "Refrigerador_Vertical_Comercial_420L",
+    "tipoRevit": "420 Litros - 350W / 110V - R134a",
+    "elementIdRevit": 7087390,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-c2add3c2",
+    "sistemaMep": "ELEC-PWR-03 / DRAIN-COND-01",
+    "quick_params": {
+      "Family": "Refrigerador_Vertical_Comercial_420L",
+      "Type": "420 Litros - 350W / 110V - R134a",
+      "Discipline": "Mechanical / HVAC (MEP)",
+      "Revit Category": "Mechanical Equipment",
+      "ElementId": "7087390",
+      "Electrical Load": "350 W / 110V",
+      "Gas Load": "N/A",
+      "Water Flow": "N/A"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 350,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 24,
+      "factorCargaPct": 45,
+      "usaGas": false,
+      "potenciaGasBTU": 0,
+      "horasLlamaDiario": 0,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": false,
+      "litrosAguaDiario": 0,
+      "mantenimientoMensualCOP": 30000
     }
   },
   {
@@ -87,6 +207,36 @@
       "height": 14,
       "rotacion": 0,
       "color": "#8b5cf6"
+    },
+    "disciplina": "Plumbing & Piping (MEP)",
+    "categoriaRevit": "Plumbing Fixtures",
+    "familiaRevit": "Poceta_Lavado_Doble_Inox_BPM",
+    "tipoRevit": "180x50cm - 2 Pocetas con Grifería Cuello Cisne",
+    "elementIdRevit": 7072145,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-ec5ea9e5",
+    "sistemaMep": "PLUMB-WATER-01 / PLUMB-DRAIN-01",
+    "quick_params": {
+      "Family": "Poceta_Lavado_Doble_Inox_BPM",
+      "Type": "180x50cm - 2 Pocetas con Grifería Cuello Cisne",
+      "Discipline": "Plumbing & Piping (MEP)",
+      "Revit Category": "Plumbing Fixtures",
+      "ElementId": "7072145",
+      "Electrical Load": "0 W / 110V",
+      "Gas Load": "N/A",
+      "Water Flow": "140 L/día"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 0,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 0,
+      "factorCargaPct": 80,
+      "usaGas": false,
+      "potenciaGasBTU": 0,
+      "horasLlamaDiario": 0,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": true,
+      "litrosAguaDiario": 140,
+      "mantenimientoMensualCOP": 15000
     }
   },
   {
@@ -108,6 +258,36 @@
       "height": 22,
       "rotacion": 0,
       "color": "#3b82f6"
+    },
+    "disciplina": "Specialty Equipment (Foodservice)",
+    "categoriaRevit": "Specialty Equipment",
+    "familiaRevit": "Batidora_Planetaria_Pedestal_6L",
+    "tipoRevit": "6 Litros - 800W / 110V Monofásico",
+    "elementIdRevit": 7021448,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-736d5c08",
+    "sistemaMep": "ELEC-PWR-02",
+    "quick_params": {
+      "Family": "Batidora_Planetaria_Pedestal_6L",
+      "Type": "6 Litros - 800W / 110V Monofásico",
+      "Discipline": "Specialty Equipment (Foodservice)",
+      "Revit Category": "Specialty Equipment",
+      "ElementId": "7021448",
+      "Electrical Load": "800 W / 110V",
+      "Gas Load": "N/A",
+      "Water Flow": "25 L/día"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 800,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 3,
+      "factorCargaPct": 80,
+      "usaGas": false,
+      "potenciaGasBTU": 0,
+      "horasLlamaDiario": 0,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": true,
+      "litrosAguaDiario": 25,
+      "mantenimientoMensualCOP": 20000
     }
   },
   {
@@ -124,6 +304,36 @@
       "height": 24,
       "rotacion": 0,
       "color": "#eab308"
+    },
+    "disciplina": "Architecture (ARC)",
+    "categoriaRevit": "Furniture",
+    "familiaRevit": "Mobiliario_AceroInox_AISI304",
+    "tipoRevit": "0.90m x 0.35m",
+    "elementIdRevit": 6999027,
+    "uniqueIdRevit": "1e8f47e0-e3e9-413c-8e3f-ab96e14c",
+    "sistemaMep": "NONE",
+    "quick_params": {
+      "Family": "Mobiliario_AceroInox_AISI304",
+      "Type": "0.90m x 0.35m",
+      "Discipline": "Architecture (ARC)",
+      "Revit Category": "Furniture",
+      "ElementId": "6999027",
+      "Electrical Load": "0 W / 110V",
+      "Gas Load": "N/A",
+      "Water Flow": "N/A"
+    },
+    "consumosTeoricos": {
+      "potenciaElectricaW": 0,
+      "tensionVoltios": 110,
+      "horasUsoDiario": 0,
+      "factorCargaPct": 80,
+      "usaGas": false,
+      "potenciaGasBTU": 0,
+      "horasLlamaDiario": 0,
+      "costoHoraGasCOP": 2200,
+      "usaAgua": false,
+      "litrosAguaDiario": 0,
+      "mantenimientoMensualCOP": 10000
     }
   }
 ]

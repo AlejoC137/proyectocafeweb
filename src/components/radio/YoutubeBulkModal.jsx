@@ -182,7 +182,7 @@ export default function YoutubeBulkModal({ isOpen, onClose, onImport, categories
             
             <textarea 
               rows={4}
-              placeholder="Ejemplos soportados:&#10;• https://www.youtube.com/playlist?list=PL...&#10;• https://www.youtube.com/watch?v=5qap5aO4i9A&#10;• https://youtu.be/21qNxnCS8MA (una URL por línea o bloque de texto)"
+              placeholder="Ejemplos soportados:&#10;• https://www.youtube.com/playlist?list=PL...&#10;• https://www.youtube.com/watch?v=5qap5aO4i9A&#10;• https://youtu.be/kgx4WGK0oNU (una URL por línea o bloque de texto)"
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               disabled={isParsing || isImporting}

@@ -9,6 +9,7 @@ import {
     Comanda,
     PROCEDE,
     COMPRAS,
+    BAJAS,
     UPDATE_ACTIVE_TAB,
     SET_USER_REG_STATE,
     SET_CURRENT_STAFF,
@@ -100,6 +101,7 @@ const initialState = {
     allItems: [],
     allVentas: [],
     allConsumoStaff: [],
+    allBajas: [],
     allProcedimientos: [],
     allRecetasMenu: [],
     allRecetasProduccion: [],
@@ -192,6 +194,8 @@ const reducer = (state = initialState, action) => {
                     return { ...state, allVentas: action.payload };
                 case CONSUMO_STAFF:
                     return { ...state, allConsumoStaff: action.payload };
+                case BAJAS:
+                    return { ...state, allBajas: action.payload };
                 case COMPRAS:
                     return { ...state, allCompras: action.payload };
                 case MENU:

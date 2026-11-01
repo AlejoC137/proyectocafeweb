@@ -1,10 +1,26 @@
-﻿export const PLANTA_CONFIG = {
+export {
+  TARIFAS_SERVICIOS,
+  REVIT_TAXONOMIA,
+  normalizarEquipoRevit,
+  calcularConsumosEquipo,
+  calcularConsumosPlanta
+} from './plantaConsumosUtils.js';
+import { normalizarEquipoRevit } from './plantaConsumosUtils.js';
+
+export const PLANTA_CONFIG = {
   dimensionesPlanta: { ancho: 3.2, largo: 3.1, areaTotalM2: 9.92 },
   equipos: [
-    {
+    normalizarEquipoRevit({
       id: "horno",
       nombre: "Horno Doble Camara Pizza (70x85 cm)",
       tipo: "HORNO",
+      disciplina: "Specialty Equipment (Foodservice)",
+      categoriaRevit: "Specialty Equipment",
+      familiaRevit: "Horno_Pizza_DobleCamara_Refractario_GLP",
+      tipoRevit: "70x85cm - 2 Cámaras - GLP 35.000 BTU/h",
+      elementIdRevit: 7041441,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a21",
+      sistemaMep: "GAS-GLP-01 / ELEC-CTRL-01",
       dimensiones: "70 cm x 85 cm",
       combustible: "Gas Propano (GLP con pipeta)",
       camaras: 2,
@@ -16,12 +32,32 @@
       potenciaGas: "35.000 BTU/h",
       temperaturaRango: "50°C - 350°C",
       cuelloDeBotellaDesc: "Capacidad de horneado limitada a 2 niveles refractarios simultaneos.",
-      cadCoords: { x: "14%", y: "12%", w: "26%", h: "28%" }
-    },
-    {
+      cadCoords: { x: "14%", y: "12%", w: "26%", h: "28%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 120,
+        tensionVoltios: 110,
+        horasUsoDiario: 6.0,
+        factorCargaPct: 90,
+        usaGas: true,
+        potenciaGasBTU: 35000,
+        horasLlamaDiario: 5.5,
+        costoHoraGasCOP: 2200,
+        usaAgua: false,
+        litrosAguaDiario: 0,
+        mantenimientoMensualCOP: 45000
+      }
+    }),
+    normalizarEquipoRevit({
       id: "batidora",
       nombre: "Batidora Planetaria 6 Litros",
       tipo: "BATIDORA",
+      disciplina: "Specialty Equipment (Foodservice)",
+      categoriaRevit: "Specialty Equipment",
+      familiaRevit: "Batidora_Planetaria_Pedestal_6L",
+      tipoRevit: "6 Litros - 800W / 110V Monofásico",
+      elementIdRevit: 7033816,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a22",
+      sistemaMep: "ELEC-PWR-02",
       dimensiones: "Pedestal (45 x 35 cm)",
       capacidadBowlLitros: 6,
       capacidadMasaBatidaKg: 4.0,
@@ -29,55 +65,171 @@
       potenciaElectrica: "800 W / 110V",
       tiempoCicloMin: 18,
       cuelloDeBotellaDesc: "Maximo 4 tartas vascas o 2 tortas por tanda de batido de 6L.",
-      cadCoords: { x: "75%", y: "56%", w: "18%", h: "22%" }
-    },
-    {
+      cadCoords: { x: "75%", y: "56%", w: "18%", h: "22%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 800,
+        tensionVoltios: 110,
+        horasUsoDiario: 3.0,
+        factorCargaPct: 80,
+        usaGas: false,
+        potenciaGasBTU: 0,
+        horasLlamaDiario: 0,
+        costoHoraGasCOP: 0,
+        usaAgua: true,
+        litrosAguaDiario: 25,
+        mantenimientoMensualCOP: 20000
+      }
+    }),
+    normalizarEquipoRevit({
       id: "nevera",
       nombre: "Nevera Vertical (70x70 cm)",
       tipo: "REFRIGERACION",
+      disciplina: "Mechanical / HVAC (MEP)",
+      categoriaRevit: "Mechanical Equipment",
+      familiaRevit: "Refrigerador_Vertical_Comercial_420L",
+      tipoRevit: "420 Litros - 350W / 110V - R134a",
+      elementIdRevit: 7837135,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a23",
+      sistemaMep: "ELEC-PWR-03 / DRAIN-COND-01",
       dimensiones: "70 cm x 70 cm",
       capacidadLitros: 420,
       temperaturaRango: "0°C - 5°C",
       capacidadTartasOreo: 16,
       capacidadBandejasFermentacion: 4,
       cuelloDeBotellaDesc: "Espacio critico para reposo de hojaldres y asentar tartas horneadas.",
-      cadCoords: { x: "72%", y: "12%", w: "22%", h: "24%" }
-    },
-    {
+      cadCoords: { x: "72%", y: "12%", w: "22%", h: "24%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 350,
+        tensionVoltios: 110,
+        horasUsoDiario: 24.0,
+        factorCargaPct: 45,
+        usaGas: false,
+        potenciaGasBTU: 0,
+        horasLlamaDiario: 0,
+        costoHoraGasCOP: 0,
+        usaAgua: false,
+        litrosAguaDiario: 0,
+        mantenimientoMensualCOP: 30000
+      }
+    }),
+    normalizarEquipoRevit({
       id: "meson_central",
       nombre: "Meson Central de Trabajo (80x110 cm)",
       tipo: "AREA_PREPARACION",
+      disciplina: "Architecture (ARC)",
+      categoriaRevit: "Furniture",
+      familiaRevit: "Meson_Central_Isla_AceroInox_AISI304",
+      tipoRevit: "80x110cm - Doble Entrepaño Inox",
+      elementIdRevit: 6947452,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a24",
+      sistemaMep: "NONE",
       dimensiones: "80 cm x 110 cm (0.88 m2)",
       material: "Acero Inox AISI 304",
       operariosMax: 2,
       usos: "Pesaje, amasado fino, laminado, porcionado y decorado.",
       cuelloDeBotellaDesc: "Area util para 1 maestro pastelero o 2 en coordinacion estrecha.",
-      cadCoords: { x: "42%", y: "38%", w: "23%", h: "33%" }
-    },
-    {
+      cadCoords: { x: "42%", y: "38%", w: "23%", h: "33%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 0,
+        tensionVoltios: 110,
+        horasUsoDiario: 0,
+        factorCargaPct: 0,
+        usaGas: false,
+        potenciaGasBTU: 0,
+        horasLlamaDiario: 0,
+        costoHoraGasCOP: 0,
+        usaAgua: false,
+        litrosAguaDiario: 0,
+        mantenimientoMensualCOP: 10000
+      }
+    }),
+    normalizarEquipoRevit({
       id: "almacen_aux",
       nombre: "Almacenamiento / Superficie Auxiliar (2 Pocetas)",
       tipo: "LAVADO_ALMACEN",
+      disciplina: "Plumbing & Piping (MEP)",
+      categoriaRevit: "Plumbing Fixtures",
+      familiaRevit: "Poceta_Lavado_Doble_Inox_BPM",
+      tipoRevit: "180x50cm - 2 Pocetas con Grifería Cuello Cisne",
+      elementIdRevit: 7100050,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a25",
+      sistemaMep: "PLUMB-WATER-01 / PLUMB-DRAIN-01",
       dimensiones: "180 cm x 50 cm",
       usos: "Lavado BPM, desinfeccion de insumos y enfriamiento inicial.",
-      cadCoords: { x: "40%", y: "12%", w: "32%", h: "16%" }
-    },
-    {
+      cuelloDeBotellaDesc: "Zona de lavado e inocuidad BPM en pared norte.",
+      cadCoords: { x: "40%", y: "12%", w: "32%", h: "16%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 0,
+        tensionVoltios: 110,
+        horasUsoDiario: 0,
+        factorCargaPct: 0,
+        usaGas: false,
+        potenciaGasBTU: 0,
+        horasLlamaDiario: 0,
+        costoHoraGasCOP: 0,
+        usaAgua: true,
+        litrosAguaDiario: 140,
+        mantenimientoMensualCOP: 15000
+      }
+    }),
+    normalizarEquipoRevit({
       id: "estanteria",
       nombre: "Estanteria de Secos e Insumos",
       tipo: "ALMACEN_SECOS",
+      disciplina: "Architecture (ARC)",
+      categoriaRevit: "Furniture",
+      familiaRevit: "Estanteria_Modular_Secos_Alimentos",
+      tipoRevit: "90x35cm - 5 Niveles Cromados",
+      elementIdRevit: 6970390,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a26",
+      sistemaMep: "NONE",
       dimensiones: "35 cm x 90 cm",
       usos: "Harinas de fuerza, azucares, frutos secos, moldes y empaques.",
-      cadCoords: { x: "14%", y: "48%", w: "14%", h: "24%" }
-    },
-    {
+      cuelloDeBotellaDesc: "Almacenaje compacto en pared lateral.",
+      cadCoords: { x: "14%", y: "48%", w: "14%", h: "24%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 0,
+        tensionVoltios: 110,
+        horasUsoDiario: 0,
+        factorCargaPct: 0,
+        usaGas: false,
+        potenciaGasBTU: 0,
+        horasLlamaDiario: 0,
+        costoHoraGasCOP: 0,
+        usaAgua: false,
+        litrosAguaDiario: 0,
+        mantenimientoMensualCOP: 5000
+      }
+    }),
+    normalizarEquipoRevit({
       id: "pipeta",
       nombre: "Pipeta de Gas GLP (40 lb)",
       tipo: "ENERGIA",
+      disciplina: "Plumbing & Piping (MEP)",
+      categoriaRevit: "Mechanical Equipment",
+      familiaRevit: "Cilindro_Almacenamiento_GLP_40lb",
+      tipoRevit: "Capacidad 18 kg GLP - Regulador 2 psi",
+      elementIdRevit: 7099433,
+      uniqueIdRevit: "1e8f47e0-e3e9-413c-8e3f-2cd6fef7fb9b-006b5a27",
+      sistemaMep: "GAS-GLP-SUPPLY",
       dimensiones: "35 x 35 cm",
       usos: "Alimentacion autonoma de gas para horno pizza.",
-      cadCoords: { x: "16%", y: "38%", w: "16%", h: "10%" }
-    }
+      cuelloDeBotellaDesc: "Suministro de combustible GLP.",
+      cadCoords: { x: "16%", y: "38%", w: "16%", h: "10%" },
+      consumosTeoricos: {
+        potenciaElectricaW: 0,
+        tensionVoltios: 110,
+        horasUsoDiario: 0,
+        factorCargaPct: 0,
+        usaGas: true,
+        potenciaGasBTU: 35000,
+        horasLlamaDiario: 5.5,
+        costoHoraGasCOP: 2200,
+        usaAgua: false,
+        litrosAguaDiario: 0,
+        mantenimientoMensualCOP: 10000
+      }
+    })
   ],
   productos: [
     {

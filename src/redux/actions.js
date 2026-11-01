@@ -110,14 +110,14 @@ export function getAllFromTable(Table) {
         let query = supabase.from(Table).select('*').range(from, to);
         
         if (useOrder) {
-          query = query.order('Date', { ascending: false });
+          query = query.order('_id', { ascending: false });
         }
 
         let { data, error } = await query;
 
         // Fallback: Si ordenar por 'Date' falla (ej. error 500 por timeout en Supabase/PostgREST o columna no indexada), reintentar sin order
         if (error && useOrder) {
-          console.warn(`Ordering by Date failed for ${Table}, retrying without order. Error:`, error.message || error);
+          console.warn(`Ordering by _id failed for ${Table}, retrying without order. Error:`, error.message || error);
           useOrder = false;
           query = supabase.from(Table).select('*').range(from, to);
           const retry = await query;
@@ -581,14 +581,14 @@ export function updateItem(itemId, updatedFields, type, auditMeta = null) {
     try {
       const payload = { ...updatedFields };
 
-      // Auditoría automática en historial_update para ItemsAlmacen
-      if (
-        (table === ITEMS || table === ItemsAlmacen || table === 'ItemsAlmacen') &&
-        !payload.historial_update
-      ) {
+      // Tablas que soportan historial acumulado: ItemsAlmacen y Menu
+      const isAlmacen = table === ITEMS || table === ItemsAlmacen || table === 'ItemsAlmacen';
+      const isMenu = table === MENU || table === MenuItems || table === 'Menu';
+
+      if ((isAlmacen || isMenu) && !payload.historial_update) {
         const state = (typeof getState === 'function') ? getState() : {};
-        const allItems = state.allItems || [];
-        let original = allItems.find(i => i._id === itemId);
+        const stateList = isMenu ? (state.allMenu || []) : (state.allItems || []);
+        let original = stateList.find(i => i._id === itemId);
 
         if (!original) {
           const { data: dbItem } = await supabase.from(table).select('*').eq('_id', itemId).maybeSingle();
@@ -597,7 +597,7 @@ export function updateItem(itemId, updatedFields, type, auditMeta = null) {
 
         if (original) {
           const cambios = {};
-          const ignoredKeys = ["_id", "historial_update", "FECHA_ACT", "createdAt", "updatedAt", "campos_parseados", "id"];
+          const ignoredKeys = ["_id", "historial_update", "FECHA_ACT", "createdAt", "updatedAt", "campos_parseados", "id", "Order"];
 
           Object.keys(payload).forEach(key => {
             if (key.startsWith('_') || ignoredKeys.includes(key)) return;
@@ -626,20 +626,37 @@ export function updateItem(itemId, updatedFields, type, auditMeta = null) {
           });
 
           if (Object.keys(cambios).length > 0) {
-            const meta = auditMeta || { origen: "Inventario (Manual)", tipo: "manual" };
+            const meta = auditMeta || {
+              origen: isMenu ? "Menú (Manual)" : "Inventario (Manual)",
+              tipo: "manual"
+            };
             payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, meta);
-            if (!payload.FECHA_ACT) {
+            if (isAlmacen && !payload.FECHA_ACT) {
               payload.FECHA_ACT = new Date().toISOString().split('T')[0];
             }
           }
         }
       }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from(table)
         .update(payload)
         .eq('_id', itemId)
         .select();
+
+      // Tolerancia si la columna historial_update aún no ha sido creada en la tabla Menu de Supabase
+      if (error && error.message && error.message.includes('historial_update') && payload.historial_update) {
+        console.warn('⚠️ La columna historial_update no existe en la tabla ' + table + '. Ejecuta alter_menu_add_historial.sql en Supabase. Guardando sin historial.');
+        const fallback = { ...payload };
+        delete fallback.historial_update;
+        const retryResult = await supabase
+          .from(table)
+          .update(fallback)
+          .eq('_id', itemId)
+          .select();
+        data = retryResult.data;
+        error = retryResult.error;
+      }
 
       if (error) {
         console.error('Error al actualizar el ítem:', error);

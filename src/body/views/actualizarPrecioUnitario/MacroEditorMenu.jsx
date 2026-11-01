@@ -166,7 +166,7 @@ const MacroEditorMenu = ({ onClose }) => {
       for (const item of itemsToUpdate) {
         const newPrice = calcNewPrice(item.Precio, priceMode, priceValue);
         try {
-          await dispatch(updateItem(item._id, { Precio: newPrice }, MenuItems));
+          await dispatch(updateItem(item._id, { Precio: newPrice }, MenuItems, { origen: "Macro Editor Menú", tipo: "automático" }));
           successCount++;
           setFeedback(`Actualizando... ${successCount} / ${itemsToUpdate.length}`);
         } catch (e) {

@@ -39,7 +39,10 @@ export default function P2PStreamManager({ onPlayTrackInDeck, onQueueTrack }) {
 
     try {
       const res = await fetch(`/api/p2p-search?q=${encodeURIComponent(query.trim())}`);
-      if (!res.ok) throw new Error('Error en la pasarela de búsqueda P2P');
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        throw new Error('La pasarela P2P no devolvió una respuesta JSON válida.');
+      }
       const data = await res.json();
       setResults(data.results || []);
       if (!data.results || data.results.length === 0) {

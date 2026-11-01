@@ -73,8 +73,8 @@ function DiaResumen() {
         const { data, error } = await supabase
           .from("Ventas")
           .select("*")
-          .like("Date", `${hoy}%`)
-          .order("Date", { ascending: true });
+          .like("Date", `${hoy}%`);
+
 
 
 

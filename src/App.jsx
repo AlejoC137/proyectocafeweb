@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import TopNav from './components/ui/top-nav';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -82,6 +82,26 @@ const PageLoader = () => (
 );
 
 function App() {
+  const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pc_sidebar_pinned');
+      if (saved !== null) return saved === 'true';
+      return typeof window !== 'undefined' && window.innerWidth >= 1024;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    try {
+      const savedPinned = localStorage.getItem('pc_sidebar_pinned');
+      if (savedPinned !== null) return savedPinned === 'true';
+      return typeof window !== 'undefined' && window.innerWidth >= 1024;
+    } catch (e) {
+      return false;
+    }
+  });
+
   useEffect(() => {
     // Escuchador BroadcastChannel local entre pestañas
     let bc;
@@ -126,10 +146,15 @@ function App() {
     <GlobalAuthModal>
       <div className='flex w-full min-h-screen relative bg-cream-bg text-darker-on-cream font-sans'>
         <div className="relative z-10 w-full overflow-x-hidden min-h-screen flex flex-col">
-          <TopNav />
+          <TopNav
+            isSidebarPinned={isSidebarPinned}
+            setIsSidebarPinned={setIsSidebarPinned}
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+          />
           <ErrorBoundary section="Aplicación">
             <Suspense fallback={<PageLoader />}>
-              <div className="flex-1 flex flex-col pt-14">
+              <div className={`flex-1 flex flex-col pt-14 transition-all duration-200 ${isSidebarPinned && isSidebarOpen ? 'md:pl-80' : ''}`}>
                 <Routes>
                   {/* --- CAFÉ, MENÚ & CLIENTES --- */}
                   <Route path="/" element={<StaffPortal />} />

@@ -335,9 +335,9 @@ const ItemMenuModal = ({ item: propItem, onClose, itemId: propItemId }) => {
     if (!editableItem || !editableItem._id) return;
     setIsSaving(true);
     try {
-      const updated = await dispatch(updateItem(editableItem._id, editableItem, MENU));
+      const updated = await dispatch(updateItem(editableItem._id, editableItem, MENU, { origen: "Modal Menú", tipo: "manual" }));
       if (updated) {
-        setMenuItem({ ...editableItem });
+        setMenuItem(Array.isArray(updated) && updated[0] ? { ...updated[0] } : { ...editableItem });
         setIsEditing(false);
         alert("Ítem de menú actualizado correctamente.");
       }
@@ -582,7 +582,94 @@ Optimiza la presentación, estrategia de precio y estructura de este platillo pa
 
           {/* TAB 1: VENTAS & HISTORIAL */}
           {activeTab === "ventas" && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Sección Historial de Cambios de Precio */}
+              <div>
+                <SectionHeader
+                  title="Historial de Cambios de Precio"
+                  subtitle="Registro cronológico acumulado de modificaciones de precio y configuración de este platillo"
+                  icon={TrendingUp}
+                />
+                {(() => {
+                  const priceLogs = parseHistoryEntries(menuItem?.historial_update);
+                  if (priceLogs.length === 0) {
+                    return (
+                      <div className="p-4 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 mt-3">
+                        <p className="text-xs font-semibold text-slate-500">Sin historial de cambios de precio registrado aún.</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Asegúrate de ejecutar el script SQL <code className="bg-slate-200 text-slate-700 px-1 rounded">alter_menu_add_historial.sql</code> en Supabase para habilitar el guardado acumulado en el Menú.
+                        </p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2 mt-3">
+                      {priceLogs.map((log, lIdx) => {
+                        const dateStr = log.fecha ? new Date(log.fecha).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" }) : "Fecha no registrada";
+                        const cambios = log.cambios || {};
+                        const changeKeys = Object.keys(cambios);
+                        return (
+                          <div key={log._id || lIdx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs space-y-2">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 text-[11px]">
+                              <div className="flex items-center gap-2">
+                                <span className="bg-blue-50 text-blue-700 font-bold px-1.5 py-0.2 rounded text-[10px]">
+                                  Log #{log.logIndex || (priceLogs.length - lIdx)}
+                                </span>
+                                <span className="font-semibold text-slate-700">{dateStr}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[9px] font-mono">
+                                  {log.origen || "Manual"}
+                                </span>
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                  (log.tipo || "").toLowerCase() === "automático" ? "bg-purple-100 text-purple-700" : "bg-amber-100 text-amber-800"
+                                }`}>
+                                  {log.tipo || "Manual"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              {changeKeys.map((campo) => {
+                                const c = cambios[campo] || {};
+                                const isPrice = campo === "Precio";
+                                const oldNum = Number(c.anterior);
+                                const newNum = Number(c.nuevo);
+                                const hasDiff = isPrice && !isNaN(oldNum) && !isNaN(newNum);
+                                const diff = hasDiff ? newNum - oldNum : 0;
+                                const pct = hasDiff && oldNum > 0 ? ((diff / oldNum) * 100).toFixed(1) : 0;
+
+                                return (
+                                  <div key={campo} className="flex items-center justify-between text-xs bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                    <span className="font-bold text-slate-600 text-[10px] uppercase w-28 truncate">{campo}</span>
+                                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                                      <span className="text-slate-400 line-through">
+                                        {isPrice && !isNaN(oldNum) ? formatCurrency(oldNum) : String(c.anterior ?? 'vacío')}
+                                      </span>
+                                      <span className="text-slate-300">→</span>
+                                      <span className="font-bold text-slate-900">
+                                        {isPrice && !isNaN(newNum) ? formatCurrency(newNum) : String(c.nuevo ?? 'vacío')}
+                                      </span>
+                                      {hasDiff && diff !== 0 && (
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                                          diff > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+                                        }`}>
+                                          {diff > 0 ? "+" : ""}{formatCurrency(diff)} ({diff > 0 ? "+" : ""}{pct}%)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+
               <SectionHeader
                 title="Historial de Ventas del Platillo"
                 subtitle="Consolidado de ventas registradas en comandas para este producto del menú"

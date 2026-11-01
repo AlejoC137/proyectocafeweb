@@ -241,9 +241,12 @@ export default function RadioStationSelector({
     setIsP2pSearching(true);
     try {
       const res = await fetch(`/api/p2p-search?q=${encodeURIComponent(p2pSearchQuery.trim())}`);
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         setP2pResults(data.results || []);
+      } else {
+        setP2pResults([]);
       }
     } catch (e) {
       console.warn("Error en búsqueda P2P:", e);
