@@ -499,10 +499,6 @@ export default function PlantaCadEditor({
   const [showConsumosModal, setShowConsumosModal] = useState(false);
   const [tarifasMep, setTarifasMep] = useState(TARIFAS_SERVICIOS);
   const [notifSincronizacion, setNotifSincronizacion] = useState(false);
-  const [inspectorTab, setInspectorTab] = useState('cad'); // 'cad', 'consumos', 'revit'
-  const [showConsumosModal, setShowConsumosModal] = useState(false);
-  const [tarifasMep, setTarifasMep] = useState(TARIFAS_SERVICIOS);
-  const [notifSincronizacion, setNotifSincronizacion] = useState(false);
 
   // Estados locales para las dimensiones de la habitación
   const anchoHab = Number(dimensionesHabitacion?.ancho || 3.20);
@@ -1381,7 +1377,8 @@ export default function PlantaCadEditor({
             title="Abrir Balance de Consumos Teóricos MEP de la Planta (Luz, Gas, Agua)"
           >
             <Zap className="w-3.5 h-3.5 text-black" />
-            Consumos MEP (` + '
+            Consumos MEP
+          </button>
 
           <button
             onClick={onResetOriginal}
@@ -2610,8 +2607,7 @@ export default function PlantaCadEditor({
               {eq.cuelloDeBotellaDesc || 'Activo operativo balanceado en la línea.'}
             </p>
           </div>
-        </d
-            </div>
+        </div>
           )}
 
           {/* PESTAÑA 2: CONSUMOS TEÓRICOS MEP */}
