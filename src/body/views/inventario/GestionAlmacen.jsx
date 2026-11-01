@@ -523,8 +523,12 @@ function GestionAlmacen() {
       {activeMainTab === "historial" && (
         <HistorialCambiosView
           items={Items}
+          menuItems={Menu}
           categorias={CATEGORIES}
-          onRefresh={() => dispatch(getAllFromTable(ITEMS))}
+          onRefresh={() => {
+            dispatch(getAllFromTable(ITEMS));
+            dispatch(getAllFromTable(MENU));
+          }}
         />
       )}
 

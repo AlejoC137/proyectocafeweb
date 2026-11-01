@@ -12,14 +12,19 @@ envFile.split(/\r?\n/).forEach(line => {
 });
 
 async function run() {
-  const url = `${env.VITE_SUPABASE_URL}/rest/v1/userPreferences?select=*&limit=3`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: env.VITE_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`
+  const tables = ['radio_current_play', 'userPreferences', 'playlist_radio'];
+  for (const t of tables) {
+    const res = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/${t}?limit=1`, {
+      headers: {
+        apikey: env.VITE_SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`
+      }
+    });
+    console.log(t, res.status);
+    if (res.ok) {
+      const d = await res.json();
+      console.log(t, 'sample keys:', Object.keys(d[0] || {}));
     }
-  });
-  const data = await res.json();
-  console.log('userPreferences sample:', data);
+  }
 }
 run();

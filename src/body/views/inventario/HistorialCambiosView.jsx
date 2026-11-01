@@ -2,30 +2,36 @@ import React, { useState, useMemo } from "react";
 import {
   History, Search, Filter, Calendar, Tag, ArrowRight,
   TrendingUp, TrendingDown, Layers, Sparkles, User,
-  Clock, Package, CheckCircle2, SlidersHorizontal, RefreshCcw
+  Clock, Package, CheckCircle2, SlidersHorizontal, RefreshCcw,
+  UtensilsCrossed, ShoppingCart
 } from "lucide-react";
 import { parseHistoryEntries } from "../../../utils/historyUtils";
 
-export default function HistorialCambiosView({ items = [], categorias = [], onRefresh }) {
+export default function HistorialCambiosView({ items = [], menuItems = [], categorias = [], onRefresh }) {
+  const [dataScope, setDataScope] = useState("almacen"); // "almacen" | "menu"
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("TODOS");
   const [selectedOrigen, setSelectedOrigen] = useState("TODOS");
   const [selectedTipo, setSelectedTipo] = useState("TODOS"); // "TODOS" | "manual" | "automático"
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  const rawActiveList = dataScope === "menu" ? menuItems : items;
+
   // Filter items that have at least one history entry
   const itemsWithHistory = useMemo(() => {
-    return items
+    return rawActiveList
       .map(item => {
         const parsed = parseHistoryEntries(item.historial_update);
         return {
           ...item,
+          _displayName: item.Nombre_del_producto || item.NombreES || item.NombreEN || "Sin nombre",
+          _displayPrice: item.Precio !== undefined ? item.Precio : (item.COSTO || 0),
           _historyEntries: parsed, // sorted newest first
           _historyCount: parsed.length
         };
       })
       .filter(item => item._historyCount > 0);
-  }, [items]);
+  }, [rawActiveList]);
 
   // Unique origins present in history
   const availableOrigins = useMemo(() => {
@@ -41,7 +47,8 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
   // Filtered products list
   const filteredProducts = useMemo(() => {
     return itemsWithHistory.filter(item => {
-      const matchesSearch = item.Nombre_del_producto?.toLowerCase().includes(searchTerm.toLowerCase());
+      const name = item._displayName.toLowerCase();
+      const matchesSearch = name.includes(searchTerm.toLowerCase());
       const matchesGroup = selectedGroup === "TODOS" || item.GRUPO === selectedGroup;
 
       const matchesOrigen = selectedOrigen === "TODOS" || item._historyEntries.some(e => e.origen === selectedOrigen);
@@ -100,7 +107,7 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
 
   const formatValue = (field, val) => {
     if (val === null || val === undefined || val === "") return <span className="text-slate-400 italic">vacío</span>;
-    if (field === "COSTO" || field === "precioUnitario") {
+    if (field === "COSTO" || field === "precioUnitario" || field === "Precio") {
       const num = Number(val);
       if (!isNaN(num)) return `$${new Intl.NumberFormat("es-CO").format(num)}`;
     }
@@ -111,39 +118,68 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
   return (
     <div className="flex flex-col h-[calc(100vh-185px)] gap-3 text-xs">
       
-      {/* Top Bar: KPIs & Filters */}
+      {/* Top Bar: Scope Selector, KPIs & Filters */}
       <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
         
+        {/* Scope Selector: Almacén vs Menú */}
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-100 p-0.5 rounded-lg flex items-center border border-slate-200">
+            <button
+              onClick={() => { setDataScope("almacen"); setSelectedProduct(null); }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                dataScope === "almacen"
+                  ? "bg-white text-blue-700 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <ShoppingCart className="h-3.5 w-3.5 text-blue-600" />
+              <span>Almacén (Insumos)</span>
+            </button>
+
+            <button
+              onClick={() => { setDataScope("menu"); setSelectedProduct(null); }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                dataScope === "menu"
+                  ? "bg-white text-amber-700 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <UtensilsCrossed className="h-3.5 w-3.5 text-amber-600" />
+              <span>Menú (Platillos)</span>
+            </button>
+          </div>
+        </div>
+
         {/* KPI Mini Badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <div className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg flex items-center gap-2">
             <Package className="h-4 w-4 text-blue-600" />
             <div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase">Con Historial</div>
+              <div className="text-[9px] text-slate-400 font-bold uppercase">Con Historial</div>
               <div className="font-bold text-slate-800 text-xs">{stats.totalProductsWithHistory} ítems</div>
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <div className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg flex items-center gap-2">
             <History className="h-4 w-4 text-indigo-600" />
             <div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase">Total Logs</div>
+              <div className="text-[9px] text-slate-400 font-bold uppercase">Total Logs</div>
               <div className="font-bold text-slate-800 text-xs">{stats.totalLogs} cambios</div>
             </div>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <div className="bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg flex items-center gap-2">
             <User className="h-4 w-4 text-amber-600" />
             <div>
-              <div className="text-[10px] text-amber-600 font-bold uppercase">Manuales</div>
+              <div className="text-[9px] text-amber-600 font-bold uppercase">Manuales</div>
               <div className="font-bold text-amber-900 text-xs">{stats.manualLogs}</div>
             </div>
           </div>
 
-          <div className="bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <div className="bg-purple-50 border border-purple-200 px-3 py-1 rounded-lg flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-purple-600" />
             <div>
-              <div className="text-[10px] text-purple-600 font-bold uppercase">Automáticos (IA)</div>
+              <div className="text-[9px] text-purple-600 font-bold uppercase">Automáticos</div>
               <div className="font-bold text-purple-900 text-xs">{stats.autoLogs}</div>
             </div>
           </div>
@@ -156,7 +192,7 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
             <Search className="h-3.5 w-3.5 absolute left-2 top-2 text-slate-400" />
             <input
               type="text"
-              placeholder="Buscar producto..."
+              placeholder={`Buscar en ${dataScope === "menu" ? "menú" : "almacén"}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-7 pr-2 py-1 border border-slate-200 rounded-lg text-xs w-44 focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white"
@@ -218,8 +254,8 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
         <div className="md:col-span-4 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col min-h-0 overflow-hidden">
           <div className="p-3 bg-slate-50/80 border-b border-slate-200 flex justify-between items-center">
             <span className="font-bold text-slate-700 text-xs flex items-center gap-1.5">
-              <Package className="h-4 w-4 text-blue-600" />
-              Productos con Cambios
+              {dataScope === "menu" ? <UtensilsCrossed className="h-4 w-4 text-amber-600" /> : <Package className="h-4 w-4 text-blue-600" />}
+              {dataScope === "menu" ? "Platillos con Cambios" : "Insumos con Cambios"}
             </span>
             <span className="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full text-[10px]">
               {filteredProducts.length}
@@ -230,7 +266,14 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
             {filteredProducts.length === 0 ? (
               <div className="text-center py-12 text-slate-400 space-y-2">
                 <Clock className="h-8 w-8 mx-auto opacity-30 text-slate-400" />
-                <p className="text-xs">No se encontraron productos con historial bajo los filtros actuales.</p>
+                <p className="text-xs">
+                  No hay {dataScope === "menu" ? "platillos del menú" : "insumos de almacén"} con cambios registrados bajo estos filtros.
+                </p>
+                {dataScope === "menu" && (
+                  <p className="text-[10px] text-slate-400 max-w-xs mx-auto">
+                    Cuando modifiques precios desde el <strong>Modal Menú</strong> o el <strong>Macro Editor</strong>, aparecerán aquí.
+                  </p>
+                )}
               </div>
             ) : (
               filteredProducts.map(prod => {
@@ -252,19 +295,23 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-slate-800 text-[11px] truncate" title={prod.Nombre_del_producto}>
-                          {prod.Nombre_del_producto}
+                        <div className="font-semibold text-slate-800 text-[11px] truncate" title={prod._displayName}>
+                          {prod._displayName}
                         </div>
                         <div className="flex items-center gap-1.5 text-[9px] text-slate-400 mt-0.5">
-                          <span className="bg-slate-100 px-1 rounded text-slate-600">{prod.GRUPO || "Sin grupo"}</span>
-                          <span>•</span>
-                          <span>{prod.UNIDADES}</span>
+                          <span className="bg-slate-100 px-1 rounded text-slate-600">{prod.GRUPO || "General"}</span>
+                          {prod.UNIDADES && (
+                            <>
+                              <span>•</span>
+                              <span>{prod.UNIDADES}</span>
+                            </>
+                          )}
                         </div>
                       </div>
 
                       <div className="text-right flex-shrink-0">
                         <span className="font-bold text-slate-800 text-[11px]">
-                          ${new Intl.NumberFormat("es-CO").format(prod.COSTO || 0)}
+                          ${new Intl.NumberFormat("es-CO").format(prod._displayPrice)}
                         </span>
                         <div className="flex items-center justify-end gap-1 mt-0.5">
                           <span className="bg-blue-100 text-blue-700 font-bold px-1.5 py-0.2 rounded text-[9px]">
@@ -313,23 +360,27 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
                     </span>
                   </div>
                   <h3 className="text-sm font-bold text-white mt-1">
-                    {activeProduct.Nombre_del_producto}
+                    {activeProduct._displayName}
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-4 text-right">
                   <div>
-                    <div className="text-[9px] text-slate-400 uppercase font-bold">Costo Actual</div>
+                    <div className="text-[9px] text-slate-400 uppercase font-bold">
+                      {dataScope === "menu" ? "Precio Actual Menú" : "Costo Actual"}
+                    </div>
                     <div className="text-sm font-extrabold text-blue-300">
-                      ${new Intl.NumberFormat("es-CO").format(activeProduct.COSTO || 0)}
+                      ${new Intl.NumberFormat("es-CO").format(activeProduct._displayPrice)}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-[9px] text-slate-400 uppercase font-bold">Precio Unitario</div>
-                    <div className="text-sm font-extrabold text-white">
-                      ${new Intl.NumberFormat("es-CO").format(activeProduct.precioUnitario || 0)}
+                  {activeProduct.precioUnitario !== undefined && (
+                    <div>
+                      <div className="text-[9px] text-slate-400 uppercase font-bold">Precio Unitario</div>
+                      <div className="text-sm font-extrabold text-white">
+                        ${new Intl.NumberFormat("es-CO").format(activeProduct.precioUnitario || 0)}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -342,14 +393,14 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
                 <div className="flex items-center gap-1.5 flex-nowrap">
                   {[...activeProduct._historyEntries].reverse().map((entry, idx) => {
                     const dateShort = entry.fecha ? new Date(entry.fecha).toLocaleDateString("es-CO", { month: "short", day: "numeric" }) : "";
-                    const costoNuevo = entry.cambios?.COSTO?.nuevo;
+                    const targetVal = entry.cambios?.Precio?.nuevo ?? entry.cambios?.COSTO?.nuevo;
 
                     return (
                       <React.Fragment key={idx}>
                         {idx > 0 && <span className="text-slate-300">→</span>}
                         <div className="flex flex-col items-center bg-white border border-blue-200 rounded px-2 py-1 shadow-2xs">
                           <span className="font-bold text-slate-800">
-                            {costoNuevo ? `$${new Intl.NumberFormat("es-CO").format(costoNuevo)}` : "Modif."}
+                            {targetVal !== undefined ? `$${new Intl.NumberFormat("es-CO").format(targetVal)}` : "Modif."}
                           </span>
                           <span className="text-[9px] text-slate-400">
                             {dateShort} ({entry.tipo || "manual"})
@@ -422,9 +473,8 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
                               const changeData = cambios[campo] || {};
                               const anterior = changeData.anterior;
                               const nuevo = changeData.nuevo;
-                              const diffInfo = (campo === "COSTO" || campo === "precioUnitario")
-                                ? getPriceDiff(anterior, nuevo)
-                                : null;
+                              const isMoney = campo === "COSTO" || campo === "precioUnitario" || campo === "Precio";
+                              const diffInfo = isMoney ? getPriceDiff(anterior, nuevo) : null;
 
                               return (
                                 <div
@@ -476,7 +526,9 @@ export default function HistorialCambiosView({ items = [], categorias = [], onRe
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-300 p-8 space-y-2">
               <History className="h-12 w-12 opacity-30" />
-              <p className="text-sm font-semibold text-slate-500">Selecciona un producto a la izquierda</p>
+              <p className="text-sm font-semibold text-slate-500">
+                Selecciona un {dataScope === "menu" ? "platillo" : "insumo"} a la izquierda
+              </p>
               <p className="text-xs text-slate-400 text-center max-w-sm">
                 Podrás revisar su línea de tiempo completa, cada cambio registrado con fecha, origen y si fue automático o manual.
               </p>
