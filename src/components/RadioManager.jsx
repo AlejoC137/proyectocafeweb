@@ -11,7 +11,6 @@ import AlbumTracklistModal from './radio/AlbumTracklistModal';
 import ListenersRemoteModal from './radio/ListenersRemoteModal';
 import P2PStreamManager from './radio/P2PStreamManager';
 import { extractYoutubeId, getYoutubeThumbnail, fetchYoutubeMetadata, YOUTUBE_CATEGORIES } from '../utils/youtubeHelpers';
-import fallbackCatalogData from '../data/localMusicCatalog.json';
 import { 
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
   GripVertical, Search, Filter, Layers, Disc, Tag, Calendar, Sparkles, 
@@ -358,14 +357,11 @@ export default function RadioManager() {
   const [showYoutubeBulkModal, setShowYoutubeBulkModal] = useState(false);
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
 
-  // Biblioteca y Cola Sincronizada con el Bat
-  const [batCatalog, setBatCatalog] = useState(() => {
-    return Array.isArray(fallbackCatalogData) && fallbackCatalogData.length > 0 ? fallbackCatalogData : [];
-  });
-  const [loadingCatalog, setLoadingCatalog] = useState(false);
-  const [selectedAirAlbumFolder, setSelectedAirAlbumFolder] = useState(() => {
-    return (Array.isArray(fallbackCatalogData) && fallbackCatalogData[0]?.folderName) || '';
-  });
+  // Biblioteca y Cola Sincronizada Dinámicamente con el Bat (Cero listas estáticas)
+  const [batCatalog, setBatCatalog] = useState([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [selectedAirAlbumFolder, setSelectedAirAlbumFolder] = useState('');
+  const lastCatalogSignatureRef = useRef('');
   const [isUpdatingAirList, setIsUpdatingAirList] = useState(false);
   const [mp3ViewMode, setMp3ViewMode] = useState('split'); // 'split' (ambos lados), 'queue' o 'library'
   const [libraryViewType, setLibraryViewType] = useState('tracks'); // 'tracks' o 'albums'
@@ -555,10 +551,17 @@ export default function RadioManager() {
     // 1. Verificación local inmediata (G:\Mi unidad\Radio\bat_heartbeat.json)
     try {
       const res = await fetch(`/api/bat-status?t=${Date.now()}`);
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const json = await res.json();
         if (json && json.online) {
           setIsBatOnline(true);
+          if (json.totalSongs && Number(json.totalSongs) > 0) {
+            const currentLoadedSongs = (batCatalog || []).reduce((acc, a) => acc + (a.tracks?.length || a.trackCount || 0), 0);
+            if (currentLoadedSongs !== Number(json.totalSongs)) {
+              fetchBatCatalog(true);
+            }
+          }
           return true;
         } else {
           // El servidor Vite local confirma que el BAT no está corriendo
@@ -581,72 +584,95 @@ export default function RadioManager() {
     return true;
   };
 
-  // Cargar biblioteca sincronizada por el .bat: primero vía endpoint local Vite, fallback a Supabase Storage
-  const fetchBatCatalog = async (silent = false) => {
+  // Cargar biblioteca 100% dinámica escaneada por el .bat (vía Supabase DB + Storage o disco local en Vite)
+  const fetchBatCatalog = async (silent = false, explicitCatalogUrl = null) => {
     try {
       if (!silent) setLoadingCatalog(true);
 
-      const fallbackList = Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [];
-      const fallbackTracks = fallbackList.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
+      const applyDynamicCatalog = (data, sourceLabel) => {
+        const totalTracks = data.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
+        setBatCatalog(data);
+        setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
+        if (!silent) {
+          setSuccess(`¡Biblioteca dinámica del .bat cargada (${sourceLabel})! (${data.length} álbumes, ${totalTracks} canciones).`);
+        }
+      };
 
-      // 1. Intentar cargar desde el endpoint local de Vite o catálogo público de la web
+      // 1. Si estamos en entorno local con Vite activo, leer el catalog.json generado en disco por el .bat
       try {
-        let localRes = await fetch(`/api/local-audio?file=catalog.json&t=${Date.now()}`);
-        if (!localRes.ok) {
-          localRes = await fetch(`/api/local-catalog?t=${Date.now()}`);
-        }
-        if (!localRes.ok) {
-          localRes = await fetch(`/catalog.json?t=${Date.now()}`);
-        }
-        if (localRes.ok) {
+        const localRes = await fetch(`/api/local-catalog?t=${Date.now()}`);
+        const ct = localRes.headers.get('content-type') || '';
+        if (localRes.ok && ct.includes('application/json')) {
           const localData = await localRes.json();
           if (Array.isArray(localData) && localData.length > 0) {
-            const localTracks = localData.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
-            if (localTracks >= fallbackTracks && localData.length >= fallbackList.length) {
-              setBatCatalog(localData);
-              setSelectedAirAlbumFolder(prev => prev || localData[0]?.folderName || '');
-              if (!silent) {
-                setSuccess(`¡Biblioteca completa cargada! (${localData.length} álbumes, ${localTracks} canciones).`);
-              }
-              return;
-            }
+            applyDynamicCatalog(localData, 'Disco Local');
+            return;
           }
         }
       } catch (e) {}
 
-      // 2. Usar catálogo empaquetado si tiene la colección completa (544 canciones)
-      if (fallbackList.length > 0) {
-        setBatCatalog(fallbackList);
-        setSelectedAirAlbumFolder(prev => prev || fallbackList[0]?.folderName || '');
-        if (!silent) {
-          setSuccess(`¡Biblioteca completa cargada! (${fallbackList.length} álbumes, ${fallbackTracks} canciones).`);
-        }
+      // 2. Consultar la URL del catálogo dinámico registrado por el .bat en la base de datos (radio_current_play.tyranny_settings.catalogUrl)
+      let targetCloudUrl = explicitCatalogUrl;
+      if (!targetCloudUrl) {
+        try {
+          const { data: playRow } = await supabase
+            .from('radio_current_play')
+            .select('tyranny_settings')
+            .eq('id', 1)
+            .single();
+          if (playRow?.tyranny_settings?.catalogUrl) {
+            targetCloudUrl = playRow.tyranny_settings.catalogUrl;
+            const ts = playRow.tyranny_settings;
+            lastCatalogSignatureRef.current = `${ts.catalogUrl || ''}|${ts.catalogSongsCount || ''}|${ts.catalogUpdatedAt || ''}`;
+          }
+        } catch (e) {}
       }
 
-      // 3. Fallback a Supabase Storage sólo si tiene IGUAL O MÁS canciones que la colección completa
+      if (targetCloudUrl) {
+        try {
+          const sep = targetCloudUrl.includes('?') ? '&' : '?';
+          const res = await fetch(`${targetCloudUrl}${sep}t=${Date.now()}`);
+          if (res.ok) {
+            const cloudData = await res.json();
+            if (Array.isArray(cloudData) && cloudData.length > 0) {
+              applyDynamicCatalog(cloudData, 'Supabase Live');
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 3. Buscar el archivo catalog_live_*.json más reciente directamente en el bucket Radio de Supabase Storage
       try {
-        const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/catalog.json?t=${Date.now()}`;
-        const res = await fetch(storageUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const storageTracks = data.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
-            // Solo sobreescribir si la versión remota es igual o más grande que la local empaquetada
-            if (storageTracks >= fallbackTracks && data.length >= fallbackList.length) {
-              setBatCatalog(data);
-              setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
-              if (!silent) {
-                setSuccess(`¡Biblioteca remota sincronizada! (${data.length} álbumes, ${storageTracks} canciones).`);
+        const { data: filesList } = await supabase.storage
+          .from('Radio')
+          .list('', {
+            limit: 20,
+            search: 'catalog_live_',
+            sortBy: { column: 'created_at', order: 'desc' }
+          });
+
+        if (Array.isArray(filesList) && filesList.length > 0) {
+          const sorted = [...filesList]
+            .filter(f => f.name && f.name.startsWith('catalog_live_') && f.name.endsWith('.json'))
+            .sort((a, b) => b.name.localeCompare(a.name));
+
+          if (sorted.length > 0) {
+            const newestFile = sorted[0].name;
+            const latestUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/${newestFile}?t=${Date.now()}`;
+            const res = await fetch(latestUrl);
+            if (res.ok) {
+              const storageData = await res.json();
+              if (Array.isArray(storageData) && storageData.length > 0) {
+                applyDynamicCatalog(storageData, 'Storage Dinámico');
+                return;
               }
-            } else {
-              console.log(`[RadioManager] Catálogo de Storage ignorado porque tiene menos canciones (${storageTracks}) que la biblioteca completa (${fallbackTracks}).`);
             }
           }
         }
       } catch (e) {}
     } catch (err) {
-      console.warn("No se pudo cargar catalog.json:", err);
-      setBatCatalog(prev => (prev && prev.length > 0 ? prev : (Array.isArray(fallbackCatalogData) ? fallbackCatalogData : [])));
+      console.warn("No se pudo cargar el catálogo dinámico del .bat:", err);
     } finally {
       if (!silent) setLoadingCatalog(false);
     }
@@ -742,15 +768,33 @@ export default function RadioManager() {
     return list;
   }, [batCatalog]);
 
+  const normalizeSearchStr = (str) =>
+    (str || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
   const filteredLibraryTracks = useMemo(() => {
     if (!librarySearchQuery.trim()) return libraryTracks;
-    const q = librarySearchQuery.toLowerCase();
-    return libraryTracks.filter(t => 
-      (t.title && t.title.toLowerCase().includes(q)) ||
-      (t.artist && t.artist.toLowerCase().includes(q)) ||
-      (t.album && t.album.toLowerCase().includes(q))
-    );
+    const words = normalizeSearchStr(librarySearchQuery).split(/\s+/).filter(Boolean);
+    return libraryTracks.filter(t => {
+      const haystack = normalizeSearchStr(
+        `${t.title || ''} ${t.artist || ''} ${t.album || ''} ${t.folderName || ''} ${t.fileName || ''}`
+      );
+      return words.every(w => haystack.includes(w));
+    });
   }, [libraryTracks, librarySearchQuery]);
+
+  const filteredLibraryAlbums = useMemo(() => {
+    if (!librarySearchQuery.trim()) return batCatalog || [];
+    const words = normalizeSearchStr(librarySearchQuery).split(/\s+/).filter(Boolean);
+    return (batCatalog || []).filter(alb => {
+      const albumText = `${alb.albumName || ''} ${alb.artist || ''} ${alb.folderName || ''} ${(alb.tracks || []).map(t => t.title || '').join(' ')}`;
+      const haystack = normalizeSearchStr(albumText);
+      return words.every(w => haystack.includes(w));
+    });
+  }, [batCatalog, librarySearchQuery]);
 
   const albumList = useMemo(() => {
     const isRealCover = (url) => url && !url.startsWith('blob:') && !url.includes('images.unsplash.com') && url.trim() !== '';
@@ -818,14 +862,20 @@ export default function RadioManager() {
         if (data.station_name) {
           lastAirTrackNameRef.current = data.station_name;
         }
+        const ts = data.tyranny_settings || {};
+        if (ts.catalogUrl || ts.catalogSongsCount || ts.catalogUpdatedAt) {
+          lastCatalogSignatureRef.current = `${ts.catalogUrl || ''}|${ts.catalogSongsCount || ''}|${ts.catalogUpdatedAt || ''}`;
+        }
         checkBatHeartbeat(data);
-        fetchBatCatalog(true); // Siempre cargar el catálogo disponible de canciones locales/en la nube
+        fetchBatCatalog(true, ts.catalogUrl || null);
 
         // Si la señal al aire está activa en la base de datos, preparar el reloj y la URL del Deck Rojo (sin reproducir en silencio hasta que el usuario active el Deck Rojo)
         if (data.is_playing && data.station_url) {
           const elapsed = Math.max(0, (Date.now() - new Date(data.updated_at).getTime()) / 1000);
           setAirTime(elapsed);
         }
+      } else {
+        fetchBatCatalog(true);
       }
     });
 
@@ -924,9 +974,17 @@ export default function RadioManager() {
               }
             }
           }
+          // Detectar si el .bat acaba de iniciar o actualizar el catálogo en la base de datos
+          const ts = row.tyranny_settings || {};
+          const newCatSig = `${ts.catalogUrl || ''}|${ts.catalogSongsCount || ''}|${ts.catalogUpdatedAt || ''}`;
+          if (newCatSig !== '||' && newCatSig !== lastCatalogSignatureRef.current) {
+            lastCatalogSignatureRef.current = newCatSig;
+            fetchBatCatalog(false, ts.catalogUrl || null);
+          }
+
           const online = checkBatHeartbeat(row);
           if (online && (row.station_artist === 'BAT_ONLINE' || row.station_artist === 'LIBRARY_LOADED' || row.station_name === 'BAT_READY')) {
-            fetchBatCatalog(true);
+            fetchBatCatalog(true, ts.catalogUrl || null);
           } else if (!online || row.station_artist === 'OFFLINE') {
             setIsBatOnline(false);
           }
@@ -2150,13 +2208,19 @@ export default function RadioManager() {
   const handleSyncWithBat = async () => {
     setIsUpdatingAirList(true);
     try {
+      // Solicitar al .bat en vivo que re-escanee la carpeta y actualice la BD
+      try {
+        await supabase.from('radio_current_play').update({ tab: 'RESCAN_CATALOG' }).eq('id', 1);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      } catch (e) {}
+
       const { data } = await supabase.from('radio_current_play').select('*').eq('id', 1).single();
       if (data) {
         checkBatHeartbeat(data);
       }
-      await fetchBatCatalog(false);
+      await fetchBatCatalog(false, data?.tyranny_settings?.catalogUrl || null);
       await fetchSongs();
-      setSuccess("🔄 ¡Catálogo y cola sincronizados correctamente!");
+      setSuccess("🔄 ¡Catálogo dinámico del .bat y cola sincronizados correctamente!");
     } catch (err) {
       setError("Error al sincronizar: " + err.message);
     } finally {
@@ -3275,7 +3339,7 @@ export default function RadioManager() {
                                 : 'text-gray-400 hover:text-white'
                             }`}
                           >
-                            <Disc className="w-3 h-3" /> Álbumes ({batCatalog.length})
+                            <Disc className="w-3 h-3" /> Álbumes ({filteredLibraryAlbums.length})
                           </button>
                         </div>
                       </div>
@@ -3409,7 +3473,7 @@ export default function RadioManager() {
                       ) : (
                         /* VISTA POR ÁLBUMES DE LA BIBLIOTECA */
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {batCatalog.map(alb => {
+                          {filteredLibraryAlbums.map(alb => {
                             const isExpanded = expandedLibraryAlbum === (alb.folderName || alb.albumName);
                             const trackCount = alb.tracks?.length || alb.trackCount || 0;
                             return (

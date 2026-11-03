@@ -8,26 +8,30 @@
 # - Retencion Segura (Grace Period): Evita cortes 404 al final de pista en moviles.
 # ==============================================================================
 
+param([switch]$ScanOnly)
+
 $ProgressPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # --- CONTROL DE INSTANCIA UNICA DEL TRANSMISOR (.BAT) ---
 $PID_LOCK_FILE = Join-Path $PSScriptRoot "bat_pid.lock"
-if (Test-Path $PID_LOCK_FILE) {
-    try {
-        $oldPid = [int](Get-Content $PID_LOCK_FILE -ErrorAction SilentlyContinue).Trim()
-        if ($oldPid -and $oldPid -ne $PID) {
-            $oldProc = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
-            if ($oldProc -and $oldProc.ProcessName -match "powershell|pwsh") {
-                Write-Host "[INSTANCIA UNICA] Cerrando instancia previa del transmisor (PID: $oldPid)..." -ForegroundColor Yellow
-                Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue
-                Start-Sleep -Milliseconds 500
+if (-not $ScanOnly) {
+    if (Test-Path $PID_LOCK_FILE) {
+        try {
+            $oldPid = [int](Get-Content $PID_LOCK_FILE -ErrorAction SilentlyContinue).Trim()
+            if ($oldPid -and $oldPid -ne $PID) {
+                $oldProc = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
+                if ($oldProc -and $oldProc.ProcessName -match "powershell|pwsh") {
+                    Write-Host "[INSTANCIA UNICA] Cerrando instancia previa del transmisor (PID: $oldPid)..." -ForegroundColor Yellow
+                    Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue
+                    Start-Sleep -Milliseconds 500
+                }
             }
-        }
-    } catch {}
+        } catch {}
+    }
+    try { [System.IO.File]::WriteAllText($PID_LOCK_FILE, "$PID", [System.Text.Encoding]::UTF8) } catch {}
 }
-try { [System.IO.File]::WriteAllText($PID_LOCK_FILE, "$PID", [System.Text.Encoding]::UTF8) } catch {}
 
 # --- CONFIGURACION DE CONEXION SUPABASE ---
 $SUPABASE_URL       = "https://gmothqjjqvbxshvvlbrq.supabase.co"
@@ -105,7 +109,7 @@ function Get-Mp3DurationSeconds($filePath) {
     } catch {}
 
     try {
-        $fileSize = (Get-Item $filePath).Length
+        $fileSize = (Get-Item -LiteralPath $filePath -ErrorAction SilentlyContinue).Length
         $est = [int]($fileSize / 24000) # Estimado conservador (~192kbps)
         if ($est -gt 10) {
             $global:DurationCache[$key] = $est
@@ -126,7 +130,8 @@ function Upload-Track($filePath, $remoteFilename) {
     }
 
     try {
-        Invoke-RestMethod -Uri $url -Method Post -Headers $headersUpload -InFile $filePath | Out-Null
+        $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
+        Invoke-RestMethod -Uri $url -Method Post -Headers $headersUpload -Body $fileBytes | Out-Null
         return $true
     } catch {
         Write-Host "`n [ERROR SUBIDA] Fallo subida a Storage: $_" -ForegroundColor Red
@@ -157,10 +162,10 @@ $global:SupportedImageRegex = '\.(jpg|jpeg|png|webp|bmp|gif)$'
 # Localizar la imagen de portada: subcarpeta de la cancion con fallback a la carpeta del .bat ($PSScriptRoot)
 function Get-TrackCoverPath($filePath) {
     # 1. Buscar en la subcarpeta del archivo de audio (si existe $filePath)
-    if ($filePath -and (Test-Path $filePath)) {
+    if ($filePath) {
         $trackDir = Split-Path $filePath -Parent
-        if (Test-Path $trackDir) {
-            $localImgs = @(Get-ChildItem -Path $trackDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match $global:SupportedImageRegex })
+        if ($trackDir -and (Test-Path -LiteralPath $trackDir)) {
+            $localImgs = @(Get-ChildItem -LiteralPath $trackDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match $global:SupportedImageRegex })
             if ($localImgs.Count -gt 0) {
                 # Priorizar nombres comunes: cover, folder, front, album, portada, art
                 $fav = $localImgs | Where-Object { $_.BaseName -match '^(cover|folder|front|album|portada|art)$' } | Select-Object -First 1
@@ -171,7 +176,7 @@ function Get-TrackCoverPath($filePath) {
     }
 
     # 2. Respaldo (Fallback): Buscar en la carpeta donde habita el .bat ($PSScriptRoot)
-    $rootImgs = @(Get-ChildItem -Path $PSScriptRoot -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match $global:SupportedImageRegex })
+    $rootImgs = @(Get-ChildItem -LiteralPath $PSScriptRoot -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match $global:SupportedImageRegex })
     if ($rootImgs.Count -gt 0) {
         $favRoot = $rootImgs | Where-Object { $_.BaseName -match '^(cover|folder|front|album|portada|logo|station|radio)$' } | Select-Object -First 1
         if ($favRoot) { return $favRoot.FullName }
@@ -183,7 +188,7 @@ function Get-TrackCoverPath($filePath) {
 
 # Subir portada a Supabase Storage con deduplicacion por hash (Zero Delay y reutilizable)
 function Ensure-CoverUploaded($localCoverPath) {
-    if (-not $localCoverPath -or -not (Test-Path $localCoverPath)) { return "" }
+    if (-not $localCoverPath -or -not (Test-Path -LiteralPath $localCoverPath)) { return "" }
 
     if ($global:UploadedCoversCache.ContainsKey($localCoverPath)) {
         return $global:UploadedCoversCache[$localCoverPath]
@@ -214,7 +219,8 @@ function Ensure-CoverUploaded($localCoverPath) {
     }
 
     try {
-        Invoke-RestMethod -Uri $url -Method Post -Headers $headersCover -InFile $localCoverPath | Out-Null
+        $coverBytes = [System.IO.File]::ReadAllBytes($localCoverPath)
+        Invoke-RestMethod -Uri $url -Method Post -Headers $headersCover -Body $coverBytes | Out-Null
         $publicUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/$remoteFilename"
         $global:UploadedCoversCache[$localCoverPath] = $publicUrl
         $coverName = Split-Path $localCoverPath -Leaf
@@ -241,7 +247,8 @@ function Start-AsyncTrackUpload($filePath, $remoteFilename) {
         try {
             $ProgressPreference = 'SilentlyContinue'
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-RestMethod -Uri $url -Method Post -Headers $headersUpload -InFile $filePath | Out-Null
+            $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
+            Invoke-RestMethod -Uri $url -Method Post -Headers $headersUpload -Body $fileBytes | Out-Null
             return $true
         } catch {
             return $false
@@ -323,16 +330,19 @@ function Update-CurrentPlay($title, $artist, $cover, $publicUrl, $isPlaying = $t
 function Send-BatHeartbeat($sec = 0, $duration = 180, $currentTitle = "") {
     try {
         $hbData = @{
-            online    = $true
-            sec       = $sec
-            duration  = $duration
-            title     = $currentTitle
-            timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+            online      = $true
+            sec         = $sec
+            duration    = $duration
+            title       = $currentTitle
+            totalSongs  = $global:IndexedTotalSongs
+            totalAlbums = $global:IndexedTotalAlbums
+            timestamp   = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
         } | ConvertTo-Json -Compress
 
         $destPaths = @(
             (Join-Path $PSScriptRoot "bat_heartbeat.json"),
-            "G:\Mi unidad\Radio\bat_heartbeat.json"
+            "G:\Mi unidad\Radio\bat_heartbeat.json",
+            "G:\Mi unidad\git\proyectocafeweb\bat_heartbeat.json"
         )
         foreach ($p in ($destPaths | Select-Object -Unique)) {
             try { [System.IO.File]::WriteAllText($p, $hbData, [System.Text.Encoding]::UTF8) } catch {}
@@ -451,14 +461,14 @@ function Find-TrackIndexInQueue($queueList, $track) {
 # ESCANEO Y GENERACION DE CATALOGO UNIFICADO
 # ==============================================================================
 function Build-And-Upload-MultiCatalog($folderList) {
-    Write-Host "`n>>> Escaneando biblioteca multi-carpeta..." -ForegroundColor Cyan
+    Write-Host "`n>>> Escaneando biblioteca multi-carpeta en tiempo real..." -ForegroundColor Cyan
     $seenFolders = [System.Collections.Generic.HashSet[string]]::new()
     $albumsDirs = [System.Collections.Generic.List[System.IO.DirectoryInfo]]::new()
 
     foreach ($folder in $folderList) {
-        if (-not (Test-Path $folder)) { continue }
+        if (-not (Test-Path -LiteralPath $folder)) { continue }
         Write-Host "    [Carpeta] $folder" -ForegroundColor DarkGray
-        $allMp3sInFolder = @(Get-ChildItem -Path $folder -Filter *.mp3 -Recurse -File)
+        $allMp3sInFolder = @(Get-ChildItem -LiteralPath $folder -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ieq ".mp3" })
         foreach ($mp3Item in $allMp3sInFolder) {
             $parentDir = $mp3Item.Directory
             $key = $parentDir.FullName.ToLower()
@@ -474,7 +484,7 @@ function Build-And-Upload-MultiCatalog($folderList) {
     $totalSongsCount = 0
 
     foreach ($alb in ($albumsDirs | Sort-Object Name)) {
-        $mp3Files = @(Get-ChildItem -Path $alb.FullName -Filter *.mp3 | Sort-Object Name)
+        $mp3Files = @(Get-ChildItem -LiteralPath $alb.FullName -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ieq ".mp3" } | Sort-Object Name)
         if ($mp3Files.Count -eq 0) { continue }
 
         $albumParts = $alb.Name -split ' - ', 2
@@ -529,22 +539,35 @@ function Build-And-Upload-MultiCatalog($folderList) {
         $albumId++
     }
 
+    $global:IndexedTotalSongs  = $totalSongsCount
+    $global:IndexedTotalAlbums = $catalogList.Count
+
     $jsonCatalog = $catalogList | ConvertTo-Json -Depth 5 -Compress
 
-    try {
-        [System.IO.File]::WriteAllText($LOCAL_CATALOG, $jsonCatalog, [System.Text.Encoding]::UTF8)
-        Write-Host " [OK] Catalogo local guardado: $($catalogList.Count) albumes, $totalSongsCount canciones." -ForegroundColor Green
-    } catch {}
+    $allLocalCatalogPaths = @(
+        $LOCAL_CATALOG,
+        "G:\Mi unidad\Radio\catalog.json",
+        "G:\Mi unidad\git\proyectocafeweb\catalog.json",
+        $WEB_REPO_CATALOG,
+        $WEB_PUBLIC_CATALOG
+    ) | Select-Object -Unique
 
-    if (Test-Path (Split-Path $WEB_REPO_CATALOG)) {
-        try { [System.IO.File]::WriteAllText($WEB_REPO_CATALOG, $jsonCatalog, [System.Text.Encoding]::UTF8) } catch {}
+    foreach ($catPath in $allLocalCatalogPaths) {
+        $parentPath = Split-Path $catPath -Parent
+        if ($parentPath -and (Test-Path -LiteralPath $parentPath)) {
+            try {
+                [System.IO.File]::WriteAllText($catPath, $jsonCatalog, [System.Text.Encoding]::UTF8)
+            } catch {}
+        }
     }
-    if (Test-Path (Split-Path $WEB_PUBLIC_CATALOG)) {
-        try { [System.IO.File]::WriteAllText($WEB_PUBLIC_CATALOG, $jsonCatalog, [System.Text.Encoding]::UTF8) } catch {}
-    }
+    Write-Host " [OK] Catalogo local actualizado: $($catalogList.Count) albumes, $totalSongsCount canciones." -ForegroundColor Green
 
+    # Subir catalogo versionado a Supabase Storage (INSERT limpio que evita bloqueo RLS de UPDATE)
+    $publicCatalogUrl = ""
     try {
-        $urlStorage = "$SUPABASE_URL/storage/v1/object/Radio/catalog.json"
+        $catTs = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        $remoteCatFilename = "catalog_live_$catTs.json"
+        $urlStorage = "$SUPABASE_URL/storage/v1/object/$BUCKET_NAME/$remoteCatFilename"
         $headersUpload = @{
             "Authorization" = "Bearer $SUPABASE_API_KEY"
             "apikey"        = "$SUPABASE_API_KEY"
@@ -552,8 +575,42 @@ function Build-And-Upload-MultiCatalog($folderList) {
             "x-upsert"      = "true"
         }
         Invoke-RestMethod -Uri $urlStorage -Method Post -Headers $headersUpload -Body ([System.Text.Encoding]::UTF8.GetBytes($jsonCatalog)) | Out-Null
-        Write-Host " [OK] Catalogo sincronizado en la nube." -ForegroundColor Green
-    } catch {}
+        $publicCatalogUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET_NAME/$remoteCatFilename"
+        Write-Host " [OK] Catalogo subido a Supabase Storage ($remoteCatFilename)." -ForegroundColor Green
+    } catch {
+        Write-Host " [AVISO] No se pudo subir catalogo a Storage: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+
+    # Notificar a la Base de Datos (radio_current_play) el conteo exacto de canciones, albumes y URL del catalogo
+    try {
+        $isoNow = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+        $curUrl = "$SUPABASE_URL/rest/v1/radio_current_play?select=tyranny_settings&id=eq.1"
+        $curResp = Invoke-RestMethod -Uri $curUrl -Headers $headers -TimeoutSec 5
+        $curRow = if ($curResp -is [System.Array]) { $curResp[0] } else { $curResp }
+
+        $tyrannyHash = @{}
+        if ($curRow -and $curRow.tyranny_settings) {
+            foreach ($prop in $curRow.tyranny_settings.PSObject.Properties) {
+                $tyrannyHash[$prop.Name] = $prop.Value
+            }
+        }
+        if ($publicCatalogUrl) {
+            $tyrannyHash["catalogUrl"] = $publicCatalogUrl
+        }
+        $tyrannyHash["catalogSongsCount"]  = $totalSongsCount
+        $tyrannyHash["catalogAlbumsCount"] = $catalogList.Count
+        $tyrannyHash["catalogUpdatedAt"]   = $isoNow
+
+        $dbSyncPayload = @{
+            tyranny_settings = $tyrannyHash
+            updated_at       = $isoNow
+        } | ConvertTo-Json -Depth 5 -Compress
+        $dbSyncBytes = [System.Text.Encoding]::UTF8.GetBytes($dbSyncPayload)
+        Invoke-RestMethod -Uri "$SUPABASE_URL/rest/v1/radio_current_play?id=eq.1" -Method Patch -Headers $headers -Body $dbSyncBytes | Out-Null
+        Write-Host " [OK] Base de datos Supabase actualizada con $totalSongsCount canciones y $($catalogList.Count) albumes." -ForegroundColor Green
+    } catch {
+        Write-Host " [AVISO] No se pudo registrar conteo de canciones en BD: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
 
     return $catalogList
 }
@@ -579,21 +636,31 @@ function Show-DashboardHeader($version, $configuredFolders, $catalogCount, $song
 # ==============================================================================
 # INICIO DE LA ESTACION
 # ==============================================================================
-$VERSION = "v4.0.0 [Stopwatch Sync & Dual Deck Ready]"
+$VERSION = "v4.1.0 [Auto-Refresh Catalog & DB Sync]"
 $folders = Get-ConfiguredFolders
 
-$fullCatalog = $null
-if (Test-Path $LOCAL_CATALOG) {
-    try {
-        $rawJson = [System.IO.File]::ReadAllText($LOCAL_CATALOG, [System.Text.Encoding]::UTF8)
-        $fullCatalog = $rawJson | ConvertFrom-Json
-        Write-Host "[INICIO RAPIDO] Catalogo local cargado al instante." -ForegroundColor Green
-    } catch {}
+# Pre-calentar cache de duraciones desde catalogo previo para que el escaneo al iniciar sea instantaneo
+foreach ($cacheCatPath in @($LOCAL_CATALOG, "G:\Mi unidad\Radio\catalog.json", $WEB_PUBLIC_CATALOG)) {
+    if ($cacheCatPath -and (Test-Path -LiteralPath $cacheCatPath)) {
+        try {
+            $rawPrevJson = [System.IO.File]::ReadAllText($cacheCatPath, [System.Text.Encoding]::UTF8)
+            $prevCat = $rawPrevJson | ConvertFrom-Json
+            foreach ($alb in $prevCat) {
+                if ($alb.tracks) {
+                    foreach ($t in $alb.tracks) {
+                        if ($t.filePath -and $t.duration -and [int]$t.duration -gt 5) {
+                            $global:DurationCache[$t.filePath.ToLower()] = [int]$t.duration
+                        }
+                    }
+                }
+            }
+            break
+        } catch {}
+    }
 }
 
-if (-not $fullCatalog -or $fullCatalog.Count -eq 0) {
-    $fullCatalog = Build-And-Upload-MultiCatalog -folderList $folders
-}
+# SIEMPRE escanear las carpetas al iniciar el .bat y actualizar el conteo real en la Base de Datos y en Radio Manager
+$fullCatalog = Build-And-Upload-MultiCatalog -folderList $folders
 
 $totalSongs = 0
 foreach ($alb in $fullCatalog) {
@@ -608,12 +675,14 @@ foreach ($alb in $fullCatalog) {
         $totalSongs += [int]$alb.trackCount
     }
 }
+$global:IndexedTotalSongs  = $totalSongs
+$global:IndexedTotalAlbums = $fullCatalog.Count
 
 $allLocalFiles = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
 $seenFilePaths = [System.Collections.Generic.HashSet[string]]::new()
 foreach ($f in $folders) {
-    if (Test-Path $f) {
-        $files = @(Get-ChildItem -Path $f -Filter *.mp3 -Recurse -File)
+    if (Test-Path -LiteralPath $f) {
+        $files = @(Get-ChildItem -LiteralPath $f -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ieq ".mp3" })
         foreach ($item in $files) {
             $k = $item.FullName.ToLower()
             if (-not $seenFilePaths.Contains($k)) {
@@ -627,6 +696,7 @@ foreach ($f in $folders) {
 Cleanup-OrphanLiveFiles
 
 Show-DashboardHeader -version $VERSION -configuredFolders $folders -catalogCount $fullCatalog.Count -songCount $totalSongs
+if ($ScanOnly) { exit 0 }
 
 # ==============================================================================
 # BUCLE MAESTRO DE EMISION
@@ -646,6 +716,31 @@ $vuIndex = 0
 
 try {
     while ($true) {
+        # 0. Detectar automaticamente si se agregaron o borraron MP3s en las carpetas configuradas
+        $currentDiskMp3s = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+        $currentSeenPaths = [System.Collections.Generic.HashSet[string]]::new()
+        foreach ($f in $folders) {
+            if (Test-Path -LiteralPath $f) {
+                $files = @(Get-ChildItem -LiteralPath $f -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ieq ".mp3" })
+                foreach ($item in $files) {
+                    $k = $item.FullName.ToLower()
+                    if (-not $currentSeenPaths.Contains($k)) {
+                        $currentSeenPaths.Add($k) | Out-Null
+                        $currentDiskMp3s.Add($item)
+                    }
+                }
+            }
+        }
+        if ($currentDiskMp3s.Count -ne $allLocalFiles.Count) {
+            Write-Host "`n>>> [AUTO-DETECCION] Cambio en carpetas detectado ($($allLocalFiles.Count) -> $($currentDiskMp3s.Count) MP3s). Sincronizando catalogo con BD..." -ForegroundColor Cyan
+            $allLocalFiles = $currentDiskMp3s
+            $seenFilePaths = $currentSeenPaths
+            $fullCatalog = Build-And-Upload-MultiCatalog -folderList $folders
+            $totalSongs = $global:IndexedTotalSongs
+            Show-DashboardHeader -version $VERSION -configuredFolders $folders -catalogCount $fullCatalog.Count -songCount $totalSongs
+if ($ScanOnly) { exit 0 }
+        }
+
         # 1. Consultar cola activa en Supabase en cada transicion
         $dbTracks = Get-SupabaseQueue
         $matchedTracks = Match-TracksToLocalFiles -dbList $dbTracks -localFilesList $allLocalFiles
@@ -753,7 +848,7 @@ try {
                 $pendingDeleteFilename = $previousRemoteFilename
             }
             $previousRemoteFilename = $remoteFilename
-        } elseif ($currentTrack.filePath -and (Test-Path $currentTrack.filePath)) {
+        } elseif ($currentTrack.filePath -and (Test-Path -LiteralPath $currentTrack.filePath)) {
             $duration = if ($currentTrack.duration -and $currentTrack.duration -gt 5) { [int]$currentTrack.duration } else { Get-Mp3DurationSeconds $currentTrack.filePath }
             $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
             $remoteFilename = "live_$timestamp.mp3"
@@ -875,7 +970,7 @@ try {
                     }
                 }
 
-                if ($nextCandidate -and $nextCandidate.filePath -and (Test-Path $nextCandidate.filePath)) {
+                if ($nextCandidate -and $nextCandidate.filePath -and (Test-Path -LiteralPath $nextCandidate.filePath)) {
                     $nextTs = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
                     $nextRemoteName = "live_$nextTs.mp3"
                     $nextDur = if ($nextCandidate.duration -and $nextCandidate.duration -gt 5) { [int]$nextCandidate.duration } else { Get-Mp3DurationSeconds $nextCandidate.filePath }
@@ -965,7 +1060,24 @@ try {
                 elseif ($key.Key -eq [ConsoleKey]::C) {
                     Write-Host "`n  [RE-ESCANEO] Actualizando catalogo completo de carpetas..." -ForegroundColor Cyan
                     $fullCatalog = Build-And-Upload-MultiCatalog -folderList $folders
-                    Write-Host "  [OK] Re-escaneo completado exitosamente." -ForegroundColor Green
+                    $totalSongs = $global:IndexedTotalSongs
+                    $allLocalFiles.Clear()
+                    $seenFilePaths.Clear()
+                    foreach ($f in $folders) {
+                        if (Test-Path -LiteralPath $f) {
+                            $files = @(Get-ChildItem -LiteralPath $f -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ieq ".mp3" })
+                            foreach ($item in $files) {
+                                $k = $item.FullName.ToLower()
+                                if (-not $seenFilePaths.Contains($k)) {
+                                    $seenFilePaths.Add($k) | Out-Null
+                                    $allLocalFiles.Add($item)
+                                }
+                            }
+                        }
+                    }
+                    Show-DashboardHeader -version $VERSION -configuredFolders $folders -catalogCount $fullCatalog.Count -songCount $totalSongs
+if ($ScanOnly) { exit 0 }
+                    Write-Host "  [OK] Re-escaneo completado: $($fullCatalog.Count) albumes, $totalSongs canciones sincronizadas con la BD." -ForegroundColor Green
                 }
                 elseif ($key.Key -eq [ConsoleKey]::Q) {
                     Write-Host "`n  [SALIENDO] Apagando emisora..." -ForegroundColor Red
@@ -1106,6 +1218,33 @@ try {
                     elseif ($cmdArtist -eq "NEXT_TRACK" -or $cmdName -eq "NEXT_TRACK") {
                         Write-Host "`n>>> [RADIO MANAGER] Siguiente pista solicitada al aire." -ForegroundColor Cyan
                         break
+                    }
+                    # 4. Re-escaneo en vivo solicitado desde el boton 'SINCRONIZAR BAT' en Radio Manager
+                    elseif ($cmdTab -eq "RESCAN_CATALOG") {
+                        Write-Host "`n>>> [RADIO MANAGER] Re-escaneo de biblioteca solicitado desde la web..." -ForegroundColor Cyan
+                        try {
+                            $ackRescan = @{ tab = "supabase" } | ConvertTo-Json -Compress
+                            Invoke-RestMethod -Uri "$SUPABASE_URL/rest/v1/radio_current_play?id=eq.1" -Method Patch -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($ackRescan)) | Out-Null
+                        } catch {}
+                        $fullCatalog = Build-And-Upload-MultiCatalog -folderList $folders
+                        $totalSongs = $global:IndexedTotalSongs
+                        $allLocalFiles.Clear()
+                        $seenFilePaths.Clear()
+                        foreach ($f in $folders) {
+                            if (Test-Path -LiteralPath $f) {
+                                $files = @(Get-ChildItem -LiteralPath $f -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -ieq ".mp3" })
+                                foreach ($item in $files) {
+                                    $k = $item.FullName.ToLower()
+                                    if (-not $seenFilePaths.Contains($k)) {
+                                        $seenFilePaths.Add($k) | Out-Null
+                                        $allLocalFiles.Add($item)
+                                    }
+                                }
+                            }
+                        }
+                        Show-DashboardHeader -version $VERSION -configuredFolders $folders -catalogCount $fullCatalog.Count -songCount $totalSongs
+if ($ScanOnly) { exit 0 }
+                        Write-Host "  [OK] Catalogo dinamico sincronizado con Radio Manager ($totalSongs canciones)." -ForegroundColor Green
                     }
                 } catch {}
             }

@@ -37,13 +37,28 @@ function localAudioDevPlugin() {
 
       server.middlewares.use('/api/local-catalog', (req, res) => {
         try {
-          const catalogPath = 'G:\\Mi unidad\\Radio\\catalog.json'
-          if (!fs.existsSync(catalogPath)) {
+          const candidates = [
+            'G:\\Mi unidad\\Radio\\catalog.json',
+            path.resolve(__dirname, 'catalog.json'),
+            path.resolve(__dirname, 'public', 'catalog.json')
+          ]
+          let bestPath = null
+          let bestMtime = 0
+          for (const c of candidates) {
+            if (fs.existsSync(c)) {
+              const st = fs.statSync(c)
+              if (st.mtimeMs > bestMtime) {
+                bestMtime = st.mtimeMs
+                bestPath = c
+              }
+            }
+          }
+          if (!bestPath) {
             res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
             res.end(JSON.stringify({ error: 'Catalog file not found' }))
             return
           }
-          let content = fs.readFileSync(catalogPath, 'utf8')
+          let content = fs.readFileSync(bestPath, 'utf8')
           if (content.charCodeAt(0) === 0xFEFF) {
             content = content.slice(1)
           }
