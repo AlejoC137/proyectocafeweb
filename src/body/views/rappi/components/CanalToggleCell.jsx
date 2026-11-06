@@ -9,11 +9,16 @@ export function CanalToggleCell({ item, onToggled }) {
   const [loadingField, setLoadingField] = useState(null);
 
   const handleToggle = async (campo) => {
+    const id = item._id || item.id;
+    if (!id) {
+      console.error("Error: el producto no tiene identificador válido (_id o id)", item);
+      return;
+    }
     const nuevoValor = !item[campo];
     setLoadingField(campo);
     try {
-      await dispatch(toggleCanalProducto(item._id, campo, nuevoValor));
-      if (onToggled) onToggled(item._id, campo, nuevoValor);
+      await dispatch(toggleCanalProducto(id, campo, nuevoValor));
+      if (onToggled) onToggled(id, campo, nuevoValor);
     } catch (err) {
       console.error("Error al actualizar canal:", err);
     } finally {

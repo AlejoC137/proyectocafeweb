@@ -578,6 +578,10 @@ export function crearItem(itemData, type, forId) {
 export function updateItem(itemId, updatedFields, type, auditMeta = null) {
   const table = type === MenuItems ? MENU : type;
   return async (dispatch, getState) => {
+    if (!itemId || itemId === "undefined" || itemId === "null") {
+      console.warn(`[updateItem] Se intentó actualizar un ítem sin ID en ${table}:`, { itemId, updatedFields });
+      return null;
+    }
     try {
       const payload = { ...updatedFields };
 

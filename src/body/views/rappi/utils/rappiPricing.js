@@ -61,8 +61,10 @@ export function analizarProducto(menuItem, cfg, recetasMenu, recetasProduccion, 
   const neto = precioRappi - comision;
   const gananciaLocal = precioLocal - costo;
   const gananciaRappi = neto - costo;
+  const itemId = menuItem._id || menuItem.id;
   return {
-    id: menuItem._id,
+    _id: itemId,
+    id: itemId,
     nombre: menuItem.NombreES,
     nombreEN: menuItem.NombreEN,
     descripcion: menuItem.DescripcionMenuES,

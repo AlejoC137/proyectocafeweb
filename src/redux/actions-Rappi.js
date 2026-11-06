@@ -78,8 +78,13 @@ export function updateRappiConfig(cfg, actualizadoPor = null) {
 // ---------------------------------------------------------------------------
 export function bulkUpdateMenu(ids = [], fields = {}, auditOrigen = "Rappi") {
   return async (dispatch) => {
+    const validIds = ids.filter((id) => id && id !== "undefined" && id !== "null");
+    if (!validIds.length) {
+      console.warn("⚠️ bulkUpdateMenu llamado sin IDs válidos:", ids);
+      return { ok: 0, fallidos: ids.length };
+    }
     const results = [];
-    for (const id of ids) {
+    for (const id of validIds) {
       // updateItem registra historial_update automáticamente para Menu
       const r = await dispatch(updateItem(id, fields, MENU, { origen: auditOrigen, tipo: "canal" }));
       results.push(r);
@@ -87,7 +92,7 @@ export function bulkUpdateMenu(ids = [], fields = {}, auditOrigen = "Rappi") {
     await dispatch(getAllFromTable(MENU));
     const fallidos = results.filter((r) => !r).length;
     if (fallidos > 0) {
-      console.warn(`⚠️ ${fallidos} productos no se actualizaron. ¿Ejecutaste alter_menu_add_canales.sql?`);
+      console.warn(`⚠️ ${fallidos} productos no se actualizaron.`);
     }
     return { ok: results.length - fallidos, fallidos };
   };
@@ -105,6 +110,7 @@ export function aplicarPreciosRappi(preciosById = {}) {
     let ok = 0;
     let fallidos = 0;
     for (const [id, precio] of Object.entries(preciosById)) {
+      if (!id || id === "undefined" || id === "null") continue;
       const r = await dispatch(
         updateItem(id, { Precio_Rappi: precio === null ? null : Math.round(precio) }, MENU, {
           origen: "Rappi (Moderador de precios)",
