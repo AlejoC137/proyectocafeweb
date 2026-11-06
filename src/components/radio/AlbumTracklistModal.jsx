@@ -123,9 +123,9 @@ export default function AlbumTracklistModal({
           onChange={handleFileAdd}
         />
 
-        {/* Cabecera del Modal con Fondo de Carátula */}
-        <div className="relative p-6 border-b-[3px] border-black dark:border-slate-700 bg-yellow-300 dark:bg-yellow-400 text-black flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 border-[3px] border-black flex-shrink-0 overflow-hidden bg-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+        {/* Cabecera del Modal Compacta estilo Spotify */}
+        <div className="relative p-4 border-b-[2.5px] border-black dark:border-slate-700 bg-yellow-300 dark:bg-yellow-400 text-black flex items-center gap-4">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 border-[2.5px] border-black flex-shrink-0 overflow-hidden bg-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <img 
               src={album.cover} 
               alt={album.albumName} 
@@ -134,45 +134,39 @@ export default function AlbumTracklistModal({
             />
           </div>
 
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-black text-white px-2 py-0.5 text-[9px] font-mono font-black uppercase">Álbum</span>
-              <span className="text-xs font-extrabold uppercase">{album.genre || 'General'}</span>
+          <div className="flex-1 min-w-0 space-y-0.5 pr-6">
+            <div className="flex items-center gap-1.5">
+              <span className="bg-black text-white px-1.5 py-0.5 text-[8px] font-mono font-black uppercase">Álbum</span>
+              <span className="text-[10px] font-extrabold uppercase truncate">{album.genre || 'General'}</span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-none text-black">
+            <h2 className="text-base sm:text-xl font-black uppercase tracking-tight leading-tight text-black truncate">
               {album.albumName}
             </h2>
 
-            <p className="text-xs font-black uppercase text-black/80">
-              {album.artistName} • {album.year || '2026'}
+            <p className="text-[11px] font-black uppercase text-black/80 truncate">
+              {album.artistName} • {album.year || '2026'} • {tracks.length} {tracks.length === 1 ? 'pista' : 'pistas'} ({formatTime(tracks.reduce((acc, t) => acc + (Number(t.duration) || 0), 0))})
             </p>
 
-            <div className="flex items-center gap-3 pt-1 text-[11px] font-mono font-bold text-black/90">
-              <span>{tracks.length} {tracks.length === 1 ? 'canción' : 'canciones'}</span>
-              <span>•</span>
-              <span>Duración: {formatTime(tracks.reduce((acc, t) => acc + (Number(t.duration) || 0), 0))}</span>
-            </div>
-
             {/* Acciones Rápidas del Álbum */}
-            <div className="flex items-center gap-2 pt-2 flex-wrap">
+            <div className="flex items-center gap-1.5 pt-1.5 flex-wrap">
               <button
                 onClick={() => {
                   if (onPlayAlbum) onPlayAlbum(album);
                   if (onPlayTrack && tracks[0]) onPlayTrack(tracks[0]);
                 }}
-                className="px-3.5 py-1.5 border-[2.5px] border-black bg-black text-white hover:bg-emerald-400 hover:text-black font-black uppercase text-xs transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1.5"
+                className="px-2.5 py-1 border-[2px] border-black bg-[#1DB954] text-black hover:bg-emerald-400 font-black uppercase text-[10px] transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1"
               >
-                <Play className="w-3.5 h-3.5 fill-current" /> Reproducir
+                <Play className="w-3 h-3 fill-current" /> Reproducir
               </button>
 
               <button
                 disabled={isUploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3.5 py-1.5 border-[2.5px] border-black bg-[#1DB954] text-black font-black uppercase text-xs hover:bg-emerald-400 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1.5 disabled:opacity-50"
+                className="px-2.5 py-1 border-[2px] border-black bg-black text-white font-black uppercase text-[10px] hover:bg-gray-800 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 disabled:opacity-50"
                 title="Subir canciones MP3 directamente a este álbum"
               >
-                {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Subir Canciones
+                {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} + MP3
               </button>
 
               {onEditAlbum && (
@@ -181,9 +175,9 @@ export default function AlbumTracklistModal({
                     onClose();
                     onEditAlbum(album);
                   }}
-                  className="px-3 py-1.5 border-[2.5px] border-black bg-white text-black font-black uppercase text-xs hover:bg-gray-200 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1"
+                  className="px-2.5 py-1 border-[2px] border-black bg-white text-black font-black uppercase text-[10px] hover:bg-gray-200 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1"
                 >
-                  <Edit3 className="w-3.5 h-3.5" /> Editar
+                  <Edit3 className="w-3 h-3" /> Editar
                 </button>
               )}
             </div>
@@ -191,85 +185,76 @@ export default function AlbumTracklistModal({
 
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 p-1.5 border-[2.5px] border-black bg-white hover:bg-black hover:text-white transition rounded-none"
+            className="absolute top-2.5 right-2.5 p-1 border-[2px] border-black bg-white hover:bg-black hover:text-white transition rounded-none"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Estado de Carga / Mensajes */}
         {uploadStatus && (
-          <div className="px-4 py-2 bg-black text-yellow-300 border-b-[2px] border-black text-xs font-mono font-bold flex items-center gap-2 justify-between">
+          <div className="px-3 py-1.5 bg-black text-yellow-300 border-b-[2px] border-black text-[11px] font-mono font-bold flex items-center gap-2 justify-between">
             <span>⚡ {uploadStatus}</span>
-            {isUploading && <Loader2 className="w-4 h-4 animate-spin text-[#1DB954]" />}
+            {isUploading && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1DB954]" />}
           </div>
         )}
 
         {/* Buscador de Pistas */}
-        <div className="p-3 bg-cream-bg dark:bg-[#0d0e15] border-b-[2px] border-black dark:border-slate-700 flex items-center justify-between gap-3">
+        <div className="px-3 py-2 bg-cream-bg dark:bg-[#0d0e15] border-b-[2px] border-black dark:border-slate-700 flex items-center justify-between gap-2">
           <input
             type="text"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            placeholder="🔍 Buscar canción en este álbum..."
-            className="w-full px-3 py-1.5 border-[2px] border-black dark:border-slate-600 bg-white dark:bg-[#1a1b26] text-xs font-bold uppercase outline-none focus:border-[#1DB954]"
+            placeholder="🔍 Filtrar pistas del álbum..."
+            className="w-full px-2.5 py-1 border-[1.5px] border-black dark:border-slate-600 bg-white dark:bg-[#1a1b26] text-[11px] font-bold uppercase outline-none focus:border-[#1DB954]"
           />
         </div>
 
-        {/* Lista de Canciones */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1">
+        {/* Lista de Canciones Compacta */}
+        <div className="flex-1 overflow-y-auto divide-y divide-black/10 dark:divide-slate-800">
           {filteredTracks.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 font-mono text-xs">
-              No se encontraron canciones en este álbum. Pulsa <strong>"+ SUBIR CANCIONES"</strong> para agregar temas MP3.
+            <div className="p-6 text-center text-gray-500 font-mono text-xs">
+              No se encontraron canciones en este álbum. Pulsa <strong>"+ MP3"</strong> para agregar temas.
             </div>
           ) : (
             filteredTracks.map((song, index) => (
               <div 
                 key={song.id || index}
-                className="group flex items-center justify-between p-2.5 border-[2px] border-transparent hover:border-black dark:hover:border-slate-500 bg-white/5 hover:bg-yellow-300/20 dark:hover:bg-yellow-400/10 transition"
+                onClick={() => onPlayTrack && onPlayTrack(song)}
+                className="group flex items-center justify-between px-3 py-1.5 hover:bg-yellow-300/25 dark:hover:bg-white/5 transition cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-6 text-center text-xs font-mono font-bold text-gray-400 group-hover:text-black dark:group-hover:text-white">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-5 text-center text-[10px] font-mono font-bold text-gray-400 group-hover:hidden">
                     {index + 1}
                   </span>
+                  <Play className="w-3.5 h-3.5 hidden group-hover:block text-[#1DB954] fill-current flex-shrink-0" />
 
                   <div className="min-w-0">
-                    <h4 className="text-xs font-black uppercase text-black dark:text-white truncate">
+                    <h4 className="text-[11px] font-black uppercase text-black dark:text-white truncate leading-tight">
                       {song.title}
                     </h4>
-                    <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate">
+                    <p className="text-[9px] font-bold text-gray-500 dark:text-gray-400 truncate leading-tight">
                       {song.artist}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-[11px] font-mono font-bold text-gray-400">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[10px] font-mono font-bold text-gray-400">
                     {formatTime(song.duration || 180)}
                   </span>
 
-                  <button
-                    onClick={() => {
-                      if (onPlayTrack) onPlayTrack(song);
-                    }}
-                    className="p-1.5 border-[2px] border-black bg-[#1DB954] text-black hover:bg-emerald-400 transition font-extrabold text-[10px] flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-                    title="Reproducir esta canción"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Reproducir
-                  </button>
-
                   {onDeleteTrack && (
                     <button
-                      onClick={() => {
-                        if (onDeleteTrack) {
-                          onDeleteTrack(song.id);
-                          setLocalTracks(prev => prev.filter(t => t.id !== song.id));
-                        }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteTrack(song.id);
+                        setLocalTracks(prev => prev.filter(t => t.id !== song.id));
                       }}
-                      className="p-1.5 border-[2.5px] border-black bg-red-500 text-white hover:bg-red-600 transition"
+                      className="p-1 border-[1.5px] border-black bg-red-500 text-white hover:bg-red-600 transition opacity-70 group-hover:opacity-100"
                       title="Eliminar esta canción del álbum"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   )}
                 </div>

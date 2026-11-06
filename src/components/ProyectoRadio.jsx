@@ -691,38 +691,38 @@ export default function ProyectoRadio() {
         allowAdminNav={tyrannySettings?.allowAdminNav}
       />
 
-      {/* LAYOUT PRINCIPAL */}
-      <div className="relative z-10 px-4 lg:px-6 pb-8 mx-auto w-full" style={{ maxWidth: '1600px' }}>
+      {/* LAYOUT PRINCIPAL COMPACTO Y ADAPTATIVO */}
+      <div className="relative z-10 px-3 lg:px-5 pb-6 mx-auto w-full" style={{ maxWidth: '1720px' }}>
         
-        {/* MOBILE TABS SWITCHER */}
-        <div className="lg:hidden flex border-[3px] border-black bg-cream-bg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 rounded-none overflow-hidden">
+        {/* MOBILE TABS SWITCHER COMPACTO */}
+        <div className="lg:hidden flex border-[2.5px] border-black bg-cream-bg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mb-3 rounded-none overflow-hidden">
           <button 
             onClick={() => setMobileTab('agenda')}
-            className={`flex-1 py-3 px-2 font-black uppercase text-xs sm:text-sm border-r-[3px] border-black transition-colors ${mobileTab === 'agenda' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
+            className={`flex-1 py-2 px-2 font-black uppercase text-xs border-r-[2.5px] border-black transition-colors ${mobileTab === 'agenda' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
           >
             Agenda
           </button>
           <button 
             onClick={() => setMobileTab('player')}
-            className={`flex-1 py-3 px-2 font-black uppercase text-xs sm:text-sm border-r-[3px] border-black transition-colors ${mobileTab === 'player' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
+            className={`flex-1 py-2 px-2 font-black uppercase text-xs border-r-[2.5px] border-black transition-colors ${mobileTab === 'player' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
           >
             Radio
           </button>
           <button 
             onClick={() => setMobileTab('menu')}
-            className={`flex-1 py-3 px-2 font-black uppercase text-xs sm:text-sm transition-colors ${mobileTab === 'menu' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
+            className={`flex-1 py-2 px-2 font-black uppercase text-xs transition-colors ${mobileTab === 'menu' ? 'bg-black text-white' : 'hover:bg-black/5'}`}
           >
             Menú
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12 xl:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 items-start">
           
-          <div className={`${mobileTab === 'agenda' ? 'block' : 'hidden'} lg:block`}>
+          <div className={`${mobileTab === 'agenda' ? 'block' : 'hidden'} lg:block lg:col-span-3`}>
             <AgendaColumn {...cafeData} />
           </div>
 
-          <div className={`flex-col gap-4 ${mobileTab === 'player' ? 'flex' : 'hidden'} lg:flex`}>
+          <div className={`flex-col gap-2.5 ${mobileTab === 'player' ? 'flex' : 'hidden'} lg:flex lg:col-span-6`}>
             <PlayerCenter 
               currentTrack={{
                 ...currentTrack,
@@ -784,7 +784,7 @@ export default function ProyectoRadio() {
             />
           </div>
 
-          <div className={`${mobileTab === 'menu' ? 'block' : 'hidden'} lg:block`}>
+          <div className={`${mobileTab === 'menu' ? 'block' : 'hidden'} lg:block lg:col-span-3`}>
             {/* Componente original preservado (descomentar para reactivar Carta de Hoy + carrusel):
                 <MenuColumn {...cafeData} />
             */}

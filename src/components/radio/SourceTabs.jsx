@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
-import { Cloud, Globe, Youtube, Loader2, ArrowUp, ArrowDown, Trash2, Search, Play, Heart, Plus, Sparkles, Radio, Shuffle, Lock } from 'lucide-react';
+import React from 'react';
+import { Cloud, Globe, Youtube, Loader2, Search, Play, Heart, Plus, Shuffle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
-import AlejoSpotifySearch from './AlejoSpotifySearch';
 import RadioStationSelector from './RadioStationSelector';
-
 
 export default function SourceTabs({
   activeTab,
@@ -12,26 +10,11 @@ export default function SourceTabs({
   isConsoleLocked = false,
   currentPlay = null,
   supabasePlaylist = [],
-  filteredSupabasePlaylist,
-  supabaseSearchQuery,
-  setSupabaseSearchQuery,
-  selectedGenre,
-  setSelectedGenre,
-  selectedArtist,
-  setSelectedArtist,
-  selectedAlbum,
-  setSelectedAlbum,
-  activeView,
-  setActiveView,
-  loadingSupabase = false,
   currentTrackIndex,
   setCurrentTrackIndex,
   setIsPlaying,
   broadcastPlay,
   isApplyingRemoteChange,
-  moveSongOrder,
-  handleDeleteSong,
-  updateAlbumData,
   toggleFavorite,
   selectedCategory,
   setSelectedCategory,
@@ -52,27 +35,25 @@ export default function SourceTabs({
   youtubeSearchQuery = '',
   setYoutubeSearchQuery,
   loadingYoutube = false,
-  toggleYoutubeFavorite,
-  handleDeleteYoutubeLink,
-  continueYoutubeAutoplay = true,
-  setContinueYoutubeAutoplay
+  toggleYoutubeFavorite
 }) {
   const navigate = useNavigate();
 
   return (
-    <>
-      {/* TABS de fuente */}
-      <div className="flex flex-col border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.1)] rounded-none mb-4 w-full transition-colors overflow-hidden">
+    <div className="flex flex-col gap-2">
+      {/* TABS DE FUENTE COMPACTOS HORIZONTALES ESTILO SPOTIFY PILLS */}
+      <div className="flex flex-col border-[2.5px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.06)] rounded-none w-full transition-colors overflow-hidden">
         {isConsoleLocked && (
-          <div className="w-full bg-red-600 text-white px-3 py-1.5 text-center font-black uppercase text-[10px] md:text-xs tracking-widest flex items-center justify-center gap-1.5 border-b-[3px] border-black animate-pulse">
-            <Lock className="w-3.5 h-3.5 stroke-[3]" />
-            <span>Consola Bloqueada por Radio Manager (Modo Tiránico Activo)</span>
+          <div className="w-full bg-red-600 text-white px-2.5 py-1 text-center font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-1.5 border-b-[2px] border-black">
+            <Lock className="w-3 h-3 stroke-[3]" />
+            <span>Consola Bloqueada por Radio Manager</span>
           </div>
         )}
-        <div className="flex flex-wrap md:flex-nowrap w-full">
-          {[{id:'supabase',icon:<Cloud className="w-5 h-5"/>,label:'Files'},
-            {id:'live',icon:<Globe className="w-5 h-5"/>,label:'Radio'},
-            {id:'youtube',icon:<Youtube className="w-5 h-5 text-red-600"/>,label:'YouTube'},
+        <div className="flex w-full">
+          {[
+            { id: 'supabase', icon: <Cloud className="w-3.5 h-3.5" />, label: 'Files / Álbumes' },
+            { id: 'live', icon: <Globe className="w-3.5 h-3.5" />, label: 'Radios' },
+            { id: 'youtube', icon: <Youtube className="w-3.5 h-3.5 text-red-500" />, label: 'YouTube' },
           ].map(tab => {
             const isCurrent = activeTab === tab.id;
             const isLockedOut = isConsoleLocked && !isCurrent;
@@ -80,33 +61,22 @@ export default function SourceTabs({
               <button 
                 key={tab.id} 
                 onClick={() => {
-                  if (isConsoleLocked && !isCurrent) {
-                    return; // Bloqueo total
-                  }
+                  if (isConsoleLocked && !isCurrent) return;
                   handleTabChange(tab.id);
                 }}
                 disabled={isLockedOut}
                 title={isLockedOut ? "Consola bloqueada por Cabina Central" : `Modo ${tab.label}`}
-                className={`flex-1 flex flex-col items-center justify-center gap-1.5 p-3 font-black uppercase tracking-widest text-[10px] md:text-[11px] transition-all border-r-[3px] last:border-r-0 border-black dark:border-slate-700 rounded-none relative ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 font-black uppercase tracking-wider text-[11px] transition-all border-r-[2px] last:border-r-0 border-black dark:border-slate-700 rounded-none relative ${
                   isCurrent
-                    ? 'bg-black text-white dark:bg-yellow-400 dark:text-black font-black'
+                    ? 'bg-black text-white dark:bg-[#1DB954] dark:text-black font-black'
                     : isLockedOut
                     ? 'bg-gray-200 dark:bg-slate-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
                     : 'bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-slate-300 hover:bg-black/10 dark:hover:bg-slate-800'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
-                  {tab.icon}
-                  {isLockedOut && <Lock className="w-3 h-3 text-red-500" />}
-                </div>
-                <span className="hidden sm:inline" style={{ fontFamily: "'First Bunny', sans-serif", fontSize: '14px' }}>
-                  {tab.label}
-                </span>
-                {isLockedOut && (
-                  <span className="text-[9px] font-bold text-red-600 dark:text-red-400 tracking-normal hidden md:inline">
-                    🔒 Fijo
-                  </span>
-                )}
+                {tab.icon}
+                <span className="truncate">{tab.label}</span>
+                {isLockedOut && <Lock className="w-2.5 h-2.5 text-red-500 shrink-0" />}
               </button>
             );
           })}
@@ -114,7 +84,7 @@ export default function SourceTabs({
       </div>
 
       {/* CONTENIDO DEL TAB */}
-      <div className="border-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] rounded-none transition-colors">
+      <div className="border-[2.5px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.06)] rounded-none transition-colors">
         {/* TAB: RADIO STATION (Selector interactivo de la emisora) */}
         {activeTab === 'supabase' && (
           <RadioStationSelector
@@ -130,90 +100,105 @@ export default function SourceTabs({
           />
         )}
 
-        {/* TAB: RADIO */}
+        {/* TAB: RADIOS ONLINE */}
         {activeTab === 'live' && (
-          <div className="p-3">
-            <div className="flex items-center justify-between mb-3 border-b-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#1e1f2e] bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] dark:bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(255,255,255,0.05)_4px,rgba(255,255,255,0.05)_5px)] px-3 py-2">
-              <h3 className="text-xl lg:text-2xl font-black flex items-center gap-2 uppercase tracking-widest text-black dark:text-white mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                <Globe className="w-6 h-6 -mt-1 flex-shrink-0 text-cyan-400" />
-                <span className="truncate">Radio</span>
-              </h3>
-              {loadingApi && <Loader2 className="w-5 h-5 animate-spin text-black dark:text-white" />}
+          <div className="p-2.5 sm:p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex gap-1 flex-wrap">
+                {['lofi', 'jazz', 'rock', 'salsa', 'chillout', 'classical'].map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => { setSelectedCategory(tag); setSearchQuery(''); }}
+                    className={`px-2 py-1 border border-black dark:border-slate-600 text-[10px] font-black uppercase tracking-wider transition ${
+                      selectedCategory === tag && !searchQuery
+                        ? 'bg-black text-white dark:bg-[#1DB954] dark:text-black dark:border-[#1DB954]'
+                        : 'bg-white dark:bg-[#0d0e15] text-black dark:text-slate-200 hover:bg-yellow-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              {loadingApi && <Loader2 className="w-4 h-4 animate-spin text-black dark:text-white shrink-0" />}
             </div>
-            <div className="flex gap-1.5 flex-wrap mb-3">
-              {['lofi', 'jazz', 'rock', 'salsa', 'chillout', 'classical'].map(tag => (
-                <button key={tag} onClick={() => { setSelectedCategory(tag); setSearchQuery(''); }}
-                  className={`px-3 py-1.5 border-[2px] border-black dark:border-slate-600 text-[10px] font-black uppercase tracking-widest transition shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] rounded-none ${
-                    selectedCategory === tag && !searchQuery ? 'bg-black text-white dark:bg-yellow-400 dark:text-black dark:border-yellow-400' : 'bg-white dark:bg-[#0d0e15] text-black dark:text-slate-200 hover:bg-yellow-100 dark:hover:bg-slate-800'
-                  }`}
-                >{tag}</button>
-              ))}
-            </div>
-            <form onSubmit={handleSearchSubmit} className="relative mb-3 flex gap-2">
-              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar emisora en vivo..."
-                className="w-full pl-10 pr-4 py-2 border-[2.5px] border-black dark:border-slate-600 bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-white text-xs font-bold uppercase placeholder-black/50 dark:placeholder-white/40 outline-none rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-              />
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-black dark:text-slate-400" />
-              <button type="submit" className="px-4 py-2 border-[2.5px] border-black dark:border-slate-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-black dark:bg-yellow-400 text-white dark:text-black text-xs font-black uppercase rounded-none hover:bg-white dark:hover:bg-white hover:text-black transition">Buscar</button>
+
+            <form onSubmit={handleSearchSubmit} className="relative mb-2.5 flex gap-1.5">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Buscar emisora en vivo..."
+                  className="w-full pl-8 pr-3 py-1.5 border-[2px] border-black dark:border-slate-600 bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-white text-xs font-bold placeholder-gray-400 outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-3 py-1.5 border-[2px] border-black dark:border-slate-600 bg-black dark:bg-[#1DB954] text-white dark:text-black text-xs font-black uppercase hover:opacity-90 transition"
+              >
+                Buscar
+              </button>
             </form>
-            <div className="space-y-1.5 overflow-y-auto max-h-64 pr-1">
+
+            <div className="divide-y divide-black/10 dark:divide-white/5 border-[2px] border-black dark:border-slate-700 overflow-y-auto max-h-[360px] custom-scrollbar">
               {apiStations.map((station, index) => {
                 const isCurrent = activeTab === 'live' && currentTrackIndex === index;
                 return (
-                  <div key={station.id || index} onClick={() => { setCurrentTrackIndex(index); setIsPlaying(true); if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) broadcastPlay(station, 'live', true); }}
-                    className={`p-2 border-[2.5px] border-black dark:border-slate-700 flex items-center justify-between cursor-pointer transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.05)] rounded-none ${
-                      isCurrent 
-                        ? 'bg-black text-white border-cyan-400 dark:bg-[#08080c] dark:border-yellow-400' 
-                        : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white hover:bg-yellow-50 dark:hover:bg-slate-800 group'
+                  <div
+                    key={station.id || index}
+                    onClick={() => {
+                      setCurrentTrackIndex(index);
+                      setIsPlaying(true);
+                      if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
+                        broadcastPlay(station, 'live', true);
+                      }
+                    }}
+                    className={`px-2.5 py-1.5 flex items-center justify-between cursor-pointer transition ${
+                      isCurrent
+                        ? 'bg-[#1DB954]/15 text-black dark:text-white'
+                        : 'bg-white dark:bg-[#181926] text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 group'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 flex-1 truncate">
-                      <span className={`text-[10px] font-black w-5 text-center flex-shrink-0 ${isCurrent ? 'text-cyan-400 dark:text-yellow-400' : 'text-black/70 dark:text-slate-400'}`}>
-                        {index}
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <span className={`text-[10px] font-mono font-bold w-4 text-center flex-shrink-0 ${isCurrent ? 'text-[#1DB954]' : 'text-gray-400'}`}>
+                        {index + 1}
                       </span>
-                      <div className="w-10 h-10 border-[2px] border-black overflow-hidden flex-shrink-0 bg-black relative group/img">
-                        <img 
-                          src={station.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'} 
-                          alt={station.title} 
+                      <div className="w-7 h-7 rounded-sm border border-black/20 overflow-hidden flex-shrink-0 bg-black relative">
+                        <img
+                          src={station.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                          alt={station.title}
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400';
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200';
                           }}
-                          className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-200" 
+                          className="w-full h-full object-cover"
                         />
-                        <div className={`absolute inset-0 flex items-center justify-center ${isCurrent ? 'bg-black/60' : 'bg-black/40 opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                          <Play className="w-4 h-4 text-cyan-400 fill-current" />
-                        </div>
                       </div>
                       <div className="truncate flex-1">
-                        <p className={`text-xs font-black truncate uppercase tracking-wider ${isCurrent ? 'text-cyan-400 dark:text-yellow-400' : 'text-black dark:text-white'}`}>
+                        <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-red-600 dark:text-[#1DB954] font-black' : 'text-black dark:text-white'}`}>
                           {station.title}
                         </p>
-                        <p className="text-[10px] font-bold uppercase opacity-80 truncate text-black/70 dark:text-slate-300">
-                          📻 {station.artist || 'Emisora En Vivo'}
+                        <p className="text-[10px] text-gray-500 dark:text-slate-400 truncate leading-tight">
+                          {station.artist || 'Emisora En Vivo'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (toggleFavorite) toggleFavorite(station);
                         }}
-                        className="p-1.5 border-[1.5px] border-black dark:border-slate-600 bg-white dark:bg-[#12131C] text-black dark:text-white transition hover:bg-red-50 hover:scale-105 rounded-none"
+                        className="p-1 text-gray-400 hover:text-red-500 transition"
                         title="Añadir a Files"
                       >
-                        <Heart 
-                          className={`w-3.5 h-3.5 ${supabasePlaylist.some(s => s.url === station.url || s.id === station.id) ? 'fill-[#FF0000] text-[#FF0000]' : 'text-black dark:text-white'}`} 
+                        <Heart
+                          className={`w-3.5 h-3.5 ${supabasePlaylist.some(s => s.url === station.url || s.id === station.id) ? 'fill-[#FF0000] text-[#FF0000]' : ''}`}
                         />
                       </button>
-                      {isCurrent ? (
-                        <span className="text-[9px] font-black px-2 py-1 bg-[#FF0000] border-[1.5px] border-black text-white shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase">LIVE</span>
-                      ) : (
-                        <div className="p-1.5 border-[1.5px] border-black dark:border-slate-600 bg-white dark:bg-[#12131C] text-black dark:text-white group-hover:bg-black group-hover:text-white dark:group-hover:bg-yellow-400 dark:group-hover:text-black transition rounded-none">
-                          <Play className="w-3.5 h-3.5 fill-current" />
-                        </div>
+                      {isCurrent && (
+                        <span className="text-[8px] font-black px-1.5 py-0.5 bg-red-600 text-white uppercase">LIVE</span>
                       )}
                     </div>
                   </div>
@@ -225,133 +210,123 @@ export default function SourceTabs({
 
         {/* TAB: YOUTUBE */}
         {activeTab === 'youtube' && (
-          <div className="p-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2 border-b-[3px] border-black dark:border-slate-700 bg-white dark:bg-[#1e1f2e] bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] dark:bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(255,255,255,0.05)_4px,rgba(255,255,255,0.05)_5px)] px-3 py-2">
-              <h3 className="text-xl lg:text-2xl font-black flex items-center gap-2 uppercase tracking-widest text-black dark:text-white mt-1 whitespace-nowrap truncate" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-                <Youtube className="w-7 h-7 text-red-600 -mt-1 flex-shrink-0 fill-current" />
-                <span className="truncate">YouTube Videos ({filteredYoutubePlaylist?.length || 0})</span>
-              </h3>
-              
-              <div className="flex items-center gap-2.5 ml-auto sm:ml-0 flex-shrink-0">
-                <button 
-                  onClick={() => setIsShuffle && setIsShuffle(!isShuffle)}
-                  className={`px-3 py-1.5 text-xs font-black uppercase tracking-widest transition border-[2.5px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none flex items-center gap-1.5 ${
-                    isShuffle 
-                      ? 'bg-yellow-400 text-black ring-2 ring-yellow-400 font-black' 
-                      : 'bg-white text-black hover:bg-yellow-100'
-                  }`}
-                  title="Activar o desactivar reproducción aleatoria en YouTube"
-                >
-                  <Shuffle className="w-3.5 h-3.5" />
-                  <span>{isShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
-                </button>
+          <div className="p-2.5 sm:p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="flex gap-1 flex-wrap overflow-x-auto">
+                {(['Todos', ...Array.from(new Set([
+                  ...YOUTUBE_CATEGORIES.filter(c => c !== 'Todos'),
+                  ...(youtubePlaylist || []).map(t => t.category).filter(Boolean)
+                ]))]).map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedYoutubeCategory(cat)}
+                    className={`px-2 py-0.5 border border-black dark:border-slate-600 text-[10px] font-black uppercase tracking-wider transition ${
+                      selectedYoutubeCategory === cat
+                        ? 'bg-red-600 text-white border-red-600'
+                        : 'bg-white dark:bg-[#0d0e15] text-black dark:text-slate-200 hover:bg-yellow-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
 
-                <button onClick={() => navigate('/RadioManager')}
-                  className="px-3 py-1.5 text-xs font-black uppercase tracking-widest transition border-[2.5px] border-black dark:border-red-600 bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black rounded-none flex items-center gap-1"
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setIsShuffle && setIsShuffle(!isShuffle)}
+                  className={`px-2 py-1 text-[10px] font-black uppercase border border-black dark:border-slate-600 flex items-center gap-1 ${
+                    isShuffle ? 'bg-yellow-400 text-black' : 'bg-white dark:bg-[#181926] text-black dark:text-white'
+                  }`}
                 >
-                  <Plus className="w-4 h-4" /> Administrar
+                  <Shuffle className="w-3 h-3" />
+                  <span>{isShuffle ? 'Shuffle ON' : 'Shuffle'}</span>
+                </button>
+                <button
+                  onClick={() => navigate('/RadioManager')}
+                  className="px-2 py-1 text-[10px] font-black uppercase border border-black bg-red-600 text-white hover:bg-red-500 flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Gestionar
                 </button>
               </div>
             </div>
 
-            {/* Filtros de Categorías Dinámicos */}
-            <div className="flex gap-2 flex-wrap mb-4 overflow-x-auto pb-1">
-              {(['Todos', ...Array.from(new Set([
-                ...YOUTUBE_CATEGORIES.filter(c => c !== 'Todos'),
-                ...(youtubePlaylist || []).map(t => t.category).filter(Boolean)
-              ]))]).map(cat => (
-                <button key={cat} onClick={() => setSelectedYoutubeCategory(cat)}
-                  className={`px-3 py-1.5 border-[3px] border-black dark:border-slate-600 text-[10px] font-black uppercase tracking-widest transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none ${
-                    selectedYoutubeCategory === cat ? 'bg-red-600 text-white' : 'bg-white dark:bg-[#0d0e15] text-black dark:text-slate-200 hover:bg-yellow-100 dark:hover:bg-slate-800'
-                  }`}
-                >{cat}</button>
-              ))}
-            </div>
-
-            {/* Buscador */}
-            <div className="relative mb-4">
-              <input type="text" value={youtubeSearchQuery} onChange={e => setYoutubeSearchQuery(e.target.value)}
-                placeholder="Filtrar por título o artista..."
-                className="w-full pl-10 pr-4 py-2.5 border-[3px] border-black dark:border-slate-600 bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-white text-xs font-bold uppercase placeholder-black/50 dark:placeholder-white/40 outline-none rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            <div className="relative mb-2.5">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={youtubeSearchQuery}
+                onChange={e => setYoutubeSearchQuery(e.target.value)}
+                placeholder="Filtrar videos por título o canal..."
+                className="w-full pl-8 pr-3 py-1.5 border-[2px] border-black dark:border-slate-600 bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-white text-xs font-bold placeholder-gray-400 outline-none"
               />
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-black dark:text-slate-400" />
             </div>
 
-            {/* Lista de Videos */}
             {loadingYoutube ? (
-              <div className="py-8 text-center text-xs font-black uppercase tracking-widest text-black dark:text-white">Cargando videos de YouTube...</div>
+              <div className="py-6 text-center text-xs font-black uppercase text-gray-400">Cargando videos...</div>
             ) : !filteredYoutubePlaylist || filteredYoutubePlaylist.length === 0 ? (
-              <div className="py-8 text-center text-xs font-black uppercase tracking-widest text-black dark:text-white">
-                <Youtube className="w-10 h-10 mx-auto mb-3 text-red-500 opacity-70" />
+              <div className="py-6 text-center text-xs font-bold text-gray-500">
+                <Youtube className="w-7 h-7 mx-auto mb-1.5 text-red-500 opacity-70" />
                 <p>No se encontraron videos en esta categoría.</p>
-                <button onClick={() => navigate('/RadioManager')} className="mt-4 px-6 py-3 text-sm font-black uppercase border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-red-600 text-white hover:bg-black transition-colors rounded-none"
-                >+ Agregar Enlaces de YouTube</button>
               </div>
             ) : (
-              <div className="space-y-1.5 overflow-y-auto max-h-64 pr-1">
+              <div className="divide-y divide-black/10 dark:divide-white/5 border-[2px] border-black dark:border-slate-700 overflow-y-auto max-h-[360px] custom-scrollbar">
                 {filteredYoutubePlaylist.map((track, index) => {
                   const isCurrent = activeTab === 'youtube' && currentTrackIndex === index;
                   return (
-                    <div key={track.id || index}
-                      className={`p-2 border-[2.5px] border-black dark:border-slate-700 flex items-center justify-between group cursor-pointer transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.05)] rounded-none ${
-                        isCurrent 
-                          ? 'bg-black text-white border-red-600 dark:bg-[#08080c] dark:border-red-600' 
-                          : 'bg-white dark:bg-[#1e1f2e] text-black dark:text-white hover:bg-yellow-50 dark:hover:bg-slate-800'
+                    <div
+                      key={track.id || index}
+                      onClick={() => {
+                        setCurrentTrackIndex(index);
+                        setIsPlaying(true);
+                        if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
+                          broadcastPlay(track, 'youtube', true);
+                        }
+                      }}
+                      className={`px-2.5 py-1.5 flex items-center justify-between group cursor-pointer transition ${
+                        isCurrent
+                          ? 'bg-red-600/15 text-black dark:text-white'
+                          : 'bg-white dark:bg-[#181926] text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5'
                       }`}
                     >
-                      <div onClick={() => { setCurrentTrackIndex(index); setIsPlaying(true); if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) broadcastPlay(track, 'youtube', true); }}
-                        className="flex items-center gap-2.5 flex-1 truncate"
-                      >
-                        <span className={`text-[10px] font-black w-5 text-center flex-shrink-0 ${isCurrent ? 'text-red-500' : 'text-black/70 dark:text-slate-400'}`}>
-                          {index}
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <span className={`text-[10px] font-mono font-bold w-4 text-center flex-shrink-0 ${isCurrent ? 'text-red-500' : 'text-gray-400'}`}>
+                          {index + 1}
                         </span>
-                        <div className="w-10 h-10 border-[2px] border-black overflow-hidden flex-shrink-0 bg-black relative group/img">
-                          <img 
-                            src={track.cover || (track.youtubeId ? `https://img.youtube.com/vi/${track.youtubeId}/mqdefault.jpg` : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400&h=400')} 
-                            alt={track.title} 
+                        <div className="w-8 h-6 rounded-sm border border-black/20 overflow-hidden flex-shrink-0 bg-black relative">
+                          <img
+                            src={track.cover || (track.youtubeId ? `https://img.youtube.com/vi/${track.youtubeId}/mqdefault.jpg` : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200')}
+                            alt={track.title}
                             onError={(e) => {
                               if (track.youtubeId) {
                                 e.currentTarget.src = `https://img.youtube.com/vi/${track.youtubeId}/0.jpg`;
-                              } else {
-                                e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400&h=400';
                               }
                             }}
-                            className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-200" 
+                            className="w-full h-full object-cover"
                           />
-                          <div className={`absolute inset-0 flex items-center justify-center ${isCurrent ? 'bg-black/60' : 'bg-black/40 opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                            <Play className="w-4 h-4 text-red-500 fill-current" />
-                          </div>
                         </div>
                         <div className="truncate flex-1">
-                          <p className={`text-xs font-black truncate uppercase tracking-wider ${isCurrent ? 'text-red-500' : 'text-black dark:text-white'}`}>
+                          <p className={`text-xs font-bold truncate leading-tight ${isCurrent ? 'text-red-500 font-black' : 'text-black dark:text-white'}`}>
                             {track.title}
                           </p>
-                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase opacity-80 truncate text-black/70 dark:text-slate-300">
-                            <span>{track.artist || 'YouTube Video'}</span>
-                            {track.category && <span className="bg-yellow-300 text-black px-1 border border-black flex-shrink-0">{track.category}</span>}
+                          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-slate-400 truncate leading-tight">
+                            <span className="truncate">{track.artist || 'YouTube'}</span>
+                            {track.category && <span className="text-[9px] px-1 bg-white/10 rounded">{track.category}</span>}
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             if (toggleYoutubeFavorite) toggleYoutubeFavorite(track.id);
                           }}
-                          className="p-1.5 border-[1.5px] border-black dark:border-slate-600 bg-white dark:bg-[#12131C] text-black dark:text-white transition hover:bg-red-50 hover:scale-105 rounded-none"
-                          title="Marcar como favorito"
+                          className="p-1 text-gray-400 hover:text-red-500 transition"
                         >
-                          <Heart 
-                            className={`w-3.5 h-3.5 ${track.is_favorite ? 'fill-[#FF0000] text-[#FF0000]' : 'text-black dark:text-white'}`} 
-                          />
+                          <Heart className={`w-3.5 h-3.5 ${track.is_favorite ? 'fill-[#FF0000] text-[#FF0000]' : ''}`} />
                         </button>
-                        {isCurrent ? (
-                          <span className="text-[9px] font-black px-2 py-1 bg-red-600 border-[1.5px] border-black text-white shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] uppercase">SONANDO</span>
-                        ) : (
-                          <div className="p-1.5 border-[1.5px] border-black dark:border-slate-600 bg-white dark:bg-[#12131C] text-black dark:text-white group-hover:bg-black group-hover:text-white dark:group-hover:bg-red-600 dark:group-hover:text-white transition rounded-none">
-                            <Play className="w-3.5 h-3.5 fill-current" />
-                          </div>
+                        {isCurrent && (
+                          <span className="text-[8px] font-black px-1.5 py-0.5 bg-red-600 text-white uppercase">PLAYING</span>
                         )}
                       </div>
                     </div>
@@ -362,7 +337,6 @@ export default function SourceTabs({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
-

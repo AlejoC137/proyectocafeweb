@@ -15,7 +15,7 @@ import {
   Play, Pause, Music, Upload, FolderUp, Trash2, Edit3, ArrowUp, ArrowDown, 
   GripVertical, Search, Filter, Layers, Disc, Tag, Calendar, Sparkles, 
   Clock, CheckSquare, Square, Volume2, VolumeX, SkipBack, SkipForward,
-  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus, RotateCcw, Shuffle, Radio, Users, Lock
+  Loader2, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Plus, Youtube, ExternalLink, Image as ImageIcon, ListPlus, RotateCcw, Shuffle, Radio, Users, Lock, Grid, List, LayoutGrid, X
 } from 'lucide-react';
 
 const MAX_PLAYLIST_SECONDS = Infinity; // Sin límite de tiempo ni de canciones
@@ -811,12 +811,22 @@ export default function RadioManager() {
         }
       });
 
-      return batCatalog.map(alb => {
-        // Prefer the cover already on the catalog entry; if missing, pull from songs
+      return batCatalog.map((alb, idx) => {
         const enrichedCover = isRealCover(alb.cover)
           ? alb.cover
           : (songsCoverMap.get((alb.albumName || alb.folderName || '').toLowerCase().trim()) || alb.cover || '');
-        return { ...alb, cover: enrichedCover };
+        const tracks = alb.tracks || [];
+        return {
+          ...alb,
+          key: alb.key || alb.folderName || alb.albumName || `alb-${idx}`,
+          albumName: alb.albumName || alb.folderName || 'Álbum',
+          artistName: alb.artistName || alb.artist || 'Varios Artistas',
+          year: alb.year || '2026',
+          genre: alb.genre || 'Radio',
+          tracks,
+          totalDuration: alb.totalDuration || tracks.reduce((acc, t) => acc + (Number(t.duration) || 180), 0),
+          cover: enrichedCover
+        };
       });
     }
 
@@ -850,6 +860,32 @@ export default function RadioManager() {
 
     return Array.from(map.values());
   }, [batCatalog, songs]);
+
+  // Controles de escala adaptativa, vista y búsqueda de Álbumes (Estilo Spotify)
+  const [albumScale, setAlbumScale] = useState('spotify'); // 'compact' | 'spotify' | 'list'
+  const [libraryAlbumScale, setLibraryAlbumScale] = useState('compact'); // 'compact' | 'grid' | 'list'
+  const [albumSearchQuery, setAlbumSearchQuery] = useState('');
+  const [albumSortBy, setAlbumSortBy] = useState('name'); // 'name' | 'artist' | 'tracks' | 'year'
+
+  const filteredAlbumList = useMemo(() => {
+    let list = [...albumList];
+    if (albumSearchQuery.trim()) {
+      const words = normalizeSearchStr(albumSearchQuery).split(/\s+/).filter(Boolean);
+      list = list.filter(alb => {
+        const haystack = normalizeSearchStr(
+          `${alb.albumName || ''} ${alb.artistName || ''} ${alb.genre || ''} ${alb.year || ''} ${(alb.tracks || []).map(t => t.title || '').join(' ')}`
+        );
+        return words.every(w => haystack.includes(w));
+      });
+    }
+    list.sort((a, b) => {
+      if (albumSortBy === 'artist') return (a.artistName || '').localeCompare(b.artistName || '');
+      if (albumSortBy === 'tracks') return ((b.tracks?.length || 0) - (a.tracks?.length || 0));
+      if (albumSortBy === 'year') return String(b.year || '').localeCompare(String(a.year || ''));
+      return (a.albumName || '').localeCompare(b.albumName || '');
+    });
+    return list;
+  }, [albumList, albumSearchQuery, albumSortBy]);
 
   useEffect(() => {
     fetchSongs();
@@ -2959,148 +2995,192 @@ export default function RadioManager() {
       onDrop={handleDrop}
     >
       {/* ========================================================================= */}
-      {/* CONTENEDOR 1: ÁREA DE LISTAS Y GESTIÓN (SEPARADO, FLEX-1 CON SCROLL)      */}
+      {/* BARRA SUPERIOR UNIFICADA COMPACTA (ESTILO SPOTIFY DESKTOP)                */}
       {/* ========================================================================= */}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-5">
-        <div className="max-w-[1920px] mx-auto space-y-4">
-        
-        {/* HEADER PRINCIPAL SPOTIFY */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 sm:p-3 bg-[#1DB954] text-black rounded-2xl shadow-xl shadow-[#1DB954]/20 shrink-0">
-                <Music className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-2 sm:gap-3">
-                  Radio Studio Manager <span className="text-[10px] sm:text-xs px-2.5 py-0.5 sm:py-1 rounded-full bg-[#1DB954]/20 text-[#1DB954] font-extrabold border border-[#1DB954]/30 uppercase tracking-widest">Spotify Style</span>
-                </h1>
-                <p className="text-[11px] sm:text-xs text-gray-400 font-semibold mt-1">
-                  Gestión integral de playlist de radio, metadatos ID3, carpetas, álbumes y enlaces de YouTube
-                </p>
-              </div>
+      <div className="flex-shrink-0 bg-[#0e0e0e] border-b border-white/10 px-3 py-2 space-y-1.5">
+        <div className="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-2">
+          
+          {/* IZQUIERDA: LOGO + ESTADO BAT */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 bg-[#1DB954] text-black rounded-lg flex items-center justify-center shadow-md shadow-[#1DB954]/20 shrink-0">
+              <Music className="w-4 h-4 stroke-[2.5]" />
+            </div>
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-sm sm:text-base font-black tracking-tight text-white truncate">
+                Radio Studio
+              </h1>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border flex items-center gap-1 shrink-0 ${
+                isBatOnline
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-red-500/15 text-red-400 border-red-500/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isBatOnline ? 'bg-emerald-400 animate-ping' : 'bg-red-500'}`} />
+                {isBatOnline ? 'BAT ON' : 'BAT OFF'}
+              </span>
+              <button
+                onClick={handleSyncWithBat}
+                disabled={isUpdatingAirList}
+                className="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white border border-white/10 transition disabled:opacity-50"
+                title="Sincronizar biblioteca y cola con iniciar_radio.bat"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isUpdatingAirList ? 'animate-spin text-[#1DB954]' : ''}`} />
+              </button>
             </div>
           </div>
 
-          {/* ACCIONES DE CARGA Y SUBIDA (OPTIMIZADAS TÁCTIL MÓVIL / IOS) */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              multiple 
-              accept="audio/*" 
-              className="hidden" 
-              onChange={handleFileSelect} 
-            />
-            <input 
-              ref={folderInputRef}
-              type="file" 
-              multiple 
-              webkitdirectory="" 
-              directory="" 
-              className="hidden" 
-              onChange={handleFileSelect} 
-            />
-
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 text-black font-extrabold text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-xl shadow-[#1DB954]/20 touch-manipulation"
-            >
-              <Upload className="w-4 h-4 stroke-[2.5]" />
-              <span>Subir MP3s</span>
-            </button>
-
-            <button 
-              onClick={() => folderInputRef.current?.click()}
-              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border border-white/15 transition flex items-center justify-center gap-1.5 shadow-lg touch-manipulation"
-            >
-              <FolderUp className="w-4 h-4" />
-              <span>Subir Carpeta</span>
-            </button>
-
-            <button 
-              onClick={() => setShowListenersModal(true)}
-              className={`min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full active:scale-95 font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border transition flex items-center justify-center gap-1.5 shadow-lg touch-manipulation ${
-                tyrannySettings?.lockConsoles
-                  ? 'bg-red-600/40 hover:bg-red-600/60 border-red-500/50 text-red-200 shadow-red-900/30'
-                  : 'bg-blue-600/30 hover:bg-blue-600/50 border-blue-500/40 text-blue-300'
+          {/* CENTRO: PESTAÑAS DE NAVEGACIÓN PRINCIPALES COMPACTAS */}
+          <div className="flex items-center gap-1 bg-[#181818] p-1 rounded-full border border-white/10 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => setManagerTab('mp3')}
+              className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 shrink-0 ${
+                managerTab === 'mp3'
+                  ? 'bg-[#1DB954] text-black shadow-sm'
+                  : 'text-gray-400 hover:text-white'
               }`}
-              title="Panel de Control Tiránico y Oyentes en tiempo real"
             >
-              <Users className="w-4 h-4" />
-              <span>{tyrannySettings?.lockConsoles ? '🔒 Tiránico' : 'Oyentes'} ({activeListenersCount})</span>
+              <Music className="w-3.5 h-3.5" />
+              <span>Consola MP3 ({songs.length})</span>
             </button>
 
-            <button 
+            <button
+              onClick={() => setManagerTab('albums')}
+              className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 shrink-0 ${
+                managerTab === 'albums'
+                  ? 'bg-[#1DB954] text-black shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Disc className="w-3.5 h-3.5" />
+              <span>Álbumes ({albumList.length})</span>
+            </button>
+
+            <button
+              onClick={() => setManagerTab('youtube')}
+              className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 shrink-0 ${
+                managerTab === 'youtube'
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Youtube className="w-3.5 h-3.5 fill-current" />
+              <span>YouTube ({youtubeSongs.length})</span>
+            </button>
+
+            <button
+              onClick={() => setManagerTab('p2p')}
+              className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 shrink-0 ${
+                managerTab === 'p2p'
+                  ? 'bg-cyan-400 text-black shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>P2P</span>
+            </button>
+          </div>
+
+          {/* DERECHA: ACCIONES RÁPIDAS DE CARGA Y CONTROL */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="audio/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <input
+              ref={folderInputRef}
+              type="file"
+              multiple
+              webkitdirectory=""
+              directory=""
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="h-7 px-2.5 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-[11px] uppercase tracking-wider transition flex items-center gap-1 shadow-sm"
+              title="Subir archivos MP3"
+            >
+              <Upload className="w-3 h-3 stroke-[2.5]" />
+              <span className="hidden sm:inline">Subir MP3</span>
+            </button>
+
+            <button
+              onClick={() => folderInputRef.current?.click()}
+              className="h-7 px-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] uppercase tracking-wider border border-white/10 transition flex items-center gap-1"
+              title="Subir carpeta completa"
+            >
+              <FolderUp className="w-3 h-3" />
+              <span className="hidden sm:inline">Carpeta</span>
+            </button>
+
+            <button
+              onClick={() => setShowListenersModal(true)}
+              className={`h-7 px-2.5 rounded-full font-extrabold text-[11px] uppercase tracking-wider border transition flex items-center gap-1 ${
+                tyrannySettings?.lockConsoles
+                  ? 'bg-red-600/30 border-red-500/50 text-red-200'
+                  : 'bg-blue-600/20 border-blue-500/40 text-blue-300 hover:bg-blue-600/35'
+              }`}
+              title="Panel de Oyentes y Control Tiránico"
+            >
+              <Users className="w-3 h-3" />
+              <span>{tyrannySettings?.lockConsoles ? '🔒' : ''} Oyentes ({activeListenersCount})</span>
+            </button>
+
+            <button
               onClick={handleForceRestart}
               disabled={isRestarting}
-              title="Forzar el reinicio completo de la radio, detener la transmisión activa y recargar listas"
-              className="min-h-[44px] px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-red-600/90 hover:bg-red-600 active:scale-95 text-white font-extrabold text-[11px] sm:text-xs uppercase tracking-wider border border-red-500/40 transition flex items-center justify-center gap-1.5 shadow-xl shadow-red-900/30 disabled:opacity-50 touch-manipulation"
+              title="Forzar reinicio de la radio"
+              className="h-7 px-2.5 rounded-full bg-red-600/80 hover:bg-red-600 text-white font-bold text-[11px] uppercase tracking-wider transition flex items-center gap-1 disabled:opacity-50"
             >
-              <RotateCcw className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} />
-              <span>{isRestarting ? 'Reiniciando...' : 'Reinicio'}</span>
+              <RotateCcw className={`w-3 h-3 ${isRestarting ? 'animate-spin' : ''}`} />
+              <span className="hidden md:inline">{isRestarting ? '...' : 'Reinicio'}</span>
             </button>
           </div>
         </div>
 
-        {/* BANNER CONTROL MAESTRO DE EMISIÓN: FORZAR FUENTES EN TODAS LAS INSTANCIAS */}
-        <div className="bg-[#181818] p-3 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
-              <Radio className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">Forzar Fuente en Oyentes:</span>
-                <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
-                  onAirTrack?.tab === 'youtube' ? 'bg-red-500/20 text-red-400 border-red-500/40' :
-                  onAirTrack?.tab === 'live' ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' :
-                  'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                }`}>
-                  Al aire: {onAirTrack?.tab === 'youtube' ? 'YouTube' : onAirTrack?.tab === 'live' ? 'Radios (Plaza)' : 'Files (MP3s)'}
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">
-                Pasa forzosamente todas las instancias abiertas de Proyecto Radio a reproducir la fuente seleccionada ({activeListenersCount} instancias conectadas).
-              </p>
-            </div>
-          </div>
+        {/* SUB-BARRA COMPACTA: CONTROL DE FUENTES EN OYENTES + VISTAS MP3 */}
+        <div className="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+              <Radio className="w-3 h-3 text-purple-400" />
+              Forzar Fuente:
+            </span>
 
-          <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full lg:w-auto">
             <button
               onClick={() => handleForceModeAll('supabase')}
-              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
+              className={`h-6 px-2.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition flex items-center gap-1 border ${
                 onAirTrack?.tab === 'supabase' || !onAirTrack?.tab
-                  ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-[#1DB954]/30'
-                  : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+                  ? 'bg-[#1DB954] text-black border-[#1DB954]'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
               }`}
             >
-              <Music className="w-4 h-4" />
-              <span>Files</span>
+              <Music className="w-3 h-3" /> Files
             </button>
 
             <button
               onClick={() => handleForceModeAll('live')}
-              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
+              className={`h-6 px-2.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition flex items-center gap-1 border ${
                 onAirTrack?.tab === 'live'
-                  ? 'bg-cyan-500 text-black border-cyan-400 shadow-cyan-500/30'
-                  : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+                  ? 'bg-cyan-400 text-black border-cyan-400'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
               }`}
             >
-              <Radio className="w-4 h-4" />
-              <span>Radios</span>
+              <Radio className="w-3 h-3" /> Radios
             </button>
 
             <button
               onClick={() => handleForceModeAll('youtube')}
-              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
+              className={`h-6 px-2.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition flex items-center gap-1 border ${
                 onAirTrack?.tab === 'youtube'
-                  ? 'bg-red-600 text-white border-red-500 shadow-red-600/30'
-                  : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
+                  ? 'bg-red-600 text-white border-red-500'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
               }`}
             >
-              <Youtube className="w-4 h-4 fill-current" />
-              <span>YouTube</span>
+              <Youtube className="w-3 h-3 fill-current" /> YouTube
             </button>
 
             <button
@@ -3108,454 +3188,486 @@ export default function RadioManager() {
                 const nextVal = !tyrannySettings?.lockConsoles;
                 await broadcastTyrannySettings({ lockConsoles: nextVal });
                 if (nextVal) {
-                  setSuccess("🔒 ¡Consolas de todos los escuchas bloqueadas! Modo tiránico activo.");
+                  setSuccess("🔒 Consolas bloqueadas en modo tiránico.");
                 } else {
-                  setSuccess("🔓 Consolas liberadas: los escuchas pueden cambiar de modo.");
+                  setSuccess("🔓 Consolas liberadas.");
                 }
               }}
-              className={`min-h-[44px] flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-lg touch-manipulation ${
+              className={`h-6 px-2.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition flex items-center gap-1 border ${
                 tyrannySettings?.lockConsoles
-                  ? 'bg-red-600 text-white border-red-500 shadow-red-900/40'
-                  : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/20'
+                  ? 'bg-red-600 text-white border-red-500'
+                  : 'bg-white/5 hover:bg-white/15 text-gray-300 border-white/10'
               }`}
-              title={tyrannySettings?.lockConsoles ? "Consolas bloqueadas (clic para liberar)" : "Consolas libres (clic para bloquear)"}
             >
-              <Lock className="w-4 h-4" />
-              <span>{tyrannySettings?.lockConsoles ? '🔒 Consolas Bloqueadas' : '🔓 Consolas Libres'}</span>
+              <Lock className="w-2.5 h-2.5" />
+              <span>{tyrannySettings?.lockConsoles ? 'Bloqueadas' : 'Libres'}</span>
             </button>
           </div>
-        </div>
 
-        {/* SWITCHER DE PESTAÑAS PRINCIPALES */}
-        <div className="flex border-b border-white/10 gap-3 sm:gap-6 pt-2 overflow-x-auto no-scrollbar whitespace-nowrap scroll-smooth">
-          <button 
-            onClick={() => setManagerTab('mp3')}
-            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
-              managerTab === 'mp3' ? 'border-[#1DB954] text-[#1DB954]' : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-          >
-            <Music className="w-4 h-4" /> Gestor MP3 ({songs.length})
-          </button>
-
-          <button 
-            onClick={() => setManagerTab('albums')}
-            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
-              managerTab === 'albums' ? 'border-[#1DB954] text-[#1DB954]' : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-          >
-            <Disc className="w-4 h-4 text-emerald-400" /> Gestor de Álbumes ({albumList.length})
-          </button>
-
-          <button 
-            onClick={() => setManagerTab('youtube')}
-            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
-              managerTab === 'youtube' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-          >
-            <Youtube className="w-4 h-4 text-red-500 fill-current" /> YouTube Manager ({youtubeSongs.length})
-          </button>
-
-          <button 
-            onClick={() => setManagerTab('p2p')}
-            className={`min-h-[44px] shrink-0 pb-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition border-b-2 flex items-center gap-2 touch-manipulation ${
-              managerTab === 'p2p' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-          >
-            <Radio className="w-4 h-4 text-cyan-400" /> P2P Stream Gateway
-          </button>
-        </div>
-
-        {managerTab === 'mp3' ? (
-          <div className="space-y-6">
-
-            {/* BARRA SUPERIOR DE ESTADO Y VISTAS */}
-            <div className="bg-[#181818] p-3 sm:p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-3 w-3 relative shrink-0">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isBatOnline ? 'bg-emerald-500' : 'bg-red-500'} opacity-75`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${isBatOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                </span>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    PARRILLA DINÁMICA AL AIRE
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                      isBatOnline ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'
-                    }`}>
-                      {isBatOnline ? '🟢 BAT CONECTADO' : '🔴 BAT DESCONECTADO'}
-                    </span>
-                  </h3>
-                  <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">
-                    {isBatOnline 
-                      ? 'Emisión sincronizada en vivo con G:\\Mi unidad\\Radio.' 
-                      : 'Inicia "iniciar_radio.bat" en tu PC para conectar la biblioteca y transmitir.'}
-                  </p>
-                </div>
+          {/* Alertas / Progreso de subida inline o Selector de Vista MP3 */}
+          <div className="flex items-center gap-2 ml-auto">
+            {error && (
+              <div className="px-2.5 py-0.5 rounded bg-red-950/90 border border-red-500/40 text-red-200 text-[10px] font-bold flex items-center gap-1.5 max-w-md truncate">
+                <AlertCircle className="w-3 h-3 text-red-400 shrink-0" />
+                <span className="truncate">{error}</span>
+                <button onClick={() => setError(null)} className="text-red-300 hover:text-white ml-1">✕</button>
               </div>
-
-              {/* BOTÓN SINCRONIZAR BAT */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleSyncWithBat}
-                  disabled={isUpdatingAirList}
-                  className="min-h-[44px] px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-extrabold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 border border-white/10 shadow-md disabled:opacity-50 touch-manipulation"
-                  title="Recargar catálogo y sincronizar con el bat"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isUpdatingAirList ? 'animate-spin text-[#1DB954]' : 'text-gray-300'}`} />
-                  <span>Sincronizar Bat</span>
-                </button>
+            )}
+            {success && (
+              <div className="px-2.5 py-0.5 rounded bg-emerald-950/90 border border-[#1DB954]/40 text-emerald-200 text-[10px] font-bold flex items-center gap-1.5 max-w-md truncate">
+                <CheckCircle2 className="w-3 h-3 text-[#1DB954] shrink-0" />
+                <span className="truncate">{success}</span>
+                <button onClick={() => setSuccess(null)} className="text-emerald-300 hover:text-white ml-1">✕</button>
               </div>
-            </div>
+            )}
 
-            {/* SELECTOR DE VISTAS: SPLIT, BIBLIOTECA, COLA */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-2 overflow-x-auto no-scrollbar gap-2">
-              <div className="flex items-center gap-2 shrink-0">
+            {managerTab === 'mp3' && (
+              <div className="flex items-center gap-1 bg-[#181818] p-0.5 rounded-lg border border-white/10">
                 <button
                   onClick={() => setMp3ViewMode('split')}
-                  className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 touch-manipulation ${
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase transition flex items-center gap-1 ${
                     mp3ViewMode === 'split'
-                      ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/20'
-                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                      ? 'bg-[#1DB954] text-black'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5" /> Consola Dividida
+                  <Layers className="w-3 h-3" /> Dividida
                 </button>
                 <button
                   onClick={() => setMp3ViewMode('library')}
-                  className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 touch-manipulation ${
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase transition flex items-center gap-1 ${
                     mp3ViewMode === 'library'
-                      ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/20'
-                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                      ? 'bg-cyan-400 text-black'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <FolderUp className="w-3.5 h-3.5" /> Biblioteca ({libraryTracks.length})
+                  <FolderUp className="w-3 h-3" /> Biblioteca ({libraryTracks.length})
                 </button>
                 <button
                   onClick={() => setMp3ViewMode('queue')}
-                  className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 touch-manipulation ${
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase transition flex items-center gap-1 ${
                     mp3ViewMode === 'queue'
-                      ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/20'
-                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                      ? 'bg-[#1DB954] text-black'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Radio className="w-3.5 h-3.5" /> Cola Al Aire ({songs.length})
+                  <Radio className="w-3 h-3" /> Cola ({songs.length})
                 </button>
               </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-              <div className="text-[11px] text-gray-400 hidden lg:flex items-center gap-2 shrink-0">
-                <span>💡 Arrastra canciones de la izquierda a la derecha para sumarlas a la cola</span>
-              </div>
-            </div>
+      {/* ========================================================================= */}
+      {/* CONTENEDOR PRINCIPAL DE TRABAJO (COMPACTO, ADAPTATIVO Y SIN DESPERDICIO)  */}
+      {/* ========================================================================= */}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-2 sm:p-3">
+        <div className="max-w-[1920px] mx-auto h-full">
 
-            {/* GRID DUAL PANEL 50% / 50% */}
-            <div className="w-full pb-4">
-              <div className={`w-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3.5 lg:gap-5 items-start' : ''}`}>
+        {managerTab === 'mp3' ? (
+          /* VISTA 1: CONSOLA DUAL MP3 (BIBLIOTECA + COLA AL AIRE) */
+          <div className={`w-full h-full ${mp3ViewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-2.5 lg:gap-3 items-stretch' : 'flex flex-col'}`}>
 
-                {/* ========================================================================= */}
-                {/* PANEL IZQUIERDO: BIBLIOTECA COMPLETA DE LA CARPETA (CON PLAY, NEXT, ALEATORIO) */}
-                {/* ========================================================================= */}
-                {(mp3ViewMode === 'split' || mp3ViewMode === 'library') && (
-                  <div className="w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col h-[540px] lg:h-[620px]">
-                    {/* CABECERA PANEL IZQUIERDO */}
-                    <div className="space-y-3 pb-3 border-b border-white/10 pt-1">
-                      {/* FILA 1: TÍTULO Y CONTEO */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="pt-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <FolderUp className="w-5 h-5 text-cyan-400 shrink-0" />
-                            <h4 className="text-base sm:text-lg font-black text-white tracking-tight truncate">
-                              Biblioteca de la Carpeta
-                            </h4>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shrink-0">
-                              {libraryTracks.length}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-gray-400 font-mono truncate mt-0.5">
-                            G:\\Mi unidad\\Radio
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* FILA 2: BARRA DE CONTROLES PLAYBACK BIBLIOTECA (GRID 3 COLUMNAS SIN DESBORDE) */}
-                      <div className="grid grid-cols-3 gap-2 bg-black/60 p-1.5 rounded-xl border border-white/10">
-                        <button
-                          onClick={handleToggleLibraryPreview}
-                          className="py-2 px-2 bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/20"
-                          title="Reproducir o pausar pre-escucha de la biblioteca en Radio Manager"
-                        >
-                          {isPlayingPreview ? <Pause className="w-3.5 h-3.5 fill-current shrink-0" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5 shrink-0" />}
-                          <span className="truncate">{isPlayingPreview ? 'Pausa' : 'Play'}</span>
-                        </button>
-                        <button
-                          onClick={handleNextLibraryPreview}
-                          className="py-2 px-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5"
-                          title="Saltar a la siguiente canción en biblioteca"
-                        >
-                          <SkipForward className="w-3.5 h-3.5 shrink-0" />
-                          <span className="truncate">Next</span>
-                        </button>
-                        <button
-                          onClick={handleToggleLibraryShuffle}
-                          className={`py-2 px-2 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                            isLibraryShuffle 
-                              ? 'bg-cyan-400 hover:bg-cyan-300 text-black font-black shadow-[0_0_15px_rgba(6,182,212,0.8)] ring-2 ring-cyan-300' 
-                              : 'bg-white/10 hover:bg-white/20 text-white'
-                          }`}
-                          title={isLibraryShuffle ? "Modo aleatorio ACTIVO en biblioteca (Clic para apagar)" : "Activar modo aleatorio en biblioteca"}
-                        >
-                          <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isLibraryShuffle ? 'text-black stroke-[2.5]' : 'text-cyan-400'}`} />
-                          <span className="truncate">{isLibraryShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
-                        </button>
-                      </div>
-
-                      {/* SUB-CABECERA: BUSCADOR Y SELECTOR DE VISTA DE BIBLIOTECA */}
-                      <div className="flex items-center gap-2 pt-1">
-                        <div className="relative flex-1">
-                          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
-                          <input
-                            type="text"
-                            value={librarySearchQuery}
-                            onChange={e => setLibrarySearchQuery(e.target.value)}
-                            placeholder="Buscar en la biblioteca local..."
-                            className="w-full pl-8 pr-3 py-1.5 bg-black/60 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
-                          />
-                        </div>
-
-                        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10 shrink-0">
-                          <button
-                            onClick={() => setLibraryViewType('tracks')}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                              libraryViewType === 'tracks'
-                                ? 'bg-cyan-500 text-black'
-                                : 'text-gray-400 hover:text-white'
-                            }`}
-                          >
-                            <Music className="w-3 h-3" /> Canciones ({filteredLibraryTracks.length})
-                          </button>
-                          <button
-                            onClick={() => setLibraryViewType('albums')}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                              libraryViewType === 'albums'
-                                ? 'bg-cyan-500 text-black'
-                                : 'text-gray-400 hover:text-white'
-                            }`}
-                          >
-                            <Disc className="w-3 h-3" /> Álbumes ({filteredLibraryAlbums.length})
-                          </button>
-                        </div>
-                      </div>
+            {/* ========================================================================= */}
+            {/* PANEL IZQUIERDO: BIBLIOTECA LOCAL (CANCIONES Y ÁLBUMES ADAPTATIVOS)       */}
+            {/* ========================================================================= */}
+            {(mp3ViewMode === 'split' || mp3ViewMode === 'library') && (
+              <div className="w-full bg-[#181818] p-2.5 rounded-xl border border-white/10 shadow-xl flex flex-col h-[calc(100vh-12.5rem)] min-h-[420px]">
+                
+                {/* CABECERA COMPACTA DEL PANEL IZQUIERDO */}
+                <div className="space-y-2 pb-2 border-b border-white/10 flex-shrink-0">
+                  {/* Fila 1: Título + Controles de Pre-escucha CUE */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <FolderUp className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <h4 className="text-xs sm:text-sm font-black text-white tracking-tight truncate">
+                        Biblioteca Local
+                      </h4>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                        {libraryTracks.length}
+                      </span>
                     </div>
 
-                    {/* CUERPO DEL PANEL IZQUIERDO */}
-                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28">
-                      {batCatalog.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
-                          <FolderUp className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />
-                          <div>
-                            <p className="text-sm font-extrabold text-white">Biblioteca no conectada</p>
-                            <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-                              Ejecuta <code>iniciar_radio.bat</code> en <code>G:\\Mi unidad\\Radio</code> para indexar tus canciones MP3.
-                            </p>
-                          </div>
-                          <button
-                            onClick={handleSyncWithBat}
-                            disabled={isUpdatingAirList}
-                            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs uppercase tracking-wider transition flex items-center gap-1.5 shadow-md shadow-cyan-500/20"
-                          >
-                            <RefreshCw className={`w-3.5 h-3.5 ${isUpdatingAirList ? 'animate-spin' : ''}`} />
-                            <span>Comprobar Bat</span>
-                          </button>
-                        </div>
-                      ) : libraryViewType === 'tracks' ? (
-                        /* VISTA POR CANCIONES DE LA BIBLIOTECA */
-                        filteredLibraryTracks.length === 0 ? (
-                          <div className="p-8 text-center text-gray-400 text-xs">
-                            No se encontraron canciones que coincidan con la búsqueda.
-                          </div>
-                        ) : (
-                          filteredLibraryTracks.map((track, idx) => {
-                            const isCurrentPreview = previewTrack && (
-                              previewTrack.title === track.title ||
-                              (track.fileName && previewTrack.fileName === track.fileName)
-                            ) && isPlayingPreview;
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={handleToggleLibraryPreview}
+                        className="h-6 px-2.5 bg-cyan-400 hover:bg-cyan-300 text-black font-black text-[10px] uppercase rounded-md transition flex items-center gap-1"
+                        title="Reproducir o pausar pre-escucha (Deck CUE)"
+                      >
+                        {isPlayingPreview ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                        <span>{isPlayingPreview ? 'Pausa' : 'Cue Play'}</span>
+                      </button>
+                      <button
+                        onClick={handleNextLibraryPreview}
+                        className="h-6 px-2 bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] rounded-md transition flex items-center gap-1"
+                        title="Siguiente en biblioteca"
+                      >
+                        <SkipForward className="w-3 h-3" />
+                        <span>Next</span>
+                      </button>
+                      <button
+                        onClick={handleToggleLibraryShuffle}
+                        className={`h-6 px-2 font-bold text-[10px] rounded-md transition flex items-center gap-1 ${
+                          isLibraryShuffle
+                            ? 'bg-cyan-400 text-black font-black ring-1 ring-cyan-200'
+                            : 'bg-white/10 hover:bg-white/20 text-gray-300'
+                        }`}
+                        title="Modo aleatorio en biblioteca"
+                      >
+                        <Shuffle className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
 
-                            return (
-                              <div
-                                key={track.id || track.fileName || idx}
-                                draggable={true}
-                                onDragStart={(e) => {
-                                  draggedLibraryTrackRef.current = track;
-                                  try {
-                                    e.dataTransfer.effectAllowed = 'copy';
-                                    e.dataTransfer.setData('application/json', JSON.stringify(track));
-                                    e.dataTransfer.setData('text/plain', JSON.stringify(track));
-                                  } catch (err) {}
-                                  setIsDraggingOverQueue(true);
-                                }}
-                                onDragEnd={() => {
-                                  setIsDraggingOverQueue(false);
-                                  setTimeout(() => { draggedLibraryTrackRef.current = null; }, 500);
-                                }}
-                                onClick={() => {
-                                  handlePlayPreview(track);
-                                }}
-                                className={`group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none ${
-                                  isCurrentPreview
-                                    ? 'bg-cyan-500/15 border-cyan-400/60 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
-                                    : 'bg-black/40 hover:bg-white/5 border-white/5 hover:border-cyan-500/30'
-                                }`}
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <span className={`text-[11px] font-mono w-5 text-right shrink-0 ${isCurrentPreview ? 'text-cyan-400 font-bold' : 'text-gray-500'}`}>
-                                    {idx + 1}
-                                  </span>
+                  {/* Fila 2: Buscador + Switcher Canciones/Álbumes + Escala de Álbumes */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="relative flex-1 min-w-[140px]">
+                      <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={librarySearchQuery}
+                        onChange={e => setLibrarySearchQuery(e.target.value)}
+                        placeholder="Buscar canción, artista o álbum..."
+                        className="w-full h-7 pl-7 pr-6 bg-black/50 border border-white/10 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"
+                      />
+                      {librarySearchQuery && (
+                        <button
+                          onClick={() => setLibrarySearchQuery('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
 
-                                  <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-800 border border-white/10 relative">
-                                    <img
-                                      src={track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'}
-                                      alt={track.title}
-                                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
-                                      className="w-full h-full object-cover"
-                                    />
-                                    {isCurrentPreview && (
-                                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-                                      </div>
-                                    )}
-                                  </div>
+                    <div className="flex items-center gap-0.5 bg-black/50 p-0.5 rounded-lg border border-white/10 shrink-0">
+                      <button
+                        onClick={() => setLibraryViewType('tracks')}
+                        className={`px-2 py-1 rounded-md text-[10px] font-bold transition flex items-center gap-1 ${
+                          libraryViewType === 'tracks'
+                            ? 'bg-cyan-400 text-black'
+                            : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        <Music className="w-3 h-3" /> Pistas ({filteredLibraryTracks.length})
+                      </button>
+                      <button
+                        onClick={() => setLibraryViewType('albums')}
+                        className={`px-2 py-1 rounded-md text-[10px] font-bold transition flex items-center gap-1 ${
+                          libraryViewType === 'albums'
+                            ? 'bg-cyan-400 text-black'
+                            : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        <Disc className="w-3 h-3" /> Álbumes ({filteredLibraryAlbums.length})
+                      </button>
+                    </div>
 
-                                  <div className="min-w-0 flex-1">
-                                    <p className={`text-xs font-bold truncate leading-tight ${isCurrentPreview ? 'text-cyan-400 font-black' : 'text-white'}`} title={track.title}>
-                                      {track.title}
-                                    </p>
-                                    <p className="text-[11px] text-gray-400 truncate" title={`${track.artist || track.albumArtist} • ${track.album}`}>
-                                      {track.artist || track.albumArtist} <span className="text-gray-600">•</span> {track.album}
-                                    </p>
-                                  </div>
+                    {/* Selector de escala adaptativa cuando se ven álbumes en la biblioteca */}
+                    {libraryViewType === 'albums' && (
+                      <div className="flex items-center gap-0.5 bg-black/50 p-0.5 rounded-lg border border-white/10 shrink-0">
+                        <button
+                          onClick={() => setLibraryAlbumScale('compact')}
+                          className={`p-1 rounded transition ${libraryAlbumScale === 'compact' ? 'bg-cyan-400 text-black' : 'text-gray-400 hover:text-white'}`}
+                          title="Álbumes compactos"
+                        >
+                          <LayoutGrid className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setLibraryAlbumScale('grid')}
+                          className={`p-1 rounded transition ${libraryAlbumScale === 'grid' ? 'bg-cyan-400 text-black' : 'text-gray-400 hover:text-white'}`}
+                          title="Álbumes tamaño medio"
+                        >
+                          <Grid className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setLibraryAlbumScale('list')}
+                          className={`p-1 rounded transition ${libraryAlbumScale === 'list' ? 'bg-cyan-400 text-black' : 'text-gray-400 hover:text-white'}`}
+                          title="Vista de lista compacta"
+                        >
+                          <List className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* CUERPO DEL PANEL IZQUIERDO */}
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-1.5">
+                  {batCatalog.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2.5 text-gray-400">
+                      <FolderUp className="w-8 h-8 text-gray-600 mx-auto animate-pulse" />
+                      <div>
+                        <p className="text-xs font-extrabold text-white">Biblioteca no conectada</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5 max-w-xs mx-auto">
+                          Ejecuta <code>iniciar_radio.bat</code> en <code>G:\Mi unidad\Radio</code> para indexar tus MP3.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleSyncWithBat}
+                        disabled={isUpdatingAirList}
+                        className="px-3 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold text-[11px] uppercase tracking-wider transition flex items-center gap-1"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isUpdatingAirList ? 'animate-spin' : ''}`} />
+                        <span>Comprobar Bat</span>
+                      </button>
+                    </div>
+                  ) : libraryViewType === 'tracks' ? (
+                    /* LISTA DENSA ESTILO SPOTIFY DE PISTAS DE LA BIBLIOTECA */
+                    filteredLibraryTracks.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500 text-xs">
+                        No hay canciones que coincidan con la búsqueda.
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5 pb-4">
+                        {filteredLibraryTracks.map((track, idx) => {
+                          const isCurrentPreview = previewTrack && (
+                            previewTrack.title === track.title ||
+                            (track.fileName && previewTrack.fileName === track.fileName)
+                          ) && isPlayingPreview;
+
+                          return (
+                            <div
+                              key={track.id || track.fileName || idx}
+                              draggable={true}
+                              onDragStart={(e) => {
+                                draggedLibraryTrackRef.current = track;
+                                try {
+                                  e.dataTransfer.effectAllowed = 'copy';
+                                  e.dataTransfer.setData('application/json', JSON.stringify(track));
+                                  e.dataTransfer.setData('text/plain', JSON.stringify(track));
+                                } catch (err) {}
+                                setIsDraggingOverQueue(true);
+                              }}
+                              onDragEnd={() => {
+                                setIsDraggingOverQueue(false);
+                                setTimeout(() => { draggedLibraryTrackRef.current = null; }, 500);
+                              }}
+                              onClick={() => handlePlayPreview(track)}
+                              className={`group flex items-center justify-between px-2 py-1 rounded-md transition-colors cursor-pointer select-none ${
+                                isCurrentPreview
+                                  ? 'bg-cyan-500/15 ring-1 ring-cyan-400/40'
+                                  : 'hover:bg-white/10'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                                <div className="w-5 text-right shrink-0 flex items-center justify-end">
+                                  {isCurrentPreview ? (
+                                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                                  ) : (
+                                    <>
+                                      <span className="text-[11px] font-mono text-gray-500 group-hover:hidden">
+                                        {idx + 1}
+                                      </span>
+                                      <Play className="w-3 h-3 text-cyan-400 fill-current hidden group-hover:inline-block" />
+                                    </>
+                                  )}
                                 </div>
 
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="text-[11px] font-mono text-gray-400 mr-1 hidden sm:inline">
-                                    {formatTime(track.duration || 210)}
-                                  </span>
+                                <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-neutral-900 border border-white/10">
+                                  <img
+                                    src={track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                                    alt={track.title}
+                                    onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
 
-                                  {/* BOTÓN REPRODUCIR PRE-ESCUCHA BIBLIOTECA */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handlePlayPreview(track);
-                                    }}
-                                    className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                                      isCurrentPreview
-                                        ? 'bg-cyan-400 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300'
-                                        : 'bg-white/10 hover:bg-cyan-400 hover:text-black text-gray-300'
-                                    }`}
-                                    title={isCurrentPreview ? "Pausar pre-escucha" : "Escuchar pre-escucha"}
-                                  >
-                                    {isCurrentPreview ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-                                  </button>
-
-                                  {/* BOTÓN AGREGAR A LA COLA */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAddTrackToQueue(track);
-                                    }}
-                                    className="px-2 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black text-gray-200 rounded-lg text-[10px] font-extrabold transition flex items-center gap-1"
-                                    title="Añadir a la cola de emisión de la derecha"
-                                  >
-                                    <Plus className="w-3 h-3" /> Cola
-                                  </button>
+                                <div className="min-w-0 flex-1">
+                                  <p className={`text-xs font-semibold truncate leading-tight ${isCurrentPreview ? 'text-cyan-400 font-bold' : 'text-white'}`} title={track.title}>
+                                    {track.title}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400 truncate leading-tight" title={`${track.artist || track.albumArtist} • ${track.album}`}>
+                                    {track.artist || track.albumArtist} <span className="text-gray-600">•</span> {track.album}
+                                  </p>
                                 </div>
                               </div>
-                            );
-                          })
-                        )
-                      ) : (
-                        /* VISTA POR ÁLBUMES DE LA BIBLIOTECA */
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[10px] font-mono text-gray-500 hidden sm:inline">
+                                  {formatTime(track.duration || 210)}
+                                </span>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddTrackToQueue(track);
+                                  }}
+                                  className="px-2 py-0.5 bg-white/10 hover:bg-[#1DB954] hover:text-black text-gray-200 rounded text-[10px] font-bold transition flex items-center gap-0.5"
+                                  title="Añadir a la cola de emisión"
+                                >
+                                  <Plus className="w-2.5 h-2.5" /> Cola
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )
+                  ) : (
+                    /* VISTA ADAPTATIVA DE ÁLBUMES EN LA BIBLIOTECA (COMPACTA / GRID / LISTA) */
+                    <div className="space-y-2 pb-4">
+                      {libraryAlbumScale === 'list' ? (
+                        <div className="space-y-1">
                           {filteredLibraryAlbums.map(alb => {
-                            const isExpanded = expandedLibraryAlbum === (alb.folderName || alb.albumName);
+                            const albId = alb.folderName || alb.albumName;
+                            const isExpanded = expandedLibraryAlbum === albId;
                             const trackCount = alb.tracks?.length || alb.trackCount || 0;
                             return (
-                              <div key={alb.folderName || alb.albumName} className="bg-black/50 border border-white/10 rounded-xl overflow-hidden flex flex-col justify-between">
-                                <div>
-                                  <div className="relative aspect-video w-full overflow-hidden bg-black/60 group">
-                                    <img 
-                                      src={alb.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'} 
-                                      alt={alb.albumName} 
-                                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
-                                      className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent p-3 flex flex-col justify-end">
-                                      <h5 className="text-xs font-black text-white truncate" title={alb.albumName}>{alb.albumName}</h5>
-                                      <p className="text-[11px] text-gray-300 truncate">{alb.artist}</p>
+                              <div key={albId} className="bg-black/40 border border-white/5 rounded-lg overflow-hidden">
+                                <div
+                                  onClick={() => setExpandedLibraryAlbum(isExpanded ? null : albId)}
+                                  className="flex items-center justify-between px-2.5 py-1.5 hover:bg-white/5 cursor-pointer transition"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-neutral-900 border border-white/10">
+                                      <img
+                                        src={alb.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                                        alt={alb.albumName}
+                                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs font-bold text-white truncate leading-tight">{alb.albumName}</p>
+                                      <p className="text-[10px] text-gray-400 truncate leading-tight">{alb.artist} • {trackCount} pistas</p>
                                     </div>
                                   </div>
-                                  <div className="p-3">
-                                    <div className="flex items-center justify-between text-[11px] text-gray-400 mb-2">
-                                      <span>{trackCount} canciones</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <button
-                                        onClick={() => handlePutAlbumOnAir(alb.folderName || alb.albumName)}
-                                        className="flex-1 py-1.5 bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-[11px] rounded-lg transition flex items-center justify-center gap-1"
-                                      >
-                                        <Plus className="w-3.5 h-3.5" /> Poner Álbum en Cola
-                                      </button>
-                                      <button
-                                        onClick={() => setExpandedLibraryAlbum(isExpanded ? null : (alb.folderName || alb.albumName))}
-                                        className="px-2 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-bold transition flex items-center gap-0.5"
-                                      >
-                                        {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                      </button>
-                                    </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePutAlbumOnAir(albId);
+                                      }}
+                                      className="px-2 py-0.5 bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-[10px] rounded transition flex items-center gap-0.5"
+                                    >
+                                      <Plus className="w-2.5 h-2.5" /> Cola
+                                    </button>
+                                    {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-gray-400" /> : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />}
                                   </div>
                                 </div>
                                 {isExpanded && (
-                                  <div className="border-t border-white/10 bg-black/80 p-2 space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
-                                    {(alb.tracks || []).map(t => (
-                                      <div 
-                                        key={t.id || t.fileName} 
-                                        draggable={true}
-                                        onDragStart={(e) => {
-                                          draggedLibraryTrackRef.current = t;
-                                          try {
-                                            e.dataTransfer.effectAllowed = 'copy';
-                                            e.dataTransfer.setData('application/json', JSON.stringify(t));
-                                            e.dataTransfer.setData('text/plain', JSON.stringify(t));
-                                          } catch (err) {}
-                                          setIsDraggingOverQueue(true);
-                                        }}
-                                        onDragEnd={() => {
-                                          setIsDraggingOverQueue(false);
-                                          setTimeout(() => { draggedLibraryTrackRef.current = null; }, 500);
-                                        }}
+                                  <div className="border-t border-white/10 bg-black/70 p-1.5 space-y-0.5 max-h-44 overflow-y-auto custom-scrollbar">
+                                    {(alb.tracks || []).map((t, tIdx) => (
+                                      <div
+                                        key={t.id || t.fileName || tIdx}
                                         onClick={() => handlePlayPreview(t)}
-                                        className="flex items-center justify-between p-1.5 hover:bg-cyan-500/10 rounded-lg text-xs cursor-pointer select-none group"
+                                        className="flex items-center justify-between px-2 py-1 hover:bg-cyan-500/10 rounded text-[11px] cursor-pointer group"
                                       >
-                                        <div className="min-w-0 flex-1 pr-2">
-                                          <p className="text-white group-hover:text-cyan-400 font-semibold truncate text-[11px] transition-colors">{t.title}</p>
-                                        </div>
-                                        <div className="flex items-center gap-1 shrink-0">
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handlePlayPreview(t);
-                                            }}
-                                            className="px-2 py-0.5 bg-cyan-500/20 hover:bg-cyan-400 text-cyan-300 hover:text-black rounded text-[10px] font-bold transition"
-                                          >
-                                            Escuchar
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleAddTrackToQueue(t);
-                                            }}
-                                            className="px-2 py-0.5 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded text-[10px] font-bold transition"
-                                          >
-                                            + Cola
-                                          </button>
-                                        </div>
+                                        <span className="text-gray-300 group-hover:text-cyan-400 truncate flex-1 pr-2">
+                                          {tIdx + 1}. {t.title}
+                                        </span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddTrackToQueue(t);
+                                          }}
+                                          className="px-1.5 py-0.2 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded text-[9px] font-bold"
+                                        >
+                                          + Cola
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        /* GRID ADAPTATIVO SPOTIFY PARA ÁLBUMES DE LA BIBLIOTECA */
+                        <div
+                          className={`grid gap-2 ${
+                            libraryAlbumScale === 'compact'
+                              ? 'grid-cols-[repeat(auto-fill,minmax(98px,1fr))]'
+                              : 'grid-cols-[repeat(auto-fill,minmax(130px,1fr))]'
+                          }`}
+                        >
+                          {filteredLibraryAlbums.map(alb => {
+                            const albId = alb.folderName || alb.albumName;
+                            const isExpanded = expandedLibraryAlbum === albId;
+                            const trackCount = alb.tracks?.length || alb.trackCount || 0;
+                            return (
+                              <div
+                                key={albId}
+                                className={`bg-[#202020] hover:bg-[#282828] border border-white/5 hover:border-white/15 rounded-lg p-1.5 transition-all group flex flex-col justify-between ${
+                                  isExpanded ? 'col-span-2 row-span-2 ring-1 ring-cyan-400/50' : ''
+                                }`}
+                              >
+                                <div>
+                                  <div
+                                    onClick={() => setExpandedLibraryAlbum(isExpanded ? null : albId)}
+                                    className="relative aspect-square w-full rounded overflow-hidden bg-black/60 cursor-pointer mb-1.5"
+                                  >
+                                    <img
+                                      src={alb.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=300'}
+                                      alt={alb.albumName}
+                                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=300'; }}
+                                      className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                                    />
+                                    <span className="absolute top-1 right-1 px-1.5 py-0.2 rounded bg-black/75 text-[9px] font-mono font-bold text-white">
+                                      {trackCount}
+                                    </span>
+
+                                    {/* Botones flotantes en hover estilo Spotify */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-1.5">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (alb.tracks?.[0]) handlePlayPreview(alb.tracks[0]);
+                                        }}
+                                        className="w-7 h-7 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center shadow-lg"
+                                        title="Pre-escuchar álbum en Deck CUE"
+                                      >
+                                        <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handlePutAlbumOnAir(albId);
+                                        }}
+                                        className="px-2 py-1 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-black text-[9px] uppercase shadow-lg flex items-center gap-0.5"
+                                        title="Enviar álbum completo a la cola"
+                                      >
+                                        <Plus className="w-2.5 h-2.5" /> Cola
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    onClick={() => setExpandedLibraryAlbum(isExpanded ? null : albId)}
+                                    className="cursor-pointer min-w-0 px-0.5"
+                                  >
+                                    <h5 className="text-[11px] font-bold text-white truncate leading-tight" title={alb.albumName}>
+                                      {alb.albumName}
+                                    </h5>
+                                    <p className="text-[10px] text-gray-400 truncate leading-tight mt-0.5" title={alb.artist}>
+                                      {alb.artist}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {isExpanded && (
+                                  <div className="mt-2 pt-1.5 border-t border-white/10 max-h-40 overflow-y-auto custom-scrollbar space-y-0.5">
+                                    {(alb.tracks || []).map((t, tIdx) => (
+                                      <div
+                                        key={t.id || t.fileName || tIdx}
+                                        onClick={() => handlePlayPreview(t)}
+                                        className="flex items-center justify-between px-1.5 py-1 hover:bg-cyan-500/10 rounded text-[10px] cursor-pointer group/t"
+                                      >
+                                        <span className="text-gray-300 group-hover/t:text-cyan-400 truncate flex-1 pr-1">
+                                          {tIdx + 1}. {t.title}
+                                        </span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddTrackToQueue(t);
+                                          }}
+                                          className="px-1.5 py-0.2 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded text-[9px] font-bold shrink-0"
+                                        >
+                                          +
+                                        </button>
                                       </div>
                                     ))}
                                   </div>
@@ -3566,620 +3678,744 @@ export default function RadioManager() {
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              </div>
+            )}
 
-                {/* ========================================================================= */}
-                {/* PANEL DERECHO: COLA DE EMISIÓN AL AIRE (CON SWITCH ON AIR, PLAY, NEXT, ALEATORIO, VACIAR) */}
-                {/* ========================================================================= */}
-                {(mp3ViewMode === 'split' || mp3ViewMode === 'queue') && (
-                  <div 
-                    onDragOver={handleQueueDragOver}
-                    onDragLeave={handleQueueDragLeave}
-                    onDrop={handleQueueDrop}
-                    className={`w-full bg-[#181818] pt-3 sm:pt-4 px-3 sm:px-4 pb-3 sm:pb-4 rounded-2xl border-2 transition-all shadow-2xl flex flex-col h-[540px] lg:h-[620px] ${
-                      isDraggingOverQueue 
-                        ? 'border-[#1DB954] bg-[#1DB954]/5 ring-4 ring-[#1DB954]/30 scale-[1.002]' 
-                        : 'border-white/10'
-                    }`}
-                  >
-                    {/* CABECERA PANEL DERECHO */}
-                    <div className="space-y-3 pb-3 border-b border-white/10 pt-1">
-                      {/* FILA 1: TÍTULO, ESTADO Y SWITCH MASTER ON AIR + VACIAR */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="pt-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-3 w-3 relative shrink-0">
-                              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${onAirTrack?.tab !== 'OFF_AIR' ? 'bg-red-500' : 'bg-gray-500'} opacity-75`}></span>
-                              <span className={`relative inline-flex rounded-full h-3 w-3 ${onAirTrack?.tab !== 'OFF_AIR' ? 'bg-red-500' : 'bg-gray-500'}`}></span>
-                            </span>
-                            <h4 className="text-base sm:text-lg font-black text-white flex items-center gap-1.5 tracking-tight truncate">
-                              <Radio className="w-5 h-5 text-[#1DB954] shrink-0" />
-                              Cola de Emisión al Aire
-                            </h4>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 border ${
-                              onAirTrack?.tab !== 'OFF_AIR' 
-                                ? 'bg-red-500/20 text-red-400 border-red-500/30' 
-                                : 'bg-white/10 text-gray-400 border-white/10'
-                            }`}>
-                              {songs.length}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-gray-400 truncate mt-0.5">
-                            Tanda en vivo sincronizada con Proyecto Radio y el Bat
-                          </p>
-                        </div>
-
-                        {/* MASTER SWITCH ON AIR & VACIAR COLA */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={handleToggleOnAirSwitch}
-                            className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center gap-1.5 border shadow-lg ${
-                              onAirTrack?.tab !== 'OFF_AIR'
-                                ? 'bg-red-600 text-white border-red-500 ring-2 ring-red-500/50 animate-pulse'
-                                : 'bg-white/10 text-gray-400 border-white/10 hover:text-white hover:bg-white/20'
-                            }`}
-                            title={onAirTrack?.tab !== 'OFF_AIR' ? "Switch ON AIR encendido: Señal autorizada a Proyecto Radio. Clic para apagar" : "Switch ON AIR apagado: Clic para autorizar emisión a Proyecto Radio"}
-                          >
-                            <span className={`w-2 h-2 rounded-full ${onAirTrack?.tab !== 'OFF_AIR' ? 'bg-white animate-ping' : 'bg-red-500'}`} />
-                            <span>{onAirTrack?.tab !== 'OFF_AIR' ? 'ON AIR' : 'OFF AIR'}</span>
-                          </button>
-
-                          <button
-                            onClick={handleClearQueue}
-                            disabled={isUpdatingAirList || songs.length === 0}
-                            className="p-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl transition border border-red-500/20 disabled:opacity-30"
-                            title="Vaciar la cola de emisión"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* FILA 2: BARRA DE CONTROLES PLAYBACK Y MONITOR AL AIRE (GRID 4 COLUMNAS SIN DESBORDE) */}
-                      <div className="grid grid-cols-4 gap-2 bg-black/60 p-1.5 rounded-xl border border-white/10">
-                        {/* BOTÓN ESCUCHAR SEÑAL EN VIVO */}
-                        <button
-                          onClick={handleToggleListenLive}
-                          className={`col-span-1 py-2 px-2 rounded-lg font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 border shadow-sm ${
-                            isPlayingLiveSignal
-                              ? 'bg-red-600 text-white border-red-500 ring-2 ring-red-500/50 animate-pulse'
-                              : 'bg-white/5 text-gray-300 border-white/10 hover:text-white hover:bg-white/10'
-                          }`}
-                          title={isPlayingLiveSignal ? "Pausar audio de la señal en vivo" : "Escuchar la señal que está saliendo al aire en Radio Proyecto"}
-                        >
-                          <Volume2 className={`w-3.5 h-3.5 shrink-0 ${isPlayingLiveSignal ? 'text-white animate-bounce' : 'text-red-400'}`} />
-                          <span className="truncate">{isPlayingLiveSignal ? 'Sonando' : 'En Vivo'}</span>
-                        </button>
-
-                        {/* PLAY / PAUSA DECK ROJO (COLA) */}
-                        <button
-                          onClick={handleAirPlayPause}
-                          className="col-span-1 py-2 px-2 bg-[#1DB954] hover:bg-[#1ed760] text-black font-black text-xs rounded-lg transition flex items-center justify-center gap-1 shadow-md shadow-[#1DB954]/20"
-                          title={isPlayingLiveSignal ? "Pausar escucha de Cola (Deck Rojo)" : "Reproducir escucha de Cola (Deck Rojo)"}
-                        >
-                          {isPlayingLiveSignal ? <Pause className="w-3.5 h-3.5 fill-current shrink-0" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5 shrink-0" />}
-                          <span className="truncate">{isPlayingLiveSignal ? 'Pausa' : 'Play'}</span>
-                        </button>
-
-                        {/* NEXT COLA */}
-                        <button
-                          onClick={handleAirNext}
-                          className="col-span-1 py-2 px-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1"
-                          title="Saltar a la siguiente canción al aire en Radio Proyecto"
-                        >
-                          <SkipForward className="w-3.5 h-3.5 shrink-0" />
-                          <span className="truncate">Next</span>
-                        </button>
-
-                        {/* ALEATORIO COLA */}
-                        <button
-                          onClick={handleToggleAirShuffle}
-                          className={`col-span-1 py-2 px-2 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-1 ${
-                            isAirShuffle 
-                              ? 'bg-red-600 hover:bg-red-500 text-white font-black shadow-[0_0_15px_rgba(239,68,68,0.8)] ring-2 ring-red-400' 
-                              : 'bg-white/10 hover:bg-white/20 text-white'
-                          }`}
-                          title={isAirShuffle ? "Modo aleatorio ACTIVO en cola (Clic para apagar)" : "Activar modo aleatorio en cola"}
-                        >
-                          <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isAirShuffle ? 'text-white stroke-[2.5]' : 'text-red-400'}`} />
-                          <span className="truncate">{isAirShuffle ? 'Aleatorio ON' : 'Aleatorio'}</span>
-                        </button>
-                      </div>
-
-                      {/* CONTROL DE VOLUMEN MONITOR DE COLA (DEDICADO) */}
-                      <div className="flex items-center justify-between gap-2 bg-black/60 px-3 py-1.5 rounded-xl border border-white/10">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <button
-                            onClick={() => {
-                              const nextMute = !isAirMuted;
-                              setIsAirMuted(nextMute);
-                              if (masterAirAudioRef.current) {
-                                masterAirAudioRef.current.muted = nextMute;
-                                masterAirAudioRef.current.volume = nextMute ? 0 : airVolume;
-                              }
-                            }}
-                            className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation shrink-0"
-                            title={isAirMuted ? "Activar audio del monitor" : "Silenciar monitor de cola"}
-                          >
-                            {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-500" /> : <Volume2 className="w-3.5 h-3.5 text-red-400" />}
-                          </button>
-                          <span className="text-[11px] font-bold text-gray-300 truncate">
-                            Monitor Cola:
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 flex-1 max-w-[150px]">
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={isAirMuted ? 0 : airVolume}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              setAirVolume(val);
-                              setIsAirMuted(false);
-                              if (masterAirAudioRef.current) {
-                                masterAirAudioRef.current.muted = false;
-                                masterAirAudioRef.current.volume = val;
-                              }
-                            }}
-                            className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
-                            title={`Volumen Monitor de Cola: ${Math.round((isAirMuted ? 0 : airVolume) * 100)}%`}
-                          />
-                          <span className="text-[10px] font-mono text-red-400 font-bold w-8 text-right shrink-0">
-                            {isAirMuted ? 'MUTE' : `${Math.round(airVolume * 100)}%`}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* BUSCADOR DENTRO DE LA COLA */}
-                      <div className="relative pt-1">
-                        <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3.5" />
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={e => setSearchQuery(e.target.value)}
-                          placeholder="Filtrar pistas de la cola..."
-                          className="w-full pl-8 pr-3 py-1.5 bg-black/60 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#1DB954] transition"
-                        />
-                      </div>
-
-                      {/* ZONA DE ARRASTRE */}
-                      <div 
-                        onDragOver={handleQueueDragOver}
-                        onDragLeave={handleQueueDragLeave}
-                        onDrop={handleQueueDrop}
-                        className={`border-2 border-dashed rounded-xl p-2.5 text-center text-xs font-bold transition flex items-center justify-center gap-2 ${
-                          isDraggingOverQueue 
-                            ? 'border-[#1DB954] text-[#1DB954] bg-[#1DB954]/25 ring-2 ring-[#1DB954]/50 animate-pulse' 
-                            : 'border-white/15 text-gray-300 bg-black/40'
-                        }`}
-                      >
-                        <ListPlus className="w-4 h-4 text-[#1DB954]" />
-                        <span>
-                          {isDraggingOverQueue 
-                            ? '¡Suelta la canción aquí para agregarla a la cola!' 
-                            : 'Arrastra canciones aquí desde la izquierda o presiona [+ Cola]'}
-                        </span>
-                      </div>
+            {/* ========================================================================= */}
+            {/* PANEL DERECHO: COLA DE EMISIÓN AL AIRE                                    */}
+            {/* ========================================================================= */}
+            {(mp3ViewMode === 'split' || mp3ViewMode === 'queue') && (
+              <div
+                onDragOver={handleQueueDragOver}
+                onDragLeave={handleQueueDragLeave}
+                onDrop={handleQueueDrop}
+                className={`w-full bg-[#181818] p-2.5 rounded-xl border transition-all shadow-xl flex flex-col h-[calc(100vh-12.5rem)] min-h-[420px] ${
+                  isDraggingOverQueue
+                    ? 'border-[#1DB954] bg-[#1DB954]/5 ring-2 ring-[#1DB954]/30'
+                    : 'border-white/10'
+                }`}
+              >
+                {/* CABECERA COMPACTA DEL PANEL DERECHO */}
+                <div className="space-y-2 pb-2 border-b border-white/10 flex-shrink-0">
+                  {/* Fila 1: Título + Controles de Emisión y Monitor */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="flex h-2.5 w-2.5 relative shrink-0">
+                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${onAirTrack?.tab !== 'OFF_AIR' ? 'bg-red-500' : 'bg-gray-500'} opacity-75`} />
+                        <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${onAirTrack?.tab !== 'OFF_AIR' ? 'bg-red-500' : 'bg-gray-500'}`} />
+                      </span>
+                      <h4 className="text-xs sm:text-sm font-black text-white tracking-tight truncate">
+                        Cola al Aire
+                      </h4>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold bg-red-500/15 text-red-400 border border-red-500/30">
+                        {songs.length}
+                      </span>
                     </div>
 
-                    {/* CUERPO DEL PANEL DERECHO (LISTA DE CANCIONES DE LA COLA) */}
-                    <div 
-                      onDragOver={handleQueueDragOver}
-                      onDragLeave={handleQueueDragLeave}
-                      onDrop={handleQueueDrop}
-                      className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-2.5 space-y-1.5 pb-24 sm:pb-28"
-                    >
-                      {songs.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-gray-400">
-                          <Radio className="w-12 h-12 text-gray-600 mx-auto animate-pulse" />
-                          <div>
-                            <p className="text-sm font-extrabold text-white">La cola de emisión está vacía</p>
-                            <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-                              Arrastra canciones desde el panel izquierdo, o pulsa el botón Aleatorio en la cabecera.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleAirShuffle()}
-                            disabled={isUpdatingAirList || batCatalog.length === 0}
-                            className="px-4 py-2 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs uppercase tracking-wider transition flex items-center gap-1.5 shadow-md shadow-[#1DB954]/20 disabled:opacity-50"
-                          >
-                            <Shuffle className="w-3.5 h-3.5" /> Cargar 15 Aleatorios
-                          </button>
-                        </div>
-                      ) : filteredSongs.length === 0 ? (
-                        <div className="p-8 text-center text-gray-400 text-xs">
-                          No hay canciones en la cola que coincidan con "${searchQuery}".
-                        </div>
-                      ) : (
-                        filteredSongs.map((song, idx) => {
-                          const isOnAir = Boolean(
-                            onAirTrack?.is_playing && (
-                              (onAirTrack?.station_name && song.title && onAirTrack.station_name.toLowerCase().includes(song.title.toLowerCase())) ||
-                              (onAirTrack?.station_name === song.title)
-                            )
-                          );
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <button
+                        onClick={handleToggleListenLive}
+                        className={`h-6 px-2 rounded-md font-bold text-[10px] uppercase transition flex items-center gap-1 border ${
+                          isPlayingLiveSignal
+                            ? 'bg-red-600 text-white border-red-500 animate-pulse'
+                            : 'bg-white/5 text-gray-300 border-white/10 hover:text-white'
+                        }`}
+                        title="Escuchar retorno en vivo"
+                      >
+                        <Volume2 className="w-3 h-3" />
+                        <span>{isPlayingLiveSignal ? 'Monitor ON' : 'Monitor'}</span>
+                      </button>
 
-                          return (
-                            <div
-                              key={song.id || idx}
-                              onClick={() => {
-                                setBottomPlayerMode('live');
-                                handlePlayAirSong(song);
-                              }}
-                              className={`group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none ${
-                                isOnAir
-                                  ? 'bg-[#1DB954]/15 border-[#1DB954]/60 shadow-md ring-1 ring-[#1DB954]/40'
-                                  : 'bg-black/40 hover:bg-white/5 border-white/5 hover:border-white/10'
-                              }`}
-                              title={`Clic para poner al aire de inmediato: "${song.title}"`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                <span className="text-[11px] font-mono text-gray-500 w-5 text-right shrink-0">
-                                  {idx + 1}
-                                </span>
+                      <button
+                        onClick={handleAirPlayPause}
+                        className="h-6 px-2.5 bg-[#1DB954] hover:bg-[#1ed760] text-black font-black text-[10px] uppercase rounded-md transition flex items-center gap-1"
+                        title="Play / Pausa Cola"
+                      >
+                        {isPlayingLiveSignal ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                        <span>{isPlayingLiveSignal ? 'Pausa' : 'Play'}</span>
+                      </button>
 
-                                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-800 border border-white/10 relative">
-                                  <img
-                                    src={song.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'}
-                                    alt={song.title}
-                                    onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
-                                    className="w-full h-full object-cover"
-                                  />
-                                  {isOnAir && (
-                                    <div className="absolute inset-0 bg-red-600/60 flex items-center justify-center">
-                                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                                    </div>
-                                  )}
-                                </div>
+                      <button
+                        onClick={handleAirNext}
+                        className="h-6 px-2 bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] rounded-md transition flex items-center gap-1"
+                        title="Siguiente canción al aire"
+                      >
+                        <SkipForward className="w-3 h-3" />
+                      </button>
 
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5">
-                                    <p className={`text-xs font-bold truncate leading-tight ${isOnAir ? 'text-[#1DB954]' : 'text-white'}`} title={song.title}>
-                                      {song.title}
-                                    </p>
-                                    {isOnAir && (
-                                      <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-black border border-red-500/30 uppercase shrink-0">
-                                        AL AIRE
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-[11px] text-gray-400 truncate" title={`${song.artist} • ${song.album}`}>
-                                    {song.artist} <span className="text-gray-600">•</span> {song.album}
-                                  </p>
-                                </div>
-                              </div>
+                      <button
+                        onClick={handleToggleAirShuffle}
+                        className={`h-6 px-2 font-bold text-[10px] rounded-md transition flex items-center gap-1 ${
+                          isAirShuffle
+                            ? 'bg-red-600 text-white font-black ring-1 ring-red-400'
+                            : 'bg-white/10 hover:bg-white/20 text-gray-300'
+                        }`}
+                        title="Modo aleatorio en cola"
+                      >
+                        <Shuffle className="w-3 h-3" />
+                      </button>
 
-                              <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
-                                <span className="text-[11px] font-mono text-gray-400 mr-1">
-                                  {formatTime(song.duration)}
-                                </span>
+                      <button
+                        onClick={handleToggleOnAirSwitch}
+                        className={`h-6 px-2 rounded-md font-black text-[10px] uppercase transition flex items-center gap-1 border ${
+                          onAirTrack?.tab !== 'OFF_AIR'
+                            ? 'bg-red-600/30 text-red-300 border-red-500/50'
+                            : 'bg-white/5 text-gray-400 border-white/10'
+                        }`}
+                        title="Autorizar o cortar señal al aire"
+                      >
+                        <span>{onAirTrack?.tab !== 'OFF_AIR' ? 'ON AIR' : 'OFF'}</span>
+                      </button>
 
-                                {/* BOTÓN TRANSMITIR / AL AIRE INMEDIATAMENTE */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setBottomPlayerMode('live');
-                                    handlePlayAirSong(song);
-                                  }}
-                                  className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                                    isOnAir
-                                      ? 'bg-red-600 text-white shadow-md shadow-red-600/30 ring-1 ring-red-400'
-                                      : 'bg-white/10 hover:bg-red-600 hover:text-white text-gray-300'
-                                  }`}
-                                  title="Transmitir al aire de inmediato"
-                                >
-                                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                                </button>
+                      <button
+                        onClick={handleClearQueue}
+                        disabled={isUpdatingAirList || songs.length === 0}
+                        className="h-6 px-1.5 bg-red-600/15 hover:bg-red-600/35 text-red-400 rounded-md transition border border-red-500/20 disabled:opacity-30"
+                        title="Vaciar cola de emisión"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
 
-                                {/* SUBIR / BAJAR ORDEN */}
-                                <button
-                                  onClick={() => handleMoveAirTrack(idx, 'up')}
-                                  disabled={idx === 0}
-                                  className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded transition disabled:opacity-20"
-                                  title="Subir en el orden de emisión"
-                                >
-                                  <ArrowUp className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleMoveAirTrack(idx, 'down')}
-                                  disabled={idx === filteredSongs.length - 1}
-                                  className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded transition disabled:opacity-20"
-                                  title="Bajar en el orden de emisión"
-                                >
-                                  <ArrowDown className="w-3.5 h-3.5" />
-                                </button>
-
-                                {/* ELIMINAR DE LA COLA */}
-                                <button
-                                  onClick={() => handleRemoveAirTrack(song.id)}
-                                  className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
-                                  title="Quitar de la cola de emisión"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })
+                  {/* Fila 2: Buscador de Cola + Volumen Monitor + Drop Hint compacto */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative flex-1 min-w-[140px]">
+                      <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Filtrar pistas en cola..."
+                        className="w-full h-7 pl-7 pr-6 bg-black/50 border border-white/10 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#1DB954] transition"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       )}
                     </div>
+
+                    {/* Volumen Monitor compacto inline */}
+                    <div className="flex items-center gap-1.5 bg-black/50 px-2 h-7 rounded-lg border border-white/10 shrink-0">
+                      <button
+                        onClick={() => {
+                          const nextMute = !isAirMuted;
+                          setIsAirMuted(nextMute);
+                          if (masterAirAudioRef.current) {
+                            masterAirAudioRef.current.muted = nextMute;
+                            masterAirAudioRef.current.volume = nextMute ? 0 : airVolume;
+                          }
+                        }}
+                        className="text-gray-400 hover:text-red-400"
+                        title="Silenciar monitor"
+                      >
+                        {isAirMuted || airVolume === 0 ? <VolumeX className="w-3 h-3 text-red-500" /> : <Volume2 className="w-3 h-3 text-red-400" />}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.02"
+                        value={isAirMuted ? 0 : airVolume}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setAirVolume(val);
+                          setIsAirMuted(false);
+                          if (masterAirAudioRef.current) {
+                            masterAirAudioRef.current.muted = false;
+                            masterAirAudioRef.current.volume = val;
+                          }
+                        }}
+                        className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
+                      />
+                      <span className="text-[9px] font-mono text-gray-400 w-6 text-right">
+                        {isAirMuted ? '0%' : `${Math.round(airVolume * 100)}%`}
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : managerTab === 'albums' ? (
-          /* SECTION: GESTOR DE ÁLBUMES A PROFUNDIDAD */
-          <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#181818] p-5 rounded-2xl border border-white/5 shadow-xl gap-4">
-              <div>
-                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                  <Disc className="w-5 h-5 text-[#1DB954]" /> Gestor de Álbumes a Profundidad
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Se han catalogado <strong className="text-[#1DB954]">{albumList.length} álbumes</strong> automáticamente. Cambia portadas en bloque desde musicCovers o edita sus metadatos.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <button 
-                  onClick={() => setShowCreateAlbumModal(true)}
-                  className="px-4 py-2 rounded-full bg-[#1DB954] text-black font-extrabold text-xs hover:bg-[#1ed760] transition flex items-center gap-2 shadow-lg"
+                </div>
+
+                {/* CUERPO DEL PANEL DERECHO (LISTA DENSA DE COLA AL AIRE) */}
+                <div
+                  onDragOver={handleQueueDragOver}
+                  onDragLeave={handleQueueDragLeave}
+                  onDrop={handleQueueDrop}
+                  className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 mt-1.5"
                 >
-                  <Plus className="w-4 h-4" /> Crear Álbum desde MP3
+                  {songs.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2.5 text-gray-400 border border-dashed border-white/10 rounded-lg">
+                      <Radio className="w-8 h-8 text-gray-600 mx-auto animate-pulse" />
+                      <div>
+                        <p className="text-xs font-extrabold text-white">Cola de emisión vacía</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5 max-w-xs mx-auto">
+                          Arrastra canciones desde la izquierda o carga 15 temas aleatorios.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleAirShuffle()}
+                        disabled={isUpdatingAirList || batCatalog.length === 0}
+                        className="px-3 py-1.5 rounded-lg bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-[11px] uppercase tracking-wider transition flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <Shuffle className="w-3 h-3" /> Cargar 15 Aleatorios
+                      </button>
+                    </div>
+                  ) : filteredSongs.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500 text-xs">
+                      No hay canciones en la cola que coincidan con "{searchQuery}".
+                    </div>
+                  ) : (
+                    <div className="space-y-0.5 pb-4">
+                      {filteredSongs.map((song, idx) => {
+                        const isOnAir = Boolean(
+                          onAirTrack?.is_playing && (
+                            (onAirTrack?.station_name && song.title && onAirTrack.station_name.toLowerCase().includes(song.title.toLowerCase())) ||
+                            (onAirTrack?.station_name === song.title)
+                          )
+                        );
+
+                        return (
+                          <div
+                            key={song.id || idx}
+                            onClick={() => {
+                              setBottomPlayerMode('live');
+                              handlePlayAirSong(song);
+                            }}
+                            className={`group flex items-center justify-between px-2 py-1 rounded-md transition-colors cursor-pointer select-none ${
+                              isOnAir
+                                ? 'bg-[#1DB954]/15 ring-1 ring-[#1DB954]/40'
+                                : 'hover:bg-white/10'
+                            }`}
+                            title={`Transmitir al aire: "${song.title}"`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                              <div className="w-5 text-right shrink-0 flex items-center justify-end">
+                                {isOnAir ? (
+                                  <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                                ) : (
+                                  <>
+                                    <span className="text-[11px] font-mono text-gray-500 group-hover:hidden">
+                                      {idx + 1}
+                                    </span>
+                                    <Play className="w-3 h-3 text-[#1DB954] fill-current hidden group-hover:inline-block" />
+                                  </>
+                                )}
+                              </div>
+
+                              <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-neutral-900 border border-white/10">
+                                <img
+                                  src={song.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                                  alt={song.title}
+                                  onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <p className={`text-xs font-semibold truncate leading-tight ${isOnAir ? 'text-[#1DB954] font-bold' : 'text-white'}`} title={song.title}>
+                                    {song.title}
+                                  </p>
+                                  {isOnAir && (
+                                    <span className="px-1 py-0.2 rounded bg-red-600 text-white text-[8px] font-black uppercase shrink-0">
+                                      LIVE
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-gray-400 truncate leading-tight" title={`${song.artist} • ${song.album}`}>
+                                  {song.artist} <span className="text-gray-600">•</span> {song.album}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                              <span className="text-[10px] font-mono text-gray-500 mr-1 hidden sm:inline">
+                                {formatTime(song.duration)}
+                              </span>
+
+                              <button
+                                onClick={() => handleMoveAirTrack(idx, 'up')}
+                                disabled={idx === 0}
+                                className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded transition disabled:opacity-20 opacity-0 group-hover:opacity-100"
+                                title="Subir"
+                              >
+                                <ArrowUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleMoveAirTrack(idx, 'down')}
+                                disabled={idx === filteredSongs.length - 1}
+                                className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded transition disabled:opacity-20 opacity-0 group-hover:opacity-100"
+                                title="Bajar"
+                              >
+                                <ArrowDown className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => setEditingSong(song)}
+                                className="p-1 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded transition opacity-0 group-hover:opacity-100"
+                                title="Editar metadatos"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleRemoveAirTrack(song.id)}
+                                className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition"
+                                title="Quitar de la cola"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+        ) : managerTab === 'albums' ? (
+          /* ========================================================================= */
+          /* VISTA 2: GESTOR DE ÁLBUMES ADAPTATIVO ESTILO SPOTIFY                      */
+          /* ========================================================================= */
+          <div className="space-y-3 animate-fade-in pb-6">
+            {/* BARRA DE HERRAMIENTAS DE ÁLBUMES COMPACTA */}
+            <div className="bg-[#181818] p-2.5 sm:p-3 rounded-xl border border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+              <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[240px]">
+                <div className="flex items-center gap-1.5">
+                  <Disc className="w-4 h-4 text-[#1DB954]" />
+                  <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                    Álbumes
+                  </h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/15 text-[#1DB954] font-mono font-bold border border-[#1DB954]/30">
+                    {filteredAlbumList.length}
+                  </span>
+                </div>
+
+                {/* Buscador de álbumes */}
+                <div className="relative flex-1 max-w-xs min-w-[160px]">
+                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={albumSearchQuery}
+                    onChange={e => setAlbumSearchQuery(e.target.value)}
+                    placeholder="Buscar álbum, artista o pista..."
+                    className="w-full h-7 pl-8 pr-6 bg-black/50 border border-white/10 rounded-full text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#1DB954] transition"
+                  />
+                  {albumSearchQuery && (
+                    <button
+                      onClick={() => setAlbumSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Ordenar por */}
+                <select
+                  value={albumSortBy}
+                  onChange={e => setAlbumSortBy(e.target.value)}
+                  className="h-7 px-2.5 bg-black/50 border border-white/10 rounded-full text-[11px] text-gray-300 font-bold focus:outline-none focus:border-[#1DB954] cursor-pointer"
+                >
+                  <option value="name" className="bg-[#181818]">Orden: Nombre (A-Z)</option>
+                  <option value="artist" className="bg-[#181818]">Orden: Artista</option>
+                  <option value="tracks" className="bg-[#181818]">Orden: N° de Pistas</option>
+                  <option value="year" className="bg-[#181818]">Orden: Año</option>
+                </select>
+              </div>
+
+              {/* CONTROLES DE ESCALA ADAPTATIVA Y ACCIONES */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-0.5 bg-black/50 p-0.5 rounded-full border border-white/10">
+                  <button
+                    onClick={() => setAlbumScale('compact')}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition flex items-center gap-1 ${
+                      albumScale === 'compact'
+                        ? 'bg-[#1DB954] text-black'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="Escala Mini Compacta (8-12 álbumes por fila)"
+                  >
+                    <LayoutGrid className="w-3 h-3" />
+                    <span>Mini</span>
+                  </button>
+                  <button
+                    onClick={() => setAlbumScale('spotify')}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition flex items-center gap-1 ${
+                      albumScale === 'spotify'
+                        ? 'bg-[#1DB954] text-black'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="Escala Estándar Spotify (6-9 álbumes por fila)"
+                  >
+                    <Grid className="w-3 h-3" />
+                    <span>Spotify</span>
+                  </button>
+                  <button
+                    onClick={() => setAlbumScale('list')}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition flex items-center gap-1 ${
+                      albumScale === 'list'
+                        ? 'bg-[#1DB954] text-black'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    title="Vista de Tabla Compacta"
+                  >
+                    <List className="w-3 h-3" />
+                    <span>Lista</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowCreateAlbumModal(true)}
+                  className="h-7 px-3 rounded-full bg-[#1DB954] text-black font-extrabold text-[11px] hover:bg-[#1ed760] transition flex items-center gap-1 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Nuevo Álbum
                 </button>
-                <button 
+
+                <button
                   onClick={() => {
                     setTargetAlbumForCover(null);
                     setShowAlbumCoversModal(true);
                   }}
-                  className="px-4 py-2 rounded-full bg-[#1DB954]/20 border border-[#1DB954]/40 text-[#1DB954] font-extrabold text-xs hover:bg-[#1DB954] hover:text-black transition flex items-center gap-2 shadow-lg"
+                  className="h-7 px-3 rounded-full bg-white/10 border border-white/15 text-white font-bold text-[11px] hover:bg-white/20 transition flex items-center gap-1"
                 >
-                  <ImageIcon className="w-4 h-4" /> Abrir Galería musicCovers
+                  <ImageIcon className="w-3.5 h-3.5 text-[#1DB954]" /> Covers
                 </button>
               </div>
             </div>
 
-            {albumList.length === 0 ? (
-              <div className="p-12 text-center text-gray-400 bg-[#181818] rounded-2xl border border-white/5">
-                <Disc className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm font-bold text-white">No hay álbumes catalogados aún</p>
-                <p className="text-xs text-gray-400">Sube canciones MP3 con metadatos para organizarlas en álbumes automáticamente.</p>
+            {filteredAlbumList.length === 0 ? (
+              <div className="p-10 text-center text-gray-400 bg-[#181818] rounded-xl border border-white/5">
+                <Disc className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                <p className="text-xs font-bold text-white">No se encontraron álbumes</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">Prueba con otra búsqueda o sube carpetas MP3.</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {albumList.map((alb) => (
-                  <div key={alb.key} className="bg-[#181818] border border-white/10 hover:border-white/20 rounded-2xl overflow-hidden shadow-xl group transition-all duration-300 flex flex-col justify-between">
-                    <div>
-                      {/* Portada de Álbum con Overlay Play */}
-                      <div className="relative aspect-square w-full overflow-hidden bg-black/50">
-                        <img 
-                          src={alb.cover} 
-                          alt={alb.albumName}
-                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'; }}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        />
-                        
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-xs">
-                          <button 
-                            onClick={() => {
-                              if (alb.tracks[0]) handlePlayPreview(alb.tracks[0]);
-                            }}
-                            className="p-3 bg-[#1DB954] hover:bg-[#1ed760] text-black rounded-full shadow-2xl scale-90 group-hover:scale-100 transition"
-                            title="Reproducir Álbum"
-                          >
-                            <Play className="w-5 h-5 fill-current ml-0.5" />
-                          </button>
-                          <button 
-                            onClick={() => setSelectedAlbumModalTarget(alb)}
-                            className="p-3 bg-white text-black hover:bg-yellow-300 rounded-full shadow-2xl scale-90 group-hover:scale-100 transition"
-                            title="Ver lista de canciones de este álbum"
-                          >
-                            <ListPlus className="w-5 h-5" />
-                          </button>
+            ) : albumScale === 'list' ? (
+              /* ───── VISTA DE TABLA COMPACTA ESTILO SPOTIFY ───── */
+              <div className="bg-[#181818] rounded-xl border border-white/10 overflow-hidden">
+                <div className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-white/10 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  <div className="col-span-5 sm:col-span-4">Álbum</div>
+                  <div className="col-span-3 hidden sm:block">Artista</div>
+                  <div className="col-span-2 hidden md:block">Género / Año</div>
+                  <div className="col-span-2 sm:col-span-1 text-right">Pistas</div>
+                  <div className="col-span-5 sm:col-span-2 text-right">Acciones</div>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {filteredAlbumList.map((alb, idx) => (
+                    <div
+                      key={alb.key || idx}
+                      onClick={() => setSelectedAlbumModalTarget(alb)}
+                      className="grid grid-cols-12 gap-2 items-center px-3 py-1.5 hover:bg-white/5 transition cursor-pointer group"
+                    >
+                      <div className="col-span-5 sm:col-span-4 flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded overflow-hidden bg-black shrink-0 border border-white/10 relative">
+                          <img
+                            src={alb.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=200'}
+                            alt={alb.albumName}
+                            onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=200'; }}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-
-                        <div className="absolute bottom-2 right-2 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-full text-[10px] font-mono text-[#1DB954] font-bold border border-white/10">
-                          {alb.tracks.length} {alb.tracks.length === 1 ? 'pista' : 'pistas'}
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white group-hover:text-[#1DB954] truncate transition-colors">
+                            {alb.albumName}
+                          </p>
+                          <p className="text-[10px] text-gray-400 truncate sm:hidden">
+                            {alb.artistName}
+                          </p>
                         </div>
                       </div>
 
-                      {/* Info del Álbum */}
-                      <div className="p-4 space-y-2 cursor-pointer" onClick={() => setSelectedAlbumModalTarget(alb)}>
-                        <h4 className="font-extrabold text-sm text-white truncate hover:text-[#1DB954] transition" title={alb.albumName}>
+                      <div className="col-span-3 hidden sm:block text-xs text-gray-300 truncate">
+                        {alb.artistName}
+                      </div>
+
+                      <div className="col-span-2 hidden md:flex items-center gap-1.5">
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#1DB954]/10 text-[#1DB954] font-bold truncate">
+                          {alb.genre}
+                        </span>
+                        <span className="text-[10px] font-mono text-gray-400">{alb.year}</span>
+                      </div>
+
+                      <div className="col-span-2 sm:col-span-1 text-right font-mono text-[11px] text-gray-300">
+                        {alb.tracks?.length || 0} <span className="text-[9px] text-gray-500">({formatTime(alb.totalDuration)})</span>
+                      </div>
+
+                      <div className="col-span-5 sm:col-span-2 flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => { if (alb.tracks?.[0]) handlePlayPreview(alb.tracks[0]); }}
+                          className="p-1.5 rounded-full bg-[#1DB954] text-black hover:scale-105 transition"
+                          title="Pre-escuchar álbum"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                        </button>
+                        <button
+                          onClick={() => handlePutAlbumOnAir(alb.folderName || alb.albumName)}
+                          className="px-2 py-1 rounded bg-white/10 hover:bg-[#1DB954] hover:text-black text-[10px] font-bold transition"
+                          title="Enviar álbum a la cola"
+                        >
+                          + Cola
+                        </button>
+                        <button
+                          onClick={() => {
+                            setTargetAlbumForCover(alb);
+                            setShowAlbumCoversModal(true);
+                          }}
+                          className="p-1.5 rounded bg-white/5 hover:bg-white/15 text-gray-300 transition"
+                          title="Cambiar carátula"
+                        >
+                          <ImageIcon className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setEditingAlbumTarget(alb)}
+                          className="p-1.5 rounded bg-white/5 hover:bg-white/15 text-gray-300 transition"
+                          title="Editar álbum"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAlbum(alb)}
+                          className="p-1.5 rounded bg-red-500/10 hover:bg-red-500/25 text-red-400 transition"
+                          title="Eliminar álbum"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* ───── GRID ADAPTATIVO ESTILO SPOTIFY (MINI / SPOTIFY) ───── */
+              <div
+                className={`grid gap-2.5 sm:gap-3 ${
+                  albumScale === 'compact'
+                    ? 'grid-cols-[repeat(auto-fill,minmax(115px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(125px,1fr))]'
+                    : 'grid-cols-[repeat(auto-fill,minmax(145px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))]'
+                }`}
+              >
+                {filteredAlbumList.map((alb, idx) => (
+                  <div
+                    key={alb.key || idx}
+                    onClick={() => setSelectedAlbumModalTarget(alb)}
+                    className="bg-[#181818] hover:bg-[#242424] border border-white/5 hover:border-white/15 rounded-xl p-2.5 shadow-md group transition-all duration-200 flex flex-col justify-between cursor-pointer select-none"
+                  >
+                    <div>
+                      {/* Portada Cuadrada con Controles Flotantes estilo Spotify */}
+                      <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-neutral-900 mb-2 shadow-md">
+                        <img
+                          src={alb.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=300'}
+                          alt={alb.albumName}
+                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=300'; }}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+
+                        {/* Pill de conteo de pistas arriba a la izquierda */}
+                        <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/75 backdrop-blur-sm rounded text-[9px] font-mono text-white font-bold">
+                          {alb.tracks?.length || 0} pistas
+                        </div>
+
+                        {/* Barra de micro-acciones arriba a la derecha en hover */}
+                        <div
+                          onClick={e => e.stopPropagation()}
+                          className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-black/80 backdrop-blur-md p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <button
+                            onClick={() => {
+                              setTargetAlbumForCover(alb);
+                              setShowAlbumCoversModal(true);
+                            }}
+                            className="p-1 hover:bg-white/20 text-gray-200 hover:text-white rounded transition"
+                            title="Cambiar carátula"
+                          >
+                            <ImageIcon className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => setEditingAlbumTarget(alb)}
+                            className="p-1 hover:bg-white/20 text-gray-200 hover:text-white rounded transition"
+                            title="Editar metadatos"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAlbum(alb)}
+                            className="p-1 hover:bg-red-500/30 text-red-400 rounded transition"
+                            title="Eliminar álbum"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Botón Play verde flotante estilo Spotify en esquina inferior derecha */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (alb.tracks?.[0]) handlePlayPreview(alb.tracks[0]);
+                          }}
+                          className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-[#1DB954] hover:bg-[#1ed760] hover:scale-105 text-black shadow-xl flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200"
+                          title="Reproducir Álbum"
+                        >
+                          <Play className="w-4 h-4 fill-current ml-0.5" />
+                        </button>
+
+                        {/* Botón + Cola en esquina inferior izquierda en hover */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePutAlbumOnAir(alb.folderName || alb.albumName);
+                          }}
+                          className="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-black/85 hover:bg-[#1DB954] text-white hover:text-black font-extrabold text-[9px] uppercase tracking-wider opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 flex items-center gap-0.5 border border-white/15"
+                          title="Poner álbum en la cola al aire"
+                        >
+                          <Plus className="w-2.5 h-2.5" /> Cola
+                        </button>
+                      </div>
+
+                      {/* Info Compacta del Álbum */}
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-xs text-white truncate group-hover:text-[#1DB954] transition-colors leading-tight" title={alb.albumName}>
                           {alb.albumName}
                         </h4>
-                        <p className="text-xs font-semibold text-gray-300 truncate" title={alb.artistName}>
+                        <p className="text-[11px] text-gray-400 truncate leading-tight mt-0.5" title={alb.artistName}>
                           {alb.artistName}
                         </p>
-
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-gray-400 font-mono">
-                            {alb.year}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 bg-[#1DB954]/10 border border-[#1DB954]/20 rounded-full text-[#1DB954] font-extrabold">
-                            {alb.genre}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-gray-400 font-mono">
-                            {formatTime(alb.totalDuration)}
-                          </span>
-                        </div>
                       </div>
                     </div>
 
-                    {/* Botones de Acción del Álbum */}
-                    <div className="p-3 bg-black/30 border-t border-white/5 flex items-center justify-between gap-1.5 flex-wrap">
-                      <button 
-                        onClick={() => setSelectedAlbumModalTarget(alb)}
-                        className="py-1.5 px-2 bg-[#1DB954]/20 hover:bg-[#1DB954] text-[#1DB954] hover:text-black rounded-lg text-[11px] font-bold transition flex items-center gap-1 border border-[#1DB954]/30"
-                        title="Ver lista de canciones del álbum"
-                      >
-                        <ListPlus className="w-3.5 h-3.5" /> Canciones
-                      </button>
-
-                      <button 
-                        onClick={() => {
-                          setTargetAlbumForCover(alb);
-                          setShowAlbumCoversModal(true);
-                        }}
-                        className="py-1.5 px-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1"
-                        title="Cambiar carátula de todas las canciones de este álbum"
-                      >
-                        <ImageIcon className="w-3.5 h-3.5" /> Carátula
-                      </button>
-
-                      <button 
-                        onClick={() => setEditingAlbumTarget(alb)}
-                        className="py-1.5 px-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1"
-                        title="Editar metadatos del álbum"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Editar
-                      </button>
-
-                      <button 
-                        onClick={() => handleDeleteAlbum(alb)}
-                        className="py-1.5 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1 border border-red-500/20"
-                        title="Eliminar este álbum y todas sus canciones"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    {/* Pie micro del álbum */}
+                    <div className="flex items-center justify-between gap-1 pt-2 mt-1.5 border-t border-white/5 text-[9px] text-gray-500 font-mono">
+                      <span className="truncate text-[#1DB954] font-sans font-bold">{alb.genre}</span>
+                      <span>{alb.year} • {formatTime(alb.totalDuration)}</span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
         ) : managerTab === 'youtube' ? (
-          /* SECTION: YOUTUBE MANAGER */
-          <div className="space-y-6">
-            {/* Formulario Agregar / Editar Enlace YouTube */}
-            <div className="bg-[#181818] p-6 rounded-2xl border border-white/10 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-3 gap-3">
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  <Youtube className="w-5 h-5 text-red-500 fill-current" />
-                  {isEditingYt ? 'Editar Propiedades de Video YouTube' : 'Agregar Enlace de YouTube'}
+          /* ========================================================================= */
+          /* VISTA 3: YOUTUBE MANAGER COMPACTO                                         */
+          /* ========================================================================= */
+          <div className="space-y-4 pb-6">
+            {/* Formulario Compacto Agregar / Editar Enlace YouTube */}
+            <div className="bg-[#181818] p-3.5 rounded-xl border border-white/10 shadow-xl space-y-3">
+              <div className="flex flex-wrap items-center justify-between border-b border-white/10 pb-2 gap-2">
+                <h3 className="text-xs sm:text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+                  <Youtube className="w-4 h-4 text-red-500 fill-current" />
+                  {isEditingYt ? 'Editar Enlace YouTube' : 'Agregar Enlace de YouTube'}
                 </h3>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowYoutubeBulkModal(true)}
-                    className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-extrabold shadow-md shadow-red-600/30 flex items-center gap-1.5 transition"
+                    className="h-7 px-3 bg-red-600 hover:bg-red-500 text-white rounded-full text-[11px] font-extrabold flex items-center gap-1 transition"
                   >
-                    <ListPlus className="w-4 h-4" /> Importación Masiva / Playlists
+                    <ListPlus className="w-3.5 h-3.5" /> Importación Masiva / Playlists
                   </button>
 
                   {isEditingYt && (
-                    <button 
+                    <button
                       onClick={() => {
                         setYtForm({ id: null, title: '', artist: '', youtubeUrl: '', category: 'Lofi & Chill' });
                         setIsEditingYt(false);
                       }}
-                      className="text-xs text-gray-400 hover:text-white px-3 py-1.5 bg-white/10 rounded-xl"
+                      className="h-7 px-2.5 text-[11px] text-gray-300 hover:text-white bg-white/10 rounded-full"
                     >
-                      Cancelar Edición
+                      Cancelar
                     </button>
                   )}
                 </div>
               </div>
 
-              <form onSubmit={handleSaveYoutubeLink} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-300 uppercase mb-1">URL de YouTube / Enlace *</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="url" 
-                      required
-                      placeholder="Ej: https://www.youtube.com/watch?v=jfKfPfyJRdk"
-                      value={ytForm.youtubeUrl}
-                      onChange={async (e) => {
-                        const url = e.target.value;
-                        const ytId = extractYoutubeId(url);
-                        setYtForm(prev => ({
-                          ...prev,
-                          youtubeUrl: url,
-                          title: prev.title || (ytId ? `Video de YouTube (${ytId})` : prev.title)
-                        }));
+              <form onSubmit={handleSaveYoutubeLink} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end">
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">URL de YouTube *</label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={ytForm.youtubeUrl}
+                    onChange={async (e) => {
+                      const url = e.target.value;
+                      const ytId = extractYoutubeId(url);
+                      setYtForm(prev => ({
+                        ...prev,
+                        youtubeUrl: url,
+                        title: prev.title || (ytId ? `Video de YouTube (${ytId})` : prev.title)
+                      }));
 
-                        if (ytId && !isEditingYt) {
-                          const meta = await fetchYoutubeMetadata(url);
-                          if (meta && meta.title) {
-                            setYtForm(prev => ({
-                              ...prev,
-                              title: meta.title,
-                              artist: meta.artist || prev.artist
-                            }));
-                          }
+                      if (ytId && !isEditingYt) {
+                        const meta = await fetchYoutubeMetadata(url);
+                        if (meta && meta.title) {
+                          setYtForm(prev => ({
+                            ...prev,
+                            title: meta.title,
+                            artist: meta.artist || prev.artist
+                          }));
                         }
-                      }}
-                      className="flex-1 px-4 py-2.5 bg-black/50 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 font-mono"
-                    />
-                    {extractYoutubeId(ytForm.youtubeUrl) && (
-                      <div className="w-16 h-10 rounded-lg overflow-hidden border border-white/20 flex-shrink-0 bg-black">
-                        <img 
-                          src={getYoutubeThumbnail(extractYoutubeId(ytForm.youtubeUrl))} 
-                          alt="preview" 
-                          onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400&h=400'; }}
-                          className="w-full h-full object-cover" 
-                        />
-                      </div>
-                    )}
-                  </div>
+                      }
+                    }}
+                    className="w-full h-8 px-3 bg-black/50 border border-white/15 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 font-mono"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase mb-1">Título *</label>
-                  <input 
-                    type="text" 
+                <div className="lg:col-span-3">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Título *</label>
+                  <input
+                    type="text"
                     required
-                    placeholder="Título de la Canción o Transmisión"
+                    placeholder="Título del video"
                     value={ytForm.title}
                     onChange={e => setYtForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-black/50 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 font-bold"
+                    className="w-full h-8 px-3 bg-black/50 border border-white/15 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 font-bold"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-300 uppercase mb-1">Artista / Canal</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ej: Lofi Girl, Cafe Music BGM, etc."
+                <div className="lg:col-span-2">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Artista / Canal</label>
+                  <input
+                    type="text"
+                    placeholder="Canal..."
                     value={ytForm.artist}
                     onChange={e => setYtForm(prev => ({ ...prev, artist: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-black/50 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-red-500"
+                    className="w-full h-8 px-3 bg-black/50 border border-white/15 rounded-lg text-white text-xs focus:outline-none focus:border-red-500"
                   />
                 </div>
 
-                <div>
+                <div className="lg:col-span-2">
                   <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs font-bold text-gray-300 uppercase">Categoría</label>
-                    <button 
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase">Categoría</label>
+                    <button
                       type="button"
                       onClick={() => {
                         setIsCustomCategory(!isCustomCategory);
-                        if (!isCustomCategory) {
-                          setYtForm(prev => ({ ...prev, category: '' }));
-                        }
+                        if (!isCustomCategory) setYtForm(prev => ({ ...prev, category: '' }));
                       }}
-                      className="text-[10px] font-bold text-red-400 hover:text-red-300 underline uppercase"
+                      className="text-[9px] font-bold text-red-400 hover:underline uppercase"
                     >
-                      {isCustomCategory ? '← Seleccionar de lista' : '+ Crear Nueva Categoría'}
+                      {isCustomCategory ? 'Lista' : '+ Nueva'}
                     </button>
                   </div>
 
                   {isCustomCategory ? (
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
-                      placeholder="Escribe el nombre de la nueva categoría..."
+                      placeholder="Categoría..."
                       value={ytForm.category}
                       onChange={e => setYtForm(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-black/50 border border-red-500 rounded-xl text-white text-sm focus:outline-none font-bold placeholder-gray-500"
+                      className="w-full h-8 px-3 bg-black/50 border border-red-500 rounded-lg text-white text-xs focus:outline-none font-bold"
                     />
                   ) : (
-                    <select 
+                    <select
                       value={ytForm.category}
                       onChange={e => {
                         if (e.target.value === '__NEW__') {
@@ -4189,88 +4425,74 @@ export default function RadioManager() {
                           setYtForm(prev => ({ ...prev, category: e.target.value }));
                         }
                       }}
-                      className="w-full px-4 py-2.5 bg-black/50 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 font-bold"
+                      className="w-full h-8 px-2.5 bg-black/50 border border-white/15 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 font-bold"
                     >
                       {availableCategories.map(cat => (
                         <option key={cat} value={cat} className="bg-[#181818] text-white">{cat}</option>
                       ))}
-                      <option value="__NEW__" className="bg-[#2a1515] text-red-400 font-bold">+ Crear Nueva Categoría...</option>
+                      <option value="__NEW__" className="bg-[#2a1515] text-red-400 font-bold">+ Nueva Categoría...</option>
                     </select>
                   )}
                 </div>
 
-                <div className="flex items-end">
-                  <button 
+                <div className="lg:col-span-1">
+                  <button
                     type="submit"
-                    className="w-full py-2.5 px-6 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-sm shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2"
+                    className="w-full h-8 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs transition flex items-center justify-center gap-1"
                   >
-                    <Plus className="w-4 h-4" />
-                    {isEditingYt ? 'Guardar Cambios' : 'Agregar Enlace a la Radio'}
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isEditingYt ? 'Guardar' : 'Añadir'}</span>
                   </button>
                 </div>
               </form>
             </div>
 
-            {/* Lista de Enlaces de YouTube Creados */}
-            <div className="bg-[#181818] rounded-2xl border border-white/10 overflow-hidden shadow-xl">
-              {/* Encabezado con Contador y Herramientas */}
-              <div className="p-4 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/5">
-                <div>
-                  <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                    <Youtube className="w-4 h-4 text-red-500 fill-current" />
-                    Lista de Enlaces Guardados ({filteredAndSortedYoutubeSongs.length}
-                    {filteredAndSortedYoutubeSongs.length !== youtubeSongs.length && ` de ${youtubeSongs.length}`})
+            {/* Lista Compacta de Enlaces de YouTube */}
+            <div className="bg-[#181818] rounded-xl border border-white/10 overflow-hidden shadow-xl">
+              <div className="p-2.5 sm:p-3 border-b border-white/10 flex flex-wrap items-center justify-between gap-2 bg-white/5">
+                <div className="flex items-center gap-2">
+                  <Youtube className="w-4 h-4 text-red-500 fill-current" />
+                  <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                    Videos Guardados ({filteredAndSortedYoutubeSongs.length})
                   </h4>
-                  <p className="text-xs text-gray-400 mt-0.5">Filtra por categoría, busca por texto o reordena los videos guardados</p>
                 </div>
 
-                {/* Controles de Búsqueda y Ordenamiento */}
-                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                  {/* Campo de Búsqueda */}
-                  <div className="relative flex-1 sm:w-44">
-                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input 
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative w-44">
+                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
                       type="text"
                       placeholder="Buscar video..."
                       value={ytSearchQuery}
                       onChange={(e) => setYtSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-7 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition"
+                      className="w-full h-7 pl-8 pr-6 bg-black/40 border border-white/10 rounded-full text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
                     />
                     {ytSearchQuery && (
-                      <button 
+                      <button
                         onClick={() => setYtSearchQuery('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs font-bold px-1"
-                        title="Limpiar búsqueda"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
                       >
                         ✕
                       </button>
                     )}
                   </div>
 
-                  {/* Selector de Orden */}
-                  <div className="relative">
-                    <select
-                      value={ytSortBy}
-                      onChange={(e) => setYtSortBy(e.target.value)}
-                      className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs text-gray-200 focus:outline-none focus:border-red-500 font-medium cursor-pointer"
-                    >
-                      <option value="custom" className="bg-[#181818] text-white">↕ Orden Personalizado</option>
-                      <option value="title-asc" className="bg-[#181818] text-white">🔤 Título (A - Z)</option>
-                      <option value="title-desc" className="bg-[#181818] text-white">🔤 Título (Z - A)</option>
-                      <option value="artist-asc" className="bg-[#181818] text-white">🎤 Artista (A - Z)</option>
-                      <option value="category" className="bg-[#181818] text-white">🏷️ Categoría</option>
-                      <option value="newest" className="bg-[#181818] text-white">🕒 Más Recientes</option>
-                    </select>
-                  </div>
+                  <select
+                    value={ytSortBy}
+                    onChange={(e) => setYtSortBy(e.target.value)}
+                    className="h-7 px-2.5 bg-black/40 border border-white/10 rounded-full text-[11px] text-gray-200 focus:outline-none focus:border-red-500 font-bold cursor-pointer"
+                  >
+                    <option value="custom" className="bg-[#181818]">↕ Personalizado</option>
+                    <option value="title-asc" className="bg-[#181818]">Título (A-Z)</option>
+                    <option value="artist-asc" className="bg-[#181818]">Artista (A-Z)</option>
+                    <option value="category" className="bg-[#181818]">Categoría</option>
+                    <option value="newest" className="bg-[#181818]">Más Recientes</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Barra de Categorías para Filtrado Rápido */}
               {youtubeSongs.length > 0 && (
-                <div className="px-4 py-2.5 bg-black/30 border-b border-white/5 flex items-center gap-2 overflow-x-auto scrollbar-none">
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
-                    <Filter className="w-3 h-3 text-red-400" /> Categorías:
-                  </span>
+                <div className="px-3 py-1.5 bg-black/30 border-b border-white/5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                   {ytCategoriesForFilter.map((cat) => {
                     const count = ytCategoryCounts[cat] || 0;
                     const isActive = ytFilterCategory === cat;
@@ -4278,18 +4500,14 @@ export default function RadioManager() {
                       <button
                         key={cat}
                         onClick={() => setYtFilterCategory(cat)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                          isActive 
-                            ? 'bg-red-600 text-white shadow-md shadow-red-600/30' 
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition shrink-0 flex items-center gap-1 ${
+                          isActive
+                            ? 'bg-red-600 text-white'
                             : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
                         }`}
                       >
                         <span>{cat}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
-                          isActive ? 'bg-black/30 text-white' : 'bg-white/10 text-gray-400'
-                        }`}>
-                          {count}
-                        </span>
+                        <span className="text-[9px] opacity-75">({count})</span>
                       </button>
                     );
                   })}
@@ -4297,98 +4515,76 @@ export default function RadioManager() {
               )}
 
               {loadingYoutubeManager ? (
-                <div className="p-12 text-center text-gray-400">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-red-500" />
-                  <p className="text-xs mt-2 font-bold">Cargando videos de YouTube...</p>
-                </div>
-              ) : youtubeSongs.length === 0 ? (
-                <div className="p-12 text-center text-gray-400 space-y-2">
-                  <Youtube className="w-8 h-8 text-gray-600 mx-auto" />
-                  <p className="text-sm font-bold text-white">No hay enlaces de YouTube configurados</p>
-                  <p className="text-xs text-gray-400">Ingresa la URL de una canción o transmisión en vivo arriba para agregarla.</p>
+                <div className="p-8 text-center text-gray-400">
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto text-red-500" />
                 </div>
               ) : filteredAndSortedYoutubeSongs.length === 0 ? (
-                <div className="p-10 text-center text-gray-400 space-y-3">
-                  <Filter className="w-8 h-8 text-gray-600 mx-auto" />
-                  <p className="text-sm font-bold text-white">No hay enlaces que coincidan con el filtro</p>
-                  <p className="text-xs text-gray-400">Prueba cambiando el texto de búsqueda o la categoría seleccionada.</p>
-                  <button 
-                    onClick={() => { setYtFilterCategory('Todos'); setYtSearchQuery(''); }}
-                    className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition inline-flex items-center gap-1.5"
-                  >
-                    Restablecer Filtros
-                  </button>
+                <div className="p-8 text-center text-gray-400 text-xs">
+                  No hay videos que coincidan con el filtro.
                 </div>
               ) : (
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-white/5 max-h-[420px] overflow-y-auto custom-scrollbar">
                   {filteredAndSortedYoutubeSongs.map((track) => {
                     const origIndex = youtubeSongs.findIndex(s => String(s.id) === String(track.id));
                     const isManualOrderActive = ytSortBy === 'custom' && ytFilterCategory === 'Todos' && !ytSearchQuery;
 
                     return (
-                      <div key={track.id || track.youtubeId} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-white/5 transition">
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
-                            <img 
-                              src={track.cover} 
+                      <div key={track.id || track.youtubeId} className="px-3 py-1.5 flex items-center justify-between gap-3 hover:bg-white/5 transition">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="relative w-10 h-7 rounded overflow-hidden bg-black flex-shrink-0 border border-white/10">
+                            <img
+                              src={track.cover}
                               alt={track.title}
                               onError={(e) => { e.currentTarget.src = getYoutubeThumbnail(track.youtubeId); }}
-                              className="w-full h-full object-cover" 
+                              className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="truncate flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-extrabold text-sm text-white truncate">{track.title}</h4>
-                              <a 
-                                href={track.youtube_url || track.url || `https://www.youtube.com/watch?v=${track.youtubeId}`} 
-                                target="_blank" 
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-bold text-xs text-white truncate">{track.title}</h4>
+                              <a
+                                href={track.youtube_url || track.url || `https://www.youtube.com/watch?v=${track.youtubeId}`}
+                                target="_blank"
                                 rel="noreferrer"
-                                className="text-gray-400 hover:text-red-400 transition shrink-0"
+                                className="text-gray-400 hover:text-red-400 shrink-0"
                               >
-                                <ExternalLink className="w-3.5 h-3.5" />
+                                <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
-                            <p className="text-xs text-gray-400 truncate">{track.artist || 'Canal de YouTube'}</p>
-                            <button
-                              onClick={() => setYtFilterCategory(track.category)}
-                              className="inline-block text-[10px] px-2 py-0.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 rounded-full font-bold mt-1 transition cursor-pointer"
-                              title={`Filtrar por ${track.category}`}
-                            >
-                              {track.category}
-                            </button>
+                            <div className="flex items-center gap-1.5 text-[10px] text-gray-400 truncate">
+                              <span className="truncate">{track.artist || 'Canal de YouTube'}</span>
+                              <span>•</span>
+                              <span className="text-red-400 font-semibold">{track.category}</span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button 
-                            onClick={() => moveYoutubeOrder(origIndex, 'up')} 
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => moveYoutubeOrder(origIndex, 'up')}
                             disabled={!isManualOrderActive || origIndex <= 0}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-20 transition"
-                            title={isManualOrderActive ? "Subir posición" : "Cambia a 'Orden Personalizado' y quita filtros para mover"}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-20"
                           >
-                            <ArrowUp className="w-3.5 h-3.5" />
+                            <ArrowUp className="w-3 h-3" />
                           </button>
-                          <button 
-                            onClick={() => moveYoutubeOrder(origIndex, 'down')} 
+                          <button
+                            onClick={() => moveYoutubeOrder(origIndex, 'down')}
                             disabled={!isManualOrderActive || origIndex >= youtubeSongs.length - 1}
-                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-20 transition"
-                            title={isManualOrderActive ? "Bajar posición" : "Cambia a 'Orden Personalizado' y quita filtros para mover"}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-gray-300 disabled:opacity-20"
                           >
-                            <ArrowDown className="w-3.5 h-3.5" />
+                            <ArrowDown className="w-3 h-3" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleEditYoutubeClick(track)}
-                            className="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 transition"
-                            title="Editar Propiedades"
+                            className="p-1 rounded bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-3 h-3" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteYoutubeLink(track.id)}
-                            className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition"
-                            title="Eliminar Enlace"
+                            className="p-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -4398,9 +4594,10 @@ export default function RadioManager() {
               )}
             </div>
           </div>
+
         ) : managerTab === 'p2p' ? (
-          <div className="space-y-4">
-            <P2PStreamManager 
+          <div className="space-y-3 pb-6">
+            <P2PStreamManager
               onPlayTrackInDeck={(track) => {
                 handlePlayPreview(track, true);
               }}
@@ -4415,137 +4612,95 @@ export default function RadioManager() {
       </div>
 
       {/* ========================================================================= */}
-      {/* CONTENEDOR 2: ÁREA DE REPRODUCTORES (SEPARADO, ESTÁTICO EN EL FONDO)     */}
+      {/* CONTENEDOR 2: BARRA INFERIOR COMPACTA DE REPRODUCTORES DUALES (SPOTIFY)   */}
       {/* ========================================================================= */}
       {(previewTrack || onAirTrack?.station_name || songs.length > 0) && (() => {
         const liveDisplayTrack = onAirTrack?.station_name ? onAirTrack : (songs[0] || null);
 
         return (
-          <div className="flex-shrink-0 w-full bg-neutral-950/98 border-t border-white/10 px-2 sm:px-4 py-2 shadow-2xl z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="flex-shrink-0 w-full bg-[#0a0a0a] border-t border-white/10 px-2.5 py-1.5 shadow-2xl z-20 pb-[max(0.35rem,env(safe-area-inset-bottom))]">
             
             {/* SELECTOR DE DECKS EN MÓVIL (< lg) */}
-            <div className="flex lg:hidden items-center justify-between gap-1.5 pb-2 border-b border-white/10 mb-2">
-              <div className="flex items-center gap-1 w-full">
-                <button
-                  onClick={() => setBottomPlayerMode('preview')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition touch-manipulation ${
-                    bottomPlayerMode === 'preview'
-                      ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/30 font-black'
-                      : 'bg-white/5 text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  <span>Deck CUE</span>
-                </button>
-
-                <button
-                  onClick={() => setBottomPlayerMode('live')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition touch-manipulation ${
-                    bottomPlayerMode === 'live'
-                      ? 'bg-red-600 text-white shadow-md shadow-red-600/30 font-black'
-                      : 'bg-white/5 text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                  <span>Deck Aire</span>
-                </button>
-
-                <button
-                  onClick={() => setBottomPlayerMode('split')}
-                  className={`py-1.5 px-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition touch-manipulation ${
-                    bottomPlayerMode === 'split'
-                      ? 'bg-white text-black font-black'
-                      : 'bg-white/5 text-gray-400 hover:text-white'
-                  }`}
-                  title="Mostrar ambos decks"
-                >
-                  <Layers className="w-3 h-3" />
-                  <span className="hidden sm:inline">Ambos</span>
-                </button>
-              </div>
+            <div className="flex lg:hidden items-center justify-between gap-1 pb-1.5 border-b border-white/10 mb-1.5">
+              <button
+                onClick={() => setBottomPlayerMode('preview')}
+                className={`flex-1 py-1 px-2 rounded text-[10px] font-black uppercase flex items-center justify-center gap-1 transition ${
+                  bottomPlayerMode === 'preview' ? 'bg-cyan-400 text-black' : 'bg-white/5 text-gray-400'
+                }`}
+              >
+                <span>Deck CUE</span>
+              </button>
+              <button
+                onClick={() => setBottomPlayerMode('live')}
+                className={`flex-1 py-1 px-2 rounded text-[10px] font-black uppercase flex items-center justify-center gap-1 transition ${
+                  bottomPlayerMode === 'live' ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-400'
+                }`}
+              >
+                <span>Deck Aire</span>
+              </button>
+              <button
+                onClick={() => setBottomPlayerMode('split')}
+                className={`py-1 px-2 rounded text-[10px] font-black uppercase flex items-center justify-center gap-1 transition ${
+                  bottomPlayerMode === 'split' ? 'bg-white text-black' : 'bg-white/5 text-gray-400'
+                }`}
+              >
+                <Layers className="w-3 h-3" />
+              </button>
             </div>
 
-            <div className="max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+            <div className="max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-2">
               
-              {/* ===================== DECK AZUL: BIBLIOTECA (PRE-ESCUCHA / CUE EXCLUSIVO) ===================== */}
-              <div className={`bg-gradient-to-r from-[#071926]/95 via-[#0b2438]/90 to-[#071926]/95 border-2 border-cyan-500/50 rounded-xl p-2.5 shadow-lg shadow-cyan-950/40 items-center justify-between gap-2 sm:gap-3 min-w-0 ${
+              {/* ===================== DECK AZUL: BIBLIOTECA (CUE) ===================== */}
+              <div className={`bg-[#0c1d29] border border-cyan-500/40 rounded-lg px-2.5 py-1.5 items-center justify-between gap-2 min-w-0 ${
                 bottomPlayerMode === 'live' ? 'hidden lg:flex' : 'flex'
               }`}>
-                
-                {/* Info Canción Azul */}
-                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
-                  <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden shrink-0 border border-cyan-400/40 ring-1 ring-cyan-400/30 bg-neutral-900 shadow-md">
-                    <img 
-                      src={previewTrack?.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'} 
-                      alt="cover biblioteca" 
-                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=400'; }}
+                <div className="flex items-center gap-2 min-w-0 w-1/3 shrink-0">
+                  <div className="relative w-9 h-9 rounded overflow-hidden shrink-0 border border-cyan-400/40 bg-neutral-900">
+                    <img
+                      src={previewTrack?.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=200'}
+                      alt="cue"
+                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=200'; }}
                       className="w-full h-full object-cover"
                     />
-                    {isPlayingPreview && (
-                      <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                      </div>
-                    )}
                   </div>
-
                   <div className="min-w-0 flex-1">
-                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1 mb-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-[8px] font-black uppercase tracking-wider text-cyan-400 block leading-none mb-0.5">
                       🎧 DECK CUE
                     </span>
-                    <h4 className="font-black text-xs text-cyan-300 truncate" title={previewTrack?.title || 'Sin pre-escucha'}>
+                    <h4 className="font-bold text-[11px] text-white truncate leading-tight" title={previewTrack?.title || 'Sin pre-escucha'}>
                       {previewTrack?.title || 'Selecciona pista'}
                     </h4>
-                    <p className="text-[10px] text-gray-400 truncate" title={previewTrack?.artist || previewTrack?.albumArtist}>
+                    <p className="text-[9px] text-gray-400 truncate leading-tight">
                       {previewTrack?.artist || previewTrack?.albumArtist || 'Biblioteca Local'}
                     </p>
                   </div>
                 </div>
 
-                {/* Controles Azul (Prev, Play/Pause, Next, Seek) */}
-                <div className="flex flex-col items-center gap-1 flex-1 max-w-xs min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <button 
-                      onClick={playPrevPreview} 
-                      className="p-1 text-gray-400 hover:text-cyan-400 transition touch-manipulation" 
-                      title="Pista anterior en biblioteca"
-                    >
+                <div className="flex flex-col items-center gap-0.5 flex-1 max-w-xs min-w-0">
+                  <div className="flex items-center gap-2">
+                    <button onClick={playPrevPreview} className="p-0.5 text-gray-400 hover:text-cyan-400 transition">
                       <SkipBack className="w-3.5 h-3.5" />
                     </button>
-                    
-                    <button 
+                    <button
                       onClick={handleTogglePreviewPlay}
-                      className="p-2 sm:p-2.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black shadow-md shadow-cyan-400/30 ring-2 ring-cyan-300 transition-transform active:scale-95 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
-                      title={isPlayingPreview ? "Pausar pre-escucha" : "Reproducir pre-escucha"}
+                      className="w-7 h-7 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center shadow"
                     >
-                      {isPlayingPreview ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                      {isPlayingPreview ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current ml-0.5" />}
                     </button>
-
-                    <button 
-                      onClick={playNextPreview} 
-                      className="p-1 text-gray-400 hover:text-cyan-400 transition touch-manipulation" 
-                      title="Siguiente pista en biblioteca"
-                    >
+                    <button onClick={playNextPreview} className="p-0.5 text-gray-400 hover:text-cyan-400 transition">
                       <SkipForward className="w-3.5 h-3.5" />
                     </button>
-
-                    <button 
-                      onClick={handleToggleLibraryShuffle} 
-                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center touch-manipulation ${
-                        isLibraryShuffle 
-                          ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.8)] ring-1 ring-cyan-400 scale-105' 
-                          : 'text-gray-400 hover:text-cyan-400 bg-transparent'
-                      }`}
-                      title={isLibraryShuffle ? "Modo aleatorio ACTIVO en biblioteca (Clic para apagar)" : "Activar modo aleatorio en biblioteca"}
+                    <button
+                      onClick={handleToggleLibraryShuffle}
+                      className={`p-1 rounded transition ${isLibraryShuffle ? 'text-cyan-300 bg-cyan-500/20' : 'text-gray-400 hover:text-cyan-400'}`}
                     >
-                      <Shuffle className={`w-3.5 h-3.5 ${isLibraryShuffle ? 'text-cyan-300 stroke-[2.5]' : ''}`} />
+                      <Shuffle className="w-3 h-3" />
                     </button>
                   </div>
 
-                  {/* Seek Azul */}
                   <div className="w-full flex items-center gap-1.5 text-[9px] font-mono text-gray-400">
-                    <span className="text-cyan-400 w-8 text-right shrink-0">{formatTime(previewTime)}</span>
-                    <input 
+                    <span className="text-cyan-400 w-7 text-right shrink-0">{formatTime(previewTime)}</span>
+                    <input
                       type="range"
                       min="0"
                       max={previewDuration || 100}
@@ -4556,19 +4711,17 @@ export default function RadioManager() {
                         if (audioRef.current) audioRef.current.currentTime = newTime;
                         setPreviewTime(newTime);
                       }}
-                      className="w-full h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400 touch-manipulation"
-                      title="Adelantar o retroceder pre-escucha de biblioteca"
+                      className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                     />
-                    <span className="w-8 shrink-0">{formatTime(previewDuration)}</span>
+                    <span className="w-7 shrink-0">{formatTime(previewDuration)}</span>
                   </div>
                 </div>
 
-                {/* Volumen Azul */}
-                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                  <button onClick={() => setIsPreviewMuted(!isPreviewMuted)} className="p-1 text-gray-400 hover:text-cyan-400 transition touch-manipulation">
+                <div className="hidden sm:flex items-center gap-1 shrink-0">
+                  <button onClick={() => setIsPreviewMuted(!isPreviewMuted)} className="p-1 text-gray-400 hover:text-cyan-400">
                     {isPreviewMuted || previewVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
                   </button>
-                  <input 
+                  <input
                     type="range"
                     min="0"
                     max="1"
@@ -4578,138 +4731,105 @@ export default function RadioManager() {
                       setPreviewVolume(Number(e.target.value));
                       setIsPreviewMuted(false);
                     }}
-                    className="w-14 sm:w-16 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400 touch-manipulation"
-                    title="Volumen Pre-escucha Biblioteca"
+                    className="w-14 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                   />
                 </div>
               </div>
 
-              {/* ===================== DECK ROJO: COLA DE EMISIÓN (AL AIRE) ===================== */}
-              <div className={`bg-gradient-to-r from-[#1c0808]/95 via-[#260c0d]/90 to-[#1c0808]/95 border-2 border-red-500/50 rounded-xl p-2.5 shadow-lg shadow-red-950/40 items-center justify-between gap-2 sm:gap-3 min-w-0 ${
+              {/* ===================== DECK ROJO: COLA AL AIRE ===================== */}
+              <div className={`bg-[#210b0c] border border-red-500/40 rounded-lg px-2.5 py-1.5 items-center justify-between gap-2 min-w-0 ${
                 bottomPlayerMode === 'preview' ? 'hidden lg:flex' : 'flex'
               }`}>
-                
-                {/* Info Canción Rojo */}
-                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 w-2/5 sm:w-1/3 shrink-0">
-                  <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden shrink-0 border border-red-500/40 ring-1 ring-red-500/30 bg-neutral-900 shadow-md">
-                    <img 
-                      src={liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'} 
-                      alt="cover al aire" 
-                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400'; }}
+                <div className="flex items-center gap-2 min-w-0 w-1/3 shrink-0">
+                  <div className="relative w-9 h-9 rounded overflow-hidden shrink-0 border border-red-500/40 bg-neutral-900">
+                    <img
+                      src={liveDisplayTrack?.station_cover || liveDisplayTrack?.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                      alt="air"
+                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'; }}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-red-600/30 flex items-center justify-center pointer-events-none">
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                    </div>
                   </div>
-
                   <div className="min-w-0 flex-1">
-                    <span className="px-1.5 py-0.5 rounded bg-red-600/30 border border-red-500/40 text-red-400 text-[8px] font-black uppercase tracking-wider inline-flex items-center gap-1 mb-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                    <span className="text-[8px] font-black uppercase tracking-wider text-red-400 block leading-none mb-0.5">
                       🔴 AL AIRE
                     </span>
-                    <h4 className="font-black text-xs text-red-400 truncate" title={liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}>
+                    <h4 className="font-bold text-[11px] text-white truncate leading-tight" title={liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}>
                       {liveDisplayTrack?.station_name || liveDisplayTrack?.title || 'Radio Café'}
                     </h4>
-                    <p className="text-[10px] text-gray-400 truncate" title={liveDisplayTrack?.station_artist || liveDisplayTrack?.artist}>
-                      {liveDisplayTrack?.station_artist || liveDisplayTrack?.artist || 'En Vivo (Cola)'}
+                    <p className="text-[9px] text-gray-400 truncate leading-tight">
+                      {liveDisplayTrack?.station_artist || liveDisplayTrack?.artist || 'En Vivo'}
                     </p>
                   </div>
                 </div>
 
-                {/* Controles Rojo (Prev, Play/Pause Monitor, Next, Seek) */}
-                <div className="flex flex-col items-center gap-1 flex-1 max-w-xs min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <button 
-                      onClick={handleAirPrev} 
-                      className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" 
-                      title="Pista anterior en cola al aire"
-                    >
+                <div className="flex flex-col items-center gap-0.5 flex-1 max-w-xs min-w-0">
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleAirPrev} className="p-0.5 text-gray-400 hover:text-red-400 transition">
                       <SkipBack className="w-3.5 h-3.5" />
                     </button>
-                    
-                    <button 
+                    <button
                       onClick={handleAirPlayPause}
-                      className="p-2 sm:p-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-600/30 transition-transform active:scale-95 touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center"
-                      title={isPlayingLiveSignal ? "Silenciar monitor de cabina" : "Escuchar monitor al aire en cabina"}
+                      className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow"
                     >
-                      {isPlayingLiveSignal ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                      {isPlayingLiveSignal ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current ml-0.5" />}
                     </button>
-
-                    <button 
-                      onClick={handleAirNext} 
-                      className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" 
-                      title="Siguiente canción al aire"
-                    >
+                    <button onClick={handleAirNext} className="p-0.5 text-gray-400 hover:text-red-400 transition">
                       <SkipForward className="w-3.5 h-3.5" />
                     </button>
-
-                    <button 
-                      onClick={handleToggleAirShuffle} 
-                      className={`p-1.5 rounded-lg transition-all flex items-center justify-center touch-manipulation ${
-                        isAirShuffle 
-                          ? 'bg-red-500/25 text-red-300 border border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] ring-1 ring-red-400 scale-105' 
-                          : 'text-gray-400 hover:text-red-400 bg-transparent'
-                      }`}
-                      title={isAirShuffle ? "Modo aleatorio ACTIVO en cola al aire (Clic para apagar)" : "Activar modo aleatorio en cola al aire"}
+                    <button
+                      onClick={handleToggleAirShuffle}
+                      className={`p-1 rounded transition ${isAirShuffle ? 'text-red-300 bg-red-500/20' : 'text-gray-400 hover:text-red-400'}`}
                     >
-                      <Shuffle className={`w-3.5 h-3.5 ${isAirShuffle ? 'text-red-300 stroke-[2.5]' : ''}`} />
+                      <Shuffle className="w-3 h-3" />
                     </button>
                   </div>
 
-                  {/* Seek Rojo */}
                   <div className="w-full flex items-center gap-1.5 text-[9px] font-mono text-gray-400">
-                    <span className="text-red-400 w-8 text-right shrink-0">{formatTime(airTime)}</span>
-                    <input 
+                    <span className="text-red-400 w-7 text-right shrink-0">{formatTime(airTime)}</span>
+                    <input
                       type="range"
                       min="0"
                       max={airDuration || liveDisplayTrack?.duration || 180}
                       step="0.5"
                       value={airTime}
                       onChange={(e) => handleSeekAir(Number(e.target.value))}
-                      className="w-full h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
-                      title="Arrastra para mover el tiempo de la canción al aire"
+                      className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
                     />
-                    <span className="w-8 shrink-0">{formatTime(airDuration || liveDisplayTrack?.duration || 180)}</span>
+                    <span className="w-7 shrink-0">{formatTime(airDuration || liveDisplayTrack?.duration || 180)}</span>
                   </div>
                 </div>
 
-                {/* Control de Volumen Monitor Al Aire */}
-                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={() => {
-                        const nextMute = !isAirMuted;
-                        setIsAirMuted(nextMute);
-                        if (masterAirAudioRef.current) {
-                          masterAirAudioRef.current.muted = nextMute;
-                          masterAirAudioRef.current.volume = nextMute ? 0 : airVolume;
-                        }
-                      }} 
-                      className="p-1 text-gray-400 hover:text-red-400 transition touch-manipulation" 
-                      title={isAirMuted ? "Activar audio" : "Silenciar"}
-                    >
-                      {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
-                    </button>
-                    <input 
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={isAirMuted ? 0 : airVolume}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setAirVolume(val);
-                        setIsAirMuted(false);
-                        if (masterAirAudioRef.current) {
-                          masterAirAudioRef.current.muted = false;
-                          masterAirAudioRef.current.volume = val;
-                        }
-                      }}
-                      className="w-16 sm:w-20 h-2 sm:h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500 touch-manipulation"
-                      title="Volumen Monitor Al Aire"
-                    />
-                  </div>
+                <div className="hidden sm:flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => {
+                      const nextMute = !isAirMuted;
+                      setIsAirMuted(nextMute);
+                      if (masterAirAudioRef.current) {
+                        masterAirAudioRef.current.muted = nextMute;
+                        masterAirAudioRef.current.volume = nextMute ? 0 : airVolume;
+                      }
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-400"
+                  >
+                    {isAirMuted || airVolume === 0 ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={isAirMuted ? 0 : airVolume}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setAirVolume(val);
+                      setIsAirMuted(false);
+                      if (masterAirAudioRef.current) {
+                        masterAirAudioRef.current.muted = false;
+                        masterAirAudioRef.current.volume = val;
+                      }
+                    }}
+                    className="w-14 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  />
                 </div>
               </div>
 

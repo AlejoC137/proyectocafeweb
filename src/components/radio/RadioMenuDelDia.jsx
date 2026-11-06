@@ -161,12 +161,12 @@ export default function RadioMenuDelDia({ todaysLunch }) {
   const opcion2Data = parsedLunch ? (parsedLunch.proteina_opcion_2 || parsedLunch["Opción 2"]) : null;
 
   return (
-    <div className={`w-full flex-col flex border-[3px] ${borderColor} bg-white dark:bg-[#161722] text-black dark:text-white rounded-none ${shadowColor} transition-colors`}>
+    <div className={`w-full flex-col flex border-[2.5px] ${borderColor} bg-white dark:bg-[#161722] text-black dark:text-white rounded-none shadow-[3px_3px_0px_0px_rgba(31,41,55,1)] dark:shadow-[3px_3px_0px_0px_rgba(239,68,68,0.4)] transition-colors`}>
 
-      {/* Header Neobrutalista */}
-      <div className={`px-3 py-2 border-b-[3px] ${borderColor} bg-white dark:bg-[#1e1f2e] bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(31,41,55,0.15)_4px,rgba(31,41,55,0.15)_5px)] dark:bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,rgba(255,255,255,0.05)_4px,rgba(255,255,255,0.05)_5px)] flex items-center justify-between overflow-hidden gap-2`}>
-        <h3 className="font-black uppercase tracking-widest text-xl lg:text-2xl flex items-center gap-2 mt-1 whitespace-nowrap truncate text-black dark:text-white" style={{ fontFamily: "'First Bunny', sans-serif" }}>
-          <Utensils className="w-4 h-4 -mt-1 flex-shrink-0 text-yellow-500" /> <span className="truncate">Menú del Día</span>
+      {/* Header Compacto */}
+      <div className={`px-3 py-1.5 border-b-[2.5px] ${borderColor} bg-white dark:bg-[#1e1f2e] flex items-center justify-between overflow-hidden gap-2`}>
+        <h3 className="font-black uppercase tracking-wider text-base lg:text-lg flex items-center gap-1.5 whitespace-nowrap truncate text-black dark:text-white" style={{ fontFamily: "'First Bunny', sans-serif" }}>
+          <Utensils className="w-3.5 h-3.5 flex-shrink-0 text-yellow-500" /> <span className="truncate">Menú del Día</span>
         </h3>
         
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -175,10 +175,10 @@ export default function RadioMenuDelDia({ todaysLunch }) {
               onClick={handleDownloadPng}
               disabled={isDownloading}
               title="Descargar afiche en PNG"
-              className={`px-2 py-1 bg-white dark:bg-[#12131C] text-black dark:text-white border-[2px] ${borderColor} shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.1)] ${buttonHover} text-[9px] leading-none font-black uppercase transition-all flex items-center gap-1 disabled:opacity-50`}
+              className={`px-2 py-0.5 bg-white dark:bg-[#12131C] text-black dark:text-white border ${borderColor} text-[9px] font-black uppercase transition-all flex items-center gap-1 disabled:opacity-50 hover:bg-black hover:text-white`}
             >
-              <Download className="w-3 h-3 text-red-500" />
-              <span>{isDownloading ? 'Generando...' : 'Descargar PNG'}</span>
+              <Download className="w-2.5 h-2.5 text-red-500" />
+              <span>{isDownloading ? '...' : 'PNG'}</span>
             </button>
           )}
         </div>
@@ -273,13 +273,13 @@ export default function RadioMenuDelDia({ todaysLunch }) {
         )}
       </div>
 
-      {/* Botón Inferior */}
-      <div className={`p-4 bg-white dark:bg-[#161722] mt-auto border-t-[3px] ${borderColor}`}>
+      {/* Botón Inferior Compacto */}
+      <div className={`p-2.5 bg-white dark:bg-[#161722] mt-auto border-t-[2px] ${borderColor}`}>
         <button
           onClick={() => navigate('/Menu')}
-          className={`w-full py-4 border-[3px] ${borderColor} bg-black dark:bg-yellow-400 text-white dark:text-black font-black uppercase tracking-[0.2em] text-xs shadow-[4px_4px_0px_0px_rgba(31,41,55,1)] dark:shadow-[4px_4px_0px_0px_rgba(250,204,21,0.5)] hover:bg-yellow-100 dark:hover:bg-white hover:text-black transition-all ${buttonHover} rounded-none flex items-center justify-center gap-2`}
+          className={`w-full py-2 border-[2px] ${borderColor} bg-black dark:bg-[#1DB954] text-white dark:text-black font-black uppercase tracking-widest text-xs shadow-[2px_2px_0px_0px_rgba(31,41,55,1)] hover:opacity-90 transition-all rounded-none flex items-center justify-center gap-1.5`}
         >
-          <Eye className="w-4 h-4" />
+          <Eye className="w-3.5 h-3.5" />
           <span>Ver Carta Completa</span>
         </button>
       </div>
