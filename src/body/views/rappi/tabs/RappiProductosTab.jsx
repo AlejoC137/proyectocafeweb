@@ -25,6 +25,9 @@ import {
   X,
   ExternalLink,
   SlidersHorizontal,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 export function RappiProductosTab({
@@ -43,6 +46,10 @@ export function RappiProductosTab({
   const [filterCanal, setFilterCanal] = useState("RAPPI"); // "RAPPI" | "PROYECTO_1" | "PROYECTO_2" | "TODOS" | "SIN_INDEXAR"
   const [soloActivos, setSoloActivos] = useState(true);
   const [showModerador, setShowModerador] = useState(true);
+
+  // Ordenamiento de columnas
+  const [sortColumn, setSortColumn] = useState("nombre");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   // Selección
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -80,6 +87,54 @@ export function RappiProductosTab({
       return true;
     });
   }, [analyzedItems, soloActivos, filterCanal, filterGrupo, search]);
+
+  // Manejar cambio de ordenamiento
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(column);
+      const defaultDesc = [
+        "precioLocal",
+        "precioRappi",
+        "diferenciaPct",
+        "costo",
+        "neto",
+        "gananciaRappi",
+        "margenRappi",
+      ];
+      setSortDirection(defaultDesc.includes(column) ? "desc" : "asc");
+    }
+  };
+
+  // Lista ordenada según la columna seleccionada
+  const sortedItems = useMemo(() => {
+    return [...filteredItems].sort((a, b) => {
+      let aVal = a[sortColumn];
+      let bVal = b[sortColumn];
+
+      if (sortColumn === "nombre") {
+        aVal = (a.nombre || "").toLowerCase();
+        bVal = (b.nombre || "").toLowerCase();
+        return sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      if (sortColumn === "canales") {
+        const score = (x) => (x.RAPPI ? 4 : 0) + (x.PROYECTO_1 ? 2 : 0) + (x.PROYECTO_2 ? 1 : 0);
+        aVal = score(a);
+        bVal = score(b);
+      } else if (sortColumn === "receta") {
+        aVal = a.tieneReceta ? 1 : 0;
+        bVal = b.tieneReceta ? 1 : 0;
+      } else {
+        aVal = Number(aVal || 0);
+        bVal = Number(bVal || 0);
+      }
+
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredItems, sortColumn, sortDirection]);
 
   // Grupos únicos para el select
   const uniqueGrupos = useMemo(() => {
@@ -166,6 +221,40 @@ export function RappiProductosTab({
     }
   };
 
+  // Componente de encabezado ordenable
+  const renderSortableHeader = (colKey, title, align = "left") => {
+    const isSorted = sortColumn === colKey;
+    const alignClass =
+      align === "right"
+        ? "text-right justify-end"
+        : align === "center"
+        ? "text-center justify-center"
+        : "text-left justify-start";
+
+    return (
+      <th
+        onClick={() => handleSort(colKey)}
+        className={`p-2 cursor-pointer select-none transition-colors hover:bg-slate-100 ${
+          isSorted ? "text-orange-600 font-extrabold bg-orange-50/50" : ""
+        }`}
+        title={`Ordenar por ${title} (${isSorted ? (sortDirection === "asc" ? "Ascendente" : "Descendente") : "Clic para ordenar"})`}
+      >
+        <div className={`flex items-center gap-1 inline-flex w-full ${alignClass}`}>
+          <span>{title}</span>
+          {isSorted ? (
+            sortDirection === "asc" ? (
+              <ArrowUp className="w-3 h-3 text-orange-600 shrink-0" />
+            ) : (
+              <ArrowDown className="w-3 h-3 text-orange-600 shrink-0" />
+            )
+          ) : (
+            <ArrowUpDown className="w-2.5 h-2.5 text-slate-300 opacity-60 hover:opacity-100 shrink-0" />
+          )}
+        </div>
+      </th>
+    );
+  };
+
   return (
     <div className="space-y-3">
       {/* Barra de KPIs superiores */}
@@ -201,7 +290,7 @@ export function RappiProductosTab({
         <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs col-span-2 sm:col-span-1 flex flex-col justify-between">
           <span className="text-[10px] font-bold uppercase text-slate-400 block">Exportación</span>
           <ExportMenuExcelButton
-            items={filteredItems}
+            items={sortedItems}
             config={config}
             canalLabel={filterCanal === "TODOS" ? "Menu_Completo" : filterCanal}
           />
@@ -212,7 +301,7 @@ export function RappiProductosTab({
       <ModeradorPrecioPanel
         config={config}
         onConfigChange={onConfigChange}
-        items={filteredItems}
+        items={sortedItems}
         selectedIds={selectedIds}
       />
 
@@ -339,27 +428,27 @@ export function RappiProductosTab({
                     )}
                   </button>
                 </th>
-                <th className="p-2">Producto</th>
-                <th className="p-2 text-center">Canales</th>
-                <th className="p-2 text-right">P. Local</th>
-                <th className="p-2 text-right">P. Rappi</th>
-                <th className="p-2 text-right">Dif. %</th>
-                <th className="p-2 text-right">Costo (CMP+CMO)</th>
-                <th className="p-2 text-right">Neto Rappi</th>
-                <th className="p-2 text-right">Ganancia Rappi</th>
-                <th className="p-2 text-center">Margen</th>
-                <th className="p-2 text-center">Receta</th>
+                {renderSortableHeader("nombre", "Producto", "left")}
+                {renderSortableHeader("canales", "Canales", "center")}
+                {renderSortableHeader("precioLocal", "P. Local", "right")}
+                {renderSortableHeader("precioRappi", "P. Rappi", "right")}
+                {renderSortableHeader("diferenciaPct", "Dif. %", "right")}
+                {renderSortableHeader("costo", "Costo (CMP+CMO)", "right")}
+                {renderSortableHeader("neto", "Neto Rappi", "right")}
+                {renderSortableHeader("gananciaRappi", "Ganancia Rappi", "right")}
+                {renderSortableHeader("margenRappi", "Margen", "center")}
+                {renderSortableHeader("receta", "Receta", "center")}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredItems.length === 0 ? (
+              {sortedItems.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="p-8 text-center text-slate-400">
                     No se encontraron productos con los filtros aplicados.
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((item) => {
+                sortedItems.map((item) => {
                   const isSelected = selectedIds.has(item.id);
                   const isEditing = editingId === item.id;
 
@@ -556,9 +645,15 @@ export function RappiProductosTab({
           </table>
         </div>
 
-        {/* Footer con conteo */}
+        {/* Footer con conteo y estado de ordenamiento */}
         <div className="bg-slate-50 px-3 py-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
-          <span>Mostrando {filteredItems.length} de {analyzedItems.length} productos</span>
+          <div className="flex items-center gap-3">
+            <span>Mostrando {sortedItems.length} de {analyzedItems.length} productos</span>
+            <span>•</span>
+            <span>
+              Ordenado por: <b className="text-slate-700">{sortColumn}</b> ({sortDirection === "asc" ? "Ascendente" : "Descendente"})
+            </span>
+          </div>
           <span>{selectedIds.size} seleccionados</span>
         </div>
       </div>

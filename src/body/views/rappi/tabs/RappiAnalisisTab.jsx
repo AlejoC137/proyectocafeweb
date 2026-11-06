@@ -25,6 +25,9 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 export function RappiAnalisisTab({
@@ -39,6 +42,13 @@ export function RappiAnalisisTab({
   const [periodo, setPeriodo] = useState("mes"); // "hoy" | "semana" | "mes" | "todo"
   const [modalRegistroOpen, setModalRegistroOpen] = useState(false);
   const [expandedVentaId, setExpandedVentaId] = useState(null);
+
+  // Estados de ordenamiento
+  const [sortProdCol, setSortProdCol] = useState("ganancia");
+  const [sortProdDir, setSortProdDir] = useState("desc");
+
+  const [sortVentaCol, setSortVentaCol] = useState("fecha");
+  const [sortVentaDir, setSortVentaDir] = useState("desc");
 
   // Cargar ventas específicas de Rappi
   const loadVentas = async () => {
@@ -62,7 +72,6 @@ export function RappiAnalisisTab({
     const mapa = {};
     menu.forEach((item) => {
       mapa[item._id] = calcularCostoMenuItem(item, recetasMenu, recetasProduccion);
-      // también por nombre para ventas históricas
       if (item.NombreES) {
         mapa[item.NombreES.trim().toLowerCase()] = mapa[item._id];
       }
@@ -114,7 +123,6 @@ export function RappiAnalisisTab({
       const canalInfo = parseJSONSafe(v.Canal_Info, {});
       const bruto = Number(v.Total_Ingreso || 0);
 
-      // Comisión real o calculada por configuración
       const comisionVal =
         canalInfo?.comisionValor !== undefined
           ? Number(canalInfo.comisionValor)
@@ -129,7 +137,6 @@ export function RappiAnalisisTab({
         const unitPrice = Number(p.Precio || 0);
         const subtotal = unitPrice * qty;
 
-        // Búsqueda de costo por ID o nombre
         const infoCosto =
           (p._id && mapaCostos[p._id]) ||
           (p.NombreES && mapaCostos[p.NombreES.trim().toLowerCase()]) ||
@@ -139,7 +146,6 @@ export function RappiAnalisisTab({
         const totalCostItem = unitCost * qty;
         costoVenta += totalCostItem;
 
-        // Acumular por producto para la tabla de rentabilidad
         const prodKey = p.NombreES || "Sin nombre";
         if (!productosMap[prodKey]) {
           productosMap[prodKey] = {
@@ -191,7 +197,6 @@ export function RappiAnalisisTab({
     const gananciaTotal = totalNeto - totalCostoProduccion;
     const margenNetoGlobal = totalNeto > 0 ? (gananciaTotal / totalNeto) * 100 : 0;
 
-    // Terminar de calcular comisiones y márgenes por producto
     const prodArray = Object.values(productosMap).map((p) => {
       const comision = p.bruto * (comisionPct / 100) * (1 + ivaComisionPct / 100);
       const neto = p.bruto - comision;
@@ -217,10 +222,73 @@ export function RappiAnalisisTab({
         pedidosCount: ventasFiltradas.length,
         ticketPromedio: ventasFiltradas.length > 0 ? totalBruto / ventasFiltradas.length : 0,
       },
-      rentabilidadPorProducto: prodArray.sort((a, b) => b.ganancia - a.ganancia),
+      rentabilidadPorProducto: prodArray,
       ventasProcesadas: ventasProc,
     };
   }, [ventasFiltradas, mapaCostos, config]);
+
+  // Ordenamiento de Tabla de Rentabilidad por Producto
+  const handleSortProd = (col) => {
+    if (sortProdCol === col) {
+      setSortProdDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortProdCol(col);
+      setSortProdDir(col === "nombre" ? "asc" : "desc");
+    }
+  };
+
+  const sortedRentabilidad = useMemo(() => {
+    return [...rentabilidadPorProducto].sort((a, b) => {
+      let aVal = a[sortProdCol];
+      let bVal = b[sortProdCol];
+
+      if (sortProdCol === "nombre") {
+        aVal = (a.nombre || "").toLowerCase();
+        bVal = (b.nombre || "").toLowerCase();
+        return sortProdDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      aVal = Number(aVal || 0);
+      bVal = Number(bVal || 0);
+
+      if (aVal < bVal) return sortProdDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortProdDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [rentabilidadPorProducto, sortProdCol, sortProdDir]);
+
+  // Ordenamiento de Tabla de Historial de Ventas
+  const handleSortVenta = (col) => {
+    if (sortVentaCol === col) {
+      setSortVentaDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortVentaCol(col);
+      setSortVentaDir("desc");
+    }
+  };
+
+  const sortedVentas = useMemo(() => {
+    return [...ventasProcesadas].sort((a, b) => {
+      let aVal = a[sortVentaCol];
+      let bVal = b[sortVentaCol];
+
+      if (sortVentaCol === "fecha") {
+        const dateA = parseVentaDate(a.fecha) || new Date(0);
+        const dateB = parseVentaDate(b.fecha) || new Date(0);
+        return sortVentaDir === "asc" ? dateA - dateB : dateB - dateA;
+      }
+      if (sortVentaCol === "pedido") {
+        aVal = (a.pedido || "").toLowerCase();
+        bVal = (b.pedido || "").toLowerCase();
+        return sortVentaDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      aVal = Number(aVal || 0);
+      bVal = Number(bVal || 0);
+
+      if (aVal < bVal) return sortVentaDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortVentaDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [ventasProcesadas, sortVentaCol, sortVentaDir]);
 
   const handleExportExcel = async () => {
     try {
@@ -235,14 +303,47 @@ export function RappiAnalisisTab({
           "Total Pedidos": kpis.pedidosCount,
           "Ticket Promedio": kpis.ticketPromedio,
         },
-        productos: rentabilidadPorProducto,
-        ventas: ventasProcesadas,
+        productos: sortedRentabilidad,
+        ventas: sortedVentas,
         periodoLabel: `rappi_${periodo}`,
       });
     } catch (err) {
       console.error(err);
       alert("Error al exportar reporte Excel.");
     }
+  };
+
+  const renderSortTh = (colKey, title, currentCol, currentDir, onClickHandler, align = "left") => {
+    const isSorted = currentCol === colKey;
+    const alignClass =
+      align === "right"
+        ? "text-right justify-end"
+        : align === "center"
+        ? "text-center justify-center"
+        : "text-left justify-start";
+
+    return (
+      <th
+        onClick={() => onClickHandler(colKey)}
+        className={`p-2 cursor-pointer select-none transition-colors hover:bg-slate-100 ${
+          isSorted ? "text-orange-600 font-extrabold bg-orange-50/50" : ""
+        }`}
+        title={`Ordenar por ${title}`}
+      >
+        <div className={`flex items-center gap-1 inline-flex w-full ${alignClass}`}>
+          <span>{title}</span>
+          {isSorted ? (
+            currentDir === "asc" ? (
+              <ArrowUp className="w-3 h-3 text-orange-600 shrink-0" />
+            ) : (
+              <ArrowDown className="w-3 h-3 text-orange-600 shrink-0" />
+            )
+          ) : (
+            <ArrowUpDown className="w-2.5 h-2.5 text-slate-300 opacity-60 hover:opacity-100 shrink-0" />
+          )}
+        </div>
+      </th>
+    );
   };
 
   return (
@@ -364,7 +465,7 @@ export function RappiAnalisisTab({
             </h3>
           </div>
           <span className="text-[11px] text-slate-400">
-            {rentabilidadPorProducto.length} producto(s) con ventas
+            {sortedRentabilidad.length} producto(s) • Ordenado por: <b>{sortProdCol}</b>
           </span>
         </div>
 
@@ -372,26 +473,26 @@ export function RappiAnalisisTab({
           <table className="w-full text-left border-collapse text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               <tr>
-                <th className="p-2">Producto</th>
-                <th className="p-2 text-center">Uds</th>
-                <th className="p-2 text-right">Facturado Bruto</th>
-                <th className="p-2 text-right">Comisión</th>
-                <th className="p-2 text-right">Neto</th>
-                <th className="p-2 text-right">Costo Unit.</th>
-                <th className="p-2 text-right">Costo Total</th>
-                <th className="p-2 text-right">Ganancia</th>
-                <th className="p-2 text-center">Margen</th>
+                {renderSortTh("nombre", "Producto", sortProdCol, sortProdDir, handleSortProd, "left")}
+                {renderSortTh("unidades", "Uds", sortProdCol, sortProdDir, handleSortProd, "center")}
+                {renderSortTh("bruto", "Facturado Bruto", sortProdCol, sortProdDir, handleSortProd, "right")}
+                {renderSortTh("comision", "Comisión", sortProdCol, sortProdDir, handleSortProd, "right")}
+                {renderSortTh("neto", "Neto", sortProdCol, sortProdDir, handleSortProd, "right")}
+                {renderSortTh("costoUnit", "Costo Unit.", sortProdCol, sortProdDir, handleSortProd, "right")}
+                {renderSortTh("costoTotal", "Costo Total", sortProdCol, sortProdDir, handleSortProd, "right")}
+                {renderSortTh("ganancia", "Ganancia", sortProdCol, sortProdDir, handleSortProd, "right")}
+                {renderSortTh("margen", "Margen", sortProdCol, sortProdDir, handleSortProd, "center")}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rentabilidadPorProducto.length === 0 ? (
+              {sortedRentabilidad.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-6 text-center text-slate-400">
                     No hay ventas de productos indexados a Rappi en este período.
                   </td>
                 </tr>
               ) : (
-                rentabilidadPorProducto.map((p, idx) => (
+                sortedRentabilidad.map((p, idx) => (
                   <tr key={idx} className="hover:bg-slate-50">
                     <td className="p-2 font-bold text-slate-800">
                       <div className="flex items-center gap-1.5">
@@ -449,7 +550,7 @@ export function RappiAnalisisTab({
             </h3>
           </div>
           <span className="text-[11px] text-slate-400">
-            {ventasProcesadas.length} pedidos registrados
+            {sortedVentas.length} pedidos • Ordenado por: <b>{sortVentaCol}</b>
           </span>
         </div>
 
@@ -458,25 +559,25 @@ export function RappiAnalisisTab({
             <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               <tr>
                 <th className="p-2 w-8"></th>
-                <th className="p-2">Fecha / Hora</th>
-                <th className="p-2">Pedido / Cliente</th>
+                {renderSortTh("fecha", "Fecha / Hora", sortVentaCol, sortVentaDir, handleSortVenta, "left")}
+                {renderSortTh("pedido", "Pedido / Cliente", sortVentaCol, sortVentaDir, handleSortVenta, "left")}
                 <th className="p-2">Productos</th>
-                <th className="p-2 text-right">Total Bruto</th>
-                <th className="p-2 text-right">Comisión</th>
-                <th className="p-2 text-right">Neto</th>
-                <th className="p-2 text-right">Costo Prod.</th>
-                <th className="p-2 text-right">Ganancia</th>
+                {renderSortTh("total", "Total Bruto", sortVentaCol, sortVentaDir, handleSortVenta, "right")}
+                {renderSortTh("comision", "Comisión", sortVentaCol, sortVentaDir, handleSortVenta, "right")}
+                {renderSortTh("neto", "Neto", sortVentaCol, sortVentaDir, handleSortVenta, "right")}
+                {renderSortTh("costo", "Costo Prod.", sortVentaCol, sortVentaDir, handleSortVenta, "right")}
+                {renderSortTh("ganancia", "Ganancia", sortVentaCol, sortVentaDir, handleSortVenta, "right")}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {ventasProcesadas.length === 0 ? (
+              {sortedVentas.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-6 text-center text-slate-400">
                     No hay pedidos de Rappi registrados en este período. Puedes registrar uno con el botón superior.
                   </td>
                 </tr>
               ) : (
-                ventasProcesadas.map((v) => {
+                sortedVentas.map((v) => {
                   const isExpanded = expandedVentaId === v.id;
                   return (
                     <React.Fragment key={v.id}>
