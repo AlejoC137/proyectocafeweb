@@ -37,6 +37,13 @@ export const PROVEE = "Proveedores";
 export const COMPRAS = "Compras";
 export const ALIADOS = "Aliados";
 export const BAJAS = "Bajas";
+export const RAPPI_CONFIG = "RappiConfig";
+export const PEDIDOS_CANAL = "PedidosCanal";
+// Canales de venta (Ventas.Canal / banderas en Menu)
+export const CANAL_LOCAL = "LOCAL";
+export const CANAL_RAPPI = "RAPPI";
+export const CANAL_PROYECTO_1 = "PROYECTO_1";
+export const CANAL_PROYECTO_2 = "PROYECTO_2";
 // Fuentes dd precios
 export const FUENTES = []
 

@@ -69,7 +69,13 @@ function Pagar({ ventaId, onClose, total, onPaymentComplete }) {
           <Button onClick={() => setMetodo("Transferencia")} className="bg-yellow-500 text-white flex-1">
             Transferencia
           </Button>
+          <Button onClick={() => setMetodo("Rappi")} className="bg-orange-500 text-white flex-1">
+            Rappi
+          </Button>
         </div>
+        {metodo && (
+          <p className="text-xs text-gray-600 mb-2">Método seleccionado: <b>{metodo}</b></p>
+        )}
 
         {metodo === "Efectivo" && (
           <div className="mt-4">

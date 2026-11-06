@@ -6,6 +6,7 @@ import { formatCurrency } from './ModelComponents';
 import ReportCopyButton from '../../components/ReportCopyButton';
 import { getAllFromTable, updateItem, createRecipeForProduct } from '../../../redux/actions';
 import { MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
+import { calcularCostoMenuItem } from '../../../utils/costoMenu';
 
 const ProductosFinanciero = () => {
     const navigate = useNavigate();
@@ -49,30 +50,8 @@ const ProductosFinanciero = () => {
         return allMenu
             .filter(item => item.Estado === 'Activo')
             .map(menuItem => {
-                let consolidatedCost = 0;
-                let recetaData = null;
-
-                if (menuItem.Receta) {
-                    // Try to find in RecetasMenu first, then RecetasProduccion
-                    recetaData = allRecetasMenu.find(r => r._id === menuItem.Receta) ||
-                        allRecetasProduccion.find(r => r._id === menuItem.Receta);
-
-                    if (recetaData && recetaData.costo) {
-                        try {
-                            const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
-
-                            // Handle different cost formats
-                            if (typeof costData === 'number') {
-                                consolidatedCost = costData;
-                            } else if (costData && (costData.vCMP || costData.vCMO)) {
-                                // Prioritize vCMP (Costo Materia Prima)
-                                consolidatedCost = (costData.vCMP || 0) + (costData.vCMO || 0);
-                            }
-                        } catch (e) {
-                            console.warn(`Error parsing cost for ${menuItem.NombreES}`, e);
-                        }
-                    }
-                }
+                // Costo consolidado (CMP + CMO) desde la receta — lógica compartida en utils/costoMenu
+                const { costo: consolidatedCost } = calcularCostoMenuItem(menuItem, allRecetasMenu, allRecetasProduccion);
 
                 const precioVenta = parseFloat(menuItem.Precio || 0);
                 const utilidad = precioVenta - consolidatedCost;

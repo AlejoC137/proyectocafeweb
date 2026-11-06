@@ -128,11 +128,23 @@ export function eliminarVenta(ventaId) {
 export function actualizarPago(ventaId, pagoInfo) {
   return async (dispatch) => {
     try {
-      const { data, error } = await supabase
+      const basePayload = { Pagado: true, Pago_Info: pagoInfo };
+      // Ventas pagadas con método "Rappi" se marcan con Canal = 'RAPPI' (ver alter_ventas_add_canal.sql)
+      const payload = pagoInfo?.metodo === "Rappi" ? { ...basePayload, Canal: "RAPPI" } : basePayload;
+
+      let { data, error } = await supabase
         .from("Ventas")
-        .update({ Pagado: true, Pago_Info: pagoInfo })
+        .update(payload)
         .eq("_id", ventaId)
         .select();
+
+      // Tolerancia si la columna Canal aún no existe en Supabase
+      if (error && payload.Canal && String(error.message || "").includes("Canal")) {
+        console.warn("⚠️ La columna Canal no existe en Ventas. Ejecuta alter_ventas_add_canal.sql en Supabase.");
+        const retry = await supabase.from("Ventas").update(basePayload).eq("_id", ventaId).select();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         console.error('Error al actualizar el pago:', error);

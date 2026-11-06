@@ -213,6 +213,7 @@ function StaffPortal() {
       { label: "Pagos", icon: DollarSign, onClick: () => navigate("/PagosProveedores") },
       { label: "Día", icon: CalendarDays, onClick: () => navigate("/DiaResumen") },
       { label: "Financiero", icon: Landmark, onClick: () => navigate("/productosFinanciero") },
+      { label: "Rappi", icon: ShoppingCart, onClick: () => navigate("/Rappi") },
       { label: "Almacén", icon: Store, onClick: () => navigate("/GestionAlmacen") },
       { label: "Mes", icon: Calendar, onClick: () => navigate("/MesResumen") },
       { label: "Bolsillos", icon: Wallet, onClick: () => navigate("/bolsillos-financieros") },

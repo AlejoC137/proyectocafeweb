@@ -43,6 +43,7 @@ const pageTitles = {
   "BOLSILLOS-FINANCIEROS": { [ESP]: "Bolsillos Financieros", [ENG]: "Financial Pockets" },
   "GASTOS-CALCULADOS": { [ESP]: "Costos de Materiales", [ENG]: "Calculated Costs" },
   "PRODUCTOSFINANCIERO": { [ESP]: "Márgenes por Producto", [ENG]: "Product Margins" },
+  "RAPPI": { [ESP]: "Rappi & Canales", [ENG]: "Rappi & Channels" },
   "MODEL": { [ESP]: "Modelado Financiero", [ENG]: "Financial Model" },
   "MODELOPROYECTO": { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" },
   "PROVEEDORES": { [ESP]: "Directorio de Proveedores", [ENG]: "Suppliers" },
@@ -145,6 +146,7 @@ const MENU_SECTIONS = [
       { emoji: "👛", label: { [ESP]: "Bolsillos Financieros", [ENG]: "Financial Pockets" }, path: "/bolsillos-financieros", subLabel: { [ESP]: "Cuentas y presupuestos", [ENG]: "Budgets and pockets" } },
       { emoji: "🧮", label: { [ESP]: "Costos de Materiales", [ENG]: "Calculated Costs" }, path: "/gastos-calculados", subLabel: { [ESP]: "Análisis de insumos", [ENG]: "Ingredient cost breakdown" }, isSub: true },
       { emoji: "📊", label: { [ESP]: "Márgenes por Producto", [ENG]: "Product Margins" }, path: "/productosFinanciero", subLabel: { [ESP]: "Rentabilidad unitaria", [ENG]: "Profitability by item" }, isSub: true },
+      { emoji: "🛵", label: { [ESP]: "Rappi & Canales", [ENG]: "Rappi & Channels" }, path: "/Rappi", subLabel: { [ESP]: "Menú, precios y análisis Rappi", [ENG]: "Delivery menu & analytics" } },
       { emoji: "📐", label: { [ESP]: "Modelo de Proyecto", [ENG]: "Project Model" }, path: "/ModeloProyecto", subLabel: { [ESP]: "Proyección y plan financiero", [ENG]: "Financial planning model" }, isSub: true },
       { emoji: "⚡", label: { [ESP]: "Acciones Rápidas", [ENG]: "Quick Price Actions" }, path: "/AccionesRapidas", subLabel: { [ESP]: "Actualizar precios por lote", [ENG]: "Batch price update" }, isSub: true },
     ]

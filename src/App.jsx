@@ -55,6 +55,7 @@ const Model = lazy(() => import('./body/views/ventaCompra/Model'));
 const ModeloProyecto = lazy(() => import('./body/views/ventaCompra/ModeloProyecto'));
 const GastosCalculadosMateriales = lazy(() => import('./body/views/ventaCompra/GastosCalculadosMateriales'));
 const ProductosFinanciero = lazy(() => import('./body/views/ventaCompra/ProductosFinanciero'));
+const Rappi = lazy(() => import('./body/views/rappi/Rappi'));
 const RecruitmentPrint = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
 const ConsumoStaffView = lazy(() => import('./body/views/staff/ConsumoStaffView'));
 const ConsumoAdminView = lazy(() => import('./body/views/staff/ConsumoAdminView'));
@@ -213,6 +214,7 @@ function App() {
                   <Route path="/admin/bolsillos-financieros" element={<Navigate to="/bolsillos-financieros" replace />} />
                   <Route path="/gastos-calculados" element={<GastosCalculadosMateriales />} />
                   <Route path="/productosFinanciero" element={<ProductosFinanciero />} />
+                  <Route path="/Rappi/:tab?" element={<Rappi />} />
                   <Route path="/Model" element={<Model />} />
                   <Route path="/ModeloProyecto" element={<ModeloProyecto />} />
                   <Route path="/ModeloProyecto/:year/:month" element={<ModeloProyecto />} />
