@@ -12,7 +12,9 @@
  * 4. RECETAS / ESCANDALLOS: Listar (get_recetas), Obtener (receta_obtener), Crear (receta_crear), Actualizar (receta_actualizar).
  * 5. COMPRAS: Listar (get_compras), Registrar (compra_crear).
  * 6. VENTAS: Listar (get_ventas), Registrar (venta_registrar).
- * 7. STAFF: Listar personal activo y roles (get_staff).
+ * 7. STAFF Y TURNOS: Listar personal (get_staff), Consultar turnos y asistencia (staff_turnos_obtener),
+ *    Añadir turno (staff_turno_agregar), Editar turnos registrados (staff_turno_editar),
+ *    Eliminar turno (staff_turno_eliminar), Editar plantilla de horario semanal (staff_horario_semanal_editar).
  *
  * Mapeo nativo a tablas Supabase:
  * - Agenda: _id, nombreES, nombreEN, fecha, horaInicio, horaFinal, servicios, valor, estado_proceso, etc.
@@ -21,7 +23,7 @@
  * - Recetas: _id, forId, legacyName, rendimiento, costo, emplatado, proces1..proces10, item1_Id..item20_Id.
  * - Compras: _id, Date, Valor, Proveedor_Id, Concepto, Categoria, Detalle.
  * - Ventas: _id, Date, Time, Total_Ingreso, Productos, Cliente, MetodoPago.
- * - Staff: _id, nombre, rol, telefono, email, activo.
+ * - Staff: _id, Nombre, Apellido, CC, Cargo, Rate, Celular, Show, Contratacion, Turnos (JSON), TurnosSet (JSON), Propinas (JSON).
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -115,6 +117,133 @@ function normalizeAgendaItem(ev) {
     ...ev,
     nombre: ev.nombreES || ev.nombre || "",
   };
+}
+
+function parseTurnosStaff(rawTurnos) {
+  if (!rawTurnos) return [];
+  if (Array.isArray(rawTurnos)) return rawTurnos;
+  if (typeof rawTurnos === "string" && rawTurnos.trim() !== "") {
+    try {
+      const parsed = JSON.parse(rawTurnos);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function parseTurnosSetStaff(rawTurnosSet) {
+  const defaultSchedule = {
+    Lunes: { inicio: "08:00", fin: "16:00", descanso: false },
+    Martes: { inicio: "08:00", fin: "16:00", descanso: false },
+    Miercoles: { inicio: "08:00", fin: "16:00", descanso: false },
+    Jueves: { inicio: "08:00", fin: "16:00", descanso: false },
+    Viernes: { inicio: "08:00", fin: "16:00", descanso: false },
+    Sabado: { inicio: "08:00", fin: "16:00", descanso: false },
+    Domingo: { inicio: "08:00", fin: "16:00", descanso: true },
+  };
+  if (!rawTurnosSet) return defaultSchedule;
+  if (typeof rawTurnosSet === "object" && !Array.isArray(rawTurnosSet)) {
+    return Object.keys(rawTurnosSet).length > 0 ? rawTurnosSet : defaultSchedule;
+  }
+  if (typeof rawTurnosSet === "string" && rawTurnosSet.trim() !== "") {
+    try {
+      const parsed = JSON.parse(rawTurnosSet);
+      return parsed && typeof parsed === "object" && Object.keys(parsed).length > 0
+        ? parsed
+        : defaultSchedule;
+    } catch {
+      return defaultSchedule;
+    }
+  }
+  return defaultSchedule;
+}
+
+function calcularHorasTurno(horaInicio, horaCierre) {
+  if (!horaInicio || !horaCierre || horaCierre === "false" || horaCierre === "PENDING") {
+    return 0;
+  }
+  try {
+    const [h1, m1] = String(horaInicio).split(":").map(Number);
+    const [h2, m2] = String(horaCierre).split(":").map(Number);
+    if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) return 0;
+    const duration = (h2 - h1) + (m2 - m1) / 60;
+    return duration > 0 ? parseFloat(duration.toFixed(2)) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function normalizarObjetoTurno(t) {
+  const rawFecha = t?.fecha || t?.turnoDate || t?.date || "";
+  const fecha = String(rawFecha).split("T")[0];
+  const horaInicio = t?.horaInicio || t?.horaEntrada || t?.hora || "";
+  const horaCierre =
+    t?.horaCierre !== undefined
+      ? String(t.horaCierre)
+      : t?.horaSalida !== undefined
+      ? String(t.horaSalida)
+      : t?.horaFin !== undefined
+      ? String(t.horaFin)
+      : "";
+  return {
+    fecha,
+    horaInicio,
+    horaCierre,
+  };
+}
+
+async function buscarEmpleadoStaff({ id, cc, nombre } = {}) {
+  if (!id && !cc && !nombre) {
+    throw new Error("Debes proporcionar 'id' (_id UUID), 'cc' (cédula) o 'nombre' del colaborador.");
+  }
+
+  const { data: allStaff, error } = await supabase().from("Staff").select("*");
+  if (error) throw new Error(`Error al consultar tabla Staff: ${error.message}`);
+  const lista = allStaff || [];
+
+  if (id) {
+    const found = lista.find((e) => String(e._id) === String(id));
+    if (!found) throw new Error(`No se encontró colaborador con ID (_id): ${id}`);
+    return found;
+  }
+
+  if (cc !== undefined && cc !== null && String(cc).trim() !== "") {
+    const ccStr = String(cc).trim();
+    const found = lista.find((e) => String(e.CC) === ccStr);
+    if (!found) throw new Error(`No se encontró colaborador con cédula (CC): ${cc}`);
+    return found;
+  }
+
+  const q = String(nombre).toLowerCase().trim();
+  const matches = lista.filter((e) => {
+    const full = `${e.Nombre || ""} ${e.Apellido || ""}`.toLowerCase().trim();
+    return (
+      full.includes(q) ||
+      String(e.Nombre || "").toLowerCase().includes(q) ||
+      String(e.Apellido || "").toLowerCase().includes(q)
+    );
+  });
+
+  if (matches.length === 0) {
+    throw new Error(`No se encontró ningún colaborador que coincida con el nombre: "${nombre}"`);
+  }
+  if (matches.length > 1) {
+    const exactFull = matches.find(
+      (e) => `${e.Nombre || ""} ${e.Apellido || ""}`.toLowerCase().trim() === q
+    );
+    if (exactFull) return exactFull;
+
+    const opciones = matches
+      .map((e) => `- ${e.Nombre || ""} ${e.Apellido || ""} (CC: ${e.CC}, _id: ${e._id})`)
+      .join("\n");
+    throw new Error(
+      `Se encontraron múltiples colaboradores para "${nombre}". Por favor especifica 'cc' o 'id':\n${opciones}`
+    );
+  }
+
+  return matches[0];
 }
 
 // ─────────────────────────────────────────────
@@ -452,14 +581,175 @@ const TOOLS = [
     },
   },
 
-  // ── 5. STAFF ────────────────────────────────
+  // ── 5. STAFF Y TURNOS ───────────────────────
   {
     name: "get_staff",
-    description: "Consulta el equipo de trabajo y colaboradores de Proyecto Café con sus roles y contacto.",
+    description: "Consulta el equipo de trabajo y colaboradores de Proyecto Café con sus roles, tarifas, estado de turno y contacto.",
     inputSchema: {
       type: "object",
       properties: {
         solo_activos: { type: "boolean", description: "Filtrar únicamente colaboradores activos (default true)" },
+        busqueda: { type: "string", description: "Filtrar por nombre, apellido, cargo o cédula (CC)" },
+      },
+    },
+  },
+  {
+    name: "staff_turnos_obtener",
+    description:
+      "Obtiene el historial de turnos registrados (asistencia) y la plantilla de horario semanal de un colaborador (buscando por ID, cédula CC o nombre), con filtro por rango de fechas y cálculo de horas trabajadas.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "UUID (_id) del colaborador en Staff" },
+        cc: { type: ["string", "number"], description: "Número de cédula (CC) del colaborador" },
+        nombre: { type: "string", description: "Nombre o apellido del colaborador" },
+        fecha_inicio: { type: "string", description: "Filtrar turnos desde esta fecha YYYY-MM-DD (opcional)" },
+        fecha_fin: { type: "string", description: "Filtrar turnos hasta esta fecha YYYY-MM-DD (opcional)" },
+      },
+    },
+  },
+  {
+    name: "staff_turno_agregar",
+    description:
+      "Añade uno o varios turnos al registro de turnos trabajados (Turnos) de un colaborador del staff. También permite iniciar un turno abierto enviando horaCierre: 'false'.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "UUID (_id) del colaborador" },
+        cc: { type: ["string", "number"], description: "Cédula (CC) del colaborador" },
+        nombre: { type: "string", description: "Nombre del colaborador" },
+        fecha: { type: "string", description: "Fecha del turno YYYY-MM-DD (si se agrega un solo turno)" },
+        horaInicio: { type: "string", description: "Hora de entrada HH:MM (ej: '08:00')" },
+        horaCierre: {
+          type: "string",
+          description: "Hora de salida HH:MM (ej: '16:30') o 'false' si el turno queda abierto en curso",
+        },
+        turnos: {
+          type: "array",
+          description: "Lista de turnos a agregar en lote: [{ fecha: 'YYYY-MM-DD', horaInicio: 'HH:MM', horaCierre: 'HH:MM' }]",
+          items: {
+            type: "object",
+            required: ["fecha", "horaInicio"],
+            properties: {
+              fecha: { type: "string" },
+              horaInicio: { type: "string" },
+              horaCierre: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: "staff_turno_editar",
+    description:
+      "⚠️ Edita los turnos registrados de un colaborador del staff. Permite modificar un turno puntual (por su 'indice' obtenido en staff_turnos_obtener o buscando por 'fecha_busqueda') o reemplazar los turnos de un periodo/completos. Guarda snapshot previo.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "UUID (_id) del colaborador" },
+        cc: { type: ["string", "number"], description: "Cédula (CC) del colaborador" },
+        nombre: { type: "string", description: "Nombre del colaborador" },
+        indice: {
+          type: "number",
+          description: "Índice exacto del turno en el arreglo Turnos (devuelto como 'indice' por staff_turnos_obtener)",
+        },
+        fecha_busqueda: {
+          type: "string",
+          description: "Si no se envía 'indice', fecha YYYY-MM-DD del turno que se desea modificar",
+        },
+        horaInicio_busqueda: {
+          type: "string",
+          description: "Opcional: horaInicio HH:MM para desambiguar si el empleado tiene varios turnos en la misma fecha_busqueda",
+        },
+        fecha: { type: "string", description: "Nueva fecha YYYY-MM-DD para el turno editado" },
+        horaInicio: { type: "string", description: "Nueva hora de entrada HH:MM para el turno editado" },
+        horaCierre: { type: "string", description: "Nueva hora de salida HH:MM para el turno editado" },
+        turnos_reemplazo: {
+          type: "array",
+          description:
+            "Modo lote: lista de turnos [{ fecha, horaInicio, horaCierre }] para reemplazar los turnos de un rango de fechas o toda la lista",
+          items: {
+            type: "object",
+            required: ["fecha", "horaInicio", "horaCierre"],
+            properties: {
+              fecha: { type: "string" },
+              horaInicio: { type: "string" },
+              horaCierre: { type: "string" },
+            },
+          },
+        },
+        rango_reemplazo: {
+          type: "object",
+          description:
+            "Si se usa 'turnos_reemplazo', define { fecha_inicio: 'YYYY-MM-DD', fecha_fin: 'YYYY-MM-DD' } para reemplazar únicamente los turnos dentro de ese rango conservando el resto del historial",
+          properties: {
+            fecha_inicio: { type: "string" },
+            fecha_fin: { type: "string" },
+          },
+        },
+        reemplazar_todos: {
+          type: "boolean",
+          description: "Si es true junto con 'turnos_reemplazo', reemplaza la totalidad del arreglo Turnos del empleado",
+        },
+      },
+    },
+  },
+  {
+    name: "staff_turno_eliminar",
+    description:
+      "🚨 Elimina un turno registrado de un colaborador del staff (por 'indice' o por 'fecha'). Requiere confirmar: true y devuelve backup del turno eliminado.",
+    inputSchema: {
+      type: "object",
+      required: ["confirmar"],
+      properties: {
+        id: { type: "string", description: "UUID (_id) del colaborador" },
+        cc: { type: ["string", "number"], description: "Cédula (CC) del colaborador" },
+        nombre: { type: "string", description: "Nombre del colaborador" },
+        indice: {
+          type: "number",
+          description: "Índice exacto del turno a eliminar (devuelto por staff_turnos_obtener)",
+        },
+        fecha: {
+          type: "string",
+          description: "Fecha YYYY-MM-DD del turno a eliminar (si no se especifica indice)",
+        },
+        horaInicio: {
+          type: "string",
+          description: "Hora de inicio HH:MM opcional para identificar el turno si hay varios en la misma fecha",
+        },
+        confirmar: {
+          type: "boolean",
+          description: "Debe ser true tras confirmación explícita del usuario",
+        },
+      },
+    },
+  },
+  {
+    name: "staff_horario_semanal_editar",
+    description:
+      "⚠️ Edita la plantilla de horario base semanal (TurnosSet: Lunes a Domingo) de un colaborador del staff, permitiendo configurar horas de entrada/salida, días de descanso y turnos quincenales (biweekly).",
+    inputSchema: {
+      type: "object",
+      required: ["horarios"],
+      properties: {
+        id: { type: "string", description: "UUID (_id) del colaborador" },
+        cc: { type: ["string", "number"], description: "Cédula (CC) del colaborador" },
+        nombre: { type: "string", description: "Nombre del colaborador" },
+        horarios: {
+          type: "object",
+          description:
+            "Objeto con los días de la semana a actualizar (Lunes, Martes, Miercoles, Jueves, Viernes, Sabado, Domingo). Ejemplo: { Lunes: { inicio: '08:00', fin: '16:00', descanso: false }, Domingo: { descanso: true } }",
+          properties: {
+            Lunes: { type: "object" },
+            Martes: { type: "object" },
+            Miercoles: { type: "object" },
+            Jueves: { type: "object" },
+            Viernes: { type: "object" },
+            Sabado: { type: "object" },
+            Domingo: { type: "object" },
+          },
+        },
       },
     },
   },
@@ -1023,15 +1313,483 @@ async function ventaRegistrar(args) {
   return { mensaje: "Venta registrada exitosamente", venta: data };
 }
 
-// ── 5. STAFF ────────────────────────────────
-async function getStaff({ solo_activos = true } = {}) {
+// ── 5. STAFF Y TURNOS ───────────────────────
+async function getStaff({ solo_activos = true, busqueda } = {}) {
   const { data, error } = await supabase().from("Staff").select("*");
   if (error) throw new Error("Error al obtener staff: " + error.message);
   let filtrados = data || [];
   if (solo_activos) {
-    filtrados = filtrados.filter((s) => s.show !== false && s.activo !== false && s.Estado !== "Inactivo");
+    filtrados = filtrados.filter(
+      (s) =>
+        s.show !== false &&
+        s.Show !== false &&
+        s.Show !== "false" &&
+        s.Contratacion !== false &&
+        s.Contratacion !== "false" &&
+        s.activo !== false &&
+        s.Estado !== "Inactivo"
+    );
   }
-  return filtrados;
+  if (busqueda) {
+    const q = String(busqueda).toLowerCase().trim();
+    filtrados = filtrados.filter((s) => {
+      const full = `${s.Nombre || ""} ${s.Apellido || ""} ${s.Cargo || ""} ${s.CC || ""}`.toLowerCase();
+      return full.includes(q);
+    });
+  }
+  return filtrados.map((s) => {
+    const turnosParsed = parseTurnosStaff(s.Turnos);
+    const ultimoTurno = turnosParsed.length > 0 ? normalizarObjetoTurno(turnosParsed[turnosParsed.length - 1]) : null;
+    const turnoAbierto = ultimoTurno && ultimoTurno.horaCierre === "false" ? ultimoTurno : null;
+    return {
+      _id: s._id,
+      nombre_completo: `${s.Nombre || ""} ${s.Apellido || ""}`.trim(),
+      Nombre: s.Nombre,
+      Apellido: s.Apellido,
+      CC: s.CC,
+      Cargo: s.Cargo,
+      Rate: s.Rate,
+      Celular: s.Celular,
+      Contratacion: s.Contratacion,
+      Show: s.Show,
+      total_turnos_registrados: turnosParsed.length,
+      turno_abierto: turnoAbierto,
+      TurnosSet: parseTurnosSetStaff(s.TurnosSet),
+      ...s,
+    };
+  });
+}
+
+async function staffTurnosObtener({ id, cc, nombre, fecha_inicio, fecha_fin } = {}) {
+  const emp = await buscarEmpleadoStaff({ id, cc, nombre });
+  const turnosRaw = parseTurnosStaff(emp.Turnos);
+
+  // Mapear con su índice original en el arreglo Turnos (como en EditarTurnosView.jsx)
+  const turnosConIndice = turnosRaw.map((t, idx) => {
+    const norm = normalizarObjetoTurno(t);
+    const horas = calcularHorasTurno(norm.horaInicio, norm.horaCierre);
+    return {
+      indice: idx,
+      fecha: norm.fecha,
+      horaInicio: norm.horaInicio,
+      horaCierre: norm.horaCierre,
+      horas,
+      abierto: norm.horaCierre === "false",
+    };
+  });
+
+  const turnosFiltrados = turnosConIndice.filter((t) => {
+    if (fecha_inicio && t.fecha < fecha_inicio) return false;
+    if (fecha_fin && t.fecha > fecha_fin) return false;
+    return true;
+  });
+
+  const totalHoras = parseFloat(
+    turnosFiltrados.reduce((acc, t) => acc + (t.horas || 0), 0).toFixed(2)
+  );
+  const rate = Number(emp.Rate) || 0;
+  const pagoBase = Math.round(totalHoras * rate);
+  const seguridadSocial = Math.round(pagoBase * 0.1);
+
+  const horarioSemanal = parseTurnosSetStaff(emp.TurnosSet);
+  const horasSemanalesPlantilla = parseFloat(
+    Object.values(horarioSemanal)
+      .reduce((acc, d) => {
+        if (!d || typeof d !== "object" || d.descanso) return acc;
+        return acc + calcularHorasTurno(d.inicio, d.fin);
+      }, 0)
+      .toFixed(2)
+  );
+
+  return {
+    empleado: {
+      _id: emp._id,
+      nombre_completo: `${emp.Nombre || ""} ${emp.Apellido || ""}`.trim(),
+      CC: emp.CC,
+      Cargo: emp.Cargo,
+      Rate: rate,
+    },
+    filtro: {
+      fecha_inicio: fecha_inicio || null,
+      fecha_fin: fecha_fin || null,
+    },
+    resumen_periodo: {
+      total_turnos_en_rango: turnosFiltrados.length,
+      total_turnos_historico: turnosRaw.length,
+      total_horas_trabajadas: totalHoras,
+      pago_base_estimado_cop: pagoBase,
+      seguridad_social_10pct_cop: seguridadSocial,
+      total_estimado_cop: pagoBase + seguridadSocial,
+    },
+    turnos: turnosFiltrados,
+    horario_semanal_base: {
+      horas_semanales_programadas: horasSemanalesPlantilla,
+      TurnosSet: horarioSemanal,
+    },
+  };
+}
+
+async function staffTurnoAgregar({ id, cc, nombre, fecha, horaInicio, horaCierre, turnos } = {}) {
+  const emp = await buscarEmpleadoStaff({ id, cc, nombre });
+  const turnosActuales = parseTurnosStaff(emp.Turnos);
+
+  let nuevosParaAgregar = [];
+  if (Array.isArray(turnos) && turnos.length > 0) {
+    nuevosParaAgregar = turnos.map((t) => {
+      const norm = normalizarObjetoTurno(t);
+      if (!norm.fecha || !norm.horaInicio) {
+        throw new Error("Cada turno en 'turnos' debe incluir al menos 'fecha' (YYYY-MM-DD) y 'horaInicio' (HH:MM).");
+      }
+      return {
+        fecha: norm.fecha,
+        horaInicio: norm.horaInicio,
+        horaCierre: norm.horaCierre || "false",
+      };
+    });
+  } else {
+    if (!fecha || !horaInicio) {
+      throw new Error("Debes proporcionar 'fecha' (YYYY-MM-DD) y 'horaInicio' (HH:MM), o un arreglo 'turnos'.");
+    }
+    nuevosParaAgregar = [
+      {
+        fecha: String(fecha).split("T")[0],
+        horaInicio: String(horaInicio),
+        horaCierre: horaCierre !== undefined ? String(horaCierre) : "false",
+      },
+    ];
+  }
+
+  const listaActualizada = [...turnosActuales, ...nuevosParaAgregar];
+
+  const { data: updated, error: updateErr } = await supabase()
+    .from("Staff")
+    .update({ Turnos: JSON.stringify(listaActualizada) })
+    .eq("_id", emp._id)
+    .select()
+    .single();
+
+  if (updateErr) throw new Error(`Error al guardar turnos en Supabase: ${updateErr.message}`);
+
+  const detalleAgregados = nuevosParaAgregar.map((t, i) => ({
+    indice: turnosActuales.length + i,
+    ...t,
+    horas: calcularHorasTurno(t.horaInicio, t.horaCierre),
+  }));
+
+  return {
+    mensaje: `Se agregaron ${detalleAgregados.length} turno(s) a ${emp.Nombre || ""} ${emp.Apellido || ""} (CC: ${emp.CC}).`,
+    empleado: {
+      _id: emp._id,
+      nombre_completo: `${emp.Nombre || ""} ${emp.Apellido || ""}`.trim(),
+      CC: emp.CC,
+    },
+    turnos_agregados: detalleAgregados,
+    total_turnos_actual: listaActualizada.length,
+    snapshot_previo_count: turnosActuales.length,
+    empleado_actualizado: updated,
+  };
+}
+
+async function staffTurnoEditar({
+  id,
+  cc,
+  nombre,
+  indice,
+  fecha_busqueda,
+  horaInicio_busqueda,
+  fecha,
+  horaInicio,
+  horaCierre,
+  turnos_reemplazo,
+  rango_reemplazo,
+  reemplazar_todos = false,
+} = {}) {
+  const emp = await buscarEmpleadoStaff({ id, cc, nombre });
+  const turnosActuales = parseTurnosStaff(emp.Turnos);
+  const snapshotPrevio = JSON.parse(JSON.stringify(turnosActuales));
+
+  // Modo Lote: reemplazar turnos de un rango de fechas o la totalidad de turnos
+  if (Array.isArray(turnos_reemplazo)) {
+    const normalizadosNuevos = turnos_reemplazo.map((t) => {
+      const norm = normalizarObjetoTurno(t);
+      if (!norm.fecha) {
+        throw new Error("Todos los turnos en 'turnos_reemplazo' deben tener 'fecha' (YYYY-MM-DD).");
+      }
+      return {
+        fecha: norm.fecha,
+        horaInicio: norm.horaInicio,
+        horaCierre: norm.horaCierre,
+      };
+    });
+
+    let nuevaLista = [];
+    if (rango_reemplazo && (rango_reemplazo.fecha_inicio || rango_reemplazo.fecha_fin)) {
+      const fIni = rango_reemplazo.fecha_inicio || "0000-00-00";
+      const fFin = rango_reemplazo.fecha_fin || "9999-12-31";
+      const fueraDeRango = turnosActuales.filter((t) => {
+        const f = normalizarObjetoTurno(t).fecha;
+        return f < fIni || f > fFin;
+      });
+      nuevaLista = [...fueraDeRango, ...normalizadosNuevos];
+    } else if (reemplazar_todos) {
+      nuevaLista = normalizadosNuevos;
+    } else {
+      throw new Error(
+        "Al usar 'turnos_reemplazo' debes indicar 'rango_reemplazo: { fecha_inicio, fecha_fin }' o 'reemplazar_todos: true' para evitar sobrescribir todo el historial accidentalmente."
+      );
+    }
+
+    const { error: updateErr } = await supabase()
+      .from("Staff")
+      .update({ Turnos: JSON.stringify(nuevaLista) })
+      .eq("_id", emp._id);
+
+    if (updateErr) throw new Error(`Error al actualizar turnos por lote en Supabase: ${updateErr.message}`);
+
+    return {
+      mensaje: `Turnos de ${emp.Nombre || ""} ${emp.Apellido || ""} actualizados exitosamente (${normalizadosNuevos.length} turnos aplicados).`,
+      empleado: {
+        _id: emp._id,
+        nombre_completo: `${emp.Nombre || ""} ${emp.Apellido || ""}`.trim(),
+        CC: emp.CC,
+      },
+      modo: rango_reemplazo ? "reemplazo_por_rango" : "reemplazo_completo",
+      rango_aplicado: rango_reemplazo || "todos",
+      turnos_aplicados: normalizadosNuevos.map((t) => ({
+        ...t,
+        horas: calcularHorasTurno(t.horaInicio, t.horaCierre),
+      })),
+      total_turnos_anterior: snapshotPrevio.length,
+      total_turnos_nuevo: nuevaLista.length,
+      snapshot_previo: snapshotPrevio,
+    };
+  }
+
+  // Modo Individual: editar un turno específico por 'indice' o por 'fecha_busqueda'
+  let targetIdx = -1;
+
+  if (indice !== undefined && indice !== null) {
+    targetIdx = Number(indice);
+    if (isNaN(targetIdx) || targetIdx < 0 || targetIdx >= turnosActuales.length) {
+      throw new Error(
+        `El índice ${indice} está fuera de rango. El colaborador tiene ${turnosActuales.length} turnos registrados (índices 0 a ${Math.max(0, turnosActuales.length - 1)}).`
+      );
+    }
+  } else if (fecha_busqueda) {
+    const fBusq = String(fecha_busqueda).split("T")[0];
+    const coincidencias = turnosActuales
+      .map((t, idx) => ({ idx, norm: normalizarObjetoTurno(t) }))
+      .filter((item) => {
+        if (item.norm.fecha !== fBusq) return false;
+        if (horaInicio_busqueda && item.norm.horaInicio !== horaInicio_busqueda) return false;
+        return true;
+      });
+
+    if (coincidencias.length === 0) {
+      throw new Error(
+        `No se encontró ningún turno en la fecha ${fBusq}${horaInicio_busqueda ? ` con horaInicio ${horaInicio_busqueda}` : ""} para ${emp.Nombre || ""} ${emp.Apellido || ""}.`
+      );
+    }
+    if (coincidencias.length > 1) {
+      const desc = coincidencias
+        .map((c) => `indice ${c.idx}: ${c.norm.fecha} (${c.norm.horaInicio} - ${c.norm.horaCierre})`)
+        .join("; ");
+      throw new Error(
+        `Hay ${coincidencias.length} turnos en la fecha ${fBusq} (${desc}). Especifica 'indice' o 'horaInicio_busqueda' para indicar cuál editar.`
+      );
+    }
+    targetIdx = coincidencias[0].idx;
+  } else {
+    throw new Error(
+      "Para editar un turno debes proporcionar 'indice' (recomendado, obtenido de staff_turnos_obtener) o 'fecha_busqueda' (YYYY-MM-DD)."
+    );
+  }
+
+  const turnoAnterior = normalizarObjetoTurno(turnosActuales[targetIdx]);
+  const turnoNuevo = {
+    fecha: fecha !== undefined ? String(fecha).split("T")[0] : turnoAnterior.fecha,
+    horaInicio: horaInicio !== undefined ? String(horaInicio) : turnoAnterior.horaInicio,
+    horaCierre: horaCierre !== undefined ? String(horaCierre) : turnoAnterior.horaCierre,
+  };
+
+  const nuevaLista = [...turnosActuales];
+  nuevaLista[targetIdx] = turnoNuevo;
+
+  const { error: updateErr } = await supabase()
+    .from("Staff")
+    .update({ Turnos: JSON.stringify(nuevaLista) })
+    .eq("_id", emp._id);
+
+  if (updateErr) throw new Error(`Error al guardar el turno editado en Supabase: ${updateErr.message}`);
+
+  return {
+    mensaje: `Turno #${targetIdx} de ${emp.Nombre || ""} ${emp.Apellido || ""} actualizado exitosamente.`,
+    empleado: {
+      _id: emp._id,
+      nombre_completo: `${emp.Nombre || ""} ${emp.Apellido || ""}`.trim(),
+      CC: emp.CC,
+    },
+    indice_editado: targetIdx,
+    turno_anterior: {
+      ...turnoAnterior,
+      horas: calcularHorasTurno(turnoAnterior.horaInicio, turnoAnterior.horaCierre),
+    },
+    turno_actualizado: {
+      ...turnoNuevo,
+      horas: calcularHorasTurno(turnoNuevo.horaInicio, turnoNuevo.horaCierre),
+    },
+    snapshot_previo: snapshotPrevio,
+  };
+}
+
+async function staffTurnoEliminar({ id, cc, nombre, indice, fecha, horaInicio, confirmar } = {}) {
+  if (confirmar !== true) {
+    throw new Error(
+      "CONFIRMACIÓN REQUERIDA (Safety Gate): Debes enviar 'confirmar: true' para eliminar un turno registrado del staff."
+    );
+  }
+
+  const emp = await buscarEmpleadoStaff({ id, cc, nombre });
+  const turnosActuales = parseTurnosStaff(emp.Turnos);
+  const snapshotPrevio = JSON.parse(JSON.stringify(turnosActuales));
+
+  let targetIdx = -1;
+  if (indice !== undefined && indice !== null) {
+    targetIdx = Number(indice);
+    if (isNaN(targetIdx) || targetIdx < 0 || targetIdx >= turnosActuales.length) {
+      throw new Error(
+        `El índice ${indice} no es válido. El colaborador tiene ${turnosActuales.length} turnos registrados.`
+      );
+    }
+  } else if (fecha) {
+    const fBusq = String(fecha).split("T")[0];
+    const coincidencias = turnosActuales
+      .map((t, idx) => ({ idx, norm: normalizarObjetoTurno(t) }))
+      .filter((item) => {
+        if (item.norm.fecha !== fBusq) return false;
+        if (horaInicio && item.norm.horaInicio !== horaInicio) return false;
+        return true;
+      });
+
+    if (coincidencias.length === 0) {
+      throw new Error(
+        `No se encontró turno en la fecha ${fBusq}${horaInicio ? ` con horaInicio ${horaInicio}` : ""} para eliminar.`
+      );
+    }
+    if (coincidencias.length > 1) {
+      const desc = coincidencias
+        .map((c) => `indice ${c.idx}: ${c.norm.fecha} (${c.norm.horaInicio} - ${c.norm.horaCierre})`)
+        .join("; ");
+      throw new Error(
+        `Se encontraron múltiples turnos en la fecha ${fBusq} (${desc}). Especifica 'indice' o 'horaInicio' para eliminar el turno exacto.`
+      );
+    }
+    targetIdx = coincidencias[0].idx;
+  } else {
+    throw new Error("Debes proporcionar 'indice' o 'fecha' para identificar el turno a eliminar.");
+  }
+
+  const turnoEliminado = normalizarObjetoTurno(turnosActuales[targetIdx]);
+  const nuevaLista = [...turnosActuales];
+  nuevaLista.splice(targetIdx, 1);
+
+  const { error: updateErr } = await supabase()
+    .from("Staff")
+    .update({ Turnos: JSON.stringify(nuevaLista) })
+    .eq("_id", emp._id);
+
+  if (updateErr) throw new Error(`Error al eliminar turno en Supabase: ${updateErr.message}`);
+
+  return {
+    mensaje: `Turno del ${turnoEliminado.fecha} (${turnoEliminado.horaInicio} - ${turnoEliminado.horaCierre}) eliminado exitosamente de ${emp.Nombre || ""} ${emp.Apellido || ""}.`,
+    empleado: {
+      _id: emp._id,
+      nombre_completo: `${emp.Nombre || ""} ${emp.Apellido || ""}`.trim(),
+      CC: emp.CC,
+    },
+    indice_eliminado: targetIdx,
+    turno_eliminado: {
+      ...turnoEliminado,
+      horas: calcularHorasTurno(turnoEliminado.horaInicio, turnoEliminado.horaCierre),
+    },
+    total_turnos_restantes: nuevaLista.length,
+    snapshot_previo: snapshotPrevio,
+  };
+}
+
+async function staffHorarioSemanalEditar({ id, cc, nombre, horarios } = {}) {
+  if (!horarios || typeof horarios !== "object") {
+    throw new Error("Se requiere el objeto 'horarios' con los días de la semana a configurar.");
+  }
+
+  const emp = await buscarEmpleadoStaff({ id, cc, nombre });
+  const horarioActual = parseTurnosSetStaff(emp.TurnosSet);
+  const snapshotPrevio = JSON.parse(JSON.stringify(horarioActual));
+
+  const diasValidos = {
+    lunes: "Lunes",
+    martes: "Martes",
+    miercoles: "Miercoles",
+    miércoles: "Miercoles",
+    jueves: "Jueves",
+    viernes: "Viernes",
+    sabado: "Sabado",
+    sábado: "Sabado",
+    domingo: "Domingo",
+  };
+
+  const nuevoHorario = { ...horarioActual };
+
+  for (const [key, cfg] of Object.entries(horarios)) {
+    const diaCanonico = diasValidos[key.toLowerCase().trim()];
+    if (!diaCanonico) {
+      throw new Error(
+        `Día inválido "${key}". Usa: Lunes, Martes, Miercoles, Jueves, Viernes, Sabado, Domingo.`
+      );
+    }
+    const prevDia = nuevoHorario[diaCanonico] || { inicio: "08:00", fin: "16:00", descanso: false };
+    const descanso = cfg.descanso !== undefined ? Boolean(cfg.descanso) : Boolean(prevDia.descanso);
+    const inicio = cfg.inicio || cfg.horaInicio || prevDia.inicio || "08:00";
+    const fin = cfg.fin || cfg.horaCierre || cfg.horaSalida || prevDia.fin || "16:00";
+
+    nuevoHorario[diaCanonico] = {
+      ...prevDia,
+      inicio,
+      fin,
+      descanso,
+      ...(cfg.biweekly !== undefined && { biweekly: Boolean(cfg.biweekly) }),
+      ...(cfg.fechaInicio !== undefined && { fechaInicio: cfg.fechaInicio }),
+    };
+  }
+
+  const { error: updateErr } = await supabase()
+    .from("Staff")
+    .update({ TurnosSet: JSON.stringify(nuevoHorario) })
+    .eq("_id", emp._id);
+
+  if (updateErr) throw new Error(`Error al actualizar plantilla de horario semanal en Supabase: ${updateErr.message}`);
+
+  const horasSemanales = parseFloat(
+    Object.values(nuevoHorario)
+      .reduce((acc, d) => {
+        if (!d || typeof d !== "object" || d.descanso) return acc;
+        return acc + calcularHorasTurno(d.inicio, d.fin);
+      }, 0)
+      .toFixed(2)
+  );
+
+  return {
+    mensaje: `Plantilla de horario semanal (TurnosSet) de ${emp.Nombre || ""} ${emp.Apellido || ""} actualizada exitosamente.`,
+    empleado: {
+      _id: emp._id,
+      nombre_completo: `${emp.Nombre || ""} ${emp.Apellido || ""}`.trim(),
+      CC: emp.CC,
+    },
+    horas_semanales_programadas: horasSemanales,
+    horas_mensuales_aprox: parseFloat(((horasSemanales / 7) * 30).toFixed(1)),
+    horario_semanal_actualizado: nuevoHorario,
+    snapshot_previo: snapshotPrevio,
+  };
 }
 
 // ── 6. AGENDA CRUD & SAFETY ──────────────────
@@ -1345,8 +2103,13 @@ async function handleMcpRequest(body) {
           get_ventas: getVentas,
           venta_registrar: ventaRegistrar,
 
-          // Staff
+          // Staff y Turnos
           get_staff: getStaff,
+          staff_turnos_obtener: staffTurnosObtener,
+          staff_turno_agregar: staffTurnoAgregar,
+          staff_turno_editar: staffTurnoEditar,
+          staff_turno_eliminar: staffTurnoEliminar,
+          staff_horario_semanal_editar: staffHorarioSemanalEditar,
 
           // Agenda
           agenda_listar: agendaListar,
