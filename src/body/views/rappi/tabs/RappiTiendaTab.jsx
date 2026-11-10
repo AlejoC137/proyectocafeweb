@@ -32,7 +32,8 @@ export function RappiTiendaTab({ menu = [], config }) {
   const productosIndexados = useMemo(() => {
     return menu.filter((item) => {
       if (item.Estado !== "Activo") return false;
-      if (canalActivo === "RAPPI" && !item.RAPPI) return false;
+      // Regla Front: si Proyecto 1 o Proyecto 2 es true, también cuenta como Rappi
+      if (canalActivo === "RAPPI" && !(item.RAPPI || item.PROYECTO_1 || item.PROYECTO_2)) return false;
       if (canalActivo === "PROYECTO_1" && !item.PROYECTO_1) return false;
       if (canalActivo === "PROYECTO_2" && !item.PROYECTO_2) return false;
       return true;

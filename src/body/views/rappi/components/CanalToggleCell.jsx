@@ -17,8 +17,23 @@ export function CanalToggleCell({ item, onToggled }) {
     const nuevoValor = !item[campo];
     setLoadingField(campo);
     try {
+      let fields = { [campo]: nuevoValor };
+
+      // Regla Front: si se activa Proyecto 1 o Proyecto 2, se defaultea RAPPI a true
+      if ((campo === "PROYECTO_1" || campo === "PROYECTO_2") && nuevoValor === true) {
+        fields.RAPPI = true;
+      }
+      // Si el usuario desmarca Rappi, también desmarcamos P1 y P2 para mantener consistencia
+      if (campo === "RAPPI" && nuevoValor === false) {
+        fields.PROYECTO_1 = false;
+        fields.PROYECTO_2 = false;
+      }
+
       await dispatch(toggleCanalProducto(id, campo, nuevoValor));
-      if (onToggled) onToggled(id, campo, nuevoValor);
+
+      if (onToggled) {
+        Object.entries(fields).forEach(([k, v]) => onToggled(id, k, v));
+      }
     } catch (err) {
       console.error("Error al actualizar canal:", err);
     } finally {
@@ -29,7 +44,11 @@ export function CanalToggleCell({ item, onToggled }) {
   return (
     <div className="flex items-center gap-1.5 justify-center">
       {CANALES.map((c) => {
-        const activo = !!item[c.campo];
+        // En el front, RAPPI está activo si RAPPI, PROYECTO_1 o PROYECTO_2 está activo
+        const activo =
+          c.campo === "RAPPI"
+            ? Boolean(item.RAPPI || item.PROYECTO_1 || item.PROYECTO_2)
+            : Boolean(item[c.campo]);
         const isLoading = loadingField === c.campo;
         return (
           <button

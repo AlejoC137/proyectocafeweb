@@ -589,6 +589,11 @@ export function updateItem(itemId, updatedFields, type, auditMeta = null) {
       const isAlmacen = table === ITEMS || table === ItemsAlmacen || table === 'ItemsAlmacen';
       const isMenu = table === MENU || table === MenuItems || table === 'Menu';
 
+      // Si se activa PROYECTO_1 o PROYECTO_2 en Menu, RAPPI pasa a ser true por defecto
+      if (isMenu && (payload.PROYECTO_1 === true || payload.PROYECTO_2 === true)) {
+        payload.RAPPI = true;
+      }
+
       if ((isAlmacen || isMenu) && !payload.historial_update) {
         const state = (typeof getState === 'function') ? getState() : {};
         const stateList = isMenu ? (state.allMenu || []) : (state.allItems || []);

@@ -78,6 +78,11 @@ export function updateRappiConfig(cfg, actualizadoPor = null) {
 // ---------------------------------------------------------------------------
 export function bulkUpdateMenu(ids = [], fields = {}, auditOrigen = "Rappi") {
   return async (dispatch) => {
+    const payload = { ...fields };
+    // Si se activa Proyecto 1 o Proyecto 2, se defaultea RAPPI a true
+    if (payload.PROYECTO_1 === true || payload.PROYECTO_2 === true) {
+      payload.RAPPI = true;
+    }
     const validIds = ids.filter((id) => id && id !== "undefined" && id !== "null");
     if (!validIds.length) {
       console.warn("⚠️ bulkUpdateMenu llamado sin IDs válidos:", ids);
@@ -86,7 +91,7 @@ export function bulkUpdateMenu(ids = [], fields = {}, auditOrigen = "Rappi") {
     const results = [];
     for (const id of validIds) {
       // updateItem registra historial_update automáticamente para Menu
-      const r = await dispatch(updateItem(id, fields, MENU, { origen: auditOrigen, tipo: "canal" }));
+      const r = await dispatch(updateItem(id, payload, MENU, { origen: auditOrigen, tipo: "canal" }));
       results.push(r);
     }
     await dispatch(getAllFromTable(MENU));
@@ -99,7 +104,11 @@ export function bulkUpdateMenu(ids = [], fields = {}, auditOrigen = "Rappi") {
 }
 
 export function toggleCanalProducto(menuId, campo, valor) {
-  return bulkUpdateMenu([menuId], { [campo]: valor }, `Canales (${campo})`);
+  const fields = { [campo]: valor };
+  if ((campo === "PROYECTO_1" || campo === "PROYECTO_2") && valor === true) {
+    fields.RAPPI = true;
+  }
+  return bulkUpdateMenu([menuId], fields, `Canales (${campo})`);
 }
 
 /**

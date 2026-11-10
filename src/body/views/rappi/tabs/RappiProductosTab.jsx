@@ -179,10 +179,21 @@ export function RappiProductosTab({
       return;
     }
     const label = valor ? "indexar" : "quitar";
-    if (!window.confirm(`¿Seguro que deseas ${label} ${ids.length} productos en ${campo}?`)) return;
+    const extraInfo = (campo === "PROYECTO_1" || campo === "PROYECTO_2") && valor
+      ? " (esto también activará Rappi por defecto)"
+      : "";
+    if (!window.confirm(`¿Seguro que deseas ${label} ${ids.length} productos en ${campo}${extraInfo}?`)) return;
 
     try {
-      await dispatch(bulkUpdateMenu(ids, { [campo]: valor }, `Lote ${campo}`));
+      let fields = { [campo]: valor };
+      if ((campo === "PROYECTO_1" || campo === "PROYECTO_2") && valor === true) {
+        fields.RAPPI = true;
+      }
+      if (campo === "RAPPI" && valor === false) {
+        fields.PROYECTO_1 = false;
+        fields.PROYECTO_2 = false;
+      }
+      await dispatch(bulkUpdateMenu(ids, fields, `Lote ${campo}`));
       setSelectedIds(new Set());
     } catch (err) {
       console.error(err);
