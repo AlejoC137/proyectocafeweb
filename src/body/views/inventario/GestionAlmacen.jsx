@@ -13,12 +13,14 @@ import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import CategoryNavBar from "../../../components/ui/category-nav-bar";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag, Sparkles, ExternalLink, Check } from "lucide-react";
+import { UtensilsCrossed, Package, ChefHat, Settings, Zap, Filter, CheckSquare, Square, Save, Search, X, Trash2, Plus, SlidersHorizontal, RefreshCcw, Eye, EyeOff, Receipt, TrendingUp, TrendingDown, History, ShoppingBag, Sparkles, ExternalLink, Check, Store } from "lucide-react";
 import HistorialItemModal from "./HistorialItemModal";
 import HistorialCambiosView from "./HistorialCambiosView";
+import ProveedorHistorialView from "./ProveedorHistorialView";
 import SupermuSyncView from "./SupermuSyncView";
 import SupermuMacroModal from "./SupermuMacroModal";
 import { getSupermuCatalog, autoMatchInventory, buildSupermuPromptContext, findCandidatesForItem, buildProposedStagedItem } from "../../../utils/supermuMatcher";
+import { markHistoricalRowsApplied } from "../../../utils/providerSnapshotUtils";
 import { generateInventoryUpdatePrompt } from "../../../utils/inventoryUpdatePrompt";
 import ReceiptIngestionModal from "./ReceiptIngestionModal";
 
@@ -437,9 +439,14 @@ function GestionAlmacen() {
         // 5. Append to historial_update if there are changes
         if (Object.keys(cambios).length > 0) {
           const isFromSupermu = !!item._matchedSupermu;
+          const isFromProvider = !!item._providerSourceLabel;
           payload.historial_update = buildUpdatedHistory(original.historial_update, cambios, {
-            origen: isFromSupermu ? "Catálogo Supermú (Referencia)" : "Gestión Almacén",
-            tipo: isFromSupermu ? "automático" : "manual"
+            origen: isFromProvider
+              ? item._providerSourceLabel
+              : isFromSupermu
+              ? "Catálogo Supermú (Referencia)"
+              : "Gestión Almacén",
+            tipo: isFromSupermu || isFromProvider ? "automático" : "manual"
           });
           payload.FECHA_ACT = new Date().toISOString().split('T')[0];
         }
@@ -453,6 +460,15 @@ function GestionAlmacen() {
       });
 
       await Promise.all(promises);
+
+      const appliedRowIds = itemsToUpdate.map(i => i._providerSnapshotRowId).filter(Boolean);
+      const captureIds = [...new Set(itemsToUpdate.map(i => i._providerCaptureId).filter(Boolean))];
+      if (appliedRowIds.length > 0) {
+        await markHistoricalRowsApplied(appliedRowIds, captureIds[0] || null).catch((err) =>
+          console.warn("No se pudo marcar aplicado_a_almacen:", err)
+        );
+      }
+
       alert("Inventario actualizado correctamente.");
       setSelectedItems([]);
       setStagedItems([]);
@@ -537,6 +553,18 @@ function GestionAlmacen() {
             <span>Catálogo Supermú (Directo)</span>
             <span className="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded font-extrabold">2.6k</span>
           </button>
+
+          <button
+            onClick={() => setActiveMainTab("proveedores_historial")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeMainTab === "proveedores_historial"
+                ? "bg-white text-indigo-600 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Store className="h-3.5 w-3.5 text-indigo-600" />
+            <span>Historial por Proveedor</span>
+          </button>
         </div>
 
         <div className="text-[11px] text-slate-400 flex items-center gap-2">
@@ -558,6 +586,21 @@ function GestionAlmacen() {
 
       {activeMainTab === "supermu" && (
         <SupermuSyncView
+          items={Items}
+          onSendToStaging={(newStaged) => {
+            setStagedItems((prev) => {
+              const existingIds = new Set(prev.map((p) => p._id));
+              const added = newStaged.filter((n) => !existingIds.has(n._id));
+              return [...prev, ...added];
+            });
+            setActiveMainTab("actualizador");
+          }}
+        />
+      )}
+
+      {activeMainTab === "proveedores_historial" && (
+        <ProveedorHistorialView
+          proveedores={proveedores}
           items={Items}
           onSendToStaging={(newStaged) => {
             setStagedItems((prev) => {
