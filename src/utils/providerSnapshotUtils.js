@@ -243,6 +243,16 @@ export async function fetchItemTimeSeries(proveedorId, itemId) {
   return data || [];
 }
 
+export async function fetchAllHistoricalPrices(limit = 500) {
+  const { data, error } = await supabase
+    .from("PreciosHistoricosProducto")
+    .select("*")
+    .order("fecha_captura", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
 export async function saveProviderCapture({
   proveedorId,
   fechaCaptura,

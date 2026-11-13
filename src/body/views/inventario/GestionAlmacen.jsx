@@ -550,8 +550,8 @@ function GestionAlmacen() {
             }`}
           >
             <ShoppingBag className="h-3.5 w-3.5 text-rose-500" />
-            <span>Catálogo Supermú (Directo)</span>
-            <span className="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded font-extrabold">2.6k</span>
+            <span>Catálogos (Supermú / Éxito / Makro)</span>
+            <span className="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded font-extrabold">3</span>
           </button>
 
           <button

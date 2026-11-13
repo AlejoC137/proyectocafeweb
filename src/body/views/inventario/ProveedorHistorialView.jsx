@@ -14,9 +14,11 @@ import {
   fetchCapturasByProveedor,
   fetchProductosByCaptura,
   fetchItemTimeSeries,
+  fetchAllHistoricalPrices,
   saveProviderCapture,
   safeNumber,
 } from "../../../utils/providerSnapshotUtils";
+import { normalizeText } from "../../../utils/supermuMatcher";
 
 export default function ProveedorHistorialView({
   proveedores = [],
@@ -30,6 +32,10 @@ export default function ProveedorHistorialView({
   const [loadingCapturas, setLoadingCapturas] = useState(false);
   const [loadingProductos, setLoadingProductos] = useState(false);
   const [tableMissingError, setTableMissingError] = useState(false);
+  const [viewMode, setViewMode] = useState("capturas"); // "capturas" | "comparar"
+  const [allHistoricalRows, setAllHistoricalRows] = useState([]);
+  const [compareSearch, setCompareSearch] = useState("");
+  const [onlyMultiStore, setOnlyMultiStore] = useState(false);
 
   // Serie de precios por producto en el tiempo
   const [selectedItemIdForSeries, setSelectedItemIdForSeries] = useState("");
@@ -122,6 +128,82 @@ export default function ProveedorHistorialView({
       .then((rows) => setTimeSeries(rows))
       .catch((err) => console.error("Error cargando serie de precios:", err));
   }, [selectedItemIdForSeries, selectedProveedorId]);
+
+  useEffect(() => {
+    if (viewMode !== "comparar") return;
+    fetchAllHistoricalPrices(600)
+      .then((rows) => setAllHistoricalRows(rows))
+      .catch((err) => console.error("Error cargando comparación entre almacenes:", err));
+  }, [viewMode]);
+
+  // Matriz de comparación entre almacenes (último precio por producto y proveedor)
+  const comparisonData = useMemo(() => {
+    const activeProvIds = new Set();
+    const groups = new Map();
+
+    // allHistoricalRows viene ordenado de más reciente a más antiguo
+    for (const row of allHistoricalRows) {
+      if (!row.proveedor_id) continue;
+      activeProvIds.add(row.proveedor_id);
+
+      const invItem = row.item_id ? itemMap[row.item_id] : null;
+      const groupKey = invItem
+        ? `item:${invItem._id}`
+        : `name:${normalizeText(row.nombre_detectado)}`;
+
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, {
+          key: groupKey,
+          item: invItem,
+          displayName: invItem ? invItem.Nombre_del_producto : row.nombre_detectado,
+          byProvider: {},
+        });
+      }
+
+      const g = groups.get(groupKey);
+      // Como viene ordenado DESC, el primero que vemos por proveedor es el más reciente
+      if (!g.byProvider[row.proveedor_id]) {
+        g.byProvider[row.proveedor_id] = row;
+      }
+    }
+
+    const activeProviders = Array.from(activeProvIds)
+      .map((id) => proveedorMap[id] || { _id: id, Nombre_Proveedor: "Proveedor" })
+      .sort((a, b) => (a.Nombre_Proveedor || "").localeCompare(b.Nombre_Proveedor || ""));
+
+    const q = compareSearch.trim().toLowerCase();
+    const rows = Array.from(groups.values())
+      .map((g) => {
+        const entries = Object.values(g.byProvider);
+        const validEntries = entries.filter((e) => safeNumber(e.precio_unitario, 0) > 0);
+        let best = null;
+        let worst = null;
+        for (const e of validEntries) {
+          if (!best || e.precio_unitario < best.precio_unitario) best = e;
+          if (!worst || e.precio_unitario > worst.precio_unitario) worst = e;
+        }
+        const savingsPct =
+          best && worst && worst.precio_unitario > best.precio_unitario
+            ? Math.round(((worst.precio_unitario - best.precio_unitario) / worst.precio_unitario) * 100)
+            : 0;
+
+        return {
+          ...g,
+          storeCount: entries.length,
+          best,
+          worst,
+          savingsPct,
+        };
+      })
+      .filter((r) => {
+        if (onlyMultiStore && r.storeCount < 2) return false;
+        if (q && !r.displayName.toLowerCase().includes(q)) return false;
+        return true;
+      })
+      .sort((a, b) => b.storeCount - a.storeCount || a.displayName.localeCompare(b.displayName));
+
+    return { activeProviders, rows };
+  }, [allHistoricalRows, itemMap, proveedorMap, compareSearch, onlyMultiStore]);
 
   const handleSelectFormProveedor = (provId) => {
     setFormProveedorId(provId);
@@ -243,10 +325,35 @@ export default function ProveedorHistorialView({
         </div>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setViewMode("capturas")}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
+                viewMode === "capturas" ? "bg-white text-indigo-700 shadow-xs" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Por Captura / Fecha
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("comparar")}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${
+                viewMode === "comparar" ? "bg-white text-emerald-700 shadow-xs" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Comparar entre Almacenes
+            </button>
+          </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadCapturas(selectedProveedorId)}
+            onClick={() => {
+              loadCapturas(selectedProveedorId);
+              if (viewMode === "comparar") {
+                fetchAllHistoricalPrices(600).then(setAllHistoricalRows).catch(() => {});
+              }
+            }}
             className="h-8 text-xs"
           >
             <RefreshCcw className="h-3.5 w-3.5 mr-1" />
@@ -409,7 +516,145 @@ export default function ProveedorHistorialView({
         </div>
       )}
 
-      {/* Main 3-panel body: Timeline | Capture Detail | Item Price Trend */}
+      {viewMode === "comparar" ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-3 flex-1 min-h-[380px]">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Store className="h-4 w-4 text-emerald-600" />
+                Comparación de Precios entre Almacenes ({comparisonData.rows.length})
+              </h3>
+              <div className="relative">
+                <Search className="h-3.5 w-3.5 absolute left-2.5 top-2 text-slate-400" />
+                <Input
+                  value={compareSearch}
+                  onChange={(e) => setCompareSearch(e.target.value)}
+                  placeholder="Buscar producto..."
+                  className="h-7 pl-8 text-xs w-56"
+                />
+              </div>
+              <label className="flex items-center gap-1.5 text-[11px] text-slate-600 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={onlyMultiStore}
+                  onChange={(e) => setOnlyMultiStore(e.target.checked)}
+                />
+                Solo en 2+ almacenes
+              </label>
+            </div>
+
+            <Button
+              size="sm"
+              disabled={!onSendToStaging || comparisonData.rows.filter((r) => r.item && r.best).length === 0}
+              onClick={() => {
+                const staged = comparisonData.rows
+                  .filter((r) => r.item && r.best)
+                  .map((r) => {
+                    const provName = proveedorMap[r.best.proveedor_id]?.Nombre_Proveedor || "Proveedor";
+                    return buildStagedFromHistoricalRow(r.item, r.best, provName);
+                  });
+                onSendToStaging(staged);
+              }}
+              className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1" />
+              Enviar Mejores Precios a Actualización Masiva
+            </Button>
+          </div>
+
+          {comparisonData.rows.length === 0 ? (
+            <div className="text-slate-400 text-center py-12">
+              No hay suficientes capturas para comparar todavía. Registra capturas de 2 o más almacenes para ver la matriz comparativa.
+            </div>
+          ) : (
+            <div className="overflow-auto flex-1">
+              <table className="w-full text-[11px] border-collapse">
+                <thead className="sticky top-0 bg-slate-50 border-b text-slate-600">
+                  <tr className="text-left">
+                    <th className="py-2 px-2">Producto</th>
+                    <th className="py-2 px-2">Almacén Actual</th>
+                    {comparisonData.activeProviders.map((prov) => (
+                      <th key={prov._id} className="py-2 px-2 text-right">
+                        {prov.Nombre_Proveedor}
+                      </th>
+                    ))}
+                    <th className="py-2 px-2 text-center">Mejor Opción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonData.rows.map((r) => (
+                    <tr key={r.key} className="border-b hover:bg-slate-50/70">
+                      <td className="py-2 px-2 font-semibold text-slate-800 max-w-[220px]">
+                        <div className="truncate" title={r.displayName}>{r.displayName}</div>
+                        {!r.item && <span className="text-[9px] text-slate-400 italic">Sin empatar en BD</span>}
+                      </td>
+                      <td className="py-2 px-2 font-mono text-slate-600">
+                        {r.item ? (
+                          <div>
+                            <div>${new Intl.NumberFormat("es-CO").format(safeNumber(r.item.COSTO, 0))}</div>
+                            <div className="text-[10px] text-slate-400">${safeNumber(r.item.precioUnitario, 0)}/{r.item.UNIDADES || "u"}</div>
+                          </div>
+                        ) : "—"}
+                      </td>
+                      {comparisonData.activeProviders.map((prov) => {
+                        const cell = r.byProvider[prov._id];
+                        const isBest = cell && r.best && cell._id === r.best._id && r.storeCount > 1;
+                        return (
+                          <td
+                            key={prov._id}
+                            className={`py-2 px-2 text-right font-mono ${
+                              isBest ? "bg-emerald-50 text-emerald-800 font-bold" : ""
+                            }`}
+                          >
+                            {cell ? (
+                              <div>
+                                <div>${new Intl.NumberFormat("es-CO").format(cell.precio_total)}</div>
+                                <div className="text-[10px] opacity-80">
+                                  ${cell.precio_unitario}/{cell.unidad}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-slate-300">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="py-2 px-2 text-center">
+                        {r.best ? (
+                          <div className="inline-flex flex-col items-center gap-0.5">
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                              {proveedorMap[r.best.proveedor_id]?.Nombre_Proveedor}
+                              {r.savingsPct > 0 ? ` (-${r.savingsPct}%)` : ""}
+                            </span>
+                            {r.item && onSendToStaging && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onSendToStaging([
+                                    buildStagedFromHistoricalRow(
+                                      r.item,
+                                      r.best,
+                                      proveedorMap[r.best.proveedor_id]?.Nombre_Proveedor || "Proveedor"
+                                    ),
+                                  ])
+                                }
+                                className="text-[10px] text-indigo-600 hover:underline font-semibold"
+                              >
+                                Aplicar
+                              </button>
+                            )}
+                          </div>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : (
+      /* Main 3-panel body: Timeline | Capture Detail | Item Price Trend */
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
         {/* Col 1: Capturas en el tiempo (3 cols) */}
         <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-2.5 flex flex-col min-h-[300px]">
@@ -633,6 +878,7 @@ export default function ProveedorHistorialView({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

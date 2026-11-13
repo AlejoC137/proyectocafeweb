@@ -1,0 +1,7 @@
+Guarda aquí las páginas de www.exito.com usando Ctrl + S ("Página web, solo HTML" o "Página web, completa").
+Por ejemplo:
+  - despensa_p1.html
+  - despensa_p2.html
+  - despensa_p3.html
+
+Luego haz doble clic en "actualizar_datos.bat" en la carpeta anterior para extraer los productos y actualizar el visualizador.

@@ -164,18 +164,67 @@ def extract_products_from_text(raw_text: str) -> List[Dict[str, Any]]:
         except Exception:
             pass
 
-    # Fallback Markdown / texto plano: líneas con precio $X.XXX
     products: List[Dict[str, Any]] = []
     seen = set()
     lines = [ln.strip() for ln in stripped.splitlines() if ln.strip()]
+
+    # 1. Patrón Markdown estructurado (ej. Éxito / e-commerce vía Jina/Agent Reach):
+    #    ### [Nombre del producto (Gr a $ 10,13)](https://.../p)
+    #    seguido en las próximas líneas por "$ 15.200 $ 12.150"
+    heading_re = re.compile(r"###\s*\[([^\]]+)\]\((https?://[^)]+)\)")
     for idx, line in enumerate(lines):
-        price_match = re.search(r"\$\s*([\d.,]+)", line)
-        if not price_match:
+        m = heading_re.search(line)
+        if not m:
             continue
-        price = parse_cop_price(price_match.group(1))
-        if price <= 0:
+        raw_title = m.group(1)
+        prod_url = m.group(2)
+        clean_title = re.sub(r"\((?:gr|g|ml|und|unid|kg|lt)\s+a\s+\$[^)]+\)", "", raw_title, flags=re.IGNORECASE).strip()
+        if len(clean_title) < 3 or clean_title.lower() in seen:
             continue
-        candidate_name = re.sub(r"\$\s*[\d.,]+", "", line).strip(" -|•*[]()")
+
+        # Buscar la línea de precio en las siguientes 6 líneas (evitando "(Gr a $ ...)")
+        found_price = 0.0
+        for lookahead in range(idx + 1, min(idx + 7, len(lines))):
+            nxt = lines[lookahead]
+            if heading_re.search(nxt):
+                break
+            nxt_no_unit = re.sub(r"\((?:gr|g|ml|und|unid|kg|lt)\s+a\s+\$[^)]+\)", "", nxt, flags=re.IGNORECASE)
+            prices_in_line = [parse_cop_price(p) for p in re.findall(r"\$\s*([\d.,]+)", nxt_no_unit)]
+            valid_prices = [p for p in prices_in_line if p >= 100]
+            if valid_prices:
+                # Si hay precio tachado + precio oferta ("$ 15.200 $ 12.150"), tomar el último (vigente)
+                found_price = valid_prices[-1]
+                break
+
+        if found_price > 0:
+            seen.add(clean_title.lower())
+            qty, unit = parse_units_and_quantity(clean_title)
+            products.append(
+                {
+                    "nombre_detectado": clean_title[:180],
+                    "precio_total": found_price,
+                    "cantidad": qty,
+                    "unidad": unit,
+                    "precio_unitario": round(found_price / qty, 4) if qty > 0 else found_price,
+                    "url_producto": prod_url,
+                }
+            )
+
+    if products:
+        return products
+
+    # 2. Fallback texto plano genérico: líneas con precio $X.XXX
+    ignore_words = ("envío gratis", "vendido por", "agregar", "precio")
+    for idx, line in enumerate(lines):
+        if line.startswith("![") or any(w in line.lower() for w in ignore_words):
+            continue
+        no_unit_note = re.sub(r"\((?:gr|g|ml|und|unid|kg|lt)\s+a\s+\$[^)]+\)", "", line, flags=re.IGNORECASE)
+        prices = [parse_cop_price(p) for p in re.findall(r"\$\s*([\d.,]+)", no_unit_note)]
+        valid_prices = [p for p in prices if p >= 100]
+        if not valid_prices:
+            continue
+        price = valid_prices[-1]
+        candidate_name = re.sub(r"\$\s*[\d.,]+", "", no_unit_note).strip(" -|•*[]()")
         if len(candidate_name) < 3 and idx > 0:
             candidate_name = lines[idx - 1].strip(" -|•*#[]()")
         if len(candidate_name) < 3 or candidate_name.lower() in seen:
