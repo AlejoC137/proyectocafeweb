@@ -858,7 +858,7 @@ function GestionAlmacen() {
                         ? "Cruzando con Supermú..."
                         : selectedItems.length > 0
                         ? `⚡ Auto-Cruzar Selección (${selectedItems.length})`
-                        : `⚡ Seleccionar y Cruzar ${filteredSearchItems.length} de ${filterGroup === 'TODOS' ? 'Almacén' : filterGroup}`}
+                        : `⚡ Seleccionar y Cruzar ${filteredSearchItems.length} de ${selectedGroup === 'TODOS' ? 'Almacén' : selectedGroup}`}
                     </span>
                   </Button>
 
@@ -1084,7 +1084,7 @@ function GestionAlmacen() {
                       className="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold h-8 shadow-xs"
                     >
                       <Sparkles className="h-3 w-3 mr-1" />
-                      Cruzar Grupo {filterGroup === 'TODOS' ? 'Completo' : filterGroup} ({filteredSearchItems.length})
+                      Cruzar Grupo {selectedGroup === 'TODOS' ? 'Completo' : selectedGroup} ({filteredSearchItems.length})
                     </Button>
 
                     <Button
