@@ -8,12 +8,11 @@ import {
 import { updateItem, crearItem, getAllFromTable } from "../../../redux/actions";
 import { ITEMS, ItemsAlmacen, CATEGORIES, AREAS } from "../../../redux/actions-types";
 import SupermuMacroModal from "./SupermuMacroModal";
-import supabase from "../../../config/supabaseClient";
 
 const STORE_CATALOGS = [
-  { id: "supermu", label: "Supermú (La Vaquita)", url: "/supermu_viewer/index.html", externalUrl: "https://supermu.com/", badge: "2.6k", color: "rose" },
-  { id: "exito", label: "Éxito (Mercado)", proveedorId: "6b38db3f-c7dc-4aa6-8ed6-dc792ecf146d", externalUrl: "https://www.exito.com/mercado", badge: "Agent Reach", color: "amber" },
-  { id: "makro", label: "Makro", proveedorNameMatch: "makro", externalUrl: "https://tienda.makro.com.co/", badge: "Web", color: "blue" },
+  { id: "supermu", label: "Supermú", short: "Mú", title: "Catálogo Directo Supermú", subtitle: 'Haz clic en "Sincronizar a Inventario" en cualquier producto para actualizar precios o crear un nuevo ítem.', url: "/supermu_viewer/index.html", badge: "2.661 productos", gradient: "from-rose-600 to-amber-500" },
+  { id: "exito", label: "Éxito", short: "é", title: "Catálogo Éxito (Mercado)", subtitle: "Visualizador de catálogo extraído de www.exito.com.", url: "/exito_viewer/index.html", badge: "Despensa", gradient: "from-yellow-400 to-amber-500" },
+  { id: "makro", label: "Makro", short: "M", title: "Catálogo Makro Colombia", subtitle: "Visualizador de catálogo y precios de tienda.makro.com.co.", url: "/makro_viewer/index.html", badge: "Makro", gradient: "from-blue-700 to-red-600" },
 ];
 
 export default function SupermuSyncView({ items = [], onSendToStaging = null }) {
@@ -32,53 +31,6 @@ export default function SupermuSyncView({ items = [], onSendToStaging = null }) 
   const [newGrupo, setNewGrupo] = useState(CATEGORIES?.[0] || "GENERAL");
   const [newArea, setNewArea] = useState(AREAS?.[0] || "COCINA");
   const [selectedCatalog, setSelectedCatalog] = useState("supermu");
-  const [externalCatalogItems, setExternalCatalogItems] = useState([]);
-  const [loadingExternal, setLoadingExternal] = useState(false);
-  const [catalogSearch, setCatalogSearch] = useState("");
-
-  useEffect(() => {
-    if (selectedCatalog === "supermu") return;
-    const cfg = STORE_CATALOGS.find((c) => c.id === selectedCatalog);
-    if (!cfg) return;
-    setLoadingExternal(true);
-    (async () => {
-      try {
-        let provId = cfg.proveedorId;
-        if (!provId && cfg.proveedorNameMatch) {
-          const { data: provs } = await supabase
-            .from("Proveedores")
-            .select("_id,Nombre_Proveedor")
-            .ilike("Nombre_Proveedor", `%${cfg.proveedorNameMatch}%`)
-            .limit(1);
-          provId = provs?.[0]?._id;
-        }
-        if (!provId) {
-          setExternalCatalogItems([]);
-          return;
-        }
-        const { data } = await supabase
-          .from("PreciosHistoricosProducto")
-          .select("*")
-          .eq("proveedor_id", provId)
-          .order("fecha_captura", { ascending: false })
-          .limit(120);
-        setExternalCatalogItems(data || []);
-      } catch (err) {
-        console.error("Error cargando catálogo externo:", err);
-        setExternalCatalogItems([]);
-      } finally {
-        setLoadingExternal(false);
-      }
-    })();
-  }, [selectedCatalog]);
-
-  const filteredExternalItems = useMemo(() => {
-    const q = catalogSearch.trim().toLowerCase();
-    if (!q) return externalCatalogItems;
-    return externalCatalogItems.filter((it) =>
-      (it.nombre_detectado || "").toLowerCase().includes(q)
-    );
-  }, [externalCatalogItems, catalogSearch]);
 
   // Listen for messages from the Supermú iframe
   useEffect(() => {
@@ -272,63 +224,69 @@ export default function SupermuSyncView({ items = [], onSendToStaging = null }) 
     }
   };
 
+  const activeCatalog = STORE_CATALOGS.find((c) => c.id === selectedCatalog) || STORE_CATALOGS[0];
+
   return (
     <div className="flex flex-col h-[calc(100vh-185px)] gap-2">
       
-      {/* Top Banner & Control Bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-2.5 px-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          {STORE_CATALOGS.map((cat) => {
-            const active = selectedCatalog === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCatalog(cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  active
-                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                }`}
-              >
-                <ShoppingBag className="h-3.5 w-3.5" />
-                <span>{cat.label}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold ${active ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"}`}>
-                  {cat.badge}
-                </span>
-              </button>
-            );
-          })}
+      {/* Top Banner & Control Bar (Restored clean layout + 3-store switcher) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-2.5 px-4 shadow-xs flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${activeCatalog.gradient} flex items-center justify-center text-white font-black text-sm shadow-sm flex-shrink-0`}>
+            {activeCatalog.short}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-slate-800 text-xs">{activeCatalog.title}</h3>
+              <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                {activeCatalog.badge}
+              </span>
+              <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 ml-1">
+                {STORE_CATALOGS.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCatalog(cat.id)}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all ${
+                      selectedCatalog === cat.id
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 truncate">
+              {activeCatalog.subtitle}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {selectedCatalog === "supermu" && (
-            <>
-              <button
-                onClick={() => setShowMacroModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 hover:from-rose-700 hover:to-amber-700 text-white rounded-lg text-xs font-extrabold shadow-sm hover:shadow transition-all"
-                title="Comparar y sincronizar masivamente todo el almacén con Supermú"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Macro Match Automático</span>
-              </button>
-
-              <button
-                onClick={() => setIframeKey(k => k + 1)}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
-                title="Recargar iframe"
-              >
-                <RefreshCcw className="h-3 w-3" />
-                Recargar
-              </button>
-            </>
+            <button
+              onClick={() => setShowMacroModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 hover:from-rose-700 hover:to-amber-700 text-white rounded-lg text-xs font-extrabold shadow-sm hover:shadow transition-all"
+              title="Comparar y sincronizar masivamente todo el almacén con Supermú"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Macro Match Automático</span>
+            </button>
           )}
 
           <button
-            onClick={() => {
-              const cfg = STORE_CATALOGS.find((c) => c.id === selectedCatalog);
-              window.open(selectedCatalog === "supermu" ? "/supermu_viewer/index.html" : (cfg?.externalUrl || "https://supermu.com"), "_blank");
-            }}
+            onClick={() => setIframeKey(k => k + 1)}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
+            title="Recargar visor"
+          >
+            <RefreshCcw className="h-3 w-3" />
+            Recargar
+          </button>
+
+          <button
+            onClick={() => window.open(activeCatalog.url, "_blank")}
             className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs transition"
           >
             <span>Abrir en Pestaña Externa</span>
@@ -337,104 +295,15 @@ export default function SupermuSyncView({ items = [], onSendToStaging = null }) 
         </div>
       </div>
 
-      {/* Catalog Content: Supermú iframe OR Éxito/Makro extracted catalog */}
-      {selectedCatalog === "supermu" ? (
-        <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden relative">
-          <iframe
-            key={iframeKey}
-            src="/supermu_viewer/index.html"
-            title="Supermú Viewer"
-            className="w-full h-full border-0"
-          />
-        </div>
-      ) : (
-        <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-xs p-3 flex flex-col gap-3 overflow-hidden">
-          <div className="flex items-center justify-between gap-2 flex-wrap border-b pb-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                value={catalogSearch}
-                onChange={(e) => setCatalogSearch(e.target.value)}
-                placeholder={`Buscar en catálogo guardado de ${selectedCatalog === "exito" ? "Éxito" : "Makro"}...`}
-                className="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs"
-              />
-            </div>
-            <div className="text-[11px] text-slate-500">
-              {filteredExternalItems.length} productos guardados en historial
-            </div>
-          </div>
-
-          {loadingExternal ? (
-            <div className="text-center text-slate-400 py-12 text-xs">Cargando catálogo...</div>
-          ) : filteredExternalItems.length === 0 ? (
-            <div className="text-center text-slate-500 py-12 px-4 space-y-2 text-xs">
-              <p className="font-bold text-slate-700">
-                Aún no hay productos guardados para {selectedCatalog === "exito" ? "Éxito" : "Makro"}.
-              </p>
-              <p className="text-[11px] text-slate-400 max-w-md mx-auto">
-                Puedes registrar una captura desde la pestaña <strong>Historial por Proveedor</strong> (pegando el extracto de Agent Reach o screenshot) o abrir la tienda en pestaña externa.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 overflow-y-auto pr-1">
-              {filteredExternalItems.map((prod) => (
-                <div key={prod._id} className="border border-slate-200 rounded-xl p-3 bg-slate-50/50 flex flex-col justify-between gap-2">
-                  <div>
-                    <div className="flex items-center justify-between gap-1 text-[10px] text-slate-400">
-                      <span>{new Date(prod.fecha_captura).toLocaleDateString("es-CO")}</span>
-                      <span>{prod.cantidad} {prod.unidad}</span>
-                    </div>
-                    <div className="font-bold text-slate-800 text-xs mt-0.5 line-clamp-2" title={prod.nombre_detectado}>
-                      {prod.nombre_detectado}
-                    </div>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-sm font-black text-rose-600 font-mono">
-                        ${new Intl.NumberFormat("es-CO").format(prod.precio_total || 0)}
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        (${prod.precio_unitario}/{prod.unidad})
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/70">
-                    {prod.url_producto ? (
-                      <a
-                        href={prod.url_producto}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                      >
-                        Ver <ExternalLink className="h-2.5 w-2.5" />
-                      </a>
-                    ) : <span />}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        window.postMessage(
-                          {
-                            type: "SUPERMU_SYNC_PRODUCT",
-                            product: {
-                              title: prod.nombre_detectado,
-                              price: prod.precio_total,
-                              grams: prod.unidad === "gr" ? prod.cantidad : 0,
-                              vendor: selectedCatalog === "exito" ? "Éxito" : "Makro",
-                            },
-                          },
-                          "*"
-                        )
-                      }
-                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold"
-                    >
-                      Sincronizar / Crear
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Embedded Catalog Viewer iframe (Supermú / Éxito / Makro) */}
+      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden relative">
+        <iframe
+          key={`${selectedCatalog}-${iframeKey}`}
+          src={activeCatalog.url}
+          title={activeCatalog.title}
+          className="w-full h-full border-0"
+        />
+      </div>
 
       {/* Direct Sync Modal */}
       {productToSync && (

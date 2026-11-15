@@ -1,0 +1,14 @@
+{
+  "total_products": 306,
+  "available_products": 306,
+  "out_of_stock": 0,
+  "on_sale_products": 259,
+  "categories": {
+    "Navidad en Makro": 306
+  },
+  "min_price": 1200.0,
+  "max_price": 2679900.0,
+  "avg_price": 37792.82,
+  "scraped_at": "2026-11-12 22:20:40",
+  "duration_seconds": 14.51
+}
