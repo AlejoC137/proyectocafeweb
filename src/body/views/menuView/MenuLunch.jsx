@@ -8,7 +8,8 @@ function MenuLunch() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
-  const menuData = useSelector((state) => state.allMenu);
+  const rawMenuData = useSelector((state) => state.allMenu) || [];
+  const menuData = rawMenuData.filter((item) => item && item.SUB_GRUPO === TARDEO_ALMUERZO);
   const currentLeng = useSelector((state) => state.currentLeng);
 
   useEffect(() => {
@@ -27,8 +28,10 @@ function MenuLunch() {
     fetchData();
   }, [dispatch]);
 
-  // Se obtienen las categorías únicas basadas en el GRUPO del producto.
-  const uniqueCategories = Array.from(new Set(menuData.map(item => item.GRUPO)));
+  // Se obtienen las categorías únicas basadas en el GRUPO del producto de almuerzo.
+  const uniqueCategories = Array.from(
+    new Set(menuData.map((item) => item?.GRUPO).filter(Boolean))
+  );
 
   /**
    * Busca la traducción de un grupo de categoría en el objeto CATEGORIES_t.
@@ -80,15 +83,16 @@ function MenuLunch() {
       </div>
       {uniqueCategories.map((category) => (
         <div key={category} className="overflow-hidden w-screen px-3 mb-3">
-          {category.SUB_GRUPO === TARDEO_ALMUERZO && <CardGrid
+          <CardGrid
             // La clave para filtrar ahora es el GRUPO
-            filterKey={category} 
+            filterKey={category}
             products={menuData}
             // El título ahora viene de la función de traducción
             TITTLE={getCategoryTitle(category)}
-            ICON={getCategoryIcon(category,"icon")}
-            isEnglish={ currentLeng }
-          />}
+            ICON={getCategoryIcon(category, "icon")}
+            isEnglish={currentLeng}
+            includeLunch={true}
+          />
         </div>
       ))}
     </div>

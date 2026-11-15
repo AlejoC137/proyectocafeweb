@@ -4,7 +4,7 @@ import { CardInstanceDetail } from "@/components/ui/cardInstanceDetail";
 import { TARDEO_ALMUERZO } from "../../redux/actions-types";
 import { getCategoryMarquee } from "../../utils/categoryMarquees";
 
-export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
+export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON, includeLunch = false }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isOpen, setIsOpen] = useState(true);
 
@@ -20,7 +20,7 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
             product={selectedProduct}
             onClose={() => setSelectedProduct(null)}
             onNext={() => {
-              const filteredProducts = products.filter(p => p.GRUPO === filterKey && (p.Estado === "Activo" || p.Estado === "OK") && p.SUB_GRUPO !== TARDEO_ALMUERZO);
+              const filteredProducts = products.filter(p => p && p.GRUPO === filterKey && (p.Estado === "Activo" || p.Estado === "OK") && (includeLunch ? p.SUB_GRUPO === TARDEO_ALMUERZO : p.SUB_GRUPO !== TARDEO_ALMUERZO));
               const currentIndex = filteredProducts.findIndex(p => p._id === selectedProduct._id);
               const nextProduct = filteredProducts[currentIndex + 1] || filteredProducts[0];
               setSelectedProduct(nextProduct);
@@ -79,9 +79,10 @@ export function CardGrid({ products, isEnglish, TITTLE, filterKey, ICON }) {
             {products
               .filter(
                 (product) =>
+                  product &&
                   product.GRUPO === filterKey &&
                   (product.Estado === "Activo" || product.Estado === "OK") &&
-                  product.SUB_GRUPO !== TARDEO_ALMUERZO
+                  (includeLunch ? product.SUB_GRUPO === TARDEO_ALMUERZO : product.SUB_GRUPO !== TARDEO_ALMUERZO)
               )
               .map((product) => (
                 <div key={product._id} className="min-w-[340px] sm:min-w-[300px] lg:min-w-[30vw] xl:min-w-[22vw] flex flex-shrink-0 justify-center rounded-none snap-start" onClick={() => setSelectedProduct(product)}>

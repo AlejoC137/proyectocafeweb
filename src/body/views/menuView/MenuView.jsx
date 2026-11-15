@@ -35,8 +35,8 @@ function MenuView() {
   const [activeTab, setActiveTab] = useState('menu');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const rawMenuData = useSelector((state) => state.allMenu);
-  const menuData = rawMenuData.filter(item => item.SUB_GRUPO !== "TARDEO_ALMUERZO");
+  const rawMenuData = useSelector((state) => state.allMenu) || [];
+  const menuData = rawMenuData.filter(item => item && item.SUB_GRUPO !== "TARDEO_ALMUERZO");
   const currentLeng = useSelector((state) => state.currentLeng);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ function MenuView() {
 
   // Importar CATEGORIES desde actions-types (necesitas agregarlo arriba)
   // O ordenarlo manualmente
-  const uniqueCategories = Array.from(new Set(menuData.map(item => item.GRUPO)))
+  const uniqueCategories = Array.from(new Set(menuData.map(item => item?.GRUPO).filter(Boolean)))
     .sort((a, b) => {
       // Define el orden deseado basado en actions-types
       const order = [
