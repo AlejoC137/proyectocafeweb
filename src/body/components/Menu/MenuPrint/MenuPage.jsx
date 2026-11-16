@@ -79,7 +79,7 @@ const MenuPage = ({
         <div className="flex-grow grid gap-4 items-start h-full relative z-10" style={{ gridTemplateColumns: `minmax(0, ${leftColRatio}fr) minmax(0, ${100 - leftColRatio}fr) ${photosWidth}${photosWidthUnit}` }}>
 
           <div 
-            className="flex flex-col h-full border-[3px] rounded-[8px] p-2 bg-white/80" 
+            className="flex flex-col h-full border-[3px] rounded-[8px] p-2 bg-white/80 relative group/col" 
             style={{ borderColor: colors.mainBorder }}
           >
             <MenuPrintColumn
@@ -89,7 +89,7 @@ const MenuPage = ({
               columnId="left"
             />
             {editMode && (
-              <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 print:hidden opacity-0 pointer-events-none group-hover/col:opacity-100 group-hover/col:pointer-events-auto transition-opacity">
                 <Button 
                   size="sm" 
                   className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"
@@ -102,7 +102,7 @@ const MenuPage = ({
           </div>
 
           <div 
-            className="flex flex-col h-full border-[3px] rounded-[8px] p-2 bg-white/80" 
+            className="flex flex-col h-full border-[3px] rounded-[8px] p-2 bg-white/80 relative group/col" 
             style={{ borderColor: colors.mainBorder }}
           >
             <MenuPrintColumn
@@ -112,7 +112,7 @@ const MenuPage = ({
               columnId="center"
             />
             {editMode && (
-              <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 print:hidden opacity-0 pointer-events-none group-hover/col:opacity-100 group-hover/col:pointer-events-auto transition-opacity">
                 <Button 
                   size="sm" 
                   className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"
@@ -125,13 +125,13 @@ const MenuPage = ({
           </div>
 
           <div 
-            className="flex flex-col gap-3 relative h-full border-[3px] rounded-[8px] p-2 bg-white/80"
+            className="flex flex-col gap-3 relative group/col h-full border-[3px] rounded-[8px] p-2 bg-white/80"
             style={{ borderColor: colors.mainBorder }}
           >
             {editMode && (
-              <div className="absolute -top-10 right-0 z-[60] print:hidden">
+              <div className="absolute top-1 right-1 z-[60] print:hidden opacity-0 pointer-events-none group-hover/col:opacity-100 group-hover/col:pointer-events-auto transition-opacity">
                 <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef} className="hidden" />
-                <Button onClick={() => fileInputRef.current.click()} disabled={uploadingImage} className="font-SpaceGrotesk text-[10px] bg-green-600 p-1 px-2 h-auto text-white hover:bg-green-700">
+                <Button onClick={() => fileInputRef.current.click()} disabled={uploadingImage} className="font-SpaceGrotesk text-[10px] bg-green-600 p-1 px-2 h-auto text-white hover:bg-green-700 shadow-md border border-black">
                   {uploadingImage ? "Subiendo..." : "+ Añadir Foto"}
                 </Button>
               </div>
@@ -148,7 +148,7 @@ const MenuPage = ({
               columnId="right"
             />
             {editMode && (
-              <div className="mt-6 mb-2 flex justify-center shrink-0 print:hidden relative z-10">
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 print:hidden opacity-0 pointer-events-none group-hover/col:opacity-100 group-hover/col:pointer-events-auto transition-opacity">
                 <Button 
                   size="sm" 
                   className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase italic text-[10px] h-6 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black cursor-pointer"

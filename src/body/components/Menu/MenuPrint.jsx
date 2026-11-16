@@ -780,7 +780,7 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
       {!isPreview && showForm && <div className="print:hidden w-full max-w-4xl mb-4"><MenuPrintFormInfo /></div>}
 
-      <div id="print-area" className={`flex flex-row flex-nowrap gap-8 items-start justify-center ${isPreview ? "p-2" : "p-10"} overflow-x-auto w-full print:block print:p-0 print:m-0 print:overflow-visible print:gap-0`} style={{ transform: (isPreview || !editMode) ? `scale(${zoom})` : 'none', transformOrigin: 'top center' }}>
+      <div id="print-area" className={`flex flex-row flex-nowrap gap-8 items-start justify-center ${isPreview ? "p-2" : "p-10"} overflow-x-auto w-full print:block print:p-0 print:m-0 print:overflow-visible print:gap-0`} style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
         {pages.map((p, idx) => (
           <div key={p.id} className="relative group/page">
             {!isPreview && editMode && pages.length > 1 && (

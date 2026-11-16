@@ -192,40 +192,65 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     const lineWidth = colors?.itemLineWidth || 1;
     const borderBottomStyle = showLine ? `${lineWidth}px ${lineStyle} ${colors?.gridBorder || 'rgba(0,0,0,0.1)'}` : 'none';
 
+    const [isEditingComment, setIsEditingComment] = useState(false);
+    const currentComment = (isEnglish ? product.MenuComentsEN : product.MenuComentsES) || '';
+
     const priceAlign = groupDescriptions?.[`${blockId}_priceAlign`] || colors?.priceAlign || 'right';
     const priceGap = groupDescriptions?.[`${blockId}_priceGap`] ?? colors?.priceGap ?? 5;
     const containerClass = priceAlign === 'left' ? 'flex justify-start items-baseline' : 'flex justify-between items-baseline gap-2';
     const containerStyle = priceAlign === 'left' ? { gap: `${priceGap}px` } : {};
 
     return (
-        <div className={`pb-0.5 group relative flex flex-col transition-opacity ${isDeactivated && editMode ? 'opacity-40 bg-red-50/40 rounded-sm px-0.5' : ''}`} style={{ borderBottom: borderBottomStyle }}>
+        <div className={`pb-0.5 group/row relative flex flex-col transition-opacity ${isDeactivated && editMode ? 'opacity-40 bg-red-50/40 rounded-sm' : ''}`} style={{ borderBottom: borderBottomStyle }}>
+            {editMode && (
+                <div className="absolute right-0 top-0 z-[60] flex items-center gap-1 bg-white/95 border border-black rounded px-1 py-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] print:hidden opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto transition-opacity">
+                    <button
+                        type="button"
+                        onClick={handleToggleItemDeactivation}
+                        className={`h-4 px-1 rounded border text-[8px] font-black uppercase flex items-center gap-0.5 transition-colors cursor-pointer ${
+                            isDeactivated 
+                                ? 'bg-red-100 border-red-500 text-red-600 hover:bg-red-200' 
+                                : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200'
+                        }`}
+                        title={isDeactivated ? (isEnglish ? "Item Disabled (Click to Enable)" : "Ítem Desactivado (Clic para Activar)") : (isEnglish ? "Item Enabled (Click to Disable)" : "Ítem Activado (Clic para Desactivar)")}
+                    >
+                        {isDeactivated ? <EyeOff size={9} /> : <Eye size={9} />}
+                        <span>{isDeactivated ? "OFF" : "ON"}</span>
+                    </button>
+
+                    <input
+                        type="number"
+                        defaultValue={product.Order || ''}
+                        onBlur={(e) => handleOrderChange(e.target.value)}
+                        className="w-7 h-4 text-[9px] border border-black px-0.5 font-bold focus:outline-none focus:ring-1 focus:ring-black bg-yellow-100 rounded-sm"
+                        title={isEnglish ? "Position order" : "Orden de posición"}
+                    />
+
+                    {showIcons && (
+                        <button
+                            type="button"
+                            onClick={() => addIconSlot()}
+                            className="h-4 px-1 flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 rounded-sm border border-black text-[8px] font-black cursor-pointer"
+                            title={isEnglish ? "Add ingredient" : "Agregar ingrediente"}
+                        >
+                            <IconPlus size={9} />
+                        </button>
+                    )}
+
+                    {showItemDescriptions && !currentComment && !isEditingComment && (
+                        <button
+                            type="button"
+                            onClick={() => setIsEditingComment(true)}
+                            className="h-4 px-1 flex items-center justify-center bg-amber-100 text-amber-900 hover:bg-amber-200 rounded-sm border border-black text-[8px] font-black cursor-pointer"
+                            title={isEnglish ? "Add note" : "Añadir nota"}
+                        >
+                            +Nota
+                        </button>
+                    )}
+                </div>
+            )}
             <div className={containerClass} style={containerStyle}>
                 <div className={`flex items-start gap-1 min-w-0 ${priceAlign === 'right' ? 'flex-grow' : ''}`}>
-                    {editMode && (
-                        <div className="flex items-center gap-1 print:hidden pt-0.5 shrink-0">
-                            <button
-                                type="button"
-                                onClick={handleToggleItemDeactivation}
-                                className={`h-5 px-1.5 rounded border text-[9px] font-black uppercase flex items-center gap-0.5 transition-colors cursor-pointer shadow-sm ${
-                                    isDeactivated 
-                                        ? 'bg-red-100 border-red-500 text-red-600 hover:bg-red-200' 
-                                        : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200'
-                                }`}
-                                title={isDeactivated ? (isEnglish ? "Item Disabled (Click to Enable)" : "Ítem Desactivado (Clic para Activar)") : (isEnglish ? "Item Enabled (Click to Disable)" : "Ítem Activado (Clic para Desactivar)")}
-                            >
-                                {isDeactivated ? <EyeOff size={10} /> : <Eye size={10} />}
-                                <span className="text-[8px]">{isDeactivated ? "OFF" : "ON"}</span>
-                            </button>
-
-                            <input
-                                type="number"
-                                defaultValue={product.Order || ''}
-                                onBlur={(e) => handleOrderChange(e.target.value)}
-                                className="w-7 h-5 text-[9px] border border-black px-0.5 font-bold focus:outline-none focus:ring-1 focus:ring-black bg-yellow-100"
-                                title={isEnglish ? "Position order" : "Orden de posición"}
-                            />
-                        </div>
-                    )}
                     <div className="flex flex-col flex-1 min-w-0 mr-1">
                         <div className={`font-bold break-words whitespace-normal uppercase ${isDeactivated && editMode ? 'line-through text-red-600' : ''}`} style={{ color: isDeactivated && editMode ? '#dc2626' : colors?.itemName, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizeItem || 11}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
                             {isEnglish ? product.NombreEN : product.NombreES}
@@ -289,16 +314,6 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
                                 </div>
                             );
                         })}
-
-                        {editMode && (
-                            <button
-                                onClick={() => addIconSlot()}
-                                className="w-4 h-4 flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 rounded-sm border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0.5px] active:translate-y-[0.5px] active:shadow-none transition-all ml-1"
-                                title={isEnglish ? "Add ingredient" : "Agregar ingrediente"}
-                            >
-                                <IconPlus size={10} />
-                            </button>
-                        )}
                     </div>
                 </div>
                 <span className="font-black whitespace-nowrap" style={{ color: colors?.itemPrice, fontFamily: colors?.fontItem || 'Space Grotesk', fontSize: `${colors?.sizePrice || 11}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
@@ -309,33 +324,39 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
             {/* Comentario en una nueva línea de ancho completo que ocupa exactamente los mismos renglones en Vista Previa y Editar */}
             {showItemDescriptions && (
                 editMode ? (
-                    <textarea
-                        defaultValue={(isEnglish ? product.MenuComentsEN : product.MenuComentsES) || ''}
-                        placeholder={isEnglish ? "Añadir comentario..." : "Añadir comentario..."}
-                        onBlur={(e) => handleComentsChange(e.target.value)}
-                        rows={1}
-                        ref={(el) => {
-                            if (el) {
-                                el.style.height = 'auto';
-                                el.style.height = `${el.scrollHeight}px`;
-                            }
-                        }}
-                        onInput={(e) => {
-                            e.target.style.height = 'auto';
-                            e.target.style.height = `${e.target.scrollHeight}px`;
-                        }}
-                        className="italic font-normal normal-case tracking-normal w-full bg-transparent border-b border-dashed border-gray-300 focus:border-black outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
-                        style={{
-                            color: colors?.itemComment || '#6b7280',
-                            fontFamily: colors?.fontBody || 'serif',
-                            fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`,
-                            lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1
-                        }}
-                    />
+                    (currentComment || isEditingComment) ? (
+                        <textarea
+                            autoFocus={isEditingComment && !currentComment}
+                            defaultValue={currentComment}
+                            placeholder={isEnglish ? "Añadir comentario..." : "Añadir comentario..."}
+                            onBlur={(e) => {
+                                handleComentsChange(e.target.value);
+                                setIsEditingComment(false);
+                            }}
+                            rows={1}
+                            ref={(el) => {
+                                if (el) {
+                                    el.style.height = 'auto';
+                                    el.style.height = `${el.scrollHeight}px`;
+                                }
+                            }}
+                            onInput={(e) => {
+                                e.target.style.height = 'auto';
+                                e.target.style.height = `${e.target.scrollHeight}px`;
+                            }}
+                            className="italic font-normal normal-case tracking-normal w-full bg-transparent border-0 focus:bg-yellow-50/60 outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
+                            style={{
+                                color: colors?.itemComment || '#6b7280',
+                                fontFamily: colors?.fontBody || 'serif',
+                                fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`,
+                                lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1
+                            }}
+                        />
+                    ) : null
                 ) : (
-                    (isEnglish ? product.MenuComentsEN : product.MenuComentsES) ? (
+                    currentComment ? (
                         <div className="italic font-normal normal-case tracking-normal w-full break-words" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
-                            {isEnglish ? product.MenuComentsEN : product.MenuComentsES}
+                            {currentComment}
                         </div>
                     ) : null
                 )
@@ -449,8 +470,8 @@ export function CardGridPrintMatrix({
     };
 
     return (
-        <div className="mb-0 break-inside-avoid">
-            <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+        <div className="mb-0 break-inside-avoid relative group/subcat">
+            <div className="flex items-center justify-between mb-1.5 gap-1">
                 <span className={`font-black uppercase tracking-widest px-2 py-0.5 border-[2px] inline-block shadow-[2px_2px_0px_0px] ${isExcluded ? 'opacity-50 bg-zinc-100 border-zinc-400 text-zinc-400' : ''}`} style={{ 
                     backgroundColor: isExcluded ? '#f4f4f5' : (colors?.categoryTitle === colors?.categoryBg ? '#000' : colors?.categoryBg), 
                     color: isExcluded ? '#a1a1aa' : colors?.categoryTitle, 
@@ -463,7 +484,7 @@ export function CardGridPrintMatrix({
                 </span>
 
                 {editMode && (
-                    <div className="ml-auto flex items-center gap-2 print:hidden">
+                    <div className="absolute right-0 top-0 z-30 flex items-center gap-1.5 bg-white/95 border border-black rounded px-1.5 py-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] print:hidden opacity-0 pointer-events-none group-hover/subcat:opacity-100 group-hover/subcat:pointer-events-auto transition-opacity">
                         {excludeKey && (
                             <button
                                 onClick={handleToggleExclude}

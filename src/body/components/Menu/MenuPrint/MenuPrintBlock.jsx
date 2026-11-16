@@ -85,6 +85,7 @@ const ItemImageContainer = ({
           minHeight={40}
           maxHeight={600}
           title="Arrastrar para cambiar la altura de la foto"
+          className="absolute -bottom-2 inset-x-0 z-50 opacity-0 group-hover:opacity-100 transition-opacity"
         />
       )}
     </div>
@@ -388,6 +389,9 @@ const MenuPrintBlock = ({
   openGallery
 }) => {
   const [selectedRecetaItem, setSelectedRecetaItem] = useState(null);
+  const [isEditingHeaderTitle, setIsEditingHeaderTitle] = useState(false);
+  const [isEditingHeaderDesc, setIsEditingHeaderDesc] = useState(false);
+  const [isEditingImgTitle, setIsEditingImgTitle] = useState(false);
 
   const parseDimensionStyle = (val, isWidth = true) => {
     if (!val || val === 'auto') return isWidth ? '100%' : undefined;
@@ -683,9 +687,24 @@ const MenuPrintBlock = ({
       return null;
     }
 
+    if (!hasTitle && !hasDesc && editMode && !isEditingHeaderTitle && !isEditingHeaderDesc) {
+      return (
+        <div className="relative h-0 print:hidden">
+          <button
+            type="button"
+            onClick={() => setIsEditingHeaderTitle(true)}
+            className="absolute top-1 left-1 z-30 bg-white/90 border border-black rounded px-1.5 py-0.5 text-[8px] font-black uppercase shadow-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            title="Añadir título o descripción al bloque"
+          >
+            + Título
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div 
-        className={`border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px] relative ${isHeaderHidden && editMode ? 'opacity-60 bg-amber-50/60 border-dashed border-amber-400' : ''}`} 
+        className={`border-b-[2px] p-2 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-0 rounded-t-[4px] relative group/header ${isHeaderHidden && editMode ? 'opacity-60 bg-amber-50/60 border-dashed border-amber-400' : ''}`} 
         style={{ ...customHeaderStyle, backgroundColor: isHeaderHidden && editMode ? '#fffbeb' : colors.categoryBg, borderColor: colors.categoryBorder }}
       >
         {isHeaderHidden && editMode && (
@@ -693,32 +712,38 @@ const MenuPrintBlock = ({
             🚫 Título Omitido
           </span>
         )}
-        {editMode ? (
+        {editMode && isEditingHeaderTitle ? (
           <input
-            className="font-black uppercase leading-none m-0 bg-transparent border-none outline-none text-center tracking-[0.1em] p-0"
+            autoFocus
+            className="font-black uppercase leading-none m-0 bg-transparent border-b border-dashed border-black/40 outline-none text-center tracking-[0.1em] p-0"
             style={{ 
-              width: 'fit-content', 
-              minWidth: '80px', 
+              width: `${Math.max(6, (titleVal || '').length + 1)}ch`,
               fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
               color: colors.categoryTitle, 
               fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` 
             }}
-            placeholder="Sin título (vacío)..."
+            placeholder="Sin título..."
             value={titleVal}
             onChange={(e) => setGroupDescriptions(prev => ({ ...prev, [`title_${id}`]: e.target.value }))}
-            onBlur={() => saveGroupDescriptions(groupDescriptions)}
+            onBlur={() => {
+              setIsEditingHeaderTitle(false);
+              saveGroupDescriptions(groupDescriptions);
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
         ) : (
-          hasTitle && (
+          (hasTitle || editMode) && (
             <h2 
-              className="font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em]" 
+              className={`font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em] ${editMode ? 'cursor-text hover:bg-black/5 rounded px-1' : ''}`} 
               style={{ 
                 fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
                 color: colors.categoryTitle, 
                 fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}` 
               }}
+              onClick={() => { if (editMode) setIsEditingHeaderTitle(true); }}
+              title={editMode ? "Clic para editar título" : ""}
             >
-              {titleVal}
+              {hasTitle ? titleVal : <span className="opacity-30 text-xs">(Sin título)</span>}
             </h2>
           )
         )}
@@ -732,20 +757,23 @@ const MenuPrintBlock = ({
     const baseGroupId = String(groupId).split('_')[0];
     const text = groupDescriptions[groupId]?.[langKey] || groupDescriptions[baseGroupId]?.[langKey] || '';
 
-    if (editMode) {
+    if (editMode && isEditingHeaderDesc) {
       return (
-        <div className="flex-none min-w-[50px] flex items-center">
+        <div className="flex-none flex items-center">
           <input
+            autoFocus
             type="text"
             className={isTitleStyle 
-              ? "w-full bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none text-center font-black tracking-[0.1em] p-0 m-0 leading-none" 
-              : "w-full bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none italic p-0 m-0 leading-none text-gray-500"}
+              ? "bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none text-center font-black tracking-[0.1em] p-0 m-0 leading-none" 
+              : "bg-transparent border-b border-dashed border-gray-400 print:hidden outline-none italic p-0 m-0 leading-none text-gray-500"}
             style={isTitleStyle ? { 
+              width: `${Math.max(8, (text || '').length + 2)}ch`,
               fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
               color: colors.categoryTitle, 
               fontSize: `${(colors.sizeCategory || 20) * 2}${colors.fontSizeUnit || 'px'}`,
               textTransform: 'uppercase'
             } : {
+              width: `${Math.max(10, (text || '').length + 2)}ch`,
               fontFamily: colors.fontBody || 'Space Grotesk', 
               fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}` 
             }}
@@ -758,20 +786,34 @@ const MenuPrintBlock = ({
               }));
             }}
             onBlur={() => {
+              setIsEditingHeaderDesc(false);
               saveGroupDescriptions(groupDescriptions);
             }}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
         </div>
       );
     }
 
-    if (!text.trim()) return null;
+    if (!text.trim()) {
+      if (!editMode) return null;
+      return (
+        <button
+          type="button"
+          onClick={() => setIsEditingHeaderDesc(true)}
+          className="absolute top-1 left-1 z-30 bg-white/90 border border-black rounded px-1 py-0.5 text-[8px] font-bold uppercase opacity-0 group-hover/header:opacity-100 transition-opacity print:hidden cursor-pointer"
+          title="Añadir subtítulo / descripción"
+        >
+          + Desc
+        </button>
+      );
+    }
 
     return (
       <div className="flex-none flex items-center">
-        <p className={isTitleStyle 
+        <p className={`${isTitleStyle 
           ? "leading-none whitespace-nowrap uppercase font-black tracking-[0.1em]" 
-          : "leading-none text-gray-500 italic truncate"} 
+          : "leading-none text-gray-500 italic truncate"} ${editMode ? 'cursor-text hover:bg-black/5 rounded px-1' : ''}`} 
           style={isTitleStyle ? { 
             fontFamily: colors.fontCategory || "'First Bunny', sans-serif", 
             color: colors.categoryTitle, 
@@ -854,9 +896,9 @@ const MenuPrintBlock = ({
         {/* Controles Estándar del Bloque (Mover/Eliminar/Duplicar) */}
         {renderBlockControls(id)}
 
-        {/* Panel de Configuración de Modo e Ítem en Modo Edición */}
+        {/* Panel de Configuración de Modo e Ítem en Modo Edición (flotante al hacer hover) */}
         {editMode && (
-          <div className="bg-yellow-100 border-b-2 border-black p-1.5 flex flex-wrap items-center justify-start gap-2 z-40 print:hidden text-[10px] font-SpaceGrotesk">
+          <div className="absolute top-0 left-0 right-0 bg-yellow-100/95 border-b-2 border-black p-1.5 flex flex-wrap items-center justify-start gap-2 z-40 print:hidden text-[10px] font-SpaceGrotesk opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity shadow-md">
             <div className="flex items-center gap-1">
               <span className="font-black text-gray-800 uppercase">VISTA:</span>
               <div className="flex bg-white border border-black rounded overflow-hidden shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
@@ -1169,62 +1211,82 @@ const MenuPrintBlock = ({
         }
         const imgObj = printImages.find(img => String(img.id) === String(blockId));
         if (imgObj) {
+          const imgName = leng ? (imgObj.nameEN || '') : (imgObj.nameES || '');
           return (
             <div key={blockId} className="relative group border-[2px] p-2 flex flex-col items-center justify-center rounded-[6px] overflow-hidden w-full h-full flex-1" style={{ borderColor: colors.imgBorder || '#000000', boxShadow: `4px 4px 0px 0px ${colors.imgShadow || '#000000'}`, backgroundColor: colors.blockBg }}>
               {renderBlockControls(blockId)}
 
-              <div className="w-full flex justify-between items-center mb-1 shrink-0">
-                {editMode ? (
-                  <input
-                    type="text"
-                    defaultValue={leng ? (imgObj.nameEN || '') : (imgObj.nameES || '')}
-                    placeholder={leng ? "Image Name (English)" : "Nombre de Imagen (Español)"}
-                    onBlur={(e) => {
-                      const updatedName = e.target.value;
-                      const newImages = printImages.map(img =>
-                        String(img.id) === String(blockId)
-                          ? { ...img, [leng ? 'nameEN' : 'nameES']: updatedName }
-                          : img
-                      );
-                      setPrintImages(newImages);
-                      saveImagesConfig(newImages);
-                    }}
-                    className="text-[11px] font-bold font-SpaceGrotesk uppercase w-full border-b border-black/30 focus:outline-none focus:border-black print:hidden mb-1"
-                  />
-                ) : (
-                  (leng ? imgObj.nameEN : imgObj.nameES) && (
-                    <span className="text-[11px] font-bold font-SpaceGrotesk uppercase mb-1 w-full border-b-[2px] pb-1 leading-none text-center" style={{ borderColor: colors.imgBorder || '#000000', color: colors.itemName }}>
-                      {leng ? imgObj.nameEN : imgObj.nameES}
-                    </span>
-                  )
-                )}
-                {editMode && (
-                  <div className="flex gap-2 print:hidden ml-2 items-center shrink-0">
-                    {openGallery ? (
-                      <button 
-                        onClick={() => openGallery('REPLACE_IMAGE', { blockId })}
-                        className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300"
-                        title="Reemplazar Imagen"
-                      >
+              {editMode && (
+                <div className="absolute top-1 left-1 flex gap-1 print:hidden items-center z-40 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+                  {openGallery ? (
+                    <button 
+                      onClick={() => openGallery('REPLACE_IMAGE', { blockId })}
+                      className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300 shadow-sm"
+                      title="Reemplazar Imagen"
+                    >
+                      Cambiar
+                    </button>
+                  ) : (
+                    <div className="relative">
+                      <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300 shadow-sm">
                         Cambiar
-                      </button>
-                    ) : (
-                      <div className="relative">
-                        <label className="text-blue-600 font-bold p-1 bg-blue-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-blue-300">
-                          Cambiar
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleReplaceImage(e, blockId)}
-                          />
-                        </label>
-                      </div>
-                    )}
-                    <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center border border-red-300">X</button>
-                  </div>
-                )}
-              </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleReplaceImage(e, blockId)}
+                        />
+                      </label>
+                    </div>
+                  )}
+                  {!imgName && !isEditingImgTitle && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingImgTitle(true)}
+                      className="text-amber-800 font-bold p-1 bg-amber-100 rounded leading-none text-[10px] cursor-pointer flex items-center justify-center uppercase border border-amber-300 shadow-sm"
+                      title="Añadir título a la imagen"
+                    >
+                      +Título
+                    </button>
+                  )}
+                  <button onClick={() => deleteImage(blockId)} className="text-red-600 font-bold p-1 px-2 bg-red-100 rounded leading-none text-xs flex items-center justify-center border border-red-300 shadow-sm">X</button>
+                </div>
+              )}
+
+              {(imgName || (editMode && isEditingImgTitle)) && (
+                <div className="w-full flex justify-between items-center mb-1 shrink-0">
+                  {editMode && isEditingImgTitle ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      defaultValue={imgName}
+                      placeholder={leng ? "Image Name (English)" : "Nombre de Imagen (Español)"}
+                      onBlur={(e) => {
+                        setIsEditingImgTitle(false);
+                        const updatedName = e.target.value;
+                        const newImages = printImages.map(img =>
+                          String(img.id) === String(blockId)
+                            ? { ...img, [leng ? 'nameEN' : 'nameES']: updatedName }
+                            : img
+                        );
+                        setPrintImages(newImages);
+                        saveImagesConfig(newImages);
+                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                      className="text-[11px] font-bold font-SpaceGrotesk uppercase w-full border-b border-black/30 focus:outline-none focus:border-black print:hidden mb-1 text-center"
+                    />
+                  ) : (
+                    <span
+                      onClick={() => { if (editMode) setIsEditingImgTitle(true); }}
+                      className={`text-[11px] font-bold font-SpaceGrotesk uppercase mb-1 w-full border-b-[2px] pb-1 leading-none text-center ${editMode ? 'cursor-text hover:bg-black/5' : ''}`}
+                      style={{ borderColor: colors.imgBorder || '#000000', color: colors.itemName }}
+                      title={editMode ? "Clic para editar título" : ""}
+                    >
+                      {imgName}
+                    </span>
+                  )}
+                </div>
+              )}
 
               <div className="w-full flex-1 min-h-0 relative h-full flex flex-col overflow-hidden">
                 <img
@@ -1396,7 +1458,7 @@ const MenuPrintBlock = ({
             minHeight={isSoloImagen ? 40 : (itemMode === 'ampliado' ? 100 : (isImageBlock ? 40 : 40))}
             maxHeight={1200}
             title="Arrastrar para cambiar el alto del bloque"
-            className="absolute -bottom-2 inset-x-0 z-50"
+            className="absolute -bottom-2 inset-x-0 z-50 opacity-0 group-hover/blockwrapper:opacity-100 transition-opacity"
           />
         )}
       </div>

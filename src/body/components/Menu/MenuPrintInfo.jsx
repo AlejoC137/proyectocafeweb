@@ -111,14 +111,14 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
         <button
           type="button"
           onClick={() => setIsEditingText(true)}
-          className="absolute -top-3 right-0 bg-yellow-300 text-black border border-black px-1.5 py-0.5 text-[8px] font-black uppercase rounded shadow-sm opacity-90 group-hover/info:opacity-100 transition-opacity z-20 cursor-pointer print:hidden"
+          className="absolute top-0 right-0 bg-yellow-300 text-black border border-black px-1.5 py-0.5 text-[8px] font-black uppercase rounded shadow-sm opacity-0 group-hover/info:opacity-100 transition-opacity z-20 cursor-pointer print:hidden"
           title="Haz clic para editar el contenido Markdown"
         >
           ✏️ Editar Texto
         </button>
       )}
       <div
-        className={`font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-${columns} gap-4 ${editMode ? 'cursor-pointer hover:bg-yellow-50/60 transition-colors p-1 rounded border border-dashed border-yellow-300' : ''}`}
+        className={`font-SpaceGrotesk text-justify w-full leading-[1.15] tracking-tight print-markdown-content columns-${columns} gap-4 ${editMode ? 'cursor-pointer hover:bg-yellow-50/60 transition-colors rounded hover:outline hover:outline-1 hover:outline-dashed hover:outline-yellow-400' : ''}`}
         onClick={() => { if (editMode) setIsEditingText(true); }}
         dangerouslySetInnerHTML={{ __html: parseMarkdown(currentText) }}
         title={editMode ? "Haz clic para editar texto" : ""}
