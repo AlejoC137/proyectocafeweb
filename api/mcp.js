@@ -28,6 +28,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { EXTENDED_TOOLS, createExtendedHandlers } from "./_mcpExtendedTools.js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -42,7 +43,7 @@ function supabase() {
 // MCP Server metadata
 const SERVER_INFO = {
   name: "proyectocafe-mcp",
-  version: "2.0.0",
+  version: "3.0.0",
 };
 
 // ─────────────────────────────────────────────
@@ -2048,7 +2049,9 @@ async function agendaRestaurar({ id } = {}) {
 // MCP JSON-RPC DISPATCHER
 // ─────────────────────────────────────────────
 
-async function handleMcpRequest(body) {
+const EXTENDED_HANDLERS = createExtendedHandlers(supabase);
+
+export async function handleMcpRequest(body) {
   const { jsonrpc, id, method, params } = body;
 
   if (jsonrpc !== "2.0") {
@@ -2069,7 +2072,7 @@ async function handleMcpRequest(body) {
         };
 
       case "tools/list":
-        return { jsonrpc: "2.0", id, result: { tools: TOOLS } };
+        return { jsonrpc: "2.0", id, result: { tools: [...TOOLS, ...EXTENDED_TOOLS] } };
 
       case "tools/call": {
         const toolName = params?.name;
@@ -2119,6 +2122,9 @@ async function handleMcpRequest(body) {
           agenda_actualizar: agendaActualizar,
           agenda_eliminar: agendaEliminar,
           agenda_restaurar: agendaRestaurar,
+
+          // Herramientas extendidas (Comandas, Notas, Planta, Proveedores, Finanzas, Rappi, Nómina, Bajas, Aliados, Radio, Usuarios, etc.)
+          ...EXTENDED_HANDLERS,
         };
 
         const fn = handlers[toolName];
