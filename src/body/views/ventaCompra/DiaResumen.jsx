@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector, useStore } from "react-redux";
-import { RECETAS_MENU } from "../../../redux/actions-types";
+import {
+  MENU,
+  ITEMS,
+  PRODUCCION,
+  RECETAS_MENU,
+  RECETAS_PRODUCCION,
+} from "../../../redux/actions-types";
 import DiaResumentStats from "./DiaResumentStats";
+import DiaResumenBolsillos from "./DiaResumenBolsillos";
 import { fetchAndProcessSales } from "./slicer"; // Import the function
 import {
   fetchVentasByDay,
@@ -31,6 +38,8 @@ function DiaResumen() {
   const store = useStore();
   const { date } = useParams();
   const [loading, setLoading] = useState(true);
+  const [loadingBolsillos, setLoadingBolsillos] = useState(false);
+  const [activeTab, setActiveTab] = useState("detalles"); // "detalles" | "productos" | "bolsillos"
   const [errorMsg, setErrorMsg] = useState(null);
   const [reloadTick, setReloadTick] = useState(0);
   const [ventas, setVentas] = useState([]);
@@ -47,7 +56,39 @@ function DiaResumen() {
   const [totalTransferencia, setTotalTransferencia] = useState(0);
   const [totalCompras, setTotalCompras] = useState(0);
 
-  const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
+  const allMenu = useSelector((state) => state.allMenu || []);
+  const allItems = useSelector((state) => state.allItems || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
+  const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
+  const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
+
+  // Cargar catálogos faltantes de forma diferida solo al abrir la pestaña Bolsillos
+  useEffect(() => {
+    if (activeTab !== "bolsillos") return;
+    let cancelled = false;
+
+    const loadCatalogs = async () => {
+      setLoadingBolsillos(true);
+      try {
+        await ensureCatalogTablesLoaded(dispatch, store.getState, [
+          MENU,
+          ITEMS,
+          PRODUCCION,
+          RECETAS_MENU,
+          RECETAS_PRODUCCION,
+        ]);
+      } catch (err) {
+        console.error("Error cargando catálogos para Bolsillos:", err);
+      } finally {
+        if (!cancelled) setLoadingBolsillos(false);
+      }
+    };
+
+    loadCatalogs();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, dispatch, store]);
 
   useEffect(() => {
     if (!date) {
@@ -273,142 +314,193 @@ function DiaResumen() {
         totalTransferencia={totalTransferencia}
         totalCompras={totalCompras}
       />
-      {/* Resumen del Día */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-        {/* Detalles de Ventas */}
-        <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">
-            Detalles de Ventas
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Total Ingreso
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Pagado
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Contenido de venta
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Fecha y Hora
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Método de Pago
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {ventas.map((venta) => (
-                  <tr
-                    key={venta._id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
-                      {venta.Total_Ingreso}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          venta.Pagado ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-                        }`}
-                      >
-                        {venta.Pagado ? "Sí" : "No"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          venta.Productos ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-                        }`}
-                      >
-                        {venta.Productos
-                          ? (() => {
-                              try {
-                                const productosArr = JSON.parse(venta.Productos);
-                                if (Array.isArray(productosArr) && productosArr.length > 0) {
-                                  return productosArr
-                                    .map(
-                                      (prod) =>
-                                        `${prod.NombreES ?? "Sin nombre"} (${prod.quantity ?? 0})`
-                                    )
-                                    .join(", ");
-                                } else {
-                                  return "Sin productos";
+      {/* Resumen del Día en Pestañas */}
+      <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Barra de Pestañas */}
+        <div className="flex flex-wrap border-b border-gray-200 bg-gray-50 px-4 pt-3 gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("detalles")}
+            className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === "detalles"
+                ? "border-blue-600 text-blue-700 bg-white"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <span>Detalles de Ventas</span>
+            <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
+              {ventas.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("productos")}
+            className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === "productos"
+                ? "border-blue-600 text-blue-700 bg-white"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <span>Productos Vendidos</span>
+            <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
+              {productosVendidos.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("bolsillos")}
+            className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === "bolsillos"
+                ? "border-amber-600 text-amber-800 bg-white"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <span>💰 Bolsillos</span>
+          </button>
+        </div>
+
+        {/* Contenido de la Pestaña Activa */}
+        <div className="p-6">
+          {activeTab === "detalles" && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Total Ingreso
+                    </th>
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Pagado
+                    </th>
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Contenido de venta
+                    </th>
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Fecha y Hora
+                    </th>
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Método de Pago
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ventas.map((venta) => (
+                    <tr
+                      key={venta._id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
+                        {venta.Total_Ingreso}
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-center">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                            venta.Pagado ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                          }`}
+                        >
+                          {venta.Pagado ? "Sí" : "No"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-center">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                            venta.Productos ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                          }`}
+                        >
+                          {venta.Productos
+                            ? (() => {
+                                try {
+                                  const productosArr = JSON.parse(venta.Productos);
+                                  if (Array.isArray(productosArr) && productosArr.length > 0) {
+                                    return productosArr
+                                      .map(
+                                        (prod) =>
+                                          `${prod.NombreES ?? "Sin nombre"} (${prod.quantity ?? 0})`
+                                      )
+                                      .join(", ");
+                                  } else {
+                                    return "Sin productos";
+                                  }
+                                } catch (e) {
+                                  return "Error al leer productos";
                                 }
-                              } catch (e) {
-                                return "Error al leer productos";
-                              }
-                            })()
-                          : "No"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                     {venta.Date && venta.Date } 
-                     <br />
-                     {venta.Time && venta.Time}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {venta.Pago_Info && (() => {
-                        let pagos;
-                        try {
-                          pagos = JSON.parse(venta.Pago_Info);
-                        } catch (e) {
-                          console.error("Error parsing Pago_Info:", e);
-                          return null;
-                        }
-                        return pagos ? 
-                          <div >{pagos.metodo}$</div>
-                         : null;
-                      })()}
-                    </td>
+                              })()
+                            : "No"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-700">
+                        {venta.Date && venta.Date}
+                        <br />
+                        {venta.Time && venta.Time}
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-700">
+                        {venta.Pago_Info && (() => {
+                          let pagos;
+                          try {
+                            pagos = JSON.parse(venta.Pago_Info);
+                          } catch (e) {
+                            console.error("Error parsing Pago_Info:", e);
+                            return null;
+                          }
+                          return pagos ? (
+                            <div>{pagos.metodo}$</div>
+                          ) : null;
+                        })()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === "productos" && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Producto
+                    </th>
+                    <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
+                      Cantidad Vendida
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {productosVendidos.map((producto, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-4 border-b text-sm text-gray-700">
+                        {producto.nombre}
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
+                        {producto.cantidad}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === "bolsillos" && (
+            <DiaResumenBolsillos
+              ventas={ventas}
+              totalIngreso={totalIngreso}
+              allMenu={allMenu}
+              allRecetasMenu={allRecetasMenu}
+              allRecetasProduccion={allRecetasProduccion}
+              allItems={allItems}
+              allProduccion={allProduccion}
+              loadingCatalogs={loadingBolsillos}
+            />
+          )}
         </div>
-
-        {/* Productos Vendidos */}
-        <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">
-            Productos Vendidos
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Producto
-                  </th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">
-                    Cantidad Vendida
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {productosVendidos.map((producto, index) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {producto.nombre}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
-                      {producto.cantidad}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-
       </div>
       
       {/* Footer Sync Button */}
