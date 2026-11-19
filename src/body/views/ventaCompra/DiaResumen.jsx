@@ -1,16 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector, useStore } from "react-redux";
-import { COMPRAS, MENU, PROVEE, RECETAS_MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
-import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
-import supabase from "../../../config/supabaseClient";
-import { recetaMariaPaula } from "../../../redux/calcularReceta";
+import { RECETAS_MENU } from "../../../redux/actions-types";
 import DiaResumentStats from "./DiaResumentStats";
 import { fetchAndProcessSales } from "./slicer"; // Import the function
+import {
+  fetchVentasByDay,
+  fetchComprasByDay,
+  ensureCatalogTablesLoaded,
+} from "./resumenQueries";
 
 const getToday = () => {
   const d = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const parseDateParts = (isoDate) => {
+  const parts = (isoDate || getToday()).split("-");
+  if (parts.length !== 3) return null;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) return null;
+  return { year, month, day };
 };
 
 function DiaResumen() {
@@ -19,35 +31,32 @@ function DiaResumen() {
   const store = useStore();
   const { date } = useParams();
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [ventas, setVentas] = useState([]);
-  const [productosRecetasHoy, setProductosRecetasHoy] = useState([]);
   const [totalIngreso, setTotalIngreso] = useState(0);
   const [totalTip, setTotalTip] = useState(0);
   const [productosVendidos, setProductosVendidos] = useState([]);
-  const [recetas, setRecetas] = useState([]);
   const [inputDate, setInputDate] = useState(date || getToday());
   const [hoy, setHoy] = useState(() => {
-    const parts = (date || getToday()).split('-');
-    return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}/${parts[0]}`;
+    const parts = parseDateParts(date || getToday());
+    return parts ? `${parts.month}/${parts.day}/${parts.year}` : "";
   });
   const [totalTarjeta, setTotalTarjeta] = useState(0);
   const [totalEfectivo, setTotalEfectivo] = useState(0);
   const [totalTransferencia, setTotalTransferencia] = useState(0);
-  
-  const allMenu = useSelector((state) => state.allMenu);
-  const allItems = useSelector((state) => state.allItems);
+  const [totalCompras, setTotalCompras] = useState(0);
+
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
-  const allProduccion = useSelector((state) => state.allProduccion);
-  const allCompras = useSelector((state) =>  state.allCompras); // Fetch Compras from Redux
-  
+
   useEffect(() => {
     if (!date) {
       navigate(`/DiaResumen/${getToday()}`, { replace: true });
     } else if (date !== inputDate) {
       setInputDate(date);
-      const parts = date.split('-');
-      if (parts.length === 3) {
-        setHoy(`${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}/${parts[0]}`);
+      const parts = parseDateParts(date);
+      if (parts) {
+        setHoy(`${parts.month}/${parts.day}/${parts.year}`);
       }
     }
   }, [date, navigate, inputDate]);
@@ -59,171 +68,143 @@ function DiaResumen() {
   };
 
   useEffect(() => {
+    const parts = parseDateParts(inputDate);
+    if (!parts) return;
+
+    let cancelled = false;
+
     const fetchData = async () => {
+      setLoading(true);
+      setErrorMsg(null);
       try {
-        await Promise.all([
-          dispatch(getAllFromTable(MENU)),
-          dispatch(getAllFromTable(RECETAS_MENU)),
-          dispatch(getAllFromTable(COMPRAS)),
-          dispatch(getAllFromTable(ITEMS)),
-          dispatch(getAllFromTable(PRODUCCION)),
+        // Consultar solo el día seleccionado en Ventas y Compras, y cargar Recetas solo si no están en Redux
+        const [ventasHoy, comprasHoy] = await Promise.all([
+          fetchVentasByDay(parts.year, parts.month, parts.day),
+          fetchComprasByDay(parts.year, parts.month, parts.day),
+          ensureCatalogTablesLoaded(dispatch, store.getState, [RECETAS_MENU]),
         ]);
 
+        if (cancelled) return;
 
-        const { data, error } = await supabase
-          .from("Ventas")
-          .select("*")
-          .like("Date", `${hoy}%`);
+        // Ordenar las ventas por fecha y hora
+        ventasHoy.sort((a, b) => {
+          const dateA = new Date(a.Time && !a.Date.includes(",") ? `${a.Date} ${a.Time}` : a.Date);
+          const dateB = new Date(b.Time && !b.Date.includes(",") ? `${b.Date} ${b.Time}` : b.Date);
+          return dateA - dateB;
+        });
 
+        setVentas(ventasHoy);
 
+        // Calcular ingresos y tips totales
+        const total = ventasHoy
+          .filter((venta) => venta.Pagado === true)
+          .reduce((acc, venta) => acc + parseFloat(venta.Total_Ingreso || 0), 0);
+        setTotalIngreso(total);
 
+        const tipSum = ventasHoy
+          .filter((venta) => venta.Pagado === true)
+          .reduce((acc, venta) => acc + parseFloat(venta.Tip || 0), 0);
+        setTotalTip(tipSum);
 
-        if (error) {
-          console.error("Error fetching ventas:", error);
-        } else {
-          const productosRecetas = [];
+        // Calcular pagos por método
+        let tarjeta = 0;
+        let efectivo = 0;
+        let transferencia = 0;
 
-          data.forEach((venta) => {
-            if (venta.Productos) {
-              const productos = JSON.parse(venta.Productos);
-              productos.forEach((producto) => {
-                if (producto.Receta) {
-                  productosRecetas.push(producto.Receta);
-                }
-              });
+        ventasHoy.forEach((venta) => {
+          if (venta.Pago_Info) {
+            let pagos;
+            try {
+              pagos = typeof venta.Pago_Info === "string" ? JSON.parse(venta.Pago_Info) : venta.Pago_Info;
+            } catch (e) {
+              console.error("Error parsing Pago_Info:", e);
+              return;
             }
-          });
 
-          const ventasHoy = data.filter((venta) => venta.Date.split(",")[0] === hoy );
-
-          // Ordenar las ventas por fecha y hora
-          ventasHoy.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-
-          setVentas(ventasHoy);
-          setProductosRecetasHoy(productosRecetas);
-
-          // Calcular ingresos y tips totales
-          const total = ventasHoy
-            .filter((venta) => venta.Pagado === true)
-            .reduce((acc, venta) => acc + parseFloat(venta.Total_Ingreso || 0), 0);
-          setTotalIngreso(total);
-
-          const totalTip = ventasHoy
-            .filter((venta) => venta.Pagado === true)
-            .reduce((acc, venta) => acc + parseFloat(venta.Tip || 0), 0);
-          setTotalTip(totalTip);
-
-          // Calculate total payments by method
-          let tarjeta = 0;
-          let efectivo = 0;
-          let transferencia = 0;
-
-          ventasHoy.forEach((venta) => {
-            if (venta.Pago_Info) {
-              let pagos;
-              try {
-                pagos = JSON.parse(venta.Pago_Info);
-              } catch (e) {
-                console.error("Error parsing Pago_Info:", e);
-                return;
-              }
-
-              // if (Array.isArray(pagos)) {
-                // pagos.forEach((pago) => {
-                  if (pagos.metodo === "Tarjeta") {
-                    tarjeta += parseFloat(venta.Total_Ingreso || 0);
-                  } if (pagos.metodo === "Efectivo") {
-                    efectivo += parseFloat(venta.Total_Ingreso || 0);
-                  }  
-                  if (pagos.metodo === "Transferencia") {
-             
-                    
-                    transferencia += parseFloat(venta.Total_Ingreso || 0);
-                  }
-                  
-               
-                // });
-              }
-            // }
-          });
-
-          setTotalTarjeta(tarjeta);
-          setTotalEfectivo(efectivo);
-          setTotalTransferencia(transferencia);
-
-          // Calcular productos vendidos
-          const productosMap = {};
-          const recetasMap = {};
-          ventasHoy.forEach((venta) => {
-            if (venta.Productos) {
-              const productos = JSON.parse(venta.Productos); // Suponiendo que Productos es un JSON
-              productos.forEach((producto) => {
-                if (producto.id === '' && producto.NombreES === '' && producto.Precio === 0 && producto.quantity === 1 && producto.matches.length === 0) {
-                  return; // Descartar el producto
-                }
-                if (productosMap[producto.NombreES]) {
-                  productosMap[producto.NombreES].cantidad += parseFloat(producto.quantity);
-                } else {
-                  productosMap[producto.NombreES] = {
-                    nombre: producto.NombreES,
-                    cantidad: parseFloat(producto.quantity),
-                    recetaId: producto.Receta || "N/A",
-                    recetaValor: 0,
-                    ingredientes: []
-                  };
-                }
-                if (producto.Receta) {
-                  if (recetasMap[producto.Receta]) {
-                    recetasMap[producto.Receta].cantidad += parseFloat(producto.quantity);
-                  } else {
-                    recetasMap[producto.Receta] = {
-                      receta: producto.Receta,
-                      cantidad: parseFloat(producto.quantity),
-                    };
-                  }
-                }
-              });
+            if (pagos?.metodo === "Tarjeta") {
+              tarjeta += parseFloat(venta.Total_Ingreso || 0);
             }
-          });
-
-          const productosArray = Object.values(productosMap);
-          
-          const updatedProductosVendidos = await Promise.all(productosArray.map(async (producto) => {
-            if (producto.recetaId !== "N/A") {
-              const currentState = store.getState();
-              const currentAllMenu = currentState.allMenu;
-              const currentAllItems = currentState.allItems;
-              const currentAllProduccion = currentState.allProduccion;
-
-              const menuItem = currentAllMenu.find((item) => item.uuid_receta === producto.recetaId);
-              if (menuItem) {
-                const recetaData = await getRecepie(menuItem.uuid_receta, "Recetas");
-                const trimmedRecepie = trimRecepie([...currentAllItems, ...currentAllProduccion], recetaData);
-                const receta = recetaMariaPaula(trimmedRecepie, menuItem.currentType, menuItem.id, menuItem.source);
-                return { ...producto, recetaValor: receta.consolidado, ingredientes: trimmedRecepie };
-              }
+            if (pagos?.metodo === "Efectivo") {
+              efectivo += parseFloat(venta.Total_Ingreso || 0);
             }
-            return producto;
-          }));
-          
-          setProductosVendidos(updatedProductosVendidos);
+            if (pagos?.metodo === "Transferencia") {
+              transferencia += parseFloat(venta.Total_Ingreso || 0);
+            }
+          }
+        });
 
-          const recetasArray = Object.values(recetasMap);
-          setRecetas(recetasArray);
-        }
+        setTotalTarjeta(tarjeta);
+        setTotalEfectivo(efectivo);
+        setTotalTransferencia(transferencia);
 
-        setLoading(false);
+        // Calcular productos vendidos
+        const productosMap = {};
+        ventasHoy.forEach((venta) => {
+          if (venta.Productos) {
+            let productos;
+            try {
+              productos = typeof venta.Productos === "string" ? JSON.parse(venta.Productos) : venta.Productos;
+            } catch (e) {
+              console.error("Error parsing Productos:", e);
+              return;
+            }
+
+            if (!Array.isArray(productos)) return;
+
+            productos.forEach((producto) => {
+              if (
+                producto.id === "" &&
+                producto.NombreES === "" &&
+                producto.Precio === 0 &&
+                producto.quantity === 1 &&
+                Array.isArray(producto.matches) &&
+                producto.matches.length === 0
+              ) {
+                return; // Descartar el producto vacío
+              }
+              const qty = parseFloat(producto.quantity || 0);
+              if (productosMap[producto.NombreES]) {
+                productosMap[producto.NombreES].cantidad += qty;
+              } else {
+                productosMap[producto.NombreES] = {
+                  nombre: producto.NombreES,
+                  cantidad: qty,
+                  recetaId: producto.Receta || "N/A",
+                };
+              }
+            });
+          }
+        });
+
+        const productosArray = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
+        setProductosVendidos(productosArray);
+
+        const comprasSum = comprasHoy.reduce(
+          (acc, compra) => acc + (parseFloat(compra.Valor) || 0),
+          0
+        );
+        setTotalCompras(comprasSum);
       } catch (error) {
+        if (cancelled) return;
         console.error("Error loading data:", error);
-        setLoading(false);
+        setErrorMsg(error?.message || "No se pudieron cargar los datos del día.");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
-  }, [ hoy]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [inputDate, dispatch, store, reloadTick]);
 
   const handleFetchSales = async () => {
-    const processedSales = await fetchAndProcessSales(dispatch);
+    await fetchAndProcessSales(dispatch);
+    setReloadTick((t) => t + 1);
   };
 
   if (loading) {
@@ -232,13 +213,6 @@ function DiaResumen() {
 
   const totalProductosVendidos = productosVendidos.reduce((acc, producto) => acc + producto.cantidad, 0);
 
-  productosVendidos.sort((a, b) => b.cantidad - a.cantidad);
-
-  // Filter and sum the Valor fields from allCompras for today
-  const totalCompras = allCompras
-    .filter((compra) => compra.Date === hoy)
-    .reduce((acc, compra) => acc + parseFloat(compra.Valor), 0);
-    
   return (
     <div className="p-8 bg-gray-50 min-h-screen w-screen">
       {/* Header and Date Selector Container */}
@@ -249,7 +223,7 @@ function DiaResumen() {
             Consulta las métricas y ventas detalladas de un día específico. ({hoy})
           </p>
         </div>
-        
+
         <div className="mt-4 md:mt-0 flex items-center gap-3">
           <label htmlFor="date" className="text-sm font-semibold text-gray-700 shrink-0">
             Fecha:
@@ -264,10 +238,33 @@ function DiaResumen() {
               onChange={handleDateChange}
             />
           </div>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="px-3 py-2.5 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg border border-gray-200 transition-colors"
+            title="Recargar datos del día"
+          >
+            Recargar
+          </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-red-700">
+          <span className="text-sm font-medium">{errorMsg}</span>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-md"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       <DiaResumentStats
         ventasRecepies={productosVendidos}
+        allRecetasMenu={allRecetasMenu}
         totalIngreso={totalIngreso}
         totalTip={totalTip}
         totalProductosVendidos={totalProductosVendidos}

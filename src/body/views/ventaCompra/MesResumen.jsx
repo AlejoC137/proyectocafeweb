@@ -1,30 +1,35 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { COMPRAS, ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION, VENTAS, CONSUMO_STAFF } from "../../../redux/actions-types";
-import { getAllFromTable, getRecepie, trimRecepie } from "../../../redux/actions";
-import supabase from "../../../config/supabaseClient";
-import { recetaMariaPaula } from "../../../redux/calcularReceta";
+import { useDispatch, useSelector, useStore } from "react-redux";
+import { ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION } from "../../../redux/actions-types";
+import { trimRecepie } from "../../../redux/actions";
+import { fetchAndProcessSales } from "./slicer";
+import {
+  fetchVentasByMonth,
+  fetchComprasByMonth,
+  fetchConsumoStaffByMonth,
+  ensureCatalogTablesLoaded,
+} from "./resumenQueries";
 
 import ProductosVendidosRentabilidad from "./ProductosVendidosRentabilidad";
 import MesResumenStats from "./MesResumenStats";
 
 function MesResumen() {
   const dispatch = useDispatch();
+  const store = useStore();
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [ventas, setVentas] = useState([]);
+  const [comprasMes, setComprasMes] = useState([]);
+  const [consumoStaffMes, setConsumoStaffMes] = useState([]);
   const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
   const [hoy, setHoy] = useState(new Date().toISOString().split('T')[0]);
 
-
-
-  const allMenu = useSelector((state) => state.allMenu);
-  const allItems = useSelector((state) => state.allItems);
-  const allRecetasMenu = useSelector((state) => state.allRecetasMenu);
-  const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion);
-  const allProduccion = useSelector((state) => state.allProduccion);
-  const allCompras = useSelector((state) => state.allCompras);
-  const allVentas = useSelector((state) => state.allVentas);
-  const allConsumoStaff = useSelector((state) => state.allConsumoStaff || []);
+  const allMenu = useSelector((state) => state.allMenu || []);
+  const allItems = useSelector((state) => state.allItems || []);
+  const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
+  const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
+  const allProduccion = useSelector((state) => state.allProduccion || []);
 
   const { selectedMonth, selectedYear } = useMemo(() => {
     const selectedDate = new Date(hoy);
@@ -35,50 +40,51 @@ function MesResumen() {
     };
   }, [hoy]);
 
-
-
-
   useEffect(() => {
+    let cancelled = false;
 
-
-
-    const fetchAllData = async () => {
+    const fetchMonthData = async () => {
       setLoading(true);
+      setErrorMsg(null);
       try {
-        // Carga los datos de Redux en paralelo
-        await Promise.all([
-          dispatch(getAllFromTable(MENU)),
-          dispatch(getAllFromTable(ITEMS)),
-          dispatch(getAllFromTable(PRODUCCION)),
-          dispatch(getAllFromTable(RECETAS_MENU)),
-          dispatch(getAllFromTable(RECETAS_PRODUCCION)),
-          dispatch(getAllFromTable(COMPRAS)),
-          dispatch(getAllFromTable(VENTAS)),
-          dispatch(getAllFromTable(CONSUMO_STAFF)),
+        // Consultar solo el mes seleccionado en Ventas, Compras y ConsumoStaff,
+        // y cargar tablas de catálogo únicamente si aún no están en Redux
+        const [ventasDelMes, comprasDelMes, consumosDelMes] = await Promise.all([
+          fetchVentasByMonth(selectedYear, selectedMonth),
+          fetchComprasByMonth(selectedYear, selectedMonth),
+          fetchConsumoStaffByMonth(selectedYear, selectedMonth),
+          ensureCatalogTablesLoaded(dispatch, store.getState, [
+            MENU,
+            ITEMS,
+            PRODUCCION,
+            RECETAS_MENU,
+            RECETAS_PRODUCCION,
+          ]),
         ]);
+
+        if (cancelled) return;
+
+        ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        setVentas(ventasDelMes);
+        setComprasMes(comprasDelMes);
+        setConsumoStaffMes(consumosDelMes);
       } catch (error) {
-        console.error("Error al cargar todos los datos:", error);
+        if (cancelled) return;
+        console.error("Error al cargar los datos del mes:", error);
+        setErrorMsg(error?.message || "No se pudieron cargar los datos del mes.");
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchAllData();
-  }, [dispatch, selectedMonth, selectedYear]);
+    fetchMonthData();
 
-  // Filtrar ventas cuando allVentas cambie
-  useEffect(() => {
-    if (!allVentas || allVentas.length === 0) return;
-    
-    const ventasDelMes = allVentas.filter((venta) => {
-      if (!venta || !venta.Date) return false;
-      const ventaDate = new Date(venta.Date);
-      return ventaDate.getMonth() === selectedMonth && ventaDate.getFullYear() === selectedYear;
-    });
-
-    ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-    setVentas(ventasDelMes);
-  }, [allVentas, selectedMonth, selectedYear]);
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, store, selectedMonth, selectedYear, reloadTick]);
 
 
 
@@ -153,22 +159,14 @@ function MesResumen() {
 
     const productosVendidos = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
 
-    const totalCompras = allCompras
-      .filter((compra) => {
-        const compraDate = new Date(compra.Date);
-        return compraDate.getMonth() === selectedMonth && compraDate.getFullYear() === selectedYear;
-      })
-      .reduce((acc, compra) => acc + parseFloat(compra.Valor || 0), 0);
+    const totalCompras = comprasMes.reduce(
+      (acc, compra) => acc + parseFloat(compra.Valor || 0),
+      0
+    );
 
     // Calcular el total consumido por el staff en costo de producción
-    const consumosDelMes = allConsumoStaff.filter((c) => {
-      if (!c || !c.Date) return false;
-      const cDate = new Date(c.Date);
-      return cDate.getMonth() === selectedMonth && cDate.getFullYear() === selectedYear;
-    });
-
     let totalConsumoCosto = 0;
-    consumosDelMes.forEach((consumo) => {
+    consumoStaffMes.forEach((consumo) => {
       if (!consumo.Productos) return;
       try {
         const productos = typeof consumo.Productos === 'string' ? JSON.parse(consumo.Productos) : consumo.Productos;
@@ -209,7 +207,7 @@ function MesResumen() {
       totalConsumoStaff: totalConsumoCosto,
       totalProductosVendidos: productosVendidos.reduce((acc, p) => acc + p.cantidad, 0),
     };
-  }, [ventas, allCompras, allMenu, allConsumoStaff, allRecetasMenu, allRecetasProduccion, selectedMonth, selectedYear]);
+  }, [ventas, comprasMes, allMenu, consumoStaffMes, allRecetasMenu, allRecetasProduccion]);
 
   useEffect(() => {
     if (datosCalculadosDelMes.productosVendidos.length === 0 || !allItems.length || !allMenu.length) {
@@ -298,7 +296,8 @@ function MesResumen() {
   };
 
   const handleFetchSales = async () => {
-    const processedSales = await fetchAndProcessSales(dispatch);
+    await fetchAndProcessSales(dispatch);
+    setReloadTick((t) => t + 1);
   };
 
   if (loading) {
@@ -319,6 +318,19 @@ function MesResumen() {
         />
         <p>Mostrando resumen para el mes de: {new Date(hoy).toLocaleDateString('es-CO', { timeZone: 'UTC', month: 'long', year: 'numeric' })}</p>
       </div>
+
+      {errorMsg && (
+        <div className="my-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-red-700">
+          <span className="text-sm font-medium">{errorMsg}</span>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-md"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       <MesResumenStats
         ventasRecepies={productosVendidosConReceta}
@@ -348,9 +360,9 @@ function MesResumen() {
               </thead>
               <tbody>
                 {ventas.map((venta, index) => (
-                  <tr key={venta.id || index} className="hover:bg-gray-50 transition-colors">
+                  <tr key={venta._id || venta.id || index} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
-                      {venta.Total_Ingreso.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+                      {(Number(venta.Total_Ingreso) || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-center">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${venta.Pagado ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
@@ -361,7 +373,15 @@ function MesResumen() {
                       {new Date(venta.Date).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
                     </td>
                     <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {venta.Pago_Info && JSON.parse(venta.Pago_Info).metodo || 'N/A'}
+                      {(() => {
+                        if (!venta.Pago_Info) return 'N/A';
+                        try {
+                          const parsed = typeof venta.Pago_Info === 'string' ? JSON.parse(venta.Pago_Info) : venta.Pago_Info;
+                          return parsed?.metodo || 'N/A';
+                        } catch {
+                          return 'N/A';
+                        }
+                      })()}
                     </td>
                   </tr>
                 ))}

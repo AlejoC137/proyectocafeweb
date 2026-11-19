@@ -1,19 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateModelAction, createModelAction, getAllFromTable, trimRecepie } from '../../../redux/actions';
-import { STAFF, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, CONSUMO_STAFF } from '../../../redux/actions-types';
+import { useDispatch, useSelector, useStore } from 'react-redux';
+import { updateModelAction, createModelAction, trimRecepie } from '../../../redux/actions';
+import { STAFF, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
 import supabase from "../../../config/supabaseClient";
 import MesResumenStats from './MesResumenStats';
 import ProductosVendidosRentabilidad from './ProductosVendidosRentabilidad';
-import { Loader2 } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Loader2, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ReportCopyButton from "../../components/ReportCopyButton";
+import {
+    fetchVentasByMonth,
+    fetchComprasByMonth,
+    fetchConsumoStaffByMonth,
+    ensureCatalogTablesLoaded,
+} from './resumenQueries';
 import {
     formatNumber,
     formatCurrency,
     parseFormattedNumber,
     formatDate,
-    LoadingOverlay,
     RowContainer,
     PurchasesModal,
     ImpuestoRow,
@@ -26,65 +31,76 @@ import {
 
 // --- UI COMPONENTS ---
 // (Components now imported from ModelComponents)
-function ModeloContent({ targetMonth, targetYear }) {
+function ModeloContent({ targetMonth, targetYear, modelsLoading = false }) {
 
     const dispatch = useDispatch();
+    const store = useStore();
     const navigate = useNavigate();
 
-    const allVentas = useSelector(state => state.allVentas);
-    const allCompras = useSelector(state => state.allCompras);
-    const allConsumoStaff = useSelector(state => state.allConsumoStaff || []);
-    const models = useSelector(state => state.models);
-    const allStaff = useSelector(state => state.allStaff);
-    const allMenu = useSelector(state => state.allMenu); // Added for new logic
-    const allItems = useSelector(state => state.allItems); // Added for new logic
-    const allRecetasMenu = useSelector(state => state.allRecetasMenu); // Added for new logic
-    const allRecetasProduccion = useSelector(state => state.allRecetasProduccion);
-    const allProduccion = useSelector(state => state.allProduccion);
+    const models = useSelector(state => state.models || []);
+    const reduxModelsLoading = useSelector(state => state.modelsLoading);
+    const allStaff = useSelector(state => state.allStaff || []);
+    const allMenu = useSelector(state => state.allMenu || []);
+    const allItems = useSelector(state => state.allItems || []);
+    const allRecetasMenu = useSelector(state => state.allRecetasMenu || []);
+    const allRecetasProduccion = useSelector(state => state.allRecetasProduccion || []);
+    const allProduccion = useSelector(state => state.allProduccion || []);
 
-    // --- LOGICA TRAIDA DE MesResumen.jsx ---
+    // --- CARGA FILTRADA POR MES (Igual que MesResumen.jsx) ---
     const [ventas, setVentas] = useState([]);
-    const [productosVendidosConReceta, setProductosVendidosConReceta] = useState([]);
-    const [showFinancials, setShowFinancials] = useState(true);
-    const [loadingVentas, setLoadingVentas] = useState(false);
+    const [comprasMes, setComprasMes] = useState([]);
+    const [consumoStaffMes, setConsumoStaffMes] = useState([]);
+    const [loadingData, setLoadingData] = useState(true);
+    const [errorMsg, setErrorMsg] = useState(null);
+    const [reloadTick, setReloadTick] = useState(0);
 
-    // 0. Cargar Tablas Maestras (Para calcular recetas y costos)
+    const isLoading = loadingData || modelsLoading || reduxModelsLoading;
+
+    // Cargar Ventas, Compras, ConsumoStaff del mes seleccionado + tablas de catálogo si faltan
     useEffect(() => {
-        const fetchMasters = async () => {
-            // Fetch all necessary data for calculations
-            // We use Promise.all to fetch concurrently
-            await Promise.all([
-                dispatch(getAllFromTable(MENU)),
-                dispatch(getAllFromTable(ITEMS)),
-                dispatch(getAllFromTable(PRODUCCION)),
-                dispatch(getAllFromTable(RECETAS_MENU)),
-                dispatch(getAllFromTable(RECETAS_PRODUCCION)),
-                dispatch(getAllFromTable(STAFF)),
-                dispatch(getAllFromTable(CONSUMO_STAFF))
-            ]);
+        let cancelled = false;
+
+        const fetchMonthData = async () => {
+            setLoadingData(true);
+            setErrorMsg(null);
+            try {
+                const [ventasDelMes, comprasDelMes, consumosDelMes] = await Promise.all([
+                    fetchVentasByMonth(targetYear, targetMonth),
+                    fetchComprasByMonth(targetYear, targetMonth, { detailed: true }),
+                    fetchConsumoStaffByMonth(targetYear, targetMonth),
+                    ensureCatalogTablesLoaded(dispatch, store.getState, [
+                        MENU,
+                        ITEMS,
+                        PRODUCCION,
+                        RECETAS_MENU,
+                        RECETAS_PRODUCCION,
+                        STAFF,
+                    ]),
+                ]);
+
+                if (cancelled) return;
+
+                ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+                setVentas(ventasDelMes);
+                setComprasMes(comprasDelMes);
+                setConsumoStaffMes(consumosDelMes);
+            } catch (error) {
+                if (cancelled) return;
+                console.error("Error al cargar datos del mes en ModeloContent:", error);
+                setErrorMsg(error?.message || "No se pudieron cargar los datos del mes.");
+            } finally {
+                if (!cancelled) {
+                    setLoadingData(false);
+                }
+            }
         };
-        fetchMasters();
-    }, [dispatch]);
 
-    // 1. Cargar Ventas desde Redux y Filtrar
-    useEffect(() => {
-        setLoadingVentas(true);
-        try {
-            // Filtrar por Target Month/Year usando los datos ya cargados en Redux
-            const ventasDelMes = allVentas.filter((venta) => {
-                if (!venta || !venta.Date) return false;
-                const ventaDate = new Date(venta.Date);
-                return ventaDate.getMonth() === targetMonth && ventaDate.getFullYear() === targetYear;
-            });
+        fetchMonthData();
 
-            ventasDelMes.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-            setVentas(ventasDelMes);
-        } catch (error) {
-            console.error("Error al filtrar ventas en ModeloContent:", error);
-        } finally {
-            setLoadingVentas(false);
-        }
-    }, [targetMonth, targetYear, allVentas]);
+        return () => {
+            cancelled = true;
+        };
+    }, [targetMonth, targetYear, dispatch, store, reloadTick]);
 
     // 2. Calcular Datos del Mes (Igual que MesResumen)
     const datosCalculadosDelMes = useMemo(() => {
@@ -151,24 +167,15 @@ function ModeloContent({ targetMonth, targetYear }) {
 
         const productosVendidos = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
 
-        // Calcular Compras Reales del mes (Usando la logica previa o reutilizando allCompras)
-        const totalCompras = allCompras
-            .filter((compra) => {
-                const compraDate = new Date(compra.Date);
-                const dLocal = new Date(compraDate.valueOf() + compraDate.getTimezoneOffset() * 60000); // Ajuste timezone local si es necesario
-                return dLocal.getMonth() === targetMonth && dLocal.getFullYear() === targetYear;
-            })
-            .reduce((acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0), 0);
+        // Calcular Compras Reales del mes (ya filtradas por mes)
+        const totalCompras = comprasMes.reduce(
+            (acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0),
+            0
+        );
 
-        // Calcular el total consumido por el staff en costo de producción
-        const consumosDelMes = allConsumoStaff.filter((c) => {
-            if (!c || !c.Date) return false;
-            const cDate = new Date(c.Date);
-            return cDate.getMonth() === targetMonth && cDate.getFullYear() === targetYear;
-        });
-
+        // Calcular el total consumido por el staff en costo de producción (ya filtrado por mes)
         let totalConsumoCosto = 0;
-        consumosDelMes.forEach((consumo) => {
+        consumoStaffMes.forEach((consumo) => {
             if (!consumo.Productos) return;
             try {
                 const productos = typeof consumo.Productos === 'string' ? JSON.parse(consumo.Productos) : consumo.Productos;
@@ -209,80 +216,65 @@ function ModeloContent({ targetMonth, targetYear }) {
             totalCompras,
             totalConsumoStaff: totalConsumoCosto,
         };
-    }, [ventas, allCompras, allMenu, allConsumoStaff, allRecetasMenu, allRecetasProduccion, targetMonth, targetYear]);
+    }, [ventas, comprasMes, allMenu, consumoStaffMes, allRecetasMenu, allRecetasProduccion]);
 
-    // 3. Obtener/Calcular Rentabilidad de Productos (Igual que MesResumen.jsx)
-    const [recetaDetailsMap, setRecetaDetailsMap] = useState({});
-
-    // Efecto para calcular detalles de recetas solo si 'productosVendidos' cambia
-    useEffect(() => {
+    // 3. Obtener/Calcular Rentabilidad de Productos (Derivado directo con useMemo para evitar renders intermedios vacíos)
+    const productosVendidosConReceta = useMemo(() => {
         if (datosCalculadosDelMes.productosVendidos.length === 0 || !allItems.length || !allMenu.length) {
-            setProductosVendidosConReceta([]);
-            return;
+            return [];
         }
 
-        const calculateRecipeValues = () => {
-            const updatedProductos = datosCalculadosDelMes.productosVendidos.map((producto) => {
-                let recetaData = null;
-                let consolidatedCost = 0;
-                let ingredients = [];
-                let vCMP = 0;
-                let vCMO = 0;
+        return datosCalculadosDelMes.productosVendidos.map((producto) => {
+            let recetaData = null;
+            let consolidatedCost = 0;
+            let ingredients = [];
+            let vCMP = 0;
+            let vCMO = 0;
 
-                if (producto.recetaId !== "N/A") {
-                    try {
-                        const menuItem = allMenu.find((item) => item.Receta === producto.recetaId);
-                        if (menuItem) {
-                            // Try to find the recipe in the Redux store (Menu or Produccion)
-                            recetaData = allRecetasMenu.find(r => r._id === menuItem.Receta) || allRecetasProduccion.find(r => r._id === menuItem.Receta);
+            if (producto.recetaId !== "N/A") {
+                try {
+                    const menuItem = allMenu.find((item) => item.Receta === producto.recetaId);
+                    if (menuItem) {
+                        recetaData = allRecetasMenu.find(r => r._id === menuItem.Receta) || allRecetasProduccion.find(r => r._id === menuItem.Receta);
 
-                            if (recetaData) {
-                                // Use stored cost instead of recalculating
-                                if (recetaData.costo) {
-                                    try {
-                                        const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
+                        if (recetaData) {
+                            if (recetaData.costo) {
+                                try {
+                                    const costData = typeof recetaData.costo === 'string' ? JSON.parse(recetaData.costo) : recetaData.costo;
 
-                                        if (typeof costData === 'number') {
-                                            // Case for pure production recipes sometimes stored as number
-                                            consolidatedCost = costData;
-                                        } else if (costData && (costData.vCMP || costData.vCMO)) {
-                                            // Case for detailed object cost (vCMP + vCMO)
-                                            vCMP = costData.vCMP || 0;
-                                            vCMO = costData.vCMO || 0;
-                                            consolidatedCost = vCMP + vCMO;
-                                        }
-                                    } catch (e) {
-                                        console.warn("Could not parse cost for recipe:", recetaData.legacyName);
+                                    if (typeof costData === 'number') {
+                                        consolidatedCost = costData;
+                                    } else if (costData && (costData.vCMP || costData.vCMO)) {
+                                        vCMP = costData.vCMP || 0;
+                                        vCMO = costData.vCMO || 0;
+                                        consolidatedCost = vCMP + vCMO;
                                     }
+                                } catch (e) {
+                                    console.warn("Could not parse cost for recipe:", recetaData.legacyName);
                                 }
-
-                                // Still trim ingredients for the "Predict" modal usage if needed
-                                ingredients = trimRecepie([...allItems, ...allProduccion], recetaData);
                             }
+
+                            ingredients = trimRecepie([...allItems, ...allProduccion], recetaData);
                         }
-                    } catch (error) {
-                        console.error(`Error procesando receta para ${producto.nombre}:`, error);
                     }
+                } catch (error) {
+                    console.error(`Error procesando receta para ${producto.nombre}:`, error);
                 }
+            }
 
-                const totalCosto = consolidatedCost * producto.cantidad;
-                const totalUtilidad = producto.totalIngreso - totalCosto;
+            const totalCosto = consolidatedCost * producto.cantidad;
+            const totalUtilidad = producto.totalIngreso - totalCosto;
 
-                return {
-                    ...producto,
-                    recetaValor: consolidatedCost,
-                    vCMP,
-                    vCMO,
-                    ingredientes: ingredients,
-                    totalCosto: totalCosto,
-                    totalUtilidad: totalUtilidad
-                };
-            });
-
-            setProductosVendidosConReceta(updatedProductos);
-        };
-
-        calculateRecipeValues();
+            return {
+                ...producto,
+                recetaValor: consolidatedCost,
+                vCMP,
+                vCMO,
+                ingredientes: ingredients,
+                totalCosto: totalCosto,
+                totalUtilidad: totalUtilidad
+            };
+        });
     }, [datosCalculadosDelMes.productosVendidos, allMenu, allItems, allProduccion, allRecetasMenu, allRecetasProduccion]);
 
     // --- LOGICA DE MODELO (State management) ---
@@ -374,13 +366,7 @@ function ModeloContent({ targetMonth, targetYear }) {
     const handleSyncRealPurchases = () => {
         const total = datosCalculadosDelMes.totalCompras;
         setRealPurchases(total);
-        // Also get the list
-        const list = allCompras.filter((compra) => {
-            const compraDate = new Date(compra.Date);
-            const dLocal = new Date(compraDate.valueOf() + compraDate.getTimezoneOffset() * 60000);
-            return dLocal.getMonth() === targetMonth && dLocal.getFullYear() === targetYear;
-        });
-        setPurchasesList(list);
+        setPurchasesList(comprasMes);
 
         const newRow = { id: 'auto-compras', name: 'Compras Reales (Sinc)', value: total };
         updateItem('compras', newRow);
@@ -694,43 +680,68 @@ function ModeloContent({ targetMonth, targetYear }) {
 
     return (
         <div className="w-full h-full flex flex-col overflow-hidden relative bg-gray-50 max-w-full">
-            {loadingVentas && <LoadingOverlay />}
-
             {/* HEADER COMPACTO Y UNIFICADO */}
             <header className="bg-white border-b shadow-sm sticky top-0 z-20 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-baseline gap-3">
                     <h1 className="text-2xl font-bold text-gray-800 tracking-tight">
                         {monthsNames[targetMonth]} <span className="text-gray-400 font-normal">{targetYear}</span>
                     </h1>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${modelId ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {modelId ? 'Hoja activa' : 'Borrador'}
-                    </span>
+                    {isLoading ? (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-blue-100 text-blue-700">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Cargando...
+                        </span>
+                    ) : (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${modelId ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            {modelId ? 'Hoja activa' : 'Borrador'}
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-6 divide-x divide-gray-200">
-                    <div className="px-4 text-center">
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Ventas ({countVentas})</div>
-                        <div className="text-xl font-bold text-gray-800">{formatCurrency(realIncome)}</div>
-                    </div>
-
-                    <div className="px-4 text-center">
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Utilidad Neta</div>
-                        <div className={`text-xl font-bold ${utilidadNeta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {formatCurrency(utilidadNeta)}
+                    {isLoading ? (
+                        <div className="px-4 flex items-center gap-2 text-sm text-gray-500">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                            <span>Consultando base de datos...</span>
                         </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="px-4 text-center">
+                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Ventas ({countVentas})</div>
+                                <div className="text-xl font-bold text-gray-800">{formatCurrency(realIncome)}</div>
+                            </div>
 
-                    <div className="px-4 text-center">
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Margen</div>
-                        <div className={`text-xl font-bold ${margen >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                            {margen.toFixed(1)}%
-                        </div>
-                    </div>
+                            <div className="px-4 text-center">
+                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Utilidad Neta</div>
+                                <div className={`text-xl font-bold ${utilidadNeta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {formatCurrency(utilidadNeta)}
+                                </div>
+                            </div>
+
+                            <div className="px-4 text-center">
+                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Margen</div>
+                                <div className={`text-xl font-bold ${margen >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                    {margen.toFixed(1)}%
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     <div className="pl-4 flex items-center gap-2">
                         <button
+                            onClick={() => setReloadTick(t => t + 1)}
+                            disabled={isLoading}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 transition-all disabled:opacity-50"
+                            title="Recargar datos del mes"
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                            Recargar
+                        </button>
+
+                        <button
                             onClick={handleOpenMenuAudit}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 transition-all"
+                            disabled={isLoading}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 transition-all disabled:opacity-50"
                             title="Ver Costos Teóricos de todo el Menú"
                         >
                             📊 Auditoría Menú
@@ -738,8 +749,8 @@ function ModeloContent({ targetMonth, targetYear }) {
 
                         <button
                             onClick={handleSave}
-                            disabled={!hasChanges && modelId}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all ${hasChanges || !modelId ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-default'}`}
+                            disabled={isLoading || (!hasChanges && modelId)}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all ${!isLoading && (hasChanges || !modelId) ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-default'}`}
                         >
                             {modelId ? (hasChanges ? 'Guardar Cambios' : 'Guardado') : 'Crear Hoja'}
                         </button>
@@ -751,58 +762,93 @@ function ModeloContent({ targetMonth, targetYear }) {
             <div className="flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar p-6">
                 <div className="w-full max-w-[1920px] mx-auto space-y-6">
 
-                    {ventas && ventas.length > 0 && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                            <div className="h-[420px]">
-                                <MesResumenStats
-                                    ventasRecepies={productosVendidosConReceta}
-                                    totalIngreso={datosCalculadosDelMes.totalIngreso}
-                                    totalTip={datosCalculadosDelMes.totalTip}
-                                    totalProductosVendidos={datosCalculadosDelMes.totalProductosVendidos}
-                                    totalTarjeta={datosCalculadosDelMes.totalTarjeta}
-                                    totalEfectivo={datosCalculadosDelMes.totalEfectivo}
-                                    totalTransferencia={datosCalculadosDelMes.totalTransferencia}
-                                    totalCompras={datosCalculadosDelMes.totalCompras}
-                                    cantidadDeDias={ventas}
-                                    totalConsumoStaff={datosCalculadosDelMes.totalConsumoStaff}
-                                />
-                            </div>
-
-                            {/* Productos Vendidos Table */}
-                            <div className="h-[420px]">
-                                <ProductosVendidosRentabilidad
-                                    productos={productosVendidosConReceta}
-                                    ventas={ventas}
-                                    targetMonth={targetMonth}
-                                    targetYear={targetYear}
-                                    onOpenGastos={handleOpenGastos}
-                                />
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+                            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full flex flex-col items-center">
+                                <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+                                <h3 className="text-lg font-bold text-gray-800 mb-1">
+                                    Cargando {monthsNames[targetMonth]} {targetYear}...
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                    Consultando ventas, compras, recetas y hoja contable desde la base de datos.
+                                </p>
                             </div>
                         </div>
-                    )}
-
-                    {(!ventas || ventas.length === 0) && !modelId ? (
+                    ) : errorMsg ? (
                         <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md">
-                                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                    <span className="text-3xl">🗂️</span>
+                            <div className="bg-white p-8 rounded-2xl shadow-sm border border-red-200 max-w-md w-full">
+                                <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                                    <span className="text-3xl">⚠️</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-2">Sin datos cargados</h3>
-                                <p className="text-gray-500 mb-4 text-sm">
-                                    No se encontraron ventas para <b>{monthsNames[targetMonth]} {targetYear}</b> ni existe una hoja de costos guardada.
-                                </p>
-                                <p className="text-xs text-gray-400 mb-6 bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-left leading-relaxed">
-                                    💡 Si la información aún está cargando, aparecerá aquí automáticamente. Para iniciar una proyección vacía sin ventas reales, presiona el botón.
-                                </p>
+                                <h3 className="text-xl font-bold text-red-700 mb-2">Error al cargar los datos</h3>
+                                <p className="text-gray-600 mb-6 text-sm">{errorMsg}</p>
                                 <button
-                                    onClick={handleSave}
-                                    className="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full"
+                                    onClick={() => setReloadTick(t => t + 1)}
+                                    className="bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-red-700 transition-colors shadow-sm w-full"
                                 >
-                                    Crear Hoja Manualmente
+                                    Reintentar
                                 </button>
                             </div>
                         </div>
                     ) : (
+                        <>
+                            {ventas && ventas.length > 0 && (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                                    <div className="h-[420px]">
+                                        <MesResumenStats
+                                            ventasRecepies={productosVendidosConReceta}
+                                            totalIngreso={datosCalculadosDelMes.totalIngreso}
+                                            totalTip={datosCalculadosDelMes.totalTip}
+                                            totalProductosVendidos={datosCalculadosDelMes.totalProductosVendidos}
+                                            totalTarjeta={datosCalculadosDelMes.totalTarjeta}
+                                            totalEfectivo={datosCalculadosDelMes.totalEfectivo}
+                                            totalTransferencia={datosCalculadosDelMes.totalTransferencia}
+                                            totalCompras={datosCalculadosDelMes.totalCompras}
+                                            cantidadDeDias={ventas}
+                                            totalConsumoStaff={datosCalculadosDelMes.totalConsumoStaff}
+                                        />
+                                    </div>
+
+                                    {/* Productos Vendidos Table */}
+                                    <div className="h-[420px]">
+                                        <ProductosVendidosRentabilidad
+                                            productos={productosVendidosConReceta}
+                                            ventas={ventas}
+                                            targetMonth={targetMonth}
+                                            targetYear={targetYear}
+                                            onOpenGastos={handleOpenGastos}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {(!ventas || ventas.length === 0) && !modelId ? (
+                                <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full">
+                                        <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                            <span className="text-3xl">🗂️</span>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-800 mb-2">Sin registros en este mes</h3>
+                                        <p className="text-gray-500 mb-6 text-sm">
+                                            No hay ventas registradas para <b>{monthsNames[targetMonth]} {targetYear}</b> ni existe una hoja de costos guardada.
+                                        </p>
+                                        <div className="flex flex-col gap-2">
+                                            <button
+                                                onClick={handleSave}
+                                                className="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full"
+                                            >
+                                                Crear Hoja Manualmente
+                                            </button>
+                                            <button
+                                                onClick={() => setReloadTick(t => t + 1)}
+                                                className="bg-gray-100 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm w-full"
+                                            >
+                                                Volver a consultar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                             <section className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[300px]">
                                 <div className="flex justify-between items-center mb-1">
@@ -887,6 +933,8 @@ function ModeloContent({ targetMonth, targetYear }) {
                                 </div>
                             </section>
                         </div>
+                    )}
+                        </>
                     )}
                 </div>
             </div>

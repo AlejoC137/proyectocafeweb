@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchModelsAction, getAllFromTable, deleteModelAction } from '../../../redux/actions';
-import { VENTAS, COMPRAS, MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, CONSUMO_STAFF } from '../../../redux/actions-types';
+import { fetchModelsAction, deleteModelAction } from '../../../redux/actions';
+import { MENU, RECETAS_MENU, RECETAS_PRODUCCION } from '../../../redux/actions-types';
 import ModeloContent from './ModeloContent';
 import { jsPDF } from 'jspdf';
+import {
+    fetchVentasMonthsIndex,
+    fetchVentasByMonth,
+    fetchComprasByMonth,
+    ensureCatalogTablesLoaded,
+} from './resumenQueries';
 
 const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -24,18 +30,19 @@ const loadJSZip = () => {
 
 const ModeloProyecto = () => {
     const dispatch = useDispatch();
+    const store = useStore();
 
     // Consumimos el estado de Redux
-    const models = useSelector(state => state.models);
-    const allVentas = useSelector(state => state.allVentas);
-    const allCompras = useSelector(state => state.allCompras || []);
-    const allConsumoStaff = useSelector(state => state.allConsumoStaff || []);
-    const allMenu = useSelector(state => state.allMenu || []);
-    const allItems = useSelector(state => state.allItems || []);
-    const allProduccion = useSelector(state => state.allProduccion || []);
-    const allRecetasMenu = useSelector(state => state.allRecetasMenu || []);
-    const allRecetasProduccion = useSelector(state => state.allRecetasProduccion || []);
+    const models = useSelector(state => state.models || []);
     const loading = useSelector(state => state.modelsLoading);
+
+    // Estado Local: Carga de modelos e índice liviano de meses con ventas
+    const [loadingModels, setLoadingModels] = useState(true);
+    const [loadingSalesIndex, setLoadingSalesIndex] = useState(true);
+    const [salesIndex, setSalesIndex] = useState(() => ({
+        years: [],
+        monthKeys: new Set(),
+    }));
 
     // Estado Local: Fecha seleccionada
     const { year: paramYear, month: paramMonth } = useParams();
@@ -85,15 +92,35 @@ const ModeloProyecto = () => {
     };
 
     useEffect(() => {
-        dispatch(fetchModelsAction());
-        dispatch(getAllFromTable(VENTAS));
-        dispatch(getAllFromTable(COMPRAS));
-        dispatch(getAllFromTable(MENU));
-        dispatch(getAllFromTable(ITEMS));
-        dispatch(getAllFromTable(PRODUCCION));
-        dispatch(getAllFromTable(RECETAS_MENU));
-        dispatch(getAllFromTable(RECETAS_PRODUCCION));
-        dispatch(getAllFromTable(CONSUMO_STAFF));
+        let cancelled = false;
+
+        const loadHeaderData = async () => {
+            setLoadingModels(true);
+            setLoadingSalesIndex(true);
+
+            const modelsPromise = dispatch(fetchModelsAction())
+                .catch((err) => console.error("Error cargando modelos:", err))
+                .finally(() => {
+                    if (!cancelled) setLoadingModels(false);
+                });
+
+            const salesIndexPromise = fetchVentasMonthsIndex()
+                .then((idx) => {
+                    if (!cancelled) setSalesIndex(idx);
+                })
+                .catch((err) => console.error("Error cargando índice de ventas:", err))
+                .finally(() => {
+                    if (!cancelled) setLoadingSalesIndex(false);
+                });
+
+            await Promise.all([modelsPromise, salesIndexPromise]);
+        };
+
+        loadHeaderData();
+
+        return () => {
+            cancelled = true;
+        };
     }, [dispatch]);
 
     // --- LÓGICA DE MATRIZ: Calcular Años Disponibles ---
@@ -101,19 +128,12 @@ const ModeloProyecto = () => {
         const uniqueYears = new Set();
         const currentYear = new Date().getFullYear();
         uniqueYears.add(currentYear);
+        if (selectedDate?.year) uniqueYears.add(selectedDate.year);
 
-        // 1. Buscar años en las VENTAS (Formato MM/DD/AAAA)
-        if (allVentas && Array.isArray(allVentas)) {
-            allVentas.forEach(v => {
-                if (v.Date) {
-                    const parts = v.Date.split('/');
-                    if (parts.length === 3) {
-                        const y = parseInt(parts[2]);
-                        if (!isNaN(y)) uniqueYears.add(y);
-                    }
-                }
-            });
-        }
+        // 1. Años con VENTAS (desde el índice liviano)
+        salesIndex.years.forEach((y) => {
+            if (!isNaN(y)) uniqueYears.add(y);
+        });
 
         // 2. Buscar años en los MODELOS
         if (models && Array.isArray(models)) {
@@ -123,7 +143,7 @@ const ModeloProyecto = () => {
         }
 
         return Array.from(uniqueYears).sort((a, b) => b - a);
-    }, [allVentas, models]);
+    }, [salesIndex.years, models, selectedDate.year]);
 
     const handleDeleteModel = async (e, modelId, modelName) => {
         e.stopPropagation();
@@ -133,12 +153,7 @@ const ModeloProyecto = () => {
     };
 
     // Generar reporte ultra detallado para un mes en formato de texto Markdown
-    const generateDetailedReport = (year, monthIndex) => {
-        const ventasMes = allVentas.filter((venta) => {
-            if (!venta || !venta.Date) return false;
-            const ventaDate = new Date(venta.Date);
-            return ventaDate.getMonth() === monthIndex && ventaDate.getFullYear() === year;
-        });
+    const generateDetailedReport = (year, monthIndex, { ventasMes = [], comprasMes = [], allMenu = [], allRecetasMenu = [], allRecetasProduccion = [] }) => {
 
         let totalIngreso = 0;
         let totalTip = 0;
@@ -230,12 +245,7 @@ const ModeloProyecto = () => {
             };
         });
 
-        // Filtrar compras del mes
-        const comprasMes = allCompras.filter((compra) => {
-            const compraDate = new Date(compra.Date);
-            const dLocal = new Date(compraDate.valueOf() + compraDate.getTimezoneOffset() * 60000);
-            return dLocal.getMonth() === monthIndex && dLocal.getFullYear() === year;
-        });
+        // Compras reales del mes (ya filtradas)
         const totalComprasReales = comprasMes.reduce((acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0), 0);
 
         // Cargar modelo contable guardado
@@ -320,7 +330,7 @@ const ModeloProyecto = () => {
         return text;
     };
 
-    const generateLunchReportText = (year, monthIndex) => {
+    const generateLunchReportText = (year, monthIndex, { allMenu = [], allRecetasMenu = [], allRecetasProduccion = [] }) => {
         // Filtrar almuerzos programados del mes
         const almuerzosMes = allMenu.filter(item => {
             if (item.SUB_GRUPO !== 'TARDEO_ALMUERZO') return false;
@@ -482,7 +492,7 @@ const ModeloProyecto = () => {
         return text;
     };
 
-    const generateGrandConsolidatedReport = (selectedMonths) => {
+    const generateGrandConsolidatedReport = (selectedMonths, { monthDataMap, allMenu = [], allRecetasMenu = [], allRecetasProduccion = [] }) => {
         let totalIngresosGeneral = 0;
         let totalCostosGeneral = 0;
         let totalUtilidadGeneral = 0;
@@ -498,12 +508,8 @@ const ModeloProyecto = () => {
         const lunchPopularityGeneral = {};
 
         selectedMonths.forEach(({ year, monthIndex }) => {
-            // -- Calcular ingresos del mes --
-            const ventasMes = allVentas.filter((venta) => {
-                if (!venta || !venta.Date) return false;
-                const ventaDate = new Date(venta.Date);
-                return ventaDate.getMonth() === monthIndex && ventaDate.getFullYear() === year;
-            });
+            const key = `${year}-${monthIndex}`;
+            const { ventasMes = [], comprasMes = [] } = monthDataMap[key] || {};
 
             let totalIngreso = 0;
             ventasMes.forEach((venta) => {
@@ -514,11 +520,6 @@ const ModeloProyecto = () => {
             totalIngresosGeneral += totalIngreso;
 
             // -- Calcular costos del mes --
-            const comprasMes = allCompras.filter((compra) => {
-                const compraDate = new Date(compra.Date);
-                const dLocal = new Date(compraDate.valueOf() + compraDate.getTimezoneOffset() * 60000);
-                return dLocal.getMonth() === monthIndex && dLocal.getFullYear() === year;
-            });
             const totalComprasReales = comprasMes.reduce((acc, compra) => acc + parseFloat(compra.Valor || compra.Total || 0), 0);
 
             const savedModel = models.find(m => {
@@ -683,11 +684,39 @@ const ModeloProyecto = () => {
 
         setZipping(true);
         try {
-            const jszip = await loadJSZip();
+            const [jszip] = await Promise.all([
+                loadJSZip(),
+                ensureCatalogTablesLoaded(dispatch, store.getState, [
+                    MENU,
+                    RECETAS_MENU,
+                    RECETAS_PRODUCCION,
+                ]),
+            ]);
+
+            const monthEntries = await Promise.all(
+                selectedMonths.map(async ({ year, monthIndex }) => {
+                    const [ventasMes, comprasMes] = await Promise.all([
+                        fetchVentasByMonth(year, monthIndex),
+                        fetchComprasByMonth(year, monthIndex),
+                    ]);
+                    return [`${year}-${monthIndex}`, { ventasMes, comprasMes }];
+                })
+            );
+            const monthDataMap = Object.fromEntries(monthEntries);
+            const state = store.getState();
+            const catalogs = {
+                allMenu: state.allMenu || [],
+                allRecetasMenu: state.allRecetasMenu || [],
+                allRecetasProduccion: state.allRecetasProduccion || [],
+            };
+
             const zip = new jszip();
 
             // Generar el Reporte Consolidado Acumulado de todos los meses seleccionados
-            const grandConsolidatedReport = generateGrandConsolidatedReport(selectedMonths);
+            const grandConsolidatedReport = generateGrandConsolidatedReport(selectedMonths, {
+                monthDataMap,
+                ...catalogs,
+            });
             if (type === 'md') {
                 zip.file(`00_resumen_consolidado_total.md`, grandConsolidatedReport);
             } else {
@@ -700,8 +729,13 @@ const ModeloProyecto = () => {
             }
 
             selectedMonths.forEach(({ year, monthIndex }) => {
-                const reportContent = generateDetailedReport(year, monthIndex);
-                const lunchContent = generateLunchReportText(year, monthIndex);
+                const { ventasMes, comprasMes } = monthDataMap[`${year}-${monthIndex}`] || {};
+                const reportContent = generateDetailedReport(year, monthIndex, {
+                    ventasMes,
+                    comprasMes,
+                    ...catalogs,
+                });
+                const lunchContent = generateLunchReportText(year, monthIndex, catalogs);
                 const fileNameBase = `informe_${monthsNames[monthIndex].toLowerCase()}_${year}`;
                 const fileLunchBase = `analisis_almuerzos_${monthsNames[monthIndex].toLowerCase()}_${year}`;
 
@@ -746,8 +780,6 @@ const ModeloProyecto = () => {
         }
     };
 
-    if (loading) return <div className="flex items-center justify-center h-screen w-screen text-gray-500">Cargando datos...</div>;
-
     return (
         <div className="flex flex-col h-screen w-full bg-gray-100 overflow-hidden m-0 p-0">
 
@@ -757,6 +789,11 @@ const ModeloProyecto = () => {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-4">
                             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Navegador Contable</h2>
+                            {loadingSalesIndex && (
+                                <span className="text-[10px] text-slate-400 animate-pulse">
+                                    Cargando historial de meses...
+                                </span>
+                            )}
                             <button
                                 onClick={() => {
                                     setIsBulkMode(!isBulkMode);
@@ -804,13 +841,8 @@ const ModeloProyecto = () => {
                                         return false;
                                     });
 
-                                    // Ventas reales
-                                    const hasSales = allVentas && allVentas.some(v => {
-                                        if (!v || !v.Date) return false;
-                                        const ventaDate = new Date(v.Date);
-                                        if (isNaN(ventaDate.getTime())) return false;
-                                        return ventaDate.getMonth() === monthIndex && ventaDate.getFullYear() === year;
-                                    });
+                                    // Ventas reales (desde índice liviano de meses)
+                                    const hasSales = salesIndex.monthKeys.has(`${year}-${monthIndex}`);
 
                                     const isSelected = selectedDate.month === monthIndex && selectedDate.year === year;
                                     const isBulkSelected = selectedMonths.some(sm => sm.year === year && sm.monthIndex === monthIndex);
@@ -862,6 +894,7 @@ const ModeloProyecto = () => {
                 <ModeloContent
                     targetMonth={selectedDate.month}
                     targetYear={selectedDate.year}
+                    modelsLoading={loadingModels || loading}
                 />
             </div>
         </div>
