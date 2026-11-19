@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { parseFlexibleObject, parseFlexibleArray } from '../../utils/staffCsvExport';
 
 // --- Thunks (Async Actions) ---
 // Simula el fetch. En producción, reemplazar con la llamada real a supabase o axios.
@@ -40,10 +41,10 @@ const employeeSlice = createSlice({
             // Aquí normalizamos la data si viene cruda (strings JSON)
             state.list = action.payload.map(emp => ({
                 ...emp,
-                // Intentar parsear JSONs si vienen como strings
-                Turnos: typeof emp.Turnos === 'string' ? safeJsonParse(emp.Turnos, []) : emp.Turnos,
-                Cuenta: typeof emp.Cuenta === 'string' ? safeJsonParse(emp.Cuenta, {}) : emp.Cuenta,
-                infoContacto: typeof emp.infoContacto === 'string' ? safeJsonParse(emp.infoContacto, {}) : emp.infoContacto
+                // Intentar parsear JSONs si vienen como strings (incluye objetos con claves sin comillas)
+                Turnos: typeof emp.Turnos === 'string' ? parseFlexibleArray(emp.Turnos) : emp.Turnos,
+                Cuenta: typeof emp.Cuenta === 'string' ? parseFlexibleObject(emp.Cuenta) : emp.Cuenta,
+                infoContacto: typeof emp.infoContacto === 'string' ? parseFlexibleObject(emp.infoContacto) : emp.infoContacto
             }));
         },
         selectEmployee: (state, action) => {

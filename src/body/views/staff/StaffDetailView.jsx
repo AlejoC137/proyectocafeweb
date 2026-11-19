@@ -6,8 +6,9 @@ import { getAllFromTable, updateStaff, deleteStaff } from "../../../redux/action
 import { STAFF } from "../../../redux/actions-types";
 import {
     X, User, CreditCard, Calendar, Edit2, Save, Trash2,
-    ArrowLeft, Phone, MapPin, CheckCircle2, Calculator
+    ArrowLeft, Phone, MapPin, CheckCircle2, Calculator, Download
 } from 'lucide-react';
+import { exportSingleStaffToCSV } from '../../../utils/staffCsvExport';
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -258,7 +259,15 @@ const StaffDetailView = () => {
                         <ArrowLeft className="w-5 h-5" />
                         Volver a la Lista
                     </button>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => exportSingleStaffToCSV(formData)}
+                            className="border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 gap-2"
+                        >
+                            <Download className="w-4 h-4" /> Descargar CSV
+                        </Button>
                         {isEditing ? (
                             <>
                                 <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancelar</Button>

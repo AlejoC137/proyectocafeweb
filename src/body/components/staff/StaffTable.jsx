@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectEmployee } from '../../../redux/slices/employeeSlice';
-import { User, Briefcase, Phone, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import { User, Briefcase, Phone, Clock, ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { exportSingleStaffToCSV } from '../../../utils/staffCsvExport';
 
-const StaffTable = ({ employees }) => {
+const StaffTable = ({ employees, selectedIds = [], onToggleSelect, onToggleSelectAll }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [showInactive, setShowInactive] = useState(false);
@@ -14,14 +15,28 @@ const StaffTable = ({ employees }) => {
     // Un empleado esta activo si Contratacion no es explicitamente false
     const activeEmployees = employees.filter(emp => emp.Contratacion !== false && emp.Contratacion !== "false");
     const inactiveEmployees = employees.filter(emp => emp.Contratacion === false || emp.Contratacion === "false");
+    const visibleEmployees = showInactive ? [...activeEmployees, ...inactiveEmployees] : activeEmployees;
+    const allVisibleSelected =
+        visibleEmployees.length > 0 && visibleEmployees.every((emp) => selectedIds.includes(emp._id));
 
     const renderRows = (empList) => (
-        empList.map((emp) => (
+        empList.map((emp) => {
+            const isSelected = selectedIds.includes(emp._id);
+            return (
             <tr
                 key={emp._id}
-                className="hover:bg-gray-50 transition cursor-pointer"
+                className={`hover:bg-gray-50 transition cursor-pointer ${isSelected ? 'bg-emerald-50/50' : ''}`}
                 onClick={() => dispatch(selectEmployee(emp))}
             >
+                <td className="pl-4 pr-2 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => onToggleSelect && onToggleSelect(emp._id)}
+                        aria-label={`Seleccionar a ${emp.Nombre || ''} ${emp.Apellido || ''}`}
+                        className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -59,18 +74,33 @@ const StaffTable = ({ employees }) => {
                     </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a
-                        href={`/staff-details/${emp.CC}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-900 font-semibold no-underline"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        Ver Detalles
-                    </a>
+                    <div className="inline-flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                exportSingleStaffToCSV(emp);
+                            }}
+                            title={`Descargar CSV de ${emp.Nombre || ''} ${emp.Apellido || ''}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            CSV
+                        </button>
+                        <a
+                            href={`/staff-details/${emp.CC}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:text-indigo-900 font-semibold no-underline"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            Ver Detalles
+                        </a>
+                    </div>
                 </td>
             </tr>
-        ))
+            );
+        })
     );
 
     return (
@@ -79,6 +109,15 @@ const StaffTable = ({ employees }) => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                         <tr>
+                            <th className="pl-4 pr-2 py-3 text-left w-10">
+                                <input
+                                    type="checkbox"
+                                    checked={allVisibleSelected}
+                                    onChange={() => onToggleSelectAll && onToggleSelectAll(visibleEmployees)}
+                                    aria-label="Seleccionar todos los empleados visibles"
+                                    className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                />
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Empleado
                             </th>
@@ -110,7 +149,7 @@ const StaffTable = ({ employees }) => {
                         {inactiveEmployees.length > 0 && (
                             <>
                                 <tr>
-                                    <td colSpan="7" className="bg-gray-50 p-0 border-y border-gray-200">
+                                    <td colSpan="8" className="bg-gray-50 p-0 border-y border-gray-200">
                                         <button
                                             onClick={() => setShowInactive(!showInactive)}
                                             className="w-full flex items-center justify-between px-6 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
@@ -131,7 +170,7 @@ const StaffTable = ({ employees }) => {
 
                         {employees.length === 0 && (
                             <tr>
-                                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
                                     No hay empleados registrados.
                                 </td>
                             </tr>
