@@ -17,6 +17,7 @@ const ALLOWED_TABLES = new Set([
   "playlist_radio", "playlist_youtube", "PreciosHistoricosProducto",
   "Procedimientos", "ProduccionInterna", "Propinas", "Proveedores",
   "Proyect_Info", "Radio", "radio_current_play", "radio_mp3", "Recetas",
+  "RecetasProcedimientos", "RecetasProduccion",
   "Staff", "user_customizations", "USER_PREFERENCES", "UserMessages",
   "Vease", "Ventas", "view_preferences",
 ]);
@@ -259,6 +260,162 @@ export const EXTENDED_TOOLS = [
       required: ["campos"],
       properties: {
         campos: { type: "object", description: "Campos del registro de producción interna" },
+      },
+    },
+  },
+  {
+    name: "produccion_interna_actualizar",
+    description: "Actualiza un registro existente de ProduccionInterna por su _id (ej: enlazar Receta, actualizar costo, cantidad o estado).",
+    inputSchema: {
+      type: "object",
+      required: ["id", "campos"],
+      properties: {
+        id: { type: "string", description: "UUID del registro en ProduccionInterna" },
+        campos: { type: "object", description: "Campos a actualizar en ProduccionInterna" },
+      },
+    },
+  },
+  {
+    name: "recetas_produccion_listar",
+    description: "Lista y busca recetas de producción interna en la tabla RecetasProduccion.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        nombre: { type: "string", description: "Buscar receta por nombre (legacyName)" },
+        for_id: { type: "string", description: "Filtrar por UUID del producto en ProduccionInterna (forId)" },
+        limit: { type: "number", description: "Máximo de resultados (default 100)" },
+      },
+    },
+  },
+  {
+    name: "receta_produccion_obtener",
+    description: "Obtiene el detalle completo de una receta de producción interna (RecetasProduccion) por _id o por for_id (UUID de ProduccionInterna).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "UUID de la receta en RecetasProduccion" },
+        for_id: { type: "string", description: "UUID del producto en ProduccionInterna" },
+      },
+    },
+  },
+  {
+    name: "receta_produccion_crear",
+    description: "Crea una receta de producción interna en RecetasProduccion, soporta insumos de ItemsAlmacen (hasta 30), subrecetas de ProduccionInterna (hasta 20), pasos (hasta 20) y notas (hasta 10), y la enlaza automáticamente en ProduccionInterna.Receta.",
+    inputSchema: {
+      type: "object",
+      required: ["nombre", "forId"],
+      properties: {
+        nombre: { type: "string", description: "Nombre de la receta (legacyName)" },
+        forId: { type: "string", description: "UUID del producto en ProduccionInterna al que pertenece" },
+        rendimiento: {
+          type: "object",
+          description: "Objeto de rendimiento: { porcion: 1, cantidad: 1000, unidades: 'gr' }",
+        },
+        UNIDADES: { type: "string", description: "Unidad principal de rendimiento (ej: 'gr', 'ml', 'un')" },
+        costo: { type: "number", description: "Costo total del lote en COP" },
+        precioUnitario: { type: "number", description: "Costo por unidad de rendimiento" },
+        ProcessTime: { type: "string", description: "Tiempo estimado de preparación" },
+        emplatado: { type: "string", description: "Instrucciones de empaque, almacenamiento o presentación" },
+        autor: { type: "string", description: "Autor de la receta" },
+        revisor: { type: "string", description: "Revisor de la receta" },
+        procesos: {
+          type: "array",
+          items: { type: "string" },
+          description: "Lista secuencial de pasos de preparación (hasta 20 pasos)",
+        },
+        notas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Notas técnicas, tips o observaciones (hasta 10 notas)",
+        },
+        ingredientes: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["item_id", "cantidad", "unidades"],
+            properties: {
+              item_id: { type: "string", description: "UUID del insumo en ItemsAlmacen" },
+              cantidad: { type: "number" },
+              unidades: { type: "string" },
+              nombre: { type: "string" },
+            },
+          },
+          description: "Insumos de ItemsAlmacen (hasta 30)",
+        },
+        productos_internos: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["item_id", "cantidad", "unidades"],
+            properties: {
+              item_id: { type: "string", description: "UUID del producto en ProduccionInterna" },
+              cantidad: { type: "number" },
+              unidades: { type: "string" },
+              nombre: { type: "string" },
+            },
+          },
+          description: "Subrecetas / insumos de ProduccionInterna (hasta 20)",
+        },
+      },
+    },
+  },
+  {
+    name: "receta_produccion_actualizar",
+    description: "⚠️ Actualiza una receta existente en RecetasProduccion (ingredientes, productos internos, procesos, notas, rendimiento o costos). Guarda snapshot.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "UUID de la receta en RecetasProduccion" },
+        nombre: { type: "string" },
+        rendimiento: { type: "object" },
+        UNIDADES: { type: "string" },
+        costo: { type: "number" },
+        precioUnitario: { type: "number" },
+        ProcessTime: { type: "string" },
+        emplatado: { type: "string" },
+        autor: { type: "string" },
+        revisor: { type: "string" },
+        procesos: { type: "array", items: { type: "string" } },
+        notas: { type: "array", items: { type: "string" } },
+        ingredientes: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["item_id", "cantidad", "unidades"],
+            properties: {
+              item_id: { type: "string" },
+              cantidad: { type: "number" },
+              unidades: { type: "string" },
+              nombre: { type: "string" },
+            },
+          },
+        },
+        productos_internos: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["item_id", "cantidad", "unidades"],
+            properties: {
+              item_id: { type: "string" },
+              cantidad: { type: "number" },
+              unidades: { type: "string" },
+              nombre: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    name: "receta_produccion_eliminar",
+    description: "⚠️ Elimina una receta de producción interna (RecetasProduccion). Requiere confirmar: true.",
+    inputSchema: {
+      type: "object",
+      required: ["id", "confirmar"],
+      properties: {
+        id: { type: "string", description: "UUID de la receta en RecetasProduccion" },
+        confirmar: { type: "boolean" },
       },
     },
   },
@@ -837,6 +994,181 @@ export function createExtendedHandlers(supabase) {
       return rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q));
     },
     produccion_interna_registrar: async ({ campos } = {}) => insertRow(supabase, "ProduccionInterna", campos),
+    produccion_interna_actualizar: async ({ id, campos } = {}) =>
+      updateRow(supabase, "ProduccionInterna", "_id", id, campos),
+
+    recetas_produccion_listar: async ({ nombre, for_id, limit = 100 } = {}) => {
+      const filters = [];
+      if (nombre) filters.push({ op: "ilike", col: "legacyName", val: nombre });
+      if (for_id) filters.push({ op: "eq", col: "forId", val: for_id });
+      return listTable(supabase, "RecetasProduccion", {
+        limit: Math.min(Number(limit) || 100, 500),
+        orderBy: "legacyName",
+        ascending: true,
+        filters,
+      });
+    },
+
+    receta_produccion_obtener: async ({ id, for_id } = {}) => {
+      let q = supabase().from("RecetasProduccion").select("*");
+      if (id) q = q.eq("_id", id);
+      else if (for_id) q = q.eq("forId", for_id);
+      else throw new Error("Se requiere id o for_id para consultar la receta de producción");
+      const { data, error } = await q.single();
+      if (error) throw new Error(`Receta de producción no encontrada: ${error.message}`);
+      return data;
+    },
+
+    receta_produccion_crear: async (args = {}) => {
+      if (!args.nombre || !args.forId) {
+        throw new Error("Campos obligatorios: nombre (legacyName) y forId (UUID en ProduccionInterna)");
+      }
+      const payload = {
+        _id: randomUUID(),
+        legacyName: args.nombre,
+        forId: args.forId,
+        costo: args.costo !== undefined ? String(args.costo) : "0",
+        precioUnitario: args.precioUnitario !== undefined ? String(args.precioUnitario) : null,
+        UNIDADES: args.UNIDADES || (args.rendimiento && typeof args.rendimiento === "object" ? args.rendimiento.unidades || "" : ""),
+        ProcessTime: args.ProcessTime !== undefined ? String(args.ProcessTime) : null,
+        emplatado: args.emplatado || null,
+        autor: args.autor || "Equipo Proyecto Café",
+        revisor: args.revisor || "Pendiente",
+        actualizacion: getBogotaDateISO(),
+        rendimiento: args.rendimiento
+          ? (typeof args.rendimiento === "string" ? args.rendimiento : JSON.stringify(args.rendimiento))
+          : JSON.stringify({ porcion: "", cantidad: "", unidades: "" }),
+      };
+
+      if (Array.isArray(args.procesos)) {
+        args.procesos.slice(0, 20).forEach((p, idx) => {
+          payload[`proces${idx + 1}`] = p;
+        });
+      }
+      if (Array.isArray(args.notas)) {
+        args.notas.slice(0, 10).forEach((n, idx) => {
+          payload[`nota${idx + 1}`] = n;
+        });
+      }
+      if (Array.isArray(args.ingredientes)) {
+        args.ingredientes.slice(0, 30).forEach((ing, idx) => {
+          payload[`item${idx + 1}_Id`] = ing.item_id;
+          payload[`item${idx + 1}_Cuantity_Units`] = JSON.stringify({
+            metric: { cuantity: ing.cantidad, units: ing.unidades },
+            ...(ing.nombre ? { legacyName: ing.nombre } : {}),
+          });
+        });
+      }
+      if (Array.isArray(args.productos_internos)) {
+        args.productos_internos.slice(0, 20).forEach((pi, idx) => {
+          payload[`producto_interno${idx + 1}_Id`] = pi.item_id;
+          payload[`producto_interno${idx + 1}_Cuantity_Units`] = JSON.stringify({
+            metric: { cuantity: pi.cantidad, units: pi.unidades },
+            ...(pi.nombre ? { legacyName: pi.nombre } : {}),
+          });
+        });
+      }
+
+      const { data, error } = await supabase()
+        .from("RecetasProduccion")
+        .insert([payload])
+        .select()
+        .single();
+      if (error) throw new Error(`Error al crear receta de producción: ${error.message}`);
+
+      // Enlazar automáticamente en ProduccionInterna.Receta
+      const { error: linkErr } = await supabase()
+        .from("ProduccionInterna")
+        .update({ Receta: data._id })
+        .eq("_id", args.forId);
+
+      return {
+        mensaje: "Receta de producción creada exitosamente",
+        vinculada_en_produccion_interna: !linkErr,
+        ...(linkErr ? { advertencia_vinculo: linkErr.message } : {}),
+        receta: data,
+      };
+    },
+
+    receta_produccion_actualizar: async ({ id, ...campos } = {}) => {
+      if (!id) throw new Error("Se requiere el ID de la receta en RecetasProduccion");
+      const { data: existing, error: fetchErr } = await supabase()
+        .from("RecetasProduccion")
+        .select("*")
+        .eq("_id", id)
+        .single();
+      if (fetchErr || !existing) throw new Error(`No se encontró la receta de producción con ID: ${id}`);
+
+      const payload = { actualizacion: getBogotaDateISO() };
+      if (campos.nombre !== undefined) payload.legacyName = campos.nombre;
+      if (campos.costo !== undefined) payload.costo = String(campos.costo);
+      if (campos.precioUnitario !== undefined) payload.precioUnitario = String(campos.precioUnitario);
+      if (campos.UNIDADES !== undefined) payload.UNIDADES = campos.UNIDADES;
+      if (campos.ProcessTime !== undefined) payload.ProcessTime = String(campos.ProcessTime);
+      if (campos.emplatado !== undefined) payload.emplatado = campos.emplatado;
+      if (campos.autor !== undefined) payload.autor = campos.autor;
+      if (campos.revisor !== undefined) payload.revisor = campos.revisor;
+      if (campos.rendimiento !== undefined) {
+        payload.rendimiento = typeof campos.rendimiento === "string"
+          ? campos.rendimiento
+          : JSON.stringify(campos.rendimiento);
+      }
+
+      if (Array.isArray(campos.procesos)) {
+        for (let i = 1; i <= 20; i++) payload[`proces${i}`] = null;
+        campos.procesos.slice(0, 20).forEach((p, idx) => {
+          payload[`proces${idx + 1}`] = p;
+        });
+      }
+      if (Array.isArray(campos.notas)) {
+        for (let i = 1; i <= 10; i++) payload[`nota${i}`] = null;
+        campos.notas.slice(0, 10).forEach((n, idx) => {
+          payload[`nota${idx + 1}`] = n;
+        });
+      }
+      if (Array.isArray(campos.ingredientes)) {
+        for (let i = 1; i <= 30; i++) {
+          payload[`item${i}_Id`] = null;
+          payload[`item${i}_Cuantity_Units`] = null;
+        }
+        campos.ingredientes.slice(0, 30).forEach((ing, idx) => {
+          payload[`item${idx + 1}_Id`] = ing.item_id;
+          payload[`item${idx + 1}_Cuantity_Units`] = JSON.stringify({
+            metric: { cuantity: ing.cantidad, units: ing.unidades },
+            ...(ing.nombre ? { legacyName: ing.nombre } : {}),
+          });
+        });
+      }
+      if (Array.isArray(campos.productos_internos)) {
+        for (let i = 1; i <= 20; i++) {
+          payload[`producto_interno${i}_Id`] = null;
+          payload[`producto_interno${i}_Cuantity_Units`] = null;
+        }
+        campos.productos_internos.slice(0, 20).forEach((pi, idx) => {
+          payload[`producto_interno${idx + 1}_Id`] = pi.item_id;
+          payload[`producto_interno${idx + 1}_Cuantity_Units`] = JSON.stringify({
+            metric: { cuantity: pi.cantidad, units: pi.unidades },
+            ...(pi.nombre ? { legacyName: pi.nombre } : {}),
+          });
+        });
+      }
+
+      const { data: updated, error: updateErr } = await supabase()
+        .from("RecetasProduccion")
+        .update(payload)
+        .eq("_id", id)
+        .select()
+        .single();
+      if (updateErr) throw new Error(`Error al actualizar receta de producción: ${updateErr.message}`);
+      return {
+        mensaje: `Receta de producción "${updated.legacyName}" actualizada exitosamente`,
+        receta_actualizada: updated,
+        snapshot_previo: existing,
+      };
+    },
+
+    receta_produccion_eliminar: async ({ id, confirmar } = {}) =>
+      deleteRow(supabase, "RecetasProduccion", "_id", id, confirmar, "receta de producción"),
     planta_layout_obtener: async () => {
       const { data, error } = await supabase()
         .from("planta_layout")

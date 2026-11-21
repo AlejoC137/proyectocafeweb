@@ -445,12 +445,17 @@ const TOOLS = [
   // ── 3. RECETAS / ESCANDALLOS (CRUD) ─────────
   {
     name: "get_recetas",
-    description: "Consulta las recetas y escandallos con ingredientes, rendimientos y procedimientos.",
+    description: "Consulta las recetas y escandallos con ingredientes, rendimientos y procedimientos (tabla Recetas o RecetasProduccion).",
     inputSchema: {
       type: "object",
       properties: {
         nombre: { type: "string", description: "Buscar receta por nombre (legacyName)" },
-        for_id: { type: "string", description: "Buscar receta vinculada a un producto de Menú (_id)" },
+        for_id: { type: "string", description: "Buscar receta vinculada a un producto de Menú o ProduccionInterna (_id)" },
+        tipo: {
+          type: "string",
+          enum: ["menu", "produccion"],
+          description: "Tabla destino: 'menu' (Recetas, default) o 'produccion' (RecetasProduccion)",
+        },
       },
     },
   },
@@ -461,19 +466,29 @@ const TOOLS = [
       type: "object",
       properties: {
         id: { type: "string", description: "UUID de la receta" },
-        for_id: { type: "string", description: "UUID del producto en Menu" },
+        for_id: { type: "string", description: "UUID del producto en Menu o ProduccionInterna" },
+        tipo: {
+          type: "string",
+          enum: ["menu", "produccion"],
+          description: "Tabla destino: 'menu' (Recetas, default) o 'produccion' (RecetasProduccion)",
+        },
       },
     },
   },
   {
     name: "receta_crear",
-    description: "Crea una nueva receta o escandallo vinculada a un producto del menú o a una producción interna.",
+    description: "Crea una nueva receta o escandallo vinculada a un producto del menú (Recetas) o a una producción interna (RecetasProduccion, usando tipo: 'produccion').",
     inputSchema: {
       type: "object",
       required: ["nombre", "forId"],
       properties: {
         nombre: { type: "string", description: "Nombre de la receta (legacyName)" },
         forId: { type: "string", description: "UUID del producto en Menu o ProduccionInterna al que pertenece" },
+        tipo: {
+          type: "string",
+          enum: ["menu", "produccion"],
+          description: "Tabla destino: 'menu' (Recetas, default) o 'produccion' (RecetasProduccion)",
+        },
         rendimiento: {
           type: "object",
           description: "Objeto con rendimiento: { porcion: 1, cantidad: 350, unidades: 'ml' }",
@@ -484,7 +499,12 @@ const TOOLS = [
         procesos: {
           type: "array",
           items: { type: "string" },
-          description: "Lista secuencial de pasos de preparación (hasta 10 pasos)",
+          description: "Lista secuencial de pasos de preparación (hasta 20 pasos)",
+        },
+        notas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Notas técnicas (hasta 10 notas)",
         },
         ingredientes: {
           type: "array",
@@ -498,24 +518,46 @@ const TOOLS = [
               nombre: { type: "string" },
             },
           },
-          description: "Lista de insumos necesarios con cantidades",
+          description: "Lista de insumos de ItemsAlmacen necesarios con cantidades (hasta 30)",
+        },
+        productos_internos: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["item_id", "cantidad", "unidades"],
+            properties: {
+              item_id: { type: "string", description: "UUID del insumo en ProduccionInterna" },
+              cantidad: { type: "number" },
+              unidades: { type: "string" },
+              nombre: { type: "string" },
+            },
+          },
+          description: "Lista de subrecetas de ProduccionInterna necesarias con cantidades (hasta 20)",
         },
       },
     },
   },
   {
     name: "receta_actualizar",
-    description: "⚠️ Modifica los ingredientes, pasos o rendimiento de una receta existente. Guarda snapshot.",
+    description: "⚠️ Modifica los ingredientes, pasos o rendimiento de una receta existente (Recetas o RecetasProduccion). Guarda snapshot.",
     inputSchema: {
       type: "object",
       required: ["id"],
       properties: {
         id: { type: "string", description: "UUID de la receta" },
+        tipo: {
+          type: "string",
+          enum: ["menu", "produccion"],
+          description: "Tabla destino: 'menu' (Recetas, default) o 'produccion' (RecetasProduccion)",
+        },
         nombre: { type: "string" },
         costo: { type: "number" },
         emplatado: { type: "string" },
         rendimiento: { type: "object" },
         procesos: { type: "array", items: { type: "string" } },
+        notas: { type: "array", items: { type: "string" } },
+        ingredientes: { type: "array", items: { type: "object" } },
+        productos_internos: { type: "array", items: { type: "object" } },
       },
     },
   },
@@ -1145,13 +1187,18 @@ async function inventarioEliminar({ id, confirmar } = {}) {
 }
 
 // ── 3. RECETAS ───────────────────────────────
-async function getRecetas({ nombre, for_id } = {}) {
-  let q = supabase().from("Recetas").select("*");
+function resolveRecetaTable(tipo) {
+  return tipo === "produccion" ? "RecetasProduccion" : "Recetas";
+}
+
+async function getRecetas({ nombre, for_id, tipo } = {}) {
+  const table = resolveRecetaTable(tipo);
+  let q = supabase().from(table).select("*");
   if (nombre) q = q.ilike("legacyName", `%${nombre}%`);
   if (for_id) q = q.eq("forId", for_id);
 
   const { data, error } = await q.order("legacyName", { ascending: true });
-  if (error) throw new Error(`Error recetas: ${error.message}`);
+  if (error) throw new Error(`Error recetas (${table}): ${error.message}`);
   return (data || []).map((item) => ({
     _id: item._id,
     nombre: item.legacyName,
@@ -1164,14 +1211,15 @@ async function getRecetas({ nombre, for_id } = {}) {
   }));
 }
 
-async function recetaObtener({ id, for_id } = {}) {
-  let q = supabase().from("Recetas").select("*");
+async function recetaObtener({ id, for_id, tipo } = {}) {
+  const table = resolveRecetaTable(tipo);
+  let q = supabase().from(table).select("*");
   if (id) q = q.eq("_id", id);
   else if (for_id) q = q.eq("forId", for_id);
   else throw new Error("Se requiere id o for_id para consultar la receta");
 
   const { data, error } = await q.single();
-  if (error) throw new Error(`Receta no encontrada: ${error.message}`);
+  if (error) throw new Error(`Receta no encontrada en ${table}: ${error.message}`);
   return data;
 }
 
@@ -1180,27 +1228,41 @@ async function recetaCrear(args) {
     throw new Error("Campos obligatorios: nombre (legacyName) y forId (producto vinculado)");
   }
 
+  const isProduccion = args.tipo === "produccion";
+  const table = resolveRecetaTable(args.tipo);
+
   const payload = {
     _id: randomUUID(),
     legacyName: args.nombre,
     forId: args.forId,
-    costo: args.costo !== undefined ? Number(args.costo) : null,
+    costo: args.costo !== undefined ? (isProduccion ? String(args.costo) : Number(args.costo)) : null,
     emplatado: args.emplatado || "",
     autor: args.autor || "Equipo Proyecto Café",
     actualizacion: getFechaActual(),
     rendimiento: args.rendimiento ? (typeof args.rendimiento === "string" ? args.rendimiento : JSON.stringify(args.rendimiento)) : null,
   };
 
-  // Mapear pasos de preparación proces1..proces10
+  if (isProduccion && args.rendimiento && typeof args.rendimiento === "object" && args.rendimiento.unidades) {
+    payload.UNIDADES = args.rendimiento.unidades;
+  }
+
+  // Mapear pasos de preparación proces1..proces20
   if (Array.isArray(args.procesos)) {
-    args.procesos.slice(0, 10).forEach((p, idx) => {
+    args.procesos.slice(0, 20).forEach((p, idx) => {
       payload[`proces${idx + 1}`] = p;
     });
   }
 
-  // Mapear ingredientes
+  // Mapear notas nota1..nota10
+  if (Array.isArray(args.notas)) {
+    args.notas.slice(0, 10).forEach((n, idx) => {
+      payload[`nota${idx + 1}`] = n;
+    });
+  }
+
+  // Mapear ingredientes (ItemsAlmacen) item1..item30
   if (Array.isArray(args.ingredientes)) {
-    args.ingredientes.slice(0, 20).forEach((ing, idx) => {
+    args.ingredientes.slice(0, 30).forEach((ing, idx) => {
       payload[`item${idx + 1}_Id`] = ing.item_id;
       payload[`item${idx + 1}_Cuantity_Units`] = JSON.stringify({
         metric: { cuantity: ing.cantidad, units: ing.unidades },
@@ -1209,41 +1271,86 @@ async function recetaCrear(args) {
     });
   }
 
-  const { data, error } = await supabase().from("Recetas").insert([payload]).select().single();
-  if (error) throw new Error(`Error al crear receta: ${error.message}`);
-  return { mensaje: "Receta creada exitosamente", receta: data };
+  // Mapear subrecetas (ProduccionInterna) producto_interno1..producto_interno20
+  if (Array.isArray(args.productos_internos)) {
+    args.productos_internos.slice(0, 20).forEach((pi, idx) => {
+      payload[`producto_interno${idx + 1}_Id`] = pi.item_id;
+      payload[`producto_interno${idx + 1}_Cuantity_Units`] = JSON.stringify({
+        metric: { cuantity: pi.cantidad, units: pi.unidades },
+        legacyName: pi.nombre || "",
+      });
+    });
+  }
+
+  const { data, error } = await supabase().from(table).insert([payload]).select().single();
+  if (error) throw new Error(`Error al crear receta en ${table}: ${error.message}`);
+
+  // Enlazar automáticamente en la tabla padre (ProduccionInterna o Menu)
+  const parentTable = isProduccion ? "ProduccionInterna" : "Menu";
+  await supabase().from(parentTable).update({ Receta: data._id }).eq("_id", args.forId);
+
+  return { mensaje: `Receta creada exitosamente en ${table}`, receta: data };
 }
 
-async function recetaActualizar({ id, ...campos }) {
+async function recetaActualizar({ id, tipo, ...campos }) {
   if (!id) throw new Error("Se requiere el ID de la receta");
 
-  const { data: existing, error: fetchErr } = await supabase().from("Recetas").select("*").eq("_id", id).single();
-  if (fetchErr || !existing) throw new Error(`No se encontró la receta con ID: ${id}`);
+  const isProduccion = tipo === "produccion";
+  const table = resolveRecetaTable(tipo);
+
+  const { data: existing, error: fetchErr } = await supabase().from(table).select("*").eq("_id", id).single();
+  if (fetchErr || !existing) throw new Error(`No se encontró la receta con ID: ${id} en ${table}`);
 
   const payload = { actualizacion: getFechaActual() };
   if (campos.nombre) payload.legacyName = campos.nombre;
-  if (campos.costo !== undefined) payload.costo = Number(campos.costo);
+  if (campos.costo !== undefined) payload.costo = isProduccion ? String(campos.costo) : Number(campos.costo);
   if (campos.emplatado !== undefined) payload.emplatado = campos.emplatado;
   if (campos.rendimiento !== undefined) {
     payload.rendimiento = typeof campos.rendimiento === "string" ? campos.rendimiento : JSON.stringify(campos.rendimiento);
   }
 
   if (Array.isArray(campos.procesos)) {
-    campos.procesos.slice(0, 10).forEach((p, idx) => {
+    campos.procesos.slice(0, 20).forEach((p, idx) => {
       payload[`proces${idx + 1}`] = p;
     });
   }
 
+  if (Array.isArray(campos.notas)) {
+    campos.notas.slice(0, 10).forEach((n, idx) => {
+      payload[`nota${idx + 1}`] = n;
+    });
+  }
+
+  if (Array.isArray(campos.ingredientes)) {
+    campos.ingredientes.slice(0, 30).forEach((ing, idx) => {
+      payload[`item${idx + 1}_Id`] = ing.item_id;
+      payload[`item${idx + 1}_Cuantity_Units`] = JSON.stringify({
+        metric: { cuantity: ing.cantidad, units: ing.unidades },
+        legacyName: ing.nombre || "",
+      });
+    });
+  }
+
+  if (Array.isArray(campos.productos_internos)) {
+    campos.productos_internos.slice(0, 20).forEach((pi, idx) => {
+      payload[`producto_interno${idx + 1}_Id`] = pi.item_id;
+      payload[`producto_interno${idx + 1}_Cuantity_Units`] = JSON.stringify({
+        metric: { cuantity: pi.cantidad, units: pi.unidades },
+        legacyName: pi.nombre || "",
+      });
+    });
+  }
+
   const { data: updated, error: updateErr } = await supabase()
-    .from("Recetas")
+    .from(table)
     .update(payload)
     .eq("_id", id)
     .select()
     .single();
 
-  if (updateErr) throw new Error(`Error al actualizar receta: ${updateErr.message}`);
+  if (updateErr) throw new Error(`Error al actualizar receta en ${table}: ${updateErr.message}`);
   return {
-    mensaje: `Receta "${updated.legacyName}" actualizada exitosamente`,
+    mensaje: `Receta "${updated.legacyName}" actualizada exitosamente en ${table}`,
     receta_actualizada: updated,
     snapshot_previo: existing,
   };

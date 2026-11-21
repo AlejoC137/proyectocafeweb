@@ -140,6 +140,7 @@ const MENU_SECTIONS = [
     items: [
       { emoji: "💰", label: { [ESP]: "Venta y Compra", [ENG]: "Sales & Purchases" }, path: "/VentaCompra", subLabel: { [ESP]: "Panel transaccional diario", [ENG]: "Daily transactions" } },
       { emoji: "🌅", label: { [ESP]: "Resumen del Día", [ENG]: "Daily Summary" }, path: "/DiaResumen", subLabel: { [ESP]: "Arqueo y balance de caja", [ENG]: "Daily cash closing" } },
+      { emoji: "📅", label: { [ESP]: "Resumen de la Semana", [ENG]: "Weekly Summary" }, path: "/SemanaResumen", subLabel: { [ESP]: "Balance semanal consolidado", [ENG]: "Weekly financial balance" } },
       { emoji: "📆", label: { [ESP]: "Resumen del Mes", [ENG]: "Monthly Summary" }, path: "/MesResumen", subLabel: { [ESP]: "Balance mensual consolidado", [ENG]: "Monthly financial balance" } },
       { emoji: "💸", label: { [ESP]: "Control de Gastos", [ENG]: "Expenses Control" }, path: "/Gastos", subLabel: { [ESP]: "Egresos y facturas varias", [ENG]: "Operational expenses" } },
       { emoji: "🛒", label: { [ESP]: "Registro de Compras", [ENG]: "Supply Purchases" }, path: "/Compras", subLabel: { [ESP]: "Facturas de materia prima", [ENG]: "Raw materials buying" } },

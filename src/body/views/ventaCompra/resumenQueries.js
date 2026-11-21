@@ -226,6 +226,78 @@ export async function fetchConsumoStaffByMonth(year, monthIndex) {
 }
 
 /**
+ * Enumera los días { year, month (1..12), day, iso } entre startIso y endIso (YYYY-MM-DD, inclusive).
+ */
+export function enumerateDateRangeDays(startIso, endIso) {
+  if (!startIso || !endIso) return [];
+  const [sy, sm, sd] = startIso.split("-").map(Number);
+  const [ey, em, ed] = endIso.split("-").map(Number);
+  if ([sy, sm, sd, ey, em, ed].some(Number.isNaN)) return [];
+
+  const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+  const end = new Date(ey, em - 1, ed, 12, 0, 0);
+  const days = [];
+
+  while (cur <= end && days.length <= 62) {
+    const year = cur.getFullYear();
+    const month = cur.getMonth() + 1;
+    const day = cur.getDate();
+    days.push({
+      year,
+      month,
+      day,
+      iso: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+    });
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
+}
+
+function buildRangeDateOrFilter(days) {
+  return days.map((d) => buildDayDateOrFilter(d.year, d.month, d.day)).join(",");
+}
+
+function matchesAnyDay(dateStr, days) {
+  return days.some((d) => matchesDay(dateStr, d.year, d.month, d.day));
+}
+
+export async function fetchVentasByRange(startIso, endIso) {
+  const days = enumerateDateRangeDays(startIso, endIso);
+  if (days.length === 0) return [];
+  const orFilter = buildRangeDateOrFilter(days);
+  const rows = await fetchFilteredPaginated({
+    table: "Ventas",
+    columns: VENTAS_COLUMNS,
+    orFilter,
+  });
+  return rows.filter((v) => matchesAnyDay(v.Date, days));
+}
+
+export async function fetchComprasByRange(startIso, endIso) {
+  const days = enumerateDateRangeDays(startIso, endIso);
+  if (days.length === 0) return [];
+  const orFilter = buildRangeDateOrFilter(days);
+  const rows = await fetchFilteredPaginated({
+    table: "Compras",
+    columns: COMPRAS_COLUMNS,
+    orFilter,
+  });
+  return rows.filter((c) => matchesAnyDay(c.Date, days));
+}
+
+export async function fetchConsumoStaffByRange(startIso, endIso) {
+  const days = enumerateDateRangeDays(startIso, endIso);
+  if (days.length === 0) return [];
+  const orFilter = buildRangeDateOrFilter(days);
+  const rows = await fetchFilteredPaginated({
+    table: "ConsumoStaff",
+    columns: CONSUMO_STAFF_COLUMNS,
+    orFilter,
+  });
+  return rows.filter((c) => matchesAnyDay(c.Date, days));
+}
+
+/**
  * Obtiene únicamente la columna `Date` de Ventas (paginado) para saber qué años y meses
  * tienen ventas registradas, sin descargar el resto de columnas pesadas.
  */

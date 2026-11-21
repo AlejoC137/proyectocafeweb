@@ -213,6 +213,7 @@ function StaffPortal() {
       { label: "Nómina", icon: BarChart3, onClick: handleGoToNomina },
       { label: "Pagos", icon: DollarSign, onClick: () => navigate("/PagosProveedores") },
       { label: "Día", icon: CalendarDays, onClick: () => navigate("/DiaResumen") },
+      { label: "Semana", icon: CalendarDays, onClick: () => navigate("/SemanaResumen") },
       { label: "Financiero", icon: Landmark, onClick: () => navigate("/productosFinanciero") },
       { label: "Rappi", icon: ShoppingCart, onClick: () => navigate("/Rappi") },
       { label: "Almacén", icon: Store, onClick: () => navigate("/GestionAlmacen") },

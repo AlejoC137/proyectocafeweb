@@ -27,6 +27,7 @@ const Compras = lazy(() => import('./body/views/ventaCompra/Compras'));
 const MenuPrintManager = lazy(() => import('./body/components/Menu/MenuPrintManager'));
 const MenuHead = lazy(() => import('./body/components/Menu/MenuHead'));
 const DiaResumen = lazy(() => import('./body/views/ventaCompra/DiaResumen'));
+const SemanaResumen = lazy(() => import('./body/views/ventaCompra/SemanaResumen'));
 const MesResumen = lazy(() => import('./body/views/ventaCompra/MesResumen'));
 const AccionesRapidas = lazy(() => import('./body/views/actualizarPrecioUnitario/AccionesRapidas'));
 const ComandaExcelView = lazy(() => import('./body/views/actividades/WorkE/ComandaExcelView'));
@@ -208,6 +209,8 @@ function App() {
                   <Route path="/Gastos" element={<Gastos />} />
                   <Route path="/DiaResumen" element={<DiaResumen />} />
                   <Route path="/DiaResumen/:date" element={<DiaResumen />} />
+                  <Route path="/SemanaResumen" element={<SemanaResumen />} />
+                  <Route path="/SemanaResumen/:date" element={<SemanaResumen />} />
                   <Route path="/MesResumen" element={<MesResumen />} />
                   <Route path="/AccionesRapidas" element={<AccionesRapidas />} />
                   <Route path="/bolsillos-financieros" element={<BolsillosFinancieros />} />

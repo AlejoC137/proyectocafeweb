@@ -7,6 +7,7 @@ import {
   PRODUCCION,
   RECETAS_MENU,
   RECETAS_PRODUCCION,
+  STAFF,
 } from "../../../redux/actions-types";
 import DiaResumentStats from "./DiaResumentStats";
 import DiaResumenBolsillos from "./DiaResumenBolsillos";
@@ -61,6 +62,7 @@ function DiaResumen() {
   const allProduccion = useSelector((state) => state.allProduccion || []);
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
   const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
+  const allStaff = useSelector((state) => state.allStaff || []);
 
   // Cargar catálogos faltantes de forma diferida solo al abrir la pestaña Bolsillos (con reintento automático)
   useEffect(() => {
@@ -79,6 +81,7 @@ function DiaResumen() {
           PRODUCCION,
           RECETAS_MENU,
           RECETAS_PRODUCCION,
+          STAFF,
         ]);
         if (!cancelled) {
           setLoadingBolsillos(false);
@@ -510,6 +513,8 @@ function DiaResumen() {
             <DiaResumenBolsillos
               ventas={ventas}
               totalIngreso={totalIngreso}
+              targetDate={inputDate}
+              allStaff={allStaff}
               allMenu={allMenu}
               allRecetasMenu={allRecetasMenu}
               allRecetasProduccion={allRecetasProduccion}

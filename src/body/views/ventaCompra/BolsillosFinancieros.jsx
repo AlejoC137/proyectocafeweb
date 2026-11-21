@@ -197,7 +197,7 @@ export default function BolsillosFinancieros() {
     );
   }, [combinedBajas, periodType, targetDate, targetMonth, targetYear, customStartDate, customEndDate]);
 
-  // Cálculo del motor de bolsillos y re-stock (Ventas + Consumo Staff + Bajas)
+  // Cálculo del motor de bolsillos y re-stock (Ventas + Consumo Staff + Bajas + Nómina)
   const financialData = useMemo(() => {
     return calculateFinancialPockets({
       ventas: ventasDelPeriodo,
@@ -208,9 +208,17 @@ export default function BolsillosFinancieros() {
       allRecetasMenu,
       allRecetasProduccion,
       allItems,
-      allProduccion
+      allProduccion,
+      periodParams: {
+        periodType,
+        targetDate,
+        targetMonth,
+        targetYear,
+        customStartDate,
+        customEndDate
+      }
     });
-  }, [ventasDelPeriodo, consumosDelPeriodo, bajasDelPeriodo, allStaff, allMenu, allRecetasMenu, allRecetasProduccion, allItems, allProduccion]);
+  }, [ventasDelPeriodo, consumosDelPeriodo, bajasDelPeriodo, allStaff, allMenu, allRecetasMenu, allRecetasProduccion, allItems, allProduccion, periodType, targetDate, targetMonth, targetYear, customStartDate, customEndDate]);
 
   // Manejadores de Fecha Rápida
   const handleSetToday = () => {
@@ -260,6 +268,9 @@ export default function BolsillosFinancieros() {
       totalRestockVentas,
       totalConsumoInterno,
       totalBajas,
+      totalNomina,
+      nomina,
+      nominaPctGlobal,
       totalTip,
       gananciaLibre,
       margenLibrePct,
@@ -286,7 +297,8 @@ export default function BolsillosFinancieros() {
       text += `      (Ventas: $${p.totalRestockVentas.toLocaleString('es-CO')} | Consumo: $${p.totalConsumoInterno.toLocaleString('es-CO')} | Bajas: $${p.totalBajas.toLocaleString('es-CO')})\n`;
     });
 
-    text += `\n🤝 *Bolsillo Propinas (Staff):* $${totalTip.toLocaleString('es-CO')}\n`;
+    text += `\n👥 *Bolsillo Nómina (Base + 10% Seg. Soc.):* $${totalNomina.toLocaleString('es-CO')} (${nominaPctGlobal.toFixed(1)}% | ${nomina?.colaboradoresCount || 0} colab., ${nomina?.totalHoras || 0}h)\n`;
+    text += `🤝 *Bolsillo Propinas (Staff):* $${totalTip.toLocaleString('es-CO')}\n`;
     text += `📈 *Utilidad Operativa Libre:* $${gananciaLibre.toLocaleString('es-CO')} (${margenLibrePct.toFixed(1)}%)\n\n`;
 
     text += `💳 *MEDIOS DE PAGO:*\n`;
@@ -586,7 +598,7 @@ export default function BolsillosFinancieros() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
         {/* CARDS DE RESUMEN EJECUTIVO / BOLSILLOS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           
           {/* Card 1: Ventas Totales */}
           <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
@@ -629,7 +641,33 @@ export default function BolsillosFinancieros() {
             </div>
           </div>
 
-          {/* Card 3: Bolsillo Propinas */}
+          {/* Card 3: Bolsillo Nómina */}
+          <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-5 border-2 border-blue-300 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-blue-900 flex items-center gap-1">
+                  👥 Bolsillo Nómina
+                </span>
+                <span className="text-[11px] text-blue-700">Base + 10% Seg. Social</span>
+              </div>
+              <span className="p-2 bg-blue-600 text-white rounded-xl shadow-sm">
+                <Users size={18} />
+              </span>
+            </div>
+            <div className="text-2xl font-black font-SpaceGrotesk text-blue-950">
+              ${financialData.totalNomina.toLocaleString('es-CO')}
+            </div>
+            <div className="flex items-center justify-between text-xs text-blue-800 mt-2 pt-2 border-t border-blue-200 font-medium">
+              <span>
+                {financialData.nomina?.colaboradoresCount || 0} colab. · {financialData.nomina?.totalHoras || 0}h
+              </span>
+              <span className="font-bold bg-blue-200/70 px-1.5 py-0.5 rounded text-blue-900">
+                {financialData.nominaPctGlobal.toFixed(1)}% de venta
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Bolsillo Propinas */}
           <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
             <div className="flex justify-between items-start mb-2">
               <div>
@@ -651,12 +689,12 @@ export default function BolsillosFinancieros() {
             </div>
           </div>
 
-          {/* Card 4: Utilidad Libre */}
+          {/* Card 5: Utilidad Libre */}
           <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
             <div className="flex justify-between items-start mb-2">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Utilidad Libre</span>
-                <span className="text-[11px] text-gray-400">Post Re-Stock y Propinas</span>
+                <span className="text-[11px] text-gray-400">Post Re-Stock, Nómina y Propinas</span>
               </div>
               <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
                 <TrendingUp size={18} />
@@ -723,7 +761,7 @@ export default function BolsillosFinancieros() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-bold text-gray-700 mb-2 gap-1">
               <span>Distribución Inteligente de Fondos</span>
               <span className="text-gray-400 font-normal">
-                Ventas = Re-Stock Ventas + Consumo Interno + Bajas + Propinas + Ganancia Libre
+                Ventas = Re-Stock Ventas + Consumo Interno + Bajas + Nómina + Propinas + Ganancia Libre
               </span>
             </div>
             <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
@@ -744,6 +782,12 @@ export default function BolsillosFinancieros() {
                 style={{ width: `${Math.min(100, Math.max(0, (financialData.totalBajas / financialData.totalIngresoVentas) * 100))}%` }}
                 className="bg-rose-500 hover:brightness-110 transition-all relative group cursor-pointer"
                 title={`Bajas y Mermas: $${financialData.totalBajas.toLocaleString('es-CO')}`}
+              />
+              {/* Nómina */}
+              <div
+                style={{ width: `${Math.min(100, Math.max(0, financialData.nominaPctGlobal))}%` }}
+                className="bg-blue-600 hover:brightness-110 transition-all relative group cursor-pointer"
+                title={`Nómina a Guardar: $${financialData.totalNomina.toLocaleString('es-CO')}`}
               />
               {/* Propinas */}
               <div
@@ -775,6 +819,12 @@ export default function BolsillosFinancieros() {
                 <div className="w-3 h-3 rounded-full bg-rose-500" />
                 <span className="text-gray-600">
                   <strong>Bajas/Mermas:</strong> ${financialData.totalBajas.toLocaleString('es-CO')}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-600" />
+                <span className="text-gray-600">
+                  <strong>Nómina:</strong> ${financialData.totalNomina.toLocaleString('es-CO')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -864,6 +914,21 @@ export default function BolsillosFinancieros() {
             Bajas & Mermas
             <span className="ml-1 bg-rose-100 text-rose-800 text-xs px-2 py-0.5 rounded-full font-sans">
               {financialData.bajasCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('nomina')}
+            className={`flex items-center gap-2 px-5 py-3 font-SpaceGrotesk font-bold text-sm border-b-2 transition-all whitespace-nowrap ${
+              activeTab === 'nomina'
+                ? 'border-primary-stitch text-primary-stitch bg-orange-50/50 rounded-t-xl'
+                : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-t-xl'
+            }`}
+          >
+            <Users size={16} />
+            Nómina a Guardar
+            <span className="ml-1 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-sans">
+              {financialData.nomina?.colaboradoresCount || 0}
             </span>
           </button>
 
@@ -1604,10 +1669,20 @@ export default function BolsillosFinancieros() {
                   </div>
                 </div>
 
+                <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 flex items-start gap-2.5">
+                  <CheckCircle2 size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-blue-900 block">2. Bolsillo de Nómina:</strong>
+                    <p className="text-blue-800 mt-0.5">
+                      Aparta <strong>${financialData.totalNomina.toLocaleString('es-CO')}</strong> para provisión de nómina del período ({financialData.nomina?.colaboradoresCount || 0} colaboradores, {financialData.nomina?.totalHoras || 0} h, incluye base + 10% seguridad social).
+                    </p>
+                  </div>
+                </div>
+
                 <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-start gap-2.5">
                   <CheckCircle2 size={16} className="text-purple-600 shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-purple-900 block">2. Bolsillo de Propinas:</strong>
+                    <strong className="text-purple-900 block">3. Bolsillo de Propinas:</strong>
                     <p className="text-purple-800 mt-0.5">
                       Aparta <strong>${financialData.totalTip.toLocaleString('es-CO')}</strong> para entregar o cuadrar con el staff según el esquema de turnos.
                     </p>
@@ -1617,15 +1692,115 @@ export default function BolsillosFinancieros() {
                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-start gap-2.5">
                   <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-emerald-900 block">3. Utilidad Operativa Disponible:</strong>
+                    <strong className="text-emerald-900 block">4. Utilidad Operativa Disponible:</strong>
                     <p className="text-emerald-800 mt-0.5">
-                      Quedan <strong>${financialData.gananciaLibre.toLocaleString('es-CO')}</strong> como margen libre para gastos fijos, nómina y utilidad neta del negocio.
+                      Quedan <strong>${financialData.gananciaLibre.toLocaleString('es-CO')}</strong> como margen libre para gastos fijos y utilidad neta del negocio.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* TAB: NÓMINA A GUARDAR */}
+        {activeTab === 'nomina' && (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold font-SpaceGrotesk text-gray-900 flex items-center gap-2">
+                  <Users className="text-blue-600" size={20} />
+                  Bolsillo de Nómina a Guardar
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Calculado exclusivamente a partir de los turnos registrados del período + 10% seguridad social.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Nómina</span>
+                  <span className="text-xl font-black font-SpaceGrotesk text-blue-900">
+                    ${financialData.totalNomina.toLocaleString('es-CO')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {!financialData.nomina?.detalle?.length ? (
+              <div className="p-10 text-center text-gray-500 text-sm">
+                No se encontraron turnos registrados para este período.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-bold">
+                    <tr>
+                      <th className="py-3 px-4 text-left">Colaborador</th>
+                      <th className="py-3 px-4 text-left">Turno / Origen</th>
+                      <th className="py-3 px-4 text-right">Horas</th>
+                      <th className="py-3 px-4 text-right">Tarifa / h</th>
+                      <th className="py-3 px-4 text-right">Base</th>
+                      <th className="py-3 px-4 text-right">Seg. Social (10%)</th>
+                      <th className="py-3 px-4 text-right">A Guardar</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {financialData.nomina.detalle.map((emp) => (
+                      <tr key={emp.id} className="hover:bg-blue-50/40">
+                        <td className="py-3 px-4">
+                          <div className="font-bold text-gray-900">{emp.nombre}</div>
+                          <div className="text-xs text-gray-500">{emp.cargo}</div>
+                        </td>
+                        <td className="py-3 px-4 text-xs text-gray-600">
+                          <div className="font-medium text-gray-800">{emp.horario || '—'}</div>
+                          <span
+                            className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              emp.turnoAbierto
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {emp.origen}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-700">{emp.horas} h</td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-600">
+                          ${emp.rate.toLocaleString('es-CO')}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-700">
+                          ${emp.pagoBase.toLocaleString('es-CO')}
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono text-gray-600">
+                          ${emp.seguridadSocial.toLocaleString('es-CO')}
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold font-mono text-blue-900">
+                          ${emp.totalNomina.toLocaleString('es-CO')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-blue-50 font-bold text-blue-950 border-t border-blue-200">
+                    <tr>
+                      <td colSpan={2} className="py-3 px-4 text-right">
+                        Total Nómina del Período:
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono">{financialData.nomina.totalHoras} h</td>
+                      <td className="py-3 px-4" />
+                      <td className="py-3 px-4 text-right font-mono">
+                        ${financialData.nomina.totalPagoBase.toLocaleString('es-CO')}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono">
+                        ${financialData.nomina.totalSeguridadSocial.toLocaleString('es-CO')}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono">
+                        ${financialData.totalNomina.toLocaleString('es-CO')}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

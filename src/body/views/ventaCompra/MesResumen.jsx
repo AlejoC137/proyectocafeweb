@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
-import { ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION } from "../../../redux/actions-types";
+import { ITEMS, MENU, RECETAS_MENU, PRODUCCION, RECETAS_PRODUCCION, STAFF } from "../../../redux/actions-types";
 import { trimRecepie } from "../../../redux/actions";
 import { fetchAndProcessSales } from "./slicer";
 import {
@@ -12,12 +12,15 @@ import {
 
 import ProductosVendidosRentabilidad from "./ProductosVendidosRentabilidad";
 import MesResumenStats from "./MesResumenStats";
+import DiaResumenBolsillos from "./DiaResumenBolsillos";
+import { calculateFinancialPockets } from "./bolsillos/pocketEngine";
 
 function MesResumen() {
   const dispatch = useDispatch();
   const store = useStore();
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [activeTab, setActiveTab] = useState("resumen"); // "resumen" | "bolsillos"
   const [reloadTick, setReloadTick] = useState(0);
   const [ventas, setVentas] = useState([]);
   const [comprasMes, setComprasMes] = useState([]);
@@ -30,6 +33,7 @@ function MesResumen() {
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
   const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
   const allProduccion = useSelector((state) => state.allProduccion || []);
+  const allStaff = useSelector((state) => state.allStaff || []);
 
   const { selectedMonth, selectedYear } = useMemo(() => {
     const selectedDate = new Date(hoy);
@@ -59,6 +63,7 @@ function MesResumen() {
             PRODUCCION,
             RECETAS_MENU,
             RECETAS_PRODUCCION,
+            STAFF,
           ]),
         ]);
 
@@ -291,6 +296,24 @@ function MesResumen() {
 
 
 
+  const bolsillosMesResumen = useMemo(() => {
+    return calculateFinancialPockets({
+      ventas,
+      consumoStaff: consumoStaffMes,
+      allStaff,
+      allMenu,
+      allRecetasMenu,
+      allRecetasProduccion,
+      allItems,
+      allProduccion,
+      periodParams: {
+        periodType: "month",
+        targetMonth: selectedMonth,
+        targetYear: selectedYear,
+      },
+    });
+  }, [ventas, consumoStaffMes, allStaff, allMenu, allRecetasMenu, allRecetasProduccion, allItems, allProduccion, selectedMonth, selectedYear]);
+
   const handleDateChange = (e) => {
     setHoy(e.target.value);
   };
@@ -343,60 +366,119 @@ function MesResumen() {
         totalCompras={datosCalculadosDelMes.totalCompras}
         cantidadDeDias={ventas}
         totalConsumoStaff={datosCalculadosDelMes.totalConsumoStaff}
+        totalNomina={bolsillosMesResumen.totalNomina}
+        totalBolsillos={bolsillosMesResumen.totalAGuardarGlobal}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="p-6 bg-white rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Detalles de Ventas del Mes</h3>
-          <div className="overflow-x-auto max-h-96">
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Total Ingreso</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Pagado</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Fecha y Hora</th>
-                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Método de Pago</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ventas.map((venta, index) => (
-                  <tr key={venta._id || venta.id || index} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
-                      {(Number(venta.Total_Ingreso) || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${venta.Pagado ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
-                        {venta.Pagado ? "Sí" : "No"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {new Date(venta.Date).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
-                    </td>
-                    <td className="py-3 px-4 border-b text-sm text-gray-700">
-                      {(() => {
-                        if (!venta.Pago_Info) return 'N/A';
-                        try {
-                          const parsed = typeof venta.Pago_Info === 'string' ? JSON.parse(venta.Pago_Info) : venta.Pago_Info;
-                          return parsed?.metodo || 'N/A';
-                        } catch {
-                          return 'N/A';
-                        }
-                      })()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Pestañas del Resumen del Mes */}
+      <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="flex flex-wrap border-b border-gray-200 bg-gray-50 px-4 pt-3 gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("resumen")}
+            className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === "resumen"
+                ? "border-blue-600 text-blue-700 bg-white"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <span>Ventas y Rentabilidad</span>
+            <span className="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
+              {ventas.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("bolsillos")}
+            className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === "bolsillos"
+                ? "border-amber-600 text-amber-800 bg-white"
+                : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <span>💰 Bolsillos del Mes</span>
+          </button>
         </div>
 
-        <div className="h-full">
-          <ProductosVendidosRentabilidad
-            productos={productosVendidosConReceta}
-            ventas={ventas}
-            targetMonth={selectedMonth}
-            targetYear={selectedYear}
-          />
+        <div className="p-6">
+          {activeTab === "resumen" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-white rounded-lg border border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Detalles de Ventas del Mes</h3>
+                <div className="overflow-x-auto max-h-96">
+                  <table className="min-w-full border-collapse border border-gray-200">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Total Ingreso</th>
+                        <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Pagado</th>
+                        <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Fecha y Hora</th>
+                        <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Método de Pago</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ventas.map((venta, index) => (
+                        <tr key={venta._id || venta.id || index} className="hover:bg-gray-50 transition-colors">
+                          <td className="py-3 px-4 border-b text-sm text-green-600 font-bold">
+                            {(Number(venta.Total_Ingreso) || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}
+                          </td>
+                          <td className="py-3 px-4 border-b text-sm text-center">
+                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${venta.Pagado ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
+                              {venta.Pagado ? "Sí" : "No"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 border-b text-sm text-gray-700">
+                            {new Date(venta.Date).toLocaleString("es-CO", { timeZone: "America/Bogota" })}
+                          </td>
+                          <td className="py-3 px-4 border-b text-sm text-gray-700">
+                            {(() => {
+                              if (!venta.Pago_Info) return 'N/A';
+                              try {
+                                const parsed = typeof venta.Pago_Info === 'string' ? JSON.parse(venta.Pago_Info) : venta.Pago_Info;
+                                return parsed?.metodo || 'N/A';
+                              } catch {
+                                return 'N/A';
+                              }
+                            })()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="h-full">
+                <ProductosVendidosRentabilidad
+                  productos={productosVendidosConReceta}
+                  ventas={ventas}
+                  targetMonth={selectedMonth}
+                  targetYear={selectedYear}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "bolsillos" && (
+            <DiaResumenBolsillos
+              ventas={ventas}
+              consumoStaff={consumoStaffMes}
+              totalIngreso={datosCalculadosDelMes.totalIngreso}
+              periodParams={{
+                periodType: "month",
+                targetMonth: selectedMonth,
+                targetYear: selectedYear,
+              }}
+              periodLabel="del Mes"
+              allStaff={allStaff}
+              allMenu={allMenu}
+              allRecetasMenu={allRecetasMenu}
+              allRecetasProduccion={allRecetasProduccion}
+              allItems={allItems}
+              allProduccion={allProduccion}
+              loadingCatalogs={false}
+            />
+          )}
         </div>
       </div>
 

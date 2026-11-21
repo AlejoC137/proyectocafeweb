@@ -11,6 +11,7 @@ const StatCard = ({ title, value, colorClass, subValue }) => (
 );
 
 const MesResumenStats = ({
+  title = "Resumen del Mes",
   ventasRecepies,
   totalIngreso,
   totalTip,
@@ -20,7 +21,9 @@ const MesResumenStats = ({
   totalTransferencia,
   totalCompras,
   cantidadDeDias,
-  totalConsumoStaff = 0
+  totalConsumoStaff = 0,
+  totalNomina = null,
+  totalBolsillos = null,
 }) => {
   const ventas = Array.isArray(cantidadDeDias) ? cantidadDeDias : [];
   const fechasUnicas = new Set(ventas.map(venta => venta.Date));
@@ -39,7 +42,7 @@ const MesResumenStats = ({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-      <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Resumen del Mes</h2>
+      <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">{title}</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {/* Ingresos */}
@@ -59,6 +62,22 @@ const MesResumenStats = ({
 
         {/* Otros */}
         <StatCard title="Propinas" value={formatNumber(totalTip)} colorClass="text-blue-600" />
+        {totalNomina !== null && (
+          <StatCard
+            title="Nómina (Turnos)"
+            value={formatNumber(totalNomina)}
+            colorClass="text-blue-700"
+            subValue="Base + 10% Seg. Social"
+          />
+        )}
+        {totalBolsillos !== null && (
+          <StatCard
+            title="Total Bolsillos"
+            value={formatNumber(totalBolsillos)}
+            colorClass="text-amber-700"
+            subValue="Re-stock + Nómina"
+          />
+        )}
       </div>
     </div>
   );

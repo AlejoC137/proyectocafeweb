@@ -254,9 +254,151 @@ export function mapGroupToPocketKey(rawGrupo, rawSubGrupo) {
   return 'OTROS';
 }
 
+const SEGURIDAD_SOCIAL_RATE = 0.1;
+
+function parseShiftHours(horaInicio, horaSalida) {
+  if (!horaInicio || !horaSalida) return 0;
+  const ini = String(horaInicio).trim();
+  const fin = String(horaSalida).trim();
+  if (!ini || !fin || ini === 'false' || fin === 'false' || fin === 'PENDING') return 0;
+  const [h1, m1] = ini.split(':').map(Number);
+  const [h2, m2] = fin.split(':').map(Number);
+  if ([h1, m1, h2, m2].some(isNaN)) return 0;
+  const dur = (h2 - h1) + (m2 - m1) / 60;
+  return dur > 0 ? dur : 0;
+}
+
+/**
+ * Calcula la nómina a guardar para un día o período dado a partir exclusivamente
+ * de los registros de turnos (`Staff.Turnos`) del período.
+ * - Incluye pago base (horas * Rate) + 10% de seguridad social (igual que CalculoNomina y ModeloContent).
+ * - Si un turno registrado sigue abierto (sin hora de salida/cierre), se reporta en el detalle con $0 hasta que se cierre.
+ */
+export function calculateDailyPayrollForPeriod({
+  allStaff = [],
+  periodType = 'day',
+  targetDate,
+  targetMonth,
+  targetYear,
+  customStartDate,
+  customEndDate,
+} = {}) {
+  if (!Array.isArray(allStaff) || allStaff.length === 0) {
+    return {
+      totalNomina: 0,
+      totalPagoBase: 0,
+      totalSeguridadSocial: 0,
+      totalHoras: 0,
+      colaboradoresCount: 0,
+      tieneTurnosAbiertos: false,
+      detalle: [],
+    };
+  }
+
+  const periodParams = { targetDate, targetMonth, targetYear, customStartDate, customEndDate };
+  const detalle = [];
+  let totalPagoBase = 0;
+  let totalSeguridadSocial = 0;
+  let totalNomina = 0;
+  let totalHoras = 0;
+  let tieneTurnosAbiertos = false;
+
+  allStaff.forEach((persona) => {
+    if (!persona) return;
+
+    let turnos = [];
+    if (Array.isArray(persona.Turnos)) {
+      turnos = persona.Turnos;
+    } else if (typeof persona.Turnos === 'string' && persona.Turnos.trim()) {
+      try {
+        const parsed = JSON.parse(persona.Turnos);
+        turnos = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        turnos = [];
+      }
+    }
+
+    const turnosEnPeriodo = turnos
+      .map((t) => ({
+        turnoDate: t?.fecha || t?.turnoDate || t?.date || '',
+        horaInicio: t?.horaInicio || t?.horaEntrada || t?.hora || '',
+        horaSalida: t?.horaCierre || t?.horaSalida || t?.horaFin || '',
+      }))
+      .filter((t) => t.turnoDate && isDateInPeriod(t.turnoDate, null, periodType, periodParams));
+
+    if (turnosEnPeriodo.length === 0) return;
+
+    let horas = 0;
+    let hasOpenShift = false;
+    turnosEnPeriodo.forEach((t) => {
+      const h = parseShiftHours(t.horaInicio, t.horaSalida);
+      if (h > 0) {
+        horas += h;
+      } else if (t.horaInicio && (!t.horaSalida || t.horaSalida === 'PENDING' || t.horaSalida === 'false')) {
+        hasOpenShift = true;
+      }
+    });
+
+    if (horas <= 0 && !hasOpenShift) return;
+
+    if (hasOpenShift) tieneTurnosAbiertos = true;
+
+    const origen = hasOpenShift
+      ? horas > 0
+        ? 'Parcial (turno sin cerrar)'
+        : 'Turno abierto (sin cierre)'
+      : 'Turno registrado';
+
+    const horarioTexto = turnosEnPeriodo
+      .map((t) => `${t.horaInicio || '—'} - ${t.horaSalida && t.horaSalida !== 'false' && t.horaSalida !== 'PENDING' ? t.horaSalida : 'Sin cierre'}`)
+      .join(', ');
+
+    const rate = Number(persona.Rate) || 0;
+    const pagoBase = horas * rate;
+    const seguridadSocial = pagoBase * SEGURIDAD_SOCIAL_RATE;
+    const totalPersona = Math.round(pagoBase + seguridadSocial);
+    const pagoBaseRound = Math.round(pagoBase);
+    const segSocialRound = Math.round(seguridadSocial);
+
+    totalPagoBase += pagoBaseRound;
+    totalSeguridadSocial += segSocialRound;
+    totalNomina += totalPersona;
+    totalHoras += horas;
+
+    const nombre = `${persona.Nombre || persona.nombre || ''} ${persona.Apellido || persona.apellido || ''}`.trim() || 'Colaborador';
+
+    detalle.push({
+      id: persona._id || persona.CC || nombre,
+      nombre,
+      cargo: persona.Cargo || persona.cargo || 'Staff',
+      rate,
+      horas: parseFloat(horas.toFixed(2)),
+      pagoBase: pagoBaseRound,
+      seguridadSocial: segSocialRound,
+      totalNomina: totalPersona,
+      origen,
+      turnoAbierto: hasOpenShift,
+      horario: horarioTexto,
+      turnosCount: turnosEnPeriodo.length,
+    });
+  });
+
+  detalle.sort((a, b) => b.totalNomina - a.totalNomina);
+
+  return {
+    totalNomina,
+    totalPagoBase,
+    totalSeguridadSocial,
+    totalHoras: parseFloat(totalHoras.toFixed(2)),
+    colaboradoresCount: detalle.length,
+    tieneTurnosAbiertos,
+    detalle,
+  };
+}
+
 /**
  * Motor central de cálculo de Bolsillos Financieros y Re-Stock
- * Incorpora: Ventas + Consumo Interno (Staff) + Bajas y Mermas
+ * Incorpora: Ventas + Consumo Interno (Staff) + Bajas y Mermas + Nómina del período
  */
 export function calculateFinancialPockets({
   ventas = [],
@@ -267,7 +409,8 @@ export function calculateFinancialPockets({
   allRecetasMenu = [],
   allRecetasProduccion = [],
   allItems = [],
-  allProduccion = []
+  allProduccion = [],
+  periodParams = null
 }) {
   // Indexadores para búsqueda O(1)
   const menuMapById = {};
@@ -776,11 +919,27 @@ export function calculateFinancialPockets({
     targetPocket.bajasItems.push(baj);
   });
 
+  // 5. CALCULAR NÓMINA DEL PERÍODO (si se pasó periodParams)
+  const nomina = periodParams
+    ? calculateDailyPayrollForPeriod({ allStaff, ...periodParams })
+    : {
+        totalNomina: 0,
+        totalPagoBase: 0,
+        totalSeguridadSocial: 0,
+        totalHoras: 0,
+        colaboradoresCount: 0,
+        tieneTurnosAbiertos: false,
+        detalle: []
+      };
+  const totalNomina = nomina.totalNomina || 0;
+
   // TOTALES GLOBALES
   const totalRestockGlobal = totalRestockVentas + totalConsumoInterno + totalBajas;
-  const gananciaLibre = totalIngresoVentas - totalRestockGlobal - totalTip;
+  const totalAGuardarGlobal = totalRestockGlobal + totalNomina;
+  const gananciaLibre = totalIngresoVentas - totalRestockGlobal - totalNomina - totalTip;
   const margenLibrePct = totalIngresoVentas > 0 ? (gananciaLibre / totalIngresoVentas) * 100 : 0;
   const restockPctGlobal = totalIngresoVentas > 0 ? (totalRestockGlobal / totalIngresoVentas) * 100 : 0;
+  const nominaPctGlobal = totalIngresoVentas > 0 ? (totalNomina / totalIngresoVentas) * 100 : 0;
   const propinasPctGlobal = totalIngresoVentas > 0 ? (totalTip / totalIngresoVentas) * 100 : 0;
 
   // Lista activa de bolsillos
@@ -815,10 +974,14 @@ export function calculateFinancialPockets({
     totalConsumoInterno,
     totalBajas,
     totalRestockGlobal,
+    totalNomina,
+    totalAGuardarGlobal,
+    nomina,
     totalTip,
     gananciaLibre,
     margenLibrePct,
     restockPctGlobal,
+    nominaPctGlobal,
     propinasPctGlobal,
     ventasPagadasCount,
     consumosCount: consumoInternoList.length,
