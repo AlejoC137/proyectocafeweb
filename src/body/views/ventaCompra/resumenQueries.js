@@ -270,6 +270,7 @@ export async function fetchVentasMonthsIndex({ pageSize = 1000 } = {}) {
 /**
  * Carga en Redux únicamente las tablas de catálogo que todavía están vacías,
  * evitando descargas redundantes al cambiar de fecha o mes.
+ * Lanza error si alguna tabla falla al cargar para permitir reintento automático.
  */
 export async function ensureCatalogTablesLoaded(dispatch, getState, tables) {
   const state = getState();
@@ -282,5 +283,15 @@ export async function ensureCatalogTablesLoaded(dispatch, getState, tables) {
 
   if (missingTables.length === 0) return;
 
-  await Promise.all(missingTables.map((table) => dispatch(getAllFromTable(table))));
+  const results = await Promise.all(
+    missingTables.map(async (table) => {
+      const res = await dispatch(getAllFromTable(table));
+      return { table, ok: res !== null && res !== undefined };
+    })
+  );
+
+  const failed = results.filter((r) => !r.ok).map((r) => r.table);
+  if (failed.length > 0) {
+    throw new Error(`No se pudieron cargar las tablas: ${failed.join(", ")}`);
+  }
 }

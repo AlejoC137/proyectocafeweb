@@ -42,7 +42,8 @@ import {
   Check,
   LogOut,
   Coffee,
-  Wallet
+  Wallet,
+  Cpu
 } from "lucide-react";
 import ComandaStaff from "../actividades/WorkE/ComandaStaff";
 import Notas from "../actividades/WorkE/Notas";
@@ -217,7 +218,8 @@ function StaffPortal() {
       { label: "Almacén", icon: Store, onClick: () => navigate("/GestionAlmacen") },
       { label: "Mes", icon: Calendar, onClick: () => navigate("/MesResumen") },
       { label: "Bolsillos", icon: Wallet, onClick: () => navigate("/bolsillos-financieros") },
-      { label: "Consumo", icon: Coffee, onClick: () => navigate("/consumoAdmin") }
+      { label: "Consumo", icon: Coffee, onClick: () => navigate("/consumoAdmin") },
+      { label: "MCP / IA", icon: Cpu, onClick: () => navigate("/mcp-control") }
     ] : [])
   ] : [];
 

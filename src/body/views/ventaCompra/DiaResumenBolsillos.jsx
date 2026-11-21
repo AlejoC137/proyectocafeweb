@@ -119,8 +119,11 @@ function DiaResumenBolsillos({
 
   if (loadingCatalogs) {
     return (
-      <div className="py-12 text-center text-gray-500 text-sm">
-        Cargando recetas e insumos para calcular bolsillos...
+      <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-500">
+        <div className="h-9 w-9 rounded-full border-4 border-gray-200 border-t-amber-600 animate-spin" />
+        <p className="text-sm font-medium">
+          Cargando recetas e insumos para calcular bolsillos...
+        </p>
       </div>
     );
   }

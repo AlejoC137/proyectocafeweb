@@ -38,9 +38,9 @@ function DiaResumen() {
   const store = useStore();
   const { date } = useParams();
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
   const [loadingBolsillos, setLoadingBolsillos] = useState(false);
   const [activeTab, setActiveTab] = useState("detalles"); // "detalles" | "productos" | "bolsillos"
-  const [errorMsg, setErrorMsg] = useState(null);
   const [reloadTick, setReloadTick] = useState(0);
   const [ventas, setVentas] = useState([]);
   const [totalIngreso, setTotalIngreso] = useState(0);
@@ -62,12 +62,15 @@ function DiaResumen() {
   const allRecetasMenu = useSelector((state) => state.allRecetasMenu || []);
   const allRecetasProduccion = useSelector((state) => state.allRecetasProduccion || []);
 
-  // Cargar catálogos faltantes de forma diferida solo al abrir la pestaña Bolsillos
+  // Cargar catálogos faltantes de forma diferida solo al abrir la pestaña Bolsillos (con reintento automático)
   useEffect(() => {
     if (activeTab !== "bolsillos") return;
     let cancelled = false;
+    let retryTimer = null;
+    let attempt = 0;
 
     const loadCatalogs = async () => {
+      if (cancelled) return;
       setLoadingBolsillos(true);
       try {
         await ensureCatalogTablesLoaded(dispatch, store.getState, [
@@ -77,16 +80,22 @@ function DiaResumen() {
           RECETAS_MENU,
           RECETAS_PRODUCCION,
         ]);
+        if (!cancelled) {
+          setLoadingBolsillos(false);
+        }
       } catch (err) {
-        console.error("Error cargando catálogos para Bolsillos:", err);
-      } finally {
-        if (!cancelled) setLoadingBolsillos(false);
+        if (cancelled) return;
+        attempt += 1;
+        console.warn(`Error cargando catálogos para Bolsillos (intento ${attempt}), reintentando...`, err);
+        const delay = Math.min(1500 * attempt, 5000);
+        retryTimer = setTimeout(loadCatalogs, delay);
       }
     };
 
     loadCatalogs();
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [activeTab, dispatch, store]);
 
@@ -113,10 +122,14 @@ function DiaResumen() {
     if (!parts) return;
 
     let cancelled = false;
+    let retryTimer = null;
+    let attempt = 0;
+
+    setLoading(true);
+    setRetryCount(0);
 
     const fetchData = async () => {
-      setLoading(true);
-      setErrorMsg(null);
+      if (cancelled) return;
       try {
         // Consultar solo el día seleccionado en Ventas y Compras, y cargar Recetas solo si no están en Redux
         const [ventasHoy, comprasHoy] = await Promise.all([
@@ -225,14 +238,17 @@ function DiaResumen() {
           0
         );
         setTotalCompras(comprasSum);
+
+        // Solo mostrar la vista cuando los datos cargaron correctamente
+        setRetryCount(0);
+        setLoading(false);
       } catch (error) {
         if (cancelled) return;
-        console.error("Error loading data:", error);
-        setErrorMsg(error?.message || "No se pudieron cargar los datos del día.");
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        attempt += 1;
+        setRetryCount(attempt);
+        console.warn(`Error cargando DiaResumen (intento ${attempt}), reintentando automáticamente...`, error);
+        const delay = Math.min(1500 * attempt, 5000);
+        retryTimer = setTimeout(fetchData, delay);
       }
     };
 
@@ -240,6 +256,7 @@ function DiaResumen() {
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [inputDate, dispatch, store, reloadTick]);
 
@@ -249,7 +266,21 @@ function DiaResumen() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-gray-50 gap-4">
+        <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
+        <div className="text-center">
+          <p className="text-base font-semibold text-gray-700">
+            Cargando resumen del día...
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {retryCount > 0
+              ? `Reintentando conexión automáticamente (intento ${retryCount})...`
+              : `Consultando ventas y compras del ${hoy}`}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const totalProductosVendidos = productosVendidos.reduce((acc, producto) => acc + producto.cantidad, 0);
@@ -289,19 +320,6 @@ function DiaResumen() {
           </button>
         </div>
       </div>
-
-      {errorMsg && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-red-700">
-          <span className="text-sm font-medium">{errorMsg}</span>
-          <button
-            type="button"
-            onClick={() => setReloadTick((t) => t + 1)}
-            className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-md"
-          >
-            Reintentar
-          </button>
-        </div>
-      )}
 
       <DiaResumentStats
         ventasRecepies={productosVendidos}

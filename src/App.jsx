@@ -59,6 +59,7 @@ const Rappi = lazy(() => import('./body/views/rappi/Rappi'));
 const RecruitmentPrint = lazy(() => import('./body/components/Menu/RecruitmentPrint'));
 const ConsumoStaffView = lazy(() => import('./body/views/staff/ConsumoStaffView'));
 const ConsumoAdminView = lazy(() => import('./body/views/staff/ConsumoAdminView'));
+const McpControlPanel = lazy(() => import('./body/views/staff/McpControlPanel'));
 const FlyerCreator = lazy(() => import('./body/components/Menu/FlyerCreator/FlyerCreator'));
 
 const CotizacionesView = lazy(() => import('./body/views/cotizaciones/CotizacionesView'));
@@ -245,6 +246,8 @@ function App() {
                   <Route path="/consumo" element={<ConsumoStaffView />} />
                   <Route path="/consumoAdmin" element={<ConsumoAdminView />} />
                   <Route path="/user-manager" element={<UserManager />} />
+                  <Route path="/mcp-control" element={<McpControlPanel />} />
+                  <Route path="/McpControl" element={<Navigate to="/mcp-control" replace />} />
 
                   {/* --- ALIADOS COMERCIALES --- */}
                   <Route path="/Aliados" element={<AliadosManager />} />
