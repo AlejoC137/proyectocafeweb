@@ -15,6 +15,7 @@ import CategoryNavBar from "@/components/ui/category-nav-bar";
 import RappiProductosTab from "./tabs/RappiProductosTab";
 import RappiAnalisisTab from "./tabs/RappiAnalisisTab";
 import RappiTiendaTab from "./tabs/RappiTiendaTab";
+import RappiMercadoTab from "./tabs/RappiMercadoTab";
 
 export function Rappi() {
   const { tab } = useParams();
@@ -60,6 +61,7 @@ export function Rappi() {
     { type: "productos", label: "1. Catálogo & Moderador", icon: "🛵" },
     { type: "analisis", label: "2. Historial & Financiero", icon: "📊" },
     { type: "tienda", label: "3. Clon Rappi (Mockup)", icon: "🛒" },
+    { type: "mercado", label: "4. Benchmark Mercado", icon: "🔍" },
   ];
 
   const headerActions = (
@@ -98,6 +100,15 @@ export function Rappi() {
       {activeTab === "tienda" && (
         <RappiTiendaTab
           menu={menu}
+          config={config}
+        />
+      )}
+
+      {activeTab === "mercado" && (
+        <RappiMercadoTab
+          menu={menu}
+          recetasMenu={recetasMenu}
+          recetasProduccion={recetasProduccion}
           config={config}
         />
       )}
