@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import supabase from '@/config/supabaseClient';
+import { uploadImageToMediaServer, resolveMediaUrl } from '@/services/mediaServerService';
 import { ALIADOS } from '@/redux/actions-types';
 import { UploadCloud, CheckCircle, ChevronRight, Image as ImageIcon, Info, DollarSign, Heart, Star, Trash2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -50,21 +51,8 @@ function AliadoRegistrationForm() {
 
         setIsUploading(true);
         try {
-            let fileExt = 'png';
-            if (file.name && file.name.includes('.')) {
-                fileExt = file.name.split('.').pop().toLowerCase();
-            } else if (file.type) {
-                fileExt = file.type.split('/')[1]?.replace('+xml', '')?.toLowerCase() || 'png';
-            }
-
-            const uniqueName = `aliado_logo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage.from("Images_eventos").upload(uniqueName, file, {
-                cacheControl: '3600',
-                upsert: true
-            });
-            if (uploadError) throw uploadError;
-            const { data: { publicUrl } } = supabase.storage.from("Images_eventos").getPublicUrl(uniqueName);
-            setFormData(prev => ({ ...prev, logo_url: publicUrl }));
+            const uploaded = await uploadImageToMediaServer(file, { folder: 'proyectocafe-galeria' });
+            setFormData(prev => ({ ...prev, logo_url: uploaded.mediaUri }));
         } catch (err) {
             console.error(err);
             alert("Error al subir la imagen: " + (err.message || err));
@@ -361,7 +349,7 @@ function AliadoRegistrationForm() {
                                         <div className="border border-gray-200 rounded-2xl p-4 bg-gray-50 flex items-center justify-between gap-4">
                                             <div className="flex items-center gap-4 min-w-0">
                                                 <div className="w-16 h-16 rounded-xl border bg-white p-1 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                    <img src={formData.logo_url} alt="Logo preview" className="w-full h-full object-contain" />
+                                                    <img src={resolveMediaUrl(formData.logo_url)} alt="Logo preview" className="w-full h-full object-contain" />
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-xs font-semibold text-green-700 flex items-center gap-1">

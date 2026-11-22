@@ -4,6 +4,7 @@
 // =========================================================
 
 import React from "react";
+import { useMediaServer } from "../../../../context/MediaServerContext";
 import {
   AlignLeft,
   AlignCenter,
@@ -47,6 +48,7 @@ export default function FlyerPropertiesPanel({
   onOpenMediaModal = () => {},
   onOpenEmojiModal = () => {}
 }) {
+  const { resolveMediaThumbUrl } = useMediaServer();
   if (!selectedElement) {
     // Modo configuración general del lienzo
     return (
@@ -94,7 +96,7 @@ export default function FlyerPropertiesPanel({
             <div className="flex flex-col gap-2 p-2 bg-white border-2 border-black rounded mt-1">
               <div className="aspect-video w-full rounded overflow-hidden relative border border-zinc-300">
                 <img
-                  src={canvasConfig.backgroundImageUrl}
+                  src={resolveMediaThumbUrl(canvasConfig.backgroundImageUrl, 480)}
                   alt="Fondo"
                   className="w-full h-full object-cover"
                 />

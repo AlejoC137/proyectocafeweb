@@ -54,8 +54,8 @@ function MesResumen() {
         // Consultar solo el mes seleccionado en Ventas, Compras y ConsumoStaff,
         // y cargar tablas de catálogo únicamente si aún no están en Redux
         const [ventasDelMes, comprasDelMes, consumosDelMes] = await Promise.all([
-          fetchVentasByMonth(selectedYear, selectedMonth),
-          fetchComprasByMonth(selectedYear, selectedMonth),
+          fetchVentasByMonth(selectedYear, selectedMonth, { force: reloadTick > 0 }),
+          fetchComprasByMonth(selectedYear, selectedMonth, { force: reloadTick > 0 }),
           fetchConsumoStaffByMonth(selectedYear, selectedMonth),
           ensureCatalogTablesLoaded(
             dispatch,

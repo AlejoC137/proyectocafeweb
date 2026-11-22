@@ -2,8 +2,10 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react"; // Ícono de favorito
+import { useMediaServer } from "@/context/MediaServerContext";
 
 export function CardInstanceHome({ product }) {
+  const { resolveMediaThumbUrl } = useMediaServer();
   return (
     <Card
       className="w-full h-[48vh] shadow-lg rounded-xl overflow-hidden border-r-4 border-r-ladrillo border-b-4 border-b-ladrillo"
@@ -16,7 +18,7 @@ export function CardInstanceHome({ product }) {
       {/* Imagen */}
       <div className="relative h-[25vh] w-full">
         <img
-          src={product.foto || "/default-image.jpg"}
+          src={resolveMediaThumbUrl(product.foto || product.Foto, 480) || "/default-image.jpg"}
           alt={product.nombre || "Especial"}
           className="w-full h-full object-cover"
         />

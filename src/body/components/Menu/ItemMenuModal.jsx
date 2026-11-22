@@ -45,6 +45,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import supabase from "../../../config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "../../../services/mediaServerService";
 import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 
@@ -305,22 +306,9 @@ const ItemMenuModal = ({ item: propItem, onClose, itemId: propItemId }) => {
 
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `menu_${Date.now()}.${fileExt}`;
-      const filePath = `menu-images/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("Images_eventos")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("Images_eventos")
-        .getPublicUrl(filePath);
-
-      setEditableItem((prev) => ({ ...prev, Foto: publicUrl }));
-      alert("¡Imagen subida y asignada con éxito!");
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
+      setEditableItem((prev) => ({ ...prev, Foto: uploaded.mediaUri }));
+      alert("¡Imagen subida al Personal Media Server y asignada con éxito!");
     } catch (err) {
       console.error("Error al subir imagen:", err);
       alert("Error al subir la imagen: " + err.message);
@@ -407,7 +395,7 @@ Optimiza la presentación, estrategia de precio y estructura de este platillo pa
             <div className="relative group shrink-0">
               {menuItem.Foto ? (
                 <img
-                  src={menuItem.Foto}
+                  src={resolveMediaUrl(menuItem.Foto)}
                   alt={menuItem.NombreES || menuItem.Nombre}
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-blue-400/40 shadow-md"
                 />

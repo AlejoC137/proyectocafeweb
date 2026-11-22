@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllFromTable } from "@/redux/actions";
 import { AGENDA } from "@/redux/actions-types";
 import PageLayout from "@/components/ui/page-layout";
+import { useMediaServer } from "@/context/MediaServerContext";
 import {
     ChevronLeft,
     ChevronRight,
@@ -26,6 +27,7 @@ import supabase from "@/config/supabaseClient";
 export default function EventosOffer() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { resolveMediaUrl, resolveMediaThumbUrl } = useMediaServer();
     const [searchParams, setSearchParams] = useSearchParams();
     const allAgenda = useSelector((state) => state.allAgenda || []);
 
@@ -222,7 +224,7 @@ export default function EventosOffer() {
                                     {/* Imagen del Poster */}
                                     <div className={`relative w-full aspect-[3/4] border-b-[3px] ${borderColor} overflow-hidden`}>
                                         {event.bannerIMG ? (
-                                            <img src={event.bannerIMG} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                            <img src={resolveMediaThumbUrl(event.bannerIMG, 600)} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                         ) : (
                                             <div className="w-full h-full bg-sage-green/20 flex items-center justify-center">
                                                 <Play size={48} className="opacity-20" />
@@ -273,7 +275,7 @@ export default function EventosOffer() {
                                 {/* Poster del Modal */}
                                 <div className={`flex-1 relative border-b-[3px] md:border-b-0 md:border-r-[3px] ${borderColor} min-h-[300px] bg-gray-50`}>
                                     {selectedEvent.bannerIMG ? (
-                                        <img src={selectedEvent.bannerIMG} className="w-full h-full object-contain" />
+                                        <img src={resolveMediaUrl(selectedEvent.bannerIMG)} className="w-full h-full object-contain" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
                                             <Ticket size={80} className="opacity-10" />

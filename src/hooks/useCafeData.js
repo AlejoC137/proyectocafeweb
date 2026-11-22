@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import supabase from '../config/supabaseClient';
 import { getLocalDateStr } from '../utils/dateUtils';
+import { useMediaServer } from '../context/MediaServerContext';
 
 function parseLunchJson(compLunch) {
   if (!compLunch) return null;
@@ -60,6 +61,7 @@ export function selectBestLunch(lunchItems, todayStr = getLocalDateStr()) {
 }
 
 export function useCafeData() {
+  const { resolveMediaUrl } = useMediaServer();
   const [agendaEvents, setAgendaEvents] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [eventCarouselIdx, setEventCarouselIdx] = useState(0);
@@ -147,16 +149,31 @@ export function useCafeData() {
     } catch { return dateStr; }
   };
 
+  const resolvedAgendaEvents = useMemo(
+    () => agendaEvents.map((e) => (e?.bannerIMG ? { ...e, bannerIMG: resolveMediaUrl(e.bannerIMG) } : e)),
+    [agendaEvents, resolveMediaUrl]
+  );
+
+  const resolvedMenuItems = useMemo(
+    () => menuItems.map((m) => (m?.Foto ? { ...m, Foto: resolveMediaUrl(m.Foto) } : m)),
+    [menuItems, resolveMediaUrl]
+  );
+
+  const resolvedTodaysLunch = useMemo(
+    () => (todaysLunch?.Foto ? { ...todaysLunch, Foto: resolveMediaUrl(todaysLunch.Foto) } : todaysLunch),
+    [todaysLunch, resolveMediaUrl]
+  );
+
   return {
-    agendaEvents,
-    menuItems,
+    agendaEvents: resolvedAgendaEvents,
+    menuItems: resolvedMenuItems,
     eventCarouselIdx,
     setEventCarouselIdx,
     menuCarouselIdx,
     setMenuCarouselIdx,
-    currentEvent: agendaEvents[eventCarouselIdx],
-    currentMenuItem: menuItems[menuCarouselIdx],
-    todaysLunch,
+    currentEvent: resolvedAgendaEvents[eventCarouselIdx],
+    currentMenuItem: resolvedMenuItems[menuCarouselIdx],
+    todaysLunch: resolvedTodaysLunch,
     formatEventDate
   };
 }

@@ -7,39 +7,35 @@ import {
   fetchMediaCatalog,
   rebaseCatalogUrls,
 } from '../services/mediaServerService';
+import {
+  CURATED_WORLD_STATIONS,
+  WORLD_RADIO_CATEGORIES,
+  getCuratedStationsForCategory,
+} from '../utils/worldRadioStations';
 
-export const DEFAULT_RADIO_STATIONS = [
-  {
-    id: 'api-default-1',
-    title: 'Lofi Cafe Radio',
-    artist: 'Global • MP3 Online',
-    genre: 'lofi',
-    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
-    isLiveStream: true,
-    duration: 0,
-    cover: ''
-  },
-  {
-    id: 'api-default-2',
-    title: 'Smooth Jazz Global',
-    artist: 'Global • MP3 Online',
-    genre: 'jazz',
-    url: 'https://streaming.exclusive.radio/er/smoothjazz/icecast.audio',
-    isLiveStream: true,
-    duration: 0,
-    cover: ''
-  },
-  {
-    id: 'api-default-3',
-    title: 'Chillout Lounge Ambient',
-    artist: 'Chillout • Stream',
-    genre: 'chillout',
-    url: 'https://stream.zeno.fm/f3wvbbqmdg8uv',
-    isLiveStream: true,
-    duration: 0,
-    cover: ''
-  }
+export const DEFAULT_RADIO_STATIONS = CURATED_WORLD_STATIONS.filter((s) =>
+  s.categories.includes('featured')
+);
+
+const RADIO_BROWSER_MIRRORS = [
+  'https://de1.api.radio-browser.info',
+  'https://fi1.api.radio-browser.info',
+  'https://at1.api.radio-browser.info',
 ];
+
+const UNSUPPORTED_STREAM_EXT = /\.(m3u8|pls|m3u|asx|ram|smil)(\?|$)/i;
+const PLAYABLE_CODEC_RE = /^(MP3|AAC|AAC\+|OGG|UNKNOWN|)$/i;
+
+function isReliableBrowserStream(item) {
+  const rawUrl = (item?.url_resolved || item?.url || '').trim();
+  if (!rawUrl.startsWith('https://')) return false;
+  if (item?.lastcheckok !== 1) return false;
+  if (item?.hls === 1) return false;
+  if (UNSUPPORTED_STREAM_EXT.test(rawUrl)) return false;
+  const codec = (item?.codec || '').trim().toUpperCase();
+  if (!PLAYABLE_CODEC_RE.test(codec)) return false;
+  return true;
+}
 
 export function useRadioData(
   activeTab,
@@ -50,7 +46,7 @@ export function useRadioData(
   setAudioError
 ) {
   // Radio Browser API & Filtros
-  const [selectedCategory, setSelectedCategory] = useState('lofi');
+  const [selectedCategory, setSelectedCategory] = useState('featured');
   const [apiStations, setApiStations] = useState(DEFAULT_RADIO_STATIONS);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingApi, setLoadingApi] = useState(false);
@@ -288,29 +284,78 @@ export function useRadioData(
     fetchYoutubePlaylist();
   }, []);
 
-  // 3. Radio-Browser API (Tab Radios Online)
-  const fetchApiRadioStations = async (tag, query = '') => {
+  // 3. Radios del Mundo: emisoras curadas 100% verificadas + Radio-Browser API (solo HTTPS verificadas y reproducibles)
+  const fetchApiRadioStations = async (categoryId, query = '') => {
+    const trimmedQuery = (query || '').trim();
+    const curated = getCuratedStationsForCategory(categoryId, trimmedQuery);
+    setApiStations(curated.length > 0 ? curated : DEFAULT_RADIO_STATIONS);
+
+    // En "Destacadas" sin búsqueda, mostramos exclusivamente el catálogo curado 100% verificado
+    if (!trimmedQuery && categoryId === 'featured') {
+      setLoadingApi(false);
+      return;
+    }
+
+    const catObj = WORLD_RADIO_CATEGORIES.find((c) => c.id === categoryId);
+    const apiTag = catObj?.apiTag || categoryId || 'lofi';
+
     try {
       setLoadingApi(true);
-      const endpoint = query
-        ? `https://de1.api.radio-browser.info/json/stations/byname/${encodeURIComponent(query)}?limit=15&hidebroken=true`
-        : `https://de1.api.radio-browser.info/json/stations/bytag/${encodeURIComponent(tag)}?limit=15&hidebroken=true`;
+      let data = null;
 
-      const res = await fetch(endpoint);
-      const data = await res.json();
+      for (const mirror of RADIO_BROWSER_MIRRORS) {
+        const endpoint = trimmedQuery
+          ? `${mirror}/json/stations/search?name=${encodeURIComponent(trimmedQuery)}&limit=40&order=clickcount&reverse=true&hidebroken=true`
+          : `${mirror}/json/stations/bytag/${encodeURIComponent(apiTag)}?limit=40&order=clickcount&reverse=true&hidebroken=true`;
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const res = await fetch(endpoint, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json)) {
+              data = json;
+              break;
+            }
+          }
+        } catch {
+          // Intentar siguiente mirror
+        }
+      }
 
       if (Array.isArray(data) && data.length > 0) {
-        const formatted = data.map((item, idx) => ({
-          id: `api-${item.stationuuid || idx}`,
-          title: item.name?.trim() || 'Emisora En Vivo',
-          artist: `${item.country || 'Global'} • ${item.codec || 'MP3'} ${item.bitrate ? `${item.bitrate}kbps` : ''}`,
-          genre: item.tags ? item.tags.split(',')[0] : 'Radio Online',
-          url: item.url_resolved || item.url,
-          isLiveStream: true,
-          duration: 0,
-          cover: item.favicon && item.favicon.startsWith('http') ? item.favicon : '',
-        }));
-        setApiStations(formatted);
+        const seenUrls = new Set(curated.map((s) => s.url.toLowerCase()));
+        const remoteFiltered = [];
+
+        for (const item of data) {
+          if (!isReliableBrowserStream(item)) continue;
+          const cleanUrl = (item.url_resolved || item.url).trim();
+          const urlKey = cleanUrl.toLowerCase();
+          if (seenUrls.has(urlKey)) continue;
+          seenUrls.add(urlKey);
+
+          remoteFiltered.push({
+            id: `api-${item.stationuuid || remoteFiltered.length}`,
+            title: item.name?.trim() || 'Emisora En Vivo',
+            artist: `${item.country || 'Global'} • ${item.codec || 'MP3'}${item.bitrate ? ` ${item.bitrate}kbps` : ''}`,
+            country: item.country || 'Global',
+            genre: item.tags ? item.tags.split(',')[0] : 'Radio Online',
+            url: cleanUrl,
+            isLiveStream: true,
+            verified: false,
+            duration: 0,
+            cover: item.favicon && item.favicon.startsWith('https://') ? item.favicon : '',
+          });
+
+          if (remoteFiltered.length >= 20) break;
+        }
+
+        const merged = [...curated, ...remoteFiltered];
+        if (merged.length > 0) {
+          setApiStations(merged);
+        }
       }
     } catch (err) {
       console.warn('API de radios no disponible:', err);

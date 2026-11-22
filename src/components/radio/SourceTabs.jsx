@@ -2,6 +2,7 @@ import React from 'react';
 import { Disc, Globe, Youtube, Loader2, Search, Heart, Plus, Shuffle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
+import { WORLD_RADIO_CATEGORIES } from '../../utils/worldRadioStations';
 import RadioStationSelector from './RadioStationSelector';
 import CoverArt from './CoverArt';
 
@@ -58,7 +59,7 @@ export default function SourceTabs({
         <div className="flex w-full">
           {[
             { id: 'supabase', icon: <Disc className="w-3.5 h-3.5" />, label: 'Biblioteca / Álbumes' },
-            { id: 'live', icon: <Globe className="w-3.5 h-3.5" />, label: 'Radios' },
+            { id: 'live', icon: <Globe className="w-3.5 h-3.5" />, label: 'Radios del Mundo' },
             { id: 'youtube', icon: <Youtube className="w-3.5 h-3.5 text-red-500" />, label: 'YouTube' },
           ].map(tab => {
             const isCurrent = activeTab === tab.id;
@@ -108,26 +109,29 @@ export default function SourceTabs({
           />
         )}
 
-        {/* TAB: RADIOS ONLINE */}
+        {/* TAB: RADIOS DEL MUNDO */}
         {activeTab === 'live' && (
           <div className="p-2.5 sm:p-3">
-            <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex gap-1 flex-wrap">
-                {['lofi', 'jazz', 'rock', 'salsa', 'chillout', 'classical'].map(tag => (
+                {WORLD_RADIO_CATEGORIES.map((cat) => (
                   <button
-                    key={tag}
-                    onClick={() => { setSelectedCategory(tag); setSearchQuery(''); }}
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setSearchQuery('');
+                    }}
                     className={`px-2 py-1 border border-black dark:border-slate-600 text-[10px] font-black uppercase tracking-wider transition ${
-                      selectedCategory === tag && !searchQuery
+                      selectedCategory === cat.id && !searchQuery
                         ? 'bg-black text-white dark:bg-[#1DB954] dark:text-black dark:border-[#1DB954]'
                         : 'bg-white dark:bg-[#0d0e15] text-black dark:text-slate-200 hover:bg-yellow-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    {tag}
+                    {cat.label}
                   </button>
                 ))}
               </div>
-              {loadingApi && <Loader2 className="w-4 h-4 animate-spin text-black dark:text-white shrink-0" />}
+              {loadingApi && <Loader2 className="w-4 h-4 animate-spin text-black dark:text-white shrink-0 mt-1" />}
             </div>
 
             <form onSubmit={handleSearchSubmit} className="relative mb-2.5 flex gap-1.5">
@@ -137,7 +141,7 @@ export default function SourceTabs({
                   type="text"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Buscar emisora en vivo..."
+                  placeholder="Buscar emisora del mundo (país, género o nombre)..."
                   className="w-full pl-8 pr-3 py-1.5 border-[2px] border-black dark:border-slate-600 bg-cream-bg dark:bg-[#0d0e15] text-black dark:text-white text-xs font-bold placeholder-gray-400 outline-none"
                 />
               </div>
@@ -156,13 +160,16 @@ export default function SourceTabs({
                   <div
                     key={station.id || index}
                     onClick={() => {
+                      if (isConsoleLocked) return;
                       setCurrentTrackIndex(index);
                       setIsPlaying(true);
                       if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
                         broadcastPlay(station, 'live', true);
                       }
                     }}
-                    className={`px-2.5 py-1.5 flex items-center justify-between cursor-pointer transition ${
+                    className={`px-2.5 py-1.5 flex items-center justify-between transition ${
+                      isConsoleLocked ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'
+                    } ${
                       isCurrent
                         ? 'bg-[#1DB954]/15 text-black dark:text-white'
                         : 'bg-white dark:bg-[#181926] text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 group'
@@ -189,13 +196,21 @@ export default function SourceTabs({
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                      {station.verified && !isCurrent && (
+                        <span
+                          className="text-[8px] font-black px-1.5 py-0.5 bg-[#1DB954]/15 text-[#1DB954] border border-[#1DB954]/30 uppercase"
+                          title="Señal HTTPS verificada"
+                        >
+                          HD
+                        </span>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (toggleFavorite) toggleFavorite(station);
                         }}
                         className="p-1 text-gray-400 hover:text-red-500 transition"
-                        title="Añadir a Files"
+                        title="Añadir a Favoritos"
                       >
                         <Heart
                           className={`w-3.5 h-3.5 ${supabasePlaylist.some(s => s.url === station.url || s.id === station.id) ? 'fill-[#FF0000] text-[#FF0000]' : ''}`}
@@ -280,13 +295,20 @@ export default function SourceTabs({
                     <div
                       key={track.id || index}
                       onClick={() => {
-                        setCurrentTrackIndex(index);
-                        setIsPlaying(true);
+                        if (isConsoleLocked) return;
+                        if (jumpToTrack) {
+                          jumpToTrack(index);
+                        } else {
+                          setCurrentTrackIndex(index);
+                          setIsPlaying(true);
+                        }
                         if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
                           broadcastPlay(track, 'youtube', true);
                         }
                       }}
-                      className={`px-2.5 py-1.5 flex items-center justify-between group cursor-pointer transition ${
+                      className={`px-2.5 py-1.5 flex items-center justify-between group transition ${
+                        isConsoleLocked ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'
+                      } ${
                         isCurrent
                           ? 'bg-red-600/15 text-black dark:text-white'
                           : 'bg-white dark:bg-[#181926] text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5'

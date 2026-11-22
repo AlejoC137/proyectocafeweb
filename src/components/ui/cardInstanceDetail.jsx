@@ -1,8 +1,10 @@
 import React from "react";
 import { ShoppingCart, Flame, Leaf, AlertTriangle, X, ChevronRight } from "lucide-react";
 import { ESP } from "../../redux/actions-types";
+import { useMediaServer } from "@/context/MediaServerContext";
 
 export function CardInstanceDetail({ product, onClose, onNext, isEnglish }) {
+  const { resolveMediaUrl } = useMediaServer();
   const leng = isEnglish === ESP ? false : true;
 
   const dietWarning = leng ? product.DietaEN : product.DietaES;
@@ -49,7 +51,7 @@ export function CardInstanceDetail({ product, onClose, onNext, isEnglish }) {
         {/* Sección de Imagen */}
         <div className="w-full md:w-1/2 relative border-b-4 md:border-b-0 md:border-r-4 border-black bg-gray-200 shrink-0">
           <img
-            src={product.Foto || "/placeholder.svg"}
+            src={resolveMediaUrl(product.Foto) || "/placeholder.svg"}
             alt={leng ? product.NombreEN : product.NombreES}
             className="w-full h-48 md:h-full object-cover min-h-[200px] md:min-h-full"
           />

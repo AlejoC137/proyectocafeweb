@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import supabase from "../../../config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "../../../services/mediaServerService";
 
 // Reuse components from MenuPrint if possible or create local simplified versions
 import MenuPrintColorPanel from "./MenuPrint/MenuPrintColorPanel";
@@ -171,20 +172,16 @@ const RecruitmentPrint = () => {
     if (!file) return;
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `recruitment_flyer/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
-      if (error) throw error;
-      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
       const newImageId = 'IMG_' + Math.random().toString(36).substr(2, 9);
-      const newImages = [...printImages, { id: newImageId, url: data.publicUrl, path: fileName, height: 150 }];
+      const newImages = [...printImages, { id: newImageId, url: uploaded.mediaUri, path: uploaded.item?.relativePath || uploaded.mediaUri, height: 150 }];
       setPrintImages(newImages);
       const newPage = { ...page, center: [newImageId, ...page.center] };
       setPage(newPage);
-      // We don't save immediately here to avoid too many writes, or we can save
       saveConfig();
     } catch (err) {
       console.error(err);
+      alert("Error subiendo imagen: " + (err.message || "Personal Media Server desconectado"));
     } finally {
       setUploadingImage(false);
     }
@@ -337,7 +334,7 @@ const RecruitmentPrint = () => {
           return (
             <div key={blockId} className="relative group mb-2 w-full flex justify-center">
               {renderBlockControls(blockId, columnId)}
-              <img src={imgObj.url} className="w-full grayscale contrast-125 object-contain" style={{ height: `${imgObj.height || 150}px` }} />
+              <img src={resolveMediaUrl(imgObj.url)} className="w-full grayscale contrast-125 object-contain" style={{ height: `${imgObj.height || 150}px` }} />
               {editMode && (
                 <div className="absolute bottom-2 left-2 flex gap-2 print:hidden">
                   <input type="number" className="w-16 border" value={imgObj.height} onChange={(e) => {

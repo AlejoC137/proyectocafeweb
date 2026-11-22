@@ -3,9 +3,11 @@
 import { memo, useState } from "react"
 import { ShoppingCart, Flame, Leaf, AlertTriangle } from "lucide-react"
 import { ESP } from "../../redux/actions-types"
+import { useMediaServer } from "@/context/MediaServerContext"
 
 // memo: evita re-render si product, isEnglish y onClick no cambiaron
 export const CardInstance = memo(function CardInstance({ product, isEnglish, onClick }) {
+  const { resolveMediaThumbUrl } = useMediaServer()
   const leng = isEnglish === ESP ? false : true
 
   const dietWarning = leng ? product.DietaEN : product.DietaES
@@ -48,7 +50,7 @@ export const CardInstance = memo(function CardInstance({ product, isEnglish, onC
       {product.Foto && product.Foto !== "" && (
         <div className="relative w-full aspect-[4/3] border-b-[3px] border-black overflow-hidden rounded-none bg-sage-green-light">
           <img
-            src={product.Foto}
+            src={resolveMediaThumbUrl(product.Foto, 480)}
             alt={leng ? product.NombreEN : product.NombreES}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />

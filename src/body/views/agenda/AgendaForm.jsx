@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, X, Users, Plus, Trash2, FileText, UploadCloud, Save, Info, Clock, DollarSign, Edit3, Image as ImageIcon2 } from "lucide-react";
 import supabase from "@/config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "@/services/mediaServerService";
 
 const Section = ({ title, icon: Icon, children }) => (
   <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
@@ -171,20 +172,11 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
     if (!file) return;
     setIsUploadingBanner(true);
     try {
-      if (formData.bannerIMG && formData.bannerIMG.includes("Images_eventos")) {
-        const urlParts = formData.bannerIMG.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        await supabase.storage.from("Images_eventos").remove([fileName]);
-      }
-      const fileExt = file.name.split('.').pop();
-      const uniqueName = `banner_${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("Images_eventos").upload(uniqueName, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from("Images_eventos").getPublicUrl(uniqueName);
-      setFormData(prev => ({ ...prev, bannerIMG: publicUrl }));
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
+      setFormData(prev => ({ ...prev, bannerIMG: uploaded.mediaUri }));
     } catch (err) {
       console.error(err);
-      alert("Error subiendo imagen");
+      alert("Error subiendo imagen: " + (err.message || "Personal Media Server desconectado"));
     } finally {
       setIsUploadingBanner(false);
     }
@@ -321,7 +313,7 @@ function AgendaForm({ eventoToEdit = null, onClose = null }) {
                   </div>
                 ) : formData.bannerIMG ? (
                   <div className="relative w-full group">
-                    <img src={formData.bannerIMG} className="w-full h-40 object-cover rounded-lg shadow-sm" alt="Banner" />
+                    <img src={resolveMediaUrl(formData.bannerIMG)} className="w-full h-40 object-cover rounded-lg shadow-sm" alt="Banner" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <button type="button" onClick={() => setFormData({ ...formData, bannerIMG: "" })} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transform hover:scale-110 transition-transform">
                         <Trash2 size={20} />

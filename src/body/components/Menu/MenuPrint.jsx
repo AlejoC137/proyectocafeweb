@@ -5,6 +5,7 @@ import { MENU, ITEMS, AGENDA } from "../../../redux/actions-types";
 import { Button } from "@/components/ui/button";
 import MenuPrintFormInfo from "./MenuPrintForm";
 import supabase from "../../../config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "../../../services/mediaServerService";
 
 // Modular Components
 import { MenuPrintStyles } from "./MenuPrint/MenuPrintStyles";
@@ -249,14 +250,9 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `menu_print_images/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
-      if (error) throw error;
-
-      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
       const newImageId = 'IMG_' + Math.random().toString(36).substr(2, 9);
-      const newImages = [...printImages, { id: newImageId, url: data.publicUrl, path: fileName, height: 100, nameES: '', nameEN: '' }];
+      const newImages = [...printImages, { id: newImageId, url: uploaded.mediaUri, path: uploaded.item?.relativePath || uploaded.mediaUri, height: 100, nameES: '', nameEN: '' }];
       setPrintImages(newImages);
       await saveImagesConfig(newImages);
 
@@ -267,7 +263,7 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
     } catch (err) {
       console.error("Error uploading image:", err);
-      alert("Error subiendo imagen.");
+      alert("Error subiendo imagen: " + (err.message || "Personal Media Server desconectado"));
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -285,29 +281,19 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `menu_print_images/${Date.now()}_replaced.${ext}`;
-      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
-      if (error) throw error;
-
-      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
 
       const newImages = [...printImages];
       const index = newImages.findIndex(img => String(img.id) === String(blockId));
       if (index !== -1) {
-        const oldImage = newImages[index];
-        if (oldImage.path) {
-          supabase.storage.from("Images_eventos").remove([oldImage.path]).catch(err => console.error("Error removing old image", err));
-        }
-
-        newImages[index].url = data.publicUrl;
-        newImages[index].path = fileName;
+        newImages[index].url = uploaded.mediaUri;
+        newImages[index].path = uploaded.item?.relativePath || uploaded.mediaUri;
         setPrintImages(newImages);
         await saveImagesConfig(newImages);
       }
     } catch (err) {
       console.error("Error replacing image:", err);
-      alert("Error reemplazando imagen.");
+      alert("Error reemplazando imagen: " + (err.message || "Personal Media Server desconectado"));
     } finally {
       setUploadingImage(false);
       e.target.value = '';
@@ -339,13 +325,8 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `menu_backgrounds/${Date.now()}_bg.${ext}`;
-      const { error } = await supabase.storage.from("Images_eventos").upload(fileName, file);
-      if (error) throw error;
-
-      const { data } = supabase.storage.from("Images_eventos").getPublicUrl(fileName);
-      const newUrl = data.publicUrl;
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
+      const newUrl = uploaded.mediaUri;
       setBackgroundUrl(newUrl);
 
       const newDescriptions = {
@@ -357,21 +338,17 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
 
     } catch (err) {
       console.error("Error uploading background:", err);
-      alert("Error subiendo el fondo.");
+      alert("Error subiendo el fondo: " + (err.message || "Personal Media Server desconectado"));
     } finally {
       setUploadingImage(false);
     }
   };
 
   const deleteImage = async (blockId) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta imagen permanentemente?")) return;
+    if (!window.confirm("¿Seguro que deseas eliminar esta imagen del diseño?")) return;
     const index = printImages.findIndex(img => String(img.id) === String(blockId));
     if (index === -1) return;
-    const image = printImages[index];
     try {
-      if (image.path) {
-        await supabase.storage.from("Images_eventos").remove([image.path]);
-      }
       const newImages = printImages.filter((_, i) => i !== index);
       setPrintImages(newImages);
       await saveImagesConfig(newImages);

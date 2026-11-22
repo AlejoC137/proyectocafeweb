@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { Flame, Leaf, AlertTriangle } from 'lucide-react';
+import { useMediaServer } from '../../../context/MediaServerContext';
 
 /**
  * Hook especializado para componentes de solo visualización
  * Contiene helpers comunes para formateo, iconos, etc.
  */
 export const useDisplayCard = (product, options = {}) => {
+  const { resolveMediaUrl } = useMediaServer();
   const {
     isEnglish = false,
     showIcons = true,
@@ -94,8 +96,9 @@ export const useDisplayCard = (product, options = {}) => {
 
   // Helper para obtener imagen con fallback
   const getImageUrl = useMemo(() => {
-    return product?.Foto || product?.bannerIMG || product?.foto || '/placeholder.svg';
-  }, [product?.Foto, product?.bannerIMG, product?.foto]);
+    const raw = product?.Foto || product?.bannerIMG || product?.foto;
+    return resolveMediaUrl(raw) || '/placeholder.svg';
+  }, [product?.Foto, product?.bannerIMG, product?.foto, resolveMediaUrl]);
 
   // Helper para detectar si es evento (tiene fecha/hora)
   const isEvent = useMemo(() => {

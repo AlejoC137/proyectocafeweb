@@ -5,6 +5,7 @@
 // =========================================================
 
 import React, { useRef, useState, useEffect } from "react";
+import { useMediaServer } from "../../../../context/MediaServerContext";
 
 export default function FlyerCanvas({
   canvasConfig = {},
@@ -19,6 +20,7 @@ export default function FlyerCanvas({
   onPanChange = () => {},
   onOpenEmojiModal = () => {}
 }) {
+  const { resolveMediaUrl } = useMediaServer();
   const containerRef = useRef(null);
   
   // Estado para Pan (desplazamiento del lienzo)
@@ -722,7 +724,7 @@ export default function FlyerCanvas({
               style={{
                 position: "absolute",
                 inset: 0,
-                backgroundImage: `url(${canvasConfig.backgroundImageUrl})`,
+                backgroundImage: `url(${resolveMediaUrl(canvasConfig.backgroundImageUrl)})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 filter: canvasConfig.backgroundBlur ? `blur(${canvasConfig.backgroundBlur}px)` : undefined,

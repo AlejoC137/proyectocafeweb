@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { MENU, ITEMS, PRODUCCION } from "../../../redux/actions-types";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
 import supabase from "../../../config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "../../../services/mediaServerService";
 import HorizontalGallery from "../../components/Menu/MenuPrintHorizontal/HorizontalGallery";
 
 import EditableIngredientRow from "./RecetaModalComponents/EditableIngredientRow";
@@ -89,23 +90,13 @@ function RecetaModal({ item, onClose }) {
 
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `menu-images/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('Images_eventos')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('Images_eventos')
-        .getPublicUrl(filePath);
+      const uploaded = await uploadImageToMediaServer(file, { folder: 'proyectocafe-galeria' });
+      const mediaUri = uploaded.mediaUri;
+      const filePath = uploaded.item?.relativePath || mediaUri;
 
       const newImage = {
         id: 'IMG_' + Date.now(),
-        url: publicUrl,
+        url: mediaUri,
         storagePath: filePath,
         height: 300
       };
@@ -119,10 +110,10 @@ function RecetaModal({ item, onClose }) {
         }).eq('id', configToUpdate.id);
       }
 
-      setImagenUrl(publicUrl);
+      setImagenUrl(mediaUri);
       
       if (receta.forId) {
-        const result = await dispatch(updateItem(receta.forId, { Foto: publicUrl }, "Menu"));
+        const result = await dispatch(updateItem(receta.forId, { Foto: mediaUri }, "Menu"));
         if (result) setFoto(publicUrl);
       }
 

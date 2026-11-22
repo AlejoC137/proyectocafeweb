@@ -343,7 +343,7 @@ export default function PlayerCenter({
       {isYoutubeTrack && ytId ? (
         <div className="flex flex-col">
           <div className="relative aspect-video w-full bg-black overflow-hidden">
-            <div ref={iframeContainerRef} className="w-full h-full" />
+            <div key={`${ytId}-${listId || ''}`} ref={iframeContainerRef} className="w-full h-full" />
             <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-[#FF0000] border border-black text-white px-2 py-0.5 shadow-md pointer-events-none">
               <Youtube className="w-3.5 h-3.5 fill-current text-white animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-wider">

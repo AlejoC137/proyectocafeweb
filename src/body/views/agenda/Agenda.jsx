@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getAllFromTable, deleteItem, updateItem } from "@/redux/actions";
 import { AGENDA } from "@/redux/actions-types";
 import { CardGridAgenda } from "@/components/ui/cardGridAgenda";
+import { useMediaServer } from "@/context/MediaServerContext";
 import PageLayout from "../../../components/ui/page-layout";
 import ContentCard from "../../../components/ui/content-card";
 import {
@@ -34,6 +35,7 @@ import { EventImporter } from "./EventImporter";
 function Agenda() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { resolveMediaUrl } = useMediaServer();
   const allAgenda = useSelector((state) => state.allAgenda || []);
 
   const { year, month } = useParams();
@@ -454,7 +456,7 @@ function Agenda() {
                                         {evento.bannerIMG && (
                                           <div
                                             className={`absolute inset-0 w-full h-full bg-cover bg-center transition-transform group-hover:scale-105 ${isIdea ? "grayscale" : ""}`}
-                                            style={{ backgroundImage: `url(${evento.bannerIMG})` }}
+                                            style={{ backgroundImage: `url(${resolveMediaUrl(evento.bannerIMG)})` }}
                                           ></div>
                                         )}
 

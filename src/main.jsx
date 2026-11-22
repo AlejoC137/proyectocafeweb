@@ -7,6 +7,7 @@ import App from './App.jsx';
 import store from './redux/store.js';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
+import { MediaServerProvider } from './context/MediaServerContext';
 import BottomNav from './components/ui/bottom-nav'; // Import BottomNav
 
 
@@ -22,11 +23,13 @@ window.addEventListener('vite:preloadError', (event) => {
 
 root.render(
   <Provider store={store}>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MediaServerProvider>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
 
-      {/* <React.StrictMode> */}
-      <App />
-      {/* </React.StrictMode> */}
-    </BrowserRouter>
+        {/* <React.StrictMode> */}
+        <App />
+        {/* </React.StrictMode> */}
+      </BrowserRouter>
+    </MediaServerProvider>
   </Provider>
 );

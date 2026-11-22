@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, Users, ArrowLeft, Save, Plus, X, ImageIcon, UploadCloud, Trash2, FileText, Copy, CheckCircle2, MessageSquare } from "lucide-react";
 import { MESSAGE_TEMPLATES } from "@/utils/messageTemplates";
 import supabase from "@/config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "@/services/mediaServerService";
 import PageLayout from "../../../components/ui/page-layout";
 
 function AgendaFormPage() {
@@ -308,31 +309,18 @@ function AgendaFormPage() {
     }));
   };
 
-  // Subir imagen al bucket
+  // Subir imagen al Personal Media Server
   const handleBannerUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setIsUploadingBanner(true);
     try {
-      if (formData.bannerIMG && formData.bannerIMG.includes("Images_eventos")) {
-        const urlParts = formData.bannerIMG.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        await supabase.storage.from("Images_eventos").remove([fileName]);
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const uniqueName = `banner_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("Images_eventos").upload(uniqueName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from("Images_eventos").getPublicUrl(uniqueName);
-      setFormData(prev => ({ ...prev, bannerIMG: publicUrl }));
-
+      const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
+      setFormData(prev => ({ ...prev, bannerIMG: uploaded.mediaUri }));
     } catch (err) {
       console.error("Error subiendo la imagen", err);
-      alert("Hubo un error al subir la imagen del banner");
+      alert("Hubo un error al subir la imagen del banner: " + (err.message || "Personal Media Server desconectado"));
     } finally {
       setIsUploadingBanner(false);
     }
@@ -342,11 +330,6 @@ function AgendaFormPage() {
     if (!formData.bannerIMG) return;
     setIsUploadingBanner(true);
     try {
-      if (formData.bannerIMG.includes("Images_eventos")) {
-        const urlParts = formData.bannerIMG.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        await supabase.storage.from("Images_eventos").remove([fileName]);
-      }
       setFormData(prev => ({ ...prev, bannerIMG: "" }));
     } catch (e) {
       console.error(e);
@@ -694,7 +677,7 @@ function AgendaFormPage() {
                     )}
                     {formData.bannerIMG ? (
                       <div className="relative w-full group">
-                        <img src={formData.bannerIMG} alt="Banner" className="w-full h-48 object-cover rounded-md border" />
+                        <img src={resolveMediaUrl(formData.bannerIMG)} alt="Banner" className="w-full h-48 object-cover rounded-md border" />
                         <button type="button" onClick={handleRemoveBanner} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 shadow-md">
                           <Trash2 size={16} />
                         </button>

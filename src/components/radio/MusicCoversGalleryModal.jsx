@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import supabase from '../../config/supabaseClient';
+import { useMediaServer } from '../../context/MediaServerContext';
 import { X, Upload, Search, Image as ImageIcon, Check, Loader2, Plus, Sparkles, Trash2, Edit3, Save } from 'lucide-react';
 
 const DEFAULT_PRESET_COVERS = [
@@ -13,6 +14,7 @@ const DEFAULT_PRESET_COVERS = [
 ];
 
 export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover, currentCoverUrl }) {
+  const { resolveMediaThumbUrl, uploadImageToMediaServer } = useMediaServer();
   const [covers, setCovers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,42 +79,16 @@ export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover
       setUploading(true);
       setError(null);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-      const filePath = `covers/${fileName}`;
+      let mediaUri = null;
+      let filePath = '';
 
-      let targetBuckets = [];
       try {
-        const { data: existingBuckets } = await supabase.storage.listBuckets();
-        if (existingBuckets && existingBuckets.length > 0) {
-          targetBuckets = existingBuckets.map(b => b.name);
-        }
-      } catch (e) {}
-
-      if (targetBuckets.length === 0) {
-        targetBuckets = ['Radio', 'radio', 'musicCovers', 'public'];
-      }
-
-      let targetBucket = null;
-      let publicUrl = null;
-
-      for (const bName of targetBuckets) {
-        try {
-          const { error: upErr } = await supabase.storage
-            .from(bName)
-            .upload(filePath, file, { upsert: true, cacheControl: '3600' });
-
-          if (!upErr) {
-            const { data: pubData } = supabase.storage.from(bName).getPublicUrl(filePath);
-            publicUrl = pubData?.publicUrl;
-            targetBucket = bName;
-            break;
-          }
-        } catch (e) {}
-      }
-
-      if (!publicUrl) {
-        publicUrl = await new Promise((resolve) => {
+        const uploaded = await uploadImageToMediaServer(file, { folder: 'proyectocafe-galeria' });
+        mediaUri = uploaded.mediaUri;
+        filePath = uploaded.item?.relativePath || mediaUri;
+      } catch (serverErr) {
+        console.warn('[MusicCoversGalleryModal] Personal Media Server no disponible, usando DataURL local:', serverErr.message);
+        mediaUri = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);
           reader.onerror = () => resolve(URL.createObjectURL(file));
@@ -124,7 +100,7 @@ export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover
         title: uploadTitle.trim() || file.name.replace(/\.[^/.]+$/, ""),
         artist: uploadArtist.trim() || 'Proyecto Café',
         album: uploadTitle.trim() || 'Álbum',
-        url: publicUrl,
+        url: mediaUri,
         storage_path: filePath
       };
 
@@ -409,7 +385,7 @@ export default function MusicCoversGalleryModal({ isOpen, onClose, onSelectCover
                   >
                     <div className="aspect-square w-full overflow-hidden bg-black/40 relative">
                       <img 
-                        src={cover.url} 
+                        src={resolveMediaThumbUrl(cover.url, 360)} 
                         alt={cover.title} 
                         onError={(e) => { e.currentTarget.src = DEFAULT_PRESET_COVERS[0].url; }}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"

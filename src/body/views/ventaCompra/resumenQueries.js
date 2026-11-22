@@ -133,12 +133,136 @@ export function matchesMonth(dateStr, year, monthIndex) {
   return ym.monthIndex === monthIndex && ym.year === year;
 }
 
+const DATE_INDEX_TTL_MS = 60 * 1000;
+const dateIndexCache = new Map();
+
+function isStatementTimeoutError(error) {
+  if (!error) return false;
+  const code = String(error.code || "");
+  const msg = String(error.message || error).toLowerCase();
+  return (
+    code === "57014" ||
+    msg.includes("statement timeout") ||
+    msg.includes("canceling statement")
+  );
+}
+
 /**
- * Consulta paginada en Supabase aplicando filtro `.or()` en el servidor
- * y seleccionando únicamente las columnas necesarias.
+ * Descarga un índice liviano `{ _id, Date }` de la tabla sin `WHERE LIKE` ni `ORDER BY`,
+ * evitando full-table scans pesados que provocan `statement timeout` en Supabase/Postgres.
+ * Reutiliza caché en memoria por 60s y deduplica llamadas concurrentes.
  */
-async function fetchFilteredPaginated({ table, columns, orFilter, pageSize = 1000 }) {
-  let allRows = [];
+async function fetchTableDateIndex(table, { force = false, pageSize = 1000 } = {}) {
+  const now = Date.now();
+  const cached = dateIndexCache.get(table);
+
+  if (!force && cached?.rows && now - cached.fetchedAt < DATE_INDEX_TTL_MS) {
+    return cached.rows;
+  }
+  if (!force && cached?.promise) {
+    return cached.promise;
+  }
+
+  const promise = (async () => {
+    let allRows = [];
+    let page = 0;
+
+    while (true) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error } = await supabase
+        .from(table)
+        .select("_id, Date")
+        .range(from, to);
+
+      if (error) {
+        throw new Error(`Error consultando índice de ${table}: ${error.message || error}`);
+      }
+
+      if (!data || data.length === 0) break;
+
+      allRows = allRows.concat(data);
+      if (data.length < pageSize) break;
+      page++;
+    }
+
+    const seen = new Set();
+    const deduped = allRows.filter((row) => {
+      if (row._id === undefined || row._id === null) return true;
+      if (seen.has(row._id)) return false;
+      seen.add(row._id);
+      return true;
+    });
+
+    dateIndexCache.set(table, { rows: deduped, fetchedAt: Date.now(), promise: null });
+    return deduped;
+  })().catch((err) => {
+    const cur = dateIndexCache.get(table);
+    if (cur?.promise === promise) {
+      dateIndexCache.delete(table);
+    }
+    throw err;
+  });
+
+  dateIndexCache.set(table, {
+    rows: cached?.rows || null,
+    fetchedAt: cached?.fetchedAt || 0,
+    promise,
+  });
+
+  return promise;
+}
+
+/**
+ * Obtiene las columnas solicitadas para un conjunto de `_id` en lotes pequeños
+ * con concurrencia acotada.
+ */
+async function fetchRowsByIds({ table, columns, ids, chunkSize = 100, concurrency = 3 }) {
+  if (!ids || ids.length === 0) return [];
+
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    chunks.push(ids.slice(i, i + chunkSize));
+  }
+
+  const results = new Array(chunks.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < chunks.length) {
+      const idx = nextIndex++;
+      const chunk = chunks[idx];
+      const { data, error } = await supabase
+        .from(table)
+        .select(columns)
+        .in("_id", chunk);
+
+      if (error) {
+        throw new Error(`Error consultando ${table}: ${error.message || error}`);
+      }
+      results[idx] = data || [];
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, chunks.length) }, () => worker());
+  await Promise.all(workers);
+
+  const flat = results.flat();
+  const seen = new Set();
+  return flat.filter((row) => {
+    if (row._id === undefined || row._id === null) return true;
+    if (seen.has(row._id)) return false;
+    seen.add(row._id);
+    return true;
+  });
+}
+
+/**
+ * Fallback secuencial sin WHERE ni ORDER BY (lotes de 500 filas) filtrando en cliente.
+ */
+async function fetchSequentialClientFiltered({ table, columns, predicate, pageSize = 500 }) {
+  let matched = [];
   let page = 0;
 
   while (true) {
@@ -148,7 +272,6 @@ async function fetchFilteredPaginated({ table, columns, orFilter, pageSize = 100
     const { data, error } = await supabase
       .from(table)
       .select(columns)
-      .or(orFilter)
       .range(from, to);
 
     if (error) {
@@ -157,22 +280,53 @@ async function fetchFilteredPaginated({ table, columns, orFilter, pageSize = 100
 
     if (!data || data.length === 0) break;
 
-    allRows = allRows.concat(data);
+    for (const row of data) {
+      if (predicate(row)) matched.push(row);
+    }
+
     if (data.length < pageSize) break;
     page++;
   }
 
-  // Deduplicar por _id si existe (protección ante inserciones durante paginación)
-  if (allRows.length > 0 && allRows[0]._id !== undefined) {
+  if (matched.length > 0 && matched[0]._id !== undefined) {
     const seen = new Set();
-    return allRows.filter((row) => {
+    return matched.filter((row) => {
       if (seen.has(row._id)) return false;
       seen.add(row._id);
       return true;
     });
   }
 
-  return allRows;
+  return matched;
+}
+
+/**
+ * Consulta en 2 fases para tablas con `Date` en texto:
+ * 1) Descarga/reutiliza el índice liviano `{ _id, Date }`.
+ * 2) Filtra en cliente y descarga las columnas completas solo para los `_id` coincidentes.
+ * Si el lookup por `_id` llegara a dar timeout, cae a escaneo secuencial en lotes pequeños.
+ */
+async function fetchByDatePredicate({ table, columns, predicate, force = false }) {
+  const indexRows = await fetchTableDateIndex(table, { force });
+  const matchingIds = [];
+
+  for (const row of indexRows) {
+    if (predicate(row) && row._id !== undefined && row._id !== null) {
+      matchingIds.push(row._id);
+    }
+  }
+
+  if (matchingIds.length === 0) return [];
+
+  try {
+    return await fetchRowsByIds({ table, columns, ids: matchingIds });
+  } catch (err) {
+    if (isStatementTimeoutError(err)) {
+      console.warn(`Lookup por _id en ${table} dio timeout; usando escaneo secuencial.`);
+      return fetchSequentialClientFiltered({ table, columns, predicate });
+    }
+    throw err;
+  }
 }
 
 /**
@@ -225,44 +379,40 @@ async function fetchTimestampRangePaginated({
   return allRows;
 }
 
-export async function fetchVentasByDay(year, month, day) {
-  const orFilter = buildDayDateOrFilter(year, month, day);
-  const rows = await fetchFilteredPaginated({
+export async function fetchVentasByDay(year, month, day, { force = false } = {}) {
+  return fetchByDatePredicate({
     table: "Ventas",
     columns: VENTAS_COLUMNS,
-    orFilter,
+    predicate: (v) => matchesDay(v.Date, year, month, day),
+    force,
   });
-  return rows.filter((v) => matchesDay(v.Date, year, month, day));
 }
 
-export async function fetchComprasByDay(year, month, day) {
-  const orFilter = buildDayDateOrFilter(year, month, day);
-  const rows = await fetchFilteredPaginated({
+export async function fetchComprasByDay(year, month, day, { force = false } = {}) {
+  return fetchByDatePredicate({
     table: "Compras",
     columns: COMPRAS_COLUMNS,
-    orFilter,
+    predicate: (c) => matchesDay(c.Date, year, month, day),
+    force,
   });
-  return rows.filter((c) => matchesDay(c.Date, year, month, day));
 }
 
-export async function fetchVentasByMonth(year, monthIndex) {
-  const orFilter = buildMonthDateOrFilter(year, monthIndex + 1);
-  const rows = await fetchFilteredPaginated({
+export async function fetchVentasByMonth(year, monthIndex, { force = false } = {}) {
+  return fetchByDatePredicate({
     table: "Ventas",
     columns: VENTAS_COLUMNS,
-    orFilter,
+    predicate: (v) => matchesMonth(v.Date, year, monthIndex),
+    force,
   });
-  return rows.filter((v) => matchesMonth(v.Date, year, monthIndex));
 }
 
-export async function fetchComprasByMonth(year, monthIndex, { detailed = false } = {}) {
-  const orFilter = buildMonthDateOrFilter(year, monthIndex + 1);
-  const rows = await fetchFilteredPaginated({
+export async function fetchComprasByMonth(year, monthIndex, { detailed = false, force = false } = {}) {
+  return fetchByDatePredicate({
     table: "Compras",
     columns: detailed ? COMPRAS_DETAIL_COLUMNS : COMPRAS_COLUMNS,
-    orFilter,
+    predicate: (c) => matchesMonth(c.Date, year, monthIndex),
+    force,
   });
-  return rows.filter((c) => matchesMonth(c.Date, year, monthIndex));
 }
 
 export async function fetchConsumoStaffByMonth(year, monthIndex) {
@@ -304,36 +454,30 @@ export function enumerateDateRangeDays(startIso, endIso) {
   return days;
 }
 
-function buildRangeDateOrFilter(days) {
-  return days.map((d) => buildDayDateOrFilter(d.year, d.month, d.day)).join(",");
-}
-
 function matchesAnyDay(dateStr, days) {
   return days.some((d) => matchesDay(dateStr, d.year, d.month, d.day));
 }
 
-export async function fetchVentasByRange(startIso, endIso) {
+export async function fetchVentasByRange(startIso, endIso, { force = false } = {}) {
   const days = enumerateDateRangeDays(startIso, endIso);
   if (days.length === 0) return [];
-  const orFilter = buildRangeDateOrFilter(days);
-  const rows = await fetchFilteredPaginated({
+  return fetchByDatePredicate({
     table: "Ventas",
     columns: VENTAS_COLUMNS,
-    orFilter,
+    predicate: (v) => matchesAnyDay(v.Date, days),
+    force,
   });
-  return rows.filter((v) => matchesAnyDay(v.Date, days));
 }
 
-export async function fetchComprasByRange(startIso, endIso) {
+export async function fetchComprasByRange(startIso, endIso, { force = false } = {}) {
   const days = enumerateDateRangeDays(startIso, endIso);
   if (days.length === 0) return [];
-  const orFilter = buildRangeDateOrFilter(days);
-  const rows = await fetchFilteredPaginated({
+  return fetchByDatePredicate({
     table: "Compras",
     columns: COMPRAS_COLUMNS,
-    orFilter,
+    predicate: (c) => matchesAnyDay(c.Date, days),
+    force,
   });
-  return rows.filter((c) => matchesAnyDay(c.Date, days));
 }
 
 export async function fetchConsumoStaffByRange(startIso, endIso) {
@@ -355,39 +499,20 @@ export async function fetchConsumoStaffByRange(startIso, endIso) {
 }
 
 /**
- * Obtiene únicamente la columna `Date` de Ventas (paginado) para saber qué años y meses
- * tienen ventas registradas, sin descargar el resto de columnas pesadas.
+ * Obtiene únicamente la columna `Date` de Ventas (reutilizando el índice liviano)
+ * para saber qué años y meses tienen ventas registradas.
  */
-export async function fetchVentasMonthsIndex({ pageSize = 1000 } = {}) {
+export async function fetchVentasMonthsIndex({ force = false, pageSize = 1000 } = {}) {
+  const indexRows = await fetchTableDateIndex("Ventas", { force, pageSize });
   const yearsSet = new Set();
   const monthKeys = new Set();
-  let page = 0;
 
-  while (true) {
-    const from = page * pageSize;
-    const to = from + pageSize - 1;
-
-    const { data, error } = await supabase
-      .from("Ventas")
-      .select("Date")
-      .range(from, to);
-
-    if (error) {
-      throw new Error(`Error consultando índice de Ventas: ${error.message || error}`);
+  for (const row of indexRows) {
+    const ym = parseYearMonth(row?.Date);
+    if (ym) {
+      yearsSet.add(ym.year);
+      monthKeys.add(`${ym.year}-${ym.monthIndex}`);
     }
-
-    if (!data || data.length === 0) break;
-
-    for (const row of data) {
-      const ym = parseYearMonth(row?.Date);
-      if (ym) {
-        yearsSet.add(ym.year);
-        monthKeys.add(`${ym.year}-${ym.monthIndex}`);
-      }
-    }
-
-    if (data.length < pageSize) break;
-    page++;
   }
 
   return {

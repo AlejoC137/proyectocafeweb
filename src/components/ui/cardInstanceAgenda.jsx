@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, Trash2, Users, Clock, ExternalLink } from "lucide-react";
+import { useMediaServer } from "@/context/MediaServerContext";
 
 export const CardInstanceAgenda = memo(function CardInstanceAgenda({ product, onDelete }) {
   const navigate = useNavigate();
+  const { resolveMediaThumbUrl } = useMediaServer();
 
   const handleViewEvento = () => {
     navigate(`/agendaForm/${product._id}`);
@@ -16,7 +18,7 @@ export const CardInstanceAgenda = memo(function CardInstanceAgenda({ product, on
       {/* Imagen del banner */}
       <div className="relative h-[200px] w-full">
         <img
-          src={product.bannerIMG || "/default-image.jpg"}
+          src={resolveMediaThumbUrl(product.bannerIMG, 600) || "/default-image.jpg"}
           alt={product.nombre || "Evento"}
           className="w-full h-full object-cover"
         />

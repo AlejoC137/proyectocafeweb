@@ -4,6 +4,7 @@ import { useRadioData } from '../hooks/useRadioData';
 import { useRadioPlayer } from '../hooks/useRadioPlayer';
 import { useRadioSync } from '../hooks/useRadioSync';
 import { buildStreamUrl } from '../services/mediaServerService';
+import { extractYoutubeId, extractPlaylistId, getYoutubeThumbnail } from '../utils/youtubeHelpers';
 
 import RadioHeader from './radio/RadioHeader';
 import AgendaColumn from './radio/AgendaColumn';
@@ -49,7 +50,59 @@ export default function ProyectoRadio() {
   // Modo mixto: independiente por defecto, sincronización opcional con RadioManager
   // Si RadioManager activa "Setlist al Aire", se bloquea /Radio automáticamente a la Cabina
   const [isCabinaSync, setIsCabinaSync] = useState(false);
+  const [remoteYoutubeTrack, setRemoteYoutubeTrack] = useState(null);
   const lastSyncedSignatureRef = useRef('');
+  const radioDataRef = useRef(null);
+
+  const applyRemoteYoutubeVideo = useCallback((payload = {}) => {
+    const rawUrl = payload.url || payload.station_url || '';
+    const ytId = payload.youtubeId || extractYoutubeId(rawUrl);
+    const listId = payload.listId || extractPlaylistId(rawUrl);
+
+    playerRef.current?.audioRef?.current?.pause();
+    setActiveTab('youtube');
+
+    const ytList = radioDataRef.current?.youtubePlaylist || [];
+    const remoteTitle = (payload.title || payload.station_name || '').trim().toLowerCase();
+    const matchedIdx = ytList.findIndex((t) => {
+      if (ytId && t.youtubeId && t.youtubeId === ytId) return true;
+      if (rawUrl && t.url && t.url === rawUrl) return true;
+      if (payload.id && t.id && String(t.id) === String(payload.id)) return true;
+      if (remoteTitle && t.title && t.title.trim().toLowerCase() === remoteTitle) return true;
+      return false;
+    });
+
+    if (matchedIdx !== -1) {
+      radioDataRef.current?.setSelectedYoutubeCategory?.('Todos');
+      radioDataRef.current?.setYoutubeSearchQuery?.('');
+      setRemoteYoutubeTrack(null);
+      setCurrentTrackIndex(matchedIdx);
+    } else if (ytId) {
+      setRemoteYoutubeTrack({
+        id: payload.id ? String(payload.id) : `remote-yt-${ytId}`,
+        title: payload.title || payload.station_name || 'Video de YouTube',
+        artist: payload.artist || payload.station_artist || 'YouTube',
+        youtubeId: ytId,
+        listId: listId || null,
+        url:
+          rawUrl ||
+          (listId
+            ? `https://www.youtube.com/watch?v=${ytId}&list=${listId}`
+            : `https://www.youtube.com/watch?v=${ytId}`),
+        cover: payload.cover || payload.station_cover || getYoutubeThumbnail(ytId),
+        type: 'youtube',
+        isLiveStream: true,
+      });
+    }
+
+    const shouldPlay = payload.isPlaying !== false;
+    setIsPlaying(shouldPlay);
+    if (shouldPlay) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
+      }, 200);
+    }
+  }, []);
 
   const handleRemoteCommand = useCallback((cmd) => {
     if (!cmd) return;
@@ -72,17 +125,15 @@ export default function ProyectoRadio() {
     } else if (cmd.type === 'FORCE_MODE') {
       const targetTab = cmd.payload?.tab || cmd.tab;
       if (targetTab && ['supabase', 'live', 'youtube'].includes(targetTab)) {
-        setActiveTab(targetTab);
         if (targetTab === 'youtube') {
-          playerRef.current?.audioRef?.current?.pause();
-          setIsPlaying(true);
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
-          }, 150);
+          applyRemoteYoutubeVideo(cmd.payload || cmd);
+        } else {
+          setRemoteYoutubeTrack(null);
+          setActiveTab(targetTab);
         }
       }
     }
-  }, []);
+  }, [applyRemoteYoutubeVideo]);
 
   useEffect(() => {
     try {
@@ -102,9 +153,12 @@ export default function ProyectoRadio() {
     setIsPlaying,
     setAudioError
   );
+  radioDataRef.current = radioData;
 
-  const currentTrack =
+  const baseTrack =
     radioData.currentPlaylist[currentTrackIndex] || radioData.currentPlaylist[0] || null;
+  const currentTrack =
+    activeTab === 'youtube' && remoteYoutubeTrack ? remoteYoutubeTrack : baseTrack;
 
   // Telemetría de presencia para que RadioManager vea los oyentes conectados
   const presenceData = useMemo(
@@ -133,12 +187,25 @@ export default function ProyectoRadio() {
   const isSetlistLocked = Boolean(tyrannySettings?.lockConsoles || tyrannySettings?.setlistMode);
   const effectiveCabinaSync = isSetlistLocked || isCabinaSync;
 
-  // Forzar pestaña de biblioteca cuando Setlist al Aire está activo
+  // Pestaña autorizada por Cabina (soporta biblioteca MP3 y YouTube)
+  const forcedCabinaTab =
+    currentPlay?.tab && ['supabase', 'live', 'youtube'].includes(currentPlay.tab)
+      ? currentPlay.tab
+      : tyrannySettings?.forcedTab && ['supabase', 'live', 'youtube'].includes(tyrannySettings.forcedTab)
+      ? tyrannySettings.forcedTab
+      : 'supabase';
+
+  // Forzar pestaña de Cabina cuando Setlist al Aire está activo (MP3 o YouTube según lo que emita RadioManager)
   useEffect(() => {
-    if (isSetlistLocked && activeTab !== 'supabase') {
-      setActiveTab('supabase');
+    if (isSetlistLocked && activeTab !== forcedCabinaTab) {
+      if (forcedCabinaTab === 'youtube') {
+        playerRef.current?.audioRef?.current?.pause();
+      } else {
+        setRemoteYoutubeTrack(null);
+      }
+      setActiveTab(forcedCabinaTab);
     }
-  }, [isSetlistLocked, activeTab]);
+  }, [isSetlistLocked, forcedCabinaTab, activeTab]);
 
   // Aplicar volumen remoto enviado desde RadioManager
   useEffect(() => {
@@ -166,7 +233,7 @@ export default function ProyectoRadio() {
 
   const handleTabChange = useCallback(
     (tab) => {
-      if (isSetlistLocked && tab !== 'supabase') return;
+      if (isSetlistLocked && tab !== forcedCabinaTab) return;
       const audioEl = playerRef.current?.audioRef?.current;
       if (audioEl) {
         try {
@@ -174,6 +241,7 @@ export default function ProyectoRadio() {
         } catch {}
       }
 
+      setRemoteYoutubeTrack(null);
       setActiveTab(tab);
       setIsPlaying(false);
       setAudioError(null);
@@ -192,7 +260,7 @@ export default function ProyectoRadio() {
       playerRef.current?.setProgress(0);
       playerRef.current?.setCurrentTime(0);
     },
-    [setCurrentTrackIndex]
+    [isSetlistLocked, forcedCabinaTab, setCurrentTrackIndex]
   );
 
   // URL directa para <audio src={...} preload="metadata" />
@@ -207,8 +275,7 @@ export default function ProyectoRadio() {
 
   // Sincronización con Cabina (obligatoria cuando Setlist al Aire está activo, u opcional)
   useEffect(() => {
-    if (!effectiveCabinaSync || !currentPlay || activeTab !== 'supabase') return;
-    if (radioData.mediaServerStatus !== 'online') return;
+    if (!effectiveCabinaSync || !currentPlay) return;
 
     const ignoredSignals = [
       'SYNC',
@@ -233,35 +300,60 @@ export default function ProyectoRadio() {
       return;
     }
 
-    const signature = `${currentPlay.station_name || ''}__${currentPlay.station_url || ''}__${currentPlay.is_playing}`;
-    if (lastSyncedSignatureRef.current === signature) return;
-    lastSyncedSignatureRef.current = signature;
+    const remoteTab = currentPlay.tab || 'supabase';
+    const signature = `${remoteTab}__${currentPlay.station_name || ''}__${currentPlay.station_url || ''}__${currentPlay.is_playing}`;
 
-    const list = radioData.currentPlaylist || [];
-    if (list.length === 0) return;
-
-    const urlIdMatch = (currentPlay.station_url || '').match(/\/media\/audio\/([^/?#]+)/);
-    const remoteTrackId = urlIdMatch ? decodeURIComponent(urlIdMatch[1]) : null;
-    const remoteTitle = (currentPlay.station_name || '').trim().toLowerCase();
-
-    const matchedIdx = list.findIndex((t) => {
-      if (remoteTrackId && t.id && String(t.id) === remoteTrackId) return true;
-      if (currentPlay.station_url && (t.streamUrl === currentPlay.station_url || t.url === currentPlay.station_url)) {
-        return true;
-      }
-      if (remoteTitle && t.title) {
-        const localTitle = t.title.trim().toLowerCase();
-        return localTitle === remoteTitle || localTitle.includes(remoteTitle) || remoteTitle.includes(localTitle);
-      }
-      return false;
-    });
-
-    if (matchedIdx !== -1 && matchedIdx !== currentTrackIndex) {
-      setCurrentTrackIndex(matchedIdx);
+    // 1. Modo YouTube desde Cabina
+    if (remoteTab === 'youtube') {
+      if (lastSyncedSignatureRef.current === signature && activeTab === 'youtube') return;
+      lastSyncedSignatureRef.current = signature;
+      applyRemoteYoutubeVideo({
+        url: currentPlay.station_url,
+        title: currentPlay.station_name,
+        artist: currentPlay.station_artist,
+        cover: currentPlay.station_cover,
+        isPlaying: currentPlay.is_playing !== false,
+      });
+      return;
     }
 
-    if (typeof currentPlay.is_playing === 'boolean') {
-      setIsPlaying(currentPlay.is_playing);
+    // 2. Modo Biblioteca MP3 desde Cabina
+    if (remoteTab === 'supabase') {
+      if (activeTab !== 'supabase') {
+        setRemoteYoutubeTrack(null);
+        setActiveTab('supabase');
+        return;
+      }
+      if (radioData.mediaServerStatus !== 'online') return;
+      if (lastSyncedSignatureRef.current === signature) return;
+      lastSyncedSignatureRef.current = signature;
+
+      const list = radioData.currentPlaylist || [];
+      if (list.length === 0) return;
+
+      const urlIdMatch = (currentPlay.station_url || '').match(/\/media\/audio\/([^/?#]+)/);
+      const remoteTrackId = urlIdMatch ? decodeURIComponent(urlIdMatch[1]) : null;
+      const remoteTitle = (currentPlay.station_name || '').trim().toLowerCase();
+
+      const matchedIdx = list.findIndex((t) => {
+        if (remoteTrackId && t.id && String(t.id) === remoteTrackId) return true;
+        if (currentPlay.station_url && (t.streamUrl === currentPlay.station_url || t.url === currentPlay.station_url)) {
+          return true;
+        }
+        if (remoteTitle && t.title) {
+          const localTitle = t.title.trim().toLowerCase();
+          return localTitle === remoteTitle || localTitle.includes(remoteTitle) || remoteTitle.includes(localTitle);
+        }
+        return false;
+      });
+
+      if (matchedIdx !== -1 && matchedIdx !== currentTrackIndex) {
+        setCurrentTrackIndex(matchedIdx);
+      }
+
+      if (typeof currentPlay.is_playing === 'boolean') {
+        setIsPlaying(currentPlay.is_playing);
+      }
     }
   }, [
     effectiveCabinaSync,
@@ -270,6 +362,7 @@ export default function ProyectoRadio() {
     radioData.mediaServerStatus,
     radioData.currentPlaylist,
     currentTrackIndex,
+    applyRemoteYoutubeVideo,
   ]);
 
   const handleToggleCabinaSync = useCallback(() => {
@@ -288,6 +381,7 @@ export default function ProyectoRadio() {
     (index) => {
       if (isSetlistLocked) return;
       if (isCabinaSync) setIsCabinaSync(false);
+      setRemoteYoutubeTrack(null);
       playerRef.current?.jumpToTrack?.(index);
     },
     [isSetlistLocked, isCabinaSync]
@@ -296,12 +390,14 @@ export default function ProyectoRadio() {
   const handleManualNextTrack = useCallback(() => {
     if (isSetlistLocked) return;
     if (isCabinaSync) setIsCabinaSync(false);
+    setRemoteYoutubeTrack(null);
     playerRef.current?.nextTrack?.();
   }, [isSetlistLocked, isCabinaSync]);
 
   const handleManualPrevTrack = useCallback(() => {
     if (isSetlistLocked) return;
     if (isCabinaSync) setIsCabinaSync(false);
+    setRemoteYoutubeTrack(null);
     playerRef.current?.prevTrack?.();
   }, [isSetlistLocked, isCabinaSync]);
 

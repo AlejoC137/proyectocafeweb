@@ -2,8 +2,10 @@ import React from "react";
 import ContentCard from "@/components/ui/content-card";
 import { Button } from "@/components/ui/button";
 import { Calendar, User, Utensils, Phone } from "lucide-react";
+import { useMediaServer } from "@/context/MediaServerContext";
 
 export function UserEventsTab({ userEvents, navigate }) {
+  const { resolveMediaThumbUrl } = useMediaServer();
   return (
     <ContentCard title="Mis Inscripciones a Eventos" className="border-none shadow-xl">
       <div className="space-y-6">
@@ -16,7 +18,7 @@ export function UserEventsTab({ userEvents, navigate }) {
             >
               {reg.agenda?.bannerIMG ? (
                 <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden shrink-0 shadow-md">
-                  <img src={reg.agenda.bannerIMG} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" alt="Banner Evento" />
+                  <img src={resolveMediaThumbUrl(reg.agenda.bannerIMG, 480)} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" alt="Banner Evento" />
                 </div>
               ) : (
                 <div className="w-full md:w-48 h-32 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0">

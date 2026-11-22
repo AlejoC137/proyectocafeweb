@@ -15,6 +15,7 @@ import {
   HELADOS, CATEGORIES_t
 } from "../../../../redux/actions-types";
 import { headerStyles } from "./MenuPrintStyles";
+import { resolveMediaUrl } from "../../../../services/mediaServerService";
 
 const ItemImageContainer = ({
   itemPhoto,
@@ -44,7 +45,7 @@ const ItemImageContainer = ({
         }}
       >
         <img
-          src={itemPhoto}
+          src={resolveMediaUrl(itemPhoto)}
           alt={itemTitle}
           className="w-full h-full object-cover"
         />
@@ -1067,7 +1068,7 @@ const MenuPrintBlock = ({
             {itemPhoto ? (
               <div className="relative w-full h-full flex-1 min-h-0 overflow-hidden">
                 <img
-                  src={itemPhoto}
+                  src={resolveMediaUrl(itemPhoto)}
                   alt={itemTitle}
                   className="w-full h-full flex-1 object-cover rounded-sm border"
                   style={{ borderColor: colors.imgBorder || '#000000' }}
@@ -1290,7 +1291,7 @@ const MenuPrintBlock = ({
 
               <div className="w-full flex-1 min-h-0 relative h-full flex flex-col overflow-hidden">
                 <img
-                  src={imgObj.url}
+                  src={resolveMediaUrl(imgObj.url)}
                   alt={imgObj.nameES || "Menu Image"}
                   onError={(e) => {
                     e.target.onerror = null;

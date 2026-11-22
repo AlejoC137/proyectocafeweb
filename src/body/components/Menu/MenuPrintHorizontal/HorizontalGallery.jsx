@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import supabase from "../../../../config/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { useImageUsage } from "../../../../hooks/useImageUsage";
+import { useMediaServer } from "../../../../context/MediaServerContext";
 
 const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
   const [images, setImages] = useState([]);
   const { usages, refetch: refetchUsages } = useImageUsage();
+  const { online, refresh: refreshMediaServer, resolveMediaThumbUrl } = useMediaServer();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,12 +62,7 @@ const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
     if (!window.confirm(confirmMsg)) return;
 
     try {
-      // 1. Delete from Supabase Storage bucket
-      if (img.storagePath) {
-        await supabase.storage.from('Images_eventos').remove([img.storagePath]);
-      }
-
-      // 2. Fetch all configs to update them
+      // 1. Fetch all configs to update them (las imágenes residen en Personal Media Server)
       const { data: configs, error: fetchErr } = await supabase.from('menu_print_config').select('*');
       if (fetchErr) throw fetchErr;
 
@@ -121,10 +118,24 @@ const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
       <div className="bg-white border-4 border-black p-6 rounded-lg shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-5xl w-full max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
+        <div className="flex justify-between items-center mb-4 border-b-2 border-black pb-2">
           <h3 className="font-black text-2xl uppercase italic">Galería de Imágenes</h3>
           <button onClick={onClose} className="font-black hover:text-red-600 transition-colors text-xl">CERRAR X</button>
         </div>
+
+        {!online && (
+          <div className="mb-4 p-3 bg-amber-50 border-2 border-amber-500 rounded-lg flex items-center justify-between gap-3">
+            <span className="text-xs font-bold text-amber-900">
+              Personal Media Server desconectado. Las imágenes locales pueden no mostrarse hasta reconectar.
+            </span>
+            <button
+              onClick={refreshMediaServer}
+              className="px-3 py-1 bg-amber-400 hover:bg-amber-500 border-2 border-black rounded text-[11px] font-black uppercase"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
 
         <div className="flex-grow overflow-y-auto pr-2 mb-6 scrollbar-hide">
           {loading ? (
@@ -162,7 +173,7 @@ const HorizontalGallery = ({ isOpen, onClose, onSelect, onUploadNew }) => {
 
                     {/* Image Area */}
                     <div className="w-full aspect-video bg-zinc-100 overflow-hidden relative border-b border-black">
-                      <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                      <img src={resolveMediaThumbUrl(img.url, 360)} alt="Gallery" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
                         <span className="bg-white text-black font-black text-[10px] uppercase px-3 py-1.5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                           Seleccionar

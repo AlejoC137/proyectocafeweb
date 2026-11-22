@@ -10,9 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useMediaServer } from "@/context/MediaServerContext"
 
 export function CardInstance({ product, isEnglish }) {
   const [showDescription, setShowDescription] = useState(false)
+  const { resolveMediaUrl } = useMediaServer()
 
   return (
     (<Card
@@ -20,7 +22,7 @@ export function CardInstance({ product, isEnglish }) {
       onClick={() => setShowDescription(!showDescription)}>
       <div className="absolute inset-0">
         <img
-          src={product.Foto}
+          src={resolveMediaUrl(product.Foto)}
           alt={isEnglish ? product.NombreEN : product.NombreES}
           className="w-full h-full object-cover" />
         <div

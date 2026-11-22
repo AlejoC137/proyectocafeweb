@@ -4,6 +4,7 @@ import { getAllFromTable } from "../../../redux/actions";
 import { MENU, ITEMS, AGENDA, CATEGORIES_t } from "../../../redux/actions-types";
 import { Button } from "@/components/ui/button";
 import supabase from "../../../config/supabaseClient";
+import { uploadImageToMediaServer, resolveMediaUrl } from "../../../services/mediaServerService";
 
 // Modular Components
 import { HorizontalStyles } from "./MenuPrintHorizontal/HorizontalStyles";
@@ -587,24 +588,11 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
 
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `menu-images/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('Images_eventos')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('Images_eventos')
-        .getPublicUrl(filePath);
-
+      const uploaded = await uploadImageToMediaServer(file, { folder: 'proyectocafe-galeria' });
       const newImage = {
         id: 'IMG_' + Date.now(),
-        url: publicUrl,
-        storagePath: filePath,
+        url: uploaded.mediaUri,
+        storagePath: uploaded.item?.relativePath || uploaded.mediaUri,
         height: 300
       };
 
@@ -628,7 +616,7 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
       await saveImagesConfig(updatedImages);
     } catch (error) {
       console.error("Error uploading:", error);
-      alert("Error al subir la imagen");
+      alert("Error al subir la imagen: " + (error.message || "Personal Media Server desconectado"));
     } finally {
       setUploadingImage(false);
       setUploadTargetPage(null);
@@ -639,47 +627,25 @@ function MenuPrintHorizontal({ menuId = 2, controlTopClass = "top-[64px]", conta
   const handleReplaceImage = async (oldImageId, newFile) => {
     setUploadingImage(true);
     try {
-      const oldImage = printImages.find(img => img.id === oldImageId);
-      if (oldImage && oldImage.storagePath) {
-        await supabase.storage.from('Images_eventos').remove([oldImage.storagePath]);
-      }
-
-      const fileExt = newFile.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `menu-images/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('Images_eventos')
-        .upload(filePath, newFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('Images_eventos')
-        .getPublicUrl(filePath);
-
+      const uploaded = await uploadImageToMediaServer(newFile, { folder: 'proyectocafe-galeria' });
       const updatedImages = printImages.map(img =>
-        img.id === oldImageId ? { ...img, url: publicUrl, storagePath: filePath } : img
+        img.id === oldImageId ? { ...img, url: uploaded.mediaUri, storagePath: uploaded.item?.relativePath || uploaded.mediaUri } : img
       );
 
       setPrintImages(updatedImages);
       await saveImagesConfig(updatedImages);
     } catch (error) {
       console.error("Error replacing image:", error);
+      alert("Error al reemplazar la imagen: " + (error.message || "Personal Media Server desconectado"));
     } finally {
       setUploadingImage(false);
     }
   };
 
   const deleteImage = async (imageId) => {
-    if (!window.confirm("¿Eliminar imagen permanentemente?")) return;
-    const imgToDelete = printImages.find(img => img.id === imageId);
+    if (!window.confirm("¿Eliminar imagen del diseño?")) return;
 
     try {
-      if (imgToDelete && imgToDelete.storagePath) {
-        await supabase.storage.from('Images_eventos').remove([imgToDelete.storagePath]);
-      }
-
       const updatedImages = printImages.filter(img => img.id !== imageId);
       setPrintImages(updatedImages);
 

@@ -4,6 +4,7 @@ import MenuPrintFooter from "../MenuPrint/MenuPrintFooter";
 import MenuPrintColumn from "../MenuPrint/MenuPrintColumn";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useMediaServer } from "../../../../context/MediaServerContext";
 
 const HorizontalPage = ({
   page,
@@ -25,6 +26,7 @@ const HorizontalPage = ({
   setSelectedColumn,
   openGallery
 }) => {
+  const { resolveMediaUrl } = useMediaServer();
   const rulerRef = React.useRef(null);
   const [draggingHandle, setDraggingHandle] = React.useState(null); // { colIdx }
 
@@ -96,7 +98,7 @@ const HorizontalPage = ({
       {page.bgImage && (
         <div className="col-start-1 row-start-1 w-full h-full relative" style={{ gridArea: '1 / 1 / 2 / 2' }}>
           <img 
-            src={page.bgImage.url}
+            src={resolveMediaUrl(page.bgImage.url)}
             alt="Page Background"
             className="w-full h-full object-cover pointer-events-none"
             style={{

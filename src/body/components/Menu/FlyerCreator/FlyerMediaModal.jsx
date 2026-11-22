@@ -8,6 +8,7 @@ import { Upload, Image as ImageIcon, Link as LinkIcon, Sparkles, X, Check, Trash
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import supabase from "../../../../config/supabaseClient";
+import { useMediaServer } from "../../../../context/MediaServerContext";
 
 export default function FlyerMediaModal({
   isOpen,
@@ -15,6 +16,13 @@ export default function FlyerMediaModal({
   onSelectImage = () => {},
   targetType = "background" // "background" | "element"
 }) {
+  const {
+    online: mediaServerOnline,
+    refresh: refreshMediaServer,
+    resolveMediaThumbUrl,
+    fetchMediaImages,
+    uploadImageToMediaServer,
+  } = useMediaServer();
   const [activeTab, setActiveTab] = useState("gallery"); // "gallery" | "upload" | "url" | "stickers"
   const [galleryImages, setGalleryImages] = useState([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
@@ -69,56 +77,27 @@ export default function FlyerMediaModal({
         console.warn("Error cargando eventos de agenda:", e);
       }
 
-      // 2. Obtener imágenes directamente del bucket Images_eventos en Supabase Storage
+      // 2. Obtener imágenes directamente del Personal Media Server (GET /api/images)
       try {
-        const { data: storageFiles } = await supabase.storage
-          .from("Images_eventos")
-          .list("", { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-
-        if (storageFiles) {
-          storageFiles.forEach((file) => {
-            if (file.name && /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(file.name)) {
-              const { data } = supabase.storage.from("Images_eventos").getPublicUrl(file.name);
-              if (data?.publicUrl && !seenUrls.has(data.publicUrl)) {
-                seenUrls.add(data.publicUrl);
-                allFound.push({
-                  url: data.publicUrl,
-                  name: file.name.replace(/^banner_\d+_/, "Banner ").replace(/\.[^.]+$/, ""),
-                  source: "Storage Eventos",
-                  category: "agenda"
-                });
-              }
+        const res = await fetchMediaImages({ limit: 100, sort: "newest" });
+        if (res?.items?.length) {
+          res.items.forEach((item) => {
+            const mediaUri = item.mediaUri || (item.id ? `media://img/${item.id}` : "");
+            if (mediaUri && !seenUrls.has(mediaUri)) {
+              seenUrls.add(mediaUri);
+              const rel = (item.relativePath || "").toLowerCase();
+              const isMenu = rel.includes("menu") || rel.includes("flyer");
+              allFound.push({
+                url: mediaUri,
+                name: item.title || item.fileName || "Imagen Media Server",
+                source: item.folderName || "Media Server",
+                category: isMenu ? "menu" : "agenda"
+              });
             }
           });
         }
       } catch (e) {
-        console.warn("Error listando bucket Images_eventos:", e);
-      }
-
-      // 3. Obtener imágenes de subcarpeta menu_print_images en Images_eventos
-      try {
-        const { data: menuFiles } = await supabase.storage
-          .from("Images_eventos")
-          .list("menu_print_images", { limit: 50 });
-
-        if (menuFiles) {
-          menuFiles.forEach((file) => {
-            if (file.name && /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(file.name)) {
-              const { data } = supabase.storage.from("Images_eventos").getPublicUrl(`menu_print_images/${file.name}`);
-              if (data?.publicUrl && !seenUrls.has(data.publicUrl)) {
-                seenUrls.add(data.publicUrl);
-                allFound.push({
-                  url: data.publicUrl,
-                  name: "Foto Menú Print",
-                  source: "Menú Print",
-                  category: "menu"
-                });
-              }
-            }
-          });
-        }
-      } catch (e) {
-        console.warn("Error listando menu_print_images:", e);
+        console.warn("Personal Media Server no disponible para galería:", e);
       }
 
       // 4. Obtener de menu_print_config
@@ -208,42 +187,27 @@ export default function FlyerMediaModal({
     setUploadError("");
 
     try {
-      // 1. Convertir a DataURL local inmediatamente para uso ágil
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const localDataUrl = event.target.result;
-
-        // Intentar subir en background a Supabase Storage bucket 'Images_eventos' si está disponible
-        try {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `flyer_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-          const filePath = `flyers/${fileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from("Images_eventos")
-            .upload(filePath, file);
-
-          if (!uploadError) {
-            const { data: publicUrlData } = supabase.storage
-              .from("Images_eventos")
-              .getPublicUrl(filePath);
-
-            if (publicUrlData?.publicUrl) {
-              onSelectImage(publicUrlData.publicUrl);
-              onClose();
-              return;
-            }
-          }
-        } catch (storageErr) {
-          console.warn("Storage upload fallback to DataURL:", storageErr);
+      // Subir al Personal Media Server y guardar como media://img/<id>
+      try {
+        const uploaded = await uploadImageToMediaServer(file, { folder: "proyectocafe-galeria" });
+        if (uploaded?.mediaUri) {
+          onSelectImage(uploaded.mediaUri);
+          onClose();
+          return;
         }
+      } catch (serverErr) {
+        console.warn("Personal Media Server upload fallback to DataURL:", serverErr);
+      }
 
-        // Si falla storage o no hay bucket, usamos el DataURL local directo
-        onSelectImage(localDataUrl);
-        onClose();
-      };
-
-      reader.readAsDataURL(file);
+      // Si el servidor local está offline, usar DataURL local directo
+      const localDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = () => reject(new Error("No se pudo leer el archivo local"));
+        reader.readAsDataURL(file);
+      });
+      onSelectImage(localDataUrl);
+      onClose();
     } catch (err) {
       setUploadError("Error al procesar el archivo: " + err.message);
     } finally {
@@ -321,6 +285,22 @@ export default function FlyerMediaModal({
 
         {/* Tab Content */}
         <div className="p-6 flex-1 overflow-y-auto bg-[#faf7f2]">
+          {!mediaServerOnline && (
+            <div className="mb-4 p-3 bg-amber-100 border-2 border-black rounded-lg flex items-center justify-between gap-3">
+              <span className="text-xs font-bold text-black">
+                Personal Media Server desconectado. Inicia el servidor local para ver o subir fotos de la galería.
+              </span>
+              <button
+                onClick={async () => {
+                  await refreshMediaServer();
+                  fetchCafeGallery();
+                }}
+                className="px-3 py-1 bg-yellow-300 hover:bg-yellow-400 border-2 border-black rounded text-[11px] font-black uppercase shrink-0"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
           {/* TAB 1: Galería */}
           {activeTab === "gallery" && (
             <div className="flex flex-col gap-4">
@@ -450,7 +430,7 @@ export default function FlyerMediaModal({
                       >
                         <div className="aspect-video w-full bg-zinc-200 overflow-hidden relative border-b-2 border-black">
                           <img
-                            src={img.url}
+                            src={resolveMediaThumbUrl(img.url, 360)}
                             alt={img.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                             loading="lazy"

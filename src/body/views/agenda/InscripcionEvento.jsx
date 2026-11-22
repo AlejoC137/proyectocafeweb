@@ -12,11 +12,13 @@ import LoginPortalDialog from "../user/LoginPortalDialog";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllFromTable } from "@/redux/actions";
 import { MESSAGE_TEMPLATES } from "@/utils/messageTemplates";
+import { useMediaServer } from "@/context/MediaServerContext";
 
 function InscripcionEvento() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { resolveMediaUrl } = useMediaServer();
   const allUsers = useSelector((state) => state.allUserPreferences || []);
 
   const [loading, setLoading] = useState(true);
@@ -389,7 +391,7 @@ function InscripcionEvento() {
           <div className="hidden md:flex md:w-5/12 flex-col bg-white rounded-2xl shadow-2xl overflow-hidden flex-shrink-0 h-full">
             <div className="flex-1 overflow-hidden">
               <img
-                src={evento.bannerIMG}
+                src={resolveMediaUrl(evento.bannerIMG)}
                 alt={evento.nombreES}
                 className="w-full h-full object-cover"
               />
@@ -430,7 +432,7 @@ function InscripcionEvento() {
               {evento.bannerIMG && (
                 <div className="block md:hidden w-full bg-black/5">
                   <img
-                    src={evento.bannerIMG}
+                    src={resolveMediaUrl(evento.bannerIMG)}
                     alt={evento.nombreES}
                     className="w-full h-auto object-contain max-h-[50vh]"
                   />

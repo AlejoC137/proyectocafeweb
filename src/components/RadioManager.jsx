@@ -326,7 +326,9 @@ export default function RadioManager() {
     }
   };
 
-  const handlePlayYoutube = (ytTrack, broadcastNow = false) => {
+  const lastBroadcastTabRef = useRef('supabase');
+
+  const handlePlayYoutube = async (ytTrack, broadcastNow = false) => {
     if (!ytTrack?.youtubeId) return;
     // Pausar audio MP3 para evitar doble sonido
     if (audioRef.current && !audioRef.current.paused) {
@@ -336,23 +338,52 @@ export default function RadioManager() {
     setActiveYoutube(ytTrack);
 
     if (broadcastNow || broadcastSetlistActive) {
-      broadcastPlay(
-        {
-          id: ytTrack.id,
-          title: ytTrack.title,
-          artist: ytTrack.artist || 'YouTube',
-          cover: ytTrack.cover || getYoutubeThumbnail(ytTrack.youtubeId),
-          url: ytTrack.url,
-        },
-        'youtube',
-        true
-      );
-      sendRemoteCommand({
-        type: 'FORCE_MODE',
-        targetClientId: 'all',
-        payload: { tab: 'youtube', url: ytTrack.url, title: ytTrack.title },
-      });
-      showToast(`📺 Emitiendo YouTube en /Radio: "${ytTrack.title}"`);
+      const ytCover = ytTrack.cover || getYoutubeThumbnail(ytTrack.youtubeId);
+      const ytUrl =
+        ytTrack.url ||
+        (ytTrack.listId
+          ? `https://www.youtube.com/watch?v=${ytTrack.youtubeId}&list=${ytTrack.listId}`
+          : `https://www.youtube.com/watch?v=${ytTrack.youtubeId}`);
+
+      try {
+        lastBroadcastTabRef.current = 'youtube';
+        if (broadcastSetlistActive) {
+          await broadcastTyrannySettings({
+            lockConsoles: true,
+            setlistMode: true,
+            forcedTab: 'youtube',
+            bannerEnabled: false,
+          });
+        }
+        await broadcastPlay(
+          {
+            id: ytTrack.id,
+            title: ytTrack.title,
+            artist: ytTrack.artist || 'YouTube',
+            cover: ytCover,
+            url: ytUrl,
+          },
+          'youtube',
+          true
+        );
+        await sendRemoteCommand({
+          type: 'FORCE_MODE',
+          targetClientId: 'all',
+          payload: {
+            tab: 'youtube',
+            id: ytTrack.id,
+            youtubeId: ytTrack.youtubeId,
+            listId: ytTrack.listId || null,
+            url: ytUrl,
+            title: ytTrack.title,
+            artist: ytTrack.artist || 'YouTube',
+            cover: ytCover,
+          },
+        });
+        showToast(`📺 Emitiendo YouTube en /Radio: "${ytTrack.title}"`);
+      } catch (e) {
+        console.warn('[RadioManager] Error emitiendo YouTube a /Radio:', e);
+      }
     }
   };
 
@@ -361,6 +392,20 @@ export default function RadioManager() {
     async (track, playing = true, seekSec = 0) => {
       if (!broadcastSetlistActive || !track) return;
       try {
+        if (lastBroadcastTabRef.current !== 'supabase') {
+          lastBroadcastTabRef.current = 'supabase';
+          await broadcastTyrannySettings({
+            lockConsoles: true,
+            setlistMode: true,
+            forcedTab: 'supabase',
+            bannerEnabled: false,
+          });
+          await sendRemoteCommand({
+            type: 'FORCE_MODE',
+            targetClientId: 'all',
+            payload: { tab: 'supabase' },
+          });
+        }
         await broadcastPlay(
           {
             id: track.id,
@@ -383,7 +428,7 @@ export default function RadioManager() {
         console.warn('[RadioManager] Error emitiendo pista a /Radio:', e);
       }
     },
-    [broadcastSetlistActive, broadcastPlay, sendRemoteCommand]
+    [broadcastSetlistActive, broadcastPlay, broadcastTyrannySettings, sendRemoteCommand]
   );
 
   // Activar / Desactivar Modo Setlist al Aire (bloquea o libera /Radio)
@@ -395,27 +440,64 @@ export default function RadioManager() {
     } catch {}
 
     try {
+      const targetTab = nextActive && activeYoutube?.youtubeId ? 'youtube' : 'supabase';
+      lastBroadcastTabRef.current = targetTab;
+
       await broadcastTyrannySettings({
         lockConsoles: nextActive,
         setlistMode: nextActive,
-        forcedTab: 'supabase',
+        forcedTab: targetTab,
         bannerEnabled: false,
       });
 
       if (nextActive) {
-        const trackToAir = currentTrack || setlist[0] || tracks[0];
-        if (trackToAir) {
+        if (activeYoutube?.youtubeId) {
+          const ytCover = activeYoutube.cover || getYoutubeThumbnail(activeYoutube.youtubeId);
+          const ytUrl =
+            activeYoutube.url ||
+            (activeYoutube.listId
+              ? `https://www.youtube.com/watch?v=${activeYoutube.youtubeId}&list=${activeYoutube.listId}`
+              : `https://www.youtube.com/watch?v=${activeYoutube.youtubeId}`);
           await broadcastPlay(
             {
-              id: trackToAir.id,
-              title: trackToAir.title,
-              artist: trackToAir.artist || 'Proyecto Café Radio',
-              cover: trackToAir.coverUrl || trackToAir.cover || '',
-              url: trackToAir.streamUrl || trackToAir.url || '',
+              id: activeYoutube.id,
+              title: activeYoutube.title,
+              artist: activeYoutube.artist || 'YouTube',
+              cover: ytCover,
+              url: ytUrl,
             },
-            'supabase',
-            isPlaying
+            'youtube',
+            true
           );
+          await sendRemoteCommand({
+            type: 'FORCE_MODE',
+            targetClientId: 'all',
+            payload: {
+              tab: 'youtube',
+              id: activeYoutube.id,
+              youtubeId: activeYoutube.youtubeId,
+              listId: activeYoutube.listId || null,
+              url: ytUrl,
+              title: activeYoutube.title,
+              artist: activeYoutube.artist || 'YouTube',
+              cover: ytCover,
+            },
+          });
+        } else {
+          const trackToAir = currentTrack || setlist[0] || tracks[0];
+          if (trackToAir) {
+            await broadcastPlay(
+              {
+                id: trackToAir.id,
+                title: trackToAir.title,
+                artist: trackToAir.artist || 'Proyecto Café Radio',
+                cover: trackToAir.coverUrl || trackToAir.cover || '',
+                url: trackToAir.streamUrl || trackToAir.url || '',
+              },
+              'supabase',
+              isPlaying
+            );
+          }
         }
         showToast('🔴 Setlist al Aire ACTIVADO: /Radio ahora sigue tu cabina y no puede cambiar música.');
       } else {
@@ -435,6 +517,7 @@ export default function RadioManager() {
     (track) => {
       if (!track) return;
       recoveryAttemptRef.current = '';
+      setActiveYoutube(null);
       setCurrentTrack(track);
       setCurrentTime(0);
       setProgress(0);
