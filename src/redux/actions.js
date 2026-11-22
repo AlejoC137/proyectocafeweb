@@ -97,42 +97,36 @@ export const toggleShowEdit = () => {
 // Acción para obtener todos los datos de una tabla
 export function getAllFromTable(Table) {
   return async (dispatch, getState) => {
-    // Fetch all paginated for large tables
+    // Fetch all paginated for large tables using deterministic keyset pagination on _id
     if (Table === 'Ventas' || Table === 'Compras') {
       let allData = [];
-      let page = 0;
-      const pageSize = 500;
-      let useOrder = true;
+      let lastId = null;
+      const pageSize = 1000;
 
       while (true) {
-        const from = page * pageSize;
-        const to = from + pageSize - 1;
-        let query = supabase.from(Table).select('*').range(from, to);
-        
-        if (useOrder) {
-          query = query.order('_id', { ascending: false });
+        let query = supabase
+          .from(Table)
+          .select('*')
+          .order('_id', { ascending: true })
+          .limit(pageSize);
+
+        if (lastId !== null) {
+          query = query.gt('_id', lastId);
         }
 
-        let { data, error } = await query;
-
-        // Fallback: Si ordenar por 'Date' falla (ej. error 500 por timeout en Supabase/PostgREST o columna no indexada), reintentar sin order
-        if (error && useOrder) {
-          console.warn(`Ordering by _id failed for ${Table}, retrying without order. Error:`, error.message || error);
-          useOrder = false;
-          query = supabase.from(Table).select('*').range(from, to);
-          const retry = await query;
-          data = retry.data;
-          error = retry.error;
-        }
+        const { data, error } = await query;
 
         if (error) {
           console.error(`Error fetching paginated ${Table}:`, error.message || error);
           break;
         }
 
-        if (data) allData = [...allData, ...data];
-        if (!data || data.length < pageSize) break;
-        page++;
+        if (!data || data.length === 0) break;
+        allData = allData.concat(data);
+        if (data.length < pageSize) break;
+        const nextLastId = data[data.length - 1]?._id;
+        if (nextLastId === undefined || nextLastId === null || nextLastId === lastId) break;
+        lastId = nextLastId;
       }
 
       return dispatch({

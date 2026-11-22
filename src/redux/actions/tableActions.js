@@ -42,34 +42,34 @@ export function getAllFromTable(Table) {
   return async (dispatch, getState) => {
     if (Table === 'Ventas' || Table === 'Compras') {
       let allData = [];
-      let page = 0;
-      const pageSize = 500;
+      let lastId = null;
+      const pageSize = 1000;
 
       while (true) {
-        const from = page * pageSize;
-        const to = from + pageSize - 1;
-        // La columna 'Date' es tipo texto no indexado y causa timeout 500 (statement timeout) al ordenar 500 filas en PostgreSQL.
-        // Se consulta directamente por rango paginado (o usando el índice primario _id) para respuesta inmediata (<500ms).
-        let query = supabase.from(Table).select('*').range(from, to).order('_id', { ascending: false });
+        // Paginación determinista por keyset sobre la clave primaria `_id` (sin OFFSET ni pérdida de filas)
+        let query = supabase
+          .from(Table)
+          .select('*')
+          .order('_id', { ascending: true })
+          .limit(pageSize);
 
-        let { data, error } = await query;
-
-        if (error) {
-          // Fallback sin order si _id fallara
-          const fallbackQuery = supabase.from(Table).select('*').range(from, to);
-          const fallbackRes = await fallbackQuery;
-          data = fallbackRes.data;
-          error = fallbackRes.error;
+        if (lastId !== null) {
+          query = query.gt('_id', lastId);
         }
+
+        const { data, error } = await query;
 
         if (error) {
           console.error(`Error fetching paginated ${Table}:`, error.message || error);
           break;
         }
 
-        if (data) allData = [...allData, ...data];
-        if (!data || data.length < pageSize) break;
-        page++;
+        if (!data || data.length === 0) break;
+        allData = allData.concat(data);
+        if (data.length < pageSize) break;
+        const nextLastId = data[data.length - 1]?._id;
+        if (nextLastId === undefined || nextLastId === null || nextLastId === lastId) break;
+        lastId = nextLastId;
       }
 
       return dispatch({

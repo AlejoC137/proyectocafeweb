@@ -16,6 +16,9 @@ import {
   fetchVentasByDay,
   fetchComprasByDay,
   ensureCatalogTablesLoaded,
+  isSalePaid,
+  parseSaleProductos,
+  getSalePaymentBreakdown,
 } from "./resumenQueries";
 
 const getToday = () => {
@@ -151,14 +154,17 @@ function DiaResumen() {
         setVentas(ventasHoy);
 
         // Calcular ingresos y tips totales
-        const total = ventasHoy
-          .filter((venta) => venta.Pagado === true)
-          .reduce((acc, venta) => acc + parseFloat(venta.Total_Ingreso || 0), 0);
+        const ventasPagadasHoy = ventasHoy.filter(isSalePaid);
+        const total = ventasPagadasHoy.reduce(
+          (acc, venta) => acc + (parseFloat(venta.Total_Ingreso || 0) || 0),
+          0
+        );
         setTotalIngreso(total);
 
-        const tipSum = ventasHoy
-          .filter((venta) => venta.Pagado === true)
-          .reduce((acc, venta) => acc + parseFloat(venta.Tip || 0), 0);
+        const tipSum = ventasPagadasHoy.reduce(
+          (acc, venta) => acc + (parseFloat(venta.Tip || 0) || 0),
+          0
+        );
         setTotalTip(tipSum);
 
         // Calcular pagos por método
@@ -166,70 +172,36 @@ function DiaResumen() {
         let efectivo = 0;
         let transferencia = 0;
 
-        ventasHoy.forEach((venta) => {
-          if (venta.Pagado !== true) return;
-          if (venta.Pago_Info) {
-            let pagos;
-            try {
-              pagos = typeof venta.Pago_Info === "string" ? JSON.parse(venta.Pago_Info) : venta.Pago_Info;
-            } catch (e) {
-              console.error("Error parsing Pago_Info:", e);
-              return;
-            }
-
-            if (pagos?.metodo === "Tarjeta") {
-              tarjeta += parseFloat(venta.Total_Ingreso || 0);
-            }
-            if (pagos?.metodo === "Efectivo") {
-              efectivo += parseFloat(venta.Total_Ingreso || 0);
-            }
-            if (pagos?.metodo === "Transferencia") {
-              transferencia += parseFloat(venta.Total_Ingreso || 0);
-            }
-          }
+        ventasPagadasHoy.forEach((venta) => {
+          const pagos = getSalePaymentBreakdown(venta);
+          tarjeta += pagos.tarjeta;
+          efectivo += pagos.efectivo;
+          transferencia += pagos.transferencia;
         });
 
         setTotalTarjeta(tarjeta);
         setTotalEfectivo(efectivo);
         setTotalTransferencia(transferencia);
 
-        // Calcular productos vendidos
+        // Calcular productos vendidos (solo ventas pagadas, soportando JSON texto plano / objeto único / array)
         const productosMap = {};
-        ventasHoy.forEach((venta) => {
-          if (venta.Productos) {
-            let productos;
-            try {
-              productos = typeof venta.Productos === "string" ? JSON.parse(venta.Productos) : venta.Productos;
-            } catch (e) {
-              console.error("Error parsing Productos:", e);
-              return;
+        ventasPagadasHoy.forEach((venta) => {
+          const productos = parseSaleProductos(venta.Productos);
+          productos.forEach((producto) => {
+            const nombre = producto.NombreES || producto.nombre;
+            if (!nombre) return;
+            const qty = parseFloat(producto.quantity ?? producto.cantidad ?? 0) || 0;
+            if (qty <= 0) return;
+            if (productosMap[nombre]) {
+              productosMap[nombre].cantidad += qty;
+            } else {
+              productosMap[nombre] = {
+                nombre,
+                cantidad: qty,
+                recetaId: producto.Receta || "N/A",
+              };
             }
-
-            if (!Array.isArray(productos)) return;
-
-            productos.forEach((producto) => {
-              if (
-                producto.id === "" &&
-                producto.NombreES === "" &&
-                producto.Precio === 0 &&
-                producto.quantity === 1 &&
-                Array.isArray(producto.matches) &&
-                producto.matches.length === 0
-              ) {
-                return; // Descartar el producto vacío
-              }
-              const qty = parseFloat(producto.quantity || 0);
-              if (productosMap[producto.NombreES]) {
-                productosMap[producto.NombreES].cantidad += qty;
-              } else {
-                productosMap[producto.NombreES] = {
-                  nombre: producto.NombreES,
-                  cantidad: qty,
-                  recetaId: producto.Receta || "N/A",
-                };
-              }
-            });
-          }
+          });
         });
 
         const productosArray = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
@@ -431,21 +403,16 @@ function DiaResumen() {
                         >
                           {venta.Productos
                             ? (() => {
-                                try {
-                                  const productosArr = JSON.parse(venta.Productos);
-                                  if (Array.isArray(productosArr) && productosArr.length > 0) {
-                                    return productosArr
-                                      .map(
-                                        (prod) =>
-                                          `${prod.NombreES ?? "Sin nombre"} (${prod.quantity ?? 0})`
-                                      )
-                                      .join(", ");
-                                  } else {
-                                    return "Sin productos";
-                                  }
-                                } catch (e) {
-                                  return "Error al leer productos";
+                                const productosArr = parseSaleProductos(venta.Productos);
+                                if (productosArr.length > 0) {
+                                  return productosArr
+                                    .map(
+                                      (prod) =>
+                                        `${prod.NombreES ?? prod.nombre ?? "Sin nombre"} (${prod.quantity ?? prod.cantidad ?? 0})`
+                                    )
+                                    .join(", ");
                                 }
+                                return "Sin productos";
                               })()
                             : "No"}
                         </span>
@@ -457,15 +424,9 @@ function DiaResumen() {
                       </td>
                       <td className="py-3 px-4 border-b text-sm text-gray-700">
                         {venta.Pago_Info && (() => {
-                          let pagos;
-                          try {
-                            pagos = JSON.parse(venta.Pago_Info);
-                          } catch (e) {
-                            console.error("Error parsing Pago_Info:", e);
-                            return null;
-                          }
-                          return pagos ? (
-                            <div>{pagos.metodo}$</div>
+                          const { metodo } = getSalePaymentBreakdown(venta);
+                          return metodo && metodo !== "N/A" ? (
+                            <div>{metodo}$</div>
                           ) : null;
                         })()}
                       </td>

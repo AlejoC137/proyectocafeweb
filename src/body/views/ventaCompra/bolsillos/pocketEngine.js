@@ -654,19 +654,22 @@ export function calculateFinancialPockets({
       metodosPago.Otros += ingreso;
     }
 
-    // Productos de la venta
+    // Productos de la venta (soporta array JSON, objeto único legacy 2024 o JSON doblemente serializado)
     let prods = [];
     if (venta.Productos) {
       try {
-        prods = typeof venta.Productos === 'string' ? JSON.parse(venta.Productos) : venta.Productos;
+        let parsed = typeof venta.Productos === 'string' ? JSON.parse(venta.Productos) : venta.Productos;
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+        prods = Array.isArray(parsed) ? parsed : (parsed && typeof parsed === 'object' ? [parsed] : []);
       } catch (e) {
         prods = [];
       }
     }
 
-    if (!Array.isArray(prods)) return;
+    if (!Array.isArray(prods) || prods.length === 0) return;
 
     prods.forEach(p => {
+      if (!p || typeof p !== 'object') return;
       const name = p.NombreES || p.nombre || p.Nombre_del_producto;
       if (!name) return;
 
@@ -677,7 +680,7 @@ export function calculateFinancialPockets({
       const key = normName.toLowerCase();
 
       const menuMaster = (p._id && menuMapById[p._id]) || (p.id && menuMapById[p.id]) || menuMapByName[key];
-      let price = parseFloat(p.price || p.valor || p.precio || 0);
+      let price = parseFloat(p.Precio ?? p.price ?? p.valor ?? p.precio ?? 0);
       if (price === 0 && menuMaster) {
         price = parseFloat(menuMaster.Precio || 0);
       }

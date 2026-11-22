@@ -25,6 +25,178 @@ const COMPRAS_DETAIL_COLUMNS = "_id, Date, Valor, Concepto, Proveedor_Id, Compra
 const CONSUMO_STAFF_COLUMNS = "_id, Date, Productos";
 
 /**
+ * Parsea de forma segura un campo que puede venir como texto plano JSON,
+ * JSON doblemente serializado (string dentro de string), u objeto/array ya parseado.
+ */
+export function safeParseJson(raw, fallback = null) {
+  if (raw === null || raw === undefined || raw === "") return fallback;
+  if (typeof raw !== "string") return raw;
+
+  let current = raw.trim();
+  if (!current) return fallback;
+
+  for (let depth = 0; depth < 3; depth++) {
+    try {
+      const parsed = JSON.parse(current);
+      if (typeof parsed === "string") {
+        const inner = parsed.trim();
+        if (
+          (inner.startsWith("{") && inner.endsWith("}")) ||
+          (inner.startsWith("[") && inner.endsWith("]"))
+        ) {
+          current = inner;
+          continue;
+        }
+      }
+      return parsed;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
+/**
+ * Determina si una venta está efectivamente pagada (soporta boolean o string "true").
+ */
+export function isSalePaid(venta) {
+  if (!venta) return false;
+  return venta.Pagado === true || String(venta.Pagado).toLowerCase() === "true";
+}
+
+/**
+ * Devuelve siempre un array de productos válidos a partir de `venta.Productos`.
+ * Soporta:
+ * - Array JSON serializado (2025–2026)
+ * - Objeto JSON único serializado (registros legacy de 2024)
+ * - JSON doblemente serializado o ya parseado
+ * Descarta filas placeholder vacías.
+ */
+export function parseSaleProductos(rawProductos) {
+  const parsed = safeParseJson(rawProductos, null);
+  if (!parsed) return [];
+  const list = Array.isArray(parsed)
+    ? parsed
+    : typeof parsed === "object"
+      ? [parsed]
+      : [];
+
+  return list.filter((p) => {
+    if (!p || typeof p !== "object") return false;
+    if (
+      p.id === "" &&
+      p.NombreES === "" &&
+      Number(p.Precio || 0) === 0 &&
+      Number(p.quantity || 0) === 1 &&
+      Array.isArray(p.matches) &&
+      p.matches.length === 0
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * Parsea `venta.Pago_Info` (texto plano JSON u objeto/array).
+ */
+export function parseSalePagoInfo(rawPagoInfo) {
+  return safeParseJson(rawPagoInfo, null);
+}
+
+/**
+ * Calcula el desglose por método de pago de una venta pagada.
+ * Soporta tanto objeto único `{ metodo }` como array de pagos parciales.
+ */
+export function getSalePaymentBreakdown(venta) {
+  const ingreso = parseFloat(venta?.Total_Ingreso || 0) || 0;
+  const out = { tarjeta: 0, efectivo: 0, transferencia: 0, metodo: "N/A" };
+  if (!venta?.Pago_Info) return out;
+
+  const parsed = parseSalePagoInfo(venta.Pago_Info);
+  if (!parsed) return out;
+
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
+  const metodos = [];
+
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object") continue;
+    const rawMetodo = String(entry.metodo || entry.method || "").trim();
+    if (!rawMetodo) continue;
+    metodos.push(rawMetodo);
+    const amount =
+      entries.length > 1 && entry.monto !== undefined
+        ? parseFloat(entry.monto || 0) || 0
+        : entries.length > 1 && entry.valor !== undefined
+          ? parseFloat(entry.valor || 0) || 0
+          : ingreso;
+
+    const norm = rawMetodo.toLowerCase();
+    if (norm.includes("tarjeta")) out.tarjeta += amount;
+    else if (norm.includes("efectivo")) out.efectivo += amount;
+    else if (norm.includes("transferencia")) out.transferencia += amount;
+  }
+
+  if (metodos.length > 0) {
+    out.metodo = metodos.join(" / ");
+  }
+  return out;
+}
+
+/**
+ * Obtiene el precio unitario de un producto de `venta.Productos`.
+ * Prioriza `Precio` (campo real guardado en Ventas), luego variantes en minúscula,
+ * y finalmente el precio actual en `allMenu` solo si el registro histórico no trae precio.
+ */
+export function getProductUnitPrice(producto, allMenu = []) {
+  if (!producto || typeof producto !== "object") return 0;
+  const rawPrice = parseFloat(
+    producto.Precio ?? producto.price ?? producto.precio ?? producto.valor ?? 0
+  );
+  if (!Number.isNaN(rawPrice) && rawPrice > 0) return rawPrice;
+
+  if (Array.isArray(allMenu) && allMenu.length > 0) {
+    const name = producto.NombreES || producto.nombre || "";
+    const menuProduct =
+      (producto.id && allMenu.find((m) => m._id === producto.id)) ||
+      (name && allMenu.find((m) => m.NombreES === name));
+    if (menuProduct) {
+      const menuPrice = parseFloat(menuProduct.Precio || 0);
+      if (!Number.isNaN(menuPrice) && menuPrice > 0) return menuPrice;
+    }
+  }
+  return 0;
+}
+
+/**
+ * Normaliza cualquier cadena `Date` de `Ventas` a una clave de día calendario `YYYY-MM-DD`,
+ * evitando que horas embebidas (ej. "11/22/2026, 9:17:15 AM") inflen el conteo de días únicos.
+ */
+export function getSaleCalendarDateKey(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return null;
+  const datePart = dateStr.split(",")[0].trim();
+  if (!datePart) return null;
+
+  const isoMatch = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(datePart);
+  if (isoMatch) {
+    return `${isoMatch[1]}-${String(Number(isoMatch[2])).padStart(2, "0")}-${String(Number(isoMatch[3])).padStart(2, "0")}`;
+  }
+
+  const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(datePart);
+  if (slashMatch) {
+    const m = Number(slashMatch[1]);
+    const d = Number(slashMatch[2]);
+    let y = Number(slashMatch[3]);
+    if (y < 100) y += 2000;
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+
+  const parsed = new Date(dateStr);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+}
+
+/**
  * Construye el filtro PostgREST `.or(...)` para un día específico,
  * cubriendo formatos históricos: "M/D/YYYY", "M/D/YYYY, HH:MM:SS",
  * "MM/DD/YYYY", "MM/DD/YYYY, ..." e ISO "YYYY-MM-DD...".

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useSelector } from "react-redux";
+import { getSaleCalendarDateKey, isSalePaid } from "./resumenQueries";
 
 
 const StatCard = ({ title, value, colorClass, subValue }) => (
@@ -26,7 +26,12 @@ const MesResumenStats = ({
   totalBolsillos = null,
 }) => {
   const ventas = Array.isArray(cantidadDeDias) ? cantidadDeDias : [];
-  const fechasUnicas = new Set(ventas.map(venta => venta.Date));
+  const ventasPagadas = ventas.filter(isSalePaid);
+  const fechasUnicas = new Set(
+    (ventasPagadas.length > 0 ? ventasPagadas : ventas)
+      .map((venta) => getSaleCalendarDateKey(venta?.Date))
+      .filter(Boolean)
+  );
   const numeroDeDias = fechasUnicas.size;
 
   const totalCostoDirecto = useMemo(() => {
@@ -47,7 +52,12 @@ const MesResumenStats = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {/* Ingresos */}
         <StatCard title="Ingreso Total" value={formatNumber(totalIngreso)} colorClass="text-green-600" subValue="Pagado" />
-        <StatCard title="Promedio Diario" value={formatNumber(promedioDiario)} colorClass="text-green-500" />
+        <StatCard
+          title="Promedio Diario"
+          value={formatNumber(promedioDiario)}
+          colorClass="text-green-500"
+          subValue={numeroDeDias > 0 ? `${numeroDeDias} ${numeroDeDias === 1 ? "día" : "días"}` : undefined}
+        />
 
         {/* Medios de Pago */}
         <StatCard title="Tarjeta" value={formatNumber(totalTarjeta * 0.97)} colorClass="text-yellow-600" subValue="-3% Retención incluido" />

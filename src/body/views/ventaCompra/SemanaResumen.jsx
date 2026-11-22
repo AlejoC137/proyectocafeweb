@@ -18,6 +18,10 @@ import {
   fetchComprasByRange,
   fetchConsumoStaffByRange,
   ensureCatalogTablesLoaded,
+  isSalePaid,
+  parseSaleProductos,
+  getSalePaymentBreakdown,
+  getProductUnitPrice,
 } from "./resumenQueries";
 import { calculateFinancialPockets } from "./bolsillos/pocketEngine";
 
@@ -178,60 +182,43 @@ function SemanaResumen() {
     const productosMap = {};
 
     ventas.forEach((venta) => {
-      if (venta.Pagado) {
-        const ingresoVenta = parseFloat(venta.Total_Ingreso || 0);
-        totalIngreso += ingresoVenta;
-        totalTip += parseFloat(venta.Tip || 0);
+      if (!isSalePaid(venta)) return;
 
-        if (venta.Pago_Info) {
-          try {
-            const pagos = typeof venta.Pago_Info === "string" ? JSON.parse(venta.Pago_Info) : venta.Pago_Info;
-            if (pagos?.metodo === "Tarjeta") totalTarjeta += ingresoVenta;
-            if (pagos?.metodo === "Efectivo") totalEfectivo += ingresoVenta;
-            if (pagos?.metodo === "Transferencia") totalTransferencia += ingresoVenta;
-          } catch (e) {
-            console.error("Error parsing Pago_Info:", e);
-          }
+      const ingresoVenta = parseFloat(venta.Total_Ingreso || 0) || 0;
+      totalIngreso += ingresoVenta;
+      totalTip += parseFloat(venta.Tip || 0) || 0;
+
+      const pagos = getSalePaymentBreakdown(venta);
+      totalTarjeta += pagos.tarjeta;
+      totalEfectivo += pagos.efectivo;
+      totalTransferencia += pagos.transferencia;
+
+      const productos = parseSaleProductos(venta.Productos);
+      productos.forEach((producto) => {
+        const nombre = producto.NombreES || producto.nombre;
+        if (!nombre) return;
+        const cantidad = parseFloat(producto.quantity ?? producto.cantidad ?? 0) || 0;
+        if (cantidad <= 0) return;
+
+        const price = getProductUnitPrice(producto, allMenu);
+
+        if (productosMap[nombre]) {
+          productosMap[nombre].cantidad += cantidad;
+          productosMap[nombre].totalIngreso += price * cantidad;
+        } else {
+          const recetaId =
+            producto.Receta ||
+            allMenu.find((m) => m.NombreES === nombre)?.Receta ||
+            "N/A";
+          productosMap[nombre] = {
+            nombre,
+            cantidad,
+            totalIngreso: price * cantidad,
+            recetaId,
+            totalCosto: 0,
+          };
         }
-      }
-
-      if (venta.Productos) {
-        try {
-          const productos = typeof venta.Productos === "string" ? JSON.parse(venta.Productos) : venta.Productos;
-          if (!Array.isArray(productos)) return;
-
-          productos.forEach((producto) => {
-            if (!producto?.NombreES) return;
-            const cantidad = parseFloat(producto.quantity || 0);
-            if (cantidad <= 0) return;
-
-            let price = parseFloat(producto.price || producto.valor || producto.precio || 0);
-            if (price === 0) {
-              const menuProduct = allMenu.find((m) => m.NombreES === producto.NombreES);
-              if (menuProduct) price = parseFloat(menuProduct.Precio || 0);
-            }
-
-            if (productosMap[producto.NombreES]) {
-              productosMap[producto.NombreES].cantidad += cantidad;
-              productosMap[producto.NombreES].totalIngreso += price * cantidad;
-            } else {
-              const recetaId =
-                producto.Receta ||
-                allMenu.find((m) => m.NombreES === producto.NombreES)?.Receta ||
-                "N/A";
-              productosMap[producto.NombreES] = {
-                nombre: producto.NombreES,
-                cantidad,
-                totalIngreso: price * cantidad,
-                recetaId,
-                totalCosto: 0,
-              };
-            }
-          });
-        } catch (e) {
-          console.error("Error parsing Productos:", e);
-        }
-      }
+      });
     });
 
     const productosVendidos = Object.values(productosMap)

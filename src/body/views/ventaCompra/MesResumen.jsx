@@ -8,6 +8,10 @@ import {
   fetchComprasByMonth,
   fetchConsumoStaffByMonth,
   ensureCatalogTablesLoaded,
+  isSalePaid,
+  parseSaleProductos,
+  getSalePaymentBreakdown,
+  getProductUnitPrice,
 } from "./resumenQueries";
 
 import ProductosVendidosRentabilidad from "./ProductosVendidosRentabilidad";
@@ -100,64 +104,46 @@ function MesResumen() {
     const productosMap = {};
 
     ventas.forEach((venta) => {
-      if (venta.Pagado) {
-        const ingresoVenta = parseFloat(venta.Total_Ingreso || 0);
-        total += ingresoVenta;
-        tipTotal += parseFloat(venta.Tip || 0);
+      if (!isSalePaid(venta)) return;
 
-        if (venta.Pago_Info) {
-          try {
-            const pagos = JSON.parse(venta.Pago_Info);
-            if (pagos.metodo === "Tarjeta") tarjeta += ingresoVenta;
-            if (pagos.metodo === "Efectivo") efectivo += ingresoVenta;
-            if (pagos.metodo === "Transferencia") transferencia += ingresoVenta;
-          } catch (e) {
-            console.error("Error al parsear Pago_Info:", e);
-          }
+      const ingresoVenta = parseFloat(venta.Total_Ingreso || 0) || 0;
+      total += ingresoVenta;
+      tipTotal += parseFloat(venta.Tip || 0) || 0;
+
+      const pagos = getSalePaymentBreakdown(venta);
+      tarjeta += pagos.tarjeta;
+      efectivo += pagos.efectivo;
+      transferencia += pagos.transferencia;
+
+      const productos = parseSaleProductos(venta.Productos);
+      productos.forEach((producto) => {
+        const nombre = producto.NombreES || producto.nombre;
+        if (!nombre) return;
+
+        const cantidad = parseFloat(producto.quantity ?? producto.cantidad ?? 0) || 0;
+        if (cantidad <= 0) return;
+
+        const price = getProductUnitPrice(producto, allMenu);
+
+        if (productosMap[nombre]) {
+          productosMap[nombre].cantidad += cantidad;
+          productosMap[nombre].totalIngreso += price * cantidad;
+        } else {
+          const recetaIdDefinitiva =
+            producto.Receta ||
+            allMenu.find((menu) => menu.NombreES === nombre)?.Receta ||
+            null;
+
+          productosMap[nombre] = {
+            nombre,
+            cantidad,
+            totalIngreso: price * cantidad,
+            recetaId: recetaIdDefinitiva || "N/A",
+            recetaValor: 0,
+            ingredientes: [],
+          };
         }
-      }
-
-      if (venta.Productos) {
-        try {
-          const productos = JSON.parse(venta.Productos);
-          productos.forEach((producto) => {
-
-            if (!producto.NombreES) return;
-
-            const cantidad = parseFloat(producto.quantity || 0);
-
-
-            // Attempt to get price from the record
-            let price = parseFloat(producto.price || producto.valor || producto.precio || 0);
-
-            // If price is 0 (missing in historical record), fallback to current menu price
-            if (price === 0) {
-              const menuProduct = allMenu.find(m => m.NombreES === producto.NombreES);
-              if (menuProduct) {
-                price = parseFloat(menuProduct.Precio || 0);
-              }
-            }
-
-            if (productosMap[producto.NombreES]) {
-              productosMap[producto.NombreES].cantidad += cantidad;
-              productosMap[producto.NombreES].totalIngreso += (price * cantidad);
-            } else {
-              let recetaIdDefinitiva = producto.Receta || allMenu.find(menu => menu.NombreES === producto.NombreES)?.Receta || null;
-
-              productosMap[producto.NombreES] = {
-                nombre: producto.NombreES,
-                cantidad: cantidad,
-                totalIngreso: (price * cantidad),
-                recetaId: recetaIdDefinitiva || "N/A",
-                recetaValor: 0,
-                ingredientes: [],
-              };
-            }
-          });
-        } catch (e) {
-          console.error("Error al parsear Productos:", e);
-        }
-      }
+      });
     });
 
     const productosVendidos = Object.values(productosMap).sort((a, b) => b.cantidad - a.cantidad);
