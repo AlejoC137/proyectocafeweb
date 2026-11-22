@@ -137,8 +137,8 @@ const MenuPage = ({
               </div>
             )}
 
-            {(page.right || []).length === 0 && !editMode && (
-              <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10">Sin elementos</div>
+            {(page.right || []).length === 0 && editMode && (
+              <div className="text-[10px] text-gray-400 font-bold uppercase text-center mt-10 pointer-events-none print:hidden">Sin elementos</div>
             )}
 
             <MenuPrintColumn

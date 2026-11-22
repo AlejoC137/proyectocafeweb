@@ -11,6 +11,12 @@ const MenuPrintHeader = ({ colors, leng, title, editMode, onTitleChange }) => {
     }
   }, [title]);
 
+  useEffect(() => {
+    if (!editMode) {
+      setIsEditing(false);
+    }
+  }, [editMode]);
+
   const handleBlur = () => {
     setIsEditing(false);
     if (onTitleChange) {

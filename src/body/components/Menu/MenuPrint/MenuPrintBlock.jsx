@@ -86,7 +86,7 @@ const ItemImageContainer = ({
           minHeight={40}
           maxHeight={600}
           title="Arrastrar para cambiar la altura de la foto"
-          className="absolute -bottom-2 inset-x-0 z-50 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute -bottom-2 inset-x-0 z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
         />
       )}
     </div>
@@ -229,9 +229,11 @@ const HorizontalResizeHandle = ({
   const bgCol = isPurple ? 'bg-purple-600' : 'bg-blue-600';
   const lineHover = isPurple ? 'group-hover/handle:bg-purple-500' : 'group-hover/handle:bg-blue-500';
 
+  const hasPositionClass = /\b(absolute|fixed|sticky|static)\b/.test(className);
+
   return (
     <div 
-      className={`w-full h-4 relative cursor-row-resize group/handle shrink-0 flex items-center justify-center print:hidden z-30 ${className}`}
+      className={`w-full h-4 ${hasPositionClass ? '' : 'relative'} cursor-row-resize group/handle shrink-0 flex items-center justify-center print:hidden z-30 ${className}`}
       onMouseDown={handleMouseDown}
       title={title}
     >
@@ -366,6 +368,7 @@ const MenuPrintBlock = ({
   columnId,
   editMode,
   moveBlock,
+  reorderBlock,
   duplicateBlock,
   colors,
   leng,
@@ -393,6 +396,14 @@ const MenuPrintBlock = ({
   const [isEditingHeaderTitle, setIsEditingHeaderTitle] = useState(false);
   const [isEditingHeaderDesc, setIsEditingHeaderDesc] = useState(false);
   const [isEditingImgTitle, setIsEditingImgTitle] = useState(false);
+
+  useEffect(() => {
+    if (!editMode) {
+      setIsEditingHeaderTitle(false);
+      setIsEditingHeaderDesc(false);
+      setIsEditingImgTitle(false);
+    }
+  }, [editMode]);
 
   const parseDimensionStyle = (val, isWidth = true) => {
     if (!val || val === 'auto') return isWidth ? '100%' : undefined;
@@ -469,7 +480,7 @@ const MenuPrintBlock = ({
     const displayHeight = activeHeight ? String(activeHeight).replace(/px$/, '') : '';
 
     return (
-      <div className="absolute top-1 right-1 flex flex-col gap-1 z-50 print:hidden opacity-0 group-hover:opacity-100 transition-opacity bg-white p-1 rounded-[6px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
+      <div className="absolute top-1 right-1 flex flex-col gap-1 z-50 print:hidden opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity bg-white p-1 rounded-[6px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">
         {/* Controles de Ancho y Alto (%, px, auto) */}
         <div className="flex flex-col gap-1 p-1 bg-purple-50 rounded border border-black text-[9px] font-SpaceGrotesk">
           <div className="flex items-center justify-between gap-1" title="Ancho del bloque (ej. 50%, 100%, 400px)">
@@ -733,7 +744,7 @@ const MenuPrintBlock = ({
             onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
         ) : (
-          (hasTitle || editMode) && (
+          hasTitle ? (
             <h2 
               className={`font-black uppercase leading-none m-0 whitespace-nowrap text-center tracking-[0.1em] ${editMode ? 'cursor-text hover:bg-black/5 rounded px-1' : ''}`} 
               style={{ 
@@ -744,8 +755,19 @@ const MenuPrintBlock = ({
               onClick={() => { if (editMode) setIsEditingHeaderTitle(true); }}
               title={editMode ? "Clic para editar título" : ""}
             >
-              {hasTitle ? titleVal : <span className="opacity-30 text-xs">(Sin título)</span>}
+              {titleVal}
             </h2>
+          ) : (
+            editMode && (
+              <button
+                type="button"
+                onClick={() => setIsEditingHeaderTitle(true)}
+                className="absolute top-1 left-1 z-30 bg-white/90 border border-black rounded px-1 py-0.5 text-[8px] font-black uppercase shadow-sm opacity-0 pointer-events-none group-hover/header:opacity-100 group-hover/header:pointer-events-auto transition-opacity print:hidden cursor-pointer"
+                title="Añadir título al bloque"
+              >
+                + Título
+              </button>
+            )
           )
         )}
         {renderGroupDescription(id, true)}
@@ -823,7 +845,10 @@ const MenuPrintBlock = ({
           } : { 
             fontFamily: colors.fontBody || 'Space Grotesk', 
             fontSize: `${colors.sizeComment || 9}${colors.fontSizeUnit || 'px'}` 
-          }}>
+          }}
+          onClick={() => { if (editMode) setIsEditingHeaderDesc(true); }}
+          title={editMode ? "Clic para editar descripción" : ""}
+        >
           {text}
         </p>
       </div>
@@ -1377,8 +1402,8 @@ const MenuPrintBlock = ({
       const raw = e.dataTransfer.getData("text/plain");
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (data && data.blockId && data.blockId !== blockId && props.reorderBlock) {
-        props.reorderBlock(data.blockId, blockId, pageIndex, columnId, 'before');
+      if (data && data.blockId && data.blockId !== blockId && reorderBlock) {
+        reorderBlock(data.blockId, blockId, pageIndex, columnId, 'before');
       }
     } catch (err) {
       console.error("Drop block error:", err);
@@ -1459,7 +1484,7 @@ const MenuPrintBlock = ({
             minHeight={isSoloImagen ? 40 : (itemMode === 'ampliado' ? 100 : (isImageBlock ? 40 : 40))}
             maxHeight={1200}
             title="Arrastrar para cambiar el alto del bloque"
-            className="absolute -bottom-2 inset-x-0 z-50 opacity-0 group-hover/blockwrapper:opacity-100 transition-opacity"
+            className="absolute -bottom-2 inset-x-0 z-50 opacity-0 pointer-events-none group-hover/blockwrapper:opacity-100 group-hover/blockwrapper:pointer-events-auto transition-opacity"
           />
         )}
       </div>

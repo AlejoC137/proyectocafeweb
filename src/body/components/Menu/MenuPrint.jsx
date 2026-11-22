@@ -670,8 +670,11 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
     return <div className="text-center text-black text-2xl font-SpaceGrotesk font-light">Cargando menú...</div>;
   }
 
+  const isPreview = previewMode || hideControls;
+  const effectiveEditMode = isPreview ? false : editMode;
+
   const commonProps = {
-    editMode,
+    editMode: effectiveEditMode,
     addBlock,
     moveBlock,
     reorderBlock,
@@ -699,8 +702,6 @@ function MenuPrint({ menuId = 1, filterOnlyHelados = false, hideControls = false
     pagesCount: pages.length,
     updatePageTitle
   };
-
-  const isPreview = previewMode || hideControls;
 
   return (
     <div className={`flex w-full flex-col items-center justify-start ${isPreview ? "bg-transparent p-2 min-h-0" : "bg-gray-200 min-h-screen pb-10"} print:bg-white print:p-0 print:m-0 print:block overflow-x-hidden`}>

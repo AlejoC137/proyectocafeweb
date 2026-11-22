@@ -75,6 +75,12 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
 
   const [isEditingText, setIsEditingText] = useState(false);
 
+  useEffect(() => {
+    if (!editMode) {
+      setIsEditingText(false);
+    }
+  }, [editMode]);
+
   if (editMode && isEditingText) {
     return (
       <div className="flex flex-col gap-1 w-full print:hidden p-1 bg-yellow-50/80 border border-black rounded">
@@ -82,7 +88,10 @@ At Proyecto Café we do everything possible to serve dishes and drinks with fres
           <label className="text-[10px] font-black text-gray-700 uppercase">{isEnglish ? "Editar Markdown (English)" : "Editar Markdown (Español)"}</label>
           <button 
             type="button" 
-            onClick={() => setIsEditingText(false)}
+            onClick={() => {
+              handleBlur();
+              setIsEditingText(false);
+            }}
             className="text-[9px] font-bold bg-black text-white px-2 py-0.5 rounded uppercase hover:bg-gray-800"
           >
             ✓ Guardar / Listo

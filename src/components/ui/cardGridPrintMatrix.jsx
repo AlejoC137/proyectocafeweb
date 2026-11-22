@@ -192,8 +192,14 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
     const lineWidth = colors?.itemLineWidth || 1;
     const borderBottomStyle = showLine ? `${lineWidth}px ${lineStyle} ${colors?.gridBorder || 'rgba(0,0,0,0.1)'}` : 'none';
 
-    const [isEditingComment, setIsEditingComment] = useState(false);
+    const [isEditingComment, setIsEditingComment] = React.useState(false);
     const currentComment = (isEnglish ? product.MenuComentsEN : product.MenuComentsES) || '';
+
+    React.useEffect(() => {
+        if (!editMode) {
+            setIsEditingComment(false);
+        }
+    }, [editMode]);
 
     const priceAlign = groupDescriptions?.[`${blockId}_priceAlign`] || colors?.priceAlign || 'right';
     const priceGap = groupDescriptions?.[`${blockId}_priceGap`] ?? colors?.priceGap ?? 5;
@@ -323,39 +329,44 @@ function ProductSummaryRow({ product, isEnglish, editMode, activeSlot, setActive
 
             {/* Comentario en una nueva línea de ancho completo que ocupa exactamente los mismos renglones en Vista Previa y Editar */}
             {showItemDescriptions && (
-                editMode ? (
-                    (currentComment || isEditingComment) ? (
-                        <textarea
-                            autoFocus={isEditingComment && !currentComment}
-                            defaultValue={currentComment}
-                            placeholder={isEnglish ? "Añadir comentario..." : "Añadir comentario..."}
-                            onBlur={(e) => {
+                editMode && isEditingComment ? (
+                    <textarea
+                        autoFocus
+                        defaultValue={currentComment}
+                        placeholder={isEnglish ? "Añadir comentario..." : "Añadir comentario..."}
+                        onBlur={(e) => {
+                            if (e.target.value !== currentComment) {
                                 handleComentsChange(e.target.value);
-                                setIsEditingComment(false);
-                            }}
-                            rows={1}
-                            ref={(el) => {
-                                if (el) {
-                                    el.style.height = 'auto';
-                                    el.style.height = `${el.scrollHeight}px`;
-                                }
-                            }}
-                            onInput={(e) => {
-                                e.target.style.height = 'auto';
-                                e.target.style.height = `${e.target.scrollHeight}px`;
-                            }}
-                            className="italic font-normal normal-case tracking-normal w-full bg-transparent border-0 focus:bg-yellow-50/60 outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
-                            style={{
-                                color: colors?.itemComment || '#6b7280',
-                                fontFamily: colors?.fontBody || 'serif',
-                                fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`,
-                                lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1
-                            }}
-                        />
-                    ) : null
+                            }
+                            setIsEditingComment(false);
+                        }}
+                        rows={1}
+                        ref={(el) => {
+                            if (el) {
+                                el.style.height = 'auto';
+                                el.style.height = `${el.scrollHeight}px`;
+                            }
+                        }}
+                        onInput={(e) => {
+                            e.target.style.height = 'auto';
+                            e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        className="block italic font-normal normal-case tracking-normal w-full bg-yellow-50/60 border-0 outline-none resize-none p-0 m-0 overflow-hidden print:hidden"
+                        style={{
+                            color: colors?.itemComment || '#6b7280',
+                            fontFamily: colors?.fontBody || 'serif',
+                            fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`,
+                            lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1
+                        }}
+                    />
                 ) : (
                     currentComment ? (
-                        <div className="italic font-normal normal-case tracking-normal w-full break-words" style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}>
+                        <div
+                            onClick={() => { if (editMode) setIsEditingComment(true); }}
+                            title={editMode ? (isEnglish ? "Click to edit note" : "Clic para editar nota") : undefined}
+                            className={`italic font-normal normal-case tracking-normal w-full break-words ${editMode ? 'cursor-text hover:bg-yellow-50/60 rounded-sm' : ''}`}
+                            style={{ color: colors?.itemComment || '#6b7280', fontFamily: colors?.fontBody || 'serif', fontSize: `${colors?.sizeComment || 9.2}${colors?.fontSizeUnit || 'px'}`, lineHeight: colors?.lineHeight !== undefined ? colors.lineHeight : 1.1 }}
+                        >
                             {currentComment}
                         </div>
                     ) : null
