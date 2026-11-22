@@ -130,14 +130,12 @@ function SemanaResumen() {
           fetchVentasByRange(weekRange.startIso, weekRange.endIso),
           fetchComprasByRange(weekRange.startIso, weekRange.endIso),
           fetchConsumoStaffByRange(weekRange.startIso, weekRange.endIso),
-          ensureCatalogTablesLoaded(dispatch, store.getState, [
-            MENU,
-            ITEMS,
-            PRODUCCION,
-            RECETAS_MENU,
-            RECETAS_PRODUCCION,
-            STAFF,
-          ]),
+          ensureCatalogTablesLoaded(
+            dispatch,
+            store.getState,
+            [MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, STAFF],
+            { force: reloadTick > 0 }
+          ),
         ]);
 
         if (cancelled) return;

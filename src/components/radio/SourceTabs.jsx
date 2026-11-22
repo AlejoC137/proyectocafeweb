@@ -57,7 +57,7 @@ export default function SourceTabs({
         )}
         <div className="flex w-full">
           {[
-            { id: 'supabase', icon: <Cloud className="w-3.5 h-3.5" />, label: 'Files / Álbumes' },
+            { id: 'supabase', icon: <Disc className="w-3.5 h-3.5" />, label: 'Biblioteca / Álbumes' },
             { id: 'live', icon: <Globe className="w-3.5 h-3.5" />, label: 'Radios' },
             { id: 'youtube', icon: <Youtube className="w-3.5 h-3.5 text-red-500" />, label: 'YouTube' },
           ].map(tab => {
@@ -91,18 +91,19 @@ export default function SourceTabs({
 
       {/* CONTENIDO DEL TAB */}
       <div className="border-[2.5px] border-black dark:border-slate-700 bg-white dark:bg-[#161722] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.06)] rounded-none transition-colors">
-        {/* TAB: RADIO STATION (Selector interactivo de la emisora) */}
+        {/* TAB: BIBLIOTECA / PERSONAL MEDIA SERVER */}
         {activeTab === 'supabase' && (
           <RadioStationSelector
             supabasePlaylist={supabasePlaylist}
-            currentPlay={currentPlay}
-            setIsPlaying={setIsPlaying}
-            broadcastPlay={broadcastPlay}
-            isApplyingRemoteChange={isApplyingRemoteChange}
-            queueWindow={queueWindow}
+            mediaAlbums={mediaAlbums}
+            mediaServerStatus={mediaServerStatus}
+            mediaServerInfo={mediaServerInfo}
+            retryMediaServer={retryMediaServer}
+            currentTrack={currentTrack}
+            currentTrackIndex={currentTrackIndex}
+            isPlaying={isPlaying}
+            togglePlay={togglePlay}
             jumpToTrack={jumpToTrack}
-            isShuffle={isShuffle}
-            setIsShuffle={setIsShuffle}
           />
         )}
 
@@ -170,15 +171,11 @@ export default function SourceTabs({
                       <span className={`text-[10px] font-mono font-bold w-4 text-center flex-shrink-0 ${isCurrent ? 'text-[#1DB954]' : 'text-gray-400'}`}>
                         {index + 1}
                       </span>
-                      <div className="w-7 h-7 rounded-sm border border-black/20 overflow-hidden flex-shrink-0 bg-black relative">
-                        <img
-                          src={station.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200'}
+                      <div className="w-7 h-7 rounded-sm border border-black/20 overflow-hidden flex-shrink-0 bg-neutral-900 relative">
+                        <CoverArt
+                          src={station.cover}
                           alt={station.title}
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=200';
-                          }}
-                          className="w-full h-full object-cover"
+                          iconClassName="w-3.5 h-3.5 text-neutral-500"
                         />
                       </div>
                       <div className="truncate flex-1">

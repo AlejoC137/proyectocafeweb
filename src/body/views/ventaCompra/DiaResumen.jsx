@@ -75,14 +75,12 @@ function DiaResumen() {
       if (cancelled) return;
       setLoadingBolsillos(true);
       try {
-        await ensureCatalogTablesLoaded(dispatch, store.getState, [
-          MENU,
-          ITEMS,
-          PRODUCCION,
-          RECETAS_MENU,
-          RECETAS_PRODUCCION,
-          STAFF,
-        ]);
+        await ensureCatalogTablesLoaded(
+          dispatch,
+          store.getState,
+          [MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, STAFF],
+          { force: reloadTick > 0 }
+        );
         if (!cancelled) {
           setLoadingBolsillos(false);
         }
@@ -100,7 +98,7 @@ function DiaResumen() {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [activeTab, dispatch, store]);
+  }, [activeTab, dispatch, store, reloadTick]);
 
   useEffect(() => {
     if (!date) {
@@ -138,7 +136,7 @@ function DiaResumen() {
         const [ventasHoy, comprasHoy] = await Promise.all([
           fetchVentasByDay(parts.year, parts.month, parts.day),
           fetchComprasByDay(parts.year, parts.month, parts.day),
-          ensureCatalogTablesLoaded(dispatch, store.getState, [RECETAS_MENU]),
+          ensureCatalogTablesLoaded(dispatch, store.getState, [RECETAS_MENU], { force: reloadTick > 0 }),
         ]);
 
         if (cancelled) return;

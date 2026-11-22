@@ -57,14 +57,12 @@ function MesResumen() {
           fetchVentasByMonth(selectedYear, selectedMonth),
           fetchComprasByMonth(selectedYear, selectedMonth),
           fetchConsumoStaffByMonth(selectedYear, selectedMonth),
-          ensureCatalogTablesLoaded(dispatch, store.getState, [
-            MENU,
-            ITEMS,
-            PRODUCCION,
-            RECETAS_MENU,
-            RECETAS_PRODUCCION,
-            STAFF,
-          ]),
+          ensureCatalogTablesLoaded(
+            dispatch,
+            store.getState,
+            [MENU, ITEMS, PRODUCCION, RECETAS_MENU, RECETAS_PRODUCCION, STAFF],
+            { force: reloadTick > 0 }
+          ),
         ]);
 
         if (cancelled) return;

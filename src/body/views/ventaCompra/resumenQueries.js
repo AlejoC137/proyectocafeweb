@@ -344,19 +344,21 @@ export async function fetchVentasMonthsIndex({ pageSize = 1000 } = {}) {
  * evitando descargas redundantes al cambiar de fecha o mes.
  * Lanza error si alguna tabla falla al cargar para permitir reintento automático.
  */
-export async function ensureCatalogTablesLoaded(dispatch, getState, tables) {
+export async function ensureCatalogTablesLoaded(dispatch, getState, tables, { force = false } = {}) {
   const state = getState();
-  const missingTables = tables.filter((table) => {
-    const key = TABLE_TO_STATE_KEY[table];
-    if (!key) return true;
-    const current = state[key];
-    return !Array.isArray(current) || current.length === 0;
-  });
+  const tablesToLoad = force
+    ? tables
+    : tables.filter((table) => {
+        const key = TABLE_TO_STATE_KEY[table];
+        if (!key) return true;
+        const current = state[key];
+        return !Array.isArray(current) || current.length === 0;
+      });
 
-  if (missingTables.length === 0) return;
+  if (tablesToLoad.length === 0) return;
 
   const results = await Promise.all(
-    missingTables.map(async (table) => {
+    tablesToLoad.map(async (table) => {
       const res = await dispatch(getAllFromTable(table));
       return { table, ok: res !== null && res !== undefined };
     })

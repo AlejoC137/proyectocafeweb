@@ -18,22 +18,48 @@ export function normalizeUnit(unit) {
 }
 
 /**
+ * Obtiene el precio unitario vigente de un insumo/producción (priorizando precioUnitario,
+ * luego costoPromedio y como respaldo COSTO / CANTIDAD si existe).
+ */
+export function getMasterUnitPrice(itemMaster) {
+  if (!itemMaster) return 0;
+  const direct = parseFloat(itemMaster.precioUnitario);
+  if (!isNaN(direct) && direct > 0) return direct;
+
+  const avg = parseFloat(itemMaster.costoPromedio);
+  if (!isNaN(avg) && avg > 0) return avg;
+
+  const costo = parseFloat(itemMaster.COSTO);
+  const cantidad = parseFloat(itemMaster.CANTIDAD);
+  if (!isNaN(costo) && costo > 0 && !isNaN(cantidad) && cantidad > 0) {
+    return costo / cantidad;
+  }
+  return 0;
+}
+
+/**
  * Ajusta el precio unitario del insumo según la unidad de la receta
- * (Ej: si el insumo está en $/kg y la receta usa gr, divide por 1000)
+ * (Ej: si el insumo está en $/kg y la receta usa gr, divide por 1000; y viceversa)
  */
 export function getNormalizedUnitPrice(itemMaster, recipeUnit, rawUnitPrice = 0) {
-  let price = rawUnitPrice || parseFloat(itemMaster?.precioUnitario || itemMaster?.costoPromedio || 0);
+  let price = parseFloat(rawUnitPrice);
+  if (!price || isNaN(price)) {
+    price = getMasterUnitPrice(itemMaster);
+  }
   if (!price || isNaN(price)) return 0;
 
   const itemUnit = (itemMaster?.UNIDADES || itemMaster?.metric || '').toLowerCase().trim();
   const recUnit = (recipeUnit || '').toLowerCase().trim();
 
-  if (['kg', 'kilo', 'kilogramo'].includes(itemUnit) && ['gr', 'g', 'gramo', 'gramos'].includes(recUnit)) {
-    return price / 1000;
-  }
-  if (['l', 'litro', 'litros'].includes(itemUnit) && ['ml', 'mililitro', 'mililitros', 'cc'].includes(recUnit)) {
-    return price / 1000;
-  }
+  const isKg = (u) => ['kg', 'kilo', 'kilogramo', 'kilogramos'].includes(u);
+  const isGr = (u) => ['gr', 'g', 'gm', 'gramo', 'gramos'].includes(u);
+  const isL = (u) => ['l', 'lt', 'litro', 'litros'].includes(u);
+  const isMl = (u) => ['ml', 'mililitro', 'mililitros', 'cc'].includes(u);
+
+  if (isKg(itemUnit) && isGr(recUnit)) return price / 1000;
+  if (isGr(itemUnit) && isKg(recUnit)) return price * 1000;
+  if (isL(itemUnit) && isMl(recUnit)) return price / 1000;
+  if (isMl(itemUnit) && isL(recUnit)) return price * 1000;
   return price;
 }
 
@@ -491,7 +517,7 @@ export function calculateFinancialPockets({
         ingredients.forEach(ing => {
           const ingQty = parseFloat(ing.cuantity || 0);
           const ingMaster = itemsMapById[ing.item_Id] || produccionMapById[ing.item_Id] || itemsMapByName[ing.name?.toLowerCase()] || produccionMapByName[ing.name?.toLowerCase()];
-          const rawPrice = ing.precioUnitario || parseFloat(ingMaster?.precioUnitario || ingMaster?.costoPromedio || 0);
+          const rawPrice = getMasterUnitPrice(ingMaster) || parseFloat(ing.precioUnitario || 0);
           const normalizedPrice = getNormalizedUnitPrice(ingMaster, ing.units, rawPrice);
           sumIngredientsCost += (ingQty * normalizedPrice);
         });
@@ -550,7 +576,7 @@ export function calculateFinancialPockets({
     if (!insumoName) return;
     const insumoKey = insumoName.trim().toLowerCase();
     const ingMaster = itemsMapById[insumoId] || produccionMapById[insumoId] || itemsMapByName[insumoKey] || produccionMapByName[insumoKey];
-    const rawPrice = parseFloat(ingMaster?.precioUnitario || ingMaster?.costoPromedio || 0);
+    const rawPrice = getMasterUnitPrice(ingMaster);
     const normalizedPrice = getNormalizedUnitPrice(ingMaster, recipeUnit, rawPrice);
 
     const insumoQtyNeeded = portionRatio * quantity;
