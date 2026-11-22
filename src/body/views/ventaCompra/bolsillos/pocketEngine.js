@@ -477,15 +477,14 @@ export function calculateFinancialPockets({
     let hasCostData = false;
 
     if (recipeData) {
-      if (recipeData.rendimiento) {
-        try {
-          const rend = typeof recipeData.rendimiento === 'string' ? JSON.parse(recipeData.rendimiento) : recipeData.rendimiento;
-          const rCant = parseFloat(rend?.cantidad || rend?.cant || 0);
-          if (rCant > 0) portions = rCant;
-        } catch (e) {}
+      // Las recetas de menú en Supabase definen las cantidades exactas para 1 unidad vendida
+      // (rendimiento.cantidad almacena el peso/volumen en ml/gr de la porción, ej. 260 ml para un Latte, NO el número de porciones).
+      try {
+        ingredients = trimRecepie(combinedCatalog, recipeData) || [];
+      } catch (e) {
+        console.warn('Error leyendo ingredientes de receta:', recipeData.legacyName || recipeData._id, e);
+        ingredients = [];
       }
-
-      ingredients = trimRecepie(combinedCatalog, recipeData);
 
       if (ingredients && ingredients.length > 0) {
         let sumIngredientsCost = 0;
@@ -657,7 +656,10 @@ export function calculateFinancialPockets({
         price = parseFloat(menuMaster.Precio || 0);
       }
 
-      const recipeId = p.Receta || p.recetaId || menuMaster?.Receta || 'N/A';
+      const rawSaleRecipe =
+        (p.Receta && p.Receta !== 'N/A' ? p.Receta : null) ||
+        (p.recetaId && p.recetaId !== 'N/A' ? p.recetaId : null);
+      const recipeId = (menuMaster?.Receta && menuMaster.Receta !== 'N/A' ? menuMaster.Receta : null) || rawSaleRecipe || 'N/A';
       const grupo = menuMaster?.GRUPO || p.GRUPO || 'OTROS';
       const subGrupo = menuMaster?.SUB_GRUPO || p.SUB_GRUPO || '';
 
@@ -758,7 +760,8 @@ export function calculateFinancialPockets({
 
       const normName = name.trim();
       const menuMaster = menuMapByName[normName.toLowerCase()] || (p._id && menuMapById[p._id]);
-      const recipeId = p.Receta || menuMaster?.Receta || 'N/A';
+      const rawConsumoRecipe = p.Receta && p.Receta !== 'N/A' ? p.Receta : null;
+      const recipeId = (menuMaster?.Receta && menuMaster.Receta !== 'N/A' ? menuMaster.Receta : null) || rawConsumoRecipe || 'N/A';
       const grupo = menuMaster?.GRUPO || p.GRUPO || 'OTROS';
       const subGrupo = menuMaster?.SUB_GRUPO || p.SUB_GRUPO || '';
 
