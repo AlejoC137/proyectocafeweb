@@ -520,7 +520,7 @@ export default function RadioManager() {
           updatePayload.station_name = firstSong.title;
           updatePayload.station_artist = firstSong.artist || 'Radio Café';
           updatePayload.station_cover = firstSong.cover || '';
-          updatePayload.station_url = firstSong.url || (firstSong.fileName ? `local://${encodeURIComponent(firstSong.fileName)}` : '');
+          updatePayload.station_url = getPreviewAudioUrl(firstSong) || firstSong.streamUrl || firstSong.url || '';
         }
       } else if (targetMode === 'live') {
         updatePayload.station_name = 'Emisora En Vivo';
@@ -550,42 +550,16 @@ export default function RadioManager() {
     }
   };
 
-  // Comprobar latido activo del .bat (detección inmediata local vía Vite y fallback Supabase)
-  const checkBatHeartbeat = async (record) => {
-    // 1. Verificación local inmediata (G:\Mi unidad\Radio\bat_heartbeat.json)
-    try {
-      const res = await fetch(`/api/bat-status?t=${Date.now()}`);
-      const contentType = res.headers.get('content-type') || '';
-      if (res.ok && contentType.includes('application/json')) {
-        const json = await res.json();
-        if (json && json.online) {
-          setIsBatOnline(true);
-          if (json.totalSongs && Number(json.totalSongs) > 0) {
-            const currentLoadedSongs = (batCatalog || []).reduce((acc, a) => acc + (a.tracks?.length || a.trackCount || 0), 0);
-            if (currentLoadedSongs !== Number(json.totalSongs)) {
-              fetchBatCatalog(true);
-            }
-          }
-          return true;
-        } else {
-          // El servidor Vite local confirma que el BAT no está corriendo
-          setIsBatOnline(false);
-          return false;
-        }
-      }
-    } catch (e) {}
-
-    // 2. Si no responde local (ej. en Vercel producción donde no hay servidor local), verificar estado en Supabase
-    if (!record) {
-      setIsBatOnline(false);
-      return false;
+  // Estado de conexión del Personal Media Server (reemplaza el antiguo heartbeat del .bat)
+  const checkBatHeartbeat = async () => {
+    const discovery = await discoverMediaServer(4000);
+    const online = Boolean(discovery.online && discovery.baseUrl);
+    setIsBatOnline(online);
+    setMediaServerStatus(online ? 'online' : 'offline');
+    if (online) {
+      mediaServerUrlRef.current = discovery.baseUrl;
     }
-    if (record.station_artist === 'OFFLINE' || record.station_name === 'Estacion Desconectada' || !record.is_playing) {
-      setIsBatOnline(false);
-      return false;
-    }
-    setIsBatOnline(true);
-    return true;
+    return online;
   };
 
   // Cargar biblioteca 100% dinámica desde el Personal Media Server (URL descubierta en media_server_config)
@@ -600,6 +574,7 @@ export default function RadioManager() {
       if (!discovery.online || !discovery.baseUrl) {
         mediaServerUrlRef.current = null;
         setMediaServerStatus('offline');
+        setIsBatOnline(false);
         if (!silent) {
           setError('Personal Media Server fuera de línea. Verifica el túnel e intenta de nuevo.');
         }
@@ -610,6 +585,7 @@ export default function RadioManager() {
       mediaServerUrlRef.current = discovery.baseUrl;
       mediaServerTracksRef.current = catalog.tracks || [];
       setMediaServerStatus('online');
+      setIsBatOnline(true);
 
       const formattedAlbums = (catalog.albums || []).map((alb) => ({
         folderName: alb.name,
@@ -639,6 +615,7 @@ export default function RadioManager() {
     } catch (err) {
       console.warn('No se pudo cargar el catálogo desde Personal Media Server:', err);
       setMediaServerStatus('offline');
+      setIsBatOnline(false);
       if (!silent) {
         setError('No se pudo cargar el catálogo del Personal Media Server.');
       }
@@ -860,141 +837,38 @@ export default function RadioManager() {
   useEffect(() => {
     fetchSongs();
     fetchYoutubeSongs();
+    fetchBatCatalog(false);
 
-    // Consultar estado inicial del bat y de la señal al aire
+    // Leer metadatos iniciales de la última emisión registrada
     supabase.from('radio_current_play').select('*').eq('id', 1).single().then(({ data }) => {
       if (data) {
         setOnAirTrack(data);
         if (data.station_name) {
           lastAirTrackNameRef.current = data.station_name;
         }
-        const ts = data.tyranny_settings || {};
-        if (ts.catalogUrl || ts.catalogSongsCount || ts.catalogUpdatedAt) {
-          lastCatalogSignatureRef.current = `${ts.catalogUrl || ''}|${ts.catalogSongsCount || ''}|${ts.catalogUpdatedAt || ''}`;
-        }
-        checkBatHeartbeat(data);
-        fetchBatCatalog(true, ts.catalogUrl || null);
-
-        // Si la señal al aire está activa en la base de datos, preparar el reloj y la URL del Deck Rojo (sin reproducir en silencio hasta que el usuario active el Deck Rojo)
-        if (data.is_playing && data.station_url) {
-          const elapsed = Math.max(0, (Date.now() - new Date(data.updated_at).getTime()) / 1000);
-          setAirTime(elapsed);
-        }
-      } else {
-        fetchBatCatalog(true);
       }
     });
 
-    // Suscripción en tiempo real al estado de la señal de radio
+    // Suscripción ligera a radio_current_play (solo metadatos externos, nunca corta masterAirAudioRef)
     const channel = supabase
       .channel('radio-air-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'radio_current_play' }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'radio_current_play', filter: 'id=eq.1' }, (payload) => {
         const row = payload.new;
-        if (row) {
-          // 1. Si es señal de pre-escucha (Modo Azul / Biblioteca CUE exclusiva)
-          if (row.tab && row.tab.startsWith('PREVIEW_READY:')) {
-            if (row.tab !== lastLoadedPreviewTabRef.current && userStartedPreviewRef.current) {
-              const parts = row.tab.substring(14).split('||');
-              const previewUrl = parts[0];
-              const previewTitle = parts[1] || '';
-              const previewArtist = parts[2] || '';
-              const previewDur = Number(parts[3]) || 180;
-
-              // Validar que la señal corresponda a la canción actualmente solicitada
-              const reqTitle = requestedPreviewTitleRef.current;
-              const isMatch = !reqTitle || !previewTitle ||
-                previewTitle.trim().toLowerCase().includes(reqTitle) ||
-                reqTitle.includes(previewTitle.trim().toLowerCase());
-
-              if (isMatch && previewUrl && audioRef.current) {
-                lastLoadedPreviewTabRef.current = row.tab;
-                audioRef.current.src = previewUrl;
-                audioRef.current.currentTime = 0;
-                audioRef.current.muted = isPreviewMutedRef.current;
-                audioRef.current.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
-                setPreviewDuration(previewDur);
-                setPreviewTrack(prev => ({
-                  ...(prev || {}),
-                  title: previewTitle || prev?.title,
-                  artist: previewArtist || prev?.artist,
-                  duration: previewDur
-                }));
-                setIsPlayingPreview(true);
-                audioRef.current.play().catch(err => console.warn("Autoplay pre-escucha diferido:", err));
-                setSuccess(`🎧 Reproduciendo en Deck CUE (Biblioteca): "${previewTitle}"`);
-              }
-            }
-            // Si el evento fue únicamente de pre-escucha y no cambió la canción al aire, salir aquí
-            if (!row.station_name || row.station_name === lastAirTrackNameRef.current) {
-              return;
-            }
-          }
-
-          if (row.tab && row.tab.startsWith('PREVIEW_REQ:')) {
-            return; // Solicitud en tránsito al BAT, no alterar emisión al aire
-          }
-
-          // 2. Si es actualización de la emisión general al aire (Deck Rojo / Cola de emisión)
-          setOnAirTrack(row);
-
-          const airAudio = masterAirAudioRef.current;
-          const trackChanged = Boolean(row.station_name && row.station_name !== lastAirTrackNameRef.current);
-          if (trackChanged) {
-            lastAirTrackNameRef.current = row.station_name;
-            // Si la nueva pista no tiene URL HTTP lista todavía (está subiendo en el BAT)
-            // y el monitor NO está ya reproduciendo la pista local en localhost, pausar temporalmente SIN apagar isPlayingLiveSignal
-            const isAlreadyPlayingLocal = airAudio && !airAudio.paused && airAudio.src && airAudio.src.includes('/api/local-audio');
-            if (!isAlreadyPlayingLocal && (!row.station_url || (!row.station_url.startsWith('http://') && !row.station_url.startsWith('https://')))) {
-              if (airAudio) {
-                airAudio.pause();
-                airAudio.currentTime = 0;
-              }
-            }
-          }
-
-          // Actualizar la fuente del Deck Rojo si se recibió la señal en vivo transmitida por el .bat
-          if (row.station_url && (row.station_url.startsWith('http://') || row.station_url.startsWith('https://'))) {
-            if (airAudio) {
-              // Si ya está sonando esta misma canción por /api/local-audio en localhost, no cortarla
-              const isPlayingSameLocal = !trackChanged && !airAudio.paused && airAudio.src && airAudio.src.includes('/api/local-audio');
-              if (!isPlayingSameLocal) {
-                const isDifferent = airAudio.src !== row.station_url;
-                if (isDifferent) {
-                  airAudio.pause();
-                  airAudio.currentTime = 0;
-                  airAudio.src = row.station_url;
-                  airAudio.load();
-                }
-                if (isPlayingLiveSignalRef.current && row.is_playing) {
-                  airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
-                  airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
-                  airAudio.play().catch(err => {
-                    console.warn("Autoplay diferido al recibir señal del BAT:", err);
-                    airAudio.addEventListener('canplay', () => {
-                      if (isPlayingLiveSignalRef.current) {
-                        airAudio.play().catch(() => {});
-                      }
-                    }, { once: true });
-                  });
-                }
-              }
-            }
-          }
-          // Detectar si el .bat acaba de iniciar o actualizar el catálogo en la base de datos
-          const ts = row.tyranny_settings || {};
-          const newCatSig = `${ts.catalogUrl || ''}|${ts.catalogSongsCount || ''}|${ts.catalogUpdatedAt || ''}`;
-          if (newCatSig !== '||' && newCatSig !== lastCatalogSignatureRef.current) {
-            lastCatalogSignatureRef.current = newCatSig;
-            fetchBatCatalog(false, ts.catalogUrl || null);
-          }
-
-          const online = checkBatHeartbeat(row);
-          if (online && (row.station_artist === 'BAT_ONLINE' || row.station_artist === 'LIBRARY_LOADED' || row.station_name === 'BAT_READY')) {
-            fetchBatCatalog(true, ts.catalogUrl || null);
-          } else if (!online || row.station_artist === 'OFFLINE') {
-            setIsBatOnline(false);
-          }
+        if (!row) return;
+        if (row.tab && (row.tab.startsWith('PREVIEW_READY:') || row.tab.startsWith('PREVIEW_REQ:'))) {
+          return;
         }
+        setOnAirTrack((prev) => {
+          if (
+            prev &&
+            prev.station_name === row.station_name &&
+            prev.station_url === row.station_url &&
+            prev.is_playing === row.is_playing
+          ) {
+            return prev;
+          }
+          return row;
+        });
       })
       .subscribe();
 
@@ -1002,44 +876,6 @@ export default function RadioManager() {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  // Monitor de latido cada 3 segundos
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (onAirTrack) checkBatHeartbeat(onAirTrack);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [onAirTrack, batCatalog.length]);
-
-  // Reloj Incorruptible de Emisión: cuenta segundo a segundo de forma continua basándose en updated_at
-  useEffect(() => {
-    if (!onAirTrack?.is_playing || !onAirTrack?.updated_at) return;
-
-    const calcElapsed = () => {
-      const startedAt = new Date(onAirTrack.updated_at).getTime();
-      return Math.max(0, (Date.now() - startedAt) / 1000);
-    };
-
-    setAirTime(calcElapsed());
-
-    const timer = setInterval(() => {
-      const elapsed = calcElapsed();
-      const songDur = airDuration || onAirTrack?.duration || 180;
-
-      // Mantener actualizado el reloj visual de emisión sin interrumpir la canción
-      setAirTime(elapsed);
-
-      // Si el audio en cabina está activo, mantenerlo alineado
-      const airAudio = masterAirAudioRef.current;
-      if (airAudio && airAudio.src && !airAudio.paused) {
-        if (Math.abs(airAudio.currentTime - elapsed) > 3) {
-          airAudio.currentTime = elapsed;
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [onAirTrack?.updated_at, onAirTrack?.is_playing, airDuration, songs.length]);
 
   // Forzar Reinicio del sistema de radio y recarga (F5) de todas las instancias abiertas
   const handleForceRestart = async () => {
@@ -1183,12 +1019,7 @@ export default function RadioManager() {
     };
 
     const handleAirEnded = () => {
-      // Si el transmisor .bat está activo, el .bat es la autoridad de transmisión; el monitor no debe cortar canciones
-      if (isBatOnline) {
-        console.log('[MasterBroadcaster] Monitor de cabina finalizó reproducción local. Esperando señal del transmisor .bat.');
-        return;
-      }
-      console.log('[MasterBroadcaster] Canción finalizada en modo autónomo. Avanzando cola...');
+      console.log('[MasterBroadcaster] Canción finalizada. Avanzando siguiente pista...');
       handleAirNext();
     };
 
@@ -1781,12 +1612,12 @@ export default function RadioManager() {
       (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase()))
     ) || songs[0];
 
-    const liveUrl = (onAirTrack?.station_url && onAirTrack.station_url.startsWith('http'))
-      ? onAirTrack.station_url
-      : (currentSong ? getPreviewAudioUrl(currentSong) : null);
+    const liveUrl =
+      (currentSong ? getPreviewAudioUrl(currentSong) : null) ||
+      (onAirTrack?.station_url && onAirTrack.station_url.startsWith('http') ? onAirTrack.station_url : null);
 
     if (!liveUrl) {
-      setError("No hay señal al aire disponible aún. Inicia el transmisor .bat.");
+      setError("No hay pista lista para reproducir. Carga un álbum o pista del Personal Media Server.");
       return;
     }
 
@@ -1824,12 +1655,9 @@ export default function RadioManager() {
         (onAirTrack?.station_name && s.title && onAirTrack.station_name.toLowerCase().includes(s.title.toLowerCase()))
       ) || songs[0];
 
-      const isLocal = typeof window !== 'undefined' &&
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-      const liveUrl = (isLocal && currentSong ? getPreviewAudioUrl(currentSong) : null) ||
-        ((onAirTrack?.station_url && onAirTrack.station_url.startsWith('http')) ? onAirTrack.station_url : null) ||
-        (currentSong ? getPreviewAudioUrl(currentSong) : null);
+      const liveUrl =
+        (currentSong ? getPreviewAudioUrl(currentSong) : null) ||
+        (onAirTrack?.station_url && onAirTrack.station_url.startsWith('http') ? onAirTrack.station_url : null);
 
       if (!liveUrl) {
         if (currentSong) {
@@ -2957,7 +2785,7 @@ export default function RadioManager() {
                   : 'bg-red-500/15 text-red-400 border-red-500/30'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${isBatOnline ? 'bg-emerald-400 animate-ping' : 'bg-red-500'}`} />
-                {isBatOnline ? 'BAT ON' : 'BAT OFF'}
+                {isBatOnline ? 'SERVER ON' : 'SERVER OFF'}
               </span>
               <button
                 onClick={handleSyncWithBat}
