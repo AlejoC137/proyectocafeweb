@@ -1,18 +1,25 @@
 import React from 'react';
-import { Cloud, Globe, Youtube, Loader2, Search, Play, Heart, Plus, Shuffle, Lock } from 'lucide-react';
+import { Disc, Globe, Youtube, Loader2, Search, Heart, Plus, Shuffle, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { YOUTUBE_CATEGORIES } from '../../utils/youtubeHelpers';
 import RadioStationSelector from './RadioStationSelector';
+import CoverArt from './CoverArt';
 
 export default function SourceTabs({
   activeTab,
   handleTabChange,
   isConsoleLocked = false,
-  currentPlay = null,
   supabasePlaylist = [],
+  mediaAlbums = [],
+  mediaServerStatus = 'loading',
+  mediaServerInfo = null,
+  retryMediaServer,
+  currentTrack = null,
   currentTrackIndex,
   setCurrentTrackIndex,
+  isPlaying = false,
   setIsPlaying,
+  togglePlay,
   broadcastPlay,
   isApplyingRemoteChange,
   toggleFavorite,
@@ -25,7 +32,6 @@ export default function SourceTabs({
   loadingApi = false,
   isShuffle,
   setIsShuffle,
-  queueWindow,
   jumpToTrack,
   // Props de YouTube
   youtubePlaylist = [],

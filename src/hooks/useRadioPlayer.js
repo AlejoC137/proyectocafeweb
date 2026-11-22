@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 export function useRadioPlayer(
-  currentPlaylist, 
-  activeTab, 
-  broadcastPlay, 
-  broadcastStop, 
+  currentPlaylist,
+  activeTab,
+  broadcastPlay,
+  broadcastStop,
   isApplyingRemoteChange,
   externalTrackIndex,
   externalSetTrackIndex,
@@ -25,6 +25,7 @@ export function useRadioPlayer(
   const [internalAudioError, setInternalAudioError] = useState(null);
   const audioError = externalAudioError !== undefined ? externalAudioError : internalAudioError;
   const setAudioError = externalSetAudioError || setInternalAudioError;
+
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -32,14 +33,14 @@ export function useRadioPlayer(
     try {
       const saved = localStorage.getItem('proyecto_radio_volume');
       return saved !== null ? parseFloat(saved) : 0.85;
-    } catch (e) {
+    } catch {
       return 0.85;
     }
   });
   const [isMuted, setIsMuted] = useState(() => {
     try {
       return localStorage.getItem('proyecto_radio_muted') === 'true';
-    } catch (e) {
+    } catch {
       return false;
     }
   });
@@ -52,16 +53,18 @@ export function useRadioPlayer(
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeatSingle, setIsRepeatSingle] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showAutoStart, setShowAutoStart] = useState(true);
+  const [showAutoStart, setShowAutoStart] = useState(false);
 
   // Historial y Cola para Shuffle & Buffer de 10 canciones
   const [shuffleHistory, setShuffleHistory] = useState([]);
   const unplayedShuffleRef = useRef([]);
-  const preloaderPoolRef = useRef([]);
 
   const audioRef = useRef(null);
-  const pendingPlayRef = useRef(null); 
-  const currentTrack = currentPlaylist[currentTrackIndex] || currentPlaylist[0];
+  const pendingPlayRef = useRef(null);
+  const lastLoadedSrcRef = useRef('');
+
+  const currentTrack = currentPlaylist?.[currentTrackIndex] || currentPlaylist?.[0] || null;
+  const currentStreamUrl = currentTrack?.streamUrl || currentTrack?.url || '';
 
   useEffect(() => {
     return () => {
@@ -71,63 +74,31 @@ export function useRadioPlayer(
     };
   }, []);
 
+  // Inicializar duración estimada cuando cambia la pista
+  useEffect(() => {
+    if (!currentTrack) {
+      setDuration(0);
+      setCurrentTime(0);
+      setProgress(0);
+      return;
+    }
+    if (currentTrack.isLiveStream) {
+      setDuration(0);
+      setCurrentTime(0);
+      setProgress(0);
+    } else if (Number.isFinite(currentTrack.duration) && currentTrack.duration > 0) {
+      setDuration(currentTrack.duration);
+    }
+  }, [currentTrack?.id, currentTrack?.duration, currentTrack?.isLiveStream]);
+
   // Reinicializar pool de shuffle cuando cambie la lista o se active shuffle
   useEffect(() => {
     if (currentPlaylist && currentPlaylist.length > 0) {
       unplayedShuffleRef.current = currentPlaylist
         .map((_, idx) => idx)
-        .filter(idx => idx !== currentTrackIndex);
+        .filter((idx) => idx !== currentTrackIndex);
     }
   }, [currentPlaylist?.length, isShuffle]);
-
-  // Precargar las siguientes canciones en memoria para cambio instantáneo sin lentitud
-  useEffect(() => {
-    if (!currentPlaylist || currentPlaylist.length === 0 || activeTab === 'youtube') return;
-
-    const total = currentPlaylist.length;
-    const next1Idx = (currentTrackIndex + 1) % total;
-    const next2Idx = (currentTrackIndex + 2) % total;
-
-    const isLocalHost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || 
-       window.location.hostname === '127.0.0.1' || 
-       window.location.hostname.includes('localhost'));
-
-    const resolvePreloadUrl = (track) => {
-      if (!track || !track.url) return null;
-      if (track.type?.includes('youtube') || track.isLiveStream) return null;
-      if (track.url.startsWith('local://')) {
-        const rawName = decodeURIComponent(track.url.replace('local://', ''));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(rawName)}` : null;
-      }
-      if (track.filePath && isLocalHost) {
-        return `/api/local-audio?path=${encodeURIComponent(track.filePath)}`;
-      }
-      if (track.url.startsWith('http://') || track.url.startsWith('https://') || track.url.startsWith('/')) {
-        return track.url;
-      }
-      return null;
-    };
-
-    const tracksToPreload = [currentPlaylist[next1Idx], currentPlaylist[next2Idx]]
-      .map(resolvePreloadUrl)
-      .filter(Boolean);
-
-    // Reutilizar o crear elementos de audio para caché en segundo plano
-    tracksToPreload.forEach((targetUrl, i) => {
-      try {
-        if (!preloaderPoolRef.current[i]) {
-          preloaderPoolRef.current[i] = new Audio();
-        }
-        const preAudio = preloaderPoolRef.current[i];
-        if (preAudio.src !== targetUrl && preAudio.src !== new URL(targetUrl, window.location.origin).href) {
-          preAudio.src = targetUrl;
-          preAudio.preload = 'auto';
-          preAudio.load();
-        }
-      } catch (e) {}
-    });
-  }, [currentPlaylist, currentTrackIndex, activeTab]);
 
   // Cola de 10 canciones: 5 anteriores (historial) y 5 siguientes (en espera)
   const queueWindow = useMemo(() => {
@@ -139,7 +110,6 @@ export function useRadioPlayer(
     const history = [];
     const upcoming = [];
 
-    // 5 hacia atrás (historial)
     if (isShuffle && shuffleHistory.length > 0) {
       const recentHistory = shuffleHistory.slice(-5);
       for (let i = recentHistory.length - 1; i >= 0; i--) {
@@ -156,7 +126,6 @@ export function useRadioPlayer(
       }
     }
 
-    // 5 hacia adelante
     const countForward = Math.min(5, total - 1);
     for (let i = 1; i <= countForward; i++) {
       let idx;
@@ -170,7 +139,7 @@ export function useRadioPlayer(
       }
     }
 
-    const currentItem = currentPlaylist[currentTrackIndex] 
+    const currentItem = currentPlaylist[currentTrackIndex]
       ? { ...currentPlaylist[currentTrackIndex], playlistIndex: currentTrackIndex, queueType: 'current' }
       : null;
 
@@ -178,44 +147,58 @@ export function useRadioPlayer(
       history,
       current: currentItem,
       upcoming,
-      allInQueue: [...history, currentItem, ...upcoming].filter(Boolean)
+      allInQueue: [...history, currentItem, ...upcoming].filter(Boolean),
     };
   }, [currentPlaylist, currentTrackIndex, isShuffle, shuffleHistory]);
 
-  const togglePlay = () => {
-    if (!currentTrack?.url || !audioRef.current) return;
+  const togglePlay = useCallback(() => {
+    if (!currentStreamUrl || !audioRef.current) return;
 
     setAudioError(null);
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
-      // Broadcast pausa global
       if (broadcastStop && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
         broadcastStop();
       }
     } else {
       setShowAutoStart(false);
+      audioRef.current.volume = isMuted ? 0 : volume;
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             setIsPlaying(true);
-            // Broadcast reproducción global
             if (broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
               broadcastPlay(currentTrack, activeTab, true, volume, isMuted);
             }
           })
           .catch((err) => {
-            if (err.name === 'AbortError' || err.name === 'NotSupportedError' || err.message?.includes('interrupted') || err.message?.includes('no supported source')) {
+            if (
+              err.name === 'AbortError' ||
+              err.message?.includes('interrupted')
+            ) {
               return;
             }
-            console.error("Error reproduciendo audio:", err);
+            console.error('Error reproduciendo audio:', err);
             setIsPlaying(false);
-            setAudioError("Haz clic nuevamente para iniciar la reproducción.");
+            setAudioError('Haz clic nuevamente para iniciar la reproducción.');
           });
       }
     }
-  };
+  }, [
+    currentStreamUrl,
+    currentTrack,
+    isPlaying,
+    isMuted,
+    volume,
+    activeTab,
+    broadcastPlay,
+    broadcastStop,
+    isApplyingRemoteChange,
+    setAudioError,
+    setIsPlaying,
+  ]);
 
   const nextTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
@@ -223,46 +206,61 @@ export function useRadioPlayer(
     let newIdx;
 
     if (isShuffle && currentPlaylist.length > 1) {
-      // Guardar el actual en el historial de shuffle
-      setShuffleHistory(prev => [...prev, currentTrackIndex]);
+      setShuffleHistory((prev) => [...prev, currentTrackIndex]);
 
-      // Filtrar los que no han sonado
-      let pool = unplayedShuffleRef.current.filter(idx => idx !== currentTrackIndex && idx < currentPlaylist.length);
+      let pool = unplayedShuffleRef.current.filter(
+        (idx) => idx !== currentTrackIndex && idx < currentPlaylist.length
+      );
       if (pool.length === 0) {
-        // Refrescar el pool con todos los índices disponibles excepto el actual
-        pool = currentPlaylist
-          .map((_, i) => i)
-          .filter(i => i !== currentTrackIndex);
+        pool = currentPlaylist.map((_, i) => i).filter((i) => i !== currentTrackIndex);
       }
 
-      // Elegir aleatoriamente
       const randomPos = Math.floor(Math.random() * pool.length);
       newIdx = pool[randomPos];
-
-      // Actualizar pool restante
       unplayedShuffleRef.current = pool.filter((_, i) => i !== randomPos);
     } else {
       newIdx = currentTrackIndex === currentPlaylist.length - 1 ? 0 : currentTrackIndex + 1;
     }
 
     setCurrentTrackIndex(newIdx);
+    setProgress(0);
+    setCurrentTime(0);
     setIsPlaying(true);
 
     const nextStation = currentPlaylist[newIdx];
     if (nextStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(nextStation, activeTab, true, volume, isMuted);
     }
-  }, [currentPlaylist, currentTrackIndex, isShuffle, broadcastPlay, isApplyingRemoteChange, activeTab, volume, isMuted, setCurrentTrackIndex]);
+  }, [
+    currentPlaylist,
+    currentTrackIndex,
+    isShuffle,
+    broadcastPlay,
+    isApplyingRemoteChange,
+    activeTab,
+    volume,
+    isMuted,
+    setCurrentTrackIndex,
+    setAudioError,
+    setIsPlaying,
+  ]);
 
   const prevTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
-    let newIdx;
 
+    // Si la canción lleva más de 3 segundos, reiniciar al inicio antes de retroceder
+    if (audioRef.current && !currentTrack?.isLiveStream && audioRef.current.currentTime > 3) {
+      audioRef.current.currentTime = 0;
+      setCurrentTime(0);
+      setProgress(0);
+      return;
+    }
+
+    let newIdx;
     if (isShuffle && shuffleHistory.length > 0) {
-      // Regresar al último reproducido en modo aleatorio
       newIdx = shuffleHistory[shuffleHistory.length - 1];
-      setShuffleHistory(prev => prev.slice(0, -1));
+      setShuffleHistory((prev) => prev.slice(0, -1));
     } else {
       newIdx = currentTrackIndex === 0 ? currentPlaylist.length - 1 : currentTrackIndex - 1;
     }
@@ -270,47 +268,104 @@ export function useRadioPlayer(
     if (newIdx >= currentPlaylist.length) newIdx = 0;
 
     setCurrentTrackIndex(newIdx);
+    setProgress(0);
+    setCurrentTime(0);
     setIsPlaying(true);
 
     const prevStation = currentPlaylist[newIdx];
     if (prevStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(prevStation, activeTab, true, volume, isMuted);
     }
-  }, [currentPlaylist, currentTrackIndex, isShuffle, shuffleHistory, broadcastPlay, isApplyingRemoteChange, activeTab, volume, isMuted, setCurrentTrackIndex]);
+  }, [
+    currentPlaylist,
+    currentTrack?.isLiveStream,
+    currentTrackIndex,
+    isShuffle,
+    shuffleHistory,
+    broadcastPlay,
+    isApplyingRemoteChange,
+    activeTab,
+    volume,
+    isMuted,
+    setCurrentTrackIndex,
+    setAudioError,
+    setIsPlaying,
+  ]);
 
-  const jumpToTrack = useCallback((index) => {
-    if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
-    setAudioError(null);
-    if (isShuffle) {
-      setShuffleHistory(prev => [...prev, currentTrackIndex]);
+  const jumpToTrack = useCallback(
+    (index) => {
+      if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
+      setAudioError(null);
+      if (isShuffle && index !== currentTrackIndex) {
+        setShuffleHistory((prev) => [...prev, currentTrackIndex]);
+      }
+      setCurrentTrackIndex(index);
+      setProgress(0);
+      setCurrentTime(0);
+      setIsPlaying(true);
+
+      const targetStation = currentPlaylist[index];
+      if (targetStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
+        broadcastPlay(targetStation, activeTab, true, volume, isMuted);
+      }
+    },
+    [
+      currentPlaylist,
+      currentTrackIndex,
+      isShuffle,
+      broadcastPlay,
+      isApplyingRemoteChange,
+      activeTab,
+      volume,
+      isMuted,
+      setCurrentTrackIndex,
+      setAudioError,
+      setIsPlaying,
+    ]
+  );
+
+  const handleLoadedMetadata = useCallback(() => {
+    if (!audioRef.current) return;
+    const dur = audioRef.current.duration;
+    if (dur && Number.isFinite(dur) && dur > 0) {
+      setDuration(dur);
     }
-    setCurrentTrackIndex(index);
-    setIsPlaying(true);
+  }, []);
 
-    const targetStation = currentPlaylist[index];
-    if (targetStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
-      broadcastPlay(targetStation, activeTab, true, volume, isMuted);
-    }
-  }, [currentPlaylist, currentTrackIndex, isShuffle, broadcastPlay, isApplyingRemoteChange, activeTab, volume, isMuted, setCurrentTrackIndex]);
-
-  const handleTimeUpdate = () => {
+  const handleTimeUpdate = useCallback(() => {
     if (!audioRef.current) return;
     const dur = audioRef.current.duration;
     const cur = audioRef.current.currentTime;
     setCurrentTime(cur);
-    if (dur && !isNaN(dur) && dur > 0) {
+    if (dur && Number.isFinite(dur) && dur > 0) {
       setDuration(dur);
-      setProgress((cur / dur) * 100);
+      setProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
+    } else if (currentTrack?.duration > 0) {
+      setProgress(Math.min(100, Math.max(0, (cur / currentTrack.duration) * 100)));
     }
-  };
+  }, [currentTrack?.duration]);
 
-  const handleSeek = (e) => {
-    if (!audioRef.current || !duration || currentTrack?.isLiveStream) return;
-    const seekPercent = parseFloat(e.target.value);
-    const newTime = (seekPercent / 100) * duration;
-    audioRef.current.currentTime = newTime;
-    setProgress(seekPercent);
-  };
+  const handleSeek = useCallback(
+    (e) => {
+      if (!audioRef.current || currentTrack?.isLiveStream) return;
+      const effectiveDuration =
+        (Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0
+          ? audioRef.current.duration
+          : duration) || currentTrack?.duration || 0;
+      if (!effectiveDuration) return;
+
+      const seekPercent = Math.min(100, Math.max(0, parseFloat(e.target.value)));
+      const newTime = (seekPercent / 100) * effectiveDuration;
+      try {
+        audioRef.current.currentTime = newTime;
+      } catch {
+        // Ignorar si aún no hay rangos cargados
+      }
+      setCurrentTime(newTime);
+      setProgress(seekPercent);
+    },
+    [duration, currentTrack?.isLiveStream, currentTrack?.duration]
+  );
 
   const handleVolumeChange = (e) => {
     const val = parseFloat(e.target.value);
@@ -323,9 +378,8 @@ export function useRadioPlayer(
     try {
       localStorage.setItem('proyecto_radio_volume', String(val));
       localStorage.setItem('proyecto_radio_muted', String(muted));
-    } catch (err) {}
+    } catch {}
 
-    // Emitir cambio de volumen con debounce/throttle si no proviene de un evento remoto
     if (broadcastVolume && !isApplyingRemoteVolume.current) {
       if (volumeDebounceTimer.current) {
         clearTimeout(volumeDebounceTimer.current);
@@ -339,13 +393,13 @@ export function useRadioPlayer(
   const toggleMute = () => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
-    const effectiveVol = nextMuted ? 0 : (volume || 0.85);
+    const effectiveVol = nextMuted ? 0 : volume || 0.85;
     if (audioRef.current) {
       audioRef.current.volume = effectiveVol;
     }
     try {
       localStorage.setItem('proyecto_radio_muted', String(nextMuted));
-    } catch (err) {}
+    } catch {}
 
     if (broadcastVolume && !isApplyingRemoteVolume.current) {
       if (volumeDebounceTimer.current) {
@@ -371,125 +425,111 @@ export function useRadioPlayer(
     try {
       localStorage.setItem('proyecto_radio_volume', String(clampedVol));
       localStorage.setItem('proyecto_radio_muted', String(muted));
-    } catch (err) {}
+    } catch {}
 
     setTimeout(() => {
       isApplyingRemoteVolume.current = false;
     }, 150);
   };
 
+  // Sincronización del elemento <audio> con la pista activa (Personal Media Server y Radios Online)
   useEffect(() => {
-    // 1. En pestaña YouTube: detener y limpiar el <audio> inmediatamente para evitar doble reproducción
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+
+    // En pestaña YouTube, detener el <audio> para evitar doble reproducción
     if (activeTab === 'youtube') {
-      if (audioRef.current) {
-        try {
-          audioRef.current.pause();
-          audioRef.current.removeAttribute('src');
-          audioRef.current.load();
-        } catch (e) {}
-      }
+      try {
+        audioEl.pause();
+        lastLoadedSrcRef.current = '';
+      } catch {}
       return;
     }
 
-    // 2. En pestaña 'supabase' (Files / Emisión Al Aire del .bat):
-    // El <audio> principal es controlado EXCLUSIVAMENTE por el sincronizador en vivo de ProyectoRadio.jsx
-    // (a través de radio_current_play.station_url). Nunca sobreescribir aquí con URLs de playlist_radio
-    // para evitar saltos de canción o reproducción de canciones viejas.
-    if (activeTab === 'supabase') {
-      if (audioRef.current) {
-        audioRef.current.volume = isMuted ? 0 : volume;
+    audioEl.volume = isMuted ? 0 : volume;
+
+    const validSrc =
+      currentStreamUrl &&
+      (currentStreamUrl.startsWith('http://') ||
+        currentStreamUrl.startsWith('https://') ||
+        currentStreamUrl.startsWith('blob:') ||
+        currentStreamUrl.startsWith('/'))
+        ? currentStreamUrl
+        : '';
+
+    if (!validSrc) {
+      if (!audioEl.paused) {
+        audioEl.pause();
       }
-      return;
-    }
-
-    if (audioRef.current && currentTrack?.url) {
-      const isLocalHost = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-      let playableUrl = currentTrack.station_url || currentTrack.stream_url || currentTrack.url;
-      if (playableUrl && playableUrl.startsWith('local://')) {
-        const rawName = decodeURIComponent(playableUrl.replace('local://', ''));
-        if (isLocalHost) {
-          playableUrl = `/api/local-audio?file=${encodeURIComponent(rawName)}`;
-        } else {
-          if (audioRef.current && !audioRef.current.paused) {
-            audioRef.current.pause();
-          }
-          return;
-        }
-      }
-
-      if (!playableUrl || (!playableUrl.startsWith('http://') && !playableUrl.startsWith('https://') && !playableUrl.startsWith('/') && !playableUrl.startsWith('blob:'))) {
-        if (audioRef.current && !audioRef.current.paused) {
-          audioRef.current.pause();
-        }
-        return;
-      }
-
-      const currentSrcPath = audioRef.current.src ? new URL(audioRef.current.src, window.location.origin).pathname + new URL(audioRef.current.src, window.location.origin).search : '';
-      const isSameSrc = (currentSrcPath === playableUrl || audioRef.current.src === playableUrl);
-
-      if (!isSameSrc) {
-        audioRef.current.pause();
-        audioRef.current.src = playableUrl;
-      }
-      audioRef.current.volume = isMuted ? 0 : volume;
-
+      lastLoadedSrcRef.current = '';
       if (isPlaying) {
-        if (!isSameSrc) {
-          if (!currentTrack?.isLiveStream) {
-            setProgress(0);
-            setCurrentTime(0);
-          }
-          const promise = audioRef.current.play();
-          if (promise !== undefined) {
-            promise.catch((err) => {
-              if (err.name === 'AbortError' || err.name === 'NotSupportedError' || err.message?.includes('interrupted') || err.message?.includes('no supported source')) {
-                return;
-              }
-              console.warn("Autoplay o reproducción cancelada:", err.message);
-              setIsPlaying(false);
-            });
-          }
-        } else if (audioRef.current.paused) {
-          audioRef.current.play().catch(() => {});
-        }
-      } else if (!audioRef.current.paused) {
-        audioRef.current.pause();
+        setIsPlaying(false);
       }
-    } else if (!currentTrack?.url && isPlaying) {
-      if (audioRef.current && !audioRef.current.paused) {
-        audioRef.current.pause();
-      }
-      setIsPlaying(false);
+      return;
     }
-  }, [currentTrack?.url, activeTab, isPlaying]);
 
-  const handleTrackEnded = () => {
+    const srcChanged = lastLoadedSrcRef.current !== validSrc;
+    if (srcChanged) {
+      lastLoadedSrcRef.current = validSrc;
+      if (!currentTrack?.isLiveStream) {
+        setProgress(0);
+        setCurrentTime(0);
+      }
+      if (audioEl.src !== validSrc) {
+        audioEl.src = validSrc;
+      }
+    }
+
+    if (isPlaying) {
+      const playPromise = audioEl.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          if (
+            err.name === 'AbortError' ||
+            err.name === 'NotSupportedError' ||
+            err.message?.includes('interrupted') ||
+            err.message?.includes('no supported source')
+          ) {
+            return;
+          }
+          console.warn('Autoplay o reproducción cancelada:', err.message);
+          setIsPlaying(false);
+        });
+      }
+    } else if (!audioEl.paused) {
+      audioEl.pause();
+    }
+  }, [currentStreamUrl, activeTab, isPlaying]);
+
+  // Mantener volumen sincronizado en caliente
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  const handleTrackEnded = useCallback(() => {
     if (isRepeatSingle) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
       }
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      if (isDailyLoop) {
-        nextTrack();
-      } else {
-        nextTrack();
-      }
+      return;
     }
-  };
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    nextTrack();
+  }, [isRepeatSingle, nextTrack]);
 
   const formatTime = (secs) => {
-    if (!secs || isNaN(secs)) return '0:00';
+    if (!secs || isNaN(secs) || !Number.isFinite(secs)) return '0:00';
     const hrs = Math.floor(secs / 3600);
     const mins = Math.floor((secs % 3600) / 60);
     const s = Math.floor(secs % 60);
     if (hrs > 0) {
-      return `${hrs}h ${mins < 10 ? '0' : ''}${mins}m`;
+      return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${s < 10 ? '0' : ''}${s}`;
     }
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
@@ -503,6 +543,7 @@ export function useRadioPlayer(
     progress,
     setProgress,
     duration,
+    setDuration,
     currentTime,
     setCurrentTime,
     volume,
@@ -526,6 +567,7 @@ export function useRadioPlayer(
     prevTrack,
     jumpToTrack,
     queueWindow,
+    handleLoadedMetadata,
     handleTimeUpdate,
     handleSeek,
     handleVolumeChange,
@@ -534,6 +576,6 @@ export function useRadioPlayer(
     setVolume,
     setIsMuted,
     handleTrackEnded,
-    formatTime
+    formatTime,
   };
 }
