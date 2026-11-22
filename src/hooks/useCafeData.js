@@ -1,5 +1,63 @@
 import { useState, useEffect } from 'react';
 import supabase from '../config/supabaseClient';
+import { getLocalDateStr } from '../utils/dateUtils';
+
+function parseLunchJson(compLunch) {
+  if (!compLunch) return null;
+  if (typeof compLunch === 'object') return compLunch;
+  try {
+    return JSON.parse(compLunch);
+  } catch {
+    return null;
+  }
+}
+
+export function selectBestLunch(lunchItems, todayStr = getLocalDateStr()) {
+  if (!Array.isArray(lunchItems) || lunchItems.length === 0) return null;
+
+  const validEntries = lunchItems
+    .map((item) => {
+      const parsed = parseLunchJson(item?.Comp_Lunch);
+      if (!parsed) return null;
+      const primaryDate = typeof parsed?.fecha?.fecha === 'string' ? parsed.fecha.fecha.trim() : '';
+      const selectedDates = Array.isArray(parsed?.fechasSeleccionadas)
+        ? parsed.fechasSeleccionadas.filter((d) => typeof d === 'string' && d.trim())
+        : [];
+      const hasContent = Boolean(
+        parsed?.entrada?.nombre ||
+        parsed?.proteina?.nombre ||
+        parsed?.carbohidrato?.nombre ||
+        parsed?.acompanante?.nombre ||
+        parsed?.ensalada?.nombre ||
+        parsed?.bebida?.nombre
+      );
+      if (!hasContent) return null;
+      return { item, primaryDate, selectedDates };
+    })
+    .filter(Boolean);
+
+  if (validEntries.length === 0) return null;
+
+  // 1. Coincidencia exacta con hoy (hora local)
+  const exactToday = validEntries.find(
+    (e) => e.primaryDate === todayStr || e.selectedDates.includes(todayStr)
+  );
+  if (exactToday) return exactToday.item;
+
+  // 2. Próximo menú más cercano (fecha > hoy)
+  const upcoming = validEntries
+    .filter((e) => e.primaryDate && e.primaryDate > todayStr)
+    .sort((a, b) => a.primaryDate.localeCompare(b.primaryDate));
+  if (upcoming.length > 0) return upcoming[0].item;
+
+  // 3. Menú más reciente (fecha < hoy)
+  const past = validEntries
+    .filter((e) => e.primaryDate && e.primaryDate < todayStr)
+    .sort((a, b) => b.primaryDate.localeCompare(a.primaryDate));
+  if (past.length > 0) return past[0].item;
+
+  return validEntries[0].item;
+}
 
 export function useCafeData() {
   const [agendaEvents, setAgendaEvents] = useState([]);
@@ -10,7 +68,7 @@ export function useCafeData() {
   // Fetch Agenda (próximos eventos)
   const fetchAgenda = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateStr();
       const { data, error } = await supabase
         .from('Agenda')
         .select('_id, nombreES, fecha, horaInicio, horaFinal, bannerIMG, linkInscripcion, valor')
@@ -50,18 +108,8 @@ export function useCafeData() {
         .eq('SUB_GRUPO', 'TARDEO_ALMUERZO');
 
       if (!lunchError && lunchDataDB && lunchDataDB.length > 0) {
-        const todayStr = new Date().toISOString().split('T')[0];
-        let foundLunch = lunchDataDB.find(item => {
-          if (!item.Comp_Lunch) return false;
-          try {
-            const parsed = JSON.parse(item.Comp_Lunch);
-            return parsed?.fecha?.fecha === todayStr;
-          } catch { return false; }
-        });
-
-        if (!foundLunch) {
-          foundLunch = lunchDataDB.find(item => item.Comp_Lunch);
-        }
+        const todayStr = getLocalDateStr();
+        const foundLunch = selectBestLunch(lunchDataDB, todayStr);
         setTodaysLunch(foundLunch);
       }
     } catch (err) {

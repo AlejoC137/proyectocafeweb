@@ -27,6 +27,7 @@ export default function RadioStationSelector({
   isPlaying = false,
   togglePlay,
   jumpToTrack = null,
+  isSetlistLocked = false,
 }) {
   const [selectorTab, setSelectorTab] = useState('albums'); // 'queue' | 'albums'
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,7 +144,7 @@ export default function RadioStationSelector({
   }, [selectedAlbum, searchQuery]);
 
   const handlePlayTrack = (track) => {
-    if (!track || !jumpToTrack) return;
+    if (isSetlistLocked || !track || !jumpToTrack) return;
 
     if (isTrackActive(track) && togglePlay) {
       togglePlay();

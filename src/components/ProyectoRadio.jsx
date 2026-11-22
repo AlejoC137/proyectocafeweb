@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useCafeData } from '../hooks/useCafeData';
 import { useRadioData } from '../hooks/useRadioData';
 import { useRadioPlayer } from '../hooks/useRadioPlayer';
@@ -45,12 +45,30 @@ export default function ProyectoRadio() {
   const [audioError, setAudioError] = useState(null);
 
   // Modo mixto: independiente por defecto, sincronización opcional con RadioManager
+  // Si RadioManager activa "Setlist al Aire", se bloquea /Radio automáticamente a la Cabina
   const [isCabinaSync, setIsCabinaSync] = useState(false);
   const lastSyncedSignatureRef = useRef('');
 
-  const { currentPlay, isSyncing: isCabinaSyncing } = useRadioSync({
-    isManager: false,
-  });
+  const handleRemoteCommand = useCallback((cmd) => {
+    if (!cmd) return;
+    if (cmd.type === 'FORCE_RELOAD') {
+      window.location.reload();
+    } else if (cmd.type === 'PAUSE') {
+      playerRef.current?.audioRef?.current?.pause();
+      setIsPlaying(false);
+    } else if (cmd.type === 'PLAY') {
+      setIsPlaying(true);
+      playerRef.current?.audioRef?.current?.play().catch(() => {});
+    } else if (cmd.type === 'SEEK_TO') {
+      const seekTime = Number(cmd.payload?.time ?? cmd.time);
+      const audioEl = playerRef.current?.audioRef?.current;
+      if (Number.isFinite(seekTime) && audioEl) {
+        try {
+          audioEl.currentTime = seekTime;
+        } catch {}
+      }
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -74,6 +92,47 @@ export default function ProyectoRadio() {
   const currentTrack =
     radioData.currentPlaylist[currentTrackIndex] || radioData.currentPlaylist[0] || null;
 
+  // Telemetría de presencia para que RadioManager vea los oyentes conectados
+  const presenceData = useMemo(
+    () => ({
+      isPlaying,
+      trackTitle: currentTrack?.title || 'En espera',
+      artist: currentTrack?.artist || '',
+      volume: playerRef.current?.volume ?? 0.85,
+      isMuted: Boolean(playerRef.current?.isMuted),
+    }),
+    [isPlaying, currentTrack?.title, currentTrack?.artist]
+  );
+
+  const {
+    currentPlay,
+    remoteVolume,
+    tyrannySettings,
+    isSyncing: isCabinaSyncing,
+  } = useRadioSync({
+    isManager: false,
+    presenceData,
+    onRemoteCommand: handleRemoteCommand,
+  });
+
+  // Cuando RadioManager activa "Setlist al Aire", quita permiso de cambio en /Radio
+  const isSetlistLocked = Boolean(tyrannySettings?.lockConsoles || tyrannySettings?.setlistMode);
+  const effectiveCabinaSync = isSetlistLocked || isCabinaSync;
+
+  // Forzar pestaña de biblioteca cuando Setlist al Aire está activo
+  useEffect(() => {
+    if (isSetlistLocked && activeTab !== 'supabase') {
+      setActiveTab('supabase');
+    }
+  }, [isSetlistLocked, activeTab]);
+
+  // Aplicar volumen remoto enviado desde RadioManager
+  useEffect(() => {
+    if (remoteVolume && playerRef.current?.applyRemoteVolume) {
+      playerRef.current.applyRemoteVolume(remoteVolume.volume, remoteVolume.isMuted);
+    }
+  }, [remoteVolume?.timestamp]);
+
   // Reproductor de audio
   const player = useRadioPlayer(
     radioData.currentPlaylist,
@@ -93,6 +152,7 @@ export default function ProyectoRadio() {
 
   const handleTabChange = useCallback(
     (tab) => {
+      if (isSetlistLocked && tab !== 'supabase') return;
       const audioEl = playerRef.current?.audioRef?.current;
       if (audioEl) {
         try {
@@ -131,9 +191,9 @@ export default function ProyectoRadio() {
         : undefined
       : currentTrack?.url || undefined;
 
-  // Sincronización opcional con Cabina (RadioManager) resolviendo siempre contra el Personal Media Server
+  // Sincronización con Cabina (obligatoria cuando Setlist al Aire está activo, u opcional)
   useEffect(() => {
-    if (!isCabinaSync || !currentPlay || activeTab !== 'supabase') return;
+    if (!effectiveCabinaSync || !currentPlay || activeTab !== 'supabase') return;
     if (radioData.mediaServerStatus !== 'online') return;
 
     const ignoredSignals = [
@@ -190,7 +250,7 @@ export default function ProyectoRadio() {
       setIsPlaying(currentPlay.is_playing);
     }
   }, [
-    isCabinaSync,
+    effectiveCabinaSync,
     currentPlay,
     activeTab,
     radioData.mediaServerStatus,
@@ -199,6 +259,7 @@ export default function ProyectoRadio() {
   ]);
 
   const handleToggleCabinaSync = useCallback(() => {
+    if (isSetlistLocked) return;
     setIsCabinaSync((prev) => {
       const next = !prev;
       if (next) {
@@ -206,26 +267,37 @@ export default function ProyectoRadio() {
       }
       return next;
     });
-  }, []);
+  }, [isSetlistLocked]);
 
-  // Si el usuario elige manualmente otra pista/siguiente/anterior, desactivar sync de cabina
+  // Si Setlist al Aire está activo, bloquear cambios manuales; si no, desactivar sync opcional
   const handleManualJumpToTrack = useCallback(
     (index) => {
+      if (isSetlistLocked) return;
       if (isCabinaSync) setIsCabinaSync(false);
       playerRef.current?.jumpToTrack?.(index);
     },
-    [isCabinaSync]
+    [isSetlistLocked, isCabinaSync]
   );
 
   const handleManualNextTrack = useCallback(() => {
+    if (isSetlistLocked) return;
     if (isCabinaSync) setIsCabinaSync(false);
     playerRef.current?.nextTrack?.();
-  }, [isCabinaSync]);
+  }, [isSetlistLocked, isCabinaSync]);
 
   const handleManualPrevTrack = useCallback(() => {
+    if (isSetlistLocked) return;
     if (isCabinaSync) setIsCabinaSync(false);
     playerRef.current?.prevTrack?.();
-  }, [isCabinaSync]);
+  }, [isSetlistLocked, isCabinaSync]);
+
+  const handleManualSeek = useCallback(
+    (e) => {
+      if (isSetlistLocked) return;
+      playerRef.current?.handleSeek?.(e);
+    },
+    [isSetlistLocked]
+  );
 
   // Limpiar bandera de recuperación al cambiar de pista exitosamente
   useEffect(() => {
@@ -451,7 +523,7 @@ export default function ProyectoRadio() {
               handleVolumeChange={player.handleVolumeChange}
               toggleMute={player.toggleMute}
               progress={player.progress}
-              handleSeek={player.handleSeek}
+              handleSeek={handleManualSeek}
               currentTime={player.currentTime}
               duration={player.duration}
               formatTime={player.formatTime}
@@ -469,14 +541,15 @@ export default function ProyectoRadio() {
               mediaServerStatus={radioData.mediaServerStatus}
               retryMediaServer={radioData.retryMediaServer}
               isRecoveringStream={isRecoveringStream}
-              isCabinaSync={isCabinaSync}
+              isCabinaSync={effectiveCabinaSync}
+              isSetlistLocked={isSetlistLocked}
               onToggleCabinaSync={handleToggleCabinaSync}
             />
 
             <SourceTabs
               activeTab={activeTab}
               handleTabChange={handleTabChange}
-              isConsoleLocked={false}
+              isConsoleLocked={isSetlistLocked}
               currentTrack={currentTrack}
               currentTrackIndex={currentTrackIndex}
               setCurrentTrackIndex={setCurrentTrackIndex}

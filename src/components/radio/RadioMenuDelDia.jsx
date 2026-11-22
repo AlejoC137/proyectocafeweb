@@ -4,6 +4,8 @@ import { Utensils, Download, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import almuerzoBg from '@/assets/ALMUERZO 2 P.C.png';
+import { getLocalDateStr } from '../../utils/dateUtils';
+import { selectBestLunch } from '../../hooks/useCafeData';
 
 export default function RadioMenuDelDia({ todaysLunch }) {
   const navigate = useNavigate();
@@ -14,8 +16,7 @@ export default function RadioMenuDelDia({ todaysLunch }) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const borderColor = "border-[#1F2937] dark:border-slate-700";
-  const shadowColor = "shadow-[4px_4px_0px_0px_rgba(255,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(239,68,68,0.6)]";
-  const buttonHover = "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none";
+  const todayStr = getLocalDateStr();
 
   // Encontrar el menú activo del día: usar prop todaysLunch o buscar en Redux
   const effectiveLunch = useMemo(() => {
@@ -23,22 +24,14 @@ export default function RadioMenuDelDia({ todaysLunch }) {
 
     if (menuData) {
       const menuArray = Array.isArray(menuData) ? menuData : Object.values(menuData);
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      const foundToday = menuArray.find(item => {
-        if (item.SUB_GRUPO !== "TARDEO_ALMUERZO" || item.Estado !== 'Activo' || !item.Comp_Lunch) return false;
-        try {
-          const d = JSON.parse(item.Comp_Lunch);
-          return d?.fecha?.fecha === todayStr;
-        } catch { return false; }
-      });
-      if (foundToday) return foundToday;
-
-      return menuArray.find(item => item.SUB_GRUPO === "TARDEO_ALMUERZO" && item.Estado === 'Activo' && item.Comp_Lunch);
+      const activeLunches = menuArray.filter(
+        (item) => item?.SUB_GRUPO === "TARDEO_ALMUERZO" && item?.Estado === 'Activo' && item?.Comp_Lunch
+      );
+      return selectBestLunch(activeLunches, todayStr);
     }
 
     return null;
-  }, [todaysLunch, menuData]);
+  }, [todaysLunch, menuData, todayStr]);
 
   // Parsear el contenido del almuerzo
   const parsedLunch = useMemo(() => {
@@ -103,7 +96,7 @@ export default function RadioMenuDelDia({ todaysLunch }) {
 
       poster.style.transform = prevTransform;
 
-      const dateStr = parsedLunch?.fecha?.fecha || new Date().toISOString().split('T')[0];
+      const dateStr = parsedLunch?.fecha?.fecha || getLocalDateStr();
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png', 1.0);
       link.download = `menu-del-dia-${dateStr}.png`;
@@ -145,17 +138,37 @@ export default function RadioMenuDelDia({ todaysLunch }) {
     );
   };
 
-  // Determinar nombre del día
+  // Determinar nombre del día y etiqueta de fecha
+  const lunchDateStr = parsedLunch?.fecha?.fecha || '';
+
   const dayName = useMemo(() => {
-    const dateStr = parsedLunch?.fecha?.fecha || new Date().toISOString().split('T')[0];
+    const dateStr = lunchDateStr || todayStr;
     try {
       const dateObj = new Date(dateStr + 'T00:00:00');
-      const days = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
-      return days[dateObj.getDay()];
+      if (!isNaN(dateObj.getTime())) {
+        const days = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+        return days[dateObj.getDay()];
+      }
     } catch {
-      return 'HOY';
+      // fallback below
     }
-  }, [parsedLunch]);
+    return parsedLunch?.fecha?.dia ? parsedLunch.fecha.dia.toUpperCase() : 'HOY';
+  }, [lunchDateStr, todayStr, parsedLunch]);
+
+  const dateBadge = useMemo(() => {
+    if (!lunchDateStr) return null;
+    if (lunchDateStr === todayStr) return 'HOY';
+    try {
+      const d = new Date(lunchDateStr + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        const formatted = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }).toUpperCase();
+        return lunchDateStr > todayStr ? `PRÓX · ${formatted}` : formatted;
+      }
+    } catch {
+      // ignore
+    }
+    return lunchDateStr;
+  }, [lunchDateStr, todayStr]);
 
   const price = "24k";
   const opcion2Data = parsedLunch ? (parsedLunch.proteina_opcion_2 || parsedLunch["Opción 2"]) : null;
@@ -170,6 +183,11 @@ export default function RadioMenuDelDia({ todaysLunch }) {
         </h3>
         
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {dateBadge && (
+            <span className="px-1.5 py-0.5 border border-[#1F2937] dark:border-slate-500 bg-yellow-100 dark:bg-[#12131C] text-black dark:text-yellow-400 text-[9px] leading-none font-black uppercase tracking-wider">
+              {dateBadge}
+            </span>
+          )}
           {parsedLunch && (
             <button
               onClick={handleDownloadPng}

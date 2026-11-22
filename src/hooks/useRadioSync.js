@@ -5,14 +5,14 @@ const SYNC_TABLE = 'radio_current_play';
 const SYNC_ROW_ID = 1;
 
 export const DEFAULT_TYRANNY_SETTINGS = {
-  lockConsoles: true,
+  lockConsoles: false,
   forcedTab: 'supabase',
-  bannerEnabled: true,
+  bannerEnabled: false,
   bannerContentType: 'both', // 'both' | 'image' | 'text'
   bannerImageUrl: '',
   bannerTitle: 'Proyecto Café Radio',
   bannerText: 'Música curada para el café',
-  showHamburgerMenu: false,
+  showHamburgerMenu: true,
   allowAdminNav: false,
 };
 

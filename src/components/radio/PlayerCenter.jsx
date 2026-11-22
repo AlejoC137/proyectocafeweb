@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Loader2,
   Radio,
+  Lock,
 } from 'lucide-react';
 import { extractYoutubeId, extractPlaylistId } from '../../utils/youtubeHelpers';
 import CoverArt from './CoverArt';
@@ -50,6 +51,7 @@ export default function PlayerCenter({
   retryMediaServer,
   isRecoveringStream = false,
   isCabinaSync = false,
+  isSetlistLocked = false,
   onToggleCabinaSync,
 }) {
   const [showQueue, setShowQueue] = useState(false);
@@ -326,7 +328,11 @@ export default function PlayerCenter({
   const isMediaServerTab = activeTab === 'supabase';
   const isOffline = isMediaServerTab && mediaServerStatus === 'offline';
   const isConnecting = isMediaServerTab && mediaServerStatus === 'loading';
-  const canSeek = !currentTrack?.isLiveStream && !isOffline && Boolean(currentTrack?.streamUrl || currentTrack?.url);
+  const canSeek =
+    !isSetlistLocked &&
+    !currentTrack?.isLiveStream &&
+    !isOffline &&
+    Boolean(currentTrack?.streamUrl || currentTrack?.url);
   const displayDuration = duration || currentTrack?.duration || 0;
 
   return (
@@ -574,19 +580,30 @@ export default function PlayerCenter({
                     {isMediaServerTab && onToggleCabinaSync && (
                       <button
                         onClick={onToggleCabinaSync}
+                        disabled={isSetlistLocked}
                         title={
-                          isCabinaSync
+                          isSetlistLocked
+                            ? 'Setlist en vivo controlado por Radio Manager'
+                            : isCabinaSync
                             ? 'Sincronizado con Radio Manager (clic para modo libre)'
                             : 'Sincronizar con la transmisión de Radio Manager'
                         }
                         className={`px-2 py-1 border text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition ${
-                          isCabinaSync
+                          isSetlistLocked
+                            ? 'bg-red-600 text-white border-red-300 cursor-default'
+                            : isCabinaSync
                             ? 'bg-red-600 text-white border-red-400'
                             : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
                         }`}
                       >
-                        <Radio className={`w-3.5 h-3.5 ${isCabinaSync ? 'animate-pulse text-white' : 'text-red-400'}`} />
-                        <span className="hidden sm:inline">{isCabinaSync ? 'Cabina ON' : 'Cabina'}</span>
+                        {isSetlistLocked ? (
+                          <Lock className="w-3.5 h-3.5 text-white" />
+                        ) : (
+                          <Radio className={`w-3.5 h-3.5 ${isCabinaSync ? 'animate-pulse text-white' : 'text-red-400'}`} />
+                        )}
+                        <span className="hidden sm:inline">
+                          {isSetlistLocked ? 'Setlist Cabina' : isCabinaSync ? 'Cabina ON' : 'Cabina'}
+                        </span>
                       </button>
                     )}
 
@@ -650,60 +667,83 @@ export default function PlayerCenter({
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-white/10">
                   {/* Controles de transporte */}
                   <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setIsShuffle?.(!isShuffle)}
-                      title="Aleatorio"
-                      className={`p-1.5 rounded border transition ${
-                        isShuffle
-                          ? 'bg-yellow-400 text-black border-yellow-400 font-black'
-                          : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/15'
-                      }`}
-                    >
-                      <Shuffle className="w-3.5 h-3.5" />
-                    </button>
+                    {isSetlistLocked ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleMainPlayToggle}
+                          disabled={!currentTrack}
+                          className="w-9 h-9 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black flex items-center justify-center shadow-md transition disabled:opacity-40"
+                          title={isPlaying ? 'Silenciar / Pausar local' : 'Escuchar emisión'}
+                        >
+                          {isPlaying ? (
+                            <Pause className="w-4 h-4 fill-current" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          )}
+                        </button>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-red-400 flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          Setlist en vivo
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => setIsShuffle?.(!isShuffle)}
+                          title="Aleatorio"
+                          className={`p-1.5 rounded border transition ${
+                            isShuffle
+                              ? 'bg-yellow-400 text-black border-yellow-400 font-black'
+                              : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/15'
+                          }`}
+                        >
+                          <Shuffle className="w-3.5 h-3.5" />
+                        </button>
 
-                    <button
-                      onClick={() => prevTrack?.()}
-                      disabled={!currentTrack}
-                      className="p-1.5 rounded bg-white/5 hover:bg-white/15 text-white border border-white/10 transition disabled:opacity-40"
-                      title="Anterior"
-                    >
-                      <SkipBack className="w-3.5 h-3.5" />
-                    </button>
+                        <button
+                          onClick={() => prevTrack?.()}
+                          disabled={!currentTrack}
+                          className="p-1.5 rounded bg-white/5 hover:bg-white/15 text-white border border-white/10 transition disabled:opacity-40"
+                          title="Anterior"
+                        >
+                          <SkipBack className="w-3.5 h-3.5" />
+                        </button>
 
-                    <button
-                      onClick={handleMainPlayToggle}
-                      disabled={!currentTrack}
-                      className="w-9 h-9 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black flex items-center justify-center shadow-md transition disabled:opacity-40"
-                      title={isPlaying ? 'Pausar' : 'Reproducir'}
-                    >
-                      {isPlaying ? (
-                        <Pause className="w-4 h-4 fill-current" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current ml-0.5" />
-                      )}
-                    </button>
+                        <button
+                          onClick={handleMainPlayToggle}
+                          disabled={!currentTrack}
+                          className="w-9 h-9 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black flex items-center justify-center shadow-md transition disabled:opacity-40"
+                          title={isPlaying ? 'Pausar' : 'Reproducir'}
+                        >
+                          {isPlaying ? (
+                            <Pause className="w-4 h-4 fill-current" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          )}
+                        </button>
 
-                    <button
-                      onClick={() => nextTrack?.()}
-                      disabled={!currentTrack}
-                      className="p-1.5 rounded bg-white/5 hover:bg-white/15 text-white border border-white/10 transition disabled:opacity-40"
-                      title="Siguiente"
-                    >
-                      <SkipForward className="w-3.5 h-3.5" />
-                    </button>
+                        <button
+                          onClick={() => nextTrack?.()}
+                          disabled={!currentTrack}
+                          className="p-1.5 rounded bg-white/5 hover:bg-white/15 text-white border border-white/10 transition disabled:opacity-40"
+                          title="Siguiente"
+                        >
+                          <SkipForward className="w-3.5 h-3.5" />
+                        </button>
 
-                    <button
-                      onClick={() => setIsRepeatSingle?.(!isRepeatSingle)}
-                      title="Repetir pista"
-                      className={`p-1.5 rounded border transition ${
-                        isRepeatSingle
-                          ? 'bg-yellow-400 text-black border-yellow-400'
-                          : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/15'
-                      }`}
-                    >
-                      <Repeat className="w-3.5 h-3.5" />
-                    </button>
+                        <button
+                          onClick={() => setIsRepeatSingle?.(!isRepeatSingle)}
+                          title="Repetir pista"
+                          className={`p-1.5 rounded border transition ${
+                            isRepeatSingle
+                              ? 'bg-yellow-400 text-black border-yellow-400'
+                              : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/15'
+                          }`}
+                        >
+                          <Repeat className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* Slider de Volumen Horizontal */}

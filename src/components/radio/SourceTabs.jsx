@@ -104,6 +104,7 @@ export default function SourceTabs({
             isPlaying={isPlaying}
             togglePlay={togglePlay}
             jumpToTrack={jumpToTrack}
+            isSetlistLocked={isConsoleLocked}
           />
         )}
 
