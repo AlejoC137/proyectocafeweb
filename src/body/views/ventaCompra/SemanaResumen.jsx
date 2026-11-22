@@ -127,8 +127,8 @@ function SemanaResumen() {
       if (cancelled) return;
       try {
         const [ventasSem, comprasSem, consumosSem] = await Promise.all([
-          fetchVentasByRange(weekRange.startIso, weekRange.endIso),
-          fetchComprasByRange(weekRange.startIso, weekRange.endIso),
+          fetchVentasByRange(weekRange.startIso, weekRange.endIso, { force: reloadTick > 0 }),
+          fetchComprasByRange(weekRange.startIso, weekRange.endIso, { force: reloadTick > 0 }),
           fetchConsumoStaffByRange(weekRange.startIso, weekRange.endIso),
           ensureCatalogTablesLoaded(
             dispatch,

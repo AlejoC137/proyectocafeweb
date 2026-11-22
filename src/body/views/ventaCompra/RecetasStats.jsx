@@ -131,6 +131,7 @@ function RecetasStats() {
                     const { data, error } = await supabase
                         .from(table)
                         .select('*')
+                        .order('_id', { ascending: true })
                         .range(page * pageSize, (page + 1) * pageSize - 1);
                     if (error) throw error;
                     if (data) allRows = [...allRows, ...data];

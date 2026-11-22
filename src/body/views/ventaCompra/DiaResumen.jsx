@@ -134,8 +134,8 @@ function DiaResumen() {
       try {
         // Consultar solo el día seleccionado en Ventas y Compras, y cargar Recetas solo si no están en Redux
         const [ventasHoy, comprasHoy] = await Promise.all([
-          fetchVentasByDay(parts.year, parts.month, parts.day),
-          fetchComprasByDay(parts.year, parts.month, parts.day),
+          fetchVentasByDay(parts.year, parts.month, parts.day, { force: reloadTick > 0 }),
+          fetchComprasByDay(parts.year, parts.month, parts.day, { force: reloadTick > 0 }),
           ensureCatalogTablesLoaded(dispatch, store.getState, [RECETAS_MENU], { force: reloadTick > 0 }),
         ]);
 
@@ -143,8 +143,8 @@ function DiaResumen() {
 
         // Ordenar las ventas por fecha y hora
         ventasHoy.sort((a, b) => {
-          const dateA = new Date(a.Time && !a.Date.includes(",") ? `${a.Date} ${a.Time}` : a.Date);
-          const dateB = new Date(b.Time && !b.Date.includes(",") ? `${b.Date} ${b.Time}` : b.Date);
+          const dateA = new Date(a.Time && !String(a.Date || "").includes(",") ? `${a.Date} ${a.Time}` : a.Date);
+          const dateB = new Date(b.Time && !String(b.Date || "").includes(",") ? `${b.Date} ${b.Time}` : b.Date);
           return dateA - dateB;
         });
 
@@ -167,6 +167,7 @@ function DiaResumen() {
         let transferencia = 0;
 
         ventasHoy.forEach((venta) => {
+          if (venta.Pagado !== true) return;
           if (venta.Pago_Info) {
             let pagos;
             try {
