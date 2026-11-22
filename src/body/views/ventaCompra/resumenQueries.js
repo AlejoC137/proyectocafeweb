@@ -175,6 +175,56 @@ async function fetchFilteredPaginated({ table, columns, orFilter, pageSize = 100
   return allRows;
 }
 
+/**
+ * Consulta paginada en Supabase para columnas `timestamp with time zone`
+ * aplicando rango [startIso, endIso) en el servidor.
+ */
+async function fetchTimestampRangePaginated({
+  table,
+  columns,
+  startIso,
+  endIso,
+  dateColumn = "Date",
+  pageSize = 1000,
+}) {
+  let allRows = [];
+  let page = 0;
+
+  while (true) {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .gte(dateColumn, startIso)
+      .lt(dateColumn, endIso)
+      .range(from, to);
+
+    if (error) {
+      throw new Error(`Error consultando ${table}: ${error.message || error}`);
+    }
+
+    if (!data || data.length === 0) break;
+
+    allRows = allRows.concat(data);
+    if (data.length < pageSize) break;
+    page++;
+  }
+
+  // Deduplicar por _id si existe (protección ante inserciones durante paginación)
+  if (allRows.length > 0 && allRows[0]._id !== undefined) {
+    const seen = new Set();
+    return allRows.filter((row) => {
+      if (seen.has(row._id)) return false;
+      seen.add(row._id);
+      return true;
+    });
+  }
+
+  return allRows;
+}
+
 export async function fetchVentasByDay(year, month, day) {
   const orFilter = buildDayDateOrFilter(year, month, day);
   const rows = await fetchFilteredPaginated({
@@ -216,13 +266,14 @@ export async function fetchComprasByMonth(year, monthIndex, { detailed = false }
 }
 
 export async function fetchConsumoStaffByMonth(year, monthIndex) {
-  const orFilter = buildMonthDateOrFilter(year, monthIndex + 1);
-  const rows = await fetchFilteredPaginated({
+  const start = new Date(Number(year), Number(monthIndex), 1, 0, 0, 0, 0);
+  const end = new Date(Number(year), Number(monthIndex) + 1, 1, 0, 0, 0, 0);
+  return fetchTimestampRangePaginated({
     table: "ConsumoStaff",
     columns: CONSUMO_STAFF_COLUMNS,
-    orFilter,
+    startIso: start.toISOString(),
+    endIso: end.toISOString(),
   });
-  return rows.filter((c) => matchesMonth(c.Date, year, monthIndex));
 }
 
 /**
@@ -286,15 +337,21 @@ export async function fetchComprasByRange(startIso, endIso) {
 }
 
 export async function fetchConsumoStaffByRange(startIso, endIso) {
-  const days = enumerateDateRangeDays(startIso, endIso);
-  if (days.length === 0) return [];
-  const orFilter = buildRangeDateOrFilter(days);
-  const rows = await fetchFilteredPaginated({
+  if (!startIso || !endIso) return [];
+  const [sy, sm, sd] = startIso.split("-").map(Number);
+  const [ey, em, ed] = endIso.split("-").map(Number);
+  if ([sy, sm, sd, ey, em, ed].some(Number.isNaN)) return [];
+
+  const start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+  const end = new Date(ey, em - 1, ed + 1, 0, 0, 0, 0);
+  if (end <= start) return [];
+
+  return fetchTimestampRangePaginated({
     table: "ConsumoStaff",
     columns: CONSUMO_STAFF_COLUMNS,
-    orFilter,
+    startIso: start.toISOString(),
+    endIso: end.toISOString(),
   });
-  return rows.filter((c) => matchesAnyDay(c.Date, days));
 }
 
 /**

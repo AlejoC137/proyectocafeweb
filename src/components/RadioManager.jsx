@@ -33,8 +33,17 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
+  Youtube,
 } from 'lucide-react';
+import supabase from '../config/supabaseClient';
 import { useRadioSync } from '../hooks/useRadioSync';
+import {
+  extractYoutubeId,
+  extractPlaylistId,
+  getYoutubeThumbnail,
+  fetchYoutubeMetadata,
+  YOUTUBE_CATEGORIES,
+} from '../utils/youtubeHelpers';
 import {
   discoverMediaServer,
   fetchMediaCatalog,
@@ -112,6 +121,8 @@ export default function RadioManager() {
 
   const audioRef = useRef(null);
   const recoveryAttemptRef = useRef('');
+  const hasAttemptedAutoplayRef = useRef(false);
+  const [needsAutoplayUnlock, setNeedsAutoplayUnlock] = useState(false);
 
   // ── 4. MODO CABINA / SETLIST AL AIRE (CONTROL DE /RADIO) ──
   const [broadcastSetlistActive, setBroadcastSetlistActive] = useState(() => {
@@ -136,12 +147,21 @@ export default function RadioManager() {
   } = useRadioSync({ isManager: true });
 
   // ── 5. UI STATE ──
-  const [libraryTab, setLibraryTab] = useState('albums'); // 'albums' | 'tracks'
+  const [libraryTab, setLibraryTab] = useState('albums'); // 'albums' | 'tracks' | 'youtube'
   const [rightTab, setRightTab] = useState('setlist'); // 'setlist' | 'listeners'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAlbumName, setSelectedAlbumName] = useState(null);
   const [albumDisplayMode, setAlbumDisplayMode] = useState('compact'); // 'compact' | 'grid' | 'list'
   const [toast, setToast] = useState(null); // { type: 'ok' | 'err', text: string }
+
+  // ── 5.5 YOUTUBE STATE ──
+  const [youtubeSongs, setYoutubeSongs] = useState([]);
+  const [loadingYoutube, setLoadingYoutube] = useState(false);
+  const [activeYoutube, setActiveYoutube] = useState(null);
+  const [ytCategoryFilter, setYtCategoryFilter] = useState('Todos');
+  const [newYtUrl, setNewYtUrl] = useState('');
+  const [newYtCategory, setNewYtCategory] = useState('Lofi & Chill');
+  const [isAddingYt, setIsAddingYt] = useState(false);
 
   const showToast = useCallback((text, type = 'ok') => {
     setToast({ text, type });
@@ -223,9 +243,118 @@ export default function RadioManager() {
     }
   }, [showToast]);
 
+  const loadYoutubeSongs = useCallback(async () => {
+    try {
+      setLoadingYoutube(true);
+      const { data, error } = await supabase
+        .from('playlist_youtube')
+        .select('*')
+        .order('order_index', { ascending: true })
+        .order('id', { ascending: true });
+      if (error) throw error;
+
+      const formatted = (data || []).map((item) => {
+        const ytUrl = item.url || item.youtube_url || '';
+        const ytId = item.youtube_id || extractYoutubeId(ytUrl);
+        const listId = item.list_id || extractPlaylistId(ytUrl);
+        return {
+          ...item,
+          youtubeId: ytId,
+          listId,
+          url: ytUrl || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : ''),
+          cover: item.cover || getYoutubeThumbnail(ytId),
+          category: item.category || 'Lofi & Chill',
+        };
+      });
+      setYoutubeSongs(formatted);
+    } catch (err) {
+      console.warn('[RadioManager] Error cargando YouTube:', err);
+    } finally {
+      setLoadingYoutube(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadMediaServer({ silent: false });
+    loadYoutubeSongs();
   }, []);
+
+  const handleAddYoutube = async (e) => {
+    e.preventDefault();
+    const raw = newYtUrl.trim();
+    if (!raw) return;
+    const ytId = extractYoutubeId(raw);
+    if (!ytId) {
+      showToast('Enlace de YouTube no válido', 'err');
+      return;
+    }
+    setIsAddingYt(true);
+    try {
+      const meta = await fetchYoutubeMetadata(raw).catch(() => null);
+      const payload = {
+        title: meta?.title || 'Video de YouTube',
+        artist: meta?.artist || 'YouTube',
+        url: raw,
+        youtube_id: ytId,
+        cover: getYoutubeThumbnail(ytId),
+        category: newYtCategory,
+        order_index: youtubeSongs.length,
+      };
+      const { error } = await supabase.from('playlist_youtube').insert([payload]);
+      if (error) throw error;
+      setNewYtUrl('');
+      await loadYoutubeSongs();
+      showToast(`🎬 Video "${payload.title}" añadido a YouTube`);
+    } catch (err) {
+      showToast('Error añadiendo video de YouTube: ' + err.message, 'err');
+    } finally {
+      setIsAddingYt(false);
+    }
+  };
+
+  const handleDeleteYoutube = async (id) => {
+    try {
+      setYoutubeSongs((prev) => prev.filter((y) => String(y.id) !== String(id)));
+      const numId = !isNaN(Number(id)) ? Number(id) : id;
+      await supabase.from('playlist_youtube').delete().eq('id', numId);
+      if (activeYoutube && String(activeYoutube.id) === String(id)) {
+        setActiveYoutube(null);
+      }
+      showToast('Video eliminado de YouTube');
+    } catch (err) {
+      showToast('Error eliminando video: ' + err.message, 'err');
+    }
+  };
+
+  const handlePlayYoutube = (ytTrack, broadcastNow = false) => {
+    if (!ytTrack?.youtubeId) return;
+    // Pausar audio MP3 para evitar doble sonido
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+    setIsPlaying(false);
+    setActiveYoutube(ytTrack);
+
+    if (broadcastNow || broadcastSetlistActive) {
+      broadcastPlay(
+        {
+          id: ytTrack.id,
+          title: ytTrack.title,
+          artist: ytTrack.artist || 'YouTube',
+          cover: ytTrack.cover || getYoutubeThumbnail(ytTrack.youtubeId),
+          url: ytTrack.url,
+        },
+        'youtube',
+        true
+      );
+      sendRemoteCommand({
+        type: 'FORCE_MODE',
+        targetClientId: 'all',
+        payload: { tab: 'youtube', url: ytTrack.url, title: ytTrack.title },
+      });
+      showToast(`📺 Emitiendo YouTube en /Radio: "${ytTrack.title}"`);
+    }
+  };
 
   // ── 7. EMISIÓN A /RADIO CUANDO SETLIST AL AIRE ESTÁ ACTIVO ──
   const syncTrackToRadioListeners = useCallback(
@@ -472,6 +601,53 @@ export default function RadioManager() {
     }
   }, [volume, isMuted]);
 
+  // Autoplay automático al iniciar RadioManager (con desbloqueo al primer toque si el navegador lo bloquea)
+  useEffect(() => {
+    if (hasAttemptedAutoplayRef.current) return;
+    if (serverStatus !== 'online' || !activeAudioSrc || activeYoutube) return;
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    hasAttemptedAutoplayRef.current = true;
+    audio.volume = isMuted ? 0 : volume;
+
+    const p = audio.play();
+    if (p !== undefined) {
+      p.then(() => {
+        setIsPlaying(true);
+        setNeedsAutoplayUnlock(false);
+      }).catch((err) => {
+        if (err?.name === 'AbortError') return;
+        setNeedsAutoplayUnlock(true);
+      });
+    }
+  }, [serverStatus, activeAudioSrc, activeYoutube, isMuted, volume]);
+
+  useEffect(() => {
+    if (!needsAutoplayUnlock) return;
+
+    const unlockAndPlay = () => {
+      const audio = audioRef.current;
+      if (!audio || !activeAudioSrc || activeYoutube) return;
+      audio.volume = isMuted ? 0 : volume;
+      audio
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setNeedsAutoplayUnlock(false);
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener('pointerdown', unlockAndPlay, { once: true });
+    window.addEventListener('keydown', unlockAndPlay, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlockAndPlay);
+      window.removeEventListener('keydown', unlockAndPlay);
+    };
+  }, [needsAutoplayUnlock, activeAudioSrc, activeYoutube, isMuted, volume]);
+
   // Auto-recuperación si el túnel de Cloudflare cambia durante la reproducción
   const handleAudioError = async () => {
     const audio = audioRef.current;
@@ -608,6 +784,19 @@ export default function RadioManager() {
     [albums, selectedAlbumName]
   );
 
+  const filteredYoutube = useMemo(() => {
+    return youtubeSongs.filter((y) => {
+      if (ytCategoryFilter !== 'Todos' && y.category !== ytCategoryFilter) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        (y.title || '').toLowerCase().includes(q) ||
+        (y.artist || '').toLowerCase().includes(q) ||
+        (y.category || '').toLowerCase().includes(q)
+      );
+    });
+  }, [youtubeSongs, ytCategoryFilter, searchQuery]);
+
   const setlistTotalDuration = useMemo(
     () => setlist.reduce((acc, t) => acc + (Number(t.duration) || 0), 0),
     [setlist]
@@ -738,6 +927,25 @@ export default function RadioManager() {
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
+        )}
+
+        {/* Banner de desbloqueo de autoplay si el navegador bloqueó el inicio */}
+        {needsAutoplayUnlock && !isPlaying && serverStatus === 'online' && !activeYoutube && (
+          <button
+            onClick={() => {
+              const audio = audioRef.current;
+              if (audio) {
+                audio.volume = isMuted ? 0 : volume;
+                audio.play().then(() => {
+                  setIsPlaying(true);
+                  setNeedsAutoplayUnlock(false);
+                }).catch(() => {});
+              }
+            }}
+            className="w-full py-2 px-3 border-2 border-black bg-[#1DB954] hover:bg-[#1ed760] text-black font-black uppercase text-xs tracking-wider flex items-center justify-center gap-2 animate-pulse transition"
+          >
+            <span>🔊 Toca aquí o en cualquier parte para activar la música</span>
+          </button>
         )}
 
         {/* REPRODUCTOR PRINCIPAL (ESTILO SPOTIFY COMPACTO) */}
@@ -958,6 +1166,20 @@ export default function RadioManager() {
                   <Music2 className="w-3.5 h-3.5" />
                   <span>Pistas ({filteredTracks.length})</span>
                 </button>
+                <button
+                  onClick={() => {
+                    setLibraryTab('youtube');
+                    setSelectedAlbumName(null);
+                  }}
+                  className={`flex-1 py-1.5 px-2.5 text-xs font-black uppercase border-2 flex items-center justify-center gap-1.5 transition ${
+                    libraryTab === 'youtube'
+                      ? 'bg-red-600 text-white border-red-500'
+                      : 'bg-[#181926] text-slate-300 border-slate-700 hover:bg-slate-800'
+                  }`}
+                >
+                  <Youtube className="w-3.5 h-3.5 text-red-400" />
+                  <span>YouTube ({youtubeSongs.length})</span>
+                </button>
               </div>
 
               <div className="relative flex-1 sm:max-w-[240px]">
@@ -980,7 +1202,158 @@ export default function RadioManager() {
               </div>
             </div>
 
-            {serverStatus === 'loading' ? (
+            {libraryTab === 'youtube' ? (
+              <div className="space-y-3">
+                {/* Reproductor embebido 16:9 cuando hay video seleccionado */}
+                {activeYoutube?.youtubeId && (
+                  <div className="border border-red-600/60 bg-black overflow-hidden">
+                    <div className="aspect-video w-full">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${activeYoutube.youtubeId}?autoplay=1&rel=0${
+                          activeYoutube.listId ? `&list=${activeYoutube.listId}` : ''
+                        }`}
+                        title={activeYoutube.title}
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      />
+                    </div>
+                    <div className="px-2.5 py-1.5 bg-[#181926] flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black truncate">{activeYoutube.title}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{activeYoutube.artist}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handlePlayYoutube(activeYoutube, true)}
+                          className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase flex items-center gap-1"
+                        >
+                          <Radio className="w-3 h-3" />
+                          <span>Emitir a /Radio</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveYoutube(null)}
+                          className="p-1 text-slate-400 hover:text-white"
+                          title="Cerrar video"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulario rápido para añadir enlace de YouTube */}
+                <form onSubmit={handleAddYoutube} className="flex flex-col sm:flex-row gap-1.5">
+                  <input
+                    type="text"
+                    value={newYtUrl}
+                    onChange={(e) => setNewYtUrl(e.target.value)}
+                    placeholder="Pegar URL de YouTube (video o playlist)..."
+                    className="flex-1 px-2.5 py-1.5 border border-slate-700 bg-[#0d0e15] text-white text-xs font-bold placeholder-slate-500 outline-none focus:border-red-500"
+                  />
+                  <select
+                    value={newYtCategory}
+                    onChange={(e) => setNewYtCategory(e.target.value)}
+                    className="px-2 py-1.5 border border-slate-700 bg-[#0d0e15] text-white text-xs font-bold outline-none"
+                  >
+                    {YOUTUBE_CATEGORIES.filter((c) => c !== 'Todos').map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={isAddingYt || !newYtUrl.trim()}
+                    className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase flex items-center justify-center gap-1 disabled:opacity-40"
+                  >
+                    {isAddingYt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                    <span>Añadir</span>
+                  </button>
+                </form>
+
+                {/* Filtros de categoría */}
+                <div className="flex flex-wrap gap-1">
+                  {YOUTUBE_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setYtCategoryFilter(cat)}
+                      className={`px-2 py-0.5 text-[10px] font-black uppercase border transition ${
+                        ytCategoryFilter === cat
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-[#181926] text-slate-300 border-slate-700 hover:bg-slate-800'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Lista de videos */}
+                {loadingYoutube ? (
+                  <div className="py-8 flex justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-red-500" />
+                  </div>
+                ) : filteredYoutube.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-400 border border-dashed border-slate-700">
+                    No hay videos de YouTube en esta categoría.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-white/5 border border-slate-700 max-h-[400px] overflow-y-auto custom-scrollbar">
+                    {filteredYoutube.map((yt) => {
+                      const isCurrentYt = activeYoutube && String(activeYoutube.id) === String(yt.id);
+                      return (
+                        <div
+                          key={yt.id}
+                          onClick={() => handlePlayYoutube(yt, false)}
+                          className={`group flex items-center justify-between gap-2 px-2.5 py-1.5 cursor-pointer transition ${
+                            isCurrentYt ? 'bg-red-600/20' : 'bg-[#181926] hover:bg-white/5'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-10 h-7 rounded-sm overflow-hidden bg-black shrink-0">
+                              <img src={yt.cover} alt={yt.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-xs font-bold truncate ${isCurrentYt ? 'text-red-400' : 'text-white'}`}>
+                                {yt.title}
+                              </p>
+                              <p className="text-[10px] text-slate-400 truncate">
+                                {yt.artist} · {yt.category}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePlayYoutube(yt, true);
+                              }}
+                              title="Emitir este video en /Radio"
+                              className="px-2 py-1 bg-red-600/80 hover:bg-red-600 text-white text-[9px] font-black uppercase flex items-center gap-1"
+                            >
+                              <Radio className="w-3 h-3" />
+                              <span className="hidden sm:inline">/Radio</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteYoutube(yt.id);
+                              }}
+                              title="Eliminar"
+                              className="p-1 text-slate-400 hover:text-red-400"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : serverStatus === 'loading' ? (
               <div className="py-12 flex flex-col items-center gap-2 text-slate-400">
                 <Loader2 className="w-7 h-7 animate-spin text-[#1DB954]" />
                 <p className="text-xs font-black uppercase">Cargando biblioteca...</p>
@@ -1582,6 +1955,7 @@ export default function RadioManager() {
           if (dur > 0) setProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
         }}
         onPlaying={() => {
+          setNeedsAutoplayUnlock(false);
           recoveryAttemptRef.current = '';
         }}
         onError={handleAudioError}

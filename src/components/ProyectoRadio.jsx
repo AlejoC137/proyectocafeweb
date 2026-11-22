@@ -15,7 +15,9 @@ export default function ProyectoRadio() {
   const isApplyingRemoteChange = useRef(false);
   const playerRef = useRef(null);
   const recoveryAttemptRef = useRef('');
+  const hasAttemptedAutoplayRef = useRef(false);
   const [isRecoveringStream, setIsRecoveringStream] = useState(false);
+  const [needsAutoplayUnlock, setNeedsAutoplayUnlock] = useState(false);
 
   // Tab activa con persistencia en localStorage
   const [activeTab, setActiveTab] = useState(() => {
@@ -66,6 +68,18 @@ export default function ProyectoRadio() {
         try {
           audioEl.currentTime = seekTime;
         } catch {}
+      }
+    } else if (cmd.type === 'FORCE_MODE') {
+      const targetTab = cmd.payload?.tab || cmd.tab;
+      if (targetTab && ['supabase', 'live', 'youtube'].includes(targetTab)) {
+        setActiveTab(targetTab);
+        if (targetTab === 'youtube') {
+          playerRef.current?.audioRef?.current?.pause();
+          setIsPlaying(true);
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('YT_FORCE_PLAY'));
+          }, 150);
+        }
       }
     }
   }, []);
@@ -304,6 +318,61 @@ export default function ProyectoRadio() {
     setAudioError(null);
   }, [currentTrack?.id, activeTab]);
 
+  // Autoplay automático al iniciar /Radio (con desbloqueo instantáneo al primer toque si el navegador lo bloquea)
+  useEffect(() => {
+    if (hasAttemptedAutoplayRef.current) return;
+    if (activeTab !== 'supabase') return;
+    if (radioData.mediaServerStatus !== 'online' || !activeAudioSrc) return;
+
+    const audioEl = playerRef.current?.audioRef?.current;
+    if (!audioEl) return;
+
+    hasAttemptedAutoplayRef.current = true;
+    audioEl.volume = player.isMuted ? 0 : player.volume;
+
+    const tryAutoplay = () => {
+      const p = audioEl.play();
+      if (p !== undefined) {
+        p.then(() => {
+          setIsPlaying(true);
+          setNeedsAutoplayUnlock(false);
+        }).catch((err) => {
+          if (err?.name === 'AbortError') return;
+          // El navegador bloqueó autoplay sin interacción previa: desbloquear al primer toque/clic
+          setNeedsAutoplayUnlock(true);
+        });
+      }
+    };
+
+    tryAutoplay();
+  }, [activeTab, radioData.mediaServerStatus, activeAudioSrc, player.isMuted, player.volume]);
+
+  // Si el navegador bloqueó el autoplay inicial, arrancar música automáticamente al primer toque/tecla
+  useEffect(() => {
+    if (!needsAutoplayUnlock) return;
+
+    const unlockAndPlay = () => {
+      const audioEl = playerRef.current?.audioRef?.current;
+      if (!audioEl || !activeAudioSrc) return;
+      audioEl.volume = player.isMuted ? 0 : player.volume;
+      audioEl
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setNeedsAutoplayUnlock(false);
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener('pointerdown', unlockAndPlay, { once: true });
+    window.addEventListener('keydown', unlockAndPlay, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAndPlay);
+      window.removeEventListener('keydown', unlockAndPlay);
+    };
+  }, [needsAutoplayUnlock, activeAudioSrc, player.isMuted, player.volume]);
+
   // Auto-recuperación: si falla el stream del Personal Media Server, re-leer media_server_config 1 vez
   const handleAudioError = useCallback(async () => {
     const audioEl = playerRef.current?.audioRef?.current;
@@ -513,6 +582,24 @@ export default function ProyectoRadio() {
               mobileTab === 'player' ? 'flex' : 'hidden'
             } lg:flex lg:col-span-6`}
           >
+            {needsAutoplayUnlock && !isPlaying && radioData.mediaServerStatus === 'online' && (
+              <button
+                onClick={() => {
+                  const audioEl = playerRef.current?.audioRef?.current;
+                  if (audioEl) {
+                    audioEl.volume = player.isMuted ? 0 : player.volume;
+                    audioEl.play().then(() => {
+                      setIsPlaying(true);
+                      setNeedsAutoplayUnlock(false);
+                    }).catch(() => {});
+                  }
+                }}
+                className="w-full py-2 px-3 border-[2.5px] border-black bg-[#1DB954] hover:bg-[#1ed760] text-black font-black uppercase text-xs tracking-wider shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 animate-pulse transition"
+              >
+                <span>🔊 Toca aquí o en cualquier parte para activar la música</span>
+              </button>
+            )}
+
             <PlayerCenter
               currentTrack={currentTrack}
               nowPlaying={radioData.nowPlaying}
@@ -580,6 +667,7 @@ export default function ProyectoRadio() {
         onTimeUpdate={player.handleTimeUpdate}
         onPlaying={() => {
           setAudioError(null);
+          setNeedsAutoplayUnlock(false);
           recoveryAttemptRef.current = '';
         }}
         onError={handleAudioError}
