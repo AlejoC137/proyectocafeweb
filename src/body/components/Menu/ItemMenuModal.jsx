@@ -48,6 +48,7 @@ import supabase from "../../../config/supabaseClient";
 import { uploadImageToMediaServer, resolveMediaUrl } from "../../../services/mediaServerService";
 import HorizontalGallery from "./MenuPrintHorizontal/HorizontalGallery";
 import { recetaMariaPaula } from "../../../redux/calcularReceta.jsx";
+import { parseHistoryEntries } from "../../../utils/historyUtils";
 
 // ─── HELPER COMPONENTS ────────────────────────────────────────────────────────
 
