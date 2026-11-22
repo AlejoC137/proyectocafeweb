@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import supabase from '../config/supabaseClient';
 import { useRadioSync } from '../hooks/useRadioSync';
+import { discoverMediaServer, fetchMediaCatalog, buildStreamUrl } from '../services/mediaServerService';
 import { parseAudioFileMetadata } from '../utils/radioMetadataParser';
 import RadioEditModal from './radio/RadioEditModal';
 import AlbumEditModal from './radio/AlbumEditModal';
@@ -359,6 +360,9 @@ export default function RadioManager() {
 
   // Biblioteca y Cola Sincronizada Dinámicamente con el Bat (Cero listas estáticas)
   const [batCatalog, setBatCatalog] = useState([]);
+  const [mediaServerStatus, setMediaServerStatus] = useState('loading'); // 'loading' | 'online' | 'offline'
+  const mediaServerUrlRef = useRef(null);
+  const mediaServerTracksRef = useRef([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [selectedAirAlbumFolder, setSelectedAirAlbumFolder] = useState('');
   const lastCatalogSignatureRef = useRef('');
@@ -428,7 +432,7 @@ export default function RadioManager() {
           title: t.title,
           artist: t.artist || album.artist || 'Radio Café',
           album: album.albumName,
-          url: `/api/local-audio?file=${encodeURIComponent(t.fileName)}`,
+          url: t.streamUrl || t.url || '',
           duration: t.duration || 210,
           cover: t.cover || album.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
           order_index: idx
@@ -584,95 +588,61 @@ export default function RadioManager() {
     return true;
   };
 
-  // Cargar biblioteca 100% dinámica escaneada por el .bat (vía Supabase DB + Storage o disco local en Vite)
-  const fetchBatCatalog = async (silent = false, explicitCatalogUrl = null) => {
+  // Cargar biblioteca 100% dinámica desde el Personal Media Server (URL descubierta en media_server_config)
+  const fetchBatCatalog = async (silent = false) => {
     try {
-      if (!silent) setLoadingCatalog(true);
+      if (!silent) {
+        setLoadingCatalog(true);
+        setMediaServerStatus('loading');
+      }
 
-      const applyDynamicCatalog = (data, sourceLabel) => {
-        const totalTracks = data.reduce((a, b) => a + (b.tracks?.length || b.trackCount || 0), 0);
-        setBatCatalog(data);
-        setSelectedAirAlbumFolder(prev => prev || data[0]?.folderName || '');
+      const discovery = await discoverMediaServer(4000);
+      if (!discovery.online || !discovery.baseUrl) {
+        mediaServerUrlRef.current = null;
+        setMediaServerStatus('offline');
         if (!silent) {
-          setSuccess(`¡Biblioteca dinámica del .bat cargada (${sourceLabel})! (${data.length} álbumes, ${totalTracks} canciones).`);
+          setError('Personal Media Server fuera de línea. Verifica el túnel e intenta de nuevo.');
         }
-      };
-
-      // 1. Si estamos en entorno local con Vite activo, leer el catalog.json generado en disco por el .bat
-      try {
-        const localRes = await fetch(`/api/local-catalog?t=${Date.now()}`);
-        const ct = localRes.headers.get('content-type') || '';
-        if (localRes.ok && ct.includes('application/json')) {
-          const localData = await localRes.json();
-          if (Array.isArray(localData) && localData.length > 0) {
-            applyDynamicCatalog(localData, 'Disco Local');
-            return;
-          }
-        }
-      } catch (e) {}
-
-      // 2. Consultar la URL del catálogo dinámico registrado por el .bat en la base de datos (radio_current_play.tyranny_settings.catalogUrl)
-      let targetCloudUrl = explicitCatalogUrl;
-      if (!targetCloudUrl) {
-        try {
-          const { data: playRow } = await supabase
-            .from('radio_current_play')
-            .select('tyranny_settings')
-            .eq('id', 1)
-            .single();
-          if (playRow?.tyranny_settings?.catalogUrl) {
-            targetCloudUrl = playRow.tyranny_settings.catalogUrl;
-            const ts = playRow.tyranny_settings;
-            lastCatalogSignatureRef.current = `${ts.catalogUrl || ''}|${ts.catalogSongsCount || ''}|${ts.catalogUpdatedAt || ''}`;
-          }
-        } catch (e) {}
+        return null;
       }
 
-      if (targetCloudUrl) {
-        try {
-          const sep = targetCloudUrl.includes('?') ? '&' : '?';
-          const res = await fetch(`${targetCloudUrl}${sep}t=${Date.now()}`);
-          if (res.ok) {
-            const cloudData = await res.json();
-            if (Array.isArray(cloudData) && cloudData.length > 0) {
-              applyDynamicCatalog(cloudData, 'Supabase Live');
-              return;
-            }
-          }
-        } catch (e) {}
+      const catalog = await fetchMediaCatalog(discovery.baseUrl, { groupBy: 'album' });
+      mediaServerUrlRef.current = discovery.baseUrl;
+      mediaServerTracksRef.current = catalog.tracks || [];
+      setMediaServerStatus('online');
+
+      const formattedAlbums = (catalog.albums || []).map((alb) => ({
+        folderName: alb.name,
+        albumName: alb.name,
+        artist: alb.artist || 'Varios Artistas',
+        cover: alb.coverUrl || '',
+        coverUrl: alb.coverUrl || '',
+        trackCount: alb.trackCount,
+        totalDuration: alb.totalDuration,
+        tracks: (alb.tracks || []).map((t) => ({
+          ...t,
+          url: t.streamUrl,
+          streamUrl: t.streamUrl,
+          cover: t.coverUrl,
+          coverUrl: t.coverUrl,
+        })),
+      }));
+
+      setBatCatalog(formattedAlbums);
+      setSelectedAirAlbumFolder((prev) => prev || formattedAlbums[0]?.folderName || '');
+
+      if (!silent) {
+        setSuccess(`¡Biblioteca cargada desde Personal Media Server! (${formattedAlbums.length} álbumes, ${catalog.tracks.length} pistas).`);
       }
 
-      // 3. Buscar el archivo catalog_live_*.json más reciente directamente en el bucket Radio de Supabase Storage
-      try {
-        const { data: filesList } = await supabase.storage
-          .from('Radio')
-          .list('', {
-            limit: 20,
-            search: 'catalog_live_',
-            sortBy: { column: 'created_at', order: 'desc' }
-          });
-
-        if (Array.isArray(filesList) && filesList.length > 0) {
-          const sorted = [...filesList]
-            .filter(f => f.name && f.name.startsWith('catalog_live_') && f.name.endsWith('.json'))
-            .sort((a, b) => b.name.localeCompare(a.name));
-
-          if (sorted.length > 0) {
-            const newestFile = sorted[0].name;
-            const latestUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Radio/${newestFile}?t=${Date.now()}`;
-            const res = await fetch(latestUrl);
-            if (res.ok) {
-              const storageData = await res.json();
-              if (Array.isArray(storageData) && storageData.length > 0) {
-                applyDynamicCatalog(storageData, 'Storage Dinámico');
-                return;
-              }
-            }
-          }
-        }
-      } catch (e) {}
+      return { baseUrl: discovery.baseUrl, catalog };
     } catch (err) {
-      console.warn("No se pudo cargar el catálogo dinámico del .bat:", err);
+      console.warn('No se pudo cargar el catálogo desde Personal Media Server:', err);
+      setMediaServerStatus('offline');
+      if (!silent) {
+        setError('No se pudo cargar el catálogo del Personal Media Server.');
+      }
+      return null;
     } finally {
       if (!silent) setLoadingCatalog(false);
     }
@@ -1339,44 +1309,38 @@ export default function RadioManager() {
   const totalPlaylistSeconds = songs.reduce((acc, item) => acc + (Number(item.duration) || 180), 0);
   const quotaPercent = Math.min(100, Math.round((totalPlaylistSeconds / MAX_PLAYLIST_SECONDS) * 100));
 
-  // Resolver URL de reproducción para preview privado o señal en vivo en Radio Manager
-  const getPreviewAudioUrl = (song) => {
+  // Resolver URL de reproducción desde Personal Media Server (sin /api/local-audio ni Supabase Storage)
+  const getPreviewAudioUrl = (song, overrideBaseUrl = null) => {
     if (!song) return null;
-    const isLocalHost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || 
-       window.location.hostname === '127.0.0.1' || 
-       window.location.hostname === '::1' || 
-       window.location.hostname === '[::1]' ||
-       window.location.hostname.includes('localhost') ||
-       window.location.port === '5173');
+    const activeBase = overrideBaseUrl || mediaServerUrlRef.current;
 
-    if (song.station_url) {
-      if (song.station_url.startsWith('http://') || song.station_url.startsWith('https://') || song.station_url.startsWith('/')) {
-        return song.station_url;
-      }
-      if (song.station_url.startsWith('local://')) {
-        const raw = decodeURIComponent(song.station_url.substring(8));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(raw)}` : null;
-      }
-    }
-    if (song.filePath) {
-      return isLocalHost ? `/api/local-audio?path=${encodeURIComponent(song.filePath)}` : null;
-    }
-    if (song.url) {
-      if (song.url.startsWith('http://') || song.url.startsWith('https://') || song.url.startsWith('/')) {
-        return song.url;
-      }
-      if (song.url.startsWith('local://')) {
-        const fileName = song.fileName || decodeURIComponent(song.url.substring(8));
-        return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(fileName)}` : null;
+    const catalogTracks = mediaServerTracksRef.current || [];
+    if (activeBase && catalogTracks.length > 0) {
+      const songTitleLower = (song.title || '').trim().toLowerCase();
+      const matched = catalogTracks.find(
+        (t) =>
+          (song.id && String(t.id) === String(song.id)) ||
+          (song.fileName && t.fileName && t.fileName === song.fileName) ||
+          (songTitleLower && t.title && t.title.trim().toLowerCase() === songTitleLower)
+      );
+      if (matched) {
+        return buildStreamUrl(activeBase, matched);
       }
     }
-    if (song.fileName) {
-      return isLocalHost ? `/api/local-audio?file=${encodeURIComponent(song.fileName)}` : null;
+
+    if (song.streamUrl && (song.streamUrl.startsWith('http://') || song.streamUrl.startsWith('https://'))) {
+      return song.streamUrl;
     }
-    if (song.title && isLocalHost) {
-      return `/api/local-audio?file=${encodeURIComponent(song.title + '.mp3')}`;
+
+    const candidate = song.station_url || song.url || '';
+    if (
+      candidate &&
+      (candidate.startsWith('http://') || candidate.startsWith('https://')) &&
+      !candidate.includes('/api/local-audio')
+    ) {
+      return candidate;
     }
+
     return null;
   };
 
@@ -1443,62 +1407,48 @@ export default function RadioManager() {
     requestedPreviewTitleRef.current = (song.title || '').trim().toLowerCase();
     lastLoadedPreviewTabRef.current = '';
 
-    const requestFromBat = async () => {
-      setSuccess(`⏳ Cargando "${song.title}" en Deck CUE...`);
-      try {
-        const fileInfo = song.fileName || song.filePath || '';
-        const requestPayload = `PREVIEW_REQ:${song.title}||${song.artist || song.albumArtist || ''}||${fileInfo}`;
-        await supabase.from('radio_current_play').update({
-          tab: requestPayload
-        }).eq('id', 1);
-      } catch (err) {
-        console.error("Error enviando solicitud de pre-escucha al BAT:", err);
-        setError("Error solicitando pre-escucha al .bat: " + err.message);
+    const resolvedUrl = getPreviewAudioUrl(song);
+    if (!resolvedUrl || !audioRef.current) {
+      setError('No se encontró una URL de audio activa en el Personal Media Server para esta pista.');
+      return;
+    }
+
+    const audio = audioRef.current;
+    audio.preload = 'metadata';
+    audio.src = resolvedUrl;
+    audio.currentTime = 0;
+    audio.muted = isPreviewMutedRef.current;
+    audio.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
+
+    let retried = false;
+    audio.onerror = async () => {
+      if (retried) {
+        setIsPlayingPreview(false);
+        setError(`No se pudo reproducir "${song.title}" desde el Personal Media Server.`);
+        return;
+      }
+      retried = true;
+      const refreshed = await fetchBatCatalog(true);
+      const nextUrl = refreshed?.baseUrl ? getPreviewAudioUrl(song, refreshed.baseUrl) : null;
+      if (nextUrl) {
+        audio.src = nextUrl;
+        audio.load();
+        audio.play().then(() => setIsPlayingPreview(true)).catch(() => setIsPlayingPreview(false));
+      } else {
+        setIsPlayingPreview(false);
+        setError('Personal Media Server fuera de línea.');
       }
     };
 
-    // En localhost, reproducir instantáneamente desde el disco local vía Vite middleware (0ms latencia y sin usar la nube)
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-    if (isLocal && (song.filePath || song.fileName || song.url)) {
-      const localAudioUrl = getPreviewAudioUrl(song) || `/api/local-audio?path=${encodeURIComponent(song.filePath || '')}&file=${encodeURIComponent(song.fileName || '')}`;
-      if (localAudioUrl && audioRef.current) {
-        const audio = audioRef.current;
-        audio.src = localAudioUrl;
-        audio.currentTime = 0;
-        audio.muted = isPreviewMutedRef.current;
-        audio.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
-        audio.onerror = () => {
-          audio.onerror = null;
-          requestFromBat();
-        };
-        audio.play().then(() => {
-          setIsPlayingPreview(true);
-          setSuccess(`🎧 Reproduciendo en Deck CUE (Biblioteca): "${song.title}"`);
-        }).catch(err => {
-          console.warn("Fallo reproducción local directa, usando fallback BAT:", err);
-          requestFromBat();
-        });
-        return;
+    audio.play().then(() => {
+      setIsPlayingPreview(true);
+      setSuccess(`🎧 Reproduciendo en Deck CUE: "${song.title}"`);
+    }).catch((err) => {
+      if (err?.name !== 'AbortError') {
+        console.warn('Error iniciando Deck CUE:', err?.message || err);
+        setIsPlayingPreview(false);
       }
-    }
-
-    // Si la canción ya tiene una URL HTTP directa en la nube, usarla directamente
-    if (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://')) && !song.url.includes('/api/local-audio')) {
-      if (audioRef.current) {
-        audioRef.current.src = song.url;
-        audioRef.current.currentTime = 0;
-        audioRef.current.muted = isPreviewMutedRef.current;
-        audioRef.current.volume = isPreviewMutedRef.current ? 0 : previewVolumeRef.current;
-        audioRef.current.play().catch(() => {});
-        setIsPlayingPreview(true);
-        setSuccess(`🎧 Reproduciendo en Deck CUE: "${song.title}"`);
-        return;
-      }
-    }
-
-    await requestFromBat();
+    });
   };
 
   // --- CONTROLES DE CABECERA DE LA BIBLIOTECA (PLAY / PAUSE EXCLUSIVO DE LA BIBLIOTECA) ---
@@ -1713,16 +1663,9 @@ export default function RadioManager() {
         airAudio.load();
       }
 
-      // Resolver URL de audio local o pública para el monitor de cabina (Deck Rojo)
-      const directAudioUrl = getPreviewAudioUrl(song) || (song.url && (song.url.startsWith('http://') || song.url.startsWith('https://')) ? song.url : '');
-      // IMPORTANTE: Para Supabase (y celulares remotos), SOLO enviar station_url si es una URL HTTP/HTTPS pública real (NUNCA /api/local-audio)
-      const isPublicCloudUrl = Boolean(
-        directAudioUrl &&
-        (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://')) &&
-        !directAudioUrl.includes('/api/local-audio') &&
-        !directAudioUrl.includes('localhost') &&
-        !directAudioUrl.includes('127.0.0.1')
-      );
+      // Resolver URL de streaming directo del Personal Media Server
+      const directAudioUrl = getPreviewAudioUrl(song) || '';
+      const coverUrl = song.coverUrl || song.cover || '';
 
       lastAirTrackNameRef.current = song.title;
 
@@ -1730,35 +1673,42 @@ export default function RadioManager() {
         ...(prev || {}),
         station_name: song.title,
         station_artist: song.artist || 'Radio Café',
-        station_cover: song.cover || '',
-        station_url: isPublicCloudUrl ? directAudioUrl : (prev?.station_url || ''),
+        station_cover: coverUrl,
+        station_url: directAudioUrl,
         tab: 'supabase',
         is_playing: true,
         updated_at: new Date().toISOString()
       }));
 
-      // Activar Deck Rojo en cabina inmediatamente
       setIsPlayingLiveSignal(true);
       isPlayingLiveSignalRef.current = true;
 
-      if (airAudio && directAudioUrl && (directAudioUrl.startsWith('http://') || directAudioUrl.startsWith('https://') || directAudioUrl.startsWith('/api/local-audio'))) {
+      if (airAudio && directAudioUrl) {
+        airAudio.preload = 'metadata';
         airAudio.src = directAudioUrl;
         airAudio.muted = isAirMutedRef.current || airVolumeRef.current === 0;
         airAudio.volume = isAirMutedRef.current ? 0 : airVolumeRef.current;
+        let retriedAir = false;
+        airAudio.onerror = async () => {
+          if (retriedAir) return;
+          retriedAir = true;
+          const refreshed = await fetchBatCatalog(true);
+          const nextUrl = refreshed?.baseUrl ? getPreviewAudioUrl(song, refreshed.baseUrl) : null;
+          if (nextUrl) {
+            airAudio.src = nextUrl;
+            airAudio.load();
+            airAudio.play().catch(() => {});
+          }
+        };
         airAudio.play().catch(() => {});
       }
 
-      // 2. Notificar inmediatamente al transmisor .bat y a Supabase
-      // Si el archivo es local, enviamos station_url: '' con REQUEST: para que el .bat lo suba a Supabase Storage y publique el enlace HTTPS para celulares
-      let fileInfo = song.fileName || song.filePath || '';
-      if (!fileInfo && song.url && song.url.startsWith('local://')) {
-        fileInfo = decodeURIComponent(song.url.replace('local://', ''));
-      }
+      // Publicar estado al aire para oyentes de ProyectoRadio con "Sincronizar con Cabina" activo
       await supabase.from('radio_current_play').update({
         station_name: song.title,
-        station_artist: `REQUEST:${song.title}||${song.artist || ''}||${fileInfo}`,
-        station_cover: song.cover || '',
-        station_url: isPublicCloudUrl ? directAudioUrl : '',
+        station_artist: song.artist || 'Radio Café',
+        station_cover: coverUrl,
+        station_url: directAudioUrl,
         tab: 'supabase',
         is_playing: true,
         updated_at: new Date().toISOString()
@@ -2015,7 +1965,7 @@ export default function RadioManager() {
         title: track.title,
         artist: track.artist || track.albumArtist || 'Radio Café',
         album: track.album || 'Sencillo',
-        url: track.url || `local://${encodeURIComponent(track.fileName || track.title)}`,
+        url: track.streamUrl || track.url || '',
         duration: track.duration || 210,
         cover: track.cover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
         order_index: nextIndex
@@ -2052,9 +2002,9 @@ export default function RadioManager() {
         title: t.title,
         artist: t.artist || albumItem.artist || 'Radio Café',
         album: albumItem.albumName,
-        url: `local://${encodeURIComponent(t.fileName)}`,
+        url: t.streamUrl || t.url || '',
         duration: t.duration || 210,
-        cover: t.cover || defaultCover,
+        cover: t.coverUrl || t.cover || defaultCover,
         genre: t.genre || albumItem.genre || 'Radio',
         year: t.year || albumItem.year || '2024',
         order_index: idx
@@ -2105,9 +2055,9 @@ export default function RadioManager() {
         title: t.title,
         artist: t.artist || t.albumArtist || 'Radio Café',
         album: t.album || 'Mix Aleatorio',
-        url: `local://${encodeURIComponent(t.fileName)}`,
+        url: t.streamUrl || t.url || '',
         duration: t.duration || 210,
-        cover: t.cover || t.albumCover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
+        cover: t.coverUrl || t.cover || t.albumCover || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400',
         order_index: idx
       }));
       const { data: insData } = await supabase.from('playlist_radio').insert(tracksToInsert).select();
@@ -2831,14 +2781,6 @@ export default function RadioManager() {
       let { error: dbError } = await supabase.from('playlist_radio').delete().eq('id', numId);
       if (dbError) {
         await supabase.from('playlist_radio').delete().eq('id', String(id));
-      }
-
-      if (fileUrl && fileUrl.includes('storage')) {
-        const parts = fileUrl.split('/');
-        const fileName = parts[parts.length - 1];
-        try {
-          await supabase.storage.from('Radio').remove([fileName]);
-        } catch (e) {}
       }
 
       setSuccess("Canción eliminada correctamente.");

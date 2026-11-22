@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useCafeData } from '../hooks/useCafeData';
 import { useRadioData } from '../hooks/useRadioData';
 import { useRadioPlayer } from '../hooks/useRadioPlayer';
+import { useRadioSync } from '../hooks/useRadioSync';
 import { buildStreamUrl } from '../services/mediaServerService';
 
 import RadioHeader from './radio/RadioHeader';
@@ -42,6 +43,14 @@ export default function ProyectoRadio() {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(null);
+
+  // Modo mixto: independiente por defecto, sincronización opcional con RadioManager
+  const [isCabinaSync, setIsCabinaSync] = useState(false);
+  const lastSyncedSignatureRef = useRef('');
+
+  const { currentPlay, isSyncing: isCabinaSyncing } = useRadioSync({
+    isManager: false,
+  });
 
   useEffect(() => {
     try {
@@ -121,6 +130,102 @@ export default function ProyectoRadio() {
         ? currentTrack?.streamUrl || currentTrack?.url || undefined
         : undefined
       : currentTrack?.url || undefined;
+
+  // Sincronización opcional con Cabina (RadioManager) resolviendo siempre contra el Personal Media Server
+  useEffect(() => {
+    if (!isCabinaSync || !currentPlay || activeTab !== 'supabase') return;
+    if (radioData.mediaServerStatus !== 'online') return;
+
+    const ignoredSignals = [
+      'SYNC',
+      'BAT_ONLINE',
+      'CARGANDO...',
+      'OFFLINE',
+      'ON_AIR:ON',
+      'ON_AIR:OFF',
+      'SHUFFLE',
+      'PAUSED',
+      'NEXT_TRACK',
+      'START_BROADCAST',
+      'RESUME_BROADCAST',
+      'FORCE_RELOAD',
+    ];
+    if (
+      currentPlay.tab === 'OFF_AIR' ||
+      ignoredSignals.includes(currentPlay.station_name) ||
+      ignoredSignals.includes(currentPlay.station_artist)
+    ) {
+      setIsPlaying(false);
+      return;
+    }
+
+    const signature = `${currentPlay.station_name || ''}__${currentPlay.station_url || ''}__${currentPlay.is_playing}`;
+    if (lastSyncedSignatureRef.current === signature) return;
+    lastSyncedSignatureRef.current = signature;
+
+    const list = radioData.currentPlaylist || [];
+    if (list.length === 0) return;
+
+    const urlIdMatch = (currentPlay.station_url || '').match(/\/media\/audio\/([^/?#]+)/);
+    const remoteTrackId = urlIdMatch ? decodeURIComponent(urlIdMatch[1]) : null;
+    const remoteTitle = (currentPlay.station_name || '').trim().toLowerCase();
+
+    const matchedIdx = list.findIndex((t) => {
+      if (remoteTrackId && t.id && String(t.id) === remoteTrackId) return true;
+      if (currentPlay.station_url && (t.streamUrl === currentPlay.station_url || t.url === currentPlay.station_url)) {
+        return true;
+      }
+      if (remoteTitle && t.title) {
+        const localTitle = t.title.trim().toLowerCase();
+        return localTitle === remoteTitle || localTitle.includes(remoteTitle) || remoteTitle.includes(localTitle);
+      }
+      return false;
+    });
+
+    if (matchedIdx !== -1 && matchedIdx !== currentTrackIndex) {
+      setCurrentTrackIndex(matchedIdx);
+    }
+
+    if (typeof currentPlay.is_playing === 'boolean') {
+      setIsPlaying(currentPlay.is_playing);
+    }
+  }, [
+    isCabinaSync,
+    currentPlay,
+    activeTab,
+    radioData.mediaServerStatus,
+    radioData.currentPlaylist,
+    currentTrackIndex,
+  ]);
+
+  const handleToggleCabinaSync = useCallback(() => {
+    setIsCabinaSync((prev) => {
+      const next = !prev;
+      if (next) {
+        lastSyncedSignatureRef.current = '';
+      }
+      return next;
+    });
+  }, []);
+
+  // Si el usuario elige manualmente otra pista/siguiente/anterior, desactivar sync de cabina
+  const handleManualJumpToTrack = useCallback(
+    (index) => {
+      if (isCabinaSync) setIsCabinaSync(false);
+      playerRef.current?.jumpToTrack?.(index);
+    },
+    [isCabinaSync]
+  );
+
+  const handleManualNextTrack = useCallback(() => {
+    if (isCabinaSync) setIsCabinaSync(false);
+    playerRef.current?.nextTrack?.();
+  }, [isCabinaSync]);
+
+  const handleManualPrevTrack = useCallback(() => {
+    if (isCabinaSync) setIsCabinaSync(false);
+    playerRef.current?.prevTrack?.();
+  }, [isCabinaSync]);
 
   // Limpiar bandera de recuperación al cambiar de pista exitosamente
   useEffect(() => {
@@ -286,7 +391,7 @@ export default function ProyectoRadio() {
         isPlaying={isPlaying}
         nowPlaying={radioData.nowPlaying}
         currentTrack={currentTrack}
-        isSyncing={radioData.mediaServerStatus === 'loading' || isRecoveringStream}
+        isSyncing={radioData.mediaServerStatus === 'loading' || isRecoveringStream || (isCabinaSync && isCabinaSyncing)}
         isDailyLoop={player.isDailyLoop}
         setIsDailyLoop={player.setIsDailyLoop}
         setShowInfoModal={player.setShowInfoModal}
@@ -352,10 +457,10 @@ export default function ProyectoRadio() {
               formatTime={player.formatTime}
               isShuffle={player.isShuffle}
               setIsShuffle={player.setIsShuffle}
-              prevTrack={player.prevTrack}
+              prevTrack={handleManualPrevTrack}
               togglePlay={player.togglePlay}
-              nextTrack={player.nextTrack}
-              jumpToTrack={player.jumpToTrack}
+              nextTrack={handleManualNextTrack}
+              jumpToTrack={handleManualJumpToTrack}
               queueWindow={player.queueWindow}
               isRepeatSingle={player.isRepeatSingle}
               setIsRepeatSingle={player.setIsRepeatSingle}
@@ -364,6 +469,8 @@ export default function ProyectoRadio() {
               mediaServerStatus={radioData.mediaServerStatus}
               retryMediaServer={radioData.retryMediaServer}
               isRecoveringStream={isRecoveringStream}
+              isCabinaSync={isCabinaSync}
+              onToggleCabinaSync={handleToggleCabinaSync}
             />
 
             <SourceTabs
@@ -380,7 +487,7 @@ export default function ProyectoRadio() {
               isApplyingRemoteChange={isApplyingRemoteChange}
               isShuffle={player.isShuffle}
               setIsShuffle={player.setIsShuffle}
-              jumpToTrack={player.jumpToTrack}
+              jumpToTrack={handleManualJumpToTrack}
               {...radioData}
             />
           </div>

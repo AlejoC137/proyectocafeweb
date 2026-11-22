@@ -16,6 +16,7 @@ import {
   WifiOff,
   RefreshCw,
   Loader2,
+  Radio,
 } from 'lucide-react';
 import { extractYoutubeId, extractPlaylistId } from '../../utils/youtubeHelpers';
 import CoverArt from './CoverArt';
@@ -48,6 +49,8 @@ export default function PlayerCenter({
   mediaServerStatus = 'online',
   retryMediaServer,
   isRecoveringStream = false,
+  isCabinaSync = false,
+  onToggleCabinaSync,
 }) {
   const [showQueue, setShowQueue] = useState(false);
   const [isExpandedCover, setIsExpandedCover] = useState(false);
@@ -566,8 +569,27 @@ export default function PlayerCenter({
                     </p>
                   </div>
 
-                  {/* Acciones Rápidas Derecha: Botón Cola (10) */}
+                  {/* Acciones Rápidas Derecha: Botón Cabina Sync + Botón Cola */}
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    {isMediaServerTab && onToggleCabinaSync && (
+                      <button
+                        onClick={onToggleCabinaSync}
+                        title={
+                          isCabinaSync
+                            ? 'Sincronizado con Radio Manager (clic para modo libre)'
+                            : 'Sincronizar con la transmisión de Radio Manager'
+                        }
+                        className={`px-2 py-1 border text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition ${
+                          isCabinaSync
+                            ? 'bg-red-600 text-white border-red-400'
+                            : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                        }`}
+                      >
+                        <Radio className={`w-3.5 h-3.5 ${isCabinaSync ? 'animate-pulse text-white' : 'text-red-400'}`} />
+                        <span className="hidden sm:inline">{isCabinaSync ? 'Cabina ON' : 'Cabina'}</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() => setShowQueue(!showQueue)}
                       title="Ventana rápida de 10 pistas (5 anteriores y 5 siguientes)"
