@@ -138,6 +138,7 @@ export default function RadioManager() {
     broadcastPlay,
     broadcastStop,
     broadcastVolume,
+    broadcastSyncHeartbeat,
     broadcastForceReload,
     broadcastTyrannySettings,
     sendRemoteCommand,
@@ -415,7 +416,10 @@ export default function RadioManager() {
             url: track.streamUrl || track.url || '',
           },
           'supabase',
-          playing
+          playing,
+          undefined,
+          undefined,
+          seekSec
         );
         if (seekSec > 0) {
           await sendRemoteCommand({
@@ -513,11 +517,28 @@ export default function RadioManager() {
     return setlist.length > 0 ? setlist : tracks;
   }, [setlist, tracks]);
 
+  const lastLoadedSrcRef = useRef('');
+  const lastUiTimeUpdateRef = useRef(0);
+
   const playTrack = useCallback(
     (track) => {
       if (!track) return;
       recoveryAttemptRef.current = '';
       setActiveYoutube(null);
+
+      // Transición síncrona en el mismo <audio> sin pausar antes (evita cortes en Android)
+      const audio = audioRef.current;
+      const nextUrl = serverUrlRef.current ? (track.streamUrl || track.url || '') : '';
+      if (audio && nextUrl) {
+        lastLoadedSrcRef.current = nextUrl;
+        audio.volume = isMuted ? 0 : volume;
+        try {
+          audio.src = nextUrl;
+          audio.load();
+          audio.play().catch(() => {});
+        } catch {}
+      }
+
       setCurrentTrack(track);
       setCurrentTime(0);
       setProgress(0);
@@ -528,7 +549,7 @@ export default function RadioManager() {
         syncTrackToRadioListeners(track, true, 0);
       }
     },
-    [broadcastSetlistActive, syncTrackToRadioListeners]
+    [broadcastSetlistActive, syncTrackToRadioListeners, isMuted, volume]
   );
 
   const togglePlay = useCallback(() => {
@@ -653,7 +674,7 @@ export default function RadioManager() {
     }
   };
 
-  // Sincronizar <audio> con currentTrack e isPlaying
+  // Sincronizar <audio> con currentTrack e isPlaying (fuente única para audio.src)
   const activeAudioSrc =
     serverStatus === 'online' ? currentTrack?.streamUrl || currentTrack?.url || undefined : undefined;
 
@@ -664,19 +685,52 @@ export default function RadioManager() {
 
     if (!activeAudioSrc) {
       if (!audio.paused) audio.pause();
+      lastLoadedSrcRef.current = '';
       return;
     }
 
+    const srcChanged = lastLoadedSrcRef.current !== activeAudioSrc;
+    if (srcChanged) {
+      lastLoadedSrcRef.current = activeAudioSrc;
+      if (audio.src !== activeAudioSrc) {
+        audio.src = activeAudioSrc;
+        audio.load();
+      }
+    }
+
     if (isPlaying) {
-      audio.play().catch((err) => {
-        if (err?.name !== 'AbortError') {
-          setIsPlaying(false);
-        }
-      });
+      if (audio.paused || srcChanged) {
+        audio.play().catch((err) => {
+          if (err?.name !== 'AbortError' && err?.name !== 'NotSupportedError') {
+            setIsPlaying(false);
+          }
+        });
+      }
     } else if (!audio.paused) {
       audio.pause();
     }
   }, [activeAudioSrc, isPlaying]);
+
+  // Pulso periódico de reloj en vivo (cada 5s) para mantener Android/oyentes exactamente sincronizados
+  useEffect(() => {
+    if (!broadcastSetlistActive || !isPlaying || !currentTrack || activeYoutube) return;
+
+    const sendPulse = () => {
+      const audio = audioRef.current;
+      broadcastSyncHeartbeat({
+        trackId: currentTrack.id,
+        url: currentTrack.streamUrl || currentTrack.url || '',
+        title: currentTrack.title || '',
+        artist: currentTrack.artist || 'Proyecto Café Radio',
+        tab: 'supabase',
+        currentTime: audio && Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+        isPlaying: true,
+      });
+    };
+
+    const interval = setInterval(sendPulse, 5000);
+    return () => clearInterval(interval);
+  }, [broadcastSetlistActive, isPlaying, currentTrack, activeYoutube, broadcastSyncHeartbeat]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -723,10 +777,12 @@ export default function RadioManager() {
         .catch(() => {});
     };
 
-    window.addEventListener('pointerdown', unlockAndPlay, { once: true });
+    window.addEventListener('click', unlockAndPlay, { once: true });
+    window.addEventListener('touchend', unlockAndPlay, { once: true });
     window.addEventListener('keydown', unlockAndPlay, { once: true });
     return () => {
-      window.removeEventListener('pointerdown', unlockAndPlay);
+      window.removeEventListener('click', unlockAndPlay);
+      window.removeEventListener('touchend', unlockAndPlay);
       window.removeEventListener('keydown', unlockAndPlay);
     };
   }, [needsAutoplayUnlock, activeAudioSrc, activeYoutube, isMuted, volume]);
@@ -2025,13 +2081,21 @@ export default function RadioManager() {
       {/* AUDIO ELEMENT: Streaming MP3 directo con soporte HTTP 206 Range */}
       <audio
         ref={audioRef}
-        src={activeAudioSrc}
-        preload="metadata"
+        preload="auto"
+        playsInline
         onLoadedMetadata={(e) => {
           const dur = e.currentTarget.duration;
           if (dur && Number.isFinite(dur) && dur > 0) setDuration(dur);
         }}
+        onCanPlay={(e) => {
+          if (isPlaying && e.currentTarget.paused) {
+            e.currentTarget.play().catch(() => {});
+          }
+        }}
         onTimeUpdate={(e) => {
+          const now = Date.now();
+          if (now - lastUiTimeUpdateRef.current < 450) return;
+          lastUiTimeUpdateRef.current = now;
           const cur = e.currentTarget.currentTime || 0;
           const dur = e.currentTarget.duration || duration || currentTrack?.duration || 0;
           setCurrentTime(cur);

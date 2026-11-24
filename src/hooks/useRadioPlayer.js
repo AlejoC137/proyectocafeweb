@@ -12,8 +12,11 @@ export function useRadioPlayer(
   externalIsPlaying,
   externalSetIsPlaying,
   externalAudioError,
-  externalSetAudioError
+  externalSetAudioError,
+  options = {}
 ) {
+  const { isStreamReady = true, onStallRecover } = options;
+
   const [internalTrackIndex, setInternalTrackIndex] = useState(0);
   const currentTrackIndex = externalTrackIndex !== undefined ? externalTrackIndex : internalTrackIndex;
   const setCurrentTrackIndex = externalSetTrackIndex || setInternalTrackIndex;
@@ -24,7 +27,7 @@ export function useRadioPlayer(
 
   const [internalAudioError, setInternalAudioError] = useState(null);
   const audioError = externalAudioError !== undefined ? externalAudioError : internalAudioError;
-  const setAudioError = externalSetAudioError || setInternalAudioError;
+  const setAudioError = externalAudioError !== undefined ? externalSetAudioError : setInternalAudioError;
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -62,9 +65,42 @@ export function useRadioPlayer(
   const audioRef = useRef(null);
   const pendingPlayRef = useRef(null);
   const lastLoadedSrcRef = useRef('');
+  const wantsToPlayRef = useRef(false);
+  const userPausedRef = useRef(false);
+  const pendingSeekRef = useRef(null);
+
+  // Throttling de UI para Android antiguos (evita 4-10 re-renders/s del árbol completo)
+  const lastUiTimeUpdateRef = useRef(0);
+  const lastUiSecondRef = useRef(-1);
+  const lastDurationRef = useRef(0);
+
+  // Watchdog anti-congelamiento / anti-corte en Android
+  const lastWatchdogTimeRef = useRef(-1);
+  const stallCountRef = useRef(0);
+  const softRetryCountRef = useRef(0);
 
   const currentTrack = currentPlaylist?.[currentTrackIndex] || currentPlaylist?.[0] || null;
-  const currentStreamUrl = currentTrack?.streamUrl || currentTrack?.url || '';
+  const rawStreamUrl = currentTrack?.streamUrl || currentTrack?.url || '';
+  const currentStreamUrl = isStreamReady ? rawStreamUrl : '';
+
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+  const currentTrackRef = useRef(currentTrack);
+  currentTrackRef.current = currentTrack;
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
+  const isMutedRef = useRef(isMuted);
+  isMutedRef.current = isMuted;
+  const onStallRecoverRef = useRef(onStallRecover);
+  onStallRecoverRef.current = onStallRecover;
+
+  // Mantener wantsToPlayRef sincronizado con isPlaying externo/interno
+  useEffect(() => {
+    wantsToPlayRef.current = Boolean(isPlaying);
+    if (isPlaying) {
+      userPausedRef.current = false;
+    }
+  }, [isPlaying]);
 
   useEffect(() => {
     return () => {
@@ -74,19 +110,105 @@ export function useRadioPlayer(
     };
   }, []);
 
+  // Helper seguro para cargar y reproducir inmediatamente en el mismo <audio>
+  // Crucial en Android: cambiar src y llamar play() síncronamente dentro del gesto o evento `ended`
+  // sin llamar pause() evita que Android Chrome libere AudioFocus o bloquee por autoplay.
+  const loadAndPlayImmediate = useCallback((url, { seekTime = null, forceReload = false } = {}) => {
+    const audioEl = audioRef.current;
+    if (!audioEl || !url || activeTabRef.current === 'youtube') return;
+
+    const validSrc =
+      url.startsWith('http://') ||
+      url.startsWith('https://') ||
+      url.startsWith('blob:') ||
+      url.startsWith('/')
+        ? url
+        : '';
+    if (!validSrc) return;
+
+    wantsToPlayRef.current = true;
+    userPausedRef.current = false;
+    stallCountRef.current = 0;
+
+    if (seekTime !== null && Number.isFinite(seekTime) && seekTime >= 0) {
+      pendingSeekRef.current = seekTime;
+    }
+
+    audioEl.volume = isMutedRef.current ? 0 : volumeRef.current;
+
+    if (forceReload || lastLoadedSrcRef.current !== validSrc) {
+      lastLoadedSrcRef.current = validSrc;
+      try {
+        audioEl.src = validSrc;
+        audioEl.load();
+      } catch {}
+    }
+
+    try {
+      const p = audioEl.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch((err) => {
+          if (
+            err?.name === 'AbortError' ||
+            err?.name === 'NotSupportedError' ||
+            err?.message?.includes('interrupted')
+          ) {
+            // Se reintentará automáticamente en onCanPlay / onLoadedData
+            return;
+          }
+          if (err?.name === 'NotAllowedError') {
+            setIsPlaying(false);
+            wantsToPlayRef.current = false;
+          }
+        });
+      }
+    } catch {}
+  }, [setIsPlaying]);
+
+  // Aplicar seek seguro (inmediato si hay metadata, o diferido en pendingSeekRef)
+  const seekToTime = useCallback((targetSeconds) => {
+    const audioEl = audioRef.current;
+    if (!Number.isFinite(targetSeconds) || targetSeconds < 0) return;
+
+    if (!audioEl || audioEl.readyState < 1) {
+      pendingSeekRef.current = targetSeconds;
+      return;
+    }
+
+    const dur = audioEl.duration;
+    const clamped =
+      Number.isFinite(dur) && dur > 0
+        ? Math.min(Math.max(0, targetSeconds), Math.max(0, dur - 0.5))
+        : targetSeconds;
+
+    try {
+      audioEl.currentTime = clamped;
+      pendingSeekRef.current = null;
+      setCurrentTime(clamped);
+      if (Number.isFinite(dur) && dur > 0) {
+        setProgress(Math.min(100, Math.max(0, (clamped / dur) * 100)));
+      }
+    } catch {
+      pendingSeekRef.current = targetSeconds;
+    }
+  }, []);
+
   // Inicializar duración estimada cuando cambia la pista
   useEffect(() => {
     if (!currentTrack) {
+      lastDurationRef.current = 0;
       setDuration(0);
       setCurrentTime(0);
       setProgress(0);
       return;
     }
     if (currentTrack.isLiveStream) {
+      lastDurationRef.current = 0;
       setDuration(0);
       setCurrentTime(0);
       setProgress(0);
     } else if (Number.isFinite(currentTrack.duration) && currentTrack.duration > 0) {
+      lastDurationRef.current = currentTrack.duration;
       setDuration(currentTrack.duration);
     }
   }, [currentTrack?.id, currentTrack?.duration, currentTrack?.isLiveStream]);
@@ -156,6 +278,8 @@ export function useRadioPlayer(
 
     setAudioError(null);
     if (isPlaying) {
+      wantsToPlayRef.current = false;
+      userPausedRef.current = true;
       audioRef.current.pause();
       setIsPlaying(false);
       if (broadcastStop && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
@@ -163,8 +287,20 @@ export function useRadioPlayer(
       }
     } else {
       setShowAutoStart(false);
-      audioRef.current.volume = isMuted ? 0 : volume;
-      const playPromise = audioRef.current.play();
+      wantsToPlayRef.current = true;
+      userPausedRef.current = false;
+      stallCountRef.current = 0;
+      softRetryCountRef.current = 0;
+
+      const audioEl = audioRef.current;
+      audioEl.volume = isMuted ? 0 : volume;
+      if (lastLoadedSrcRef.current !== currentStreamUrl || !audioEl.src) {
+        lastLoadedSrcRef.current = currentStreamUrl;
+        audioEl.src = currentStreamUrl;
+        audioEl.load();
+      }
+
+      const playPromise = audioEl.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
@@ -181,8 +317,9 @@ export function useRadioPlayer(
               return;
             }
             console.error('Error reproduciendo audio:', err);
+            wantsToPlayRef.current = false;
             setIsPlaying(false);
-            setAudioError('Haz clic nuevamente para iniciar la reproducción.');
+            setAudioError('Toca nuevamente para iniciar la reproducción.');
           });
       }
     }
@@ -203,6 +340,8 @@ export function useRadioPlayer(
   const nextTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
+    softRetryCountRef.current = 0;
+    stallCountRef.current = 0;
     let newIdx;
 
     if (isShuffle && currentPlaylist.length > 1) {
@@ -222,12 +361,19 @@ export function useRadioPlayer(
       newIdx = currentTrackIndex === currentPlaylist.length - 1 ? 0 : currentTrackIndex + 1;
     }
 
+    const nextStation = currentPlaylist[newIdx];
+    const nextUrl = isStreamReady ? (nextStation?.streamUrl || nextStation?.url || '') : '';
+
+    // Transición síncrona en el mismo <audio> (clave para Android en segundo plano / pantalla apagada)
+    if (nextUrl && activeTab !== 'youtube') {
+      loadAndPlayImmediate(nextUrl);
+    }
+
     setCurrentTrackIndex(newIdx);
     setProgress(0);
     setCurrentTime(0);
     setIsPlaying(true);
 
-    const nextStation = currentPlaylist[newIdx];
     if (nextStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(nextStation, activeTab, true, volume, isMuted);
     }
@@ -235,6 +381,8 @@ export function useRadioPlayer(
     currentPlaylist,
     currentTrackIndex,
     isShuffle,
+    isStreamReady,
+    loadAndPlayImmediate,
     broadcastPlay,
     isApplyingRemoteChange,
     activeTab,
@@ -248,6 +396,8 @@ export function useRadioPlayer(
   const prevTrack = useCallback(() => {
     if (!currentPlaylist || currentPlaylist.length === 0) return;
     setAudioError(null);
+    softRetryCountRef.current = 0;
+    stallCountRef.current = 0;
 
     // Si la canción lleva más de 3 segundos, reiniciar al inicio antes de retroceder
     if (audioRef.current && !currentTrack?.isLiveStream && audioRef.current.currentTime > 3) {
@@ -267,12 +417,18 @@ export function useRadioPlayer(
 
     if (newIdx >= currentPlaylist.length) newIdx = 0;
 
+    const prevStation = currentPlaylist[newIdx];
+    const prevUrl = isStreamReady ? (prevStation?.streamUrl || prevStation?.url || '') : '';
+
+    if (prevUrl && activeTab !== 'youtube') {
+      loadAndPlayImmediate(prevUrl);
+    }
+
     setCurrentTrackIndex(newIdx);
     setProgress(0);
     setCurrentTime(0);
     setIsPlaying(true);
 
-    const prevStation = currentPlaylist[newIdx];
     if (prevStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
       broadcastPlay(prevStation, activeTab, true, volume, isMuted);
     }
@@ -281,6 +437,8 @@ export function useRadioPlayer(
     currentTrack?.isLiveStream,
     currentTrackIndex,
     isShuffle,
+    isStreamReady,
+    loadAndPlayImmediate,
     shuffleHistory,
     broadcastPlay,
     isApplyingRemoteChange,
@@ -296,15 +454,24 @@ export function useRadioPlayer(
     (index) => {
       if (!currentPlaylist || index < 0 || index >= currentPlaylist.length) return;
       setAudioError(null);
+      softRetryCountRef.current = 0;
+      stallCountRef.current = 0;
       if (isShuffle && index !== currentTrackIndex) {
         setShuffleHistory((prev) => [...prev, currentTrackIndex]);
       }
+
+      const targetStation = currentPlaylist[index];
+      const targetUrl = isStreamReady ? (targetStation?.streamUrl || targetStation?.url || '') : '';
+
+      if (targetUrl && activeTab !== 'youtube') {
+        loadAndPlayImmediate(targetUrl);
+      }
+
       setCurrentTrackIndex(index);
       setProgress(0);
       setCurrentTime(0);
       setIsPlaying(true);
 
-      const targetStation = currentPlaylist[index];
       if (targetStation && broadcastPlay && isApplyingRemoteChange && !isApplyingRemoteChange.current) {
         broadcastPlay(targetStation, activeTab, true, volume, isMuted);
       }
@@ -313,6 +480,8 @@ export function useRadioPlayer(
       currentPlaylist,
       currentTrackIndex,
       isShuffle,
+      isStreamReady,
+      loadAndPlayImmediate,
       broadcastPlay,
       isApplyingRemoteChange,
       activeTab,
@@ -325,20 +494,81 @@ export function useRadioPlayer(
   );
 
   const handleLoadedMetadata = useCallback(() => {
-    if (!audioRef.current) return;
-    const dur = audioRef.current.duration;
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+    const dur = audioEl.duration;
     if (dur && Number.isFinite(dur) && dur > 0) {
+      lastDurationRef.current = dur;
       setDuration(dur);
+    }
+    if (pendingSeekRef.current !== null && !currentTrackRef.current?.isLiveStream) {
+      const target = pendingSeekRef.current;
+      pendingSeekRef.current = null;
+      const clamped =
+        Number.isFinite(dur) && dur > 0
+          ? Math.min(Math.max(0, target), Math.max(0, dur - 0.5))
+          : target;
+      try {
+        audioEl.currentTime = clamped;
+        setCurrentTime(clamped);
+        if (Number.isFinite(dur) && dur > 0) {
+          setProgress(Math.min(100, Math.max(0, (clamped / dur) * 100)));
+        }
+      } catch {
+        pendingSeekRef.current = target;
+      }
+    }
+  }, []);
+
+  const handleCanPlay = useCallback(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl || activeTabRef.current === 'youtube') return;
+
+    if (pendingSeekRef.current !== null && !currentTrackRef.current?.isLiveStream) {
+      const target = pendingSeekRef.current;
+      pendingSeekRef.current = null;
+      const dur = audioEl.duration;
+      const clamped =
+        Number.isFinite(dur) && dur > 0
+          ? Math.min(Math.max(0, target), Math.max(0, dur - 0.5))
+          : target;
+      try {
+        audioEl.currentTime = clamped;
+      } catch {}
+    }
+
+    if (wantsToPlayRef.current && audioEl.paused && !userPausedRef.current) {
+      audioEl.volume = isMutedRef.current ? 0 : volumeRef.current;
+      audioEl.play().catch(() => {});
     }
   }, []);
 
   const handleTimeUpdate = useCallback(() => {
-    if (!audioRef.current) return;
-    const dur = audioRef.current.duration;
-    const cur = audioRef.current.currentTime;
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+    const now = Date.now();
+    const cur = audioEl.currentTime || 0;
+    const dur = audioEl.duration;
+    const sec = Math.floor(cur);
+
+    // Resetear contador de stall mientras el audio avanza
+    if (Math.abs(cur - lastWatchdogTimeRef.current) > 0.15) {
+      stallCountRef.current = 0;
+    }
+
+    // Throttle de actualizaciones de estado React para mantener Android antiguos fluidos
+    if (now - lastUiTimeUpdateRef.current < 450 && sec === lastUiSecondRef.current) {
+      return;
+    }
+    lastUiTimeUpdateRef.current = now;
+    lastUiSecondRef.current = sec;
+
     setCurrentTime(cur);
     if (dur && Number.isFinite(dur) && dur > 0) {
-      setDuration(dur);
+      if (Math.abs(dur - lastDurationRef.current) > 0.5) {
+        lastDurationRef.current = dur;
+        setDuration(dur);
+      }
       setProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
     } else if (currentTrack?.duration > 0) {
       setProgress(Math.min(100, Math.max(0, (cur / currentTrack.duration) * 100)));
@@ -356,15 +586,10 @@ export function useRadioPlayer(
 
       const seekPercent = Math.min(100, Math.max(0, parseFloat(e.target.value)));
       const newTime = (seekPercent / 100) * effectiveDuration;
-      try {
-        audioRef.current.currentTime = newTime;
-      } catch {
-        // Ignorar si aún no hay rangos cargados
-      }
-      setCurrentTime(newTime);
+      seekToTime(newTime);
       setProgress(seekPercent);
     },
-    [duration, currentTrack?.isLiveStream, currentTrack?.duration]
+    [duration, currentTrack?.isLiveStream, currentTrack?.duration, seekToTime]
   );
 
   const handleVolumeChange = (e) => {
@@ -432,7 +657,7 @@ export function useRadioPlayer(
     }, 150);
   };
 
-  // Sincronización del elemento <audio> con la pista activa (Personal Media Server y Radios Online)
+  // Sincronización del elemento <audio> con la pista activa (fuente única de verdad para audioEl.src)
   useEffect(() => {
     const audioEl = audioRef.current;
     if (!audioEl) return;
@@ -471,32 +696,42 @@ export function useRadioPlayer(
     const srcChanged = lastLoadedSrcRef.current !== validSrc;
     if (srcChanged) {
       lastLoadedSrcRef.current = validSrc;
+      stallCountRef.current = 0;
+      softRetryCountRef.current = 0;
       if (!currentTrack?.isLiveStream) {
         setProgress(0);
         setCurrentTime(0);
       }
       if (audioEl.src !== validSrc) {
         audioEl.src = validSrc;
+        audioEl.load();
       }
     }
 
     if (isPlaying) {
-      const playPromise = audioEl.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          if (
-            err.name === 'AbortError' ||
-            err.name === 'NotSupportedError' ||
-            err.message?.includes('interrupted') ||
-            err.message?.includes('no supported source')
-          ) {
-            return;
-          }
-          console.warn('Autoplay o reproducción cancelada:', err.message);
-          setIsPlaying(false);
-        });
+      wantsToPlayRef.current = true;
+      userPausedRef.current = false;
+      if (audioEl.paused || srcChanged) {
+        const playPromise = audioEl.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            if (
+              err.name === 'AbortError' ||
+              err.name === 'NotSupportedError' ||
+              err.message?.includes('interrupted') ||
+              err.message?.includes('no supported source')
+            ) {
+              // onCanPlay reintentará reproducir automáticamente
+              return;
+            }
+            console.warn('Autoplay o reproducción cancelada:', err.message);
+            wantsToPlayRef.current = false;
+            setIsPlaying(false);
+          });
+        }
       }
     } else if (!audioEl.paused) {
+      wantsToPlayRef.current = false;
       audioEl.pause();
     }
   }, [currentStreamUrl, activeTab, isPlaying]);
@@ -509,19 +744,116 @@ export function useRadioPlayer(
   }, [volume, isMuted]);
 
   const handleTrackEnded = useCallback(() => {
+    const audioEl = audioRef.current;
     if (isRepeatSingle) {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
+      if (audioEl) {
+        audioEl.currentTime = 0;
+        audioEl.play().catch(() => {});
       }
       return;
     }
 
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    // IMPORTANTE PARA ANDROID: NO llamar audioEl.pause() antes de pasar a la siguiente pista.
+    // Llamar pause() suelta AudioFocus y permite que Android suspenda el proceso en pantalla apagada.
     nextTrack();
   }, [isRepeatSingle, nextTrack]);
+
+  const handleTrackEndedRef = useRef(handleTrackEnded);
+  handleTrackEndedRef.current = handleTrackEnded;
+
+  // Watchdog anti-interrupciones / anti-corte entre canciones para Android
+  useEffect(() => {
+    if (!isPlaying || activeTab === 'youtube') {
+      stallCountRef.current = 0;
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const audioEl = audioRef.current;
+      if (!audioEl || !wantsToPlayRef.current || userPausedRef.current) return;
+
+      const cur = audioEl.currentTime || 0;
+      const dur = audioEl.duration;
+      const isLive = Boolean(currentTrackRef.current?.isLiveStream);
+
+      // 1. Detectar pistas MP3 VBR que se quedan congeladas al final sin disparar `ended` en Android
+      if (!isLive && Number.isFinite(dur) && dur > 5 && cur >= dur - 0.8) {
+        if (audioEl.ended || Math.abs(cur - lastWatchdogTimeRef.current) < 0.1) {
+          stallCountRef.current = 0;
+          handleTrackEndedRef.current();
+          return;
+        }
+      }
+
+      // 2. Si el audio quedó pausado inesperadamente (p.ej. micro-interrupción del OS o AbortError)
+      if (audioEl.paused && !audioEl.ended) {
+        audioEl.play().catch(() => {});
+      }
+
+      // 3. Detectar congelamiento de buffer (mismo currentTime durante >= 9 segundos)
+      if (Math.abs(cur - lastWatchdogTimeRef.current) < 0.1) {
+        stallCountRef.current += 1;
+      } else {
+        stallCountRef.current = 0;
+        softRetryCountRef.current = 0;
+      }
+      lastWatchdogTimeRef.current = cur;
+
+      if (stallCountRef.current >= 3) {
+        stallCountRef.current = 0;
+        const activeUrl = lastLoadedSrcRef.current || audioEl.currentSrc || audioEl.src;
+
+        if (softRetryCountRef.current < 2 && activeUrl) {
+          softRetryCountRef.current += 1;
+          const savedPos = !isLive && Number.isFinite(cur) && cur > 1 ? cur : null;
+          loadAndPlayImmediate(activeUrl, { seekTime: savedPos, forceReload: true });
+        } else if (onStallRecoverRef.current) {
+          softRetryCountRef.current = 0;
+          onStallRecoverRef.current();
+        } else if (!isLive) {
+          softRetryCountRef.current = 0;
+          handleTrackEndedRef.current();
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, activeTab, loadAndPlayImmediate]);
+
+  // Reanudar automáticamente al volver red Wi-Fi/datos o al desbloquear pantalla en Android
+  useEffect(() => {
+    const resumeIfNeeded = () => {
+      const audioEl = audioRef.current;
+      if (!audioEl || activeTabRef.current === 'youtube') return;
+      if (!wantsToPlayRef.current || userPausedRef.current) return;
+
+      if (audioEl.ended) {
+        handleTrackEndedRef.current();
+        return;
+      }
+      if (audioEl.paused) {
+        const activeUrl = lastLoadedSrcRef.current;
+        if (audioEl.readyState === 0 && activeUrl) {
+          loadAndPlayImmediate(activeUrl, { forceReload: true });
+        } else {
+          audioEl.play().catch(() => {});
+        }
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        resumeIfNeeded();
+      }
+    };
+
+    window.addEventListener('online', resumeIfNeeded);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('online', resumeIfNeeded);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [loadAndPlayImmediate]);
 
   const formatTime = (secs) => {
     if (!secs || isNaN(secs) || !Number.isFinite(secs)) return '0:00';
@@ -562,12 +894,16 @@ export function useRadioPlayer(
     setShowAutoStart,
     audioRef,
     pendingPlayRef,
+    wantsToPlayRef,
     togglePlay,
     nextTrack,
     prevTrack,
     jumpToTrack,
     queueWindow,
+    loadAndPlayImmediate,
+    seekToTime,
     handleLoadedMetadata,
+    handleCanPlay,
     handleTimeUpdate,
     handleSeek,
     handleVolumeChange,

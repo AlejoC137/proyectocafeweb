@@ -371,6 +371,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      // Compatibilidad con Android algo antiguos (Android 8-11 / Chrome 75+ / WebView)
+      target: ['es2019', 'chrome75', 'safari13'],
       drop: mode === 'production' ? ['console', 'debugger'] : [],
       rollupOptions: {
         output: {

@@ -48,6 +48,10 @@ export function useRadioSync(options = {}) {
 
   // Reloj de emisión continua en vivo (Live Broadcast Clock)
   const liveTimeTickRef = useRef(null);
+  const realtimeConnectedRef = useRef(false);
+  const reconnectTimerRef = useRef(null);
+  const reconnectAttemptRef = useRef(0);
+  const [reconnectNonce, setReconnectNonce] = useState(0);
 
   const channelRef = useRef(null);
   const onRemoteCommandRef = useRef(onRemoteCommand);
@@ -166,13 +170,29 @@ export function useRadioSync(options = {}) {
   useEffect(() => {
     refreshCurrentPlay();
 
-    const pollInterval = setInterval(() => {
-      refreshCurrentPlay();
-    }, 2500);
+    let pollTimer = null;
+    let cancelled = false;
+
+    const scheduleNextPoll = () => {
+      if (cancelled) return;
+      // Polling adaptativo: rápido (3.5s) si WebSocket cayó en Android; ligero (10s) si Realtime está activo
+      const delay = realtimeConnectedRef.current ? 10000 : 3500;
+      pollTimer = setTimeout(async () => {
+        await refreshCurrentPlay();
+        scheduleNextPoll();
+      }, delay);
+    };
+
+    scheduleNextPoll();
 
     const handleWakeUp = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' || !document.hidden) {
         refreshCurrentPlay();
+        // Si el WebSocket se desconectó mientras la pantalla estaba apagada, reconectar de inmediato
+        if (!realtimeConnectedRef.current) {
+          reconnectAttemptRef.current = 0;
+          setReconnectNonce((n) => n + 1);
+        }
       }
     };
 
@@ -181,7 +201,8 @@ export function useRadioSync(options = {}) {
     document.addEventListener('visibilitychange', handleWakeUp);
 
     return () => {
-      clearInterval(pollInterval);
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
       window.removeEventListener('focus', handleWakeUp);
       window.removeEventListener('online', handleWakeUp);
       document.removeEventListener('visibilitychange', handleWakeUp);
@@ -349,6 +370,13 @@ export function useRadioSync(options = {}) {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          realtimeConnectedRef.current = true;
+          reconnectAttemptRef.current = 0;
+          setSyncError(null);
+          if (reconnectTimerRef.current) {
+            clearTimeout(reconnectTimerRef.current);
+            reconnectTimerRef.current = null;
+          }
           console.log('[RadioSync] Suscripción Realtime y Presence activa.');
           if (!isManager) {
             try {
@@ -369,8 +397,20 @@ export function useRadioSync(options = {}) {
               });
             } catch (e) {}
           }
-        } else if (status === 'CHANNEL_ERROR') {
-          setSyncError('Realtime no disponible.');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          realtimeConnectedRef.current = false;
+          if (status !== 'CLOSED') {
+            setSyncError('Reconectando Realtime...');
+          }
+          // Reconexión automática con backoff exponencial (clave para Android Doze / cambios de red)
+          if (!reconnectTimerRef.current) {
+            const delay = Math.min(15000, 2000 * Math.pow(2, reconnectAttemptRef.current));
+            reconnectAttemptRef.current = Math.min(reconnectAttemptRef.current + 1, 4);
+            reconnectTimerRef.current = setTimeout(() => {
+              reconnectTimerRef.current = null;
+              setReconnectNonce((n) => n + 1);
+            }, delay);
+          }
         }
       });
 
@@ -427,6 +467,11 @@ export function useRadioSync(options = {}) {
     } catch (e) {}
 
     return () => {
+      realtimeConnectedRef.current = false;
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
@@ -435,7 +480,7 @@ export function useRadioSync(options = {}) {
       if (bcCommand) bcCommand.close();
       if (bcPresence) bcPresence.close();
     };
-  }, [clientId, isManager, updateMergedListeners]);
+  }, [clientId, isManager, updateMergedListeners, reconnectNonce]);
 
   // Actualizar Presence en Supabase y localmente cuando cambie el estado de reproducción
   useEffect(() => {
@@ -588,7 +633,34 @@ export function useRadioSync(options = {}) {
     }
   };
 
-  const broadcastPlay = async (station, tab, playing = true, currentVolume, currentMuted) => {
+  // Enviar pulso de sincronización de reloj en vivo (0 escrituras en BD, baja latencia para Android)
+  const broadcastSyncHeartbeat = useCallback(async ({
+    trackId = null,
+    url = '',
+    title = '',
+    artist = '',
+    tab = 'supabase',
+    currentTime = 0,
+    isPlaying = true,
+  } = {}) => {
+    if (!isManager) return;
+    await sendRemoteCommand({
+      type: 'SYNC_HEARTBEAT',
+      targetClientId: 'all',
+      payload: {
+        trackId,
+        url,
+        title,
+        artist,
+        tab,
+        currentTime: Number.isFinite(Number(currentTime)) ? Number(currentTime) : 0,
+        isPlaying: Boolean(isPlaying),
+        sentAt: Date.now(),
+      },
+    });
+  }, [isManager]);
+
+  const broadcastPlay = async (station, tab, playing = true, currentVolume, currentMuted, seekTime = 0) => {
     if (!station) return;
 
     const basePayload = {
@@ -601,6 +673,25 @@ export function useRadioSync(options = {}) {
       is_playing: playing,
       updated_at: new Date().toISOString(),
     };
+
+    // Emitir también por Realtime Broadcast instantáneo para que Android no espere polling ni replicación
+    if (isManager) {
+      sendRemoteCommand({
+        type: 'SYNC_HEARTBEAT',
+        targetClientId: 'all',
+        payload: {
+          trackId: station.id || null,
+          url: basePayload.station_url,
+          title: basePayload.station_name,
+          artist: basePayload.station_artist,
+          tab: basePayload.tab,
+          currentTime: Number.isFinite(Number(seekTime)) ? Number(seekTime) : 0,
+          isPlaying: Boolean(playing),
+          sentAt: Date.now(),
+          immediate: true,
+        },
+      }).catch(() => {});
+    }
 
     const payloadWithVolume = (hasVolumeColumnRef.current && currentVolume !== undefined)
       ? { ...basePayload, volume: currentVolume, is_muted: Boolean(currentMuted) }
@@ -742,6 +833,7 @@ export function useRadioSync(options = {}) {
     broadcastPlay,
     broadcastStop,
     broadcastVolume,
+    broadcastSyncHeartbeat,
     broadcastForceReload,
     broadcastTyrannySettings,
     tyrannySettings,
